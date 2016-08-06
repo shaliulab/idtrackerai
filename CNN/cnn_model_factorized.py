@@ -118,14 +118,12 @@ if __name__ == '__main__':
         ckpt_dir = args.ckpt_folder
         ckpt_dir_model = ckpt_dir + "/model"
         ckpt_dir_softmax = ckpt_dir + "/softmax"
-        print "****************************************************************"
         if not os.path.exists(ckpt_dir): # Checkpoint folder does not exist
             os.makedirs(ckpt_dir) # we create a checkpoint folder
             os.makedirs(ckpt_dir_model)
             os.makedirs(ckpt_dir_softmax)
             print "Checkpoint folder created"
-
-            ''' here we will load the weithgs or a pretrained mode.................................'''
+            'asdfasdf'
             if loadCkpt_folder: # we load weight of another model (knowledge transfer)
                 ckpt_kt = tf.train.get_checkpoint_state(loadCkpt_folder + "/model")
                 if ckpt_kt and ckpt_kt.model_checkpoint_path:
