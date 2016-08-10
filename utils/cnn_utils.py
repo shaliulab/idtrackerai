@@ -6,6 +6,7 @@ if 'linux' in sys.platform:
     import matplotlib
     matplotlib.use('GtkAgg')
 import matplotlib.pyplot as plt
+
 # Create some wrappers for simplicity
 def computeVolume(width, height, strides):
     c1 = float(strides[1])
@@ -133,20 +134,62 @@ def CNNplotter(lossPlot,accPlot,features, labels,numIndiv):
     plt.draw()
     plt.pause(1)
 
-def CNNplotterFast(lossPlot,accPlot,valAccPlot,valLossPlot):
+def CNNplotterFast(lossPlot,accPlot,valAccPlot,valLossPlot,meanIndivAcc,meanValIndiviAcc):
+    numIndiv = len(meanIndivAcc)
     plt.close()
     plt.figure
     plt.switch_backend('TkAgg')
     mng = plt.get_current_fig_manager()
     mng.resize(*mng.window.maxsize())
-    plt.subplot(121)
+
+    plt.subplot(231)
     plt.plot(lossPlot,'or-', label='training')
     plt.plot(valLossPlot, 'ob--', label='validation')
+    plt.ylabel('Loss function')
     plt.legend()
 
-    plt.subplot(122)
+    plt.subplot(232)
+    plt.semilogy(lossPlot,'ro-',label='training')
+    plt.semilogy(valLossPlot,'bo-',label='validation')
+    # plt.plot(np.log(lossPlot),'ro-',label='training')
+    # plt.plot(np.log(valLossPlot),'bo-',label='validation')
+
+    plt.subplot(234)
     plt.plot(accPlot, 'or-')
     plt.plot(valAccPlot, 'ob--')
+    plt.xlabel('Epoch')
+    plt.ylabel('Acc function')
+
+    plt.subplot(235)
+    plt.semilogy(accPlot,'ro-',label='training')
+    plt.semilogy(valAccPlot,'bo-',label='validation')
+    # plt.plot(np.log(accPlot),'ro-',label='training')
+    # plt.plot(np.log(valAccPlot),'bo-',label='validation')
+    plt.xlabel('Epoch')
+    ax = plt.gca()
+    ax.relim()
+    ax.autoscale_view()
+
+    ax = plt.subplot(1, 3, 3)
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+
+    individuals = [str(j) for j in range(1,numIndiv+1)]
+    ind = np.arange(numIndiv)
+    width = 0.35
+    rects1 = ax.barh(ind, meanIndivAcc, width, color='red', alpha=0.4,label='training')
+
+    rects2 = ax.barh(ind+width, meanValIndiviAcc, width, color='blue', alpha=0.4,label='validation')
+
+    plt.yticks((ind+width), individuals)
+    plt.xlim((0,1))
+    plt.ylabel('individual')
+    plt.title('Individual accuracy')
+    plt.legend()
+
     plt.draw()
     plt.pause(1)
 

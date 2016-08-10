@@ -1,5 +1,11 @@
 from itertools import groupby
 
+### Dict utils ###
+def getVarFromDict(dictVar,variableNames):
+    ''' get variables from a standard python dictionary '''
+    return [dictVar[v] for v in variableNames]
+
+### Array utils ####
 def flatten(l):
     ''' flatten a list of lists '''
     return [inner for outer in l for inner in outer]
@@ -14,8 +20,6 @@ def Ncycle(l,n):
     for i in range(n):
         l = cycle(l)
     return l
-
-
 
 def countRate(array):
     # count repetitions of each element in array and returns the multiset

@@ -49,3 +49,13 @@ def testDeleteDuplicates():
         return "deleteDuplicates: test ok"
     else:
         return "please check the function deleteDuplicates"
+
+""" getVarFromDict test (py_utils)"""
+def testGetVarFromDict():
+    a = {'b':1, 'c':2, 'd':3}
+    [b,c]= getVarFromDict(a,['b', 'd'])
+    ans = [1,3]
+    if [b,c] == ans:
+        return "getVarFromDict: test ok"
+    else:
+        return "please check the function getVarFromDict"
