@@ -130,6 +130,15 @@ def dense_to_one_hot(labels, n_classes=2):
     labels_one_hot.flat[index_offset + labels.ravel()] = 1
     return labels_one_hot
 
+# def one_hot_to_dense(labels_one_hot):
+#     # print np.where(labels_one_hot==1)[1]
+#     return tf.where(labels_one_hot==1)[:,1]
+
 def one_hot_to_dense(labels_one_hot):
     # print np.where(labels_one_hot==1)[1]
-    return tf.where(labels_one_hot==1)[:,1]
+    if type(labels_one_hot) is list:
+        return np.where(np.asarray(labels_one_hot)==1)[1]
+    elif(type(labels_one_hot) is np.ndarray):
+        return np.where(labels_one_hot==1)[1]
+    else:
+        raise ValueError('one_hot_to_dense accepts either lists or numpy arrays as an argument.')

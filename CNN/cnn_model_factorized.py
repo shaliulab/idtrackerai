@@ -60,7 +60,7 @@ def model(x,y,width, height, channels, classes, keep_prob):
     h_relu = tf.nn.relu(h_fc_drop)
     y_logits = buildSoftMax('Wsoft1','bsoft1',h_relu,n_fc,classes)
 
-    return y_logits
+    return y_logits, h_relu
 
 if __name__ == '__main__':
 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     y = tf.placeholder(tf.float32, [None, classes])
     keep_prob = tf.placeholder(tf.float32)
 
-    y_logits = model(x,y,imsize[1],imsize[2],imsize[0],classes,keep_prob)
+    y_logits, h_relu = model(x,y,imsize[1],imsize[2],imsize[0],classes,keep_prob)
 
 
     # Define loss/eval/training functions
@@ -200,11 +200,12 @@ if __name__ == '__main__':
                 accValEpoch = []
                 indivAccEpoch = []
                 valIIndivAccEpoch = []
+
                 for iter_i in range(iter_per_epoch-1):
                     batch_xs = X_train[indices[iter_i]:indices[iter_i+1]]
                     batch_ys = Y_train[indices[iter_i]:indices[iter_i+1]]
 
-                    loss, acc, pred, tr = sess.run([cross_entropy,accuracy, prediction, truth],
+                    loss, acc, pred, tr, feat = sess.run([cross_entropy,accuracy, prediction, truth, h_relu],
                                     feed_dict={
                                         x: batch_xs,
                                         y: batch_ys,
@@ -223,6 +224,8 @@ if __name__ == '__main__':
 
                     sess.run(optimizer, feed_dict={
                         x: batch_xs, y: batch_ys, keep_prob: 1})
+                # take the last batch to plot some features (from the last relu layer)
+                featPlot = feat
 
                 # nanmean because in minibatches some individuals could not appear...
                 meanIndivAcc = np.nanmean(indivAccEpoch, axis=0)
@@ -269,19 +272,35 @@ if __name__ == '__main__':
                 indivAccPlot.append(meanIndivAcc)
                 indivValAccPlot.append(meanValIndiviAcc)
 
+                lossSpeed, lossAccel = computeDerivatives(lossPlot)
+                accSpeed, accAccel = computeDerivatives(accPlot)
+                valLossSpeed, valLossAccel = computeDerivatives(valLossPlot)
+                valAccSpeed, valAccAccel = computeDerivatives(valAccPlot)
+
                 lossAccDict = {
                     'loss': lossPlot,
-                    'acc': accPlot,
                     'valLoss': valLossPlot,
+                    'lossSpeed': lossSpeed,
+                    'valLossSpeed': valLossSpeed,
+                    'lossAccel': lossAccel,
+                    'valLossAccel': valLossAccel,
+                    'acc': accPlot,
                     'valAcc': valAccPlot,
+                    'accSpeed': accSpeed,
+                    'valAccSpeed': valAccSpeed,
+                    'accAccel': accAccel,
+                    'valAccAccel': valAccAccel,
                     'indivAcc': indivAccPlot,
                     'indivValAcc': indivValAccPlot,
+                    'features': featPlot,
+                    'labels': one_hot_to_dense(batch_ys) # labels of the last batch to plot some features
                     }
 
                 pickle.dump( lossAccDict , open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
 
                 # Poltter
-                CNNplotterFast(lossPlot,accPlot,valAccPlot,valLossPlot,meanIndivAcc,meanValIndiviAcc)
+                # CNNplotterFast(lossPlot,accPlot,valAccPlot,valLossPlot,meanIndivAcc,meanValIndiviAcc)
+                CNNplotterFast(lossAccDict)
                 # convolve = sess.run(h_conv3, feed_dict={x: batch_xs, y: batch_ys, keep_prob: 1.0})
                 # print(convolve[0].shape)
         if args.train == 0:

@@ -6,8 +6,15 @@ if 'linux' in sys.platform:
     import matplotlib
     matplotlib.use('GtkAgg')
 import matplotlib.pyplot as plt
+import warnings
+from py_utils import *
 
-# Create some wrappers for simplicity
+'''
+****************************************************************************
+CNN wrappers
+*****************************************************************************
+'''
+
 def computeVolume(width, height, strides):
     c1 = float(strides[1])
     c2 = float(strides[2])
@@ -82,7 +89,11 @@ def buildSoftMaxWeights(inputSoftMax,n_fc,classes):
     y_logits = tf.matmul(inputSoftMax, W_fc) + b_fc
     return y_logits, W_fc, b_fc
 
-# plotting utilities
+'''
+****************************************************************************
+Plotting utilities
+*****************************************************************************
+'''
 
 def get_spaced_colors(n):
     max_value = 16581375 #255**3
@@ -97,178 +108,146 @@ def get_legend_str(n):
 
     return [str(i+1) for i in range(n)]
 
+def CNNplotterFast(lossAccDict):
 
-def CNNplotter(lossPlot,accPlot,features, labels,numIndiv):
-    features = [inner for outer in features for inner in outer]
-    features = np.asarray(features)
+    # get variables
+    lossPlot, valLossPlot, lossSpeed,valLossSpeed, lossAccel, valLossAccel, \
+    accPlot, valAccPlot, accSpeed,valAccSpeed, accAccel, valAccAccel, \
+    indivAcc,indivValAcc,\
+    features, labels = getVarFromDict(lossAccDict,[
+        'loss', 'valLoss', 'lossSpeed', 'valLossSpeed', 'lossAccel', 'valLossAccel',
+        'acc', 'valAcc', 'accSpeed', 'valAccSpeed', 'accAccel', 'valAccAccel',
+        'indivAcc', 'indivValAcc',
+        'features', 'labels'])
 
-    labels = one_hot_to_dense(labels)
-
-    c = get_spaced_colors(numIndiv)
-    leg = get_legend_str(numIndiv)
-
-
-    plt.close()
-    plt.figure
-    plt.switch_backend('TkAgg')
-    mng = plt.get_current_fig_manager()
-    mng.resize(*mng.window.maxsize())
-    plt.subplot(131)
-    plt.plot(lossPlot,'o-')
-
-    plt.subplot(132)
-    plt.plot(accPlot, 'or-')
-
-    plt.subplot(133)
-
-    for i in range(numIndiv):
-        # print len(features)
-        # print len(labels)
-        # print np.where(labels == i)[0]
-        featThisIndiv = features[np.where(labels == i)[0]]
-
-        # ax.plot(feat[:, 0], feat[:, 1],feat[:, 2], '.', c=c[i])
-        plt.plot(featThisIndiv[:, 0], featThisIndiv[:, 1], '.', c=c[i])
-    plt.legend(leg[:numIndiv])
-
-    plt.draw()
-    plt.pause(1)
-
-def CNNplotterFast(lossPlot,accPlot,valAccPlot,valLossPlot,meanIndivAcc,meanValIndiviAcc):
+    meanIndivAcc = indivAcc[-1]
+    meanValIndiviAcc = indivValAcc[-1]
     numIndiv = len(meanIndivAcc)
+    features = features[:30]
+    features = np.reshape(features, [features.shape[0],10,10])
+    labels = labels[:30]
+
+
     plt.close()
-    plt.figure
+    # fig, axes = plt.subplots(nrows=10, ncols=12)
+    # fig = plt.figure()
     plt.switch_backend('TkAgg')
     mng = plt.get_current_fig_manager()
     mng.resize(*mng.window.maxsize())
 
-    plt.subplot(231)
-    plt.plot(lossPlot,'or-', label='training')
-    plt.plot(valLossPlot, 'ob--', label='validation')
-    plt.ylabel('Loss function')
-    plt.legend()
 
-    plt.subplot(232)
-    plt.semilogy(lossPlot,'ro-',label='training')
-    plt.semilogy(valLossPlot,'bo-',label='validation')
-    # plt.plot(np.log(lossPlot),'ro-',label='training')
-    # plt.plot(np.log(valLossPlot),'bo-',label='validation')
+    # loss
+    ax1 = plt.subplot(261)
+    ax1.spines["top"].set_visible(False)
+    ax1.spines["right"].set_visible(False)
+    ax1.get_xaxis().tick_bottom()
+    ax1.get_yaxis().tick_left()
+    ax1.set_axis_bgcolor('none')
 
-    plt.subplot(234)
-    plt.plot(accPlot, 'or-')
-    plt.plot(valAccPlot, 'ob--')
-    plt.xlabel('Epoch')
-    plt.ylabel('Acc function')
+    ax1.plot(lossPlot,'or-', label='training')
+    ax1.plot(valLossPlot, 'ob--', label='validation')
+    ax1.set_ylabel('Loss function')
+    ax1.legend(fancybox=True, framealpha=0.05)
 
-    plt.subplot(235)
-    plt.semilogy(accPlot,'ro-',label='training')
-    plt.semilogy(valAccPlot,'bo-',label='validation')
-    # plt.plot(np.log(accPlot),'ro-',label='training')
-    # plt.plot(np.log(valAccPlot),'bo-',label='validation')
-    plt.xlabel('Epoch')
-    ax = plt.gca()
-    ax.relim()
-    ax.autoscale_view()
+    ax2 = plt.subplot(262)
+    ax2.spines["top"].set_visible(False)
+    ax2.spines["right"].set_visible(False)
+    ax2.get_xaxis().tick_bottom()
+    ax2.get_yaxis().tick_left()
+    ax2.set_axis_bgcolor('none')
 
-    ax = plt.subplot(1, 3, 3)
+    ax2.plot(lossSpeed,'ro-',label='training')
+    # plt.plot(valLossSpeed,'bo--',label='validation')
+    ax2.set_ylabel('Loss function speed')
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
+    ax3 = plt.subplot(263)
+    ax3.spines["top"].set_visible(False)
+    ax3.spines["right"].set_visible(False)
+    ax3.get_xaxis().tick_bottom()
+    ax3.get_yaxis().tick_left()
+    ax3.set_axis_bgcolor('none')
+
+    ax3.plot(lossAccel,'ro-',label='training')
+    # plt.plot(valLossAccel,'bo--',label='validation')
+    ax3.set_ylabel('Loss function accel.')
+
+
+    # accuracy
+    ax4 = plt.subplot(267)
+    ax4.spines["top"].set_visible(False)
+    ax4.spines["right"].set_visible(False)
+    ax4.get_xaxis().tick_bottom()
+    ax4.get_yaxis().tick_left()
+    ax4.set_axis_bgcolor('none')
+
+    ax4.plot(accPlot, 'or-')
+    ax4.plot(valAccPlot, 'ob--')
+    ax4.set_xlabel('Epoch')
+    ax4.set_ylabel('Accuray')
+
+    ax5 = plt.subplot(268)
+    ax5.spines["top"].set_visible(False)
+    ax5.spines["right"].set_visible(False)
+    ax5.get_xaxis().tick_bottom()
+    ax5.get_yaxis().tick_left()
+    ax5.set_axis_bgcolor('none')
+
+    ax5.plot(accSpeed,'ro-',label='training')
+    # plt.plot(valAccSpeed,'bo--',label='validation')
+    ax5.set_ylabel('Accuray speed')
+
+    ax6 = plt.subplot(2,6,9)
+    ax6.spines["top"].set_visible(False)
+    ax6.spines["right"].set_visible(False)
+    ax6.get_xaxis().tick_bottom()
+    ax6.get_yaxis().tick_left()
+    ax6.set_axis_bgcolor('none')
+
+    ax6.plot(accAccel,'ro-',label='training')
+    # plt.plot(valAccAccel,'bo--',label='validation')
+    ax6.set_ylabel('Accuray accel.')
+
+    # Individual accuracies
+    ax7 = plt.subplot(1, 4, 3)
+    ax7.spines["top"].set_visible(False)
+    ax7.spines["right"].set_visible(False)
+    ax7.get_xaxis().tick_bottom()
+    ax7.get_yaxis().tick_left()
+    ax7.set_axis_bgcolor('none')
 
     individuals = [str(j) for j in range(1,numIndiv+1)]
     ind = np.arange(numIndiv)
     width = 0.35
-    rects1 = ax.barh(ind, meanIndivAcc, width, color='red', alpha=0.4,label='training')
+    rects1 = ax7.barh(ind, meanIndivAcc, width, color='red', alpha=0.4,label='training')
 
-    rects2 = ax.barh(ind+width, meanValIndiviAcc, width, color='blue', alpha=0.4,label='validation')
+    rects2 = ax7.barh(ind+width, meanValIndiviAcc, width, color='blue', alpha=0.4,label='validation')
 
-    plt.yticks((ind+width), individuals)
-    plt.xlim((0,1))
-    plt.ylabel('individual')
-    plt.title('Individual accuracy')
-    plt.legend()
+    ax7.set_yticks((ind+width), individuals)
+    ax7.set_xlim((0,1))
+    ax7.set_ylabel('individual')
+    ax7.set_title('Individual accuracy')
+    ax7.legend(fancybox=True, framealpha=0.05)
 
+    k=0
+    ax_feats = []
+    for i in range(30):
+        ax8 = plt.subplot(10,12,(i % 3)+10+12*k)
+        ax_feats.append(ax8)
+        if i % 3 == 2:
+            k+=1
+        ax8.imshow(features[i], interpolation='none', cmap='gray')
+        ax8.set_ylabel('Indiv' + str(labels[i]))
+    # print fig.get_children()
+    # plt.tight_layout()
+    plt.subplots_adjust(bottom=0.1, right=.9, left=0.1, top=.9, wspace = 0.5, hspace=0.5)
     plt.draw()
     plt.pause(1)
 
-def CNNplotterROCFast(lossPlot,accPlot,sensPlot,specPlot, valAccPlot, valLossPlot, valSensPlot, valSpecPlot):
-    plt.close()
-    plt.figure
-    plt.switch_backend('TkAgg')
-    mng = plt.get_current_fig_manager()
-    mng.resize(*mng.window.maxsize())
-    plt.subplot(221)
-    plt.plot(lossPlot,'or-', label='training')
-    plt.plot(valLossPlot, 'ob--', label='validation')
-    plt.legend()
-    plt.ylabel('Loss')
-
-    plt.subplot(222)
-    plt.plot(sensPlot,'or-')
-    plt.plot(valSensPlot, 'ob--')
-    plt.ylabel('Sensitivity')
 
 
-    plt.subplot(223)
-    plt.plot(accPlot, 'or-')
-    plt.plot(valAccPlot, 'ob--')
-    plt.ylabel('Accuracy')
-
-    plt.subplot(224)
-    plt.plot(specPlot, 'or-')
-    plt.plot(valSpecPlot, 'ob--')
-    plt.ylabel('Specificity')
-
-    plt.draw()
-    plt.pause(1)
-
-def CNNplotterROCFastWeights(weightsTrain, bDocs, weightsVal, bDocsVal, lossPlot,accPlot,sensPlot,specPlot, valAccPlot, valLossPlot, valSensPlot, valSpecPlot):
-    plt.close()
-    plt.figure
-    plt.switch_backend('TkAgg')
-    mng = plt.get_current_fig_manager()
-    mng.resize(*mng.window.maxsize())
-    plt.subplot(231)
-    plt.plot(lossPlot,'or-', label='training')
-    plt.plot(valLossPlot, 'ob--', label='validation')
-    plt.legend()
-    plt.ylabel('Loss')
-
-    plt.subplot(232)
-    plt.plot(sensPlot,'or-')
-    plt.plot(valSensPlot, 'ob--')
-    plt.ylabel('Sensitivity')
-
-
-    plt.subplot(234)
-    plt.plot(accPlot, 'or-')
-    plt.plot(valAccPlot, 'ob--')
-    plt.ylabel('Accuracy')
-
-    plt.subplot(235)
-    plt.plot(specPlot, 'or-')
-    plt.plot(valSpecPlot, 'ob--')
-    plt.ylabel('Specificity')
-
-    plt.subplot(1, 12, 9)
-    plt.imshow(weightsTrain, cmap = 'gray', interpolation='none')
-    plt.colorbar()
-
-    plt.subplot(1 ,12, 10)
-    plt.imshow([bDocs, [0,0]], cmap = 'gray', interpolation='none')
-
-    plt.subplot(1, 12, 11)
-    plt.imshow(weightsVal, cmap = 'gray', interpolation='none')
-    # plt.colorbar()
-
-    plt.subplot(1, 12, 12)
-    plt.imshow([bDocsVal,[0,0]], cmap = 'gray', interpolation='none')
-
-    plt.draw()
-    plt.pause(1)
-
+''' ****************************************************************************
+CNN statistics and cluster analysis
+*****************************************************************************'''
 
 def computeROCAccuracy(y, y_logits, name=None):
     # sess = tf.Session()
@@ -290,6 +269,22 @@ def computeROCAccuracy(y, y_logits, name=None):
     # print sess.run(specificity)
 
     return sensitivity, specificity, TP, FP, FN, TN
+
+def computeDerivatives(array):
+
+    if len(array) > 1:
+        speed = np.diff(array)
+    else:
+        warnings.warn('Not enough points to compute the speed')
+        speed = []
+
+    if len(array) > 2:
+        accel = np.diff(speed)
+    else:
+        warnings.warn('Not enough points to compute the acceleration')
+        accel = []
+
+    return speed, accel
 
 # y = np.array([[1,0],[0,1],[1,0],[0,1]])
 # y_logits = np.array([[1,0],[0,1],[1,0],[1,0]])
