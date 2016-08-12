@@ -11,8 +11,8 @@ import numpy as np
 from checkCheck import *
 from pprint import *
 
-def model(x,y,width, height, channels, classes, keep_prob):
-    x_tensor = tf.reshape(x, [-1, width, height, channels])
+def model(x,width, height, channels, classes, keep_prob):
+    x_tensor = tf.reshape(x, [-1, width, height, channels],name='x_reshape')
     # conv1
     filter_size1 = 5
     n_filter1 = 15
@@ -23,7 +23,7 @@ def model(x,y,width, height, channels, classes, keep_prob):
     stride2 = [1,2,2,1]
     pool2 = 2
     pad2 = 'SAME'
-    max_pool2, w2, h2 = maxpool2d(w1,h1, h_conv1, pool2,stride2,pad2)
+    max_pool2, w2, h2 = maxpool2d('maxpool1',w1,h1, h_conv1, pool2,stride2,pad2)
     d2 = n_filter1
     # conv2
     filter_size3 = 5
@@ -35,7 +35,7 @@ def model(x,y,width, height, channels, classes, keep_prob):
     stride4 = [1,2,2,1]
     pool4 = 2
     pad4 = 'SAME'
-    max_pool4, w4, h4 = maxpool2d(w3,h3, h_conv3, pool4,stride4,pad4)
+    max_pool4, w4, h4 = maxpool2d('maxpool2',w3,h3, h_conv3, pool4,stride4,pad4)
     d4 = n_filter3
     # conv4
     filter_size5 = 5
@@ -46,11 +46,11 @@ def model(x,y,width, height, channels, classes, keep_prob):
     d5 = n_filter5
     # linearize weights for fully-connected layer
     resolutionS = w5 * h5
-    h_conv5_flat = tf.reshape(h_conv5, [-1, resolutionS*d5])
+    h_conv5_flat = tf.reshape(h_conv5, [-1, resolutionS*d5], name = 'h_conv5_reshape')
     # fully-connected 1
     n_fc = 100
     h_fc_drop = buildFc('Wfc1', 'bfc1', h_conv5_flat,w5,h5,d5,n_fc,keep_prob)
-    h_relu = tf.nn.relu(h_fc_drop)
+    h_relu = tf.nn.relu(h_fc_drop,name = 'lastRelu')
     y_logits = buildSoftMax('Wsoft1','bsoft1',h_relu,n_fc,classes)
 
     return y_logits, h_relu
@@ -91,30 +91,29 @@ if __name__ == '__main__':
     resolution = np.prod(imsize)
     classes = numIndiv
 
-    x = tf.placeholder(tf.float32, [None, resolution])
-    y = tf.placeholder(tf.float32, [None, classes])
-    keep_prob = tf.placeholder(tf.float32)
+    x = tf.placeholder(tf.float32, [None, resolution], name = 'images')
+    y = tf.placeholder(tf.float32, [None, classes], name = 'labels')
+    keep_prob = tf.placeholder(tf.float32, name = 'keep_prob')
 
-    y_logits, h_relu = model(x,y,imsize[1],imsize[2],imsize[0],classes,keep_prob)
+    y_logits, h_relu = model(x,imsize[1],imsize[2],imsize[0],classes,keep_prob)
 
 
     # Define loss/eval/training functions
     cross_entropy = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(y_logits, y))
+        tf.nn.softmax_cross_entropy_with_logits(y_logits, y, name = 'CrossEntropy'), name = 'CrossEntropyMean')
     # opt = tf.train.AdamOptimizer(learning_rate=0.01, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
-    opt = tf.train.GradientDescentOptimizer(0.01)
-    optimizer = opt.minimize(cross_entropy)
+    optimizer = tf.train.GradientDescentOptimizer(0.01, name = 'OptMethod').minimize(cross_entropy, name = 'MinimizedFunc')
 
     # Monitor accuracy
-    prediction = tf.argmax(y_logits, 1)
-    truth = tf.argmax(y,1)
-    correct_prediction = tf.equal(prediction, truth)
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
+    prediction = tf.argmax(y_logits, 1,name='prediction')
+    truth = tf.argmax(y,1,name='truth')
+    correct_prediction = tf.equal(prediction, truth,name='correctPrediction')
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'),name='overallAccuracy')
 
     # Create counter for epochs and savers
     global_step = tf.Variable(0, name='global_step', trainable=False)
-    saver_model = createSaver('soft', include=False)
-    saver_softmax = createSaver('soft', include=True)
+    saver_model = createSaver('soft', False, 'saver_model')
+    saver_softmax = createSaver('soft', True, 'saver_softmax')
 
 
     print "\n****** Entering TF session ******\n"
@@ -122,6 +121,8 @@ if __name__ == '__main__':
     with tf.Session() as sess:
         # you need to initialize all variables
         tf.initialize_all_variables().run()
+        tf.train.write_graph(sess.graph_def,ckpt_dir, 'train.pb',as_text=False)
+
 
         if args.train == 1:
             print "\n****** Starting training session ******\n"
@@ -137,6 +138,11 @@ if __name__ == '__main__':
             # counter for epochs
             start = global_step.eval() # get last global_step
             print "\nStart from:", start
+
+            n_epochs = args.num_epochs - start
+            batch_size = args.batch_size
+
+            # lossAccDict = trainValidate(start, n_epochs, batch_size, X_train, Y_train, X_val, Y_val, ckpt_dir_model, classes, sess )
             # We'll now train in minibatches and report accuracy, loss:
             n_epochs = args.num_epochs - start
             batch_size = args.batch_size
@@ -264,36 +270,36 @@ if __name__ == '__main__':
 
                 print 'Validation Accuracy (epoch = %d): ' % (start + epoch_i) + str(meanAcc) #+ "Individual Accuracy"
                 pprint(meanValIndiviAcc)
-
-                '''
-                **************************************
-                references
-                **************************************
-                '''
-                # if Y_ref.shape[0] <= batch_size:
-                #     print 'No need to batch references'
-                #     Rfeat = sess.run(h_relu,
-                #              feed_dict={
-                #                  x: X_ref,
-                #                  y: Y_ref,
-                #                  keep_prob: 1.0
-                #              })
-                #     refFeatEpoch = Rfeat
-                # else:
-                #     # print Rindices
-                #     # print ref_iter_per_epoch
-                #     for Riter_i in range(ref_iter_per_epoch-1):
-                #         Rbatch_xs = X_ref[Rindices[Riter_i]:Rindices[Riter_i+1]]
-                #         Rbatch_ys = Y_ref[Rindices[Riter_i]:Rindices[Riter_i+1]]
-                #
-                #         Rfeat = sess.run(h_relu,
-                #                  feed_dict={
-                #                      x: Rbatch_xs,
-                #                      y: Rbatch_ys,
-                #                      keep_prob: 1.0
-                #                  })
-                #         refFeatEpoch.append(Rfeat)
-                #     refFeatEpoch = np.asarray(flatten(refFeatEpoch))
+            #
+            #     '''
+            #     **************************************
+            #     references
+            #     **************************************
+            #     '''
+            #     # if Y_ref.shape[0] <= batch_size:
+            #     #     print 'No need to batch references'
+            #     #     Rfeat = sess.run(h_relu,
+            #     #              feed_dict={
+            #     #                  x: X_ref,
+            #     #                  y: Y_ref,
+            #     #                  keep_prob: 1.0
+            #     #              })
+            #     #     refFeatEpoch = Rfeat
+            #     # else:
+            #     #     # print Rindices
+            #     #     # print ref_iter_per_epoch
+            #     #     for Riter_i in range(ref_iter_per_epoch-1):
+            #     #         Rbatch_xs = X_ref[Rindices[Riter_i]:Rindices[Riter_i+1]]
+            #     #         Rbatch_ys = Y_ref[Rindices[Riter_i]:Rindices[Riter_i+1]]
+            #     #
+            #     #         Rfeat = sess.run(h_relu,
+            #     #                  feed_dict={
+            #     #                      x: Rbatch_xs,
+            #     #                      y: Rbatch_ys,
+            #     #                      keep_prob: 1.0
+            #     #                  })
+            #     #         refFeatEpoch.append(Rfeat)
+            #     #     refFeatEpoch = np.asarray(flatten(refFeatEpoch))
 
                 '''
                 **************************************
@@ -357,6 +363,8 @@ if __name__ == '__main__':
                 figname = ckpt_dir + '/figures/result_' + str(epoch_i) + '.pdf'
                 plt.savefig(figname)
                 print '-------------------------------'
+
+
 
 
         if args.train == 0:
