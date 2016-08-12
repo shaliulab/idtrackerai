@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     # prep for args
     parser = argparse.ArgumentParser()
-    parser.add_argument('--datasetTrain', default='25dpf_60indiv_22000ImPerInd_rotateAndCrop', type = str)
+    parser.add_argument('--datasetTrain', default='36dpf_60indiv_22000ImPerInd_rotateAndCrop', type = str)
     parser.add_argument('--datasetTest', default=None, type = str)
     parser.add_argument('--train', default=1, type=int)
     parser.add_argument('--ckpt_folder', default = "./ckpt_dir", type= str)
@@ -74,6 +74,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_indiv', default = 60, type = int)
     parser.add_argument('--num_train', default = 22000, type = int)
     parser.add_argument('--num_test', default = 0, type = int)
+    parser.add_argument('--num_ref', default = 0, type = int)
     parser.add_argument('--num_epochs', default = 500, type = int)
     parser.add_argument('--batch_size', default = 250, type = int)
     args = parser.parse_args()
@@ -83,11 +84,12 @@ if __name__ == '__main__':
     num_indiv = args.num_indiv
     num_train = args.num_train
     num_test = args.num_test
+    num_ref = args.num_ref
     ckpt_folder = args.ckpt_folder
     loadCkpt_folder = args.loadCkpt_folder
 
     # numIndiv, imsize, X_train, X_valid, X_test, Y_train, Y_valid, Y_test = dataHelper0(path, num_train, num_test, num_valid, ckpt_folder)
-    numIndiv, imsize, X_train, Y_train, X_val, Y_val, X_test, Y_test = loadDataBase(pathTrain, num_indiv, num_train, num_test,ckpt_folder,pathTest)
+    numIndiv, imsize, X_train, Y_train, X_val, Y_val, X_test, Y_test, X_ref, Y_ref = loadDataBase(pathTrain, num_indiv, num_train, num_test, num_ref,ckpt_folder,pathTest)
     print 'val size:    images  labels'
     print X_val.shape, Y_val.shape
     resolution = np.prod(imsize)
@@ -127,17 +129,20 @@ if __name__ == '__main__':
         ckpt_dir = args.ckpt_folder
         ckpt_dir_model = ckpt_dir + "/model"
         ckpt_dir_softmax = ckpt_dir + "/softmax"
+        ckpt_dir_figures = ckpt_dir + "/figures"
         if not os.path.exists(ckpt_dir): # Checkpoint folder does not exist
             os.makedirs(ckpt_dir) # we create a checkpoint folder
             os.makedirs(ckpt_dir_model)
             os.makedirs(ckpt_dir_softmax)
+            os.makedirs(ckpt_dir_figures)
             print "Checkpoint folder created"
-            'asdfasdf'
+
             if loadCkpt_folder: # we load weight of another model (knowledge transfer)
                 ckpt_kt = tf.train.get_checkpoint_state(loadCkpt_folder + "/model")
                 if ckpt_kt and ckpt_kt.model_checkpoint_path:
                     print ckpt_kt.model_checkpoint_path
                     saver_model.restore(sess, ckpt_kt.model_checkpoint_path) # restore all variables
+
 
         # load state of the training from the checkpoint
         ckpt_model = tf.train.get_checkpoint_state(ckpt_dir_model)
@@ -159,7 +164,9 @@ if __name__ == '__main__':
         train_size = len(Y_train)
         iter_per_epoch = int(np.ceil(np.true_divide(train_size,batch_size)))
         val_size = len(Y_val)
+        ref_size = len(Y_ref)
         val_iter_per_epoch = int(np.ceil(np.true_divide(val_size,batch_size)))
+        ref_iter_per_epoch = int(np.ceil(np.true_divide(ref_size,batch_size)))
         print "Train size:", train_size
         print "Batch size:", batch_size
         print "Iter per epoch:", iter_per_epoch
@@ -171,8 +178,11 @@ if __name__ == '__main__':
         indices = indices.astype('int')
         Vindices = np.linspace(0, val_size, val_iter_per_epoch)
         Vindices = Vindices.astype('int')
+        Rindices = np.linspace(0, ref_size, ref_iter_per_epoch)
+        Rindices = Rindices.astype('int')
+
         if args.train == 1:
-            if start == 0:
+            if start == 0 or not os.path.exists(ckpt_dir_model + "/lossAcc.pkl"):
                 lossPlot = []
                 accPlot = []
                 valLossPlot = []
@@ -200,7 +210,14 @@ if __name__ == '__main__':
                 accValEpoch = []
                 indivAccEpoch = []
                 valIIndivAccEpoch = []
+                valFeatEpoch = []
+                refFeatEpoch = []
 
+                '''
+                **************************************
+                training
+                **************************************
+                '''
                 for iter_i in range(iter_per_epoch-1):
                     batch_xs = X_train[indices[iter_i]:indices[iter_i+1]]
                     batch_ys = Y_train[indices[iter_i]:indices[iter_i+1]]
@@ -214,6 +231,7 @@ if __name__ == '__main__':
                     lossEpoch.append(loss)
                     accEpoch.append(acc)
 
+                    # individual accuracy
                     indivPred = [np.true_divide(np.sum(np.logical_and(np.equal(pred, i), np.equal(tr, i)), axis=0), np.sum(np.equal(tr, i))) for i in range(classes)]
                     indivAccEpoch.append(indivPred)
 
@@ -239,11 +257,16 @@ if __name__ == '__main__':
                 saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
 
                 # dealing with massive validation sets (10% of train set), it is necessary to batch them
+                '''
+                **************************************
+                validation
+                **************************************
+                '''
                 for Viter_i in range(val_iter_per_epoch-1):
                     Vbatch_xs = X_val[Vindices[Viter_i]:Vindices[Viter_i+1]]
                     Vbatch_ys = Y_val[Vindices[Viter_i]:Vindices[Viter_i+1]]
 
-                    valLoss, valAcc, valPred, valTr = sess.run([cross_entropy, accuracy, prediction, truth],
+                    valLoss, valAcc, valPred, valTr, Vfeat = sess.run([cross_entropy, accuracy, prediction, truth,h_relu],
                              feed_dict={
                                  x: Vbatch_xs,
                                  y: Vbatch_ys,
@@ -253,18 +276,63 @@ if __name__ == '__main__':
                     accValEpoch.append(valAcc)
                     valIndivPred = [np.true_divide(np.sum(np.logical_and(np.equal(valPred, i), np.equal(valTr, i)), axis=0), np.sum(np.equal(valTr, i))) for i in range(classes)]
                     valIIndivAccEpoch.append(valIndivPred)
+                    valFeatEpoch.append(Vfeat)
                     if Viter_i % round(np.true_divide(val_iter_per_epoch,4)) == 0:
                         valIndivPred = np.around(valIndivPred, decimals=2)
                         print 'Validation Accuracy (batch = %d): ' % Viter_i + str(valAcc) #+ " Individual accuracy: "
                         # pprint(valIndivPred)
 
+                valFeatEpoch = np.asarray(flatten(valFeatEpoch))
                 meanValIndiviAcc = np.nanmean(valIIndivAccEpoch, axis=0)
                 meanAcc = np.mean(meanValIndiviAcc)
+
                 print 'Validation Accuracy (epoch = %d): ' % (start + epoch_i) + str(meanAcc) #+ "Individual Accuracy"
                 pprint(meanValIndiviAcc)
 
-                # print('Validation Mean accuracy (%d): ' % epoch_i + str(np.mean(accValEpoch)))
+                '''
+                **************************************
+                references
+                **************************************
+                '''
+                # if Y_ref.shape[0] <= batch_size:
+                #     print 'No need to batch references'
+                #     Rfeat = sess.run(h_relu,
+                #              feed_dict={
+                #                  x: X_ref,
+                #                  y: Y_ref,
+                #                  keep_prob: 1.0
+                #              })
+                #     refFeatEpoch = Rfeat
+                # else:
+                #     # print Rindices
+                #     # print ref_iter_per_epoch
+                #     for Riter_i in range(ref_iter_per_epoch-1):
+                #         Rbatch_xs = X_ref[Rindices[Riter_i]:Rindices[Riter_i+1]]
+                #         Rbatch_ys = Y_ref[Rindices[Riter_i]:Rindices[Riter_i+1]]
+                #
+                #         Rfeat = sess.run(h_relu,
+                #                  feed_dict={
+                #                      x: Rbatch_xs,
+                #                      y: Rbatch_ys,
+                #                      keep_prob: 1.0
+                #                  })
+                #         refFeatEpoch.append(Rfeat)
+                #     refFeatEpoch = np.asarray(flatten(refFeatEpoch))
 
+                '''
+                **************************************
+                references accuracy
+                **************************************
+                '''
+                # idP, overallAccRef, indivAccRef = computeRefAccuracy(refFeatEpoch,Y_ref,valFeatEpoch,Y_val)
+                # print 'Validation Accuracy with Ref (epoch = %d): ' % (start + epoch_i) + str(overallAccRef) + ', individual accuracy = '
+                # pprint(indivAccRef)
+
+                '''
+                **************************************
+                plotting
+                **************************************
+                '''
                 lossPlot.append(np.mean(lossEpoch))
                 accPlot.append(np.mean(accEpoch))
                 valLossPlot.append(np.mean(lossValEpoch))
@@ -292,6 +360,7 @@ if __name__ == '__main__':
                     'valAccAccel': valAccAccel,
                     'indivAcc': indivAccPlot,
                     'indivValAcc': indivValAccPlot,
+                    # 'indivValAccRef': indivAccRef,
                     'features': featPlot,
                     'labels': one_hot_to_dense(batch_ys) # labels of the last batch to plot some features
                     }
@@ -303,6 +372,11 @@ if __name__ == '__main__':
                 CNNplotterFast(lossAccDict)
                 # convolve = sess.run(h_conv3, feed_dict={x: batch_xs, y: batch_ys, keep_prob: 1.0})
                 # print(convolve[0].shape)
+
+                print 'Saving figure...'
+                figname = ckpt_dir + '/figures/result_' + str(epoch_i) + '.pdf'
+                plt.savefig(figname)
+                print '-------------------------------'
         if args.train == 0:
             # REMARK: the train on different animals has to be tested by considering the features, otherwise it would make no sense
             # one cannot associate different animals to the same labels of the training set!!!

@@ -8,6 +8,7 @@ if 'linux' in sys.platform:
 import matplotlib.pyplot as plt
 import warnings
 from py_utils import *
+import numpy.matlib as npm
 
 '''
 ****************************************************************************
@@ -113,7 +114,7 @@ def CNNplotterFast(lossAccDict):
     # get variables
     lossPlot, valLossPlot, lossSpeed,valLossSpeed, lossAccel, valLossAccel, \
     accPlot, valAccPlot, accSpeed,valAccSpeed, accAccel, valAccAccel, \
-    indivAcc,indivValAcc,\
+    indivAcc,indivValAcc, \
     features, labels = getVarFromDict(lossAccDict,[
         'loss', 'valLoss', 'lossSpeed', 'valLossSpeed', 'lossAccel', 'valLossAccel',
         'acc', 'valAcc', 'accSpeed', 'valAccSpeed', 'accAccel', 'valAccAccel',
@@ -124,7 +125,7 @@ def CNNplotterFast(lossAccDict):
     meanValIndiviAcc = indivValAcc[-1]
     numIndiv = len(meanIndivAcc)
     features = features[:30]
-    features = np.reshape(features, [features.shape[0],10,10])
+    features = np.reshape(features, [features.shape[0],int(np.sqrt(features.shape[1])),int(np.sqrt(features.shape[1]))])
     labels = labels[:30]
 
 
@@ -216,14 +217,18 @@ def CNNplotterFast(lossAccDict):
     ax7.set_axis_bgcolor('none')
 
     individuals = [str(j) for j in range(1,numIndiv+1)]
-    ind = np.arange(numIndiv)
+    ind = np.arange(numIndiv)+1
+    # width = 0.25
     width = 0.35
     rects1 = ax7.barh(ind, meanIndivAcc, width, color='red', alpha=0.4,label='training')
 
     rects2 = ax7.barh(ind+width, meanValIndiviAcc, width, color='blue', alpha=0.4,label='validation')
 
-    ax7.set_yticks((ind+width), individuals)
+    # rects3 = ax7.barh(ind+width*2, indivAccRef, width, color='green', alpha=0.4,label='validation')
+
+    # ax7.set_yticks((ind+width), individuals)
     ax7.set_xlim((0,1))
+    ax7.set_ylim((0,numIndiv+1))
     ax7.set_ylabel('individual')
     ax7.set_title('Individual accuracy')
     ax7.legend(fancybox=True, framealpha=0.05)
@@ -285,6 +290,45 @@ def computeDerivatives(array):
         accel = []
 
     return speed, accel
+
+def computeRefAccuracy(Rfeat,Y_ref,Vfeat,Y_val):
+    Y_ref = one_hot_to_dense(Y_ref)
+    Y_val = one_hot_to_dense(Y_val)
+    numIndiv = len(list(set(Y_ref)))
+    # print 'numIndiv', str(numIndiv)
+    numRef = len(Y_ref)
+    # print 'numRef', str(numRef)
+    numRefPerIndiv = numRef/numIndiv
+    # print 'numRefPerIndiv', str(numRefPerIndiv)
+    numProbImages = len(Y_val)
+    idP = []
+    for i, (Y_P, featP) in enumerate(zip(Y_val,Vfeat)):
+        # print 'Y_P', str(Y_P)
+        # print 'featP', str(featP)
+        featP_rep = npm.repmat(featP,numRef,1)
+        # print 'featP_rep', str(featP_rep)
+        dist = np.sum(np.abs(np.subtract(featP_rep,Rfeat)),1)
+        # print 'dist', str(dist)
+        bestRef = np.where(dist==np.min(dist))
+        # print 'bestRef', str(bestRef)
+        ids = Y_ref[bestRef]
+        # print ids
+
+        if len(list(set(ids))) == 1:
+            idP.append(ids[0])
+        else:
+            idP.append(np.float('nan'))
+
+    overallAcc = np.true_divide(np.sum(np.subtract(Y_val,idP) == 0),numProbImages)
+    indivAcc = [np.true_divide(np.sum(np.logical_and(np.equal(idP, i), np.equal(Y_val, i)), axis=0), np.sum(np.equal(Y_val, i))) for i in range(numIndiv)]
+
+    return idP, overallAcc, indivAcc
+
+# Rfeat = np.asarray([[1.,2.,3.1],[1.,2.,3.],[1.,2.,3.],[2.,3.,4.1],[3.,4.,5.],[3.,4.,5.1]])
+# Y_ref = np.asarray([0,0,1,1,2,2])
+# Vfeat = np.asarray([[1.,2.,3.],[1.,2.,3.1],[1.,2.,3.1],[3.,4.,5.],[2.,3.,4.1],[3.,4.,5.1]])
+# Y_val = np.asarray([0,1,0,2,1,2])
+# computeRefAccuracy(Rfeat,Y_ref,Vfeat,Y_val)
 
 # y = np.array([[1,0],[0,1],[1,0],[0,1]])
 # y_logits = np.array([[1,0],[0,1],[1,0],[1,0]])

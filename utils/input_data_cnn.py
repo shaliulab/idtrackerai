@@ -1,6 +1,6 @@
 import numpy as np
 import h5py
-from tf_utils import weight_variable, bias_variable, dense_to_one_hot
+from tf_utils import weight_variable, bias_variable, dense_to_one_hot, one_hot_to_dense
 import cPickle as pickle
 import os
 from pprint import *
@@ -76,7 +76,7 @@ def matToH5(pathToDatabase):
 # matlabImdb = ['imdb_15indiv_15000_1000_32_rotateAndCrop_25dpf_s1.mat']
 # [matToH5('../matlabexports/' + m) for m in matlabImdb]
 
-def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, ckpt_folder, imdbTest = None):
+def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckpt_folder="", imdbTest = None):
     '''
     imdbTrain: name of the database used for training and validation
     imdbTest: name of the databse used for testing
@@ -134,7 +134,7 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, ckpt_folder, i
         labels = np.array(flatten([i*np.ones(sum(labels==ind)).astype(int) for i,ind in enumerate(indicesIndiv)]))
         return images, labels
 
-    def splitter(images, labels, numImages, numIndiv, imsize):
+    def splitter(images, labels, numImages, numIndiv, imsize, numRef):
         # split (90-10%) a permuted database according to the number of requested images
         # remeber to PERMUTE images and labels before splitting them!
         numImages = numImages * numIndiv
@@ -154,7 +154,14 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, ckpt_folder, i
         Y_train = dense_to_one_hot(Y_train, n_classes=numIndiv)
         Y_val = dense_to_one_hot(Y_val, n_classes=numIndiv)
 
-        return X_train, Y_train, X_val, Y_val
+        # take references
+        if numRef > 0:
+            X_val, Y_val, X_ref, Y_ref = refTaker(X_val, Y_val, numRef, numIndiv)
+        else:
+            X_ref = []
+            Y_ref = []
+
+        return X_train, Y_train, X_val, Y_val, X_ref, Y_ref
 
     def cropper(images, labels, numImages, numIndiv, imsize):
         # crop a permuted database according to the number of requested images
@@ -170,6 +177,22 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, ckpt_folder, i
         Y_test = dense_to_one_hot(Y_test, n_classes=numIndiv)
 
         return X_test, Y_test
+
+    def refTaker(X,Y,numRef,numIndiv):
+        X_ref = []
+        Y_ref = []
+        for i in range(numIndiv):
+            refIndices = np.where(one_hot_to_dense(Y)==i)[0][:numRef]
+
+            X_ref.append(X[refIndices])
+            Y_ref.append(Y[refIndices])
+            X = np.delete(X,refIndices,axis=0)
+            Y = np.delete(Y,refIndices,axis=0)
+
+        X_ref = np.asarray(flatten(X_ref))
+        Y_ref = np.asarray(flatten(Y_ref))
+
+        return X, Y, X_ref, Y_ref
 
     # check if the train database exists, and load it!
     checkDatabase(imdbTrain)
@@ -195,7 +218,7 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, ckpt_folder, i
     imagesTrainS = imagesTrainS[permImagesTrain]
     labelsTrainS = labelsTrainS[permImagesTrain]
 
-    X_train, Y_train, X_val, Y_val = splitter(imagesTrainS, labelsTrainS, numTrain, numIndivTrainTest, imsizeTrain)
+    X_train, Y_train, X_val, Y_val, X_ref, Y_ref = splitter(imagesTrainS, labelsTrainS, numTrain, numIndivTrainTest, imsizeTrain, numRef)
 
     # check train's dimensions
     cardTrain = int(np.ceil(np.true_divide(np.multiply(numTrain,9),10)))*numIndivTrainTest
@@ -205,12 +228,20 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, ckpt_folder, i
     dimensionChecker(X_train.shape, dimTrainI)
     dimensionChecker(Y_train.shape, dimTrainL)
     # check val's dimensions
-    cardVal = int(np.ceil(np.true_divide(numTrain,10)))*numIndivTrainTest
+    cardVal = (int(np.ceil(np.true_divide(numTrain,10)))-numRef)*numIndivTrainTest
     dimValL = (cardVal, numIndivTrainTest)
     dimValI = (cardVal, imagesTrain.shape[2] * imagesTrain.shape[3])
 
     dimensionChecker(X_val.shape, dimValI)
     dimensionChecker(Y_val.shape, dimValL)
+
+    # check ref's dimensions
+    # cardRef = numRef*numIndivTrainTest
+    # dimRefL = (cardRef, numIndivTrainTest)
+    # dimRefI = (cardRef, imagesTrain.shape[2] * imagesTrain.shape[3])
+    #
+    # dimensionChecker(X_ref.shape, dimRefI)
+    # dimensionChecker(Y_ref.shape, dimRefL)
     # Get images, labels, and indices of individuals of the test set
     if numTest > 0:
         if imdbTest != None:
@@ -261,10 +292,10 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, ckpt_folder, i
         X_test = []
         Y_test = []
 
-    return numIndivTrainTest, imsizeTrain, X_train, Y_train, X_val, Y_val, X_test, Y_test
+    return numIndivTrainTest, imsizeTrain, X_train, Y_train, X_val, Y_val, X_test, Y_test, X_ref, Y_ref
 
 # loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, ckpt_folder, imdbTest = None):
-# numIndivTrainTest, imsizeTrain, X_train, Y_train, X_val, Y_val, X_test, Y_test = loadDataBase('25dpf_60indiv_22000ImPerInd_rotateAndCrop', 5, 10000, 1000,"hola")
+# numIndivTrainTest, imsizeTrain, X_train, Y_train, X_val, Y_val, X_test, Y_test, X_ref, Y_ref = loadDataBase('25dpf_60indiv_22000ImPerInd_rotateAndCrop', 10, 1000, 100,10)
 
 def dataHelper0(path, num_train, num_test, num_valid, ckpt_folder):
     Fish = {}
