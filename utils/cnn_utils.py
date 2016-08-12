@@ -1,3 +1,4 @@
+import os
 import tensorflow as tf
 import numpy as np
 from tf_utils import *
@@ -89,6 +90,66 @@ def buildSoftMaxWeights(inputSoftMax,n_fc,classes):
     b_fc = bias_variable([classes])
     y_logits = tf.matmul(inputSoftMax, W_fc) + b_fc
     return y_logits, W_fc, b_fc
+
+
+'''
+****************************************************************************
+Manage checkpoit folders, saving and restore
+*****************************************************************************
+'''
+
+def createSaver(varName, include):
+    '''
+    varName: string (name of part of the name of the variable)
+    include: boolean (save or discard)
+
+    Scans all the variables and save the ones that has 'varName' as part of their
+    name, if include is True or the contrary if include is False
+    '''
+    if include:
+        saver = tf.train.Saver([v for v in tf.all_variables() if varName in v.name])
+    elif not include:
+        saver = tf.train.Saver([v for v in tf.all_variables() if varName not in v.name])
+    else:
+        raise ValueError('The second argument has to be a boolean')
+
+    return saver
+
+
+def createCkptFolder(folderName, subfoldersNameList):
+    '''
+    create if it does not exist the folder folderName in CNN and
+    the same for the subfolders in the subfoldersNameList
+    '''
+    if not os.path.exists(folderName): # folder does not exist
+        os.makedirs(folderName) # create a folder
+        print folderName + ' has been created'
+    else:
+        print folderName + ' already exists'
+
+    subPaths = []
+    for name in subfoldersNameList:
+        subPath = folderName + '/' + name
+        if not os.path.exists(subPath):
+            os.makedirs(subPath)
+            print subPath + ' has been created'
+        else:
+            print subPath + ' already exists'
+        subPaths.append(subPath)
+    return subPaths
+
+
+def restoreFromFolder(pathToCkpt, saver, session):
+    '''
+    Restores variables stored in pathToCkpt with a certain saver,
+    for a particular (TF) session
+    '''
+    ckpt = tf.train.get_checkpoint_state(pathToCkpt)
+    if ckpt and ckpt.model_checkpoint_path:
+        print "restoring from " + ckpt.model_checkpoint_path
+        saver.restore(session, ckpt.model_checkpoint_path) # restore model variables
+    else:
+        raise ValueError('No model exists in folder %s' % pathToCkpt)
 
 '''
 ****************************************************************************

@@ -154,16 +154,16 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
         Y_train = dense_to_one_hot(Y_train, n_classes=numIndiv)
         Y_val = dense_to_one_hot(Y_val, n_classes=numIndiv)
 
-        # take references
-        if numRef > 0:
-            X_val, Y_val, X_ref, Y_ref = refTaker(X_val, Y_val, numRef, numIndiv)
-        else:
-            X_ref = []
-            Y_ref = []
+        # # take references from validation
+        # if numRef > 0:
+        #     X_val, Y_val, X_ref, Y_ref = refTaker(X_val, Y_val, numRef, numIndiv)
+        # else:
+        #     X_ref = []
+        #     Y_ref = []
 
-        return X_train, Y_train, X_val, Y_val, X_ref, Y_ref
+        return X_train, Y_train, X_val, Y_val #, X_ref, Y_ref
 
-    def cropper(images, labels, numImages, numIndiv, imsize):
+    def cropper(images, labels, numImages, numIndiv, imsize, numRef):
         # crop a permuted database according to the number of requested images
         # remeber to PERMUTE images and labels before cropping them!
         resolution = np.prod(imsize)
@@ -176,11 +176,19 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
         # dense to one hot, i.e. [i]-->[0,0,...0,1 (ith position),0,..,0]
         Y_test = dense_to_one_hot(Y_test, n_classes=numIndiv)
 
-        return X_test, Y_test
+        # take references from test
+        if numRef > 0:
+            X_test, Y_test, X_ref, Y_ref = refTaker(X_val, Y_val, numRef, numIndiv)
+        else:
+            X_ref = []
+            Y_ref = []
+
+        return X_test, Y_test, X_ref, Y_ref
 
     def refTaker(X,Y,numRef,numIndiv):
         X_ref = []
         Y_ref = []
+        # Maybe improve this part (GPU?)
         for i in range(numIndiv):
             refIndices = np.where(one_hot_to_dense(Y)==i)[0][:numRef]
 
@@ -218,7 +226,7 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
     imagesTrainS = imagesTrainS[permImagesTrain]
     labelsTrainS = labelsTrainS[permImagesTrain]
 
-    X_train, Y_train, X_val, Y_val, X_ref, Y_ref = splitter(imagesTrainS, labelsTrainS, numTrain, numIndivTrainTest, imsizeTrain, numRef)
+    X_train, Y_train, X_val, Y_val = splitter(imagesTrainS, labelsTrainS, numTrain, numIndivTrainTest, imsizeTrain, numRef)
 
     # check train's dimensions
     cardTrain = int(np.ceil(np.true_divide(np.multiply(numTrain,9),10)))*numIndivTrainTest
@@ -228,7 +236,7 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
     dimensionChecker(X_train.shape, dimTrainI)
     dimensionChecker(Y_train.shape, dimTrainL)
     # check val's dimensions
-    cardVal = (int(np.ceil(np.true_divide(numTrain,10)))-numRef)*numIndivTrainTest
+    cardVal = int(np.ceil(np.true_divide(numTrain,10)))*numIndivTrainTest
     dimValL = (cardVal, numIndivTrainTest)
     dimValI = (cardVal, imagesTrain.shape[2] * imagesTrain.shape[3])
 
@@ -278,11 +286,11 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
         imagesTestS, labelsTestS = sliceDatabase(imagesTest, labelsTest, indivTest)
         imagesTestS = imagesTestS[permImagesTest]
         labelsTestS = labelsTestS[permImagesTest]
-        X_test, Y_test = cropper(imagesTestS, labelsTestS, numTest, numIndivTrainTest, imsizeTest)
+        X_test, Y_test, X_ref, Y_ref = cropper(imagesTestS, labelsTestS, numTest, numIndivTrainTest, imsizeTest, numRef)
         # check test's dimensions
-        cardTest = numTest*numIndivTrainTest
+        cardTest = (numTest - numRef) * numIndivTrainTest
         dimTestL = (cardTest, numIndivTrainTest)
-        dimTestI = (cardTest, imagesTest.shape[2]*imagesTest.shape[3])
+        dimTestI = (cardTest, imagesTest.shape[2] * imagesTest.shape[3])
 
         dimensionChecker(X_test.shape, dimTestI)
         dimensionChecker(Y_test.shape, dimTestL)
@@ -291,6 +299,8 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
         print 'The number of images for test is zero.'
         X_test = []
         Y_test = []
+        X_ref = []
+        Y_ref = [] 
 
     return numIndivTrainTest, imsizeTrain, X_train, Y_train, X_val, Y_val, X_test, Y_test, X_ref, Y_ref
 
