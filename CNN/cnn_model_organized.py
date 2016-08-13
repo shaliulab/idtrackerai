@@ -154,208 +154,250 @@ if __name__ == '__main__':
             start = global_step.eval() # get last global_step
             print "\nStart from:", start
 
-            # We'll now train in minibatches and report accuracy, loss:
+
             n_epochs = args.num_epochs - start
             batch_size = args.batch_size
+
+            # We'll now fine tune in minibatches and report accuracy, loss:
+            n_epochs = args.num_epochs - start
+            batch_size = args.batch_size
+
             train_size = len(Y_train)
-            iter_per_epoch = int(np.ceil(np.true_divide(train_size,batch_size)))
+            train_iter_per_epoch = int(np.ceil(np.true_divide(train_size,batch_size)))
 
             val_size = len(Y_val)
             val_iter_per_epoch = int(np.ceil(np.true_divide(val_size,batch_size)))
 
-            print "Train size:", train_size
             print "Batch size:", batch_size
-            print "Iter per epoch:", iter_per_epoch
-            print "validation's batches"
-            print "val size:", val_size
-            print "val Iter per epoch:", val_iter_per_epoch
+            print "Training's batches"
+            print "Train size:", train_size
+            print "Train iter per epoch:", train_iter_per_epoch
+            print "Validation's batches"
+            print "Val size:", val_size
+            print "Val Iter per epoch:", val_iter_per_epoch, "\n"
 
-            indices = np.linspace(0, train_size, iter_per_epoch)
-            indices = indices.astype('int')
+            Tindices = np.linspace(0, train_size, train_iter_per_epoch)
+            Tindices = Tindices.astype('int')
             Vindices = np.linspace(0, val_size, val_iter_per_epoch)
             Vindices = Vindices.astype('int')
 
             if start == 0 or not os.path.exists(ckpt_dir_model + "/lossAcc.pkl"):
-                lossPlot = []
-                accPlot = []
+                # ref lists for plotting
+                trainLossPlot = []
+                trainAccPlot = []
+                trainIndivAccPlot = []
+                # test lists for ploting
                 valLossPlot = []
                 valAccPlot = []
-                indivAccPlot = []
-                indivValAccPlot = []
+                valIndivAccPlot = []
             else:
                 ''' load from pickle '''
-                print 'Loading loss and accuracies from previous checkpoint...'
                 lossAccDict = pickle.load( open( ckpt_dir_model + "/lossAcc.pkl", "rb" ) )
-
-                lossPlot = lossAccDict['loss']
-                accPlot = lossAccDict['acc']
+                # ref lists for plotting
+                trainLossPlot = lossAccDict['loss']
+                trainAccPlot = lossAccDict['acc']
+                trainIndivAccPlot = lossAccDict['indivAcc']
+                # test lists for plotting
                 valLossPlot = lossAccDict['valLoss']
                 valAccPlot = lossAccDict['valAcc']
-                indivAccPlot = lossAccDict['indivAcc']
-                indivValAccPlot = lossAccDict['indivValAcc']
+                valIndivAccPlot = lossAccDict['indivValAcc']
 
             # print "Start from:", start
             for epoch_i in range(n_epochs):
-                lossEpoch = []
-                accEpoch = []
-                featPlot = []
-                lossValEpoch = []
-                accValEpoch = []
-                indivAccEpoch = []
-                valIIndivAccEpoch = []
-                valFeatEpoch = []
-                # refFeatEpoch = []
-
+                print '**** Epoch %i ****' % (epoch_i + start)
                 '''
                 **************************************
-                training
+                Training
                 **************************************
                 '''
-                for iter_i in range(iter_per_epoch-1):
-                    batch_xs = X_train[indices[iter_i]:indices[iter_i+1]]
-                    batch_ys = Y_train[indices[iter_i]:indices[iter_i+1]]
-
-                    loss, acc, pred, tr, feat = sess.run([cross_entropy,accuracy, prediction, truth, h_relu],
-                                    feed_dict={
-                                        x: batch_xs,
-                                        y: batch_ys,
-                                        keep_prob: 1.0
-                                    })
-                    lossEpoch.append(loss)
-                    accEpoch.append(acc)
+                if Y_train.shape[0] <= batch_size:
+                    # Run forward step to compute loss, accuracy...
+                    trainLoss, trainAcc, trainPred, trainTr, trainFeat = sess.run([cross_entropy,accuracy, prediction, truth, h_relu],
+                             feed_dict={
+                                 x: X_train,
+                                 y: Y_train,
+                                 keep_prob: 1.0
+                             })
 
                     # individual accuracy
-                    indivPred = [np.true_divide(np.sum(np.logical_and(np.equal(pred, i), np.equal(tr, i)), axis=0), np.sum(np.equal(tr, i))) for i in range(classes)]
-                    indivAccEpoch.append(indivPred)
+                    trainIndivAcc = [np.true_divide(np.sum(np.logical_and(np.equal(trainPred, i), np.equal(trainTr, i)), axis=0), np.sum(np.equal(refTr, i))) for i in range(classes)]
 
-                    if iter_i % round(np.true_divide(iter_per_epoch,4)) == 0:
-                        indivPred = np.around(indivPred, decimals=2)
-                        print "Iter " + str(iter_i) + ", Minibatch Loss= " + "{:.6f}".format(loss) + ", Training Accuracy= " + "{:.5f}".format(acc) #+ ", Individual Accuracy= "
-                        # pprint(indivPred)
-
+                    # Run backward step to compute and apply the gradients
                     sess.run(optimizer, feed_dict={
-                        x: batch_xs, y: batch_ys, keep_prob: 1})
-                # take the last batch to plot some features (from the last relu layer)
-                featPlot = feat
+                        x: X_ref, y: Y_ref, keep_prob: 1})
 
-                # nanmean because in minibatches some individuals could not appear...
-                meanIndivAcc = np.nanmean(indivAccEpoch, axis=0)
-                meanAcc = np.mean(meanIndivAcc)
-                print('Training Accuracy (%d): ' % (start + epoch_i) + str(meanAcc) + " Individual Accuracy")
-                pprint(meanIndivAcc)
+                    # Labels to plot the features
+                    trainFeatLabels = Y_train
 
-                # update
+                else:
+                    print 'Training with batches of size %i' % batch_size
+                    # lists to save each batch of the epoch
+                    lossEpoch = []
+                    accEpoch = []
+                    indivAccEpoch = []
+
+                    for iter_i in range(train_iter_per_epoch-1):
+                        # Take data for the batch
+                        batch_xs = X_train[Tindices[iter_i]:Tindices[iter_i+1]]
+                        batch_ys = Y_train[Tindices[iter_i]:Tindices[iter_i+1]]
+
+                        # Run forward step to compute loss, accuracy...
+                        batchLoss, batchAcc, batchPred, batchTr, batchFeat = sess.run([cross_entropy,accuracy, prediction, truth, h_relu],
+                                        feed_dict={
+                                            x: batch_xs,
+                                            y: batch_ys,
+                                            keep_prob: 1.0
+                                        })
+                        # individual accuracy
+                        indivBatchAcc = [np.true_divide(np.sum(np.logical_and(np.equal(batchPred, i), np.equal(batchTr, i)), axis=0), np.sum(np.equal(batchTr, i))) for i in range(classes)]
+
+                        # Append batch results to the lists for the epoch
+                        lossEpoch.append(batchLoss)
+                        accEpoch.append(batchAcc)
+                        indivAccEpoch.append(indivBatchAcc)
+
+                        # Print per batch loss and accuracies
+                        if iter_i % round(np.true_divide(train_iter_per_epoch,4)) == 0:
+                            print "Batch " + str(iter_i) + \
+                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                                ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+
+                        # Run backward step to compute and apply the gradients
+                        sess.run(optimizer, feed_dict={
+                            x: batch_xs, y: batch_ys, keep_prob: 1})
+
+                    # When fine tuning with batches we take the features of the last batch
+                    # as the features to be ploted
+                    trainFeat = batchFeat
+                    trainFeatLabels = batch_ys
+
+                    # Compute mean loss, acc, and indivAcc for the epoch
+                    # Note that we are overwriting the loss and acc of the last batch
+                    # we do this to be consistent with the names of the case in which there are not batches
+                    # This way the appending of results for the plot can be the same for the case with or
+                    # without batches.
+                    trainLoss = np.mean(lossEpoch)
+                    trainAcc = np.mean(accEpoch)
+                    trainIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
+
+                # Batch finished
+                print('Train (epoch %d): ' % (start + epoch_i) + \
+                    " Loss=" + "{:.6f}".format(trainLoss) + \
+                    ", Accuracy=" + "{:.5f}".format(trainAcc) + \
+                    ", Individual Accuracy=")
+                print(trainIndivAcc)
+
+                # update global step and save model
                 global_step.assign(global_step + 1).eval() # set and update(eval) global_step with index, i
                 saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
                 saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
 
-                # dealing with massive validation sets (10% of train set), it is necessary to batch them
                 '''
                 **************************************
-                validation
+                Validation
                 **************************************
                 '''
-                for Viter_i in range(val_iter_per_epoch-1):
-                    Vbatch_xs = X_val[Vindices[Viter_i]:Vindices[Viter_i+1]]
-                    Vbatch_ys = Y_val[Vindices[Viter_i]:Vindices[Viter_i+1]]
-
-                    valLoss, valAcc, valPred, valTr, Vfeat = sess.run([cross_entropy, accuracy, prediction, truth,h_relu],
+                if Y_val.shape[0] <= batch_size:
+                    print 'Validating'
+                    # Run forward step to compute loss, accuracy...
+                    valLoss, valAcc, valPred, valTr, valFeat = sess.run([cross_entropy,accuracy, prediction, truth, h_relu],
                              feed_dict={
-                                 x: Vbatch_xs,
-                                 y: Vbatch_ys,
+                                 x: X_val,
+                                 y: Y_val,
                                  keep_prob: 1.0
                              })
-                    lossValEpoch.append(valLoss)
-                    accValEpoch.append(valAcc)
-                    valIndivPred = [np.true_divide(np.sum(np.logical_and(np.equal(valPred, i), np.equal(valTr, i)), axis=0), np.sum(np.equal(valTr, i))) for i in range(classes)]
-                    valIIndivAccEpoch.append(valIndivPred)
-                    valFeatEpoch.append(Vfeat)
-                    if Viter_i % round(np.true_divide(val_iter_per_epoch,4)) == 0:
-                        valIndivPred = np.around(valIndivPred, decimals=2)
-                        print 'Validation Accuracy (batch = %d): ' % Viter_i + str(valAcc) #+ " Individual accuracy: "
-                        # pprint(valIndivPred)
 
-                valFeatEpoch = np.asarray(flatten(valFeatEpoch))
-                meanValIndiviAcc = np.nanmean(valIIndivAccEpoch, axis=0)
-                meanAcc = np.mean(meanValIndiviAcc)
+                    # individual accuracy
+                    valIndivAcc = [np.true_divide(np.sum(np.logical_and(np.equal(valPred, i), np.equal(valTr, i)), axis=0), np.sum(np.equal(valTr, i))) for i in range(classes)]
 
-                print 'Validation Accuracy (epoch = %d): ' % (start + epoch_i) + str(meanAcc) #+ "Individual Accuracy"
-                pprint(meanValIndiviAcc)
+                else:
+                    print 'Validating with batches of size %i' % batch_size
+                    # lists to save each batch of the epoch
+                    lossEpoch = []
+                    accEpoch = []
+                    indivAccEpoch = []
 
-                '''
-                **************************************
-                references
-                **************************************
-                '''
-                # if Y_ref.shape[0] <= batch_size:
-                #     print 'No need to batch references'
-                #     Rfeat = sess.run(h_relu,
-                #              feed_dict={
-                #                  x: X_ref,
-                #                  y: Y_ref,
-                #                  keep_prob: 1.0
-                #              })
-                #     refFeatEpoch = Rfeat
-                # else:
-                #     # print Rindices
-                #     # print ref_iter_per_epoch
-                #     for Riter_i in range(ref_iter_per_epoch-1):
-                #         Rbatch_xs = X_ref[Rindices[Riter_i]:Rindices[Riter_i+1]]
-                #         Rbatch_ys = Y_ref[Rindices[Riter_i]:Rindices[Riter_i+1]]
-                #
-                #         Rfeat = sess.run(h_relu,
-                #                  feed_dict={
-                #                      x: Rbatch_xs,
-                #                      y: Rbatch_ys,
-                #                      keep_prob: 1.0
-                #                  })
-                #         refFeatEpoch.append(Rfeat)
-                #     refFeatEpoch = np.asarray(flatten(refFeatEpoch))
+                    for iter_i in range(val_iter_per_epoch-1):
+                        # Take data for the batch
+                        batch_xs = X_val[Vindices[iter_i]:Vindices[iter_i+1]]
+                        batch_ys = Y_val[Vindices[iter_i]:Vindices[iter_i+1]]
 
-                '''
-                **************************************
-                references accuracy
-                **************************************
-                '''
-                # # idP, overallAccRef, indivAccRef = computeRefAccuracy(refFeatEpoch,Y_ref,valFeatEpoch,Y_val)
-                # # print 'Validation Accuracy with Ref (epoch = %d): ' % (start + epoch_i) + str(overallAccRef) + ', individual accuracy = '
-                # # pprint(indivAccRef)
-                #
+                        # Run forward step to compute loss, accuracy...
+                        batchLoss, batchAcc, batchPred, batchTr, batchFeat = sess.run([cross_entropy,accuracy, prediction, truth, h_relu],
+                                        feed_dict={
+                                            x: batch_xs,
+                                            y: batch_ys,
+                                            keep_prob: 1.0
+                                        })
+                        # individual accuracy
+                        indivBatchAcc = [np.true_divide(np.sum(np.logical_and(np.equal(batchPred, i), np.equal(batchTr, i)), axis=0), np.sum(np.equal(batchTr, i))) for i in range(classes)]
+
+                        # Append batch results to the lists for the epoch
+                        lossEpoch.append(batchLoss)
+                        accEpoch.append(batchAcc)
+                        indivAccEpoch.append(indivBatchAcc)
+
+                        # Print per batch loss and accuracies
+                        if iter_i % round(np.true_divide(val_iter_per_epoch,4)) == 0:
+                            print "Batch " + str(iter_i) + \
+                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                                ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+
+                    # Compute mean loss, acc, and indivAcc for the epoch
+                    # Note that we are overwriting the loss and acc of the last batch
+                    # we do this to be consistent with the names of the case in which there are not batches
+                    # This way the appending of results for the plot can be the same for the case with or
+                    # without batches.
+                    valLoss = np.mean(lossEpoch)
+                    valAcc = np.mean(accEpoch)
+                    valIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
+
+                # Batch finished
+                print('Validation (epoch %d): ' % (start + epoch_i) + \
+                    " Loss=" + "{:.6f}".format(valLoss) + \
+                    ", Accuracy=" + "{:.5f}".format(valAcc) + \
+                    ", Individual Accuracy=")
+                print(valIndivAcc)
+
                 '''
                 **************************************
                 saving dict with loss function and accuracy values
                 **************************************
                 '''
-                lossPlot.append(np.mean(lossEpoch))
-                accPlot.append(np.mean(accEpoch))
-                valLossPlot.append(np.mean(lossValEpoch))
-                valAccPlot.append(np.mean(accValEpoch))
-                indivAccPlot.append(meanIndivAcc)
-                indivValAccPlot.append(meanValIndiviAcc)
 
-                lossSpeed, lossAccel = computeDerivatives(lossPlot)
-                accSpeed, accAccel = computeDerivatives(accPlot)
+                # References
+                trainLossPlot.append(trainLoss)
+                trainAccPlot.append(trainAcc)
+                trainIndivAccPlot.append(trainIndivAcc)
+                trainLossSpeed, trainLossAccel = computeDerivatives(trainLossPlot)
+                trainAccSpeed, trainAccAccel = computeDerivatives(trainAccPlot)
+                trainFeatPlot = trainFeat
+
+                # Test
+                valLossPlot.append(valLoss)
+                valAccPlot.append(valAcc)
+                valIndivAccPlot.append(valIndivAcc)
                 valLossSpeed, valLossAccel = computeDerivatives(valLossPlot)
                 valAccSpeed, valAccAccel = computeDerivatives(valAccPlot)
 
                 lossAccDict = {
-                    'loss': lossPlot,
+                    'loss': trainLossPlot,
                     'valLoss': valLossPlot,
-                    'lossSpeed': lossSpeed,
+                    'lossSpeed': trainLossSpeed,
                     'valLossSpeed': valLossSpeed,
-                    'lossAccel': lossAccel,
+                    'lossAccel': trainLossAccel,
                     'valLossAccel': valLossAccel,
-                    'acc': accPlot,
+                    'acc': trainAccPlot,
                     'valAcc': valAccPlot,
-                    'accSpeed': accSpeed,
+                    'accSpeed': trainAccSpeed,
                     'valAccSpeed': valAccSpeed,
-                    'accAccel': accAccel,
-                    'valAccAccel': valAccAccel,
-                    'indivAcc': indivAccPlot,
-                    'indivValAcc': indivValAccPlot,
+                    'accAccel': trainAccSpeed,
+                    'valAccAccel': valAccSpeed,
+                    'indivAcc': trainIndivAccPlot,
+                    'indivValAcc': valIndivAccPlot,
                     # 'indivValAccRef': indivAccRef,
-                    'features': featPlot,
-                    'labels': one_hot_to_dense(batch_ys) # labels of the last batch to plot some features
+                    'features': trainFeatPlot,
+                    'labels': one_hot_to_dense(trainFeatLabels) # labels of the last batch of the references to plot some features
                     }
 
                 pickle.dump( lossAccDict , open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
@@ -376,7 +418,7 @@ if __name__ == '__main__':
                 print '-------------------------------'
 
         '''
-        *************************************************************************
+        ************************************************************************
         ********************************Testing*********************************
         ************************************************************************
         '''
@@ -388,7 +430,6 @@ if __name__ == '__main__':
 
             # Create ckpt folder for the test if does not exist,
             # if it exist it gives the path to the cktp subfolders
-            ckpt_dir = ckpt_dir + '_test'
             [ckpt_dir_model,ckpt_dir_softmax,ckpt_dir_figures] = createCkptFolder(ckpt_dir, ['model', 'softmax', 'figures'])
 
             # Load weights from a pretrained model if there is not any model saved
@@ -412,6 +453,10 @@ if __name__ == '__main__':
             print "\nStart from:", start
 
             ''' ****** fine tuning ******'''
+
+            n_epochs = args.num_epochs - start
+            batch_size = args.batch_size
+
             # We'll now fine tune in minibatches and report accuracy, loss:
             n_epochs = args.num_epochs - start
             batch_size = args.batch_size
@@ -459,7 +504,7 @@ if __name__ == '__main__':
 
             # print "Start from:", start
             for epoch_i in range(n_epochs):
-                print '**** Epoch %i ****' % epoch_i
+                print '**** Epoch %i ****' % (epoch_i + start)
                 '''
                 **************************************
                 Fine tuning
@@ -520,7 +565,7 @@ if __name__ == '__main__':
 
                         # Run backward step to compute and apply the gradients
                         sess.run(optimizer, feed_dict={
-                            x: batch_xs, y: batch_ys, keep_prob: 1.0})
+                            x: batch_xs, y: batch_ys, keep_prob: 1})
 
                     # When fine tuning with batches we take the features of the last batch
                     # as the features to be ploted
@@ -565,6 +610,7 @@ if __name__ == '__main__':
 
                     # individual accuracy
                     testIndivAcc = [np.true_divide(np.sum(np.logical_and(np.equal(testPred, i), np.equal(testTr, i)), axis=0), np.sum(np.equal(testTr, i))) for i in range(classes)]
+                    testMeanIndivAcc = np.mean(testIndivAcc)
 
                 else:
                     print 'Testing with batches of size %i' % batch_size

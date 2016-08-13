@@ -592,13 +592,13 @@ def computeDerivatives(array):
     if len(array) > 1:
         speed = np.diff(array)
     else:
-        warnings.warn('Not enough points to compute the speed')
+        # warnings.warn('Not enough points to compute the speed')
         speed = []
 
     if len(array) > 2:
         accel = np.diff(speed)
     else:
-        warnings.warn('Not enough points to compute the acceleration')
+        # warnings.warn('Not enough points to compute the acceleration')
         accel = []
 
     return speed, accel

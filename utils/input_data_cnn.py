@@ -163,7 +163,7 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
 
         return X_train, Y_train, X_val, Y_val #, X_ref, Y_ref
 
-    def cropper(images, labels, numImages, numIndiv, imsize, numRef):
+    def cropper(images, labels, numImages, numIndiv, imsize, numRef,loadRefPerm):
         # crop a permuted database according to the number of requested images
         # remeber to PERMUTE images and labels before cropping them!
         resolution = np.prod(imsize)
@@ -178,14 +178,15 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
 
         # take references from test
         if numRef > 0:
-            X_test, Y_test, X_ref, Y_ref = refTaker(X_val, Y_val, numRef, numIndiv)
+            X_test, Y_test, X_ref, Y_ref = refTaker(X_test, Y_test, numRef, numIndiv,loadRefPerm)
         else:
-            X_ref = []
-            Y_ref = []
+            print 'Zero references requested, the list of references will be empty...'
+            X_ref = np.asarray([])
+            Y_ref = np.asarray([])
 
         return X_test, Y_test, X_ref, Y_ref
 
-    def refTaker(X,Y,numRef,numIndiv):
+    def refTaker(X,Y,numRef,numIndiv,loadRefPerm):
         X_ref = []
         Y_ref = []
         # Maybe improve this part (GPU?)
@@ -197,8 +198,12 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
             X = np.delete(X,refIndices,axis=0)
             Y = np.delete(Y,refIndices,axis=0)
 
+        # We need to permute the references since they have been created in order
         X_ref = np.asarray(flatten(X_ref))
         Y_ref = np.asarray(flatten(Y_ref))
+        perm = permuter(len(Y_ref),'references',loadRefPerm)
+        X_ref = X_ref[perm]
+        Y_ref = Y_ref[perm]
 
         return X, Y, X_ref, Y_ref
 
@@ -286,7 +291,7 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
         imagesTestS, labelsTestS = sliceDatabase(imagesTest, labelsTest, indivTest)
         imagesTestS = imagesTestS[permImagesTest]
         labelsTestS = labelsTestS[permImagesTest]
-        X_test, Y_test, X_ref, Y_ref = cropper(imagesTestS, labelsTestS, numTest, numIndivTrainTest, imsizeTest, numRef)
+        X_test, Y_test, X_ref, Y_ref = cropper(imagesTestS, labelsTestS, numTest, numIndivTrainTest, imsizeTest, numRef,os.path.exists(ckpt_folder))
         # check test's dimensions
         cardTest = (numTest - numRef) * numIndivTrainTest
         dimTestL = (cardTest, numIndivTrainTest)
@@ -297,10 +302,10 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
 
     else:
         print 'The number of images for test is zero.'
-        X_test = []
-        Y_test = []
-        X_ref = []
-        Y_ref = [] 
+        X_test = np.asarray([])
+        Y_test = np.asarray([])
+        X_ref = np.asarray([])
+        Y_ref = np.asarray([])
 
     return numIndivTrainTest, imsizeTrain, X_train, Y_train, X_val, Y_val, X_test, Y_test, X_ref, Y_ref
 
