@@ -224,7 +224,7 @@ if __name__ == '__main__':
 
                     # Run backward step to compute and apply the gradients
                     sess.run(optimizer, feed_dict={
-                        x: X_ref, y: Y_ref, keep_prob: 1})
+                        x: X_ref, y: Y_ref, keep_prob: 1.0})
 
                     # Labels to plot the features
                     trainFeatLabels = Y_train
@@ -264,7 +264,7 @@ if __name__ == '__main__':
 
                         # Run backward step to compute and apply the gradients
                         sess.run(optimizer, feed_dict={
-                            x: batch_xs, y: batch_ys, keep_prob: 1})
+                            x: batch_xs, y: batch_ys, keep_prob: 1.0})
 
                     # When fine tuning with batches we take the features of the last batch
                     # as the features to be ploted
@@ -516,7 +516,7 @@ if __name__ == '__main__':
                              feed_dict={
                                  x: X_ref,
                                  y: Y_ref,
-                                 keep_prob: 1.0
+                                 keep_prob: 0.8
                              })
 
                     # individual accuracy
@@ -525,7 +525,7 @@ if __name__ == '__main__':
 
                     # Run backward step to compute and apply the gradients
                     sess.run(optimizer, feed_dict={
-                        x: X_ref, y: Y_ref, keep_prob: 1})
+                        x: X_ref, y: Y_ref, keep_prob: 0.8})
 
                     # Labels to plot the features
                     refFeatLabels = Y_ref
@@ -547,7 +547,7 @@ if __name__ == '__main__':
                                         feed_dict={
                                             x: batch_xs,
                                             y: batch_ys,
-                                            keep_prob: 1.0
+                                            keep_prob: 0.8
                                         })
                         # individual accuracy
                         indivBatchAcc = [np.true_divide(np.sum(np.logical_and(np.equal(batchPred, i), np.equal(batchTr, i)), axis=0), np.sum(np.equal(batchTr, i))) for i in range(classes)]
@@ -565,7 +565,7 @@ if __name__ == '__main__':
 
                         # Run backward step to compute and apply the gradients
                         sess.run(optimizer, feed_dict={
-                            x: batch_xs, y: batch_ys, keep_prob: 1})
+                            x: batch_xs, y: batch_ys, keep_prob: 0.8})
 
                     # When fine tuning with batches we take the features of the last batch
                     # as the features to be ploted
