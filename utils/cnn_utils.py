@@ -13,6 +13,31 @@ import numpy.matlib as npm
 from pprint import *
 from tensorflow.python.platform import gfile
 import cPickle as pickle
+import re
+
+'''
+****************************************************************************
+Tensorboard
+*****************************************************************************
+'''
+
+def _activation_summary(x):
+  """Helper to create summaries for activations.
+  Creates a summary that provides a histogram of activations.
+  Creates a summary that measure the sparsity of activations.
+  Args:
+    x: Tensor
+  Returns:
+    nothing
+  """
+  # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
+  # session. This helps the clarity of presentation on tensorboard.
+  tensor_name = re.sub('%s_[0-9]*/' % 'tower', '', x.op.name)
+  tf.histogram_summary(tensor_name + '/activations', x)
+  tf.scalar_summary(tensor_name + '/sparsity', tf.nn.zero_fraction(x))
+
+def _add_loss_summary(loss):
+    tf.scalar_summary(loss.op.name, loss)
 
 '''
 ****************************************************************************
@@ -27,26 +52,29 @@ def computeVolume(width, height, strides):
     heightS = int(np.ceil(height/c2))
     return widthS, heightS
 
-def buildConv2D(Wname, Bname, inputWidth, inputHeight, inputDepth, inputConv ,filter_size, n_filters, stride, pad):
-    # WConv = weight_variable([filter_size, filter_size, inputDepth, n_filters])
-    # bConv = bias_variable([n_filters])
-    WConv = tf.get_variable(
-        Wname,
-        [filter_size, filter_size, inputDepth, n_filters],
-        initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
-        )
-    bConv = tf.get_variable(
-        Bname,
-        [n_filters],
-        initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
-        )
-    hConv = tf.nn.conv2d(name = Wname + Bname,
-                input=inputConv,
-                 filter=WConv,
-                 strides=stride,
-                 padding=pad) + bConv
+def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filter_size, n_filters, stride, pad):
+    with tf.variable_scope(scopeName) as scope:
+        W = tf.get_variable(
+            'weights',
+            [filter_size, filter_size, inputDepth, n_filters],
+            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            )
+        b = tf.get_variable(
+            'biases',
+            [n_filters],
+            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            )
+        conv = tf.nn.conv2d(
+                    input=inputConv,
+                     filter=W,
+                     strides=stride,
+                     padding=pad)
+        convb = tf.nn.bias_add(conv, b, name = scope.name)
+
+        _activation_summary(convb)
+
     w,h = computeVolume(inputWidth, inputHeight, stride)
-    return hConv,w,h
+    return convb,w,h
 
 
 def maxpool2d(name,inputWidth, inputHeight, inputPool, pool=2 , stride=[1,2,2,1] ,pad='VALID'):
@@ -60,34 +88,44 @@ def maxpool2d(name,inputWidth, inputHeight, inputPool, pool=2 , stride=[1,2,2,1]
     w, h = computeVolume(inputWidth, inputHeight, stride)
     return max_pool, w, h
 
-def buildFc(Wname, Bname,inputFc,height,width,n_filters,n_fc,keep_prob):
-    W_fc = tf.get_variable(
-        Wname,
-        [height * width * n_filters, n_fc],
-        initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
-        )
-    b_fc = tf.get_variable(
-        Bname,
-        [n_fc],
-        initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
-        )
-    h_fc = tf.add(tf.matmul(inputFc, W_fc), b_fc,name = Wname + Bname)
-    h_fc_drop = tf.nn.dropout(h_fc, keep_prob, name = Wname + Bname + 'Dropout')
-    return h_fc_drop
+def buildFc(scopeName, inputFc, height, width, n_filters, n_fc, keep_prob):
+    with tf.variable_scope(scopeName) as scope:
+        W = tf.get_variable(
+            'weights',
+            [height * width * n_filters, n_fc],
+            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            )
+        b = tf.get_variable(
+            'biases',
+            [n_fc],
+            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            )
+        fc = tf.add(tf.matmul(inputFc, W), b)
+        fc_drop = tf.nn.dropout(fc, keep_prob, name = scope.name)
+        _activation_summary(fc_drop)
+    return fc_drop
 
-def buildSoftMax(Wname, Bname,inputSoftMax,n_fc,classes):
-    W_fc = tf.get_variable(
-        Wname,
-        [n_fc, classes],
-        initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
-        )
-    b_fc = tf.get_variable(
-        Bname,
-        [classes],
-        initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
-        )
-    y_logits = tf.add(tf.matmul(inputSoftMax, W_fc), b_fc, name = Wname + Bname + 'SoftMax')
-    return y_logits
+def reLU(scopeName, inputRelu):
+    with tf.variable_scope(scopeName) as scope:
+        relu = tf.nn.relu(inputRelu, name = scope.name)
+        _activation_summary(relu)
+    return relu
+
+def buildSoftMax(scopeName, inputSoftMax, n_fc, classes):
+    with tf.variable_scope(scopeName) as scope:
+        W = tf.get_variable(
+            'weights',
+            [n_fc, classes],
+            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            )
+        b = tf.get_variable(
+            'biases',
+            [classes],
+            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            )
+        logits = tf.add(tf.matmul(inputSoftMax, W), b, name = scope.name)
+        _activation_summary(logits)
+    return logits
 
 # def buildSoftMaxWeights(inputSoftMax,n_fc,classes):
 #     # the same as build softmax, but outputs the weights for visualization
@@ -95,255 +133,6 @@ def buildSoftMax(Wname, Bname,inputSoftMax,n_fc,classes):
 #     b_fc = bias_variable([classes])
 #     y_logits = tf.matmul(inputSoftMax, W_fc) + b_fc
 #     return y_logits, W_fc, b_fc
-
-'''
-****************************************************************************
-Train validate utilities
-*****************************************************************************
-'''
-
-def trainValidate(start, n_epochs, batch_size, X_train, Y_train, X_val, Y_val, ckpt_dir_model, classes, sess ):
-
-    with gfile.FastGFile("./ckp_dir_trainValFunc/train.pb","rb") as f:
-        graph_def = tf.GraphDef()
-        graph_def.ParseFromString(f.read())
-        sess.graph.as_default()
-        # tf.import_graph_def(graph_def, name='')
-        cross_entropy, accuracy, prediction, truth, h_relu, x, y, keep_prob = tf.import_graph_def(
-        graph_def, return_elements = [
-            "CrossEntropyMean:0",
-            "overallAccuracy:0",
-            "prediction:0",
-            "truth:0",
-            "lastRelu:0",
-            "images:0",
-            "labels:0",
-            "keep_prob:0"
-            ],
-            name = '')
-
-    print '***********************'
-    print keep_prob
-    print '***********************'
-    # print("map variables")
-    # [cross_entropy, accuracy, prediction, truth, h_relu]  = sess.graph.get_tensor_by_name([
-    #     "CrossEntropyMean:0",
-    #     "overallAccuracy:0",
-    #     "prediction:0",
-    #     "truth:0",
-    #     "lastRelu:0"
-    #     ])
-
-    # tf.add_to_collection(tf.GraphKeys.VARIABLES,cross_entropy)
-    train_size = len(Y_train)
-    iter_per_epoch = int(np.ceil(np.true_divide(train_size,batch_size)))
-
-    val_size = len(Y_val)
-    val_iter_per_epoch = int(np.ceil(np.true_divide(val_size,batch_size)))
-
-    print "Train size:", train_size
-    print "Batch size:", batch_size
-    print "Iter per epoch:", iter_per_epoch
-    print "validation's batches"
-    print "val size:", val_size
-    print "val Iter per epoch:", val_iter_per_epoch
-
-    indices = np.linspace(0, train_size, iter_per_epoch)
-    indices = indices.astype('int')
-    Vindices = np.linspace(0, val_size, val_iter_per_epoch)
-    Vindices = Vindices.astype('int')
-
-    if start == 0 or not os.path.exists(ckpt_dir_model + "/lossAcc.pkl"):
-        lossPlot = []
-        accPlot = []
-        valLossPlot = []
-        valAccPlot = []
-        indivAccPlot = []
-        indivValAccPlot = []
-    else:
-        ''' load from pickle '''
-        print 'Loading loss and accuracies from previous checkpoint...'
-        lossAccDict = pickle.load( open( ckpt_dir_model + "/lossAcc.pkl", "rb" ) )
-
-        lossPlot = lossAccDict['loss']
-        accPlot = lossAccDict['acc']
-        valLossPlot = lossAccDict['valLoss']
-        valAccPlot = lossAccDict['valAcc']
-        indivAccPlot = lossAccDict['indivAcc']
-        indivValAccPlot = lossAccDict['indivValAcc']
-
-    # print "Start from:", start
-    for epoch_i in range(n_epochs):
-
-        '''
-        **************************************
-        training
-        **************************************
-        '''
-        if Y_train.shape[0] <= batch_size:
-            print 'No need to batch references'
-            loss, acc, pred, tr, feat = sess.run([cross_entropy, accuracy, prediction, truth, h_relu],
-                            feed_dict={
-                                x: X_train,
-                                y: Y_train,
-                                keep_prob: 1.0
-                            })
-
-            # individual accuracy
-            indivPred = [np.true_divide(np.sum(np.logical_and(np.equal(pred, i), np.equal(tr, i)), axis=0), np.sum(np.equal(tr, i))) for i in range(classes)]
-            indivPred = np.around(indivPred, decimals=2)
-
-            sess.run(optimizer, feed_dict={
-                x: batch_xs, y: batch_ys, keep_prob: 1.0})
-
-            lossEpoch = loss
-            accEpoch = acc
-            featPlot = feat
-            indivAccEpoch = indivPred
-
-            # lossValEpoch = []
-            # accValEpoch = []
-            # valIIndivAccEpoch = []
-            # valFeatEpoch = []
-
-        else:
-            lossEpoch = []
-            accEpoch = []
-            featPlot = []
-            indivAccEpoch = []
-
-            lossValEpoch = []
-            accValEpoch = []
-            valIIndivAccEpoch = []
-            valFeatEpoch = []
-
-            for iter_i in range(iter_per_epoch-1):
-                batch_xs = X_train[indices[iter_i]:indices[iter_i+1]]
-                batch_ys = Y_train[indices[iter_i]:indices[iter_i+1]]
-
-                loss, acc, pred, tr, feat = sess.run([cross_entropy, accuracy, prediction, truth, h_relu],
-                                feed_dict={
-                                    x: batch_xs,
-                                    y: batch_ys,
-                                    keep_prob: 1.0
-                                })
-                lossEpoch.append(loss)
-                accEpoch.append(acc)
-
-                # individual accuracy
-                indivPred = [np.true_divide(np.sum(np.logical_and(np.equal(pred, i), np.equal(tr, i)), axis=0), np.sum(np.equal(tr, i))) for i in range(classes)]
-                indivAccEpoch.append(indivPred)
-
-                if iter_i % round(np.true_divide(iter_per_epoch,4)) == 0:
-                    indivPred = np.around(indivPred, decimals=2)
-                    print "Iter " + str(iter_i) + ", Minibatch Loss= " + "{:.6f}".format(loss) + ", Training Accuracy= " + "{:.5f}".format(acc) #+ ", Individual Accuracy= "
-                    # pprint(indivPred)
-
-                sess.run(optimizer, feed_dict={
-                    x: batch_xs, y: batch_ys, keep_prob: 1})
-            # take the last batch to plot some features (from the last relu layer)
-            featPlot = feat
-
-            # nanmean because in minibatches some individuals could not appear...
-            meanIndivAcc = np.nanmean(indivAccEpoch, axis=0)
-
-        # Batches finished print statistic for the epoch
-        meanAcc = np.mean(meanIndivAcc)
-        print('Training Accuracy (%d): ' % (start + epoch_i) + str(meanAcc) + " Individual Accuracy")
-        pprint(meanIndivAcc)
-
-        # update
-        global_step.assign(global_step + 1).eval() # set and update(eval) global_step with index, i
-        saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
-        saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
-
-        # dealing with massive validation sets (10% of train set), it is necessary to batch them
-        '''
-        **************************************
-        validation
-        **************************************
-        '''
-        for Viter_i in range(val_iter_per_epoch-1):
-            Vbatch_xs = X_val[Vindices[Viter_i]:Vindices[Viter_i+1]]
-            Vbatch_ys = Y_val[Vindices[Viter_i]:Vindices[Viter_i+1]]
-
-            valLoss, valAcc, valPred, valTr, Vfeat = sess.run([cross_entropy, accuracy, prediction, truth,h_relu],
-                     feed_dict={
-                         x: Vbatch_xs,
-                         y: Vbatch_ys,
-                         keep_prob: 1.0
-                     })
-            lossValEpoch.append(valLoss)
-            accValEpoch.append(valAcc)
-            valIndivPred = [np.true_divide(np.sum(np.logical_and(np.equal(valPred, i), np.equal(valTr, i)), axis=0), np.sum(np.equal(valTr, i))) for i in range(classes)]
-            valIIndivAccEpoch.append(valIndivPred)
-            valFeatEpoch.append(Vfeat)
-            if Viter_i % round(np.true_divide(val_iter_per_epoch,4)) == 0:
-                valIndivPred = np.around(valIndivPred, decimals=2)
-                print 'Validation Accuracy (batch = %d): ' % Viter_i + str(valAcc) #+ " Individual accuracy: "
-                # pprint(valIndivPred)
-
-        valFeatEpoch = np.asarray(flatten(valFeatEpoch))
-        meanValIndiviAcc = np.nanmean(valIIndivAccEpoch, axis=0)
-        meanAcc = np.mean(meanValIndiviAcc)
-
-        print 'Validation Accuracy (epoch = %d): ' % (start + epoch_i) + str(meanAcc) #+ "Individual Accuracy"
-        pprint(meanValIndiviAcc)
-
-        '''
-        **************************************
-        saving dict with loss function and accuracy values
-        **************************************
-        '''
-        lossPlot.append(np.mean(lossEpoch))
-        accPlot.append(np.mean(accEpoch))
-        valLossPlot.append(np.mean(lossValEpoch))
-        valAccPlot.append(np.mean(accValEpoch))
-        indivAccPlot.append(meanIndivAcc)
-        indivValAccPlot.append(meanValIndiviAcc)
-
-        lossSpeed, lossAccel = computeDerivatives(lossPlot)
-        accSpeed, accAccel = computeDerivatives(accPlot)
-        valLossSpeed, valLossAccel = computeDerivatives(valLossPlot)
-        valAccSpeed, valAccAccel = computeDerivatives(valAccPlot)
-
-        lossAccDict = {
-            'loss': lossPlot,
-            'valLoss': valLossPlot,
-            'lossSpeed': lossSpeed,
-            'valLossSpeed': valLossSpeed,
-            'lossAccel': lossAccel,
-            'valLossAccel': valLossAccel,
-            'acc': accPlot,
-            'valAcc': valAccPlot,
-            'accSpeed': accSpeed,
-            'valAccSpeed': valAccSpeed,
-            'accAccel': accAccel,
-            'valAccAccel': valAccAccel,
-            'indivAcc': indivAccPlot,
-            'indivValAcc': indivValAccPlot,
-            # 'indivValAccRef': indivAccRef,
-            'features': featPlot,
-            'labels': one_hot_to_dense(batch_ys) # labels of the last batch to plot some features
-            }
-
-        pickle.dump( lossAccDict , open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
-
-        '''
-        *******************
-        Plotter
-        *******************
-        '''
-        # CNNplotterFast(lossPlot,accPlot,valAccPlot,valLossPlot,meanIndivAcc,meanValIndiviAcc)
-        CNNplotterFast(lossAccDict)
-        # convolve = sess.run(h_conv3, feed_dict={x: batch_xs, y: batch_ys, keep_prob: 1.0})
-        # print(convolve[0].shape)
-
-        print 'Saving figure...'
-        figname = ckpt_dir + '/figures/result_' + str(epoch_i) + '.pdf'
-        plt.savefig(figname)
-        print '-------------------------------'
-
 
 '''
 ****************************************************************************
@@ -560,8 +349,6 @@ def CNNplotterFast(lossAccDict):
     plt.draw()
     plt.pause(1)
 
-
-
 ''' ****************************************************************************
 CNN statistics and cluster analysis
 *****************************************************************************'''
@@ -645,3 +432,28 @@ def computeRefAccuracy(Rfeat,Y_ref,Vfeat,Y_val):
 # y = np.array([[1,0],[0,1],[1,0],[0,1]])
 # y_logits = np.array([[1,0],[0,1],[1,0],[1,0]])
 # computeROCAccuracy(y, y_logits, name=None)
+
+def individualAccuracy(labels,logits,classes):
+    # We add 1 to the labels and predictions to avoid having a 0 label
+    labels = tf.cast(tf.add(tf.where(tf.equal(labels,1))[:,1],1),tf.float32)
+    predictions = tf.cast(tf.add(tf.argmax(logits,1),1),tf.float32)
+    labelsRep = tf.reshape(tf.tile(labels, [classes]), [classes,tf.shape(labels)[0]])
+
+    correct = tf.cast(tf.equal(labels,predictions),tf.float32)
+    indivCorrect = tf.mul(predictions,correct)
+
+    indivRep = tf.cast(tf.transpose(tf.reshape(tf.tile(tf.range(1,classes+1), [tf.shape(labels)[0]]), [tf.shape(labels)[0],classes])),tf.float32)
+    indivCorrectRep = tf.reshape(tf.tile(indivCorrect, [classes]), [classes,tf.shape(labels)[0]])
+    correctPerIndiv = tf.cast(tf.equal(indivRep,indivCorrectRep),tf.float32)
+
+    countCorrect = tf.reduce_sum(correctPerIndiv,1)
+    numImagesPerIndiv = tf.reduce_sum(tf.cast(tf.equal(labelsRep,indivRep),tf.float32),1)
+
+    indivAcc = tf.div(countCorrect,numImagesPerIndiv)
+    acc = tf.reduce_mean(indivAcc)
+
+    return acc,indivAcc
+
+# labels = tf.constant([[1,0,0],[0,1,0],[1,0,0],[0,0,1]])
+# logits = tf.constant([[1,0,0],[0,1,0],[1,0,0],[0,1,0]])
+# individualAccuracy(labels,logits,tf.constant(3))

@@ -11,49 +11,52 @@ import numpy as np
 from checkCheck import *
 from pprint import *
 
-def model(x,width, height, channels, classes, keep_prob):
-    x_tensor = tf.reshape(x, [-1, width, height, channels],name='x_reshape')
+def model(images, width, height, channels, classes, keep_prob):
+    '''
+    Gives predictions for a given set of images
+    '''
+    images_tensor = tf.reshape(images, [-1, width, height, channels],name='images_reshape')
     # conv1
     filter_size1 = 5
     n_filter1 = 15
     stride1 = [1,1,1,1]
     pad1 = 'SAME'
-    h_conv1, w1, h1 = buildConv2D('Wconv1', 'bconv1', width, height, 1, x_tensor, filter_size1, n_filter1, stride1, pad1)
+    conv1, w1, h1 = buildConv2D('conv1', width, height, 1, images_tensor, filter_size1, n_filter1, stride1, pad1)
     # maxpool2d
     stride2 = [1,2,2,1]
     pool2 = 2
     pad2 = 'SAME'
-    max_pool2, w2, h2 = maxpool2d('maxpool1',w1,h1, h_conv1, pool2,stride2,pad2)
+    max_pool2, w2, h2 = maxpool2d('maxpool1',w1,h1, conv1, pool2,stride2,pad2)
     d2 = n_filter1
     # conv2
     filter_size3 = 5
     n_filter3 = 50
     stride3 = [1,1,1,1]
     pad3 = 'SAME'
-    h_conv3, w3, h3 = buildConv2D('Wconv2', 'bconv2', w2, h2, d2, max_pool2, filter_size3, n_filter3, stride3, pad3)
+    conv3, w3, h3 = buildConv2D('conv2', w2, h2, d2, max_pool2, filter_size3, n_filter3, stride3, pad3)
     # maxpool2d
     stride4 = [1,2,2,1]
     pool4 = 2
     pad4 = 'SAME'
-    max_pool4, w4, h4 = maxpool2d('maxpool2',w3,h3, h_conv3, pool4,stride4,pad4)
+    max_pool4, w4, h4 = maxpool2d('maxpool2',w3,h3, conv3, pool4,stride4,pad4)
     d4 = n_filter3
     # conv4
     filter_size5 = 5
     n_filter5 = 100
     stride5 = [1,1,1,1]
     pad5 = 'SAME'
-    h_conv5, w5, h5 = buildConv2D('Wconv3', 'bconv3', w4, h4, d4, max_pool4, filter_size5, n_filter5, stride5, pad5)
+    conv5, w5, h5 = buildConv2D('conv3', w4, h4, d4, max_pool4, filter_size5, n_filter5, stride5, pad5)
     d5 = n_filter5
     # linearize weights for fully-connected layer
     resolutionS = w5 * h5
-    h_conv5_flat = tf.reshape(h_conv5, [-1, resolutionS*d5], name = 'h_conv5_reshape')
+    conv5_flat = tf.reshape(conv5, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    h_fc_drop = buildFc('Wfc1', 'bfc1', h_conv5_flat,w5,h5,d5,n_fc,keep_prob)
-    h_relu = tf.nn.relu(h_fc_drop,name = 'lastRelu')
-    y_logits = buildSoftMax('Wsoft1','bsoft1',h_relu,n_fc,classes)
+    fc_drop = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
+    relu = reLU('relu1', fc_drop)
+    y_logits = buildSoftMax('softmax1', relu, n_fc, classes)
 
-    return y_logits, h_relu
+    return y_logits, relu
 
 if __name__ == '__main__':
 
@@ -106,7 +109,7 @@ if __name__ == '__main__':
     y = tf.placeholder(tf.float32, [None, classes], name = 'labels')
     keep_prob = tf.placeholder(tf.float32, name = 'keep_prob')
 
-    y_logits, h_relu = model(x,imsize[1],imsize[2],imsize[0],classes,keep_prob)
+    y_logits, relu = model(x,imsize[1],imsize[2],imsize[0],classes,keep_prob)
 
 
     # Define loss/eval/training functions
@@ -116,16 +119,17 @@ if __name__ == '__main__':
     optimizer = tf.train.GradientDescentOptimizer(0.01, name = 'OptMethod').minimize(cross_entropy, name = 'MinimizedFunc')
 
     # Monitor accuracy
-    prediction = tf.argmax(y_logits, 1,name='prediction')
-    truth = tf.argmax(y,1,name='truth')
-    correct_prediction = tf.equal(prediction, truth,name='correctPrediction')
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'),name='overallAccuracy')
-
+    # prediction = tf.argmax(y_logits, 1,name='prediction')
+    # truth = tf.argmax(y,1,name='truth')
+    # correct_prediction = tf.equal(prediction, truth,name='correctPrediction')
+    # accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'),name='overallAccuracy')
+    accuracy, indivAcc = individualAccuracy(y,y_logits,classes)
     # Create counter for epochs and savers
     global_step = tf.Variable(0, name='global_step', trainable=False)
     saver_model = createSaver('soft', False, 'saver_model')
     saver_softmax = createSaver('soft', True, 'saver_softmax')
 
+    # summary_op = tf.merge_all_summaries()
 
     print "\n****** Entering TF session ******\n"
 
@@ -133,7 +137,7 @@ if __name__ == '__main__':
         # you need to initialize all variables
         tf.initialize_all_variables().run()
         # tf.train.write_graph(sess.graph_def,ckpt_dir, 'train.pb',as_text=False)
-
+        # summary_writer = tf.train.SummaryWriter(ckpt_dir,sess.graph)
         '''
         ************************************************************************
         *******************************Training*********************************
@@ -153,10 +157,6 @@ if __name__ == '__main__':
             # counter for epochs
             start = global_step.eval() # get last global_step
             print "\nStart from:", start
-
-
-            n_epochs = args.num_epochs - start
-            batch_size = args.batch_size
 
             # We'll now fine tune in minibatches and report accuracy, loss:
             n_epochs = args.num_epochs - start
@@ -212,7 +212,7 @@ if __name__ == '__main__':
                 '''
                 if Y_train.shape[0] <= batch_size:
                     # Run forward step to compute loss, accuracy...
-                    trainLoss, trainAcc, trainPred, trainTr, trainFeat = sess.run([cross_entropy,accuracy, prediction, truth, h_relu],
+                    trainLoss, trainAcc, trainIndivAcc, trainFeat = sess.run([cross_entropy,accuracy, indivAcc, relu],
                              feed_dict={
                                  x: X_train,
                                  y: Y_train,
@@ -220,7 +220,7 @@ if __name__ == '__main__':
                              })
 
                     # individual accuracy
-                    trainIndivAcc = [np.true_divide(np.sum(np.logical_and(np.equal(trainPred, i), np.equal(trainTr, i)), axis=0), np.sum(np.equal(refTr, i))) for i in range(classes)]
+                    # trainIndivAcc = [np.true_divide(np.sum(np.logical_and(np.equal(trainPred, i), np.equal(trainTr, i)), axis=0), np.sum(np.equal(refTr, i))) for i in range(classes)]
 
                     # Run backward step to compute and apply the gradients
                     sess.run(optimizer, feed_dict={
@@ -242,14 +242,14 @@ if __name__ == '__main__':
                         batch_ys = Y_train[Tindices[iter_i]:Tindices[iter_i+1]]
 
                         # Run forward step to compute loss, accuracy...
-                        batchLoss, batchAcc, batchPred, batchTr, batchFeat = sess.run([cross_entropy,accuracy, prediction, truth, h_relu],
+                        batchLoss, batchAcc, indivBatchAcc, batchFeat = sess.run([cross_entropy,accuracy, indivAcc, relu],
                                         feed_dict={
                                             x: batch_xs,
                                             y: batch_ys,
                                             keep_prob: 1.0
                                         })
                         # individual accuracy
-                        indivBatchAcc = [np.true_divide(np.sum(np.logical_and(np.equal(batchPred, i), np.equal(batchTr, i)), axis=0), np.sum(np.equal(batchTr, i))) for i in range(classes)]
+                        # indivBatchAcc = [np.true_divide(np.sum(np.logical_and(np.equal(batchPred, i), np.equal(batchTr, i)), axis=0), np.sum(np.equal(batchTr, i))) for i in range(classes)]
 
                         # Append batch results to the lists for the epoch
                         lossEpoch.append(batchLoss)
@@ -280,6 +280,10 @@ if __name__ == '__main__':
                     trainAcc = np.mean(accEpoch)
                     trainIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
 
+                # if (start + epoch_i + 1) % 10 == 0:
+                #     summary_str = sess.run(summary_op)
+                #     summary_writer.add_summary(summary_str,(start+epoch_i))
+
                 # Batch finished
                 print('Train (epoch %d): ' % (start + epoch_i) + \
                     " Loss=" + "{:.6f}".format(trainLoss) + \
@@ -300,7 +304,7 @@ if __name__ == '__main__':
                 if Y_val.shape[0] <= batch_size:
                     print 'Validating'
                     # Run forward step to compute loss, accuracy...
-                    valLoss, valAcc, valPred, valTr, valFeat = sess.run([cross_entropy,accuracy, prediction, truth, h_relu],
+                    valLoss, valAcc, valIndivAcc, valFeat = sess.run([cross_entropy,accuracy, indivAcc, relu],
                              feed_dict={
                                  x: X_val,
                                  y: Y_val,
@@ -323,14 +327,14 @@ if __name__ == '__main__':
                         batch_ys = Y_val[Vindices[iter_i]:Vindices[iter_i+1]]
 
                         # Run forward step to compute loss, accuracy...
-                        batchLoss, batchAcc, batchPred, batchTr, batchFeat = sess.run([cross_entropy,accuracy, prediction, truth, h_relu],
+                        batchLoss, batchAcc, indivBatchAcc, batchFeat = sess.run([cross_entropy,accuracy, indivAcc, relu],
                                         feed_dict={
                                             x: batch_xs,
                                             y: batch_ys,
                                             keep_prob: 1.0
                                         })
                         # individual accuracy
-                        indivBatchAcc = [np.true_divide(np.sum(np.logical_and(np.equal(batchPred, i), np.equal(batchTr, i)), axis=0), np.sum(np.equal(batchTr, i))) for i in range(classes)]
+                        # indivBatchAcc = [np.true_divide(np.sum(np.logical_and(np.equal(batchPred, i), np.equal(batchTr, i)), axis=0), np.sum(np.equal(batchTr, i))) for i in range(classes)]
 
                         # Append batch results to the lists for the epoch
                         lossEpoch.append(batchLoss)
