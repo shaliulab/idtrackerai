@@ -15,10 +15,22 @@ def inference(images, width, height, channels, classes, keep_prob):
     '''
     Gives predictions for a given set of images
     '''
-    images_tensor = tf.reshape(images, [-1, width, height, channels],name='images_reshape')
+    with tf.variable_scope('Input') as scope:
+        images_tensor = tf.reshape(images, [-1, width, height, channels],name='images')
+        with tf.variable_scope('visualization'):
+            # scale weights to [0 1], type is still float
+            x_min = tf.reduce_min(images_tensor)
+            x_max = tf.reduce_max(images_tensor)
+            images_tensor_0_to_1 = (images_tensor - x_min) / (x_max - x_min)
+
+            # to tf.image_summary format [batch_size, height, width, channels]
+            # images_placeholder_transposed = tf.transpose (images_placeholder_0_to_1, [0, 2, 3, 1])
+
+            # this will display random images
+            tf.image_summary('_rawImages', images_tensor_0_to_1, max_images=10)
     # conv1
     filter_size1 = 5
-    n_filter1 = 15
+    n_filter1 = 16
     stride1 = [1,1,1,1]
     pad1 = 'SAME'
     conv1, w1, h1 = buildConv2D('conv1', width, height, 1, images_tensor, filter_size1, n_filter1, stride1, pad1)
@@ -30,7 +42,7 @@ def inference(images, width, height, channels, classes, keep_prob):
     d2 = n_filter1
     # conv2
     filter_size3 = 5
-    n_filter3 = 50
+    n_filter3 = 64
     stride3 = [1,1,1,1]
     pad3 = 'SAME'
     conv3, w3, h3 = buildConv2D('conv2', w2, h2, d2, max_pool2, filter_size3, n_filter3, stride3, pad3)
@@ -78,8 +90,9 @@ def evaluation(y,y_logits,classes):
     return accuracy, indivAcc
 
 def placeholder_inputs(batch_size, resolution):
-    images_placeholder = tf.placeholder(tf.float32, [batch_size, resolution], name = 'images')
-    labels_placeholder = tf.placeholder(tf.float32, [batch_size, classes], name = 'labels')
+    images_placeholder = tf.placeholder(tf.float32, [None, resolution], name = 'images')
+    labels_placeholder = tf.placeholder(tf.float32, [None, classes], name = 'labels')
+
     return images_placeholder, labels_placeholder
 
 def get_batch_indices(numImages,batch_size):
@@ -114,7 +127,7 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
 
     return outList
 
-def run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution):
+def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, loadCkpt_folder, keep_prob = 1.0):
     with tf.Graph().as_default():
         images_pl, labels_pl = placeholder_inputs(batch_size, resolution)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
@@ -141,10 +154,22 @@ def run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classe
             print "\n****** Checking Folders (save/restore) ******\n"
             [ckpt_dir_model,ckpt_dir_softmax,ckpt_dir_figures] = createCkptFolder( ckpt_dir, ['model', 'softmax', 'figures'])
 
-            # load state of the training from the checkpoint
-            print "\n"
-            restoreFromFolder(ckpt_dir_model, saver_model, sess)
-            restoreFromFolder(ckpt_dir_softmax, saver_softmax, sess)
+            # Load weights from a pretrained model if there is not any model saved
+            # in the ckpt folder of the test
+            ckpt = tf.train.get_checkpoint_state(ckpt_dir_model)
+            if not (ckpt and ckpt.model_checkpoint_path):
+                if loadCkpt_folder:
+                    loadCkpt_folder = loadCkpt_folder + '/model'
+                    print 'loading weigths from ' + loadCkpt_folder
+                    restoreFromFolder(loadCkpt_folder, saver_model, sess)
+                    global_step.assign(0).eval()
+
+                else:
+                    raise NameError('It is not possible to perform knowledge transfer, give a folder containing a trained model')
+            else:
+                print "\n"
+                restoreFromFolder(ckpt_dir_model, saver_model, sess)
+                restoreFromFolder(ckpt_dir_softmax, saver_softmax, sess)
 
             # counter for epochs
             start = global_step.eval() # get last global_step
@@ -152,7 +177,8 @@ def run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classe
             # We'll now fine tune in minibatches and report accuracy, loss:
             n_epochs = num_epochs - start
 
-            summary_writer = tf.train.SummaryWriter(ckpt_dir,sess.graph)
+            summary_writerT = tf.train.SummaryWriter(ckpt_dir + '/train',sess.graph)
+            summary_writerV = tf.train.SummaryWriter(ckpt_dir + '/val',sess.graph)
 
             if start == 0 or not os.path.exists(ckpt_dir_model + "/lossAcc.pkl"):
                 # ref lists for plotting
@@ -187,25 +213,26 @@ def run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classe
                 indivAccEpoch = []
 
                 ''' TRAINING '''
+                print Titer_per_epoch
                 for iter_i in range(Titer_per_epoch):
 
                     _, batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
                         sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
                         images_pl, labels_pl, keep_prob_pl,
-                        X_train, Y_train, keep_prob = 1.0)
+                        X_t, Y_t, keep_prob = keep_prob)
 
                     lossEpoch.append(batchLoss)
                     accEpoch.append(batchAcc)
                     indivAccEpoch.append(indivBatchAcc)
 
                     # Print per batch loss and accuracies
-                    if iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0:
+                    if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
                         print "Batch " + str(iter_i) + \
                             ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
                             ", Training Accuracy= " + "{:.5f}".format(batchAcc)
 
                 trainFeat = batchFeat
-                trainFeatLabels = Y_train[Tindices[iter_i]:Tindices[iter_i+1]]
+                trainFeatLabels = Y_t[Tindices[iter_i]:Tindices[iter_i+1]]
 
                 trainLoss = np.mean(lossEpoch)
                 trainAcc = np.mean(accEpoch)
@@ -220,7 +247,7 @@ def run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classe
 
                 # Summary writer
                 summary_str = sess.run(summary_op, feed_dict=feed_dict)
-                summary_writer.add_summary(summary_str, epoch_i)
+                summary_writerT.add_summary(summary_str, epoch_i)
 
                 # update global step and save model
                 global_step.assign(global_step + 1).eval() # set and update(eval) global_step with index, i
@@ -237,7 +264,7 @@ def run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classe
                     batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
                         sess, opListVal, Vindices, iter_i, Viter_per_epoch,
                         images_pl, labels_pl, keep_prob_pl,
-                        X_val, Y_val, keep_prob = 1.0)
+                        X_v, Y_v, keep_prob = keep_prob)
 
                     lossEpoch.append(batchLoss)
                     accEpoch.append(batchAcc)
@@ -260,6 +287,9 @@ def run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classe
                     ", Accuracy=" + "{:.5f}".format(valAcc) + \
                     ", Individual Accuracy=")
                 print(valIndivAcc)
+
+                summary_str = sess.run(summary_op, feed_dict=feed_dict)
+                summary_writerV.add_summary(summary_str, epoch_i)
 
                 '''
                 **************************************
@@ -343,7 +373,6 @@ loadCkpt_folder = args.loadCkpt_folder
 batch_size = args.batch_size
 num_epochs = args.num_epochs
 
-# numIndiv, imsize, X_train, X_valid, X_test, Y_train, Y_valid, Y_test = dataHelper0(path, num_train, num_test, num_valid, ckpt_dir)
 
 print "\n****** Loading database ******\n"
 numIndiv, imsize, \
@@ -364,16 +393,6 @@ print X_ref.shape, Y_ref.shape
 channels, width, height = imsize
 resolution = np.prod(imsize)
 classes = numIndiv
-numImagesT = Y_train.shape[0]
-numImagesV = Y_val.shape[0]
-Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
-Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
-
-
-
-
-
-
 
 '''
 ************************************************************************
@@ -381,5 +400,18 @@ Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
 ************************************************************************
 '''
 if args.train == 1:
+    numImagesT = Y_train.shape[0]
+    numImagesV = Y_val.shape[0]
+    Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
+    Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
 
-    run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution)
+    run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution, loadCkpt_folder)
+
+if args.train == 0:
+    numImagesT = Y_ref.shape[0]
+    numImagesV = Y_test.shape[0]
+    Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
+    Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
+
+
+    run_training(X_ref, Y_ref, X_test, Y_test, width, height, channels, classes, resolution, loadCkpt_folder, 0.5)
