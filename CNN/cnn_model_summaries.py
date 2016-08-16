@@ -1,0 +1,385 @@
+import os
+import sys
+sys.path.append('../utils')
+import tensorflow as tf
+from tf_utils import *
+from input_data_cnn import *
+from cnn_utils import *
+import argparse
+import h5py
+import numpy as np
+from checkCheck import *
+from pprint import *
+
+def inference(images, width, height, channels, classes, keep_prob):
+    '''
+    Gives predictions for a given set of images
+    '''
+    images_tensor = tf.reshape(images, [-1, width, height, channels],name='images_reshape')
+    # conv1
+    filter_size1 = 5
+    n_filter1 = 15
+    stride1 = [1,1,1,1]
+    pad1 = 'SAME'
+    conv1, w1, h1 = buildConv2D('conv1', width, height, 1, images_tensor, filter_size1, n_filter1, stride1, pad1)
+    # maxpool2d
+    stride2 = [1,2,2,1]
+    pool2 = 2
+    pad2 = 'SAME'
+    max_pool2, w2, h2 = maxpool2d('maxpool1',w1,h1, conv1, pool2,stride2,pad2)
+    d2 = n_filter1
+    # conv2
+    filter_size3 = 5
+    n_filter3 = 50
+    stride3 = [1,1,1,1]
+    pad3 = 'SAME'
+    conv3, w3, h3 = buildConv2D('conv2', w2, h2, d2, max_pool2, filter_size3, n_filter3, stride3, pad3)
+    # maxpool2d
+    stride4 = [1,2,2,1]
+    pool4 = 2
+    pad4 = 'SAME'
+    max_pool4, w4, h4 = maxpool2d('maxpool2',w3,h3, conv3, pool4,stride4,pad4)
+    d4 = n_filter3
+    # conv4
+    filter_size5 = 5
+    n_filter5 = 100
+    stride5 = [1,1,1,1]
+    pad5 = 'SAME'
+    conv5, w5, h5 = buildConv2D('conv3', w4, h4, d4, max_pool4, filter_size5, n_filter5, stride5, pad5)
+    d5 = n_filter5
+    # linearize weights for fully-connected layer
+    resolutionS = w5 * h5
+    conv5_flat = tf.reshape(conv5, [-1, resolutionS*d5], name = 'conv5_reshape')
+    # fully-connected 1
+    n_fc = 100
+    fc_drop = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
+    relu = reLU('relu1', fc_drop)
+    y_logits = buildSoftMax('softmax1', relu, n_fc, classes)
+
+    return y_logits, relu
+
+def _add_loss_summary(loss):
+    tf.scalar_summary(loss.op.name, loss)
+
+def loss(y,y_logits):
+    cross_entropy = tf.reduce_mean(
+        tf.nn.softmax_cross_entropy_with_logits(y_logits, y, name = 'CrossEntropy'), name = 'CrossEntropyMean')
+    _add_loss_summary(cross_entropy)
+    return cross_entropy
+
+def optimize(loss):
+    optimizer = tf.train.GradientDescentOptimizer(0.01)
+    global_step = tf.Variable(0, name='global_step', trainable=False)
+    train_op = optimizer.minimize(loss)
+    return train_op, global_step
+
+def evaluation(y,y_logits,classes):
+    accuracy, indivAcc = individualAccuracy(y,y_logits,classes)
+    return accuracy, indivAcc
+
+def placeholder_inputs(batch_size, resolution):
+    images_placeholder = tf.placeholder(tf.float32, [batch_size, resolution], name = 'images')
+    labels_placeholder = tf.placeholder(tf.float32, [batch_size, classes], name = 'labels')
+    return images_placeholder, labels_placeholder
+
+def get_batch_indices(numImages,batch_size):
+    indices = range(0,numImages,batch_size)# np.linspace(0, numImages, iter_per_epoch)
+    indices.append(numImages)
+    indices = np.asarray(indices)
+    iter_per_epoch = indices.shape[0]-1
+    indices = indices.astype('int')
+
+    return indices, iter_per_epoch
+
+def get_batch(batchNum, iter_per_epoch, indices, images_pl, labels_pl, keep_prob_pl, images, labels, keep_prob):
+    if iter_per_epoch > 1:
+        images_feed = images[indices[batchNum]:indices[batchNum+1]]
+        labels_feed = labels[indices[batchNum]:indices[batchNum+1]]
+    else:
+        images_feed = images
+        labels_feed = labels
+
+    feed_dict = {
+      images_pl: images_feed,
+      labels_pl: labels_feed,
+      keep_prob_pl: keep_prob
+    }
+    return feed_dict
+
+def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labels_pl, keep_prob_pl, images, labels, keep_prob):
+    feed_dict = get_batch(batchNum, iter_per_epoch, indices, images_pl, labels_pl, keep_prob_pl, images, labels, keep_prob)
+    # Run forward step to compute loss, accuracy...
+    outList = sess.run(opsList, feed_dict=feed_dict)
+    outList.append(feed_dict)
+
+    return outList
+
+def run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution):
+    with tf.Graph().as_default():
+        images_pl, labels_pl = placeholder_inputs(batch_size, resolution)
+        keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
+
+        logits, relu = inference(images_pl, width, height, channels, classes, keep_prob_pl)
+
+        cross_entropy = loss(labels_pl,logits)
+
+        train_op, global_step =  optimize(cross_entropy)
+
+        accuracy, indivAcc = evaluation(labels_pl,logits,classes)
+
+        summary_op = tf.merge_all_summaries()
+
+        saver_model = createSaver('soft', False, 'saver_model')
+        saver_softmax = createSaver('soft', True, 'saver_softmax')
+
+        with tf.Session() as sess:
+            # you need to initialize all variables
+            tf.initialize_all_variables().run()
+
+            print "\n****** Starting training session ******\n"
+            # Create folder for checkpoint if does not exist
+            print "\n****** Checking Folders (save/restore) ******\n"
+            [ckpt_dir_model,ckpt_dir_softmax,ckpt_dir_figures] = createCkptFolder( ckpt_dir, ['model', 'softmax', 'figures'])
+
+            # load state of the training from the checkpoint
+            print "\n"
+            restoreFromFolder(ckpt_dir_model, saver_model, sess)
+            restoreFromFolder(ckpt_dir_softmax, saver_softmax, sess)
+
+            # counter for epochs
+            start = global_step.eval() # get last global_step
+            print "\nStart from:", start
+            # We'll now fine tune in minibatches and report accuracy, loss:
+            n_epochs = num_epochs - start
+
+            summary_writer = tf.train.SummaryWriter(ckpt_dir,sess.graph)
+
+            if start == 0 or not os.path.exists(ckpt_dir_model + "/lossAcc.pkl"):
+                # ref lists for plotting
+                trainLossPlot = []
+                trainAccPlot = []
+                trainIndivAccPlot = []
+                # test lists for ploting
+                valLossPlot = []
+                valAccPlot = []
+                valIndivAccPlot = []
+            else:
+                ''' load from pickle '''
+                lossAccDict = pickle.load( open( ckpt_dir_model + "/lossAcc.pkl", "rb" ) )
+                # ref lists for plotting
+                trainLossPlot = lossAccDict['loss']
+                trainAccPlot = lossAccDict['acc']
+                trainIndivAccPlot = lossAccDict['indivAcc']
+                # test lists for plotting
+                valLossPlot = lossAccDict['valLoss']
+                valAccPlot = lossAccDict['valAcc']
+                valIndivAccPlot = lossAccDict['indivValAcc']
+
+            # print "Start from:", start
+            opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu]
+            opListVal = [cross_entropy, accuracy, indivAcc, relu]
+
+            for epoch_i in range(n_epochs):
+                epoch_counter = start + epoch_i
+                print '**** Epoch %i ****' % epoch_counter
+                lossEpoch = []
+                accEpoch = []
+                indivAccEpoch = []
+
+                ''' TRAINING '''
+                for iter_i in range(Titer_per_epoch):
+
+                    _, batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                        sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
+                        images_pl, labels_pl, keep_prob_pl,
+                        X_train, Y_train, keep_prob = 1.0)
+
+                    lossEpoch.append(batchLoss)
+                    accEpoch.append(batchAcc)
+                    indivAccEpoch.append(indivBatchAcc)
+
+                    # Print per batch loss and accuracies
+                    if iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0:
+                        print "Batch " + str(iter_i) + \
+                            ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                            ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+
+                trainFeat = batchFeat
+                trainFeatLabels = Y_train[Tindices[iter_i]:Tindices[iter_i+1]]
+
+                trainLoss = np.mean(lossEpoch)
+                trainAcc = np.mean(accEpoch)
+                trainIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
+
+                # Batch finished
+                print('Train (epoch %d): ' % epoch_counter + \
+                    " Loss=" + "{:.6f}".format(trainLoss) + \
+                    ", Accuracy=" + "{:.5f}".format(trainAcc) + \
+                    ", Individual Accuracy=")
+                print(trainIndivAcc)
+
+                # Summary writer
+                summary_str = sess.run(summary_op, feed_dict=feed_dict)
+                summary_writer.add_summary(summary_str, epoch_i)
+
+                # update global step and save model
+                global_step.assign(global_step + 1).eval() # set and update(eval) global_step with index, i
+                saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
+                saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
+
+                ''' VALIDATION '''
+
+                lossEpoch = []
+                accEpoch = []
+                indivAccEpoch = []
+                for iter_i in range(Viter_per_epoch):
+
+                    batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                        sess, opListVal, Vindices, iter_i, Viter_per_epoch,
+                        images_pl, labels_pl, keep_prob_pl,
+                        X_val, Y_val, keep_prob = 1.0)
+
+                    lossEpoch.append(batchLoss)
+                    accEpoch.append(batchAcc)
+                    indivAccEpoch.append(indivBatchAcc)
+
+                    # Print per batch loss and accuracies
+                    if iter_i % round(np.true_divide(Viter_per_epoch,4)) == 0:
+                        print "Batch " + str(iter_i) + \
+                            ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                            ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+
+                valLoss = np.mean(lossEpoch)
+                valAcc = np.mean(accEpoch)
+                valIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
+
+                # Batch finished
+
+                print('Validation (epoch %d): ' % epoch_counter + \
+                    " Loss=" + "{:.6f}".format(valLoss) + \
+                    ", Accuracy=" + "{:.5f}".format(valAcc) + \
+                    ", Individual Accuracy=")
+                print(valIndivAcc)
+
+                '''
+                **************************************
+                saving dict with loss function and accuracy values
+                **************************************
+                '''
+
+                # References
+                trainLossPlot.append(trainLoss)
+                trainAccPlot.append(trainAcc)
+                trainIndivAccPlot.append(trainIndivAcc)
+                trainLossSpeed, trainLossAccel = computeDerivatives(trainLossPlot)
+                trainAccSpeed, trainAccAccel = computeDerivatives(trainAccPlot)
+                trainFeatPlot = trainFeat
+
+                # Test
+                valLossPlot.append(valLoss)
+                valAccPlot.append(valAcc)
+                valIndivAccPlot.append(valIndivAcc)
+                valLossSpeed, valLossAccel = computeDerivatives(valLossPlot)
+                valAccSpeed, valAccAccel = computeDerivatives(valAccPlot)
+
+                lossAccDict = {
+                    'loss': trainLossPlot,
+                    'valLoss': valLossPlot,
+                    'lossSpeed': trainLossSpeed,
+                    'valLossSpeed': valLossSpeed,
+                    'lossAccel': trainLossAccel,
+                    'valLossAccel': valLossAccel,
+                    'acc': trainAccPlot,
+                    'valAcc': valAccPlot,
+                    'accSpeed': trainAccSpeed,
+                    'valAccSpeed': valAccSpeed,
+                    'accAccel': trainAccSpeed,
+                    'valAccAccel': valAccSpeed,
+                    'indivAcc': trainIndivAccPlot,
+                    'indivValAcc': valIndivAccPlot,
+                    # 'indivValAccRef': indivAccRef,
+                    'features': trainFeatPlot,
+                    'labels': one_hot_to_dense(trainFeatLabels) # labels of the last batch of the references to plot some features
+                    }
+
+                pickle.dump( lossAccDict , open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
+                '''
+                *******************
+                Plotter
+                *******************
+                '''
+                if epoch_i % 10 == 0:
+                    CNNplotterFast(lossAccDict)
+
+                    print 'Saving figure...'
+                    figname = ckpt_dir + '/figures/result_' + str(epoch_i) + '.pdf'
+                    plt.savefig(figname)
+                print '-------------------------------'
+
+
+# prep for args
+parser = argparse.ArgumentParser()
+parser.add_argument('--datasetTrain', default='36dpf_60indiv_22000ImPerInd_rotateAndCrop', type = str)
+parser.add_argument('--datasetTest', default=None, type = str)
+parser.add_argument('--train', default=1, type=int)
+parser.add_argument('--ckpt_folder', default = "./ckpt_dir", type= str)
+parser.add_argument('--loadCkpt_folder', default = "", type = str)
+parser.add_argument('--num_indiv', default = 60, type = int)
+parser.add_argument('--num_train', default = 22000, type = int)
+parser.add_argument('--num_test', default = 0, type = int)
+parser.add_argument('--num_ref', default = 0, type = int)
+parser.add_argument('--num_epochs', default = 500, type = int)
+parser.add_argument('--batch_size', default = 250, type = int)
+args = parser.parse_args()
+
+pathTrain = args.datasetTrain
+pathTest = args.datasetTest
+num_indiv = args.num_indiv
+num_train = args.num_train
+num_test = args.num_test
+num_ref = args.num_ref
+ckpt_dir = args.ckpt_folder
+loadCkpt_folder = args.loadCkpt_folder
+batch_size = args.batch_size
+num_epochs = args.num_epochs
+
+# numIndiv, imsize, X_train, X_valid, X_test, Y_train, Y_valid, Y_test = dataHelper0(path, num_train, num_test, num_valid, ckpt_dir)
+
+print "\n****** Loading database ******\n"
+numIndiv, imsize, \
+X_train, Y_train, \
+X_val, Y_val, \
+X_test, Y_test, \
+X_ref, Y_ref = loadDataBase(pathTrain, num_indiv, num_train, num_test, num_ref, ckpt_dir,pathTest)
+
+print '\n train size:    images  labels'
+print X_train.shape, Y_train.shape
+print 'val size:    images  labels'
+print X_val.shape, Y_val.shape
+print 'test size:    images  labels'
+print X_test.shape, Y_test.shape
+print 'ref size:    images  labels'
+print X_ref.shape, Y_ref.shape
+
+channels, width, height = imsize
+resolution = np.prod(imsize)
+classes = numIndiv
+numImagesT = Y_train.shape[0]
+numImagesV = Y_val.shape[0]
+Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
+Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
+
+
+
+
+
+
+
+'''
+************************************************************************
+*******************************Training*********************************
+************************************************************************
+'''
+if args.train == 1:
+
+    run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution)

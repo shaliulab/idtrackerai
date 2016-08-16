@@ -450,7 +450,10 @@ def individualAccuracy(labels,logits,classes):
     numImagesPerIndiv = tf.reduce_sum(tf.cast(tf.equal(labelsRep,indivRep),tf.float32),1)
 
     indivAcc = tf.div(countCorrect,numImagesPerIndiv)
-    acc = tf.reduce_mean(indivAcc)
+
+    correct_prediction = tf.equal(predictions, labels, name='correctPrediction')
+    acc = tf.reduce_mean(tf.cast(correct_prediction, 'float'), name='overallAccuracy')
+    # acc = tf.reduce_mean(indivAcc)
 
     return acc,indivAcc
 
