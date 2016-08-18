@@ -10,65 +10,8 @@ import h5py
 import numpy as np
 from checkCheck import *
 from pprint import *
-
-def inference(images, width, height, channels, classes, keep_prob):
-    '''
-    Gives predictions for a given set of images
-    '''
-    with tf.variable_scope('Input') as scope:
-        images_tensor = tf.reshape(images, [-1, width, height, channels],name='images')
-        with tf.variable_scope('visualization'):
-            # scale weights to [0 1], type is still float
-            x_min = tf.reduce_min(images_tensor)
-            x_max = tf.reduce_max(images_tensor)
-            images_tensor_0_to_1 = (images_tensor - x_min) / (x_max - x_min)
-
-            # to tf.image_summary format [batch_size, height, width, channels]
-            # images_placeholder_transposed = tf.transpose (images_placeholder_0_to_1, [0, 2, 3, 1])
-
-            # this will display random images
-            tf.image_summary('_rawImages', images_tensor_0_to_1, max_images=10)
-    # conv1
-    filter_size1 = 5
-    n_filter1 = 16
-    stride1 = [1,1,1,1]
-    pad1 = 'SAME'
-    conv1, w1, h1 = buildConv2D('conv1', width, height, 1, images_tensor, filter_size1, n_filter1, stride1, pad1)
-    # maxpool2d
-    stride2 = [1,2,2,1]
-    pool2 = 2
-    pad2 = 'SAME'
-    max_pool2, w2, h2 = maxpool2d('maxpool1',w1,h1, conv1, pool2,stride2,pad2)
-    d2 = n_filter1
-    # conv2
-    filter_size3 = 5
-    n_filter3 = 64
-    stride3 = [1,1,1,1]
-    pad3 = 'SAME'
-    conv3, w3, h3 = buildConv2D('conv2', w2, h2, d2, max_pool2, filter_size3, n_filter3, stride3, pad3)
-    # maxpool2d
-    stride4 = [1,2,2,1]
-    pool4 = 2
-    pad4 = 'SAME'
-    max_pool4, w4, h4 = maxpool2d('maxpool2',w3,h3, conv3, pool4,stride4,pad4)
-    d4 = n_filter3
-    # conv4
-    filter_size5 = 5
-    n_filter5 = 100
-    stride5 = [1,1,1,1]
-    pad5 = 'SAME'
-    conv5, w5, h5 = buildConv2D('conv3', w4, h4, d4, max_pool4, filter_size5, n_filter5, stride5, pad5)
-    d5 = n_filter5
-    # linearize weights for fully-connected layer
-    resolutionS = w5 * h5
-    conv5_flat = tf.reshape(conv5, [-1, resolutionS*d5], name = 'conv5_reshape')
-    # fully-connected 1
-    n_fc = 100
-    fc_drop = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
-    relu = reLU('relu1', fc_drop)
-    y_logits = buildSoftMax('softmax1', relu, n_fc, classes)
-
-    return y_logits, relu
+from cnn_architectures import *
+import warnings
 
 def _add_loss_summary(loss):
     tf.scalar_summary(loss.op.name, loss)
@@ -81,6 +24,7 @@ def loss(y,y_logits):
 
 def optimize(loss):
     optimizer = tf.train.GradientDescentOptimizer(0.01)
+    # optimizer = tf.train.AdamOptimizer(learning_rate=0.01, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
     global_step = tf.Variable(0, name='global_step', trainable=False)
     train_op = optimizer.minimize(loss)
     return train_op, global_step
@@ -132,7 +76,7 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
         images_pl, labels_pl = placeholder_inputs(batch_size, resolution)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
-        logits, relu = inference(images_pl, width, height, channels, classes, keep_prob_pl)
+        logits, relu = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
 
         cross_entropy = loss(labels_pl,logits)
 
@@ -165,7 +109,7 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                     global_step.assign(0).eval()
 
                 else:
-                    raise NameError('It is not possible to perform knowledge transfer, give a folder containing a trained model')
+                    warnings.warn('It is not possible to perform knowledge transfer, give a folder containing a trained model')
             else:
                 print "\n"
                 restoreFromFolder(ckpt_dir_model, saver_model, sess)
@@ -205,146 +149,158 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
             opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu]
             opListVal = [cross_entropy, accuracy, indivAcc, relu]
 
-            for epoch_i in range(n_epochs):
-                epoch_counter = start + epoch_i
-                print '**** Epoch %i ****' % epoch_counter
-                lossEpoch = []
-                accEpoch = []
-                indivAccEpoch = []
+            stored_exception = None
+            epoch_i = 0
+            while epoch_i <= n_epochs:
+            # for epoch_i in range(n_epochs):
+                try:
+                    epoch_counter = start + epoch_i
+                    print '**** Epoch %i ****' % epoch_counter
+                    lossEpoch = []
+                    accEpoch = []
+                    indivAccEpoch = []
 
-                ''' TRAINING '''
-                print Titer_per_epoch
-                for iter_i in range(Titer_per_epoch):
+                    ''' TRAINING '''
+                    for iter_i in range(Titer_per_epoch):
 
-                    _, batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
-                        sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
-                        images_pl, labels_pl, keep_prob_pl,
-                        X_t, Y_t, keep_prob = keep_prob)
+                        _, batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                            sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
+                            images_pl, labels_pl, keep_prob_pl,
+                            X_t, Y_t, keep_prob = keep_prob)
 
-                    lossEpoch.append(batchLoss)
-                    accEpoch.append(batchAcc)
-                    indivAccEpoch.append(indivBatchAcc)
+                        lossEpoch.append(batchLoss)
+                        accEpoch.append(batchAcc)
+                        indivAccEpoch.append(indivBatchAcc)
 
-                    # Print per batch loss and accuracies
-                    if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
-                        print "Batch " + str(iter_i) + \
-                            ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
-                            ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+                        # Print per batch loss and accuracies
+                        if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
+                            print "Batch " + str(iter_i) + \
+                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                                ", Training Accuracy= " + "{:.5f}".format(batchAcc)
 
-                trainFeat = batchFeat
-                trainFeatLabels = Y_t[Tindices[iter_i]:Tindices[iter_i+1]]
+                    trainFeat = batchFeat
+                    trainFeatLabels = Y_t[Tindices[iter_i]:Tindices[iter_i+1]]
 
-                trainLoss = np.mean(lossEpoch)
-                trainAcc = np.mean(accEpoch)
-                trainIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
+                    trainLoss = np.mean(lossEpoch)
+                    trainAcc = np.mean(accEpoch)
+                    trainIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
 
-                # Batch finished
-                print('Train (epoch %d): ' % epoch_counter + \
-                    " Loss=" + "{:.6f}".format(trainLoss) + \
-                    ", Accuracy=" + "{:.5f}".format(trainAcc) + \
-                    ", Individual Accuracy=")
-                print(trainIndivAcc)
+                    # Batch finished
+                    print('Train (epoch %d): ' % epoch_counter + \
+                        " Loss=" + "{:.6f}".format(trainLoss) + \
+                        ", Accuracy=" + "{:.5f}".format(trainAcc) + \
+                        ", Individual Accuracy=")
+                    print(trainIndivAcc)
 
-                # Summary writer
-                summary_str = sess.run(summary_op, feed_dict=feed_dict)
-                summary_writerT.add_summary(summary_str, epoch_i)
+                    # Summary writer
+                    summary_str = sess.run(summary_op, feed_dict=feed_dict)
+                    summary_writerT.add_summary(summary_str, epoch_i)
 
-                # update global step and save model
-                global_step.assign(global_step + 1).eval() # set and update(eval) global_step with index, i
-                saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
-                saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
+                    # update global step and save model
+                    global_step.assign(global_step + 1).eval() # set and update(eval) global_step with index, i
+                    saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
+                    saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
 
-                ''' VALIDATION '''
+                    ''' VALIDATION '''
 
-                lossEpoch = []
-                accEpoch = []
-                indivAccEpoch = []
-                for iter_i in range(Viter_per_epoch):
+                    lossEpoch = []
+                    accEpoch = []
+                    indivAccEpoch = []
+                    for iter_i in range(Viter_per_epoch):
 
-                    batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
-                        sess, opListVal, Vindices, iter_i, Viter_per_epoch,
-                        images_pl, labels_pl, keep_prob_pl,
-                        X_v, Y_v, keep_prob = keep_prob)
+                        batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                            sess, opListVal, Vindices, iter_i, Viter_per_epoch,
+                            images_pl, labels_pl, keep_prob_pl,
+                            X_v, Y_v, keep_prob = keep_prob)
 
-                    lossEpoch.append(batchLoss)
-                    accEpoch.append(batchAcc)
-                    indivAccEpoch.append(indivBatchAcc)
+                        lossEpoch.append(batchLoss)
+                        accEpoch.append(batchAcc)
+                        indivAccEpoch.append(indivBatchAcc)
 
-                    # Print per batch loss and accuracies
-                    if iter_i % round(np.true_divide(Viter_per_epoch,4)) == 0:
-                        print "Batch " + str(iter_i) + \
-                            ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
-                            ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+                        # Print per batch loss and accuracies
+                        if iter_i % round(np.true_divide(Viter_per_epoch,4)) == 0:
+                            print "Batch " + str(iter_i) + \
+                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                                ", Training Accuracy= " + "{:.5f}".format(batchAcc)
 
-                valLoss = np.mean(lossEpoch)
-                valAcc = np.mean(accEpoch)
-                valIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
+                    valLoss = np.mean(lossEpoch)
+                    valAcc = np.mean(accEpoch)
+                    valIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
 
-                # Batch finished
+                    # Batch finished
 
-                print('Validation (epoch %d): ' % epoch_counter + \
-                    " Loss=" + "{:.6f}".format(valLoss) + \
-                    ", Accuracy=" + "{:.5f}".format(valAcc) + \
-                    ", Individual Accuracy=")
-                print(valIndivAcc)
+                    print('Validation (epoch %d): ' % epoch_counter + \
+                        " Loss=" + "{:.6f}".format(valLoss) + \
+                        ", Accuracy=" + "{:.5f}".format(valAcc) + \
+                        ", Individual Accuracy=")
+                    print(valIndivAcc)
 
-                summary_str = sess.run(summary_op, feed_dict=feed_dict)
-                summary_writerV.add_summary(summary_str, epoch_i)
+                    summary_str = sess.run(summary_op, feed_dict=feed_dict)
+                    summary_writerV.add_summary(summary_str, epoch_i)
 
-                '''
-                **************************************
-                saving dict with loss function and accuracy values
-                **************************************
-                '''
+                    '''
+                    **************************************
+                    saving dict with loss function and accuracy values
+                    **************************************
+                    '''
 
-                # References
-                trainLossPlot.append(trainLoss)
-                trainAccPlot.append(trainAcc)
-                trainIndivAccPlot.append(trainIndivAcc)
-                trainLossSpeed, trainLossAccel = computeDerivatives(trainLossPlot)
-                trainAccSpeed, trainAccAccel = computeDerivatives(trainAccPlot)
-                trainFeatPlot = trainFeat
+                    # References
+                    trainLossPlot.append(trainLoss)
+                    trainAccPlot.append(trainAcc)
+                    trainIndivAccPlot.append(trainIndivAcc)
+                    trainLossSpeed, trainLossAccel = computeDerivatives(trainLossPlot)
+                    trainAccSpeed, trainAccAccel = computeDerivatives(trainAccPlot)
+                    trainFeatPlot = trainFeat
 
-                # Test
-                valLossPlot.append(valLoss)
-                valAccPlot.append(valAcc)
-                valIndivAccPlot.append(valIndivAcc)
-                valLossSpeed, valLossAccel = computeDerivatives(valLossPlot)
-                valAccSpeed, valAccAccel = computeDerivatives(valAccPlot)
+                    # Test
+                    valLossPlot.append(valLoss)
+                    valAccPlot.append(valAcc)
+                    valIndivAccPlot.append(valIndivAcc)
+                    valLossSpeed, valLossAccel = computeDerivatives(valLossPlot)
+                    valAccSpeed, valAccAccel = computeDerivatives(valAccPlot)
 
-                lossAccDict = {
-                    'loss': trainLossPlot,
-                    'valLoss': valLossPlot,
-                    'lossSpeed': trainLossSpeed,
-                    'valLossSpeed': valLossSpeed,
-                    'lossAccel': trainLossAccel,
-                    'valLossAccel': valLossAccel,
-                    'acc': trainAccPlot,
-                    'valAcc': valAccPlot,
-                    'accSpeed': trainAccSpeed,
-                    'valAccSpeed': valAccSpeed,
-                    'accAccel': trainAccSpeed,
-                    'valAccAccel': valAccSpeed,
-                    'indivAcc': trainIndivAccPlot,
-                    'indivValAcc': valIndivAccPlot,
-                    # 'indivValAccRef': indivAccRef,
-                    'features': trainFeatPlot,
-                    'labels': one_hot_to_dense(trainFeatLabels) # labels of the last batch of the references to plot some features
-                    }
+                    lossAccDict = {
+                        'loss': trainLossPlot,
+                        'valLoss': valLossPlot,
+                        'lossSpeed': trainLossSpeed,
+                        'valLossSpeed': valLossSpeed,
+                        'lossAccel': trainLossAccel,
+                        'valLossAccel': valLossAccel,
+                        'acc': trainAccPlot,
+                        'valAcc': valAccPlot,
+                        'accSpeed': trainAccSpeed,
+                        'valAccSpeed': valAccSpeed,
+                        'accAccel': trainAccSpeed,
+                        'valAccAccel': valAccSpeed,
+                        'indivAcc': trainIndivAccPlot,
+                        'indivValAcc': valIndivAccPlot,
+                        # 'indivValAccRef': indivAccRef,
+                        'features': trainFeatPlot,
+                        'labels': one_hot_to_dense(trainFeatLabels) # labels of the last batch of the references to plot some features
+                        }
 
-                pickle.dump( lossAccDict , open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
-                '''
-                *******************
-                Plotter
-                *******************
-                '''
-                if epoch_i % 10 == 0:
-                    CNNplotterFast(lossAccDict)
+                    pickle.dump( lossAccDict , open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
+                    '''
+                    *******************
+                    Plotter
+                    *******************
+                    '''
+                    if epoch_i % 10 == 0:
+                        CNNplotterFast(lossAccDict)
 
-                    print 'Saving figure...'
-                    figname = ckpt_dir + '/figures/result_' + str(epoch_i) + '.pdf'
-                    plt.savefig(figname)
-                print '-------------------------------'
+                        print 'Saving figure...'
+                        figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
+                        plt.savefig(figname)
+                    print '-------------------------------'
+
+                    if stored_exception:
+                        break
+                    epoch_i += 1
+                except KeyboardInterrupt:
+                    stored_exception = sys.exc_info()
+
+            if stored_exception:
+                raise stored_exception[0], stored_exception[1], stored_exception[2]
 
 
 # prep for args
