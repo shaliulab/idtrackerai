@@ -8,6 +8,10 @@ import tkMessageBox
 import argparse
 import os
 import glob
+import pandas as pd
+import h5py
+import time
+import re
 
 """
 Display messages and errors
@@ -31,14 +35,19 @@ def displayError(title, message):
 """
 Scan folders  for videos
 """
+def natural_sort(l):
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+    return sorted(l, key = alphanum_key)
+
 def scanFolder(path):
     paths = [path]
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)
     folder = os.path.dirname(path)
     # maybe write check on video extension supported by opencv2
-    if filename[-1] == '0':
-        paths = glob.glob(folder + "/" + filename[:-1] + "*" + extension)
+    if filename[-2:] == '_1':
+        paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
     return paths
 
 """
@@ -65,6 +74,7 @@ def computeBkg(paths, ROI, EQ):
 
     totNumFrame = 0
     for path in paths:
+        print 'Adding video %s to background' % path
         cap = cv2.VideoCapture(path)
         numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
         # width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
@@ -77,7 +87,7 @@ def computeBkg(paths, ROI, EQ):
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray = cropper(gray, ROI)
             gray = checkEq(EQ, gray)
-            gray = frameAverager(gray)
+            gray,_ = frameAverager(gray)
             bkg = bkg + gray
     bkg = np.true_divide(bkg, totNumFrame)
     # bkg is the backgorund computed by summing all the averaged frames
@@ -182,7 +192,7 @@ Normalize by the average intensity
 """
 
 def frameAverager(frame):
-    return np.divide(frame,np.mean(frame))
+    return np.divide(frame,np.mean(frame)), np.mean(frame)
 
 """
 Image equalization
@@ -306,15 +316,17 @@ if __name__ == '__main__':
 
     # prep for args
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', default='./test0.avi', type = str)
-    parser.add_argument('--bkg_subtraction', default=True, type = bool)
-    parser.add_argument('--ROI_selection', default=True, type = bool)
+    videoPath = './Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
+    # testPath = './test_1.avi'
+    parser.add_argument('--path', default = videoPath, type = str)
+    parser.add_argument('--bkg_subtraction', default = False, type = bool)
+    parser.add_argument('--ROI_selection', default = True, type = bool)
     parser.add_argument('--mask_frame', default = True, type= bool)
-    parser.add_argument('--Eq_image', default=False, type = bool)
-    parser.add_argument('--min_th', default=180, type = int)
-    parser.add_argument('--max_th', default=255, type = int)
-    parser.add_argument('--min_area', default=50, type = int)
-    parser.add_argument('--max_area', default=500, type = int)
+    parser.add_argument('--Eq_image', default = False, type = bool)
+    parser.add_argument('--min_th', default = 180, type = int)
+    parser.add_argument('--max_th', default = 255, type = int)
+    parser.add_argument('--min_area', default = 350, type = int)
+    parser.add_argument('--max_area', default = 2000, type = int)
     args = parser.parse_args()
 
     ''' Parameters for the segmentation '''
@@ -335,6 +347,8 @@ if __name__ == '__main__':
     ROI = checkROI(selectROI)
     bkg = checkBkg(bkgSubstraction, paths, ROI, EQ)
     ''' Entering loop for segmentation of the video '''
+    totalFrameCounter = 0
+    df = pd.DataFrame(columns=('avIntensity','miniFrames', 'centroids', 'areas', 'pixels'))
     for path in paths:
         print 'Segmenting video %s' % path
         cap = cv2.VideoCapture(path)
@@ -351,29 +365,62 @@ if __name__ == '__main__':
             frame = checkEq(EQ, frame)
             # mask or crop the image
             frame = cropper(frame, ROI)
-            #Normalize each frame by its mean intensity
-            frame = frameAverager(frame)
             avFrame = frame
+            #Normalize each frame by its mean intensity
+            frame, avIntensity = frameAverager(frame)
+            # avFrame = frame
             # perform background subtraction if needed
             frame = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
             # Find contours in the segmented image
             miniFrames, centroids, areas, pixels, goodContoursFull = blobExtractor(frame, avFrame, minArea, maxArea, ROI)
 
-            cv2.drawContours(frameToPlot, goodContoursFull, -1, (255,0,0), -1)
+            # Add frame imformation to DataFrame
+            df.loc[totalFrameCounter] = [avIntensity, miniFrames, centroids, areas, pixels]
 
-            ### uncomment to plot centroids
-            for c in centroids:
-                cv2.circle(frameToPlot,c,3,(0,0,1),4)
-            # Visualization of the process
-            cv2.imshow('ROIFrameContours',frameToPlot)
+            ### uncomment to plot centroids and blobs
+            # cv2.drawContours(frameToPlot, goodContoursFull, -1, (255,0,0), -1)
+            # for c in centroids:
+            #     cv2.circle(frameToPlot,c,3,(0,0,1),4)
+            # # Visualization of the process
+            # cv2.imshow('ROIFrameContours',frameToPlot)
 
-            # Plot miniframes
-            for i, miniFrame in enumerate(miniFrames):
-                cv2.imshow('miniFrame' + str(i), miniFrame)
-                print pixels[i]
+            ### Plot miniframes
+            # for i, miniFrame in enumerate(miniFrames):
+            #     cv2.imshow('miniFrame' + str(i), miniFrame)
 
-            k = cv2.waitKey(30) & 0xFF
-            if k == 27: #pres esc to quit
-                break
+            # k = cv2.waitKey(30) & 0xFF
+            # if k == 27: #pres esc to quit
+            #     break
+            totalFrameCounter += 1
+
+    # df.to_hdf('test.h5','df',mode='w',format='table',data_columns=True)
+    df.to_pickle('testNatureMethods.pkl')
+
+
+
+    # # nameDatabase =  ageInDpf + '_' + str(numIndiv) + 'indiv_' + str(int(numImagesPerIndiv)) + 'ImPerInd_' + preprocessing
+    # f = h5py.File('../data/' + 'test' + '_%i.hdf5', driver='family')
+    # grp = f.create_group("segmentation")
+    #
+    #
+    # dset1 = grp.create_dataset("avIntensity", data.shape, dtype='f')
+    # dset2 = grp.create_dataset("miniFrames", label.shape, dtype='i')
+    # dset1 = grp.create_dataset("centroids", data.shape, dtype='f')
+    # dset2 = grp.create_dataset("areas", label.shape, dtype='f')
+    # dset2 = grp.create_dataset("pixels", label.shape, dtype='f')
+    #
+    #
+    # dset1[...] = data
+    # dset2[...] = label
+    #
+    # grp.attrs['originalMatPath'] = pathToDatabase
+    # grp.attrs['numIndiv'] = numIndiv
+    # grp.attrs['imageSize'] = imsize
+    # grp.attrs['numImagesPerIndiv'] = numImagesPerIndiv
+    # grp.attrs['ageInDpf'] = ageInDpf
+    # grp.attrs['preprocessing'] = preprocessing
+    #
+    # f.close()
+
     cap.release()
     cv2.destroyAllWindows()
