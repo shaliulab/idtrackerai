@@ -29,28 +29,53 @@ def displayError(title, message):
     tkMessageBox.showerror(title=title,message=message,parent=window)
 
 """
+Scan folders  for videos
+"""
+def scanFolder(path):
+    paths = [path]
+    video = os.path.basename(path)
+    filename, extension = os.path.splitext(video)
+    folder = os.path.dirname(path)
+    # maybe write check on video extension supported by opencv2
+    if filename[-1] == '0':
+        paths = glob.glob(folder + "/" + filename[:-1] + "*" + extension)
+    return paths
+
+"""
+Get general information from video
+"""
+def getVideoInfo(paths):
+    cap = cv2.VideoCapture(paths[0])
+    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+    return width, height
+
+"""
 Compute background and threshold
 """
 def computeBkg(paths, ROI, EQ):
+    # This holds even if we have not selected a ROI because then the ROI is the
+    # full frame
     bkg = np.zeros(
     (
     np.abs(np.subtract(ROI[0][1],ROI[1][1])),
     np.abs(np.subtract(ROI[0][0],ROI[1][0]))
     )
     )
+
     totNumFrame = 0
     for path in paths:
         cap = cv2.VideoCapture(path)
         numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        heigth = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+        # width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+        # height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
         counter = 0
         totNumFrame = totNumFrame + numFrame
         while counter < numFrame:
             counter += 1;
             ret, frame = cap.read()
-            frame = frame[ROI[0][1]:ROI[1][1], ROI[0][0]:ROI[1][0]]
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray = cropper(gray, ROI)
             gray = checkEq(EQ, gray)
             gray = frameAverager(gray)
             bkg = bkg + gray
@@ -62,88 +87,38 @@ def computeBkg(paths, ROI, EQ):
 def bkgSubtraction(frame, bkg):
     return np.abs(np.subtract(frame,bkg))
 
-def frameAverager(frame):
-    return np.divide(frame,np.mean(frame))
+def checkBkg(bkgSubstraction, paths, ROI, EQ):
+    ''' Compute Bkg '''
+    if bkgSubstraction:
+        print '\n Computing background ...\n'
+        bkg = computeBkg(paths, ROI, EQ)
 
-def filterContoursBySize(contours,minArea,maxArea):
-    goodContours = []
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if area > minArea and area < maxArea:
-            goodContours.append(contour)
-    return goodContours
+        return bkg
+    else:
+        return None
 
-def coordROI2Full(x,y,ROI):
-    if ROI[0][0] > ROI[1][0]:
-        ROI = [ROI[1],ROI[0]]
-    x = x + ROI[0][0]
-    y = y + ROI[0][1]
-    return x, y
-
-def cntROI2OriginalFrame(contours,ROI):
-    contoursFull = []
-    for cnt in contours:
-        cnt = cnt + np.asarray([ROI[0][0],ROI[0][1]])
-        contoursFull.append(cnt)
-    return contoursFull
-
-def getBoundigBox(cnt):
-    x,y,w,h = cv2.boundingRect(cnt)
-    if (x > 2 and y > 2):
-        x = x - 2
-        y = y - 2
-        w = w + 4
-        h = h + 4
-    return ((x,y),(x+w,y+h))
-
-def getCentroid(cnt):
-    M = cv2.moments(cnt)
-    x = int(M['m10']/M['m00'])
-    y = int(M['m01']/M['m00'])
-    return (x,y)
-
-def getPixelsList(cnt, width, height):
-    cimg = np.zeros((height, width))
-    cv2.drawContours(cimg, cnt, -1, (255,0,0), -1)
-    # Access the image pixels and create a 1D numpy array then add to list
-    pts = np.where(cimg == 255)
-    return zip(pts[0],pts[1])
-
-def getBlobsInfoPerFrame(blobs, width, height):
-    boundingBoxes = []
-    centroids = []
-    areas = []
-    pixels = []
-    for blob in blobs:
-        # boundigBox
-        boundingBoxes.append(getBoundigBox(blob))
-        # centroid
-        centroids.append(getCentroid(blob))
-        # area
-        areas.append(cv2.contourArea(blob))
-        # pixels list
-        pixels.append(getPixelsList(blob,width, height))
-    return boundingBoxes, centroids, areas, pixels
-
+"""
+ROI selector GUI
+"""
 def ROIselector(paths):
 
     def ROIselectorCallBack(event, x, y, flags, params):
     	# grab references to the global variables
-    	global ROI, selectROI
+    	global ROI, selectROI_
 
     	# if the left mouse button was clicked, record the starting
     	# (x, y) coordinates and indicate that cropping is being
     	# performed
     	if event == cv2.EVENT_LBUTTONDOWN:
     		ROI = [(x, y)]
-    		selectROI = True
+    		selectROI_ = True
 
     	# check to see if the left mouse button was released
     	elif event == cv2.EVENT_LBUTTONUP:
     		# record the ending (x, y) coordinates and indicate that
     		# the cropping operation is finished
     		ROI.append((x, y))
-    		selectROI = False
+    		selectROI_ = False
 
     		# draw a rectangle around the region of interest
     		cv2.rectangle(frame, ROI[0], ROI[1], (0, 255, 0), 2)
@@ -172,21 +147,10 @@ def ROIselector(paths):
     cv2.destroyAllWindows()
     return ROI
 
-def scanFolder(path):
-    paths = [path]
-    video = os.path.basename(path)
-    filename, extension = os.path.splitext(video)
-    folder = os.path.dirname(path)
-    # maybe write check on video extension supported by opencv2
-    if filename[-1] == '0':
-        paths = glob.glob(folder + "/" + filename[:-1] + "*" + extension)
-    return paths
-
 def checkROI(selectROI):
     ROI = []
     if not selectROI:
-        ROI = [(0,0),(width, heigth)]
-    print ROI
+        ROI = [(0,0),(width, height)]
     ''' Select ROI '''
     if selectROI:
         print '\n Selecting ROI ...'
@@ -194,16 +158,35 @@ def checkROI(selectROI):
         print "ROI: ",ROI
     return ROI
 
-def checkBkg(bkgSubstraction, paths, ROI, EQ):
-    ''' Compute Bkg '''
-    if bkgSubstraction:
-        print '\n Computing background ...\n'
-        bkg = computeBkg(paths, ROI, EQ)
+"""
+Cropper and masker
+"""
+def maskROI(frame, ROI):
+    mask = np.zeros_like(frame)
+    mask[ROI[0][1]:ROI[1][1], ROI[0][0]:ROI[1][0]] = 1.
+    maskedFrame = frame * mask
+    return maskedFrame
 
-        return bkg
-    else:
-        return None
+def cropper(frame, ROI):
+    return frame[ROI[0][1]:ROI[1][1], ROI[0][0]:ROI[1][0]]
 
+def masker(frame, maskFrame, ROI, selectROI):
+    if selectROI:
+        if maskFrame:
+            frame = maskROI(frame, ROI)
+    return frame
+
+
+"""
+Normalize by the average intensity
+"""
+
+def frameAverager(frame):
+    return np.divide(frame,np.mean(frame))
+
+"""
+Image equalization
+"""
 def checkEq(EQ, frame):
     if EQ:
         # Equalize image using CLAHE (Contrast Limited Adaptive Histogram Equalization)
@@ -211,6 +194,9 @@ def checkEq(EQ, frame):
         frame = clahe.apply(frame)
     return frame
 
+"""
+Image segmentation
+"""
 def segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction):
     #Apply background substractions if requested and thresholding image
     if bkgSubstraction:
@@ -223,11 +209,98 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction):
         ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
     return frame
 
-def getVideoInfo(paths):
-    cap = cv2.VideoCapture(paths[0])
-    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-    heigth = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-    return width, heigth
+"""
+Get information from blobs
+"""
+
+def filterContoursBySize(contours,minArea,maxArea):
+    goodContours = []
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > minArea and area < maxArea:
+            goodContours.append(contour)
+    return goodContours
+
+def coordROI2Full(x,y,ROI):
+    if ROI[0][0] > ROI[1][0]:
+        ROI = [ROI[1],ROI[0]]
+    x = x + ROI[0][0]
+    y = y + ROI[0][1]
+    return x, y
+
+def cntROI2OriginalFrame(contours,ROI):
+    contoursFull = []
+    for cnt in contours:
+        cnt = cnt + np.asarray([ROI[0][0],ROI[0][1]])
+        contoursFull.append(cnt)
+    return contoursFull
+
+def cntROI2BoundingBox(cnt,boundingBox):
+    return cnt - np.asarray([boundingBox[0][0],boundingBox[0][1]])
+
+def getBoundigBox(cnt):
+    x,y,w,h = cv2.boundingRect(cnt)
+    if (x > 2 and y > 2):
+        x = x - 2
+        y = y - 2
+        w = w + 4
+        h = h + 4
+    return ((x,y),(x+w,y+h))
+
+def getCentroid(cnt,ROI):
+    M = cv2.moments(cnt)
+    x = int(M['m10']/M['m00'])
+    y = int(M['m01']/M['m00'])
+    x, y = coordROI2Full(x,y,ROI)
+    return (x,y)
+
+def getPixelsList(cnt, width, height):
+    cimg = np.zeros((height, width))
+    cv2.drawContours(cimg, cnt, -1, (255,0,0), -1)
+    # Access the image pixels and create a 1D numpy array then add to list
+    pts = np.where(cimg == 255)
+    return zip(pts[0],pts[1])
+
+def getMiniFrame(avFrame, cnt, ROI):
+    boundingBox = getBoundigBox(cnt)
+    miniFrame = avFrame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
+    cntBB = cntROI2BoundingBox(cnt,boundingBox)
+    pixelsInBB = getPixelsList(cntBB, np.abs(boundingBox[0][0]-boundingBox[1][0]), np.abs(boundingBox[0][1]-boundingBox[1][1]))
+    pixelsInROI = pixelsInBB + np.asarray([boundingBox[0][0],boundingBox[0][1]])
+    pixelsInFullF = pixelsInROI + np.asarray([ROI[0][0],ROI[0][1]])
+    return miniFrame, pixelsInFullF
+
+def getBlobsInfoPerFrame(avFrame, contours, ROI):
+    miniFrames = []
+    centroids = []
+    areas = []
+    pixels = []
+    for cnt in contours:
+        # boundigBox
+        miniFrame, pixelsInFullF = getMiniFrame(avFrame, cnt, ROI)
+        miniFrames.append(miniFrame)
+        # centroid
+        centroids.append(getCentroid(cnt,ROI))
+        # area
+        areas.append(cv2.contourArea(cnt))
+        # pixels list
+        pixels.append(pixelsInFullF)
+    return miniFrames, centroids, areas, pixels
+
+def blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI):
+    contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    # Filter contours by size
+    goodContours = filterContoursBySize(contours,minArea, maxArea)
+    # Pass contours' coordinates from ROI to full size image if the ROI
+    # has been cropped
+    goodContoursFull = cntROI2OriginalFrame(goodContours,ROI) #only used to plot in the full frame
+
+    ### uncomment to plot contours
+    # cv2.drawContours(frame, goodContours, -1, (255,0,0), -1)
+    # get contours properties
+    miniFrames, centroids, areas, pixels = getBlobsInfoPerFrame(avFrame, goodContours, ROI)
+
+    return miniFrames, centroids, areas, pixels, goodContoursFull
 
 if __name__ == '__main__':
 
@@ -235,7 +308,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--path', default='./test0.avi', type = str)
     parser.add_argument('--bkg_subtraction', default=True, type = bool)
-    parser.add_argument('--ROI_selection', default=False, type = bool)
+    parser.add_argument('--ROI_selection', default=True, type = bool)
+    parser.add_argument('--mask_frame', default = True, type= bool)
     parser.add_argument('--Eq_image', default=False, type = bool)
     parser.add_argument('--min_th', default=180, type = int)
     parser.add_argument('--max_th', default=255, type = int)
@@ -246,6 +320,7 @@ if __name__ == '__main__':
     ''' Parameters for the segmentation '''
     bkgSubstraction = args.bkg_subtraction
     selectROI = args.ROI_selection
+    maskFrame = args.mask_frame
     EQ = args.Eq_image
     minThreshold = args.min_th
     maxThreshold = args.max_th
@@ -254,7 +329,8 @@ if __name__ == '__main__':
 
     ''' Path to video/s '''
     paths = scanFolder(args.path)
-    width, heigth = getVideoInfo(paths)
+
+    width, height = getVideoInfo(paths)
     ROI = []
     ROI = checkROI(selectROI)
     bkg = checkBkg(bkgSubstraction, paths, ROI, EQ)
@@ -268,32 +344,34 @@ if __name__ == '__main__':
             counter += 1
             #Get frame from video file
             ret, frame = cap.read()
-            originalFrame = frame
+            frameToPlot = masker(frame, maskFrame, ROI, selectROI)
             #Color to gray scale
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # Equalize image to enhance contrast
             frame = checkEq(EQ, frame)
-            #crop according to ROI
-            frame = frame[ROI[0][1]:ROI[1][1], ROI[0][0]:ROI[1][0]]
+            # mask or crop the image
+            frame = cropper(frame, ROI)
             #Normalize each frame by its mean intensity
-            frame = np.divide(frame,np.mean(frame))
-            # perform backgourn subtraction if needed
+            frame = frameAverager(frame)
+            avFrame = frame
+            # perform background subtraction if needed
             frame = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
             # Find contours in the segmented image
-            contours, hierarchy = cv2.findContours(frame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-            # Filter contours by size
-            goodContours = filterContoursBySize(contours,minArea, maxArea)
-            # Pass contours' coordinates from ROI to full size image
-            goodContoursFull = cntROI2OriginalFrame(goodContours,ROI)
-            ### uncomment to plot contours
-            cv2.drawContours(originalFrame, goodContoursFull, -1, (255,0,0), -1)
-            # get contours properties
-            boundingBoxes, centroids, areas, pixels = getBlobsInfoPerFrame(goodContoursFull, width, heigth)
+            miniFrames, centroids, areas, pixels, goodContoursFull = blobExtractor(frame, avFrame, minArea, maxArea, ROI)
+
+            cv2.drawContours(frameToPlot, goodContoursFull, -1, (255,0,0), -1)
+
             ### uncomment to plot centroids
             for c in centroids:
-                cv2.circle(originalFrame,c,3,(0,0,1),4)
+                cv2.circle(frameToPlot,c,3,(0,0,1),4)
             # Visualization of the process
-            cv2.imshow('ROIFrameContours',originalFrame)
+            cv2.imshow('ROIFrameContours',frameToPlot)
+
+            # Plot miniframes
+            for i, miniFrame in enumerate(miniFrames):
+                cv2.imshow('miniFrame' + str(i), miniFrame)
+                print pixels[i]
+
             k = cv2.waitKey(30) & 0xFF
             if k == 27: #pres esc to quit
                 break
