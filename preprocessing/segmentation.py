@@ -319,8 +319,8 @@ if __name__ == '__main__':
     videoPath = './Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
     # testPath = './test_1.avi'
     parser.add_argument('--path', default = videoPath, type = str)
-    parser.add_argument('--bkg_subtraction', default = False, type = bool)
-    parser.add_argument('--ROI_selection', default = True, type = bool)
+    parser.add_argument('--bkg_subtraction', default = True, type = bool)
+    parser.add_argument('--ROI_selection', default = False, type = bool)
     parser.add_argument('--mask_frame', default = True, type= bool)
     parser.add_argument('--Eq_image', default = False, type = bool)
     parser.add_argument('--min_th', default = 180, type = int)
@@ -350,6 +350,7 @@ if __name__ == '__main__':
     totalFrameCounter = 0
     df = pd.DataFrame(columns=('avIntensity','miniFrames', 'centroids', 'areas', 'pixels'))
     for path in paths:
+        start  = time.time()
         print 'Segmenting video %s' % path
         cap = cv2.VideoCapture(path)
         numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
@@ -377,50 +378,23 @@ if __name__ == '__main__':
             # Add frame imformation to DataFrame
             df.loc[totalFrameCounter] = [avIntensity, miniFrames, centroids, areas, pixels]
 
-            ### uncomment to plot centroids and blobs
+            # ### uncomment to plot centroids and blobs
             # cv2.drawContours(frameToPlot, goodContoursFull, -1, (255,0,0), -1)
             # for c in centroids:
             #     cv2.circle(frameToPlot,c,3,(0,0,1),4)
             # # Visualization of the process
             # cv2.imshow('ROIFrameContours',frameToPlot)
-
-            ### Plot miniframes
+            #
+            # ## Plot miniframes
             # for i, miniFrame in enumerate(miniFrames):
             #     cv2.imshow('miniFrame' + str(i), miniFrame)
-
+            #
             # k = cv2.waitKey(30) & 0xFF
             # if k == 27: #pres esc to quit
             #     break
             totalFrameCounter += 1
+        print time.time() - start
 
-    # df.to_hdf('test.h5','df',mode='w',format='table',data_columns=True)
-    df.to_pickle('testNatureMethods.pkl')
-
-
-
-    # # nameDatabase =  ageInDpf + '_' + str(numIndiv) + 'indiv_' + str(int(numImagesPerIndiv)) + 'ImPerInd_' + preprocessing
-    # f = h5py.File('../data/' + 'test' + '_%i.hdf5', driver='family')
-    # grp = f.create_group("segmentation")
-    #
-    #
-    # dset1 = grp.create_dataset("avIntensity", data.shape, dtype='f')
-    # dset2 = grp.create_dataset("miniFrames", label.shape, dtype='i')
-    # dset1 = grp.create_dataset("centroids", data.shape, dtype='f')
-    # dset2 = grp.create_dataset("areas", label.shape, dtype='f')
-    # dset2 = grp.create_dataset("pixels", label.shape, dtype='f')
-    #
-    #
-    # dset1[...] = data
-    # dset2[...] = label
-    #
-    # grp.attrs['originalMatPath'] = pathToDatabase
-    # grp.attrs['numIndiv'] = numIndiv
-    # grp.attrs['imageSize'] = imsize
-    # grp.attrs['numImagesPerIndiv'] = numImagesPerIndiv
-    # grp.attrs['ageInDpf'] = ageInDpf
-    # grp.attrs['preprocessing'] = preprocessing
-    #
-    # f.close()
-
+    # df.to_pickle('testNatureMethods.pkl')
     cap.release()
     cv2.destroyAllWindows()
