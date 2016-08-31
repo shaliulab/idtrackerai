@@ -212,8 +212,8 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction):
     if bkgSubstraction:
         frame = np.abs(np.subtract(frame, bkg))
         frame = np.multiply(frame/np.max(frame),255).astype('uint8')
-        ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
+        # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
     else:
         frame = np.multiply(frame/np.max(frame),255).astype('uint8')
         ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
@@ -266,7 +266,8 @@ def getCentroid(cnt,ROI):
 
 def getPixelsList(cnt, width, height):
     cimg = np.zeros((height, width))
-    cv2.drawContours(cimg, cnt, -1, (255,0,0), -1)
+    cv2.drawContours(cimg, [cnt], -1, (255,0,0), -1)
+    # cv2.imshow('cnt',cimg)
     # Access the image pixels and create a 1D numpy array then add to list
     pts = np.where(cimg == 255)
     return zip(pts[0],pts[1])
@@ -316,16 +317,16 @@ if __name__ == '__main__':
 
     # prep for args
     parser = argparse.ArgumentParser()
-    videoPath = './Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
+    videoPath = './Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi'
     # testPath = './test_1.avi'
     parser.add_argument('--path', default = videoPath, type = str)
     parser.add_argument('--bkg_subtraction', default = True, type = bool)
-    parser.add_argument('--ROI_selection', default = False, type = bool)
+    parser.add_argument('--ROI_selection', default = True, type = bool)
     parser.add_argument('--mask_frame', default = True, type= bool)
     parser.add_argument('--Eq_image', default = False, type = bool)
-    parser.add_argument('--min_th', default = 180, type = int)
+    parser.add_argument('--min_th', default = 130, type = int)
     parser.add_argument('--max_th', default = 255, type = int)
-    parser.add_argument('--min_area', default = 350, type = int)
+    parser.add_argument('--min_area', default = 40, type = int)
     parser.add_argument('--max_area', default = 2000, type = int)
     args = parser.parse_args()
 
@@ -379,19 +380,19 @@ if __name__ == '__main__':
             df.loc[totalFrameCounter] = [avIntensity, miniFrames, centroids, areas, pixels]
 
             # ### uncomment to plot centroids and blobs
-            # cv2.drawContours(frameToPlot, goodContoursFull, -1, (255,0,0), -1)
-            # for c in centroids:
-            #     cv2.circle(frameToPlot,c,3,(0,0,1),4)
-            # # Visualization of the process
-            # cv2.imshow('ROIFrameContours',frameToPlot)
+            cv2.drawContours(frameToPlot, goodContoursFull, -1, (255,0,0), -1)
+            for c in centroids:
+                cv2.circle(frameToPlot,c,3,(0,0,1),4)
+            # Visualization of the process
+            cv2.imshow('ROIFrameContours',frameToPlot)
             #
             # ## Plot miniframes
             # for i, miniFrame in enumerate(miniFrames):
             #     cv2.imshow('miniFrame' + str(i), miniFrame)
             #
-            # k = cv2.waitKey(30) & 0xFF
-            # if k == 27: #pres esc to quit
-            #     break
+            k = cv2.waitKey(30) & 0xFF
+            if k == 27: #pres esc to quit
+                break
             totalFrameCounter += 1
         print time.time() - start
 
