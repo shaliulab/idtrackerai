@@ -1,6 +1,7 @@
 import cv2
 import sys
 sys.path.append('../utils')
+from py_utils import *
 import time
 import numpy as np
 from matplotlib import pyplot as plt
@@ -15,46 +16,8 @@ import re
 from joblib import Parallel, delayed
 import multiprocessing
 import itertools
-from py_utils import *
+import cPickle as pickle
 
-"""To be moved in py_utils"""
-def ssplit2(seq,splitters):
-    """
-    split a list at splitters, if the splitted sequence is longer than 1
-    """
-    seq=list(seq)
-    if splitters and seq:
-        splitters=set(splitters).intersection(seq)
-        if splitters:
-            result=[]
-            begin=0
-            for end in range(len(seq)):
-                if seq[end] in splitters:
-                    if (end > begin and len(seq[begin:end])>1) :
-                        result.append(seq[begin:end])
-                    begin=end+1
-            if begin<len(seq):
-                result.append(seq[begin:])
-            return result
-    return [seq]
-
-""""""
-def natural_sort(l):
-    convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
-    return sorted(l, key = alphanum_key)
-
-def scanFolder(path):
-    paths = [path]
-    video = os.path.basename(path)
-    filename, extension = os.path.splitext(video)
-    folder = os.path.dirname(path)
-    # maybe write check on video extension supported by opencv2
-    if filename[-2:] == '_1':
-        paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
-    return paths
-
-""""""
 
 def computeIntersection(pixelsA,pixelsB):
     """
@@ -63,7 +26,6 @@ def computeIntersection(pixelsA,pixelsB):
     intersect = False
     if len(np.intersect1d(pixelsA,pixelsB)) > 0:
         intersect = True
-        # print intersect
     return intersect
 
 def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
@@ -76,29 +38,14 @@ def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
     intersect = False
     trueFragment = False
     for combination in combinations:
-        # print combination
         inter = computeIntersection(pixelsFrameA[combination[0]],pixelsFrameB[combination[1]])
         intersect += inter
-        # print inter
         if inter:
             s.append(combination)
     if intersect == numAnimals:
         trueFragment = True
         permutation = np.asarray(sorted(s, key=lambda x: x[1]))[:,0]
     return trueFragment, permutation
-
-# df = pd.read_pickle('./Cafeina5pecesSmall/Caffeine5fish_20140206T122428_3.pkl')
-# pixelsFrameA = df.loc[12,'pixels']
-# pixelsFrameB = df.loc[13,'pixels']
-#
-# im = np.zeros((671,1068))
-# for p in pixelsFrameA:
-#     im[np.unravel_index(p,(671,1068))] = 1
-# for p in pixelsFrameB:
-#     im[np.unravel_index(p,(671,1068))] = .5
-#
-# plt.ion()
-# plt.imshow(im,cmap='gray'), plt.show()
 
 def computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals, numSegment):
 
@@ -124,7 +71,6 @@ def computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals, numSegment)
                         SE.append(np.nan)
                     else:
                         SE.append(i-1)
-                # print df
                 counter += 1
                 df.loc[i,'permutation'] = df.loc[i-1,'permutation'][s]
             else:
@@ -155,8 +101,7 @@ def fragmentator(path):
     return fragmentsIndices
 
 def segmentJoiner(paths,fragmentsIndices,numAnimals):
-
-    # first segment
+    # init first segment
     df = pd.read_pickle(paths[0])
     fragmentsIndicesA = fragmentsIndices[0][1]
     permutationA = df.iloc[-1]['permutation']
@@ -169,7 +114,6 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
     globalFragments = fragmentsIndicesA[:-1]
 
     for i in range(1,len(paths)):
-
         print 'Joining segment %s with %s ' % (paths[i-1], paths[i])
         # current segment
         df = pd.read_pickle(paths[i])
@@ -178,33 +122,29 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
         pixelsB = df.iloc[0]['pixels']
         numFramesB = len(df)
 
-        if isinstance(permutationA,float): # if the last frame of the previous segment is not good (it si NaN)
-
+        if isinstance(permutationA,float): # if the last frame of the previous segment is not good (it is NaN)
             globalFragments.append(fragmentsIndicesA[-1])
-
             if isinstance(fragmentsIndicesB[0][0],float):
                 fragmentsIndicesB[0][0] = globalFrameCounter
 
             globalFragments += fragmentsIndicesB[:-1]
-
             fragmentsIndicesA = fragmentsIndicesB
             permutationA = df.iloc[-1]['permutation'] # I save the permutation of the last frame of the current segment
             pixelsA = df.iloc[-1]['pixels']
             numFramesA = numFramesB
             globalFrameCounter += numFramesA
-
         else: # if the last frame of the previous segment is good
             if (len(pixelsA) == numAnimals and len(pixelsB) == numAnimals and not isinstance(df.loc[0,'permutation'],float)):
                 trueFragment, s = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
-                if trueFragment:
 
+                if trueFragment:
                     newFragment = [fragmentsIndicesA[-1][0],fragmentsIndicesB[0][1]]
                     globalFragments.append(newFragment)
                     globalFragments += fragmentsIndicesB[1:-1]
-
                     # update permutations if they join
                     df.set_value(0,'permutation',permutationA[s])
                     counter = 1
+
                     while (not isinstance(df.loc[counter,'permutation'],float) and counter<len(df)):
                         pixelsA = df.loc[counter-1,'pixels']
                         pixelsB = df.loc[counter,'pixels']
@@ -212,13 +152,10 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
                         indivB = df.loc[counter, 'permutation']
                         trueFragment, s = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
                         df.set_value(counter,'permutation',indivA[s])
-
                         counter += 1
-
                 else:
                     fragmentsIndicesA[-1][1] = globalFrameCounter-1
                     globalFragments.append(fragmentsIndicesA[-1])
-
                     fragmentsIndicesB[0][0] = globalFrameCounter + 1
                     globalFragments += fragmentsIndicesB[:-1]
 
@@ -228,7 +165,6 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
             pixelsA = df.iloc[-1]['pixels']
             numFramesA = numFramesB
             globalFrameCounter += numFramesA
-
             #save
             video = os.path.basename(paths[i])
             filename, extension = os.path.splitext(video)
@@ -240,9 +176,10 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
 
     globalFragments.append(fragmentsIndicesB[-1])
     globalFragments = [map(int,globalFragment) for globalFragment in globalFragments]
-    print globalFragments
     globalFragments = sorted(globalFragments, key=lambda x: x[1]-x[0],reverse=True)
-    return globalFragments
+    ### to be changed in the parallel version of this function
+    filename = folder +'/'+ filename.split('_')[0] + '_segments.pkl'
+    pickle.dump(globalFragments, open(filename, 'wb'))
 
 if __name__ == '__main__':
     paths = scanFolder('./Cafeina5peces/Caffeine5fish_20140206T122428_1.pkl')
@@ -252,12 +189,9 @@ if __name__ == '__main__':
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
     fragmentsIndices = Parallel(n_jobs=num_cores)(delayed(fragmentator)(path) for path in paths)
-    # print fragmentsIndices
     fragmentsIndices = sorted(fragmentsIndices, key=lambda x: x[0])
-    print fragmentsIndices
     numAnimals = 5
     globalFragments = segmentJoiner(paths, fragmentsIndices, numAnimals)
-    print globalFragments
 
     """
     IdInspector
@@ -294,12 +228,11 @@ if __name__ == '__main__':
             ret, frame = cap.read()
             #Color to gray scale
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            # print permutation
             font = cv2.FONT_HERSHEY_SIMPLEX
 
             # Plot segmentated blobs
             for i, pixel in enumerate(pixels):
-                px = np.unravel_index(pixel,(671,1068))
+                px = np.unravel_index(pixel,(height,width))
                 frame[px[0],px[1]] = 255
 
             # plot numbers if not crossing
@@ -315,7 +248,6 @@ if __name__ == '__main__':
             pass
 
         cv2.namedWindow('IdPlayer')
-        print numFrame
         cv2.createTrackbar( 'start', 'IdPlayer', 0, numFrame-1, onChange )
         # cv2.createTrackbar( 'end'  , 'IdPlayer', numFrame-1, numFrame, onChange )
 

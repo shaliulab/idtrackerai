@@ -1,5 +1,8 @@
 import cv2
 import sys
+sys.path.append('../utils')
+from py_utils import *
+from video_utils import *
 import time
 import numpy as np
 from matplotlib import pyplot as plt
@@ -33,39 +36,30 @@ def displayError(title, message):
     window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
     tkMessageBox.showerror(title=title,message=message,parent=window)
 
-"""
-Scan folders  for videos
-"""
-def natural_sort(l):
-    convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
-    return sorted(l, key = alphanum_key)
 
-def scanFolder(path):
-    paths = [path]
+
+def generateVideoTOC(allSegments, path):
+    """
+    generates a dataframe mapping frames to segments and save it as pickle
+    """
+    segmentsTOC = []
+    framesTOC = []
+    for segment, frame in allSegments:
+        segmentsTOC.append(segment)
+        framesTOC.append(frame)
+    segmentsTOC = flatten(segmentsTOC)
+    framesTOC = flatten(framesTOC)
+    videoTOC =  pd.DataFrame({'segment':segmentsTOC, 'frame': framesTOC})
+    folder = os.path.dirname(path)
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)
-    folder = os.path.dirname(path)
-    # maybe write check on video extension supported by opencv2
-    if filename[-2:] == '_1':
-        paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
-    return paths
-
-"""
-Get general information from video
-"""
-def getVideoInfo(paths):
-    cap = cv2.VideoCapture(paths[0])
-    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-    return width, height
+    filename = filename.split('_')[0]
+    videoTOC.to_pickle(folder +'/'+ filename + '_frameIndices' + '.pkl')
 
 """
 Compute background and threshold
 """
-def getNumFrame(path):
-    cap = cv2.VideoCapture(path)
-    return int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+
 
 def computeBkgPar(path,bkg,ROI):
     print 'Adding video %s to background' % path
@@ -83,8 +77,8 @@ def computeBkgPar(path,bkg,ROI):
     return bkg
 
 def computeBkg(paths, ROI, EQ):
-    # This holds even if we have not selected a ROI because then the ROI is the
-    # full frame
+    # This holds even if we have not selected a ROI because then the ROI is
+    # initialized as the full frame
     bkg = np.zeros(
     (
     np.abs(np.subtract(ROI[0][1],ROI[1][1])),
@@ -327,10 +321,13 @@ def blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI, height, width)
 def segmentAndSave(path, height, width):
     print 'Segmenting video %s' % path
     cap = cv2.VideoCapture(path)
-    numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    video = os.path.basename(path)
+    filename, extension = os.path.splitext(video)
+    numSegment = int(filename.split('_')[-1])
+    numFrames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     counter = 0
     df = pd.DataFrame(columns=('avIntensity','miniFrames', 'centroids', 'areas', 'pixels', 'numberOfBlobs'))
-    while counter < numFrame:
+    while counter < numFrames:
 
         #Get frame from video file
         ret, frame = cap.read()
@@ -375,12 +372,14 @@ def segmentAndSave(path, height, width):
     folder = os.path.dirname(path)
     df.to_pickle(folder +'/'+ filename + '.pkl')
 
+    return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist()
+
 
 if __name__ == '__main__':
 
     # prep for args
     parser = argparse.ArgumentParser()
-    videoPath = './Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
+    videoPath = './Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi'
     # testPath = './test_1.avi'
     parser.add_argument('--path', default = videoPath, type = str)
     parser.add_argument('--bkg_subtraction', default = True, type = bool)
@@ -419,8 +418,11 @@ if __name__ == '__main__':
 
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    results = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width) for path in paths)
+    allSegments = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width) for path in paths)
+    allSegments = sorted(allSegments, key=lambda x: x[0][0])
+    generateVideoTOC(allSegments, paths[0])
 
+    # print allFrames
     # """
     # Visualize
     # """
