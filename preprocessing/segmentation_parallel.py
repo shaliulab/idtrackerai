@@ -36,7 +36,27 @@ def displayError(title, message):
     window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
     tkMessageBox.showerror(title=title,message=message,parent=window)
 
-
+def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minThreshold,maxThreshold,maxArea):
+    """
+    saves general info about the video in a pickle (_videoinfo.pkl)
+    """
+    videoInfo = pd.DataFrame({
+        'path': path,
+        'Height':height,
+        'width': width,
+        'ROI': tuple(ROI),
+        'numAnimals':numAnimals,
+        'numCores':numCores,
+        'minThreshold':minThreshold,
+        'maxThreshold':maxThreshold,
+        'maxArea': maxArea
+        })
+    print videoInfo
+    folder = os.path.dirname(path)
+    video = os.path.basename(path)
+    filename, extension = os.path.splitext(video)
+    filename = filename.split('_')[0]
+    videoInfo.to_pickle(folder +'/'+ filename + '_videoInfo' + '.pkl')
 
 def generateVideoTOC(allSegments, path):
     """
@@ -258,6 +278,12 @@ def getBoundigBox(cnt):
         h = h + 4
     return ((x,y),(x+w,y+h))
 
+def boundingBox_ROI2Full(bb, ROI):
+    """
+    Gives back only the first point of bb translated in the full frame
+    """
+    return (bb[0][0] + ROI[0][0], bb[0][1] + ROI[0][1])
+
 def getCentroid(cnt,ROI):
     M = cv2.moments(cnt)
     x = int(M['m10']/M['m00'])
@@ -276,6 +302,7 @@ def getPixelsList(cnt, width, height):
 def getMiniFrame(avFrame, cnt, ROI, height, width):
     # print '1', ROI
     boundingBox = getBoundigBox(cnt)
+    bb = boundingBox_ROI2Full(boundingBox, ROI)
     miniFrame = avFrame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
     cntBB = cntROI2BoundingBox(cnt,boundingBox)
     pixelsInBB = getPixelsList(cntBB, np.abs(boundingBox[0][0]-boundingBox[1][0]), np.abs(boundingBox[0][1]-boundingBox[1][1]))
@@ -283,16 +310,19 @@ def getMiniFrame(avFrame, cnt, ROI, height, width):
     # print '2', ROI
     pixelsInFullF = pixelsInROI + np.asarray([ROI[0][1],ROI[0][0]])
     pixelsInFullFF = np.ravel_multi_index([pixelsInFullF[:,0],pixelsInFullF[:,1]],(height,width))
-    return miniFrame, pixelsInFullFF
+    return bb, miniFrame, pixelsInFullFF
 
 def getBlobsInfoPerFrame(avFrame, contours, ROI, height, width):
+    boundingBoxes = []
     miniFrames = []
     centroids = []
     areas = []
     pixels = []
     for cnt in contours:
         # boundigBox
-        miniFrame, pixelsInFullF = getMiniFrame(avFrame, cnt, ROI, height, width)
+        boundingBox, miniFrame, pixelsInFullF = getMiniFrame(avFrame, cnt, ROI, height, width)
+        boundingBoxes.append(boundingBox)
+        # miniframes
         miniFrames.append(miniFrame)
         # centroid
         centroids.append(getCentroid(cnt,ROI))
@@ -300,7 +330,7 @@ def getBlobsInfoPerFrame(avFrame, contours, ROI, height, width):
         areas.append(cv2.contourArea(cnt))
         # pixels list
         pixels.append(pixelsInFullF)
-    return miniFrames, centroids, areas, pixels
+    return boundingBoxes, miniFrames, centroids, areas, pixels
 
 def blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI, height, width):
     contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -314,9 +344,9 @@ def blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI, height, width)
     ### uncomment to plot contours
     # cv2.drawContours(frame, goodContours, -1, (255,0,0), -1)
     # get contours properties
-    miniFrames, centroids, areas, pixels = getBlobsInfoPerFrame(avFrame, goodContours, ROI, height, width)
+    boundingBoxes, miniFrames, centroids, areas, pixels = getBlobsInfoPerFrame(avFrame, goodContours, ROI, height, width)
 
-    return miniFrames, centroids, areas, pixels, goodContoursFull
+    return boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull
 
 def segmentAndSave(path, height, width):
     print 'Segmenting video %s' % path
@@ -326,7 +356,7 @@ def segmentAndSave(path, height, width):
     numSegment = int(filename.split('_')[-1])
     numFrames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     counter = 0
-    df = pd.DataFrame(columns=('avIntensity','miniFrames', 'centroids', 'areas', 'pixels', 'numberOfBlobs'))
+    df = pd.DataFrame(columns=('avIntensity', 'boundingBoxes','miniFrames', 'centroids', 'areas', 'pixels', 'numberOfBlobs'))
     while counter < numFrames:
 
         #Get frame from video file
@@ -345,7 +375,7 @@ def segmentAndSave(path, height, width):
         # perform background subtraction if needed
         frame = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
         # Find contours in the segmented image
-        miniFrames, centroids, areas, pixels, goodContoursFull = blobExtractor(frame, avFrame, minArea, maxArea, ROI, height, width)
+        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull = blobExtractor(frame, avFrame, minArea, maxArea, ROI, height, width)
 
         # contours, hierarchy = cv2.findContours(frame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
         # cv2.drawContours(frameToPlot,contours,-1,color=(255,0,0),thickness=-1)
@@ -363,7 +393,7 @@ def segmentAndSave(path, height, width):
         # if k == 27: #pres esc to quit
         #     break
         # Add frame imformation to DataFrame
-        df.loc[counter] = [avIntensity, miniFrames, centroids, areas, pixels, len(centroids)]
+        df.loc[counter] = [avIntensity, boundingBoxes, miniFrames, centroids, areas, pixels, len(centroids)]
         counter += 1
     cap.release()
     cv2.destroyAllWindows()
@@ -372,6 +402,7 @@ def segmentAndSave(path, height, width):
     folder = os.path.dirname(path)
     df.to_pickle(folder +'/'+ filename + '.pkl')
 
+
     return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist()
 
 
@@ -379,7 +410,7 @@ if __name__ == '__main__':
 
     # prep for args
     parser = argparse.ArgumentParser()
-    videoPath = './Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi'
+    videoPath = './Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
     # testPath = './test_1.avi'
     parser.add_argument('--path', default = videoPath, type = str)
     parser.add_argument('--bkg_subtraction', default = True, type = bool)
@@ -390,9 +421,11 @@ if __name__ == '__main__':
     parser.add_argument('--max_th', default = 255, type = int)
     parser.add_argument('--min_area', default = 150, type = int)
     parser.add_argument('--max_area', default = 2000, type = int)
+    parser.add_argument('--num_animals', default = 5, type = int)
     args = parser.parse_args()
 
     ''' Parameters for the segmentation '''
+    numAnimals = args.num_animals
     bkgSubstraction = args.bkg_subtraction
     selectROI = args.ROI_selection
     maskFrame = args.mask_frame
@@ -417,11 +450,12 @@ if __name__ == '__main__':
     #     df = segmentAndSave(path)
 
     num_cores = multiprocessing.cpu_count()
+
     # num_cores = 1
     allSegments = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width) for path in paths)
     allSegments = sorted(allSegments, key=lambda x: x[0][0])
     generateVideoTOC(allSegments, paths[0])
-
+    collectAndSaveVideoInfo(paths[0], height, width, ROI, numAnimals, num_cores, minThreshold,maxThreshold,maxArea)
     # print allFrames
     # """
     # Visualize

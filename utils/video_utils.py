@@ -1,3 +1,4 @@
+import cv2
 """
 Get general information from video
 """

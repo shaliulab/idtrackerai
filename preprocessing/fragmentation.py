@@ -197,7 +197,7 @@ if __name__ == '__main__':
     IdInspector
     """
     numSegment = 0
-    paths = scanFolder('./Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+    # paths = scanFolder('./Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
     path = paths[numSegment]
 
     def IdPlayer(path):
