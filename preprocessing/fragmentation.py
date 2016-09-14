@@ -45,6 +45,9 @@ def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
     if intersect == numAnimals:
         trueFragment = True
         permutation = np.asarray(sorted(s, key=lambda x: x[1]))[:,0]
+    else:
+        print intersect
+        print 'caca'
     return trueFragment, permutation
 
 def computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals, numSegment):
@@ -146,11 +149,17 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
                     counter = 1
 
                     while (not isinstance(df.loc[counter,'permutation'],float) and counter<len(df)):
+                        print counter
                         pixelsA = df.loc[counter-1,'pixels']
                         pixelsB = df.loc[counter,'pixels']
                         indivA = df.loc[counter-1, 'permutation']
                         indivB = df.loc[counter, 'permutation']
+                        # print numAnimals
+                        # print len(pixelsA)
+                        # print len(pixelsB)
                         trueFragment, s = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
+                        if isinstance(s,float):
+                            break
                         df.set_value(counter,'permutation',indivA[s])
                         counter += 1
                 else:
@@ -197,7 +206,7 @@ if __name__ == '__main__':
     IdInspector
     """
     numSegment = 0
-    # paths = scanFolder('./Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+    paths = scanFolder('./Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
     path = paths[numSegment]
 
     def IdPlayer(path):

@@ -16,6 +16,7 @@ import time
 import re
 from joblib import Parallel, delayed
 import multiprocessing
+import cPickle as pickle
 
 """
 Display messages and errors
@@ -36,7 +37,7 @@ def displayError(title, message):
     window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
     tkMessageBox.showerror(title=title,message=message,parent=window)
 
-def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minThreshold,maxThreshold,maxArea):
+def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minThreshold,maxThreshold,maxArea, numFramesPerSegment):
     """
     saves general info about the video in a pickle (_videoinfo.pkl)
     """
@@ -49,7 +50,8 @@ def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minT
         'numCores':numCores,
         'minThreshold':minThreshold,
         'maxThreshold':maxThreshold,
-        'maxArea': maxArea
+        'maxArea': maxArea,
+        'numFramesPerSegment':numFramesPerSegment
         })
     print videoInfo
     folder = os.path.dirname(path)
@@ -124,7 +126,12 @@ def checkBkg(bkgSubstraction, paths, ROI, EQ):
     if bkgSubstraction:
         print '\n Computing background ...\n'
         bkg = computeBkg(paths, ROI, EQ)
-
+        path = paths[0]
+        folder = os.path.dirname(path)
+        video = os.path.basename(path)
+        filename, extension = os.path.splitext(video)
+        filename = filename.split('_')[0]
+        pickle.dump(bkg,open(folder +'/'+ filename + '_bkg' + '.pkl','wb'))
         return bkg
     else:
         return None
@@ -272,17 +279,17 @@ def cntROI2BoundingBox(cnt,boundingBox):
 def getBoundigBox(cnt):
     x,y,w,h = cv2.boundingRect(cnt)
     if (x > 2 and y > 2):
-        x = x - 2
-        y = y - 2
-        w = w + 4
-        h = h + 4
+        x = x - 4 #2
+        y = y - 4 #2
+        w = w + 8 #4
+        h = h + 8 #4
     return ((x,y),(x+w,y+h))
 
 def boundingBox_ROI2Full(bb, ROI):
     """
     Gives back only the first point of bb translated in the full frame
     """
-    return (bb[0][0] + ROI[0][0], bb[0][1] + ROI[0][1])
+    return ((bb[0][0] + ROI[0][0], bb[0][1] + ROI[0][1]),(bb[1][0] + ROI[0][0], bb[1][1] + ROI[0][1]))
 
 def getCentroid(cnt,ROI):
     M = cv2.moments(cnt)
@@ -299,28 +306,39 @@ def getPixelsList(cnt, width, height):
     pts = np.where(cimg == 255)
     return zip(pts[0],pts[1])
 
-def getMiniFrame(avFrame, cnt, ROI, height, width):
+def sampleBkg(cntBB, miniFrame):
+    cv2.drawContours(miniFrame, [cntBB], -1, color=255, thickness = -1)
+    # cv2.imshow('cnt',cimg)
+    # Access the image pixels and create a 1D numpy array then add to list
+    bkgSample = miniFrame[np.where(miniFrame != 255)]
+    return bkgSample
+
+def getMiniFrame(frame, cnt, ROI, height, width):
     # print '1', ROI
     boundingBox = getBoundigBox(cnt)
     bb = boundingBox_ROI2Full(boundingBox, ROI)
-    miniFrame = avFrame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
+    miniFrame = frame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
     cntBB = cntROI2BoundingBox(cnt,boundingBox)
+    miniFrameBkg = miniFrame.copy()
+    bkgSample = sampleBkg(cntBB, miniFrameBkg)
     pixelsInBB = getPixelsList(cntBB, np.abs(boundingBox[0][0]-boundingBox[1][0]), np.abs(boundingBox[0][1]-boundingBox[1][1]))
     pixelsInROI = pixelsInBB + np.asarray([boundingBox[0][1],boundingBox[0][0]])
     # print '2', ROI
     pixelsInFullF = pixelsInROI + np.asarray([ROI[0][1],ROI[0][0]])
     pixelsInFullFF = np.ravel_multi_index([pixelsInFullF[:,0],pixelsInFullF[:,1]],(height,width))
-    return bb, miniFrame, pixelsInFullFF
+    return bb, miniFrame, pixelsInFullFF, bkgSample
 
-def getBlobsInfoPerFrame(avFrame, contours, ROI, height, width):
+def getBlobsInfoPerFrame(frame, contours, ROI, height, width):
     boundingBoxes = []
     miniFrames = []
     centroids = []
     areas = []
     pixels = []
+    bkgSamples = []
     for cnt in contours:
         # boundigBox
-        boundingBox, miniFrame, pixelsInFullF = getMiniFrame(avFrame, cnt, ROI, height, width)
+        boundingBox, miniFrame, pixelsInFullF, bkgSample = getMiniFrame(frame, cnt, ROI, height, width)
+        bkgSamples.append(bkgSample)
         boundingBoxes.append(boundingBox)
         # miniframes
         miniFrames.append(miniFrame)
@@ -330,9 +348,9 @@ def getBlobsInfoPerFrame(avFrame, contours, ROI, height, width):
         areas.append(cv2.contourArea(cnt))
         # pixels list
         pixels.append(pixelsInFullF)
-    return boundingBoxes, miniFrames, centroids, areas, pixels
+    return boundingBoxes, miniFrames, centroids, areas, pixels, bkgSamples
 
-def blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI, height, width):
+def blobExtractor(segmentedFrame, frame, minArea, maxArea, ROI, height, width):
     contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
     # Filter contours by size
@@ -344,9 +362,9 @@ def blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI, height, width)
     ### uncomment to plot contours
     # cv2.drawContours(frame, goodContours, -1, (255,0,0), -1)
     # get contours properties
-    boundingBoxes, miniFrames, centroids, areas, pixels = getBlobsInfoPerFrame(avFrame, goodContours, ROI, height, width)
+    boundingBoxes, miniFrames, centroids, areas, pixels, bkgSamples = getBlobsInfoPerFrame(frame, goodContours, ROI, height, width)
 
-    return boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull
+    return boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples
 
 def segmentAndSave(path, height, width):
     print 'Segmenting video %s' % path
@@ -356,7 +374,7 @@ def segmentAndSave(path, height, width):
     numSegment = int(filename.split('_')[-1])
     numFrames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     counter = 0
-    df = pd.DataFrame(columns=('avIntensity', 'boundingBoxes','miniFrames', 'centroids', 'areas', 'pixels', 'numberOfBlobs'))
+    df = pd.DataFrame(columns=('avIntensity', 'boundingBoxes','miniFrames', 'centroids', 'areas', 'pixels', 'numberOfBlobs', 'bkgSamples'))
     while counter < numFrames:
 
         #Get frame from video file
@@ -373,9 +391,9 @@ def segmentAndSave(path, height, width):
         frame, avIntensity = frameAverager(frame)
 
         # perform background subtraction if needed
-        frame = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
+        segmentedFrame = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
         # Find contours in the segmented image
-        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull = blobExtractor(frame, avFrame, minArea, maxArea, ROI, height, width)
+        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI, height, width)
 
         # contours, hierarchy = cv2.findContours(frame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
         # cv2.drawContours(frameToPlot,contours,-1,color=(255,0,0),thickness=-1)
@@ -393,7 +411,7 @@ def segmentAndSave(path, height, width):
         # if k == 27: #pres esc to quit
         #     break
         # Add frame imformation to DataFrame
-        df.loc[counter] = [avIntensity, boundingBoxes, miniFrames, centroids, areas, pixels, len(centroids)]
+        df.loc[counter] = [avIntensity, boundingBoxes, miniFrames, centroids, areas, pixels, len(centroids), bkgSamples]
         counter += 1
     cap.release()
     cv2.destroyAllWindows()
@@ -419,7 +437,7 @@ if __name__ == '__main__':
     parser.add_argument('--Eq_image', default = False, type = bool)
     parser.add_argument('--min_th', default = 150, type = int)
     parser.add_argument('--max_th', default = 255, type = int)
-    parser.add_argument('--min_area', default = 150, type = int)
+    parser.add_argument('--min_area', default = 350, type = int)
     parser.add_argument('--max_area', default = 2000, type = int)
     parser.add_argument('--num_animals', default = 5, type = int)
     args = parser.parse_args()
