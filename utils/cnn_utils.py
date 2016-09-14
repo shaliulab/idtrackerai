@@ -118,22 +118,22 @@ def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filte
 
         _activation_summary(convb)
 
-        with tf.variable_scope('visualization') :
-
-            grid_x = int(np.sqrt(n_filters))
-            grid_y = grid_x  # to get a square grid for 64 conv1 features
-            WtoPlot = tf.slice(W, [0, 0, 0, 0], [filter_size, filter_size, 1, n_filters])
-            grid = put_kernels_on_grid (WtoPlot, (grid_y, grid_x))
-            tf.image_summary(scopeName + '/features', grid, max_images=1)
-
-            # x_min = tf.reduce_min(convb)
-            # x_max = tf.reduce_max(convb)
-            # convb_0_to_1 = (convb - x_min) / (x_max - x_min)
-
-            convbToPlot = tf.slice(convb, [0, 0, 0, 8], [250, w, h, 1])
-
-            # this will display random images
-            tf.image_summary(scopeName + '/output', convbToPlot, max_images=10)
+        # with tf.variable_scope('visualization') :
+        #
+        #     grid_x = int(np.sqrt(n_filters))
+        #     grid_y = grid_x  # to get a square grid for 64 conv1 features
+        #     WtoPlot = tf.slice(W, [0, 0, 0, 0], [filter_size, filter_size, 1, n_filters])
+        #     grid = put_kernels_on_grid (WtoPlot, (grid_y, grid_x))
+        #     tf.image_summary(scopeName + '/features', grid, max_images=1)
+        #
+        #     # x_min = tf.reduce_min(convb)
+        #     # x_max = tf.reduce_max(convb)
+        #     # convb_0_to_1 = (convb - x_min) / (x_max - x_min)
+        #
+        #     convbToPlot = tf.slice(convb, [0, 0, 0, 8], [250, w, h, 1])
+        #
+        #     # this will display random images
+        #     tf.image_summary(scopeName + '/output', convbToPlot, max_images=10)
 
 
     return convb,w,h

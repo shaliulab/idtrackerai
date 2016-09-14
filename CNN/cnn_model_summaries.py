@@ -33,7 +33,7 @@ def evaluation(y,y_logits,classes):
     accuracy, indivAcc = individualAccuracy(y,y_logits,classes)
     return accuracy, indivAcc
 
-def placeholder_inputs(batch_size, resolution):
+def placeholder_inputs(batch_size, resolution, classes):
     images_placeholder = tf.placeholder(tf.float32, [None, resolution], name = 'images')
     labels_placeholder = tf.placeholder(tf.float32, [None, classes], name = 'labels')
 
@@ -71,9 +71,10 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
 
     return outList
 
-def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, loadCkpt_folder, keep_prob = 1.0):
+def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder,batch_size, num_epochs,Tindices, Titer_per_epoch,
+Vindices, Viter_per_epoch, keep_prob = 1.0):
     with tf.Graph().as_default():
-        images_pl, labels_pl = placeholder_inputs(batch_size, resolution)
+        images_pl, labels_pl = placeholder_inputs(batch_size, resolution, classes)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
         logits, relu = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
@@ -218,7 +219,7 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                         indivAccEpoch.append(indivBatchAcc)
 
                         # Print per batch loss and accuracies
-                        if iter_i % round(np.true_divide(Viter_per_epoch,4)) == 0:
+                        if iter_i % round(np.true_divide(Viter_per_epoch,1)) == 0:
                             print "Batch " + str(iter_i) + \
                                 ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
                                 ", Training Accuracy= " + "{:.5f}".format(batchAcc)
@@ -302,72 +303,74 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
             if stored_exception:
                 raise stored_exception[0], stored_exception[1], stored_exception[2]
 
+if __name__ == '__main__':
+    # prep for args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--datasetTrain', default='36dpf_60indiv_22000ImPerInd_rotateAndCrop', type = str)
+    parser.add_argument('--datasetTest', default=None, type = str)
+    parser.add_argument('--train', default=1, type=int)
+    parser.add_argument('--ckpt_folder', default = "./ckpt_dir", type= str)
+    parser.add_argument('--loadCkpt_folder', default = "", type = str)
+    parser.add_argument('--num_indiv', default = 60, type = int)
+    parser.add_argument('--num_train', default = 22000, type = int)
+    parser.add_argument('--num_test', default = 0, type = int)
+    parser.add_argument('--num_ref', default = 0, type = int)
+    parser.add_argument('--num_epochs', default = 500, type = int)
+    parser.add_argument('--batch_size', default = 250, type = int)
+    args = parser.parse_args()
 
-# prep for args
-parser = argparse.ArgumentParser()
-parser.add_argument('--datasetTrain', default='36dpf_60indiv_22000ImPerInd_rotateAndCrop', type = str)
-parser.add_argument('--datasetTest', default=None, type = str)
-parser.add_argument('--train', default=1, type=int)
-parser.add_argument('--ckpt_folder', default = "./ckpt_dir", type= str)
-parser.add_argument('--loadCkpt_folder', default = "", type = str)
-parser.add_argument('--num_indiv', default = 60, type = int)
-parser.add_argument('--num_train', default = 22000, type = int)
-parser.add_argument('--num_test', default = 0, type = int)
-parser.add_argument('--num_ref', default = 0, type = int)
-parser.add_argument('--num_epochs', default = 500, type = int)
-parser.add_argument('--batch_size', default = 250, type = int)
-args = parser.parse_args()
-
-pathTrain = args.datasetTrain
-pathTest = args.datasetTest
-num_indiv = args.num_indiv
-num_train = args.num_train
-num_test = args.num_test
-num_ref = args.num_ref
-ckpt_dir = args.ckpt_folder
-loadCkpt_folder = args.loadCkpt_folder
-batch_size = args.batch_size
-num_epochs = args.num_epochs
-
-
-print "\n****** Loading database ******\n"
-numIndiv, imsize, \
-X_train, Y_train, \
-X_val, Y_val, \
-X_test, Y_test, \
-X_ref, Y_ref = loadDataBase(pathTrain, num_indiv, num_train, num_test, num_ref, ckpt_dir,pathTest)
-
-print '\n train size:    images  labels'
-print X_train.shape, Y_train.shape
-print 'val size:    images  labels'
-print X_val.shape, Y_val.shape
-print 'test size:    images  labels'
-print X_test.shape, Y_test.shape
-print 'ref size:    images  labels'
-print X_ref.shape, Y_ref.shape
-
-channels, width, height = imsize
-resolution = np.prod(imsize)
-classes = numIndiv
-
-'''
-************************************************************************
-*******************************Training*********************************
-************************************************************************
-'''
-if args.train == 1:
-    numImagesT = Y_train.shape[0]
-    numImagesV = Y_val.shape[0]
-    Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
-    Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
-
-    run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution, loadCkpt_folder)
-
-if args.train == 0:
-    numImagesT = Y_ref.shape[0]
-    numImagesV = Y_test.shape[0]
-    Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
-    Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
+    pathTrain = args.datasetTrain
+    pathTest = args.datasetTest
+    num_indiv = args.num_indiv
+    num_train = args.num_train
+    num_test = args.num_test
+    num_ref = args.num_ref
+    ckpt_dir = args.ckpt_folder
+    loadCkpt_folder = args.loadCkpt_folder
+    batch_size = args.batch_size
+    num_epochs = args.num_epochs
 
 
-    run_training(X_ref, Y_ref, X_test, Y_test, width, height, channels, classes, resolution, loadCkpt_folder, 0.5)
+    print "\n****** Loading database ******\n"
+    numIndiv, imsize, \
+    X_train, Y_train, \
+    X_val, Y_val, \
+    X_test, Y_test, \
+    X_ref, Y_ref = loadDataBase(pathTrain, num_indiv, num_train, num_test, num_ref, ckpt_dir,pathTest)
+
+    print '\n train size:    images  labels'
+    print X_train.shape, Y_train.shape
+    print 'val size:    images  labels'
+    print X_val.shape, Y_val.shape
+    print 'test size:    images  labels'
+    print X_test.shape, Y_test.shape
+    print 'ref size:    images  labels'
+    print X_ref.shape, Y_ref.shape
+
+    channels, width, height = imsize
+    resolution = np.prod(imsize)
+    classes = numIndiv
+
+    '''
+    ************************************************************************
+    *******************************Training*********************************
+    ************************************************************************
+    '''
+    if args.train == 1:
+        numImagesT = Y_train.shape[0]
+        numImagesV = Y_val.shape[0]
+        Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
+        Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
+
+        run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
+        Vindices, Viter_per_epoch)
+
+    if args.train == 0:
+        numImagesT = Y_ref.shape[0]
+        numImagesV = Y_test.shape[0]
+        Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
+        Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
+
+
+        run_training(X_ref, Y_ref, X_test, Y_test, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
+        Vindices, Viter_per_epoch, 0.5)

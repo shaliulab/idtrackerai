@@ -149,18 +149,6 @@ def getFoci(ellipse, centroid):
     Ext = tuple(np.round(Ext).astype('int'))
     return Focus, Ext
 
-#
-# def extremumEllipse(ellipse, focus):
-#     cx = ellipse[0][0]
-#     cy = ellipse[0][1]
-#
-#     fx = focus[0]
-#     fy = focus[1]
-#
-#     a = np.true_divide(llipse[1][1],2)**2
-#
-#     m = np.true_divide(cy-fy, cx - fx)
-
 def getEncompassingIndices(frameIndices, num_segmnent, goodIndices):
     """
     frameIndices = dataframe containing the list of frame per segment
@@ -187,33 +175,22 @@ def getMFandC(path, frameIndices):
     df = pd.read_pickle(path)
     # print df
     # check if permutations are NaN (i.e. the frame is not included in a fragment)
-    permutations = np.asarray(df['permutation'].notnull())
+    permutationsBool = np.asarray(df['permutation'].notnull())
     #generate a lists of "admissible" miniframes and centroids
+    permutations = np.asarray(df['permutation'])
     boundingBoxes = np.asarray(df.loc[:, 'boundingBoxes'])
     miniframes = np.asarray(df.loc[:, 'miniFrames'])
     centroids = np.asarray(df.loc[:, 'centroids'])
     bkgSamples = np.asarray(df.loc[:,'bkgSamples'])
-    goodIndices = np.where(permutations==True)[0]
+    goodIndices = np.where(permutationsBool==True)[0]
     goodFrameIndices, segmentIndices = getEncompassingIndices(frameIndices, numSegment, goodIndices)
     boundingBoxes = boundingBoxes[goodIndices]
     miniframes = miniframes[goodIndices]
     centroids = centroids[goodIndices]
     bkgSamples = bkgSamples[goodIndices]
-<<<<<<< HEAD
+
     permutations = permutations[goodIndices]
     return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist()
-=======
-
-    return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices
->>>>>>> master
-
-# def getVideoInfo(pathVideoInfo):
-#     df = pd.read_pickle(pathVideoInfo)
-#     minThreshold = df.loc[0,'minThreshold']
-#     maxThreshold = df.loc[0,'maxThreshold']
-#     return minThreshold, maxThreshold
-
-# def getSampleBG(miniframe,avIntens,minThreshold,maxThreshold):
 
 def fillSquareFrame(square_frame,bkgSamps):
     bkgSamps = bkgSamps[bkgSamps > 150]
@@ -228,17 +205,11 @@ def fillSquareFrame(square_frame,bkgSamps):
 def reaper(path, frameIndices):
     # print 'segment number ', i
     print 'reaping', path
-<<<<<<< HEAD
     boundingboxes, miniframes, centroids, bkgSamples, goodFrameIndices, segmentIndices, permutations = getMFandC(path,frameIndices)
     miniframes = np.asarray(miniframes)
     """ Visualise """
     AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images', 'permutations'])
-=======
-    boundingboxes, miniframes, centroids, bkgSamples, goodFrameIndices, segmentIndices = getMFandC(path,frameIndices)
-    miniframes = np.asarray(miniframes)
-    """ Visualise """
-    AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images'])
->>>>>>> master
+
     counter = 0
     font = cv2.FONT_HERSHEY_SIMPLEX
     while counter < len(miniframes):
@@ -292,11 +263,9 @@ def reaper(path, frameIndices):
             # get all the heads in a single list
             portraits.append(square_frame_filled)
 
-        AllPortraits.set_value(goodFrameIndices[counter], 'images', portraits)
-<<<<<<< HEAD
+        AllPortraits.set_value(goodFrameIndices[counter], 'images', np.asarray(portraits))
         AllPortraits.set_value(goodFrameIndices[counter], 'permutations', permutations[counter])
-=======
->>>>>>> master
+
         k = cv2.waitKey(1) & 0xFF
         if k == 27: #pres esc to quit
             break
@@ -304,8 +273,8 @@ def reaper(path, frameIndices):
     return AllPortraits
 
 if __name__ == '__main__':
-    frameIndices = pd.read_pickle('./Cafeina5peces/Caffeine5fish_frameIndices.pkl')
-    paths = scanFolder('./Cafeina5peces/Caffeine5fish_20140206T122428_1.pkl')
+    frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
+    paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.pkl')
 
     num_cores = multiprocessing.cpu_count()
 
