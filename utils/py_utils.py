@@ -1,5 +1,7 @@
 from itertools import groupby
-
+import os
+import glob
+import re
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):
     ''' get variables from a standard python dictionary '''
@@ -46,3 +48,39 @@ def deleteDuplicates(array):
             delInds.append(i)
 
     return newArray,delInds
+
+
+def ssplit2(seq,splitters):
+    """
+    split a list at splitters, if the splitted sequence is longer than 1
+    """
+    seq=list(seq)
+    if splitters and seq:
+        splitters=set(splitters).intersection(seq)
+        if splitters:
+            result=[]
+            begin=0
+            for end in range(len(seq)):
+                if seq[end] in splitters:
+                    if (end > begin and len(seq[begin:end])>1) :
+                        result.append(seq[begin:end])
+                    begin=end+1
+            if begin<len(seq):
+                result.append(seq[begin:])
+            return result
+    return [seq]
+
+def natural_sort(l):
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+    return sorted(l, key = alphanum_key)
+
+def scanFolder(path):
+    paths = [path]
+    video = os.path.basename(path)
+    filename, extension = os.path.splitext(video)
+    folder = os.path.dirname(path)
+    # maybe write check on video extension supported by opencv2
+    if filename[-2:] == '_1':
+        paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
+    return paths
