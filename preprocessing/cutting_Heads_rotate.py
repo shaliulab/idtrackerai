@@ -199,8 +199,13 @@ def getMFandC(path, frameIndices):
     miniframes = miniframes[goodIndices]
     centroids = centroids[goodIndices]
     bkgSamples = bkgSamples[goodIndices]
+<<<<<<< HEAD
     permutations = permutations[goodIndices]
     return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist()
+=======
+
+    return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices
+>>>>>>> master
 
 # def getVideoInfo(pathVideoInfo):
 #     df = pd.read_pickle(pathVideoInfo)
@@ -223,10 +228,17 @@ def fillSquareFrame(square_frame,bkgSamps):
 def reaper(path, frameIndices):
     # print 'segment number ', i
     print 'reaping', path
+<<<<<<< HEAD
     boundingboxes, miniframes, centroids, bkgSamples, goodFrameIndices, segmentIndices, permutations = getMFandC(path,frameIndices)
     miniframes = np.asarray(miniframes)
     """ Visualise """
     AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images', 'permutations'])
+=======
+    boundingboxes, miniframes, centroids, bkgSamples, goodFrameIndices, segmentIndices = getMFandC(path,frameIndices)
+    miniframes = np.asarray(miniframes)
+    """ Visualise """
+    AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images'])
+>>>>>>> master
     counter = 0
     font = cv2.FONT_HERSHEY_SIMPLEX
     while counter < len(miniframes):
@@ -281,7 +293,10 @@ def reaper(path, frameIndices):
             portraits.append(square_frame_filled)
 
         AllPortraits.set_value(goodFrameIndices[counter], 'images', portraits)
+<<<<<<< HEAD
         AllPortraits.set_value(goodFrameIndices[counter], 'permutations', permutations[counter])
+=======
+>>>>>>> master
         k = cv2.waitKey(1) & 0xFF
         if k == 27: #pres esc to quit
             break
