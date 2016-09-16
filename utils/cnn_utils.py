@@ -396,15 +396,15 @@ def CNNplotterFast(lossAccDict):
     ax7.set_title('Individual accuracy')
     ax7.legend(fancybox=True, framealpha=0.05)
 
-    k=0
-    ax_feats = []
-    for i in range(30):
-        ax8 = plt.subplot(10,12,(i % 3)+10+12*k)
-        ax_feats.append(ax8)
-        if i % 3 == 2:
-            k+=1
-        ax8.imshow(features[i], interpolation='none', cmap='gray')
-        ax8.set_ylabel('Indiv' + str(labels[i]))
+    # k=0
+    # ax_feats = []
+    # for i in range(30):
+    #     ax8 = plt.subplot(10,12,(i % 3)+10+12*k)
+    #     ax_feats.append(ax8)
+    #     if i % 3 == 2:
+    #         k+=1
+    #     ax8.imshow(features[i], interpolation='none', cmap='gray')
+    #     ax8.set_ylabel('Indiv' + str(labels[i]))
     # print fig.get_children()
     # plt.tight_layout()
     plt.subplots_adjust(bottom=0.1, right=.9, left=0.1, top=.9, wspace = 0.5, hspace=0.5)

@@ -17,6 +17,7 @@ import re
 from joblib import Parallel, delayed
 import multiprocessing
 import cPickle as pickle
+import gc
 
 """
 Display messages and errors
@@ -37,7 +38,7 @@ def displayError(title, message):
     window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
     tkMessageBox.showerror(title=title,message=message,parent=window)
 
-def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minThreshold,maxThreshold,maxArea, numFramesPerSegment):
+def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minThreshold,maxThreshold,maxArea):
     """
     saves general info about the video in a pickle (_videoinfo.pkl)
     """
@@ -50,8 +51,7 @@ def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minT
         'numCores':numCores,
         'minThreshold':minThreshold,
         'maxThreshold':maxThreshold,
-        'maxArea': maxArea,
-        'numFramesPerSegment':numFramesPerSegment
+        'maxArea': maxArea
         })
     print videoInfo
     folder = os.path.dirname(path)
@@ -220,7 +220,8 @@ Normalize by the average intensity
 """
 
 def frameAverager(frame):
-    return np.divide(frame,np.mean(frame)), np.mean(frame)
+    avFrame = np.divide(frame,np.mean(frame))
+    return np.multiply(np.true_divide(avFrame,np.max(avFrame)),255).astype('uint8'), np.mean(frame)
 
 """
 Image equalization
@@ -239,13 +240,15 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction):
     #Apply background substractions if requested and thresholding image
     if bkgSubstraction:
         frame = np.abs(np.subtract(frame, bkg))
-        frame = np.multiply(frame/np.max(frame),255).astype('uint8')
-        ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
-    else:
-        frame = np.multiply(frame/np.max(frame),255).astype('uint8')
+        frame = np.multiply(np.true_divide(frame,np.max(frame)),255).astype('uint8')
+        frameBkg = frame.copy()
+        # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
-    return frame
+    else:
+        frame = np.multiply(np.true_divide(frame,np.max(frame)),255).astype('uint8')
+        frameBkg = frame.copy()
+        ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
+    return frame, frameBkg
 
 """
 Get information from blobs
@@ -379,11 +382,12 @@ def segmentAndSave(path, height, width):
 
         #Get frame from video file
         ret, frame = cap.read()
-        frameToPlot = masker(frame, maskFrame, ROI, selectROI)
+        # frameToPlot = masker(frame, maskFrame, ROI, selectROI)
         #Color to gray scale
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # Equalize image to enhance contrast
         frame = checkEq(EQ, frame)
+        frameToPlot = masker(frame, maskFrame, ROI, selectROI)
         # mask or crop the image
         frame = cropper(frame, ROI)
         avFrame = frame
@@ -391,20 +395,12 @@ def segmentAndSave(path, height, width):
         frame, avIntensity = frameAverager(frame)
 
         # perform background subtraction if needed
-        segmentedFrame = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
+        segmentedFrame, frameBkg = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
+        frameBkg = 255 - frameBkg
         # Find contours in the segmented image
-        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI, height, width)
+        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, frameBkg, minArea, maxArea, ROI, height, width)
 
-        # contours, hierarchy = cv2.findContours(frame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-        # cv2.drawContours(frameToPlot,contours,-1,color=(255,0,0),thickness=-1)
-        #
-        # ## check change of coordinates from miniframe to fullframe
-        # whiteFrame = np.ones_like(frameToPlot)
-        #
-        # # # Plot segmentated blobs
-        # # for i, pixel in enumerate(pixels):
-        # #     px = np.unravel_index(pixel,(height,width))
-        # #     frame[px[0],px[1]] = 255
+        # cv2.drawContours(frameToPlot,goodContoursFull,-1,color=(255,0,0),thickness=-1)
         #
         # cv2.imshow('checkcoord', frameToPlot)
         # k = cv2.waitKey(30) & 0xFF
@@ -419,6 +415,8 @@ def segmentAndSave(path, height, width):
     filename, extension = os.path.splitext(video)
     folder = os.path.dirname(path)
     df.to_pickle(folder +'/'+ filename + '.pkl')
+    print 'Cleaning memory...'
+    gc.collect()
 
 
     return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist()
@@ -428,18 +426,18 @@ if __name__ == '__main__':
 
     # prep for args
     parser = argparse.ArgumentParser()
-    videoPath = './Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
+    videoPath = '../Conflict8/conflict3and4_20120316T155032_1.avi'
     # testPath = './test_1.avi'
     parser.add_argument('--path', default = videoPath, type = str)
     parser.add_argument('--bkg_subtraction', default = True, type = bool)
     parser.add_argument('--ROI_selection', default = True, type = bool)
     parser.add_argument('--mask_frame', default = True, type= bool)
     parser.add_argument('--Eq_image', default = False, type = bool)
-    parser.add_argument('--min_th', default = 150, type = int)
+    parser.add_argument('--min_th', default = 120, type = int)
     parser.add_argument('--max_th', default = 255, type = int)
-    parser.add_argument('--min_area', default = 350, type = int)
-    parser.add_argument('--max_area', default = 2000, type = int)
-    parser.add_argument('--num_animals', default = 5, type = int)
+    parser.add_argument('--min_area', default = 250, type = int)
+    parser.add_argument('--max_area', default = 4000, type = int)
+    parser.add_argument('--num_animals', default = 8, type = int)
     args = parser.parse_args()
 
     ''' Parameters for the segmentation '''

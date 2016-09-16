@@ -45,9 +45,9 @@ def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
     if intersect == numAnimals:
         trueFragment = True
         permutation = np.asarray(sorted(s, key=lambda x: x[1]))[:,0]
-    else:
-        print intersect
-        print 'caca'
+    # else:
+    #     print intersect
+    #     print 'caca'
     return trueFragment, permutation
 
 def computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals, numSegment):
@@ -93,7 +93,7 @@ def fragmentator(path):
     df = pd.read_pickle(path)
     columnNumBlobs = df.loc[:,'numberOfBlobs']
     columnPixels = df.loc[:,'pixels']
-    numAnimals = 5
+    numAnimals = 8
     dfPermutations, fragmentsIndices = computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals, numSegment)
     fragmentsIndices = (numSegment, fragmentsIndices)
     df['permutation'] = dfPermutations
@@ -125,9 +125,9 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
         pixelsB = df.iloc[0]['pixels']
         numFramesB = len(df)
 
-        if isinstance(permutationA,float): # if the last frame of the previous segment is not good (it is NaN)
+        if isinstance(permutationA,float): # if the last frame of the previous segment is not good (the permutation is NaN)
             globalFragments.append(fragmentsIndicesA[-1])
-            if isinstance(fragmentsIndicesB[0][0],float):
+            if int(fragmentsIndicesB[0][0])<0:
                 fragmentsIndicesB[0][0] = globalFrameCounter
 
             globalFragments += fragmentsIndicesB[:-1]
@@ -136,10 +136,9 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
             pixelsA = df.iloc[-1]['pixels']
             numFramesA = numFramesB
             globalFrameCounter += numFramesA
-        else: # if the last frame of the previous segment is good
+        else: # if the last frame of the previous segment is good ()
             if (len(pixelsA) == numAnimals and len(pixelsB) == numAnimals and not isinstance(df.loc[0,'permutation'],float)):
                 trueFragment, s = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
-
                 if trueFragment:
                     newFragment = [fragmentsIndicesA[-1][0],fragmentsIndicesB[0][1]]
                     globalFragments.append(newFragment)
@@ -149,7 +148,7 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
                     counter = 1
 
                     while (not isinstance(df.loc[counter,'permutation'],float) and counter<len(df)):
-                        print counter
+                        # print counter
                         pixelsA = df.loc[counter-1,'pixels']
                         pixelsB = df.loc[counter,'pixels']
                         indivA = df.loc[counter-1, 'permutation']
@@ -190,8 +189,10 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
     filename = folder +'/'+ filename.split('_')[0] + '_segments.pkl'
     pickle.dump(globalFragments, open(filename, 'wb'))
 
+    return globalFragments
+
 if __name__ == '__main__':
-    paths = scanFolder('./Cafeina5peces/Caffeine5fish_20140206T122428_1.pkl')
+    paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.pkl')
 
     # for path in paths:
     #     fragmentator(path)
@@ -199,14 +200,15 @@ if __name__ == '__main__':
     # num_cores = 1
     fragmentsIndices = Parallel(n_jobs=num_cores)(delayed(fragmentator)(path) for path in paths)
     fragmentsIndices = sorted(fragmentsIndices, key=lambda x: x[0])
-    numAnimals = 5
+    print fragmentsIndices
+    numAnimals = 8
     globalFragments = segmentJoiner(paths, fragmentsIndices, numAnimals)
 
     """
     IdInspector
     """
     numSegment = 0
-    paths = scanFolder('./Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+    paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
     path = paths[numSegment]
 
     def IdPlayer(path):

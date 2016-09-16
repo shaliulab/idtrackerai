@@ -23,7 +23,7 @@ def loss(y,y_logits):
     return cross_entropy
 
 def optimize(loss):
-    optimizer = tf.train.GradientDescentOptimizer(0.01)
+    optimizer = tf.train.GradientDescentOptimizer(0.0001)
     # optimizer = tf.train.AdamOptimizer(learning_rate=0.01, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
     global_step = tf.Variable(0, name='global_step', trainable=False)
     train_op = optimizer.minimize(loss)
@@ -286,14 +286,16 @@ Vindices, Viter_per_epoch, keep_prob = 1.0):
                     Plotter
                     *******************
                     '''
-                    if epoch_i % 10 == 0:
-                        CNNplotterFast(lossAccDict)
-
-                        print 'Saving figure...'
-                        figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
-                        plt.savefig(figname)
-                    print '-------------------------------'
-
+                    ### uncomment to plot ----
+                    # if epoch_i % 10 == 0:
+                    #     CNNplotterFast(lossAccDict)
+                    #
+                    #     print 'Saving figure...'
+                    #     figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
+                    #     plt.savefig(figname)
+                    # print '-------------------------------'
+                    ### ---
+                    
                     if stored_exception:
                         break
                     epoch_i += 1
