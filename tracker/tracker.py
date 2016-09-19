@@ -180,8 +180,8 @@ if __name__ == '__main__':
 
     # prep for args
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', default = '../Conflict8/conflict3and4_20120316T155032_1.avi', type = str)
-    parser.add_argument('--ckpt_folder', default = "./ckpt_Conflict8", type= str)
+    parser.add_argument('--path', default = '', type = str)
+    parser.add_argument('--ckpt_folder', default = "", type= str)
     parser.add_argument('--loadCkpt_folder', default = "../CNN/ckpt_Train_30indiv_36dpf_22000", type = str)
     parser.add_argument('--num_epochs', default = 50, type = int)
     parser.add_argument('--batch_size', default = 250, type = int)
@@ -233,12 +233,12 @@ if __name__ == '__main__':
             ckpt_dir, loadCkpt_folder, batch_size,num_epochs,
             Tindices, Titer_per_epoch,
             Vindices, Viter_per_epoch,
-            1.) #dropout
+            .8) #dropout
 
     ''' Loop to assign identities to '''
     if train == 0:
         Ids = []
-        allIdentities = pd.DataFrame(index=portraits.index,columns=range(8))
+        allIdentities = pd.DataFrame(index=portraits.index,columns=range(5))
         for n, fragment in enumerate(fragments):
             # if n ==1 :
             print 'testing fragment',n
@@ -287,79 +287,3 @@ if __name__ == '__main__':
             Ids.append(newFragmentFramesId)
             allIdentities.loc[fragment[0]:fragment[1]] = Ids[n]
             allIdentities.to_pickle(folder +'/'+ filename.split('_')[0] + '_identities.pkl')
-
-    if train == 2:
-
-        # numSegment = 0
-        # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
-        # frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
-        # allIdentities = pd.read_pickle('../Conflict8/conflict3and4_identities.pkl')
-        # path = paths[numSegment]
-        #
-        # def IdPlayer(path,allIdentities,frameIndices):
-        #
-        #     video = os.path.basename(path)
-        #     filename, extension = os.path.splitext(video)
-        #     sNumber = int(filename.split('_')[-1])
-        #     folder = os.path.dirname(path)
-        #     df = pd.read_pickle(folder +'/'+ filename + '.pkl')
-        #     cap = cv2.VideoCapture(path)
-        #     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        #     width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        #     height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-        #
-        #     def onChange(trackbarValue):
-        #         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-        #         centroids = df.loc[trackbarValue,'centroids']
-        #         pixels = df.loc[trackbarValue,'pixels']
-        #         # permutation = df.loc[trackbarValue,'permutation']
-        #         # print 'previous frame, ', str(trackbarValue-1), ', permutation, ', df.loc[trackbarValue-1,'permutation']
-        #         # print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
-        #         # if sNumber == 1 and trackbarValue > 100:
-        #         #     trueFragment, s = computeFrameIntersection(df.loc[trackbarValue-1,'pixels'],df.loc[trackbarValue,'pixels'],5)
-        #         #     print trueFragment, s
-        #         #     result = df.loc[trackbarValue-1,'permutation'][s]
-        #         #     print 'result, ', result
-        #         #Get frame from video file
-        #         ret, frame = cap.read()
-        #         #Color to gray scale
-        #         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        #         font = cv2.FONT_HERSHEY_SIMPLEX
-        #
-        #         # Plot segmentated blobs
-        #         for i, pixel in enumerate(pixels):
-        #             px = np.unravel_index(pixel,(height,width))
-        #             frame[px[0],px[1]] = 255
-        #
-        #         # plot numbers if not crossing
-        #         globalFrame = frameIndices[frameIndices['frame']== trackbarValue][frameIndices['segment']==sNumber].index[0]
-        #         if not isinstance(permutation,float):
-        #             # print 'pass'
-        #             for i, centroid in enumerate(centroids):
-        #                 cv2.putText(frame,str(identities.loc[globalFrame,i]),centroid, font, 1,0)
-        #
-        #         cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
-        #
-        #         # Visualization of the process
-        #         cv2.imshow('IdPlayer',frame)
-        #         pass
-        #
-        #     cv2.namedWindow('IdPlayer')
-        #     print '*************************************************'
-        #     cv2.createTrackbar( 'start', 'IdPlayer', 0, numFrame-1, onChange )
-        #     # cv2.createTrackbar( 'end'  , 'IdPlayer', numFrame-1, numFrame, onChange )
-        #
-        #     onChange(1)
-        #     cv2.waitKey()
-        #
-        #     start = cv2.getTrackbarPos('start','IdPlayer')
-        #
-        #     return raw_input('Which segment do you want to inspect?')
-        #
-        # finish = False
-        # while not finish:
-        #     print 'I am here', numSegment
-        #     numSegment = IdPlayer(paths[int(numSegment)],allIdentities,frameIndices)
-        #     if numSegment == 'q':
-        #         finish = True
-        #

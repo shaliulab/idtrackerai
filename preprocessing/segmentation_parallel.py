@@ -241,14 +241,14 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction):
     if bkgSubstraction:
         frame = np.abs(np.subtract(frame, bkg))
         frame = np.multiply(np.true_divide(frame,np.max(frame)),255).astype('uint8')
-        frameBkg = frame.copy()
-        # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
+        # frameBkg = frame.copy()
+        ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
     else:
         frame = np.multiply(np.true_divide(frame,np.max(frame)),255).astype('uint8')
-        frameBkg = frame.copy()
+        # frameBkg = frame.copy()
         ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
-    return frame, frameBkg
+    return frame#, frameBkg
 
 """
 Get information from blobs
@@ -395,10 +395,11 @@ def segmentAndSave(path, height, width):
         frame, avIntensity = frameAverager(frame)
 
         # perform background subtraction if needed
-        segmentedFrame, frameBkg = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
-        frameBkg = 255 - frameBkg
+        # segmentedFrame, frameBkg = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
+        segmentedFrame = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
+        # frameBkg = 255 - frameBkg
         # Find contours in the segmented image
-        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, frameBkg, minArea, maxArea, ROI, height, width)
+        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI, height, width)
 
         # cv2.drawContours(frameToPlot,goodContoursFull,-1,color=(255,0,0),thickness=-1)
         #
@@ -415,8 +416,8 @@ def segmentAndSave(path, height, width):
     filename, extension = os.path.splitext(video)
     folder = os.path.dirname(path)
     df.to_pickle(folder +'/'+ filename + '.pkl')
-    print 'Cleaning memory...'
-    gc.collect()
+    # print 'Cleaning memory...'
+    # gc.collect()
 
 
     return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist()
@@ -426,18 +427,18 @@ if __name__ == '__main__':
 
     # prep for args
     parser = argparse.ArgumentParser()
-    videoPath = '../Conflict8/conflict3and4_20120316T155032_1.avi'
+    videoPath = '../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi' # '../Conflict8/conflict3and4_20120316T155032_1.avi'
     # testPath = './test_1.avi'
     parser.add_argument('--path', default = videoPath, type = str)
     parser.add_argument('--bkg_subtraction', default = True, type = bool)
     parser.add_argument('--ROI_selection', default = True, type = bool)
     parser.add_argument('--mask_frame', default = True, type= bool)
     parser.add_argument('--Eq_image', default = False, type = bool)
-    parser.add_argument('--min_th', default = 120, type = int)
+    parser.add_argument('--min_th', default = 150, type = int)
     parser.add_argument('--max_th', default = 255, type = int)
     parser.add_argument('--min_area', default = 250, type = int)
     parser.add_argument('--max_area', default = 4000, type = int)
-    parser.add_argument('--num_animals', default = 8, type = int)
+    parser.add_argument('--num_animals', default = 5, type = int)
     args = parser.parse_args()
 
     ''' Parameters for the segmentation '''

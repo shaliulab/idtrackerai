@@ -17,6 +17,8 @@ from joblib import Parallel, delayed
 import multiprocessing
 import itertools
 import cPickle as pickle
+import math
+
 
 
 def computeIntersection(pixelsA,pixelsB):
@@ -93,7 +95,7 @@ def fragmentator(path):
     df = pd.read_pickle(path)
     columnNumBlobs = df.loc[:,'numberOfBlobs']
     columnPixels = df.loc[:,'pixels']
-    numAnimals = 8
+    numAnimals = 5
     dfPermutations, fragmentsIndices = computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals, numSegment)
     fragmentsIndices = (numSegment, fragmentsIndices)
     df['permutation'] = dfPermutations
@@ -127,7 +129,7 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
 
         if isinstance(permutationA,float): # if the last frame of the previous segment is not good (the permutation is NaN)
             globalFragments.append(fragmentsIndicesA[-1])
-            if int(fragmentsIndicesB[0][0])<0:
+            if math.isnan(fragmentsIndicesB[0][0]):
                 fragmentsIndicesB[0][0] = globalFrameCounter
 
             globalFragments += fragmentsIndicesB[:-1]
@@ -192,7 +194,8 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
     return globalFragments
 
 if __name__ == '__main__':
-    paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.pkl')
+    paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.pkl') # '../Conflict8/conflict3and4_20120316T155032_1.pkl'
+    # Cafeina5peces/Caffeine5fish_20140206T122428_1.avi
 
     # for path in paths:
     #     fragmentator(path)
@@ -201,14 +204,14 @@ if __name__ == '__main__':
     fragmentsIndices = Parallel(n_jobs=num_cores)(delayed(fragmentator)(path) for path in paths)
     fragmentsIndices = sorted(fragmentsIndices, key=lambda x: x[0])
     print fragmentsIndices
-    numAnimals = 8
+    numAnimals = 5
     globalFragments = segmentJoiner(paths, fragmentsIndices, numAnimals)
 
     """
     IdInspector
     """
     numSegment = 0
-    paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+    paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
     path = paths[numSegment]
 
     def IdPlayer(path):

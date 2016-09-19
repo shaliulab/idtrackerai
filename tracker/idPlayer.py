@@ -19,6 +19,9 @@ import itertools
 import cPickle as pickle
 
 numSegment = 0
+# paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+# frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
+# allIdentities = pd.read_pickle('../Cafeina5peces/Caffeine5fish_identities.pkl')
 paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
 frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
 allIdentities = pd.read_pickle('../Conflict8/conflict3and4_identities.pkl')
@@ -27,7 +30,7 @@ path = paths[numSegment]
 def get_spaced_colors(n):
     max_value = 16581375 #255**3
     interval = int(max_value / n)
-    colors = [hex(I)[2:].zfill(6) for I in range(0, max_value, interval)]
+    colors = [hex(I)[2:].zfill(6) for I in range(100, max_value, interval)]
     rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
     return rgbcolorslist
 
@@ -44,41 +47,67 @@ def IdPlayer(path,allIdentities,frameIndices):
     height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     numAnimals = 8
     colors = get_spaced_colors(8)
-    print colors
+    print 'colors, ',colors
     def onChange(trackbarValue):
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         centroids = df.loc[trackbarValue,'centroids']
         pixels = df.loc[trackbarValue,'pixels']
         permutation = df.loc[trackbarValue,'permutation']
-        # print 'previous frame, ', str(trackbarValue-1), ', permutation, ', df.loc[trackbarValue-1,'permutation']
-        # print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
-        # if sNumber == 1 and trackbarValue > 100:
-        #     trueFragment, s = computeFrameIntersection(df.loc[trackbarValue-1,'pixels'],df.loc[trackbarValue,'pixels'],5)
-        #     print trueFragment, s
-        #     result = df.loc[trackbarValue-1,'permutation'][s]
-        #     print 'result, ', result
+
         #Get frame from video file
         ret, frame = cap.read()
-        #Color to gray scale
-        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         font = cv2.FONT_HERSHEY_SIMPLEX
+        frameCopy = frame.copy()
 
         # Plot segmentated blobs
-        # for i, pixel in enumerate(pixels):
-        #     px = np.unravel_index(pixel,(height,width))
-        #     frame[px[0],px[1]] = 255
+
 
 
         # plot numbers if not crossing
         globalFrame = frameIndices[frameIndices['frame']== trackbarValue][frameIndices['segment']==sNumber].index[0]
+        print 'permutation, ', permutation
         if not isinstance(permutation,float):
-            # print 'pass'
-            for i, centroid in enumerate(centroids):
-                print centroid
-                cur_id = allIdentities.loc[globalFrame,i]
-                cv2.putText(frame,str(cur_id),centroid, font, 1,0)
-                cv2.circle(frame, centroid,2, colors[cur_id],2)
+            print 'pass'
+            # shadows
+            if trackbarValue > 0:
+                previousFrame = trackbarValue -1
+                shadowsCounter = 1
+                # frameShadows = np.zeros_like(frame)
+                while not isinstance(df.loc[previousFrame,'permutation'],float):
+                    # framePreviousShadows = np.zeros_like(frame)
+                    previousPixels = df.loc[previousFrame,'pixels']
+                    globalPreviousFrame = frameIndices[frameIndices['frame']== previousFrame][frameIndices['segment']==sNumber].index[0]
+                    print 'globalPreviousFrame, ', globalPreviousFrame
+                    for i, pixel in enumerate(previousPixels):
+                        cur_id = allIdentities.loc[globalPreviousFrame,i]
+                        px = np.unravel_index(pixel,(height,width))
+                        # print px
+                        # print cur_id
+                        # framePreviousShadows[px[0],px[1],:] = colors[cur_id]
+                        # print colors
+                        frame[px[0],px[1],:] = np.multiply(colors[cur_id],.3).astype('uint8')+np.multiply(frame[px[0],px[1],:],.7).astype('uint8')
+                    if previousFrame > 0 and shadowsCounter <= 11:
+                        previousFrame = previousFrame-1
+                        shadowsCounter += 1
+                    else:
+                        break
+                    # frameShadows = cv2.addWeighted(frameShadows,.5.,framePreviousShadows,.5.,0)
 
+                for i, centroid in enumerate(centroids):
+                    # print centroid
+                    cur_id = allIdentities.loc[globalFrame,i]
+                    px = np.unravel_index(pixels[i],(height,width))
+                    frame[px[0],px[1],:] = frameCopy[px[0],px[1],:]
+                    cv2.putText(frame,str(cur_id),centroid, font, 1,colors[cur_id],2)
+                    cv2.circle(frame, centroid,2, colors[cur_id],2)
+
+
+
+                    # frame[px[0],px[1],:] = colors[cur_id]
+
+
+        # blendFrame = cv2.addWeighted(frame,.5,frameShadows,.5,0)
+        # print 'shape blend Frame, ', blendFrame.shape
         cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
 
         # Visualization of the process

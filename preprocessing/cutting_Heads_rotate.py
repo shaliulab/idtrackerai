@@ -218,7 +218,7 @@ def reaper(path, frameIndices):
         minif = miniframes[counter]
         cents = centroids[counter]
         bkgSamps = bkgSamples[counter]
-        thMinif, ellipses = miniframeThresholder(minif, 90, 255,True)
+        thMinif, ellipses = miniframeThresholder(minif, 110, 255,True) # 90 for conlfict
         for j, miniframe in enumerate(thMinif):
             cent = full2miniframe(cents[j], bbs[j])
             focus, ext = getFoci(ellipses[j],cent)
@@ -274,8 +274,10 @@ def reaper(path, frameIndices):
     return AllPortraits
 
 if __name__ == '__main__':
-    frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
-    paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.pkl')
+    # frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
+    frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
+    # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.pkl')
+    paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.pkl')
 
     num_cores = multiprocessing.cpu_count()
 
