@@ -32,10 +32,16 @@ def computeIntersection(pixelsA,pixelsB):
 
 def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
     """
+    INPUT
     pixelsFrameA (B): list of pixels of the blobs detected on frame A (B)
+    numAnimals: number of animals in the video
+
+    OUTPUT
+    trueFragment: True when each animal from frame A overlap with only one animal in frame B
+    permutation: permutation that needs to be applied to miniFrames for the identities in A and B to be conserved
     """
     permutation = np.nan
-    combinations = itertools.product(range(numAnimals),range(numAnimals))
+    combinations = itertools.product(range(numAnimals),range(numAnimals)) # compute all the pairwise posibilities for two given number of animals
     s = []
     intersect = False
     trueFragment = False
@@ -47,28 +53,53 @@ def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
     if intersect == numAnimals:
         trueFragment = True
         permutation = np.asarray(sorted(s, key=lambda x: x[1]))[:,0]
-    # else:
-    #     print intersect
-    #     print 'caca'
+
     return trueFragment, permutation
 
 def computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals, numSegment):
+    """
+    Given number of blobs in each frame and the pixels of each blob this function
+    return a list of fragments (parts of the video where the animals do not cross)
+    and a the permutations that need to be applied to the miniFrames to identify
+    and animal by overlapping.
+
+    INPUT
+    columnNumBlobs: column with number of blobs for each frame in the segment
+    columnPixes: list of numAnimals-lists each list has the pixels of each blob in the frame
+    numAnimals: number of animals in the video
+    numSegment: segment number
+
+    OUTPUT
+    df: DataFrame with the permutations for each frame
+    SEs: list of fragments for the given segment. Each fragment is a 2 element list
+    with the starting and ending frame of the fragment. The framecounter is with respect
+    to the segment.
+    """
 
     def storeFragmentIndices(SE, SEs, i):
-        if len(SE) == 1:
+        """
+        Adds the last frame index (i) of the fragment (i),
+        appends it to list of fragments SEs and initialize the new fragment
+
+        INPUT
+        SE: opened fragment (it only has the starting frame index)
+        SEs: list of previous fragments
+        counter: set the counter for the new fragment to 1
+        """
+        if len(SE) == 1: # the fragment is opened
             SE.append(i-1)
             SEs.append(SE)
         counter = 1
-        SE = []
+        SE = [] # we initialize the next fragment
         return SE, SEs, counter
 
-    SEs = [] # append SE^i for every segment
-    SE = [] # store the indices of fragments in the form SE^1 = [[s_1^1,e_1^1], ..., [s_n^1, e_n^1]] for every segment
+    SEs = [] # list the indices of fragments in the form SEs = [[s_1^1,e_1^1], ..., [s_n^1, e_n^1]] for every segment
+    SE = []
     counter = 1
     df = pd.DataFrame(columns=['permutation'])
-    for i in range(1,len(columnPixels)):
-        if (columnNumBlobs[i-1] == numAnimals and columnNumBlobs[i] == numAnimals):
-            trueFragment, s = computeFrameIntersection(columnPixels[i-1],columnPixels[i],numAnimals)
+    for i in range(1,len(columnPixels)): # for every frame
+        if (columnNumBlobs[i-1] == numAnimals and columnNumBlobs[i] == numAnimals): # if the current frame and the previous have the right numAnimals
+            trueFragment, s = computeFrameIntersection(columnPixels[i-1],columnPixels[i],numAnimals) # compute overlapping between blobs
             if trueFragment:
                 if counter == 1:
                     df.loc[i-1,'permutation'] = np.arange(numAnimals)
