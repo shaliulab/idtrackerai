@@ -49,8 +49,6 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height):
     df = pd.read_pickle(folder +'/'+ filename + '.pkl')
     cap = cv2.VideoCapture(path)
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     colors = get_spaced_colors(numAnimals)
     print 'colors, ',colors
     def onChange(trackbarValue):

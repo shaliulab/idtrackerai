@@ -1,5 +1,8 @@
 import cv2
 import sys
+sys.path.append('../utils')
+from py_utils import *
+from video_utils import *
 import time
 import numpy as np
 from matplotlib import pyplot as plt
@@ -9,10 +12,13 @@ import argparse
 import os
 import glob
 import pandas as pd
-import h5py
 import time
 import re
-
+from joblib import Parallel, delayed
+import multiprocessing
+import cPickle as pickle
+import gc
+import datetime
 """
 Display messages and errors
 """
@@ -32,63 +38,74 @@ def displayError(title, message):
     window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
     tkMessageBox.showerror(title=title,message=message,parent=window)
 
-"""
-Scan folders  for videos
-"""
-def natural_sort(l):
-    convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
-    return sorted(l, key = alphanum_key)
+def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minThreshold,maxThreshold,maxArea,maxNumBlobs):
+    """
+    saves general info about the video in a pickle (_videoinfo.pkl)
+    """
+    videoInfo = {
+        'path': path,
+        'height':height,
+        'width': width,
+        'ROI': tuple(ROI),
+        'numAnimals':numAnimals,
+        'numCores':numCores,
+        'minThreshold':minThreshold,
+        'maxThreshold':maxThreshold,
+        'maxArea': maxArea,
+        'maxNumBlobs':maxNumBlobs
+        }
+    print videoInfo
+    saveFile(path, videoInfo, 'videoInfo', addSegNum = False, time = 0)
 
-def scanFolder(path):
-    paths = [path]
-    video = os.path.basename(path)
-    filename, extension = os.path.splitext(video)
-    folder = os.path.dirname(path)
-    # maybe write check on video extension supported by opencv2
-    if filename[-2:] == '_1':
-        paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
-    return paths
-
-"""
-Get general information from video
-"""
-def getVideoInfo(paths):
-    cap = cv2.VideoCapture(paths[0])
-    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-    return width, height
+def generateVideoTOC(allSegments, path):
+    """
+    generates a dataframe mapping frames to segments and save it as pickle
+    """
+    segmentsTOC = []
+    framesTOC = []
+    for segment, frame in allSegments:
+        segmentsTOC.append(segment)
+        framesTOC.append(frame)
+    segmentsTOC = flatten(segmentsTOC)
+    framesTOC = flatten(framesTOC)
+    videoTOC =  pd.DataFrame({'segment':segmentsTOC, 'frame': framesTOC})
+    saveFile(path, videoTOC, 'frameIndices', addSegNum = False, time = 0)
 
 """
 Compute background and threshold
 """
+
+
+def computeBkgPar(path,bkg,ROI):
+    print 'Adding video %s to background' % path
+    cap = cv2.VideoCapture(path)
+    counter = 0
+    numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    while counter < numFrame:
+        counter += 1;
+        ret, frame = cap.read()
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cropper(gray, ROI)
+        gray = checkEq(EQ, gray)
+        # gray,_ = frameAverager(gray) ##XXX
+        bkg = bkg + gray
+    return bkg
+
 def computeBkg(paths, ROI, EQ):
-    # This holds even if we have not selected a ROI because then the ROI is the
-    # full frame
+    # This holds even if we have not selected a ROI because then the ROI is
+    # initialized as the full frame
     bkg = np.zeros(
     (
     np.abs(np.subtract(ROI[0][1],ROI[1][1])),
     np.abs(np.subtract(ROI[0][0],ROI[1][0]))
     )
     )
-
-    totNumFrame = 0
-    for path in paths:
-        print 'Adding video %s to background' % path
-        cap = cv2.VideoCapture(path)
-        numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        # width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        # height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-        counter = 0
-        totNumFrame = totNumFrame + numFrame
-        while counter < numFrame:
-            counter += 1;
-            ret, frame = cap.read()
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            gray = cropper(gray, ROI)
-            gray = checkEq(EQ, gray)
-            gray,_ = frameAverager(gray)
-            bkg = bkg + gray
+    num_cores = multiprocessing.cpu_count()
+    # num_cores = 1
+    numFrame = Parallel(n_jobs=num_cores)(delayed(getNumFrame)(path) for path in paths)
+    partialBkg = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg,ROI) for path in paths)
+    bkg = np.sum(np.asarray(partialBkg),axis=0)
+    totNumFrame = sum(numFrame)
     bkg = np.true_divide(bkg, totNumFrame)
     # bkg is the backgorund computed by summing all the averaged frames
     # of the video and dividing by the number of frames in the video.
@@ -102,7 +119,8 @@ def checkBkg(bkgSubstraction, paths, ROI, EQ):
     if bkgSubstraction:
         print '\n Computing background ...\n'
         bkg = computeBkg(paths, ROI, EQ)
-
+        path = paths[0]
+        saveFile(path, bkg, 'bkg', addSegNum = False, time = 0)
         return bkg
     else:
         return None
@@ -165,7 +183,6 @@ def checkROI(selectROI):
     if selectROI:
         print '\n Selecting ROI ...'
         ROI = ROIselector(paths)
-        print "ROI: ",ROI
     return ROI
 
 """
@@ -192,7 +209,8 @@ Normalize by the average intensity
 """
 
 def frameAverager(frame):
-    return np.divide(frame,np.mean(frame)), np.mean(frame)
+    avFrame = np.divide(frame,np.mean(frame))
+    return np.multiply(np.true_divide(avFrame,np.max(avFrame)),255).astype('uint8'), np.mean(frame)
 
 """
 Image equalization
@@ -211,13 +229,15 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction):
     #Apply background substractions if requested and thresholding image
     if bkgSubstraction:
         frame = np.abs(np.subtract(frame, bkg))
-        frame = np.multiply(frame/np.max(frame),255).astype('uint8')
-        # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
+        frame = np.multiply(np.true_divide(frame,np.max(frame)),255).astype('uint8')
+        # frameBkg = frame.copy()
+        ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
     else:
-        frame = np.multiply(frame/np.max(frame),255).astype('uint8')
+        frame = np.multiply(np.true_divide(frame,np.max(frame)),255).astype('uint8')
+        # frameBkg = frame.copy()
         ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
-    return frame
+    return frame#, frameBkg
 
 """
 Get information from blobs
@@ -251,11 +271,17 @@ def cntROI2BoundingBox(cnt,boundingBox):
 def getBoundigBox(cnt):
     x,y,w,h = cv2.boundingRect(cnt)
     if (x > 2 and y > 2):
-        x = x - 2
-        y = y - 2
-        w = w + 4
-        h = h + 4
+        x = x - 4 #2
+        y = y - 4 #2
+        w = w + 8 #4
+        h = h + 8 #4
     return ((x,y),(x+w,y+h))
+
+def boundingBox_ROI2Full(bb, ROI):
+    """
+    Gives back only the first point of bb translated in the full frame
+    """
+    return ((bb[0][0] + ROI[0][0], bb[0][1] + ROI[0][1]),(bb[1][0] + ROI[0][0], bb[1][1] + ROI[0][1]))
 
 def getCentroid(cnt,ROI):
     M = cv2.moments(cnt)
@@ -266,29 +292,47 @@ def getCentroid(cnt,ROI):
 
 def getPixelsList(cnt, width, height):
     cimg = np.zeros((height, width))
-    cv2.drawContours(cimg, [cnt], -1, (255,0,0), -1)
+    cv2.drawContours(cimg, [cnt], -1, color=255, thickness = -1)
     # cv2.imshow('cnt',cimg)
     # Access the image pixels and create a 1D numpy array then add to list
     pts = np.where(cimg == 255)
     return zip(pts[0],pts[1])
 
-def getMiniFrame(avFrame, cnt, ROI):
-    boundingBox = getBoundigBox(cnt)
-    miniFrame = avFrame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
-    cntBB = cntROI2BoundingBox(cnt,boundingBox)
-    pixelsInBB = getPixelsList(cntBB, np.abs(boundingBox[0][0]-boundingBox[1][0]), np.abs(boundingBox[0][1]-boundingBox[1][1]))
-    pixelsInROI = pixelsInBB + np.asarray([boundingBox[0][0],boundingBox[0][1]])
-    pixelsInFullF = pixelsInROI + np.asarray([ROI[0][0],ROI[0][1]])
-    return miniFrame, pixelsInFullF
+def sampleBkg(cntBB, miniFrame):
+    cv2.drawContours(miniFrame, [cntBB], -1, color=255, thickness = -1) # FIXME there is a bug the depends on the ROI
+    # cv2.imshow('cnt',cimg)
+    # Access the image pixels and create a 1D numpy array then add to list
+    bkgSample = miniFrame[np.where(miniFrame != 255)]
+    return bkgSample
 
-def getBlobsInfoPerFrame(avFrame, contours, ROI):
+def getMiniFrame(frame, cnt, ROI, height, width):
+    # print '1', ROI
+    boundingBox = getBoundigBox(cnt)
+    bb = boundingBox_ROI2Full(boundingBox, ROI)
+    miniFrame = frame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
+    cntBB = cntROI2BoundingBox(cnt,boundingBox)
+    miniFrameBkg = miniFrame.copy()
+    bkgSample = sampleBkg(cntBB, miniFrameBkg)
+    pixelsInBB = getPixelsList(cntBB, np.abs(boundingBox[0][0]-boundingBox[1][0]), np.abs(boundingBox[0][1]-boundingBox[1][1]))
+    pixelsInROI = pixelsInBB + np.asarray([boundingBox[0][1],boundingBox[0][0]])
+    # print '2', ROI
+    pixelsInFullF = pixelsInROI + np.asarray([ROI[0][1],ROI[0][0]])
+    pixelsInFullFF = np.ravel_multi_index([pixelsInFullF[:,0],pixelsInFullF[:,1]],(height,width))
+    return bb, miniFrame, pixelsInFullFF, bkgSample
+
+def getBlobsInfoPerFrame(frame, contours, ROI, height, width):
+    boundingBoxes = []
     miniFrames = []
     centroids = []
     areas = []
     pixels = []
+    bkgSamples = []
     for cnt in contours:
         # boundigBox
-        miniFrame, pixelsInFullF = getMiniFrame(avFrame, cnt, ROI)
+        boundingBox, miniFrame, pixelsInFullF, bkgSample = getMiniFrame(frame, cnt, ROI, height, width)
+        bkgSamples.append(bkgSample)
+        boundingBoxes.append(boundingBox)
+        # miniframes
         miniFrames.append(miniFrame)
         # centroid
         centroids.append(getCentroid(cnt,ROI))
@@ -296,10 +340,11 @@ def getBlobsInfoPerFrame(avFrame, contours, ROI):
         areas.append(cv2.contourArea(cnt))
         # pixels list
         pixels.append(pixelsInFullF)
-    return miniFrames, centroids, areas, pixels
+    return boundingBoxes, miniFrames, centroids, areas, pixels, bkgSamples
 
-def blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI):
+def blobExtractor(segmentedFrame, frame, minArea, maxArea, ROI, height, width):
     contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+
     # Filter contours by size
     goodContours = filterContoursBySize(contours,minArea, maxArea)
     # Pass contours' coordinates from ROI to full size image if the ROI
@@ -309,28 +354,83 @@ def blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI):
     ### uncomment to plot contours
     # cv2.drawContours(frame, goodContours, -1, (255,0,0), -1)
     # get contours properties
-    miniFrames, centroids, areas, pixels = getBlobsInfoPerFrame(avFrame, goodContours, ROI)
+    boundingBoxes, miniFrames, centroids, areas, pixels, bkgSamples = getBlobsInfoPerFrame(frame, goodContours, ROI, height, width)
 
-    return miniFrames, centroids, areas, pixels, goodContoursFull
+    return boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples
+
+def segmentAndSave(path, height, width):
+    print 'Segmenting video %s' % path
+    cap = cv2.VideoCapture(path)
+    video = os.path.basename(path)
+    filename, extension = os.path.splitext(video)
+    numSegment = int(filename.split('_')[-1])
+    numFrames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    counter = 0
+    df = pd.DataFrame(columns=('avIntensity', 'boundingBoxes','miniFrames', 'centroids', 'areas', 'pixels', 'numberOfBlobs', 'bkgSamples'))
+    maxNumBlobs = 0
+    while counter < numFrames:
+
+        #Get frame from video file
+        ret, frame = cap.read()
+        # frameToPlot = masker(frame, maskFrame, ROI, selectROI)
+        #Color to gray scale
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # Equalize image to enhance contrast
+        frame = checkEq(EQ, frame)
+        frameToPlot = masker(frame, maskFrame, ROI, selectROI)
+        # mask or crop the image
+        frame = cropper(frame, ROI)
+        avFrame = frame
+        #Normalize each frame by its mean intensity
+        frame, avIntensity = frameAverager(frame)
+
+        # perform background subtraction if needed
+        # segmentedFrame, frameBkg = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
+        segmentedFrame = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
+        # frameBkg = 255 - frameBkg
+        # Find contours in the segmented image
+        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI, height, width)
+
+        if len(centroids) > maxNumBlobs:
+            maxNumBlobs = len(centroids)
+        # cv2.drawContours(frameToPlot,goodContoursFull,-1,color=(255,0,0),thickness=-1)
+        #
+        # cv2.imshow('checkcoord', frameToPlot)
+        # k = cv2.waitKey(30) & 0xFF
+        # if k == 27: #pres esc to quit
+        #     break
+        # Add frame imformation to DataFrame
+        df.loc[counter] = [avIntensity, boundingBoxes, miniFrames, centroids, areas, pixels, len(centroids), bkgSamples]
+        counter += 1
+    cap.release()
+    cv2.destroyAllWindows()
+
+    saveFile(path, df, '', addSegNum = True, time = 0)
+
+    return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist(), maxNumBlobs
+
 
 if __name__ == '__main__':
 
-    # prep for args
+    videoPath = '../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
+    # videoPath = '../Conflict8/conflict3and4_20120316T155032_1.avi'
+
     parser = argparse.ArgumentParser()
-    videoPath = './Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi'
-    # testPath = './test_1.avi'
+
     parser.add_argument('--path', default = videoPath, type = str)
     parser.add_argument('--bkg_subtraction', default = True, type = bool)
     parser.add_argument('--ROI_selection', default = True, type = bool)
     parser.add_argument('--mask_frame', default = True, type= bool)
     parser.add_argument('--Eq_image', default = False, type = bool)
-    parser.add_argument('--min_th', default = 130, type = int)
+    parser.add_argument('--min_th', default = 150, type = int)
     parser.add_argument('--max_th', default = 255, type = int)
-    parser.add_argument('--min_area', default = 40, type = int)
-    parser.add_argument('--max_area', default = 2000, type = int)
+    parser.add_argument('--min_area', default = 250, type = int)
+    parser.add_argument('--max_area', default = 750, type = int)
+    parser.add_argument('--num_animals', default = 5, type = int)
     args = parser.parse_args()
 
     ''' Parameters for the segmentation '''
+    numAnimals = args.num_animals
     bkgSubstraction = args.bkg_subtraction
     selectROI = args.ROI_selection
     maskFrame = args.mask_frame
@@ -342,60 +442,27 @@ if __name__ == '__main__':
 
     ''' Path to video/s '''
     paths = scanFolder(args.path)
+    createFolder(paths[0], name = '', timestamp = True, segmentation=True)
 
     width, height = getVideoInfo(paths)
     ROI = []
     ROI = checkROI(selectROI)
+    print '0', ROI
     bkg = checkBkg(bkgSubstraction, paths, ROI, EQ)
     ''' Entering loop for segmentation of the video '''
-    totalFrameCounter = 0
-    df = pd.DataFrame(columns=('avIntensity','miniFrames', 'centroids', 'areas', 'pixels'))
-    for path in paths:
-        start  = time.time()
-        print 'Segmenting video %s' % path
-        cap = cv2.VideoCapture(path)
-        numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        counter = 0
-        while counter < numFrame:
-            counter += 1
-            #Get frame from video file
-            ret, frame = cap.read()
-            frameToPlot = masker(frame, maskFrame, ROI, selectROI)
-            #Color to gray scale
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            # Equalize image to enhance contrast
-            frame = checkEq(EQ, frame)
-            # mask or crop the image
-            frame = cropper(frame, ROI)
-            avFrame = frame
-            #Normalize each frame by its mean intensity
-            frame, avIntensity = frameAverager(frame)
-            # avFrame = frame
-            # perform background subtraction if needed
-            frame = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
-            # Find contours in the segmented image
-            miniFrames, centroids, areas, pixels, goodContoursFull = blobExtractor(frame, avFrame, minArea, maxArea, ROI)
 
-            # Add frame imformation to DataFrame
-            df.loc[totalFrameCounter] = [avIntensity, miniFrames, centroids, areas, pixels]
 
-            # ### uncomment to plot centroids and blobs
-            cv2.drawContours(frameToPlot, goodContoursFull, -1, (255,0,0), -1)
-            for c in centroids:
-                cv2.circle(frameToPlot,c,3,(0,0,1),4)
-            # Visualization of the process
-            cv2.imshow('ROIFrameContours',frameToPlot)
-            #
-            # ## Plot miniframes
-            # for i, miniFrame in enumerate(miniFrames):
-            #     cv2.imshow('miniFrame' + str(i), miniFrame)
-            #
-            k = cv2.waitKey(30) & 0xFF
-            if k == 27: #pres esc to quit
-                break
-            totalFrameCounter += 1
-        print time.time() - start
+    # for path in paths:
+    #     df = segmentAndSave(path)
 
-    # df.to_pickle('testNatureMethods.pkl')
-    cap.release()
-    cv2.destroyAllWindows()
+    num_cores = multiprocessing.cpu_count()
+
+    # num_cores = 1
+    OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width) for path in paths)
+    allSegments = [(out[0],out[1]) for out in OupPutParallel]
+    # print allSegments
+    maxNumBlobs = max([out[2] for out in OupPutParallel])
+    # print maxNumBlobs
+    allSegments = sorted(allSegments, key=lambda x: x[0][0])
+    generateVideoTOC(allSegments, paths[0])
+    collectAndSaveVideoInfo(paths[0], height, width, ROI, numAnimals, num_cores, minThreshold,maxThreshold,maxArea,maxNumBlobs)
