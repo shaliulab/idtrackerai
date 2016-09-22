@@ -21,8 +21,9 @@ import cPickle as pickle
 numSegment = 0
 paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
 frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
-allIdentities = pd.read_pickle('../Cafeina5peces/Caffeine5fish_identities_new.pkl')
+# allIdentities = pd.read_pickle('../Cafeina5peces/Caffeine5fish_identities_new.pkl')
 videoInfoPath = '../Cafeina5peces/Caffeine5fish_videoInfo.pkl'
+statsPath = '../Cafeina5peces/Caffeine5fish_statistics.pkl'
 # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
 # frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
 # allIdentities = pd.read_pickle('../Conflict8/conflict3and4_identities.pkl')
@@ -32,6 +33,14 @@ numAnimals = videoInfo['numAnimals']
 width = videoInfo['width']
 height = videoInfo['Height']
 
+stats = pd.read_pickle(statsPath)
+allFragIds = stats['fragmentIds']
+allFragProbIds = stats['probFragmentIds']
+
+allIds = stats['blobIds']
+allProbIds = stats['probBlobIds']
+
+statistics = [allFragIds, allFragProbIds, allIds, allProbIds]
 
 def get_spaced_colors(n):
     max_value = 16581375 #255**3
@@ -40,7 +49,10 @@ def get_spaced_colors(n):
     rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
     return rgbcolorslist
 
-def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height):
+def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat):
+    plusOne = False # if stat are the identities' indices we will sum 1, because it is nicer
+    if stat.dtype == 'int64':
+        plusOne = True
 
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)
@@ -84,12 +96,13 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height):
                     globalPreviousFrame = frameIndices[frameIndices['frame']== previousFrame][frameIndices['segment']==sNumber].index[0]
                     print 'globalPreviousFrame, ', globalPreviousFrame
                     for i, pixel in enumerate(previousPixels):
-                        cur_id = allIdentities.loc[globalPreviousFrame,i]-1
+                        cur_id = allIdentities[globalPreviousFrame,i]
                         px = np.unravel_index(pixel,(height,width))
                         # print px
                         # print cur_id
                         # framePreviousShadows[px[0],px[1],:] = colors[cur_id]
                         # print colors
+                        # print cur_id
                         frame[px[0],px[1],:] = np.multiply(colors[cur_id],.3).astype('uint8')+np.multiply(frame[px[0],px[1],:],.7).astype('uint8')
                     if previousFrame > 0 and shadowsCounter <= 11:
                         previousFrame = previousFrame-1
@@ -100,11 +113,25 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height):
 
                 for i, centroid in enumerate(centroids):
                     # print centroid
-                    cur_id = allIdentities.loc[globalFrame,i]-1
+                    cur_id = allIdentities[globalFrame,i]
+                    if plusOne:
+                        cur_stat = stat[globalFrame,i]
+                        fontSize = 1
+                        text = str(cur_stat + 1)
+                        color = colors[cur_id]
+                        thickness = 2
+                    else:
+                        text = str(np.round(stat[globalFrame,i,:],decimals=2))
+                        fontSize = .5
+                        thickness = 1
+                        color = [0,0,0]
+
+
                     px = np.unravel_index(pixels[i],(height,width))
                     frame[px[0],px[1],:] = frameCopy[px[0],px[1],:]
-                    cv2.putText(frame,str(cur_id),centroid, font, 1,colors[cur_id],2)
-                    cv2.circle(frame, centroid,2, colors[cur_id],2)
+                    cv2.putText(frame,text,centroid, font, fontSize,color,thickness)
+                    cv2.putText(frame,str(cur_id+1),(centroid[0]-10,centroid[1]-10) , font, 1,colors[cur_id],2)
+                    # cv2.circle(frame, centroid,2, colors[cur_id],2)
 
 
 
@@ -134,6 +161,6 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height):
 finish = False
 while not finish:
     print 'I am here', numSegment
-    numSegment = IdPlayer(paths[int(numSegment)],allIdentities,frameIndices, numAnimals, width, height)
+    numSegment = IdPlayer(paths[int(numSegment)],allFragIds,frameIndices, numAnimals, width, height,allFragProbIds)
     if numSegment == 'q':
         finish = True

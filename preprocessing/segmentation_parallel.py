@@ -38,11 +38,11 @@ def displayError(title, message):
     window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
     tkMessageBox.showerror(title=title,message=message,parent=window)
 
-def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minThreshold,maxThreshold,maxArea):
+def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minThreshold,maxThreshold,maxArea,maxNumBlobs):
     """
     saves general info about the video in a pickle (_videoinfo.pkl)
     """
-    videoInfo = pd.DataFrame({
+    videoInfo = {
         'path': path,
         'Height':height,
         'width': width,
@@ -51,14 +51,16 @@ def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minT
         'numCores':numCores,
         'minThreshold':minThreshold,
         'maxThreshold':maxThreshold,
-        'maxArea': maxArea
-        })
+        'maxArea': maxArea,
+        'maxNumBlobs':maxNumBlobs
+        }
     print videoInfo
     folder = os.path.dirname(path)
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)
     filename = filename.split('_')[0]
-    videoInfo.to_pickle(folder +'/'+ filename + '_videoInfo' + '.pkl')
+    # videoInfo.to_pickle(folder +'/'+ filename + '_videoInfo' + '.pkl')
+    pickle.dump(videoInfo,open(folder +'/'+ filename + '_videoInfo' + '.pkl',"wb"))
 
 def generateVideoTOC(allSegments, path):
     """
@@ -310,7 +312,7 @@ def getPixelsList(cnt, width, height):
     return zip(pts[0],pts[1])
 
 def sampleBkg(cntBB, miniFrame):
-    cv2.drawContours(miniFrame, [cntBB], -1, color=255, thickness = -1)
+    cv2.drawContours(miniFrame, [cntBB], -1, color=255, thickness = -1) # FIXME there is a bug the depends on the ROI
     # cv2.imshow('cnt',cimg)
     # Access the image pixels and create a 1D numpy array then add to list
     bkgSample = miniFrame[np.where(miniFrame != 255)]
@@ -378,6 +380,7 @@ def segmentAndSave(path, height, width):
     numFrames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     counter = 0
     df = pd.DataFrame(columns=('avIntensity', 'boundingBoxes','miniFrames', 'centroids', 'areas', 'pixels', 'numberOfBlobs', 'bkgSamples'))
+    maxNumBlobs = 0
     while counter < numFrames:
 
         #Get frame from video file
@@ -401,6 +404,8 @@ def segmentAndSave(path, height, width):
         # Find contours in the segmented image
         boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI, height, width)
 
+        if len(centroids) > maxNumBlobs:
+            maxNumBlobs = len(centroids)
         # cv2.drawContours(frameToPlot,goodContoursFull,-1,color=(255,0,0),thickness=-1)
         #
         # cv2.imshow('checkcoord', frameToPlot)
@@ -420,14 +425,15 @@ def segmentAndSave(path, height, width):
     # gc.collect()
 
 
-    return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist()
+    return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist(), maxNumBlobs
 
 
 if __name__ == '__main__':
 
     # prep for args
     parser = argparse.ArgumentParser()
-    videoPath = '../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi' # '../Conflict8/conflict3and4_20120316T155032_1.avi'
+    videoPath = '../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
+    # videoPath = '../Conflict8/conflict3and4_20120316T155032_1.avi'
     # testPath = './test_1.avi'
     parser.add_argument('--path', default = videoPath, type = str)
     parser.add_argument('--bkg_subtraction', default = True, type = bool)
@@ -437,7 +443,7 @@ if __name__ == '__main__':
     parser.add_argument('--min_th', default = 150, type = int)
     parser.add_argument('--max_th', default = 255, type = int)
     parser.add_argument('--min_area', default = 250, type = int)
-    parser.add_argument('--max_area', default = 4000, type = int)
+    parser.add_argument('--max_area', default = 750, type = int)
     parser.add_argument('--num_animals', default = 5, type = int)
     args = parser.parse_args()
 
@@ -469,10 +475,14 @@ if __name__ == '__main__':
     num_cores = multiprocessing.cpu_count()
 
     # num_cores = 1
-    allSegments = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width) for path in paths)
+    OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width) for path in paths)
+    allSegments = [(out[0],out[1]) for out in OupPutParallel]
+    # print allSegments
+    maxNumBlobs = max([out[2] for out in OupPutParallel])
+    # print maxNumBlobs
     allSegments = sorted(allSegments, key=lambda x: x[0][0])
     generateVideoTOC(allSegments, paths[0])
-    collectAndSaveVideoInfo(paths[0], height, width, ROI, numAnimals, num_cores, minThreshold,maxThreshold,maxArea)
+    collectAndSaveVideoInfo(paths[0], height, width, ROI, numAnimals, num_cores, minThreshold,maxThreshold,maxArea,maxNumBlobs)
     # print allFrames
     # """
     # Visualize

@@ -39,11 +39,12 @@ def miniframeThresholder(miniframes, minThreshold, maxThreshold,EQ=False):
             ellipse = fitEllipse(contours)
 
         ellipse = fitEllipse(contours)
-
-        if ellipse == None:
-            ret, thMiniframe = cv2.threshold(miniframe,minThreshold+20,maxThreshold, cv2.THRESH_BINARY_INV)
+        inc = 1
+        while ellipse == None:
+            ret, thMiniframe = cv2.threshold(miniframe,minThreshold+20*inc,maxThreshold, cv2.THRESH_BINARY_INV)
             contours, hierarchy = cv2.findContours(thMiniframe,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
             ellipse = fitEllipse(contours)
+            inc += 1
         miniEllipses.append(fitEllipse(contours))
         # goodContours = filterContoursBySize(contours,minArea, maxArea)
 
@@ -122,6 +123,7 @@ def getFoci(ellipse, centroid):
             distances.append(np.linalg.norm(p1 - p))
         return np.argmin(distances)
     # centre
+    # print 'ellipse, ', ellipse
     cx = ellipse[0][0]
     cy = ellipse[0][1]
     # semi-axis (ordered by default using fitEllipse in OpenCV)
@@ -241,13 +243,18 @@ def getPortrait(miniframe,cent,bb,ellipse,bkgSamp):
 
     bigger_frame = np.zeros((diag,2*diag)).astype('uint8')
     bigger_frame[0:diag,diag/2:3*diag/2] = new_frame
-    rect1 = (ext_rt[0]-16+diag/2, 0)
-    rect2 = (ext_rt[0]+16+diag/2, 32)
+    if ext_rt[0]-16+diag/2 < 0 or ext_rt[0]-16+diag/2 < 0:
+        rect1 = (diag-16,0)
+        rect2 = (diag+16,32)
+    else:
+        rect1 = (ext_rt[0]-16+diag/2, 0)
+        rect2 = (ext_rt[0]+16+diag/2, 32)
     square_frame = bigger_frame[rect1[1]:rect2[1],rect1[0]:rect2[0]]
+    # print 'rect12, ', rect1, rect2
 
     portrait = fillSquareFrame(square_frame,bkgSamp)
 
-    return portrait
+    return portrait, bigger_frame
 
 def reaper(path, frameIndices):
     # print 'segment number ', i
@@ -256,7 +263,7 @@ def reaper(path, frameIndices):
     miniframes = np.asarray(miniframes)
     """ Visualise """
     AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images', 'permutations'])
-    print goodFrameIndices
+    # print goodFrameIndices
     counter = 0
     font = cv2.FONT_HERSHEY_SIMPLEX
     while counter < len(miniframes):
@@ -267,19 +274,19 @@ def reaper(path, frameIndices):
         bkgSamps = bkgSamples[counter]
         thMinif, ellipses = miniframeThresholder(minif, 110, 255,True) # 90 for conlfict
         for j, miniframe in enumerate(minif):
-
-            portrait = getPortrait(miniframe,cents[j],bbs[j],ellipses[j],bkgSamps[j])
+            # print '----------------', j, counter, path
+            portrait, bigger_frame = getPortrait(miniframe,cents[j],bbs[j],ellipses[j],bkgSamps[j])
 
             # get all the heads in a single list
             portraits.append(portrait)
-            cv2.imshow('thresholdedMiniframes'+str(j),bigger_frame)
+            cv2.imshow(str(j),portrait)
+
+        k = cv2.waitKey(1) & 0xFF
+        if k == 27: #pres esc to quit
+            break
 
         AllPortraits.set_value(goodFrameIndices[counter], 'images', np.asarray(portraits))
         AllPortraits.set_value(goodFrameIndices[counter], 'permutations', permutations[counter])
-
-        k = cv2.waitKey(100) & 0xFF
-        if k == 27: #pres esc to quit
-            break
         counter += 1
     return AllPortraits
 

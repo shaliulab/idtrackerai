@@ -225,6 +225,7 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals):
     return globalFragments
 
 if __name__ == '__main__':
+# if False: # used to test funcitons
     paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.pkl') # '../Conflict8/conflict3and4_20120316T155032_1.pkl'
     # Cafeina5peces/Caffeine5fish_20140206T122428_1.avi
 

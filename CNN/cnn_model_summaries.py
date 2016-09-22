@@ -104,6 +104,9 @@ Vindices, Viter_per_epoch, keep_prob = 1.0):
             ckpt = tf.train.get_checkpoint_state(ckpt_dir_model)
             if not (ckpt and ckpt.model_checkpoint_path):
                 if loadCkpt_folder:
+                    print '********************************************************'
+                    print 'We are only loading the model'
+                    print '********************************************************'
                     loadCkpt_folder = loadCkpt_folder + '/model'
                     print 'loading weigths from ' + loadCkpt_folder
                     restoreFromFolder(loadCkpt_folder, saver_model, sess)
@@ -113,6 +116,9 @@ Vindices, Viter_per_epoch, keep_prob = 1.0):
                     warnings.warn('It is not possible to perform knowledge transfer, give a folder containing a trained model')
             else:
                 print "\n"
+                print '********************************************************'
+                print 'Shit, we are also loading the softmax'
+                print '********************************************************'
                 restoreFromFolder(ckpt_dir_model, saver_model, sess)
                 restoreFromFolder(ckpt_dir_softmax, saver_softmax, sess)
 
