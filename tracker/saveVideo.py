@@ -20,17 +20,24 @@ import cPickle as pickle
 
 numSegment = 0
 paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
-allIdentities = pd.read_pickle('../Cafeina5peces/Caffeine5fish_identities_new.pkl')
-videoInfoPath = '../Cafeina5peces/Caffeine5fish_videoInfo.pkl'
 # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
-# frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
-# allIdentities = pd.read_pickle('../Conflict8/conflict3and4_identities.pkl')
 
-videoInfo = pd.read_pickle(videoInfoPath)
+frameIndices = loadFile(paths[0], 'frameIndices', time=0)
+videoInfo = loadFile(paths[0], 'videoInfo', time=0)
+stats = loadFile(paths[0], 'statistics', time=0)
+
 numAnimals = videoInfo['numAnimals']
 width = videoInfo['width']
-height = videoInfo['Height']
+height = videoInfo['height']
+
+allFragIds = stats['fragmentIds']
+# allFragProbIds = stats['probFragmentIds']
+
+# allIds = stats['blobIds']
+# allProbIds = stats['probBlobIds']
+
+# statistics = [allFragProbIds, allIds, allProbIds]
+
 
 # path = paths[numSegment]
 
@@ -42,6 +49,7 @@ def get_spaced_colors(n):
     return rgbcolorslist
 
 def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, show=True):
+
     path = paths[0]
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)
@@ -52,11 +60,8 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, show=True)
     name = folder +'/'+ filename.split('_')[0]  + '_tracked'+ '.avi'
     out = cv2.VideoWriter(name, fourcc, 15.0, (width, height))
     for path in paths:
-        video = os.path.basename(path)
-        filename, extension = os.path.splitext(video)
-        sNumber = int(filename.split('_')[-1])
-        folder = os.path.dirname(path)
-        df = pd.read_pickle(folder +'/'+ filename + '.pkl')
+        df, sNumber = loadFile(path, 'segmentation', time=0)
+        sNumber = int(sNumber)
         cap = cv2.VideoCapture(path)
         numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
         width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
@@ -73,6 +78,7 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, show=True)
             font = cv2.FONT_HERSHEY_SIMPLEX
             frameCopy = frame.copy()
             # plot numbers if not crossing
+            # globalFrame = frameIndices[frameIndices['frame']== trackbarValue][frameIndices['segment']==sNumber].index[0]
             globalFrame = frameIndices[frameIndices['frame']== currentFrame][frameIndices['segment']==sNumber].index[0]
             if not isinstance(permutation,float):
                 # shadows
@@ -83,9 +89,11 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, show=True)
                     while not isinstance(df.loc[previousFrame,'permutation'],float):
                         # framePreviousShadows = np.zeros_like(frame)
                         previousPixels = df.loc[previousFrame,'pixels']
+                        # globalPreviousFrame = frameIndices[frameIndices['frame']== previousFrame][frameIndices['segment']==sNumber].index[0]
                         globalPreviousFrame = frameIndices[frameIndices['frame']== previousFrame][frameIndices['segment']==sNumber].index[0]
+                        # print globalPreviousFrame, allIdentities[globalPreviousFrame,:]
                         for i, pixel in enumerate(previousPixels):
-                            cur_id = allIdentities.loc[globalPreviousFrame,i]-1
+                            cur_id = allIdentities[globalPreviousFrame,i]
                             px = np.unravel_index(pixel,(height,width))
                             frame[px[0],px[1],:] = np.multiply(colors[cur_id],.3).astype('uint8')+np.multiply(frame[px[0],px[1],:],.7).astype('uint8')
                         if previousFrame > 0 and shadowsCounter <= 11:
@@ -96,10 +104,10 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, show=True)
 
                     for i, centroid in enumerate(centroids):
                         # print centroid
-                        cur_id = allIdentities.loc[globalFrame,i]-1
+                        cur_id = allIdentities[globalFrame,i]
                         px = np.unravel_index(pixels[i],(height,width))
                         frame[px[0],px[1],:] = frameCopy[px[0],px[1],:]
-                        cv2.putText(frame,str(cur_id),centroid, font, 1,colors[cur_id],2)
+                        cv2.putText(frame,str(cur_id+1),centroid, font, 1,colors[cur_id],2)
                         cv2.circle(frame, centroid,2, colors[cur_id],2)
 
             cv2.putText(frame,'frame: ' + str(globalFrame),(300,50), font, 1,(0,0,255))
@@ -116,4 +124,4 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, show=True)
             else:
                 ValueError('Set show to True to display, or False to save the video')
             currentFrame += 1
-IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, show=True)
+IdSaver(paths,allFragIds,frameIndices,numAnimals,width,height, show=False)

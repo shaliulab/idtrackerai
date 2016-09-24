@@ -55,7 +55,7 @@ def collectAndSaveVideoInfo(path, height, width, ROI, numAnimals, numCores, minT
         'maxNumBlobs':maxNumBlobs
         }
     print videoInfo
-    saveFile(path, videoInfo, 'videoInfo', addSegNum = False, time = 0)
+    saveFile(path, videoInfo, 'videoInfo',time = 0)
 
 def generateVideoTOC(allSegments, path):
     """
@@ -69,7 +69,7 @@ def generateVideoTOC(allSegments, path):
     segmentsTOC = flatten(segmentsTOC)
     framesTOC = flatten(framesTOC)
     videoTOC =  pd.DataFrame({'segment':segmentsTOC, 'frame': framesTOC})
-    saveFile(path, videoTOC, 'frameIndices', addSegNum = False, time = 0)
+    saveFile(path, videoTOC, 'frameIndices', time = 0)
 
 """
 Compute background and threshold
@@ -120,7 +120,7 @@ def checkBkg(bkgSubstraction, paths, ROI, EQ):
         print '\n Computing background ...\n'
         bkg = computeBkg(paths, ROI, EQ)
         path = paths[0]
-        saveFile(path, bkg, 'bkg', addSegNum = False, time = 0)
+        saveFile(path, bkg, 'bkg', time = 0)
         return bkg
     else:
         return None
@@ -393,19 +393,19 @@ def segmentAndSave(path, height, width):
 
         if len(centroids) > maxNumBlobs:
             maxNumBlobs = len(centroids)
-        # cv2.drawContours(frameToPlot,goodContoursFull,-1,color=(255,0,0),thickness=-1)
-        #
-        # cv2.imshow('checkcoord', frameToPlot)
-        # k = cv2.waitKey(30) & 0xFF
-        # if k == 27: #pres esc to quit
-        #     break
+        cv2.drawContours(frameToPlot,goodContoursFull,-1,color=(255,0,0),thickness=-1)
+
+        cv2.imshow('checkcoord', frameToPlot)
+        k = cv2.waitKey(30) & 0xFF
+        if k == 27: #pres esc to quit
+            break
         # Add frame imformation to DataFrame
         df.loc[counter] = [avIntensity, boundingBoxes, miniFrames, centroids, areas, pixels, len(centroids), bkgSamples]
         counter += 1
     cap.release()
     cv2.destroyAllWindows()
 
-    saveFile(path, df, '', addSegNum = True, time = 0)
+    saveFile(path, df, 'segment', time = 0)
 
     return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist(), maxNumBlobs
 
@@ -442,7 +442,7 @@ if __name__ == '__main__':
 
     ''' Path to video/s '''
     paths = scanFolder(args.path)
-    createFolder(paths[0], name = '', timestamp = True, segmentation=True)
+    createFolder(paths[0], name = 'labMeeting', timestamp = True)
 
     width, height = getVideoInfo(paths)
     ROI = []
@@ -457,7 +457,7 @@ if __name__ == '__main__':
 
     num_cores = multiprocessing.cpu_count()
 
-    # num_cores = 1
+    num_cores = 1
     OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width) for path in paths)
     allSegments = [(out[0],out[1]) for out in OupPutParallel]
     # print allSegments

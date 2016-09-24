@@ -20,27 +20,24 @@ import cPickle as pickle
 
 numSegment = 0
 paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
-# allIdentities = pd.read_pickle('../Cafeina5peces/Caffeine5fish_identities_new.pkl')
-videoInfoPath = '../Cafeina5peces/Caffeine5fish_videoInfo.pkl'
-statsPath = '../Cafeina5peces/Caffeine5fish_statistics.pkl'
 # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
-# frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
-# allIdentities = pd.read_pickle('../Conflict8/conflict3and4_identities.pkl')
-# path = paths[numSegment]
-videoInfo = pd.read_pickle(videoInfoPath)
+
+frameIndices = loadFile(paths[0], 'frameIndices', time=0)
+videoInfo = loadFile(paths[0], 'videoInfo', time=0)
+stats = loadFile(paths[0], 'statistics', time=0)
+
 numAnimals = videoInfo['numAnimals']
 width = videoInfo['width']
-height = videoInfo['Height']
+height = videoInfo['height']
 
-stats = pd.read_pickle(statsPath)
 allFragIds = stats['fragmentIds']
+print allFragIds[:50]
 allFragProbIds = stats['probFragmentIds']
 
 allIds = stats['blobIds']
 allProbIds = stats['probBlobIds']
 
-statistics = [allFragIds, allFragProbIds, allIds, allProbIds]
+statistics = [allFragProbIds, allIds, allProbIds]
 
 def get_spaced_colors(n):
     max_value = 16581375 #255**3
@@ -54,11 +51,8 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat):
     if stat.dtype == 'int64':
         plusOne = True
 
-    video = os.path.basename(path)
-    filename, extension = os.path.splitext(video)
-    sNumber = int(filename.split('_')[-1])
-    folder = os.path.dirname(path)
-    df = pd.read_pickle(folder +'/'+ filename + '.pkl')
+    df, sNumber = loadFile(path, 'segmentation', time=0)
+    sNumber = int(sNumber)
     cap = cv2.VideoCapture(path)
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
@@ -78,13 +72,11 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat):
 
         # Plot segmentated blobs
 
-
-
         # plot numbers if not crossing
         globalFrame = frameIndices[frameIndices['frame']== trackbarValue][frameIndices['segment']==sNumber].index[0]
         print 'permutation, ', permutation
         if not isinstance(permutation,float):
-            print 'pass'
+            # print 'pass'
             # shadows
             if trackbarValue > 0:
                 previousFrame = trackbarValue -1
@@ -117,8 +109,8 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat):
                     if plusOne:
                         cur_stat = stat[globalFrame,i]
                         fontSize = 1
-                        text = str(cur_stat + 1)
-                        color = colors[cur_id]
+                        text = str(cur_stat)
+                        color = [0,0,0]
                         thickness = 2
                     else:
                         text = str(np.round(stat[globalFrame,i,:],decimals=2))
@@ -156,11 +148,15 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat):
 
     start = cv2.getTrackbarPos('start','IdPlayer')
 
-    return raw_input('Which segment do you want to inspect?')
+    numSegment =  raw_input('Which segment do you want to inspect?')
+    statNum = raw_input('Which statistics do you wanna visualize (allFragProbIds, allIds, allProbIds)?')
+    return numSegment, statNum
+    # return raw_input('Which statistics do you wanna visualize (0,1,2,3)?')
 
 finish = False
+statNum = 1
 while not finish:
     print 'I am here', numSegment
-    numSegment = IdPlayer(paths[int(numSegment)],allFragIds,frameIndices, numAnimals, width, height,allFragProbIds)
+    numSegment, statNum = IdPlayer(paths[int(numSegment)],allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)])
     if numSegment == 'q':
         finish = True

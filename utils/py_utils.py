@@ -88,11 +88,11 @@ def scanFolder(path):
         paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
     return paths
 
-def saveFile(path, variabletoSave, stringToAdd, addSegNum = False, time = 0):
+def saveFile(path, variabletoSave, name, time = 0):
     """
     All the input are strings!!!
     path: path to the first segment of the video
-    stringToAdd: string to add to the name of the video (wihtout timestamps)
+    name: string to add to the name of the video (wihtout timestamps)
     folder: path to the folder in which the file has to be stored
     """
     if os.path.exists(path)==False:
@@ -104,24 +104,28 @@ def saveFile(path, variabletoSave, stringToAdd, addSegNum = False, time = 0):
     subFolder = subFolders[time]
     filename, extension = os.path.splitext(video)
     # we assume there's an underscore before the timestamp
-    if addSegNum:
+    if name == 'segment' or name == 'segmentation':
         nSegment = filename.split('_')[-1]# and before the number of the segment
         filename = filename.split('_')[0] + '_' + nSegment + '.pkl'
         pd.to_pickle(variabletoSave, subFolder +'/segmentation/'+ filename)
     else:
-        filename = filename.split('_')[0] + '_' + stringToAdd + '.pkl'
+        filename = filename.split('_')[0] + '_' + name + '.pkl'
         pd.to_pickle(variabletoSave, subFolder + '/'+ filename)
     print 'you just saved: ',subFolder + filename
 
 
 
-def loadFile(path, name, time=0, segmentation=False):
+def loadFile(path, name, time=0):
+    """
+    loads a pickle. path is the path of the video, while name is a string in the
+    set {}
+    """
     video = os.path.basename(path)
     folder = os.path.dirname(path)
     filename, extension = os.path.splitext(video)
     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
     subFolder = subFolders[time]
-    if segmentation:
+    if name  == 'segmentation':
         nSegment = filename.split('_')[-1]
         filename = filename.split('_')[0] + '_' + nSegment + '.pkl'
         return pd.read_pickle(subFolder + '/segmentation/' + filename ), nSegment
@@ -130,19 +134,17 @@ def loadFile(path, name, time=0, segmentation=False):
         return pd.read_pickle(subFolder + filename )
 
 
+def createFolder(path, name = '', timestamp = False):
 
-
-def createFolder(path, name = '', timestamp = False, segmentation=True):
-    if timestamp:
-        ts = '_{:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
-        name = name + ts
+    ts = '_{:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
+    name = name + ts
 
     folder = os.path.dirname(path)
-    folderName = folder  + '/' + name
+    folderName = folder +'/'+ name + '/segmentation'
     os.makedirs(folderName) # create a folder
-    if segmentation:
-        folderName = folderName + '/segmentation'
-        os.makedirs(folderName) # create a folder
+
+    # folderName = folderName
+    # os.makedirs(folderName) # create a folder
 
     print folderName + ' has been created'
 

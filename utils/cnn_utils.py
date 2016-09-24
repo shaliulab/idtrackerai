@@ -242,7 +242,6 @@ def createCkptFolder(folderName, subfoldersNameList):
         subPaths.append(subPath)
     return subPaths
 
-
 def restoreFromFolder(pathToCkpt, saver, session):
     '''
     Restores variables stored in pathToCkpt with a certain saver,

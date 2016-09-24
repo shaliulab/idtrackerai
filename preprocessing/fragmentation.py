@@ -160,7 +160,7 @@ def fragmentator(path, numAnimals):
     # filename, extension = os.path.splitext(video)
     # numSegment = int(filename.split('_')[-1])
     # df = pd.read_pickle(path)
-    df, numSegment = loadFile(path, '', time=0, segmentation=True)
+    df, numSegment = loadFile(path, 'segmentation', time=0)
     numSegment = int(numSegment)
     columnNumBlobs = df.loc[:,'numberOfBlobs']
     columnPixels = df.loc[:,'pixels']
@@ -172,13 +172,13 @@ def fragmentator(path, numAnimals):
     # filename, extension = os.path.splitext(video)
     # folder = os.path.dirname(path)
     # df.to_pickle(folder +'/'+ filename + '.pkl')
-    saveFile(path, df, '', addSegNum = True, time = 0)
+    saveFile(path, df, 'segment', time = 0)
     return fragmentsIndices
 
 def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
     # init first segment
     maxBlobs = maxNumBlobs
-    df,_ = loadFile(paths[0], '', time=0, segmentation=True)
+    df,_ = loadFile(paths[0], 'segmentation', time=0)
     # df = pd.read_pickle(paths[0])
     fragmentsIndicesA = fragmentsIndices[0][1]
     permutationA = df.iloc[-1]['permutation']
@@ -194,7 +194,7 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
     for i in range(1,len(paths)):
         print 'Joining segment %s with %s ' % (paths[i-1], paths[i])
         # current segment
-        df,_ = loadFile(paths[i], '', time=0, segmentation=True)
+        df,_ = loadFile(paths[i], 'segmentation', time=0)
         # df = pd.read_pickle(paths[i])
         fragmentsIndicesB = np.add(fragmentsIndices[i][1],globalFrameCounter).tolist()
         permutationB = df.iloc[0]['permutation']
@@ -285,7 +285,7 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
             numBlobsA = numBlobsB
             globalFrameCounter += numFramesA
             #save
-            saveFile(paths[i], df, '', addSegNum = True, time = 0)
+            saveFile(paths[i], df, 'segment', time = 0)
             # video = os.path.basename(paths[i])
             # filename, extension = os.path.splitext(video)
             # folder = os.path.dirname(paths[i])
@@ -300,7 +300,7 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
     globalFragments = [map(int,globalFragment) for globalFragment in globalFragments]
     globalFragments = sorted(globalFragments, key=lambda x: x[1]-x[0],reverse=True)
     ### to be changed in the parallel version of this function
-    saveFile(paths[0], globalFragments, 'fragments', addSegNum = False, time = 0)
+    saveFile(paths[0], globalFragments, 'fragments', time = 0)
     # filename = folder +'/'+ filename.split('_')[0] + '_segments.pkl'
     # pickle.dump(globalFragments, open(filename, 'wb'))
 
@@ -310,7 +310,7 @@ if __name__ == '__main__':
 # if False: # used to test functions
     paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.pkl') # '../Conflict8/conflict3and4_20120316T155032_1.pkl'
     # Cafeina5peces/Caffeine5fish_20140206T122428_1.avi
-    info = loadFile(paths[0], 'videoInfo', time=0, segmentation=False)
+    info = loadFile(paths[0], 'videoInfo', time=0)
     # info = pd.read_pickle('../Cafeina5peces/Caffeine5fish_videoInfo.pkl')
     width = info['width']
     height = info['height']
@@ -334,7 +334,7 @@ if __name__ == '__main__':
     path = paths[numSegment]
 
     def IdPlayer(path,numAnimals, width, height):
-        df,sNumber = loadFile(path, '', time=0, segmentation=True)
+        df,sNumber = loadFile(path, 'segmentation', time=0)
         # video = os.path.basename(path)
         # filename, extension = os.path.splitext(video)
         # sNumber = int(filename.split('_')[-1])
