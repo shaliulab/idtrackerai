@@ -75,8 +75,7 @@ def generateVideoTOC(allSegments, path):
 Compute background and threshold
 """
 
-
-def computeBkgPar(path,bkg,ROI):
+def computeBkgPar(path,bkg):
     print 'Adding video %s to background' % path
     cap = cv2.VideoCapture(path)
     counter = 0
@@ -85,25 +84,20 @@ def computeBkgPar(path,bkg,ROI):
         counter += 1;
         ret, frame = cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = cropper(gray, ROI)
         gray = checkEq(EQ, gray)
         # gray,_ = frameAverager(gray) ##XXX
         bkg = bkg + gray
     return bkg
 
-def computeBkg(paths, ROI, EQ):
+def computeBkg(paths, EQ, width, height):
     # This holds even if we have not selected a ROI because then the ROI is
     # initialized as the full frame
-    bkg = np.zeros(
-    (
-    np.abs(np.subtract(ROI[0][1],ROI[1][1])),
-    np.abs(np.subtract(ROI[0][0],ROI[1][0]))
-    )
-    )
+    bkg = np.zeros((height,width))
+
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
     numFrame = Parallel(n_jobs=num_cores)(delayed(getNumFrame)(path) for path in paths)
-    partialBkg = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg,ROI) for path in paths)
+    partialBkg = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg) for path in paths)
     bkg = np.sum(np.asarray(partialBkg),axis=0)
     totNumFrame = sum(numFrame)
     bkg = np.true_divide(bkg, totNumFrame)
@@ -111,17 +105,31 @@ def computeBkg(paths, ROI, EQ):
     # of the video and dividing by the number of frames in the video.
     return bkg
 
-def bkgSubtraction(frame, bkg):
-    return np.abs(np.subtract(frame,bkg))
-
-def checkBkg(bkgSubstraction, paths, ROI, EQ):
+def checkBkg(bkgSubstraction, paths, ROI, EQ, width, height):
     ''' Compute Bkg '''
     if bkgSubstraction:
-        print '\n Computing background ...\n'
-        bkg = computeBkg(paths, ROI, EQ)
-        path = paths[0]
-        saveFile(path, bkg, 'bkg', time = 0)
-        return bkg
+        video = os.path.basename(paths[0])
+        folder = os.path.dirname(paths[0])
+        filename, extension = os.path.splitext(video)
+
+        subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
+        if len(subFolders) >= 2:
+            subFolder = subFolders[1]
+            filename = subFolder + filename.split('_')[0] + '_bkg.pkl'
+            print filename
+            if os.path.isfile(filename):
+            # if False:
+                print '\n Loading background ...\n'
+                bkg = loadFile(paths[0], 'bkg',1)
+
+            else:
+                print '\n Computing background ...\n'
+                bkg = computeBkg(paths, EQ, width, height)
+                path = paths[0]
+                saveFile(path, bkg, 'bkg', time = 0)
+
+            bkg = cropper(bkg, ROI)
+            return bkg
     else:
         return None
 
@@ -231,8 +239,8 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction):
         frame = np.abs(np.subtract(frame, bkg))
         frame = np.multiply(np.true_divide(frame,np.max(frame)),255).astype('uint8')
         # frameBkg = frame.copy()
-        ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
+        # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
     else:
         frame = np.multiply(np.true_divide(frame,np.max(frame)),255).astype('uint8')
         # frameBkg = frame.copy()
@@ -393,12 +401,15 @@ def segmentAndSave(path, height, width):
 
         if len(centroids) > maxNumBlobs:
             maxNumBlobs = len(centroids)
-        cv2.drawContours(frameToPlot,goodContoursFull,-1,color=(255,0,0),thickness=-1)
 
-        cv2.imshow('checkcoord', frameToPlot)
-        k = cv2.waitKey(30) & 0xFF
-        if k == 27: #pres esc to quit
-            break
+        ### UNCOMMENT TO PLOT ##################################################
+        # cv2.drawContours(frameToPlot,goodContoursFull,-1,color=(255,0,0),thickness=-1)
+        # cv2.imshow('checkcoord', frameToPlot)
+        # k = cv2.waitKey(30) & 0xFF
+        # if k == 27: #pres esc to quit
+        #     break
+        ########################################################################
+
         # Add frame imformation to DataFrame
         df.loc[counter] = [avIntensity, boundingBoxes, miniFrames, centroids, areas, pixels, len(centroids), bkgSamples]
         counter += 1
@@ -412,8 +423,8 @@ def segmentAndSave(path, height, width):
 
 if __name__ == '__main__':
 
-    videoPath = '../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
-    # videoPath = '../Conflict8/conflict3and4_20120316T155032_1.avi'
+    # videoPath = '../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
+    videoPath = '../Conflict8/conflict3and4_20120316T155032_1.avi'
 
     parser = argparse.ArgumentParser()
 
@@ -422,11 +433,11 @@ if __name__ == '__main__':
     parser.add_argument('--ROI_selection', default = True, type = bool)
     parser.add_argument('--mask_frame', default = True, type= bool)
     parser.add_argument('--Eq_image', default = False, type = bool)
-    parser.add_argument('--min_th', default = 150, type = int)
+    parser.add_argument('--min_th', default = 110, type = int)
     parser.add_argument('--max_th', default = 255, type = int)
     parser.add_argument('--min_area', default = 250, type = int)
     parser.add_argument('--max_area', default = 750, type = int)
-    parser.add_argument('--num_animals', default = 5, type = int)
+    parser.add_argument('--num_animals', default = 8, type = int)
     args = parser.parse_args()
 
     ''' Parameters for the segmentation '''
@@ -448,7 +459,7 @@ if __name__ == '__main__':
     ROI = []
     ROI = checkROI(selectROI)
     print '0', ROI
-    bkg = checkBkg(bkgSubstraction, paths, ROI, EQ)
+    bkg = checkBkg(bkgSubstraction, paths, ROI, EQ, width, height)
     ''' Entering loop for segmentation of the video '''
 
 
@@ -457,7 +468,7 @@ if __name__ == '__main__':
 
     num_cores = multiprocessing.cpu_count()
 
-    num_cores = 1
+    # num_cores = 1
     OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width) for path in paths)
     allSegments = [(out[0],out[1]) for out in OupPutParallel]
     # print allSegments

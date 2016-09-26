@@ -308,8 +308,8 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
 
 if __name__ == '__main__':
 # if False: # used to test functions
-    paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.pkl') # '../Conflict8/conflict3and4_20120316T155032_1.pkl'
-    # Cafeina5peces/Caffeine5fish_20140206T122428_1.avi
+    paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+    # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
     info = loadFile(paths[0], 'videoInfo', time=0)
     # info = pd.read_pickle('../Cafeina5peces/Caffeine5fish_videoInfo.pkl')
     width = info['width']
@@ -321,16 +321,17 @@ if __name__ == '__main__':
     # num_cores = 1
     fragmentsIndices = Parallel(n_jobs=num_cores)(delayed(fragmentator)(path, numAnimals) for path in paths)
     fragmentsIndices = sorted(fragmentsIndices, key=lambda x: x[0])
-    print fragmentsIndices
+    # print fragmentsIndices
 
     globalFragments = segmentJoiner(paths, fragmentsIndices, numAnimals, maxNumBlobs)
-    print globalFragments
+    # print globalFragments
 
     """
     IdInspector
     """
     numSegment = 0
-    paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
+    # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+    paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
     path = paths[numSegment]
 
     def IdPlayer(path,numAnimals, width, height):

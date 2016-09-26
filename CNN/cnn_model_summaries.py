@@ -293,13 +293,13 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                     *******************
                     '''
                     ### uncomment to plot ----
-                    if epoch_i % 10 == 0:
-                        CNNplotterFast(lossAccDict)
-
-                        print 'Saving figure...'
-                        figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
-                        plt.savefig(figname)
-                    print '-------------------------------'
+                    # if epoch_i % 10 == 0:
+                    #     CNNplotterFast(lossAccDict)
+                    #
+                    #     print 'Saving figure...'
+                    #     figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
+                    #     plt.savefig(figname)
+                    # print '-------------------------------'
                     ### ---
 
                     if stored_exception:
@@ -339,6 +339,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_ref', default = 0, type = int)
     parser.add_argument('--num_epochs', default = 500, type = int)
     parser.add_argument('--batch_size', default = 250, type = int)
+    parser.add_argument('--learning_rate', default = 0.001, type= float)
     args = parser.parse_args()
 
     pathTrain = args.dataset_train
@@ -351,6 +352,7 @@ if __name__ == '__main__':
     loadCkpt_folder = args.load_ckpt_folder
     batch_size = args.batch_size
     num_epochs = args.num_epochs
+    lr = args.learning_rate
 
 
     print "\n****** Loading database ******\n"

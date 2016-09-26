@@ -59,7 +59,12 @@ def DataNextFragment(portraits, animalInd):
     identitiesInd = np.where(identities==animalInd)
     frames = identitiesInd[0]
     portraitInds = identitiesInd[1]
-    _, height, width =  portraitsFrag[0].shape
+    # print portraitsFrag[0]
+    # print portraitsFrag[0].shape
+
+    # _, height, width =  portraitsFrag[0].shape
+    height = 32
+    width = 32
     imsize = (1, height, width)
     indivFragments = []
     indivFragment = []
