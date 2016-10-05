@@ -121,6 +121,8 @@ def checkBkg(bkgSubstraction, paths, ROI, EQ, width, height):
             # if False:
                 print '\n Loading background ...\n'
                 bkg = loadFile(paths[0], 'bkg',1)
+                path = paths[0]
+                saveFile(path, bkg, 'bkg', time = 0)
 
             else:
                 print '\n Computing background ...\n'
@@ -128,8 +130,15 @@ def checkBkg(bkgSubstraction, paths, ROI, EQ, width, height):
                 path = paths[0]
                 saveFile(path, bkg, 'bkg', time = 0)
 
-            bkg = cropper(bkg, ROI)
-            return bkg
+        else:
+            print '\n Computing background ...\n'
+            bkg = computeBkg(paths, EQ, width, height)
+            path = paths[0]
+            saveFile(path, bkg, 'bkg', time = 0)
+
+        bkg = cropper(bkg, ROI)
+        return bkg
+
     else:
         return None
 
@@ -279,10 +288,10 @@ def cntROI2BoundingBox(cnt,boundingBox):
 def getBoundigBox(cnt):
     x,y,w,h = cv2.boundingRect(cnt)
     if (x > 2 and y > 2):
-        x = x - 4 #2
-        y = y - 4 #2
-        w = w + 8 #4
-        h = h + 8 #4
+        x = x - 10 #2
+        y = y - 10 #2
+        w = w + 20 #4
+        h = h + 20 #4
     return ((x,y),(x+w,y+h))
 
 def boundingBox_ROI2Full(bb, ROI):
@@ -351,7 +360,8 @@ def getBlobsInfoPerFrame(frame, contours, ROI, height, width):
     return boundingBoxes, miniFrames, centroids, areas, pixels, bkgSamples
 
 def blobExtractor(segmentedFrame, frame, minArea, maxArea, ROI, height, width):
-    contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    # contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
 
     # Filter contours by size
     goodContours = filterContoursBySize(contours,minArea, maxArea)
@@ -374,7 +384,7 @@ def segmentAndSave(path, height, width):
     numSegment = int(filename.split('_')[-1])
     numFrames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     counter = 0
-    df = pd.DataFrame(columns=('avIntensity', 'boundingBoxes','miniFrames', 'centroids', 'areas', 'pixels', 'numberOfBlobs', 'bkgSamples'))
+    df = pd.DataFrame(columns=('avIntensity', 'boundingBoxes','miniFrames', 'contours', 'centroids', 'areas', 'pixels', 'numberOfBlobs', 'bkgSamples'))
     maxNumBlobs = 0
     while counter < numFrames:
 
@@ -411,7 +421,7 @@ def segmentAndSave(path, height, width):
         ########################################################################
 
         # Add frame imformation to DataFrame
-        df.loc[counter] = [avIntensity, boundingBoxes, miniFrames, centroids, areas, pixels, len(centroids), bkgSamples]
+        df.loc[counter] = [avIntensity, boundingBoxes, miniFrames, goodContoursFull, centroids, areas, pixels, len(centroids), bkgSamples]
         counter += 1
     cap.release()
     cv2.destroyAllWindows()
@@ -430,10 +440,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--path', default = videoPath, type = str)
     parser.add_argument('--bkg_subtraction', default = True, type = bool)
-    parser.add_argument('--ROI_selection', default = True, type = bool)
+    parser.add_argument('--ROI_selection', default = False, type = bool)
     parser.add_argument('--mask_frame', default = True, type= bool)
     parser.add_argument('--Eq_image', default = False, type = bool)
-    parser.add_argument('--min_th', default = 110, type = int)
+    parser.add_argument('--min_th', default = 90, type = int)
     parser.add_argument('--max_th', default = 255, type = int)
     parser.add_argument('--min_area', default = 250, type = int)
     parser.add_argument('--max_area', default = 750, type = int)
@@ -453,13 +463,14 @@ if __name__ == '__main__':
 
     ''' Path to video/s '''
     paths = scanFolder(args.path)
-    createFolder(paths[0], name = 'labMeeting', timestamp = True)
+    createFolder(paths[0], name = '', timestamp = True)
 
     width, height = getVideoInfo(paths)
     ROI = []
     ROI = checkROI(selectROI)
     print '0', ROI
     bkg = checkBkg(bkgSubstraction, paths, ROI, EQ, width, height)
+    # print bkg
     ''' Entering loop for segmentation of the video '''
 
 
