@@ -126,9 +126,13 @@ def loadFile(path, name, time=0):
     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
     subFolder = subFolders[time]
     if name  == 'segmentation':
+        # print 'i am here'
         nSegment = filename.split('_')[-1]
         filename = filename.split('_')[0] + '_' + nSegment + '.pkl'
-        return pd.read_pickle(subFolder + '/segmentation/' + filename ), nSegment
+        # print filename
+        # print subFolder
+        # print nSegment
+        return pd.read_pickle(subFolder + 'segmentation/' + filename ), nSegment
     else:
         filename = filename.split('_')[0] + '_' + name + '.pkl'
         return pd.read_pickle(subFolder + filename )

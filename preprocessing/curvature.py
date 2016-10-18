@@ -200,7 +200,7 @@ def fillSquareFrame(square_frame,bkgSamps):
     return square_frame
 
 # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_10.avi')
-path = '../Conflict8/_20161003155023/segmentation/conflict3and4_10.pkl'
+path = '../Conflict8/minArea_debug2_20161006120431/segmentation/conflict3and4_10.pkl'
 # df, numSegment = loadFile(paths[0], 'segmentation', time=0)
 df = pd.read_pickle(path)
 # print path
@@ -219,8 +219,6 @@ for j in range(10,numFrames):
         height, width = minif.shape
 
         plt.ion()
-        frame = np.zeros_like((500,500)).astype('uint8')
-        frame = cv2.cvtColor(frame,cv2.COLOR_GRAY2RGB)
         contour = full2miniframe(contour, bb)
         contour = smooth_resample(contour,smooth=True)
         contour = np.vstack([contour,contour])
@@ -282,28 +280,28 @@ for j in range(10,numFrames):
         portrait = fillSquareFrame(minif_cropped,bkgSamp)
         cv2.imshow('rot_crop', portrait)
         cv2.waitKey(1000)
-        # print curvature
-    #     X = np.squeeze(contour)[:,0]
-    #     Y = np.squeeze(contour)[:,1]
-    #     plt.figure()
-    #     plt.subplot(1,2,1)
-    #     plt.imshow(minif,interpolation='none',cmap='gray')
-    #     plt.plot(X,Y,'r')
-    #     for i,maxCoor in enumerate(maxCoord[:2]):
-    #         plt.scatter(maxCoor[0],maxCoor[1],s=100,c='b')
-    #         plt.scatter(support[i][0],support[i][1],s=100,c='r')
-    #
-    #     plt.scatter(m[0],m[1],s=100,c='g')
-    #     plt.plot([m[0],nose[0]],[m[1],nose[1]],'r')
-    #     plt.plot([0,minif.shape[1]],[m[1],m[1]])
-    #     plt.plot([m[0],m[0]], [0,minif.shape[0]])
-    #     plt.scatter(nose[0],nose[1],s=100,c='g')
-    #     plt.axis('equal')
-    #
-    #     plt.subplot(1,2,2)
-    #     plt.plot(curvature)
-    #     plt.scatter(sorted_locations[:2],curvature[sorted_locations[:2]],s=50,c='b')
-    #     # plt.axvline(zero)
-    #     # plt.axvline(zero+len(contour)/2)
-    # plt.show()
+        print curvature
+        X = np.squeeze(contour)[:,0]
+        Y = np.squeeze(contour)[:,1]
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.imshow(minif,interpolation='none',cmap='gray')
+        plt.plot(X,Y,'r')
+        for i,maxCoor in enumerate(maxCoord[:2]):
+            plt.scatter(maxCoor[0],maxCoor[1],s=100,c='b')
+            plt.scatter(support[i][0],support[i][1],s=100,c='r')
+
+        plt.scatter(m[0],m[1],s=100,c='g')
+        plt.plot([m[0],nose[0]],[m[1],nose[1]],'r')
+        plt.plot([0,minif.shape[1]],[m[1],m[1]])
+        plt.plot([m[0],m[0]], [0,minif.shape[0]])
+        plt.scatter(nose[0],nose[1],s=100,c='g')
+        plt.axis('equal')
+
+        plt.subplot(1,2,2)
+        plt.plot(curvature)
+        plt.scatter(sorted_locations[:2],curvature[sorted_locations[:2]],s=50,c='b')
+        # plt.axvline(zero)
+        # plt.axvline(zero+len(contour)/2)
+    plt.show()
 # counter += 1

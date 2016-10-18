@@ -207,21 +207,13 @@ def idFragment(IdProbs):
     for IdProb in IdProbs:
         epsilon = 0.01
         epMat = np.zeros_like(IdProb)
-        # print epMat.shape
         epMat[IdProb >= .99] = epsilon
-        # print epMat.shape
-        # print IdProb-epMat
-        # print np.prod(np.subtract(1., IdProb-epMat),axis = 0)
-        # avProbFragmentsId = np.power(np.subtract(1.,np.mean(IdProb, axis=0)),IdProb.shape[0])
-        # probFragmentsId = np.subtract(1., np.power(np.subtract(1.,np.mean(IdProb, axis=0)),IdProb.shape[0]))
-        # probFragmentsId = np.subtract(1., np.prod(np.subtract(1., IdProb-epMat), axis = 0))
+
         probFragmentsId = np.mean(IdProb, axis=0)
-        print 'probFragmentsId', probFragmentsId
+
         fragmentsId = np.argmax(probFragmentsId)
-        # print 'fragments Id', fragmentsId
 
         fragLen = IdProb.shape[0]
-        # print 'fragment lengths', fragLen
         probFragmentsIds.append(np.matlib.repmat(probFragmentsId,fragLen,1))
         fragmentsIds.append(np.multiply(np.ones(fragLen),fragmentsId).astype('int'))
 

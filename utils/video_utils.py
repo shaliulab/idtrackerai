@@ -6,11 +6,12 @@ def getVideoInfo(paths):
     if len(paths) == 1:
         path = paths
     elif len(paths) > 1:
-        cap = cv2.VideoCapture(paths[0])
-        width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+        path = paths[0]
     else:
         raise ValueError('the path (or list of path) seems to be empty')
+    cap = cv2.VideoCapture(paths[0])
+    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     return width, height
 
 def getNumFrame(path):

@@ -75,7 +75,7 @@ def generateVideoTOC(allSegments, path):
 Compute background and threshold
 """
 
-def computeBkgPar(path,bkg):
+def computeBkgPar(path,bkg,EQ):
     print 'Adding video %s to background' % path
     cap = cv2.VideoCapture(path)
     counter = 0
@@ -97,7 +97,7 @@ def computeBkg(paths, EQ, width, height):
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
     numFrame = Parallel(n_jobs=num_cores)(delayed(getNumFrame)(path) for path in paths)
-    partialBkg = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg) for path in paths)
+    partialBkg = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg,EQ) for path in paths)
     bkg = np.sum(np.asarray(partialBkg),axis=0)
     totNumFrame = sum(numFrame)
     bkg = np.true_divide(bkg, totNumFrame)
@@ -145,38 +145,40 @@ def checkBkg(bkgSubstraction, paths, ROI, EQ, width, height):
 """
 ROI selector GUI
 """
-def ROIselector(paths):
 
+def ROIselector(frame):
+    global ROI_
+    ROI_ = []
     def ROIselectorCallBack(event, x, y, flags, params):
     	# grab references to the global variables
-    	global ROI, selectROI_
+        global ROI_, select
 
     	# if the left mouse button was clicked, record the starting
     	# (x, y) coordinates and indicate that cropping is being
     	# performed
     	if event == cv2.EVENT_LBUTTONDOWN:
-    		ROI = [(x, y)]
-    		selectROI_ = True
+    		ROI_ = [(x, y)]
+    		select = True
 
     	# check to see if the left mouse button was released
     	elif event == cv2.EVENT_LBUTTONUP:
     		# record the ending (x, y) coordinates and indicate that
     		# the cropping operation is finished
-    		ROI.append((x, y))
-    		selectROI_ = False
+    		ROI_.append((x, y))
+    		select = False
 
     		# draw a rectangle around the region of interest
-    		cv2.rectangle(frame, ROI[0], ROI[1], (0, 255, 0), 2)
+    		cv2.rectangle(frame, ROI_[0], ROI_[1], (0, 255, 0), 2)
     		cv2.imshow("ROIselector", frame)
 
-    cap = cv2.VideoCapture(paths[0])
-    ret, frame = cap.read()
+    # cap = cv2.VideoCapture(paths[0])
+    # ret, frame = cap.read()
     cv2.namedWindow("ROIselector")
     cv2.setMouseCallback("ROIselector", ROIselectorCallBack)
     # if there are two reference points, the ROI has been selected properly
     displayMessage('ROI selector warning','Click and drag to select a rectangular region of interest')
     # otherwise we will need to set at while loop
-    while len(ROI) != 2:
+    while len(ROI_) != 2:
         # if len(ROI) != 2 and ROI is not []:
         # keep looping until the 'q' key is pressed
         while True:
@@ -187,28 +189,26 @@ def ROIselector(paths):
             # if the 'c' key is pressed, break from the loop
         	if key == ord("c"):
         		break
+    return ROI_
 
-    cap.release()
-    cv2.destroyAllWindows()
-    return ROI
-
-def checkROI(selectROI):
-    ROI = []
-    if not selectROI:
-        ROI = [(0,0),(width, height)]
+def checkROI(selectROI,frame):
+    height, width, channels = frame.shape
     ''' Select ROI '''
     if selectROI:
         print '\n Selecting ROI ...'
-        ROI = ROIselector(paths)
+        ROI = ROIselector(frame)
+    else:
+        ROI = [(0,0),(width, height)]
     return ROI
 
 """
 Cropper and masker
 """
 def maskROI(frame, ROI):
-    mask = np.zeros_like(frame)
-    mask[ROI[0][1]:ROI[1][1], ROI[0][0]:ROI[1][0]] = 1.
-    maskedFrame = frame * mask
+    mask = np.zeros_like(frame).astype('uint8')
+    mask[ROI[0][1]:ROI[1][1], ROI[0][0]:ROI[1][0]] = 255.
+    maskedFrame = cv2.addWeighted(frame,0.7,mask,0.3,0)
+    # maskedFrame = frame * mask
     return maskedFrame
 
 def cropper(frame, ROI):
@@ -285,13 +285,35 @@ def cntROI2OriginalFrame(contours,ROI):
 def cntROI2BoundingBox(cnt,boundingBox):
     return cnt - np.asarray([boundingBox[0][0],boundingBox[0][1]])
 
-def getBoundigBox(cnt):
+# def getBoundigBox(cnt):
+#     x,y,w,h = cv2.boundingRect(cnt)
+#     n = 10
+#     if (x > n and y > n): # We only expand the
+#         x = x - n #2
+#         y = y - n #2
+#         w = w + 2*n #4
+#         h = h + 2*n #4
+#     return ((x,y),(x+w,y+h))
+
+def getBoundigBox(cnt, width, height):
     x,y,w,h = cv2.boundingRect(cnt)
-    if (x > 2 and y > 2):
-        x = x - 10 #2
-        y = y - 10 #2
-        w = w + 20 #4
-        h = h + 20 #4
+    n = 10
+    if x - n > 0: # We only expand the
+        x = x - n
+    else:
+        x = 0
+    if y - n > 0:
+        y = y - n
+    else:
+        y = 0
+    if x + w + 2*n < width:
+        w = w + 2*n
+    else:
+        w = width - x
+    if y + h + 2*n < height:
+        h = h + 2*n
+    else:
+        h = height - y
     return ((x,y),(x+w,y+h))
 
 def boundingBox_ROI2Full(bb, ROI):
@@ -316,7 +338,14 @@ def getPixelsList(cnt, width, height):
     return zip(pts[0],pts[1])
 
 def sampleBkg(cntBB, miniFrame):
-    cv2.drawContours(miniFrame, [cntBB], -1, color=255, thickness = -1) # FIXME there is a bug the depends on the ROI
+    # print cntBB
+    # print miniFrame.shape
+    frame = np.zeros((500,500)).astype('uint8')
+    # cv2.drawContours(frame, [cntBB], -1, color=255, thickness = -1)
+    # cv2.imshow('a',frame)
+    # cv2.waitKey(1)
+    cv2.drawContours(miniFrame, [cntBB], -1, color=255, thickness = -1) # FIXME there is a bug that depends on the ROI
+
     # cv2.imshow('cnt',cimg)
     # Access the image pixels and create a 1D numpy array then add to list
     bkgSample = miniFrame[np.where(miniFrame != 255)]
@@ -324,11 +353,16 @@ def sampleBkg(cntBB, miniFrame):
 
 def getMiniFrame(frame, cnt, ROI, height, width):
     # print '1', ROI
-    boundingBox = getBoundigBox(cnt)
+    boundingBox = getBoundigBox(cnt, width, height)
     bb = boundingBox_ROI2Full(boundingBox, ROI)
+    # print 'ROI ', ROI
+    # print 'frame shape, ', frame.shape
+    # print 'boundingBox, ', boundingBox
     miniFrame = frame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
+    # print 'miniFrame shape, ', miniFrame.shape
     cntBB = cntROI2BoundingBox(cnt,boundingBox)
     miniFrameBkg = miniFrame.copy()
+    # print 'miniFrameBkg shape, ', miniFrameBkg.shape
     bkgSample = sampleBkg(cntBB, miniFrameBkg)
     pixelsInBB = getPixelsList(cntBB, np.abs(boundingBox[0][0]-boundingBox[1][0]), np.abs(boundingBox[0][1]-boundingBox[1][1]))
     pixelsInROI = pixelsInBB + np.asarray([boundingBox[0][1],boundingBox[0][0]])
@@ -344,8 +378,10 @@ def getBlobsInfoPerFrame(frame, contours, ROI, height, width):
     areas = []
     pixels = []
     bkgSamples = []
-    for cnt in contours:
+    for i, cnt in enumerate(contours):
         # boundigBox
+        # print '-------------'
+        # print 'contour, ', i
         boundingBox, miniFrame, pixelsInFullF, bkgSample = getMiniFrame(frame, cnt, ROI, height, width)
         bkgSamples.append(bkgSample)
         boundingBoxes.append(boundingBox)
@@ -376,7 +412,7 @@ def blobExtractor(segmentedFrame, frame, minArea, maxArea, ROI, height, width):
 
     return boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples
 
-def segmentAndSave(path, height, width):
+def segmentAndSave(path, height, width, ROI, selectROI, bkg, bkgSubstraction, EQ, maskFrame, minThreshold, maxThreshold, minArea, maxArea):
     print 'Segmenting video %s' % path
     cap = cv2.VideoCapture(path)
     video = os.path.basename(path)
@@ -387,7 +423,7 @@ def segmentAndSave(path, height, width):
     df = pd.DataFrame(columns=('avIntensity', 'boundingBoxes','miniFrames', 'contours', 'centroids', 'areas', 'pixels', 'numberOfBlobs', 'bkgSamples'))
     maxNumBlobs = 0
     while counter < numFrames:
-
+        # print counter
         #Get frame from video file
         ret, frame = cap.read()
         # frameToPlot = masker(frame, maskFrame, ROI, selectROI)
@@ -407,17 +443,19 @@ def segmentAndSave(path, height, width):
         segmentedFrame = segmentVideo(frame, minThreshold, maxThreshold, bkg, bkgSubstraction)
         # frameBkg = 255 - frameBkg
         # Find contours in the segmented image
+        # print '***********************'
+        # print 'frame, ', counter
         boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, avFrame, minArea, maxArea, ROI, height, width)
 
         if len(centroids) > maxNumBlobs:
             maxNumBlobs = len(centroids)
 
         ### UNCOMMENT TO PLOT ##################################################
-        # cv2.drawContours(frameToPlot,goodContoursFull,-1,color=(255,0,0),thickness=-1)
-        # cv2.imshow('checkcoord', frameToPlot)
-        # k = cv2.waitKey(30) & 0xFF
-        # if k == 27: #pres esc to quit
-        #     break
+        cv2.drawContours(frameToPlot,goodContoursFull,-1,color=(255,0,0),thickness=-1)
+        cv2.imshow('checkcoord', frameToPlot)
+        k = cv2.waitKey(30) & 0xFF
+        if k == 27: #pres esc to quit
+            break
         ########################################################################
 
         # Add frame imformation to DataFrame
@@ -431,6 +469,39 @@ def segmentAndSave(path, height, width):
     return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist(), maxNumBlobs
 
 
+def segment(paths, name, numAnimals,
+            bkgSubstraction, selectROI, maskFrame, EQ,
+            minThreshold, maxThreshold,
+            minArea, maxArea):
+
+    createFolder(paths[0], name = name, timestamp = True)
+
+    width, height = getVideoInfo(paths)
+    cap = cv2.VideoCapture(paths[0])
+    ret, frame = cap.read()
+    cap.release()
+
+    ROI = []
+    ROI = checkROI(selectROI, frame)
+    bkg = checkBkg(bkgSubstraction, paths, ROI, EQ, width, height)
+    ''' Entering loop for segmentation of the video '''
+
+    # for path in paths:
+    #     df = segmentAndSave(path)
+
+    num_cores = multiprocessing.cpu_count()
+
+    num_cores = 1
+    print 'Entering to the parallel loop'
+    OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width, ROI, selectROI, bkg, bkgSubstraction, EQ, maskFrame,minThreshold,maxThreshold,minArea,maxArea) for path in paths)
+    allSegments = [(out[0],out[1]) for out in OupPutParallel]
+    # print allSegments
+    maxNumBlobs = max([out[2] for out in OupPutParallel])
+    # print maxNumBlobs
+    allSegments = sorted(allSegments, key=lambda x: x[0][0])
+    generateVideoTOC(allSegments, paths[0])
+    collectAndSaveVideoInfo(paths[0], height, width, ROI, numAnimals, num_cores, minThreshold,maxThreshold,maxArea,maxNumBlobs)
+
 if __name__ == '__main__':
 
     # videoPath = '../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
@@ -439,14 +510,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--path', default = videoPath, type = str)
-    parser.add_argument('--bkg_subtraction', default = True, type = bool)
-    parser.add_argument('--ROI_selection', default = False, type = bool)
-    parser.add_argument('--mask_frame', default = True, type= bool)
-    parser.add_argument('--Eq_image', default = False, type = bool)
+    parser.add_argument('--folder_name', default = '', type = str)
+    parser.add_argument('--bkg_subtraction', default = 1, type = int)
+    parser.add_argument('--ROI_selection', default = 1, type = int)
+    parser.add_argument('--mask_frame', default = 1, type= int)
+    parser.add_argument('--Eq_image', default = 0, type = int)
     parser.add_argument('--min_th', default = 90, type = int)
     parser.add_argument('--max_th', default = 255, type = int)
     parser.add_argument('--min_area', default = 250, type = int)
-    parser.add_argument('--max_area', default = 750, type = int)
+    parser.add_argument('--max_area', default = 500, type = int)
     parser.add_argument('--num_animals', default = 8, type = int)
     args = parser.parse_args()
 
@@ -463,28 +535,9 @@ if __name__ == '__main__':
 
     ''' Path to video/s '''
     paths = scanFolder(args.path)
-    createFolder(paths[0], name = '', timestamp = True)
+    name  = args.folder_name
 
-    width, height = getVideoInfo(paths)
-    ROI = []
-    ROI = checkROI(selectROI)
-    print '0', ROI
-    bkg = checkBkg(bkgSubstraction, paths, ROI, EQ, width, height)
-    # print bkg
-    ''' Entering loop for segmentation of the video '''
-
-
-    # for path in paths:
-    #     df = segmentAndSave(path)
-
-    num_cores = multiprocessing.cpu_count()
-
-    # num_cores = 1
-    OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width) for path in paths)
-    allSegments = [(out[0],out[1]) for out in OupPutParallel]
-    # print allSegments
-    maxNumBlobs = max([out[2] for out in OupPutParallel])
-    # print maxNumBlobs
-    allSegments = sorted(allSegments, key=lambda x: x[0][0])
-    generateVideoTOC(allSegments, paths[0])
-    collectAndSaveVideoInfo(paths[0], height, width, ROI, numAnimals, num_cores, minThreshold,maxThreshold,maxArea,maxNumBlobs)
+    segment(paths, name, numAnimals,
+                bkgSubstraction, selectROI, maskFrame, EQ,
+                minThreshold, maxThreshold,
+                minArea, maxArea)

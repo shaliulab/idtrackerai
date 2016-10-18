@@ -19,8 +19,8 @@ import itertools
 import cPickle as pickle
 
 numSegment = 0
-paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+# paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
 
 frameIndices = loadFile(paths[0], 'frameIndices', time=0)
 videoInfo = loadFile(paths[0], 'videoInfo', time=0)

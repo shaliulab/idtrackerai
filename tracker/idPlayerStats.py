@@ -44,6 +44,8 @@ def get_spaced_colors(n):
     interval = int(max_value / n)
     colors = [hex(I)[2:].zfill(6) for I in range(100, max_value, interval)]
     rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
+    black = (0., 0., 0.)
+    rgbcolorslist.insert(0, black)
     return rgbcolorslist
 
 def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat):
@@ -58,7 +60,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat):
     width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     colors = get_spaced_colors(numAnimals)
-    print 'colors, ',colors
+    # print 'colors, ',colors
     def onChange(trackbarValue):
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         centroids = df.loc[trackbarValue,'centroids']
@@ -95,7 +97,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat):
                         # framePreviousShadows[px[0],px[1],:] = colors[cur_id]
                         # print colors
                         # print cur_id
-                        frame[px[0],px[1],:] = np.multiply(colors[cur_id],.3).astype('uint8')+np.multiply(frame[px[0],px[1],:],.7).astype('uint8')
+                        frame[px[0],px[1],:] = np.multiply(colors[cur_id+1],.3).astype('uint8')+np.multiply(frame[px[0],px[1],:],.7).astype('uint8')
                     if previousFrame > 0 and shadowsCounter <= 11:
                         previousFrame = previousFrame-1
                         shadowsCounter += 1
@@ -122,7 +124,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat):
                     px = np.unravel_index(pixels[i],(height,width))
                     frame[px[0],px[1],:] = frameCopy[px[0],px[1],:]
                     cv2.putText(frame,text,centroid, font, fontSize,color,thickness)
-                    cv2.putText(frame,str(cur_id+1),(centroid[0]-10,centroid[1]-10) , font, 1,colors[cur_id],2)
+                    cv2.putText(frame,str(cur_id+1),(centroid[0]-10,centroid[1]-10) , font, 1,colors[cur_id+1],2)
                     # cv2.circle(frame, centroid,2, colors[cur_id],2)
 
 
