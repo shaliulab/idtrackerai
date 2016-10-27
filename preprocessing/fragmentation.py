@@ -407,10 +407,12 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--path', default = videoPath, type = str)
-
+    args = parser.parse_args()
     paths = scanFolder(args.path)
     fragment(paths)
     play(paths)
+
+    
 # if False: # used to test functions
     # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
     # # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')

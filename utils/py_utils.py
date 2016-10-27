@@ -4,6 +4,8 @@ import glob
 import re
 import datetime
 import pandas as pd
+import numpy as np
+import Tkinter, tkSimpleDialog
 
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):
@@ -11,6 +13,12 @@ def getVarFromDict(dictVar,variableNames):
     return [dictVar[v] for v in variableNames]
 
 ### Array utils ####
+def maskArray(im1,im2,w1,w2):
+    return np.add(np.multiply(im1,w1),np.multiply(im2,w2))
+
+def uint8caster(im):
+    return np.multiply(np.true_divide(im,np.max(im)),255).astype('uint8')
+
 def flatten(l):
     ''' flatten a list of lists '''
     return [inner for outer in l for inner in outer]
@@ -101,6 +109,7 @@ def saveFile(path, variabletoSave, name, time = 0):
     filename, extension = os.path.splitext(video)
     folder = os.path.dirname(path)
     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
+    # print 'subFolders', subFolders
     subFolder = subFolders[time]
     filename, extension = os.path.splitext(video)
     # we assume there's an underscore before the timestamp
@@ -124,7 +133,9 @@ def loadFile(path, name, time=0):
     folder = os.path.dirname(path)
     filename, extension = os.path.splitext(video)
     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
+    # print 'subFolders from loadFile ',subFolders
     subFolder = subFolders[time]
+
     if name  == 'segmentation':
         # print 'i am here'
         nSegment = filename.split('_')[-1]
@@ -140,8 +151,8 @@ def loadFile(path, name, time=0):
 
 def createFolder(path, name = '', timestamp = False):
 
-    ts = '_{:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
-    name = name + ts
+    ts = '{:%Y%m%d%H%M%S}_'.format(datetime.datetime.now())
+    name = ts + name
 
     folder = os.path.dirname(path)
     folderName = folder +'/'+ name + '/segmentation'
@@ -151,6 +162,32 @@ def createFolder(path, name = '', timestamp = False):
     # os.makedirs(folderName) # create a folder
 
     print folderName + ' has been created'
+
+"""
+Display messages and errors
+"""
+def getInput(name,text):
+    root = Tkinter.Tk() # dialog needs a root window, or will create an "ugly" one for you
+    root.withdraw() # hide the root window
+    password = tkSimpleDialog.askstring(name, text, parent=root)
+    root.destroy() # clean up after yourself!
+    return password
+
+def displayMessage(title,message):
+    window = Tk()
+    window.wm_withdraw()
+
+    #centre screen message
+    window.geometry("1x1+"+str(window.winfo_screenwidth()/2)+"+"+str(window.winfo_screenheight()/2))
+    tkMessageBox.showinfo(title=title, message=message)
+
+def displayError(title, message):
+    #message at x:200,y:200
+    window = Tk()
+    window.wm_withdraw()
+
+    window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
+    tkMessageBox.showerror(title=title,message=message,parent=window)
 
 
 # a = 1

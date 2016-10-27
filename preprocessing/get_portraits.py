@@ -74,10 +74,12 @@ def smooth_resample(contour,smooth = False):
     x_new = x
     y_new = y
 
-    M = 1000 # FIXME The number of points for the resampling has to be consistent with the resolution for the artifact of the arctan2 not to appear
+    # M = 1000
+    M = 1000
     t = np.linspace(0, len(x_new), M)
     x = np.interp(t, np.arange(len(x_new)), x_new)
     y = np.interp(t, np.arange(len(y_new)), y_new)
+    # tol = .1
     tol = .1
     i, idx = 0, [0]
     while i < len(x):
@@ -107,7 +109,7 @@ def phi(ind, cnt): # FIXME we need to understand the arctan2 and return the corr
     # return atan
 
 
-def curv(cnt,i,n):
+def curv(cnt,i,n,orientation):
     left = (i + n) % (len(cnt)-1)
     right = (i - n) % (len(cnt)-1)
     phi_l = phi(left, cnt) #% 360
@@ -119,7 +121,7 @@ def curv(cnt,i,n):
         if phi_r <= 0:
             phi_r += 2*np.pi
 
-    return (phi_l - phi_r) /(2*n+1)
+    return orientation*(phi_l - phi_r) /(2*n+1) # good one
 
 def get_extrema(curvature):
     gradients = np.diff(curvature)
@@ -213,6 +215,7 @@ def fillSquareFrame(square_frame,bkgSamps):
 
 def getPortrait(miniframe,cnt,bb,bkgSamp):
     height, width = miniframe.shape
+    orientation = np.sign(cv2.contourArea(cnt,oriented=True)) ### TODO this can probably be optimized
 
     # Pass contour to bb coord, resample, smooth, and duplicate
     cnt = full2miniframe(cnt, bb)
@@ -222,7 +225,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp):
     cnt = np.vstack([cnt,cnt])
 
     # Compute curvature
-    curvature = [curv(cnt,i,2) for i in range(len(cnt))]
+    curvature = [curv(cnt,i,3,orientation) for i in range(len(cnt))]
     curvature = np.asarray(curvature)
 
     # Smooth curvature
@@ -237,6 +240,16 @@ def getPortrait(miniframe,cnt,bb,bkgSamp):
     i2 = zero+len(cnt)/2
     cnt = cnt[i1:i2]
     curvature = curvature[i1:i2]
+
+    ### Uncomment to plot
+    # plt.close("all")
+    # plt.ion()
+    # plt.figure()
+    # plt.plot(curvature)
+    # plt.figure()
+    # plt.plot(cnt[:,0],cnt[:,1],'o')
+    # plt.show()
+    # plt.pause(.5)
 
     # Find first two maxima (tail and nose), get middle point, and angle of rotation
     max_locations, min_locations = get_extrema(curvature)
@@ -257,6 +270,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp):
     y_offset = np.ceil((diag-rowsMin)/2).astype('int')
     new_frame[y_offset:y_offset + rowsMin, x_offset:x_offset+colsMin] = miniframe
     new_frame = fillSquareFrame(new_frame,bkgSamp)
+
     # Translate and rotate nose and middle point to the new frame
     new_nose = tuple(np.asarray([nose[0]+x_offset, nose[1]+y_offset]).astype('int'))
     new_m = tuple(np.asarray([m[0]+x_offset, m[1]+y_offset]).astype('int'))
@@ -297,7 +311,8 @@ def reaper(path, frameIndices):
         for j, miniframe in enumerate(minif):
             # print '----------------', j, counter, path
             # print miniframe
-            # cv2.imshow('frame', miniframe)
+            ### Uncomment to plot
+            cv2.imshow('frame', miniframe)
             # cv2.waitKey()
             portrait = getPortrait(miniframe,cnts[j],bbs[j],bkgSamps[j])
 
@@ -305,11 +320,11 @@ def reaper(path, frameIndices):
             portraits.append(portrait)
 
         ### UNCOMMENT TO PLOT ##################################################
-        #     cv2.imshow(str(j),portrait)
-        #
-        # k = cv2.waitKey(1) & 0xFF
-        # if k == 27: #pres esc to quit
-        #     break
+            cv2.imshow(str(j),portrait)
+
+        k = cv2.waitKey(100) & 0xFF
+        if k == 27: #pres esc to quit
+            break
         ########################################################################
 
         AllPortraits.set_value(goodFrameIndices[counter], 'images', np.asarray(portraits))
@@ -319,16 +334,12 @@ def reaper(path, frameIndices):
     print 'you just reaped', path
     return AllPortraits
 
-if __name__ == '__main__':
-    # frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
-    # frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
-    # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-    paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+def portrait(paths):
     frameIndices = loadFile(paths[0], 'frameIndices', time=0)
 
     num_cores = multiprocessing.cpu_count()
     # paths = [paths[5]]
-    # num_cores = 1
+    num_cores = 1
     allPortraits = Parallel(n_jobs=num_cores)(delayed(reaper)(path,frameIndices) for path in paths)
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)
@@ -340,3 +351,10 @@ if __name__ == '__main__':
     # allPortraits.to_pickle(folder +'/'+ filename + '_portraits' + '.pkl')
 
     saveFile(path, allPortraits, 'portraits', time = 0)
+
+if __name__ == '__main__':
+    # frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
+    # frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
+    # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+    paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+    portrait(paths)

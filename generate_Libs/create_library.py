@@ -3,7 +3,7 @@ import sys
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
 
-from segmentation import *
+from segmentation_ROI import *
 from fragmentation import *
 from get_portraits import *
 
@@ -26,9 +26,46 @@ import cPickle as pickle
 import math
 from natsort import natsorted, ns
 from os.path import isdir, isfile
+import scipy.spatial.distance as scisd
+
+def assignCenterFrame(centers,centroids): ### TODO this function can be improved to be faster by using repmats
+    """
+    centers: centers of the arenas
+    centroids: centroids of the fish for a frame
+    """
+    d = scisd.cdist(centers,centroids)
+    centersAssigned = np.argmin(d,axis=0)
+    return centersAssigned
+
+### Unit test
+# centers = [(1,1),(-1,1),(-1,-1),(1,-1)]
+# centroids = [(-1,1),(1,1),(-1,-1),(1,-1)]
+# centersAssigned = assignCenterFrame(centers,centroids)
+# print centersAssigned
+
+
+def assignCenterAndSave(path,centers):
+    df, _ = loadFile(path, 'segmentation', time=0)
+    dfPermutations = pd.DataFrame(index=df.index,columns={'permutation'})
+    for centroids, index in zip(df.centroids,df.index):
+        dfPermutations.loc[index,'permutation'] = assignCenterFrame(centers,centroids)
+
+    df['permutation'] = dfPermutations
+    saveFile(path, df, 'segment', time = 0)
+
+# path = '/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf/group_1_camera_1/group_1_camera_2_20160508T100615_1.avi'
+# info = loadFile(path, 'videoInfo', time=0)
+# centers = info['ROICenters']
+# assignCenterPath(path,centers)
+# play([path])
+
+def assignCenters(paths,centers):
+    num_cores = multiprocessing.cpu_count()
+    # num_cores = 1
+    Parallel(n_jobs=num_cores)(delayed(assignCenterAndSave)(path, centers) for path in paths)
 
 def buildLibrary(libPath,numAnimals,
-                bkgSubstraction, selectROI, maskFrame, EQ,
+                bkgSubstraction, selectROI, EQ,
                 minThreshold, maxThreshold,
                 minArea, maxArea):
 
@@ -42,15 +79,8 @@ def buildLibrary(libPath,numAnimals,
 
         return ageInDpf, preprocessing, subDirs
 
-
-    # def fragment():
-    #     print 'fragment'
-    #
-    # def portrait():
-    #     print 'portrait'
-
     def libLoop(libPath, numAnimals,
-                bkgSubstraction, selectROI, maskFrame, EQ,
+                bkgSubstraction, selectROI, EQ,
                 minThreshold, maxThreshold,
                 minArea, maxArea):
 
@@ -67,14 +97,19 @@ def buildLibrary(libPath,numAnimals,
             paths = scanFolder(videoPath)
             name  = 'preprocessing_' + subDir
             segment(paths, name, numAnimals,
-                        bkgSubstraction, selectROI, maskFrame, EQ,
+                        bkgSubstraction, selectROI, EQ,
                         minThreshold, maxThreshold,
                         minArea, maxArea)
-            fragment(paths)
-            play(paths)
+            info = loadFile(paths[0], 'videoInfo', time=0)
+            centers = info['ROICenters']
+            assignCenters(paths,centers)
+            # play(paths)
+            portrait(paths)
+            # fragment(paths)
+
 
     libLoop(libPath, numAnimals,
-                bkgSubstraction, selectROI, maskFrame, EQ,
+                bkgSubstraction, selectROI, EQ,
                 minThreshold, maxThreshold,
                 minArea, maxArea)
 
@@ -101,7 +136,6 @@ if __name__ == '__main__':
     numAnimals = args.num_animals
     bkgSubstraction = args.bkg_subtraction
     selectROI = args.ROI_selection
-    maskFrame = args.mask_frame
     EQ = args.Eq_image
     minThreshold = args.min_th
     maxThreshold = args.max_th
@@ -110,6 +144,6 @@ if __name__ == '__main__':
 
 
     buildLibrary(libPath,numAnimals,
-                    bkgSubstraction, selectROI, maskFrame, EQ,
+                    bkgSubstraction, selectROI, EQ,
                     minThreshold, maxThreshold,
                     minArea, maxArea)
