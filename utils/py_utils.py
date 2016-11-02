@@ -5,7 +5,9 @@ import re
 import datetime
 import pandas as pd
 import numpy as np
-import Tkinter, tkSimpleDialog
+import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
+from Tkinter import *
+import shutil
 
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):
@@ -96,6 +98,61 @@ def scanFolder(path):
         paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
     return paths
 
+# def saveFile(path, variabletoSave, name, time = 0):
+#     """
+#     All the input are strings!!!
+#     path: path to the first segment of the video
+#     name: string to add to the name of the video (wihtout timestamps)
+#     folder: path to the folder in which the file has to be stored
+#     """
+#     if os.path.exists(path)==False:
+#         raise ValueError("the video %s does not exist!" %path)
+#     video = os.path.basename(path)
+#     filename, extension = os.path.splitext(video)
+#     folder = os.path.dirname(path)
+#     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
+#     subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
+#     # print 'subFolders Saver', subFolders
+#     subFolder = subFolders[time]
+#     filename, extension = os.path.splitext(video)
+#     # we assume there's an underscore before the timestamp
+#     if name == 'segment' or name == 'segmentation':
+#         nSegment = filename.split('_')[-1]# and before the number of the segment
+#         filename = filename.split('_')[0] + '_' + nSegment + '.pkl'
+#         pd.to_pickle(variabletoSave, subFolder +'/segmentation/'+ filename)
+#     else:
+#         filename = filename.split('_')[0] + '_' + name + '.pkl'
+#         pd.to_pickle(variabletoSave, subFolder + '/'+ filename)
+#     print 'you just saved: ',subFolder + filename
+
+
+
+# def loadFile(path, name, time=0):
+#     """
+#     loads a pickle. path is the path of the video, while name is a string in the
+#     set {}
+#     """
+#     video = os.path.basename(path)
+#     folder = os.path.dirname(path)
+#     filename, extension = os.path.splitext(video)
+#     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
+#     subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
+#     # print 'subFolders Loader', subFolders
+#     # print 'subFolders from loadFile ',subFolders
+#     subFolder = subFolders[time]
+#
+#     if name  == 'segmentation':
+#         # print 'i am here'
+#         nSegment = filename.split('_')[-1]
+#         filename = filename.split('_')[0] + '_' + nSegment + '.pkl'
+#         # print filename
+#         # print subFolder
+#         # print nSegment
+#         return pd.read_pickle(subFolder + 'segmentation/' + filename ), nSegment
+#     else:
+#         filename = filename.split('_')[0] + '_' + name + '.pkl'
+#         return pd.read_pickle(subFolder + filename )
+
 def saveFile(path, variabletoSave, name, time = 0):
     """
     All the input are strings!!!
@@ -109,20 +166,19 @@ def saveFile(path, variabletoSave, name, time = 0):
     filename, extension = os.path.splitext(video)
     folder = os.path.dirname(path)
     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-    # print 'subFolders', subFolders
+    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
+    # print 'subFolders Saver', subFolders
     subFolder = subFolders[time]
     filename, extension = os.path.splitext(video)
     # we assume there's an underscore before the timestamp
     if name == 'segment' or name == 'segmentation':
         nSegment = filename.split('_')[-1]# and before the number of the segment
-        filename = filename.split('_')[0] + '_' + nSegment + '.pkl'
+        filename = 'segm_' + nSegment + '.pkl'
         pd.to_pickle(variabletoSave, subFolder +'/segmentation/'+ filename)
     else:
-        filename = filename.split('_')[0] + '_' + name + '.pkl'
+        filename = name + '.pkl'
         pd.to_pickle(variabletoSave, subFolder + '/'+ filename)
     print 'you just saved: ',subFolder + filename
-
-
 
 def loadFile(path, name, time=0):
     """
@@ -133,21 +189,87 @@ def loadFile(path, name, time=0):
     folder = os.path.dirname(path)
     filename, extension = os.path.splitext(video)
     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
+    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
+    # print 'subFolders Loader', subFolders
     # print 'subFolders from loadFile ',subFolders
     subFolder = subFolders[time]
 
     if name  == 'segmentation':
         # print 'i am here'
         nSegment = filename.split('_')[-1]
-        filename = filename.split('_')[0] + '_' + nSegment + '.pkl'
+        filename = 'segm_' + nSegment + '.pkl'
         # print filename
         # print subFolder
         # print nSegment
         return pd.read_pickle(subFolder + 'segmentation/' + filename ), nSegment
     else:
-        filename = filename.split('_')[0] + '_' + name + '.pkl'
+        filename = name + '.pkl'
         return pd.read_pickle(subFolder + filename )
 
+def copyExistentFiles(path, listNames, time=1):
+    """
+    Load data from previous session (time = 1 means we are looking back of one step)
+    """
+    existentFile = {name:'0' for name in listNames}
+    # existentFile = dict()
+    createFolder(path, name = '', timestamp = False)
+    video = os.path.basename(path)
+    folder = os.path.dirname(path)
+    #count how many videos we have
+    numVideos = len(glob.glob1(folder,"*.avi"))
+
+    filename, extension = os.path.splitext(video)
+    subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
+    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
+    print subFolders
+    if len(subFolders) <= 1:
+        pass
+    else:
+        srcSubFolder = subFolders[time]
+        dstSubFolder = subFolders[time-1]
+        for name in listNames:
+            if name == 'segmentation':
+                segDirname = subFolder + '/' + name
+                if os.path.isdir(segDirname):
+                    numSegmentedVideos = len(glob.glob1(segDirname,"*.pkl"))
+                    if numSegmentedVideos == numVideos:
+                        existentFile[name] = '1'
+                        dstSubFolderSeg = dstSubFolder + '/segmentation'
+                        srcFiles = os.listdir(segDirname)
+                        for fileName in srcFiles:
+                            fullFileName = os.path.join(segDirname, fileName)
+                            if (os.path.isfile(fullFileName)):
+                                shutil.copy(fullFileName, dstSubFolderSeg)
+                        # if segmentation is copyed we also copy frameIndices and videoInfo
+                        fullFileName = srcSubFolder + '/frameIndices.pkl'
+                        if os.path.isfile(fullFileName):
+                            shutil.copy(fullFileName, dstSubFolder)
+                        fullFileName = srcSubFolder + '/videoInfo.pkl'
+                        if os.path.isfile(fullFileName):
+                            shutil.copy(fullFileName, dstSubFolder)
+
+            else:
+                if name is 'fragmentation':
+                    segDirname = subFolder + 'segmentation'
+                    if os.path.isdir(segDirname):
+                        srcFiles = os.listdir(segDirname)
+                        if os.path.isdir(segDirname) and len(srcFiles)!=0:
+                            df,_ = loadFile(path, 'segmentation', time=0)
+                            if 'permutation' in list(df.columns):
+                                existentFile[name] = '1'
+
+                else:
+                    fullFileName = srcSubFolder + '/' + name + '.pkl'
+                    if os.path.isfile(fullFileName):
+                        existentFile[name] = '1'
+                        shutil.copy(fullFileName, dstSubFolder)
+                    if name is 'ROI':
+                        fullFileName = srcSubFolder + '/centers.pkl'
+                        if os.path.isfile(fullFileName):
+                            shutil.copy(fullFileName, dstSubFolder)
+
+
+    return existentFile, srcSubFolder
 
 def createFolder(path, name = '', timestamp = False):
 
@@ -162,10 +284,85 @@ def createFolder(path, name = '', timestamp = False):
     # os.makedirs(folderName) # create a folder
 
     print folderName + ' has been created'
+#
+# createFolder('/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf/group_1_camera_1/group_1_camera_1_20160508T094501_1.avi', name = '', timestamp = False)
+# copyExistentFiles('/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf/group_1_camera_1/group_1_camera_1_20160508T094501_1.avi', ['mask', 'centers', 'bkg','segmentation'], time=1)
 
 """
 Display messages and errors
 """
+# def selectOptions(optionsList):
+#     opt = []
+#     def chkbox_checked():
+#         for ix, item in enumerate(cb):
+#             if cb_v[ix].get() is '0':
+#                 opt[ix]=('0')
+#             else:
+#                 opt[ix]=('1')
+#         print opt
+#     root = Tk()
+#     cb = []
+#     cb_v = []
+#     for ix, text in enumerate(optionsList):
+#         cb_v.append(StringVar())
+#         off_value=0  #whatever you want it to be when the checkbutton is off
+#         cb.append(Checkbutton(root, text=text, onvalue=text,offvalue=off_value,
+#                                  variable=cb_v[ix],
+#                                  command=chkbox_checked))
+#         cb[ix].grid(row=ix, column=0, sticky='w')
+#         opt.append(off_value)
+#         cb[-1].deselect() #uncheck the boxes initially.
+#     label = Label(root, width=20)
+#     label.grid(row=ix+1, column=0, sticky='w')
+#     b1 = Button(root,text = 'Quit', command= root.quit)
+#     root.mainloop()
+#     return opt
+
+def selectOptions(optionsList, optionsDict=None, text="Select preprocessing options:  "):
+    master = Tk()
+    if optionsDict==None:
+        optionsDict = {el:'1' for el in optionsList}
+    def createCheckBox(name,i):
+        var = IntVar()
+        Checkbutton(master, text=name, variable=var).grid(row=i+1, sticky=W)
+        return var
+
+    Label(master, text=text).grid(row=0, sticky=W)
+    variables = []
+    for i, opt in enumerate(optionsList):
+        if optionsDict[opt] == '1':
+            var = createCheckBox(opt,i)
+            variables.append(var)
+            var.set(optionsDict[opt])
+        else:
+            Label(master, text= '     ' + opt).grid(row=i+1, sticky=W)
+            var = IntVar()
+            var.set(0)
+            variables.append(var)
+
+    Button(master, text='Ok', command=master.quit).grid(row=i+2, sticky=W, pady=4)
+    mainloop()
+    varValues = []
+    for var in variables:
+        varValues.append(var.get())
+    optionsDict = dict((key, value) for (key, value) in zip(optionsList, varValues))
+    master.destroy()
+    return optionsDict
+
+def selectFile():
+    root = Tkinter.Tk()
+    root.withdraw()
+    filename = tkFileDialog.askopenfilename()
+    root.destroy()
+    return filename
+
+def selectDir():
+    root = Tkinter.Tk()
+    root.withdraw()
+    dirName = tkFileDialog.askdirectory()
+    root.destroy()
+    return dirName
+
 def getInput(name,text):
     root = Tkinter.Tk() # dialog needs a root window, or will create an "ugly" one for you
     root.withdraw() # hide the root window

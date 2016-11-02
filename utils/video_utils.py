@@ -104,125 +104,86 @@ def computeBkg(paths, EQ, width, height):
     # of the video and dividing by the number of frames in the video.
     return bkg
 
-def checkBkg(bkgSubstraction, paths, EQ, width, height):
+def checkBkg(useBkg, usePreviousBkg, paths, EQ, width, height):
     ''' Compute Bkg '''
-    if bkgSubstraction:
-        video = os.path.basename(paths[0])
-        folder = os.path.dirname(paths[0])
-        filename, extension = os.path.splitext(video)
-        # print 'paths', paths
-        subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-
-        print subFolders
-
-        if len(subFolders) == 1:
-            subFolder = subFolders[0]
-            filename = subFolder + filename.split('_')[0] + '_bkg.pkl'
-            # print filename
-            if os.path.isfile(filename):
-            # if False:
-                print '\n Loading background ...\n'
-                bkg = loadFile(paths[0], 'bkg',0)
-                path = paths[0]
-            else:
-                print '\n Computing background ...\n'
-                bkg = computeBkg(paths, EQ, width, height)
-                path = paths[0]
-                saveFile(path, bkg, 'bkg', time = 0)
-                # print path
-        elif len(subFolders) >= 2:
-            subFolder = subFolders[1]
-            filename = subFolder + filename.split('_')[0] + '_bkg.pkl'
-            # print filename
-            if os.path.isfile(filename):
-            # if False:
-                print '\n Loading background ...\n'
-                bkg = loadFile(paths[0], 'bkg',1)
-                path = paths[0]
-                # print path
-                saveFile(path, bkg, 'bkg', time = 0)
-            else:
-                print '\n Computing background ...\n'
-                bkg = computeBkg(paths, EQ, width, height)
-                path = paths[0]
-                # print path
-                saveFile(path, bkg, 'bkg', time = 0)
+    path = paths[0]
+    if useBkg:
+        if usePreviousBkg:
+            bkg = loadFile(path, 'bkg',0)
         else:
-            print '\n Computing background ...\n'
             bkg = computeBkg(paths, EQ, width, height)
-            path = paths[0]
             saveFile(path, bkg, 'bkg', time = 0)
         return bkg
     else:
         return None
 
 
-"""
-ROI selector GUI
-"""
-def ROIselector(frame):
-    plt.ion()
-    f, ax = plt.subplots()
-    ax.imshow(frame, interpolation='nearest', cmap='gray')
-    props = {'facecolor': '#000070',
-             'edgecolor': 'white',
-             'alpha': 0.3}
-    rect_tool = RectangleTool(ax, rect_props=props)
-
-    plt.show()
-    numROIs = getInput('Number of ROIs','Ok')
-    numROIs = int(numROIs)
-    print 'The number of ROIs to select is ', numROIs
-    counter = 0
-    ROIsCoords = []
-    centers = []
-    ROIsShapes = []
-    mask = np.ones_like(frame,dtype='uint8')*255
-    while counter < numROIs:
-        ROIshape = getInput('Roi shape','r= rect, c=circ')
-        # ROIshape = raw_input('ROI shape (r/c/p)? (press enter after selection)')
-
-        if ROIshape == 'r' or ROIshape == 'c':
-            ROIsShapes.append(ROIshape)
-
-            rect_tool.callback_on_enter(rect_tool.extents)
-            coord = np.asarray(rect_tool.extents).astype('int')
-
-            print 'ROI coords, ', coord
-            # goodROI=raw_input('Is the selection correct? [y]/n: ')
-            text = 'Is ' + str(coord) + ' the ROI you wanted to select? y/n'
-            goodROI = getInput('Confirm selection',text)
-            if goodROI == 'y':
-                ROIsCoords.append(coord)
-                if ROIshape == 'r':
-                    cv2.rectangle(mask,(coord[0],coord[2]),(coord[1],coord[3]),0,-1)
-                    centers.append(None)
-                if ROIshape == 'c':
-                    center = ((coord[1]+coord[0])/2,(coord[3]+coord[2])/2)
-                    angle = 90
-                    axes = tuple(sorted(((coord[1]-coord[0])/2,(coord[3]-coord[2])/2)))
-                    print center, angle, axes
-                    cv2.ellipse(mask,center,axes,angle,0,360,0,-1)
-                    centers.append(center)
-
-        counter = len(ROIsCoords)
-    plt.close("all")
-
-    return mask, centers
-
-def checkROI(selectROI,frame, path):
-    ''' Select ROI '''
-    if selectROI:
-        try:
-            mask = loadFile(path, 'mask',0)
-            center = loadFile(path, 'center',0)
-        except:
-            print '\n Selecting ROI ...'
-            mask, centers = ROIselector(frame)
-    else:
-        mask = np.zeros_like(frame)
-        centers = []
-    return mask, centers
+# """
+# ROI selector GUI
+# """
+# def ROIselector(frame):
+#     plt.ion()
+#     f, ax = plt.subplots()
+#     ax.imshow(frame, interpolation='nearest', cmap='gray')
+#     props = {'facecolor': '#000070',
+#              'edgecolor': 'white',
+#              'alpha': 0.3}
+#     rect_tool = RectangleTool(ax, rect_props=props)
+#
+#     plt.show()
+#     numROIs = getInput('Number of ROIs','Type the number of ROIs to be selected')
+#     numROIs = int(numROIs)
+#     print 'The number of ROIs to select is ', numROIs
+#     counter = 0
+#     ROIsCoords = []
+#     centers = []
+#     ROIsShapes = []
+#     mask = np.ones_like(frame,dtype='uint8')*255
+#     while counter < numROIs:
+#         ROIshape = getInput('Roi shape','r= rect, c=circ')
+#         # ROIshape = raw_input('ROI shape (r/c/p)? (press enter after selection)')
+#
+#         if ROIshape == 'r' or ROIshape == 'c':
+#             ROIsShapes.append(ROIshape)
+#
+#             rect_tool.callback_on_enter(rect_tool.extents)
+#             coord = np.asarray(rect_tool.extents).astype('int')
+#
+#             print 'ROI coords, ', coord
+#             # goodROI=raw_input('Is the selection correct? [y]/n: ')
+#             text = 'Is ' + str(coord) + ' the ROI you wanted to select? y/n'
+#             goodROI = getInput('Confirm selection',text)
+#             if goodROI == 'y':
+#                 ROIsCoords.append(coord)
+#                 if ROIshape == 'r':
+#                     cv2.rectangle(mask,(coord[0],coord[2]),(coord[1],coord[3]),0,-1)
+#                     centers.append(None)
+#                 if ROIshape == 'c':
+#                     center = ((coord[1]+coord[0])/2,(coord[3]+coord[2])/2)
+#                     angle = 90
+#                     axes = tuple(sorted(((coord[1]-coord[0])/2,(coord[3]-coord[2])/2)))
+#                     print center, angle, axes
+#                     cv2.ellipse(mask,center,axes,angle,0,360,0,-1)
+#                     centers.append(center)
+#
+#         counter = len(ROIsCoords)
+#     plt.close("all")
+#
+#     return mask, centers
+#
+# def checkROI(selectROI,frame, path):
+#     ''' Select ROI '''
+#     if selectROI:
+#         try:
+#             mask = loadFile(path, 'mask',0)
+#             center = loadFile(path, 'center',0)
+#         except:
+#             print '\n Selecting ROI ...'
+#             mask, centers = ROIselector(frame)
+#     else:
+#         mask = np.zeros_like(frame)
+#         centers = []
+#     return mask, centers
 
 """
 Normalize by the average intensity
@@ -245,20 +206,21 @@ def checkEq(EQ, frame):
 """
 Image segmentation
 """
-def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, bkgSubstraction):
+def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
     #Apply background substraction if requested and threshold image
-    if bkgSubstraction:
+    if useBkg:
         frameSubtracted = uint8caster(np.abs(np.subtract(bkg,frame)))
         frameSubtractedMasked = cv2.addWeighted(frameSubtracted,1,mask,1,0)
         ### Uncomment to plot
         # cv2.imshow('frameSubtractedMasked',frameSubtractedMasked)
         # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        ret, frameSegmented = cv2.threshold(frameSubtractedMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
+        frameSubtractedMasked = 255-frameSubtractedMasked
+        ret, frameSegmented = cv2.threshold(frameSubtractedMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
     else:
         frameMasked = cv2.addWeighted(uint8caster(frame),1,mask,1,0)
         ### Uncomment to plot
         # cv2.imshow('frameMasked',frameMasked)
-        ret, frameSegmented = cv2.threshold(frameMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY_INV)
+        ret, frameSegmented = cv2.threshold(frameMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
     return frameSegmented
 
 """

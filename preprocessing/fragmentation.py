@@ -19,8 +19,6 @@ import itertools
 import cPickle as pickle
 import math
 
-
-
 def computeIntersection(pixelsA,pixelsB):
     """
     pixels A (B): linear indices of blob A (B)
@@ -40,7 +38,8 @@ def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
     trueFragment: True when each animal from frame A overlap with only one animal in frame B
     permutation: permutation that needs to be applied to miniFrames for the identities in A and B to be conserved
     """
-    thArea = 750
+    thArea = 5000
+    # print '*********** NUM ANIMALS **********, ', numAnimals
     # thArea = 5
     numAnimalsA = len(pixelsFrameA)
     numAnimalsB = len(pixelsFrameB)
@@ -54,13 +53,22 @@ def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
         overlapMat[combination] = inter
 
     rows = overlapMat.nonzero()[0]
+    # print 'rows, ', rows
     cols = overlapMat.nonzero()[1]
+    # print 'cols, ', cols
     possibleCombinations = zip(rows,cols)
     s = []
     for possibleCombination in possibleCombinations:
+        # print 'possibleCombination, ', possibleCombination
+        # print sum(possibleCombination[0]==rows) == 1
+        # print sum(possibleCombination[1]==cols) == 1
+        # print len(pixelsFrameB[possibleCombination[1]]) < thArea
+        # print len(pixelsFrameA[possibleCombination[0]]) < thArea
         if (sum(possibleCombination[0]==rows) == 1 and sum(possibleCombination[1]==cols) ==1) and \
             len(pixelsFrameB[possibleCombination[1]]) < thArea and len(pixelsFrameA[possibleCombination[0]]) < thArea:
-                s.append(possibleCombination)
+            s.append(possibleCombination)
+    # print len(s)
+    # print type(numAnimals)
     if len(s) == numAnimals:
         trueFragment = True
 
@@ -125,33 +133,43 @@ def computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals,maxNumBlobs)
     df.loc[0,'permutation'] = init
 
     for i in range(1,len(columnPixels)): # for every frame
+        # print 'Frame ---------------------------------------, ', i
         trueFragment, permutation, overlapMat = computeFrameIntersection(columnPixels[i-1],columnPixels[i],numAnimals) # compute overlapping between blobs
-
+        # print 'trueFragment, ', trueFragment
+        # print 'overlapMat, '
+        # print overlapMat
+        # print 'permutation, ', permutation
         old = df.loc[i-1,'permutation']
 
         cur_ind = set(old)
         all_ind = set(range(maxNumBlobs))
         missing = list(all_ind - cur_ind)
+        # print 'missing individuals, ', missing
 
         df.loc[i, 'permutation'] = applyPermutation(maxNumBlobs, permutation, old, missing)
+        # print 'newID, ', df.loc[i, 'permutation']
 
-        if trueFragment and len(SE)==0:
-
-            if missing and missing[-1] == numAnimals:
+        if trueFragment and len(SE)==0: # There is a good overlapping and it is a new fragment
+            # print 'There is a good overlapping and it is a new fragment'
+            if missing and missing[-1] == numAnimals: # If all individuals are missing
                 missing[-1] = -1
 
-            tofill = np.where(df.loc[i-1,'permutation'] == -1)[0][:len(missing)]
-            df.loc[i-1,'permutation'][tofill] = missing
+            tofill = np.where(df.loc[i-1,'permutation'] == -1)[0][:len(missing)] #which individuals where not good in the previous frame
+            df.loc[i-1,'permutation'][tofill] = missing # We give new index to the individuals that where not in the previous frame (because they were crossin or dissapeared)
 
-            if i-1 == 0:
+            if i-1 == 0: # If it is the first frame of the segment we set a Nan because we do not know what happend between this one and the previous segment
                 SE.append(np.nan)
             else:
+                # print '******* Appending first frame to the fragment *******'
                 SE.append(i-1)
         elif not trueFragment:
+            # print 'There is not a good overlapping, we close the fragment and initialize a new one'
+            # print 'Fragment, ', SE
+            # print 'All fragments so far, ', SEs
             SE, SEs = storeFragmentIndices(SE, SEs, i)
         if trueFragment and i == len(columnPixels)-1:
+            # print 'This is the last frame of the segment, we close the fragment and put a NaN at the end'
             SE, SEs = storeFragmentIndices(SE, SEs, np.nan)
-
     return df, SEs
 
 def fragmentator(path, numAnimals, maxNumBlobs):
@@ -161,12 +179,12 @@ def fragmentator(path, numAnimals, maxNumBlobs):
     columnNumBlobs = df.loc[:,'numberOfBlobs']
     columnPixels = df.loc[:,'pixels']
 
+
     dfPermutations, fragmentsIndices = computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals,maxNumBlobs)
     fragmentsIndices = (numSegment, fragmentsIndices)
     df['permutation'] = dfPermutations
 
     saveFile(path, df, 'segment', time = 0)
-    print fragmentsIndices
     return fragmentsIndices
 
 def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
@@ -284,11 +302,11 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
             # df.to_pickle(folder +'/'+ filename + '.pkl')
 
     if isinstance(fragmentsIndicesB[-1][1],float):
-        print 'pass last condition'
+        # print 'pass last condition'
         fragmentsIndicesB[-1][1] = globalFrameCounter
 
     globalFragments.append(fragmentsIndicesB[-1])
-    print globalFragments
+    print 'Global fragments, ', globalFragments
     globalFragments = [map(int,globalFragment) for globalFragment in globalFragments]
     globalFragments = sorted(globalFragments, key=lambda x: x[1]-x[0],reverse=True)
     ### to be changed in the parallel version of this function
@@ -302,11 +320,11 @@ def fragment(paths):
     info = loadFile(paths[0], 'videoInfo', time=0)
     width = info['width']
     height = info['height']
-    numAnimals = info['numAnimals']
+    numAnimals = int(info['numAnimals'])
     maxNumBlobs = info['maxNumBlobs']
 
     num_cores = multiprocessing.cpu_count()
-    # num_cores = 1
+    num_cores = 1
     fragmentsIndices = Parallel(n_jobs=num_cores)(delayed(fragmentator)(path, numAnimals, maxNumBlobs) for path in paths)
     fragmentsIndices = sorted(fragmentsIndices, key=lambda x: x[0])
     # print fragmentsIndices
@@ -314,201 +332,105 @@ def fragment(paths):
     globalFragments = segmentJoiner(paths, fragmentsIndices, numAnimals, maxNumBlobs)
     # print globalFragments
 
-def play(paths):
-    """
-    IdInspector
-    """
-    info = loadFile(paths[0], 'videoInfo', time=0)
-    width = info['width']
-    height = info['height']
-    numAnimals = info['numAnimals']
-    maxNumBlobs = info['maxNumBlobs']
-    numSegment = 0
-    # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-    # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
-    path = paths[numSegment]
+# def playFragmentation(paths):
+#     """
+#     IdInspector
+#     """
+#     info = loadFile(paths[0], 'videoInfo', time=0)
+#     width = info['width']
+#     height = info['height']
+#     numAnimals = info['numAnimals']
+#     maxNumBlobs = info['maxNumBlobs']
+#     numSegment = 0
+#     # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+#     # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
+#     path = paths[numSegment]
+#
+#     def IdPlayerFragmentation(path,numAnimals, width, height):
+#         df,sNumber = loadFile(path, 'segmentation', time=0)
+#         # video = os.path.basename(path)
+#         # filename, extension = os.path.splitext(video)
+#         # sNumber = int(filename.split('_')[-1])
+#         # folder = os.path.dirname(path)
+#         # df = pd.read_pickle(folder +'/'+ filename + '.pkl')
+#         print 'Visualizing video %s' % path
+#         # print df
+#         cap = cv2.VideoCapture(path)
+#         numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+#         # width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+#         # height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+#
+#         def onChange(trackbarValue):
+#             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+#             centroids = df.loc[trackbarValue,'centroids']
+#             pixelsA = df.loc[trackbarValue-1,'pixels']
+#             pixelsB = df.loc[trackbarValue,'pixels']
+#             permutation = df.loc[trackbarValue,'permutation']
+#             print '------------------------------------------------------------'
+#             print 'previous frame, ', str(trackbarValue-1), ', permutation, ', df.loc[trackbarValue-1,'permutation']
+#             print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
+#             trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
+#             print 'overlapMat, '
+#             print overlapMat
+#             print 'permutation, ', s
+#             # if sNumber == 1 and trackbarValue > 100:
+#             #     trueFragment, s = computeFrameIntersection(df.loc[trackbarValue-1,'pixels'],df.loc[trackbarValue,'pixels'],5)
+#             #     print trueFragment, s
+#             #     result = df.loc[trackbarValue-1,'permutation'][s]
+#             #     print 'result, ', result
+#             #Get frame from video file
+#             ret, frame = cap.read()
+#             #Color to gray scale
+#             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#             font = cv2.FONT_HERSHEY_SIMPLEX
+#
+#             # Plot segmentated blobs
+#             for i, pixel in enumerate(pixelsB):
+#                 px = np.unravel_index(pixel,(height,width))
+#                 frame[px[0],px[1]] = 255
+#
+#             # plot numbers if not crossing
+#             # if not isinstance(permutation,float):
+#                 # print 'pass'
+#             for i, centroid in enumerate(centroids):
+#                 cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
+#
+#             cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
+#
+#             # Visualization of the process
+#             cv2.imshow('IdPlayerFragmentation',frame)
+#             pass
+#
+#         cv2.namedWindow('IdPlayerFragmentation')
+#         cv2.createTrackbar( 'start', 'IdPlayerFragmentation', 0, numFrame-1, onChange )
+#         # cv2.createTrackbar( 'end'  , 'IdPlayer', numFrame-1, numFrame, onChange )
+#
+#         onChange(1)
+#         cv2.waitKey(0)
+#
+#         start = cv2.getTrackbarPos('start','IdPlayerFragmentation')
+#         return raw_input('Which segment do you want to inspect?')
+#
+#     finish = False
+#     while not finish:
+#         # print 'I am here', numSegment
+#         numSegment = IdPlayerFragmentation(paths[int(numSegment)],numAnimals, width, height)
+#         if numSegment == 'q':
+#             finish = True
+#     cv2.waitKey(1)
+#     cv2.destroyAllWindows()
+#     cv2.waitKey(1)
 
-    def IdPlayer(path,numAnimals, width, height):
-        df,sNumber = loadFile(path, 'segmentation', time=0)
-        # video = os.path.basename(path)
-        # filename, extension = os.path.splitext(video)
-        # sNumber = int(filename.split('_')[-1])
-        # folder = os.path.dirname(path)
-        # df = pd.read_pickle(folder +'/'+ filename + '.pkl')
-        print 'Segmenting video %s' % path
-        print df
-        cap = cv2.VideoCapture(path)
-        numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        # width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        # height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 
-        def onChange(trackbarValue):
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-            centroids = df.loc[trackbarValue,'centroids']
-            pixelsA = df.loc[trackbarValue-1,'pixels']
-            pixelsB = df.loc[trackbarValue,'pixels']
-            permutation = df.loc[trackbarValue,'permutation']
-            print '------------------------------------------------------------'
-            print 'previous frame, ', str(trackbarValue-1), ', permutation, ', df.loc[trackbarValue-1,'permutation']
-            print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
-            trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
-            print 'overlapMat, '
-            print overlapMat
-            print 'permutation, ', s
-            # if sNumber == 1 and trackbarValue > 100:
-            #     trueFragment, s = computeFrameIntersection(df.loc[trackbarValue-1,'pixels'],df.loc[trackbarValue,'pixels'],5)
-            #     print trueFragment, s
-            #     result = df.loc[trackbarValue-1,'permutation'][s]
-            #     print 'result, ', result
-            #Get frame from video file
-            ret, frame = cap.read()
-            #Color to gray scale
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            font = cv2.FONT_HERSHEY_SIMPLEX
 
-            # Plot segmentated blobs
-            for i, pixel in enumerate(pixelsB):
-                px = np.unravel_index(pixel,(height,width))
-                frame[px[0],px[1]] = 255
 
-            # plot numbers if not crossing
-            # if not isinstance(permutation,float):
-                # print 'pass'
-            for i, centroid in enumerate(centroids):
-                cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
-
-            cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
-
-            # Visualization of the process
-            cv2.imshow('IdPlayer',frame)
-            pass
-
-        cv2.namedWindow('IdPlayer')
-        cv2.createTrackbar( 'start', 'IdPlayer', 0, numFrame-1, onChange )
-        # cv2.createTrackbar( 'end'  , 'IdPlayer', numFrame-1, numFrame, onChange )
-
-        onChange(1)
-        cv2.waitKey()
-
-        start = cv2.getTrackbarPos('start','IdPlayer')
-
-        return raw_input('Which segment do you want to inspect?')
-
-    finish = False
-    while not finish:
-        print 'I am here', numSegment
-        numSegment = IdPlayer(paths[int(numSegment)],numAnimals, width, height)
-        if numSegment == 'q':
-            finish = True
-
-if __name__ == '__main__':
-
-    videoPath = '../Conflict8/conflict3and4_20120316T155032_1.avi'
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--path', default = videoPath, type = str)
-    args = parser.parse_args()
-    paths = scanFolder(args.path)
-    fragment(paths)
-    play(paths)
-
-    
-# if False: # used to test functions
-    # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
-    # # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-    # info = loadFile(paths[0], 'videoInfo', time=0)
-    # # info = pd.read_pickle('../Cafeina5peces/Caffeine5fish_videoInfo.pkl')
-    # width = info['width']
-    # height = info['height']
-    # numAnimals = info['numAnimals']
-    # maxNumBlobs = info['maxNumBlobs']
-    #
-    # num_cores = multiprocessing.cpu_count()
-    # # num_cores = 1
-    # fragmentsIndices = Parallel(n_jobs=num_cores)(delayed(fragmentator)(path, numAnimals) for path in paths)
-    # fragmentsIndices = sorted(fragmentsIndices, key=lambda x: x[0])
-    # # print fragmentsIndices
-    #
-    # globalFragments = segmentJoiner(paths, fragmentsIndices, numAnimals, maxNumBlobs)
-    # # print globalFragments
-    #
-    # """
-    # IdInspector
-    # """
-    # numSegment = 0
-    # # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-    # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
-    # path = paths[numSegment]
-    #
-    # def IdPlayer(path,numAnimals, width, height):
-    #     df,sNumber = loadFile(path, 'segmentation', time=0)
-    #     # video = os.path.basename(path)
-    #     # filename, extension = os.path.splitext(video)
-    #     # sNumber = int(filename.split('_')[-1])
-    #     # folder = os.path.dirname(path)
-    #     # df = pd.read_pickle(folder +'/'+ filename + '.pkl')
-    #     print 'Segmenting video %s' % path
-    #
-    #     cap = cv2.VideoCapture(path)
-    #     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-    #     # width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-    #     # height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-    #
-    #     def onChange(trackbarValue):
-    #         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-    #         centroids = df.loc[trackbarValue,'centroids']
-    #         pixelsA = df.loc[trackbarValue-1,'pixels']
-    #         pixelsB = df.loc[trackbarValue,'pixels']
-    #         permutation = df.loc[trackbarValue,'permutation']
-    #         print '------------------------------------------------------------'
-    #         print 'previous frame, ', str(trackbarValue-1), ', permutation, ', df.loc[trackbarValue-1,'permutation']
-    #         print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
-    #         trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
-    #         print 'overlapMat, '
-    #         print overlapMat
-    #         print 'permutation, ', s
-    #         # if sNumber == 1 and trackbarValue > 100:
-    #         #     trueFragment, s = computeFrameIntersection(df.loc[trackbarValue-1,'pixels'],df.loc[trackbarValue,'pixels'],5)
-    #         #     print trueFragment, s
-    #         #     result = df.loc[trackbarValue-1,'permutation'][s]
-    #         #     print 'result, ', result
-    #         #Get frame from video file
-    #         ret, frame = cap.read()
-    #         #Color to gray scale
-    #         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    #         font = cv2.FONT_HERSHEY_SIMPLEX
-    #
-    #         # Plot segmentated blobs
-    #         for i, pixel in enumerate(pixelsB):
-    #             px = np.unravel_index(pixel,(height,width))
-    #             frame[px[0],px[1]] = 255
-    #
-    #         # plot numbers if not crossing
-    #         # if not isinstance(permutation,float):
-    #             # print 'pass'
-    #         for i, centroid in enumerate(centroids):
-    #             cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
-    #
-    #         cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
-    #
-    #         # Visualization of the process
-    #         cv2.imshow('IdPlayer',frame)
-    #         pass
-    #
-    #     cv2.namedWindow('IdPlayer')
-    #     cv2.createTrackbar( 'start', 'IdPlayer', 0, numFrame-1, onChange )
-    #     # cv2.createTrackbar( 'end'  , 'IdPlayer', numFrame-1, numFrame, onChange )
-    #
-    #     onChange(1)
-    #     cv2.waitKey()
-    #
-    #     start = cv2.getTrackbarPos('start','IdPlayer')
-    #
-    #     return raw_input('Which segment do you want to inspect?')
-    #
-    # finish = False
-    # while not finish:
-    #     print 'I am here', numSegment
-    #     numSegment = IdPlayer(paths[int(numSegment)],numAnimals, width, height)
-    #     if numSegment == 'q':
-    #         finish = True
+# if __name__ == '__main__':
+#
+#     # videoPath = '../Conflict8/conflict3and4_20120316T155032_1.avi'
+#     videoPath = '../data/library/33dpf/group_1/group_1.avi'
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument('--path', default = videoPath, type = str)
+#     args = parser.parse_args()
+#     paths = scanFolder(args.path)
+#     fragment(paths)
+#     play(paths)

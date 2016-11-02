@@ -31,7 +31,6 @@ def smooth(x,window_len=20,window='hanning'):
    if window_len<3:
        return x
 
-
    if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
 
@@ -320,11 +319,11 @@ def reaper(path, frameIndices):
             portraits.append(portrait)
 
         ### UNCOMMENT TO PLOT ##################################################
-            cv2.imshow(str(j),portrait)
-
-        k = cv2.waitKey(100) & 0xFF
-        if k == 27: #pres esc to quit
-            break
+        #     cv2.imshow(str(j),portrait)
+        #
+        # k = cv2.waitKey(100) & 0xFF
+        # if k == 27: #pres esc to quit
+        #     break
         ########################################################################
 
         AllPortraits.set_value(goodFrameIndices[counter], 'images', np.asarray(portraits))
@@ -339,7 +338,7 @@ def portrait(paths):
 
     num_cores = multiprocessing.cpu_count()
     # paths = [paths[5]]
-    num_cores = 1
+    # num_cores = 1
     allPortraits = Parallel(n_jobs=num_cores)(delayed(reaper)(path,frameIndices) for path in paths)
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)
@@ -352,9 +351,9 @@ def portrait(paths):
 
     saveFile(path, allPortraits, 'portraits', time = 0)
 
-if __name__ == '__main__':
-    # frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
-    # frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
-    # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-    paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
-    portrait(paths)
+# if __name__ == '__main__':
+#     # frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
+#     # frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
+#     # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+#     paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+#     portrait(paths)

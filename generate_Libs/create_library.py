@@ -3,7 +3,6 @@ import sys
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
 
-from segmentation_ROI import *
 from fragmentation import *
 from get_portraits import *
 
@@ -28,122 +27,91 @@ from natsort import natsorted, ns
 from os.path import isdir, isfile
 import scipy.spatial.distance as scisd
 
-def assignCenterFrame(centers,centroids): ### TODO this function can be improved to be faster by using repmats
+def orderCenters(centers,camera): ### TODO check if this function does what you were thinking about Paco, I go back to the f****** bug...
+    """
+    orders points counterclockwise
+    Assuming that (0,0) is in the top-left corner because the centers come from the image
+    """
+    #select the circle with minimal x (at most the arena can be 44deg rotated wrt its center)
+    cents = np.asarray(centers)
+    #centroid of the four points
+    centroid = np.divide(np.sum(cents, axis=0), cents.shape[0])
+    #put the centroid in the origin
+    trCenters = np.subtract(centers, centroid)
+    #take the signum
+    signum = np.sign(trCenters)
+    #compute the arctan to order
+    arctans = [np.arctan2(s[0],s[1]) for s in signum]
+    # just to check
+    #signum = signum[np.argsort(arctans)]
+    cents = cents[np.argsort(arctans)]
+    cents = list(tuple(map(tuple,cents)))
+    def shift(seq, n):
+        n = n % len(seq)
+        return seq[n:] + seq[:n]
+    # print 'ordered centers, ', cents
+    if camera == 2: ### NOTE We assume only 4 arenas in a square so that a rotation of 180 degrees is shifting 2 positions the centers
+        cents = shift(cents, 2)
+    # print 'ordered centers after rotation, ', cents
+    return cents
+
+# centers = [(-1,-1),(1,1),(1,-1),(-1,1)]
+# print 'centers, ', centers
+# centers = orderCenters(centers,2)
+
+def assignCenterFrame(centers,centroids,camera = 1):
     """
     centers: centers of the arenas
     centroids: centroids of the fish for a frame
     """
-    d = scisd.cdist(centers,centroids)
-    centersAssigned = np.argmin(d,axis=0)
-    return centersAssigned
+    centers = orderCenters(centers,camera) # Order the centers counterclockwise
+    # print 'centers ordered,', centers
+    d = scisd.cdist(centers,centroids) # Compute the distance of each fish to each centroid
+    identities = np.argmin(d,axis=0) # Assign identity by the centroid to which they are closer
 
-### Unit test
+    return identities
+
+## Unit test
 # centers = [(1,1),(-1,1),(-1,-1),(1,-1)]
+# print 'centers, ', centers
 # centroids = [(-1,1),(1,1),(-1,-1),(1,-1)]
-# centersAssigned = assignCenterFrame(centers,centroids)
-# print centersAssigned
+# print 'centroids, ', centroids
+# identities = assignCenterFrame(centers,centroids,2)
+# print identities
 
 
-def assignCenterAndSave(path,centers):
+def assignCenterAndSave(path,centers, camera):
     df, _ = loadFile(path, 'segmentation', time=0)
     dfPermutations = pd.DataFrame(index=df.index,columns={'permutation'})
     for centroids, index in zip(df.centroids,df.index):
-        dfPermutations.loc[index,'permutation'] = assignCenterFrame(centers,centroids)
+        dfPermutations.loc[index,'permutation'] = assignCenterFrame(centers,centroids,camera)
 
     df['permutation'] = dfPermutations
     saveFile(path, df, 'segment', time = 0)
 
-# path = '/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf/group_1_camera_1/group_1_camera_2_20160508T100615_1.avi'
-# info = loadFile(path, 'videoInfo', time=0)
-# centers = info['ROICenters']
-# assignCenterPath(path,centers)
-# play([path])
-
-def assignCenters(paths,centers):
+def assignCenters(paths,centers,camera = 1):
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    Parallel(n_jobs=num_cores)(delayed(assignCenterAndSave)(path, centers) for path in paths)
+    Parallel(n_jobs=num_cores)(delayed(assignCenterAndSave)(path, centers, camera) for path in paths)
 
-def buildLibrary(libPath,numAnimals,
-                bkgSubstraction, selectROI, EQ,
-                minThreshold, maxThreshold,
-                minArea, maxArea):
+def portraitsToIMDB(portraits, numAnimalsInGroup, groupNum):
+    images = np.asarray(flatten(portraits.loc[:,'images'].tolist()))
+    images = np.expand_dims(images, axis=1)
+    imsize = (1,images.shape[2], images.shape[3])
+    labels = np.asarray(flatten(portraits.loc[:,'permutations'].tolist())) + numAnimalsInGroup*groupNum
+    print 'Group, ', groupNum
+    print 'Lables, ', labels
+    labels = np.expand_dims(labels, axis=1)
 
-    def retrieveInfoLib(libPath, preprocessing = "curvature_portrait"):
-        #the folder's name is the age of the individuals
-        ageInDpf = os.path.split(libPath)[-1]
+    return imsize, images, labels
 
-        # get the list of subfolders
-        subDirs = [d for d in os.listdir(libPath) if isdir(libPath +'/'+ d)]
-        subDirs = natsorted(subDirs, alg=ns.IGNORECASE)
+def retrieveInfoLib(libPath, preprocessing = "curvature_portrait"):
+    #the folder's name is the age of the individuals
+    ageInDpf = os.path.split(libPath)[-1]
 
-        return ageInDpf, preprocessing, subDirs
+    # get the list of subfolders
+    subDirs = [d for d in os.listdir(libPath) if isdir(libPath +'/'+ d)]
+    subDirs = [subDir for subDir in subDirs if 'group' in subDir]
+    subDirs = natsorted(subDirs, alg=ns.IGNORECASE)
 
-    def libLoop(libPath, numAnimals,
-                bkgSubstraction, selectROI, EQ,
-                minThreshold, maxThreshold,
-                minArea, maxArea):
-
-        ageInDpf, preprocessing, subDirs = retrieveInfoLib(libPath, preprocessing = "curvature_portrait")
-        for subDir in subDirs:
-            print '-----------------------'
-            print 'preprocessing ', subDir
-
-            group = subDir.split('_')[1]
-            ''' Path to video/s '''
-            path = libPath + '/' + subDir
-            videoPath = natural_sort([v for v in os.listdir(path) if isfile(path +'/'+ v)])[0]
-            videoPath = path + '/' + videoPath
-            paths = scanFolder(videoPath)
-            name  = 'preprocessing_' + subDir
-            segment(paths, name, numAnimals,
-                        bkgSubstraction, selectROI, EQ,
-                        minThreshold, maxThreshold,
-                        minArea, maxArea)
-            info = loadFile(paths[0], 'videoInfo', time=0)
-            centers = info['ROICenters']
-            assignCenters(paths,centers)
-            # play(paths)
-            portrait(paths)
-            # fragment(paths)
-
-
-    libLoop(libPath, numAnimals,
-                bkgSubstraction, selectROI, EQ,
-                minThreshold, maxThreshold,
-                minArea, maxArea)
-
-if __name__ == '__main__':
-
-    libPath = '../data/library/25dpf'
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--path', default = libPath, type = str)
-    parser.add_argument('--folder_name', default = '', type = str)
-    parser.add_argument('--bkg_subtraction', default = 0, type = int)
-    parser.add_argument('--ROI_selection', default = 1, type = int)
-    parser.add_argument('--mask_frame', default = 1, type= int)
-    parser.add_argument('--Eq_image', default = 0, type = int)
-    parser.add_argument('--min_th', default = 150, type = int)
-    parser.add_argument('--max_th', default = 255, type = int)
-    parser.add_argument('--min_area', default = 100, type = int)
-    parser.add_argument('--max_area', default = 600, type = int)
-    parser.add_argument('--num_animals', default = 4, type = int)
-    args = parser.parse_args()
-
-    ''' Parameters for the segmentation '''
-    numAnimals = args.num_animals
-    bkgSubstraction = args.bkg_subtraction
-    selectROI = args.ROI_selection
-    EQ = args.Eq_image
-    minThreshold = args.min_th
-    maxThreshold = args.max_th
-    minArea = args.min_area # in pixels
-    maxArea = args.max_area # in pixels
-
-
-    buildLibrary(libPath,numAnimals,
-                    bkgSubstraction, selectROI, EQ,
-                    minThreshold, maxThreshold,
-                    minArea, maxArea)
+    return ageInDpf, preprocessing, subDirs
