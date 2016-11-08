@@ -230,7 +230,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     cnt = np.vstack([cnt,cnt])
 
     # Compute curvature
-    curvature = [curv(cnt,i,1,orientation) for i in range(len(cnt))]
+    curvature = [curv(cnt,i,3,orientation) for i in range(len(cnt))]
     curvature = np.asarray(curvature)
 
 
@@ -311,7 +311,8 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
 
     # Fill black parts of the portrait with random background
     # portrait = fillSquareFrame(minif_cropped,bkgSamp)
-    return portrait, curvature, cnt, maxCoord, sorted_locations
+    # return portrait, curvature, cnt, maxCoord, sorted_locations
+    return portrait
 
 def reaper(path, frameIndices):
     # print 'segment number ', i

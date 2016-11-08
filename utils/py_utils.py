@@ -363,10 +363,10 @@ def selectFile():
     root.destroy()
     return filename
 
-def selectDir():
+def selectDir(initialDir):
     root = Tkinter.Tk()
     root.withdraw()
-    dirName = tkFileDialog.askdirectory()
+    dirName = tkFileDialog.askdirectory(initialdir = initialDir)
     root.destroy()
     return dirName
 

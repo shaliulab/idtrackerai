@@ -64,11 +64,11 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
         if len(centroids) > maxNumBlobs:
             maxNumBlobs = len(centroids)
         ### UNCOMMENT TO PLOT ##################################################
-        cv2.drawContours(origFrame,goodContoursFull,-1,color=(255,0,0),thickness=-1)
-        cv2.imshow('checkcoord', origFrame)
-        k = cv2.waitKey(100) & 0xFF
-        if k == 27: #pres esc to quit
-            break
+        # cv2.drawContours(origFrame,goodContoursFull,-1,color=(255,0,0),thickness=-1)
+        # cv2.imshow('checkcoord', origFrame)
+        # k = cv2.waitKey(100) & 0xFF
+        # if k == 27: #pres esc to quit
+        #     break
         ########################################################################
 
         # Add frame imformation to DataFrame
@@ -91,7 +91,7 @@ def segment(paths, numAnimals,
     num_cores = multiprocessing.cpu_count()
 
     width, height = getVideoInfo(paths)
-    num_cores = 1
+    # num_cores = 1
     print 'Entering to the parallel loop'
     OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea) for path in paths)
     allSegments = [(out[0],out[1]) for out in OupPutParallel]

@@ -158,8 +158,10 @@ def SegmentationPreview(path, width, height, bkg, maxIntensity, maxBkg, mask, us
     maxThreshold = maxRangeTh ###NOTE this is because we are not using the maxThreshold and we set it to the maximum for it not to affect the segmentation
     # print 'Ready to get the cap from the path'
     cap = cv2.VideoCapture(path)
+    print 'path GUI_utils line 161,    ', path
     # print 'Ready to get eh number of frames'
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    print 'numFrame GUI_utils line 163   ', numFrame
 
     def TB2th(TB,maxRangeTh,maxTB):
         th = maxRangeTh * TB / maxTB
@@ -174,7 +176,7 @@ def SegmentationPreview(path, width, height, bkg, maxIntensity, maxBkg, mask, us
         maxTh = TB2th(maxTh,maxRangeTh,maxTB)
         # print 'I am in thresholder'
         #threshold the frame, find contours and get portraits of the fish
-        toile = np.zeros_like(origFrame, dtype='uint8')
+        toile = np.zeros_like(frameGray, dtype='uint8')
         # print 'I am going to call segmentVideo'
         segmentedFrame = segmentVideo(origFrame, minTh, maxTh, bkg, mask, useBkg)
         # print '1'
@@ -219,7 +221,8 @@ def SegmentationPreview(path, width, height, bkg, maxIntensity, maxBkg, mask, us
             if j < numGoodContours:
                 # print 'good'
                 # print miniFrames
-                portrait, curvature, cnt,maxCoord, sorted_locations = getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j],frameValue)
+                # portrait, curvature, cnt,maxCoord, sorted_locations = getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j],frameValue)
+                portrait = getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j],frameValue)
                 portrait = np.squeeze(portrait)
                 ### Uncomment to plot
                 # plt.subplot(2,8,j+1)
@@ -329,6 +332,7 @@ def SegmentationPreview(path, width, height, bkg, maxIntensity, maxBkg, mask, us
         # print 'end resizeImageDown'
         pass
     # print 'Ready create trackbars in Bars window'
+    print 'numFrame in gui utils', numFrame
     cv2.createTrackbar('start', 'Bars', 0, numFrame-1, scroll )
     cv2.createTrackbar('minTh', 'Bars', 0, int(maxTB), changeMinTh)
     cv2.createTrackbar('maxTh', 'Bars', 0, int(maxTB), changeMaxTh)

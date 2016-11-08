@@ -39,8 +39,9 @@ if __name__ == '__main__':
     ''' ************************************************************************
     Selecting library directory
     ************************************************************************ '''
-    # libPath = selectDir()
-    libPath = '/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf'
+    initialDir = '/media/lab/idZebLib_TU20160413_34_36dpf/idZebLib/TU20160413/36dpf'
+    libPath = selectDir(initialDir)
+    # libPath = '/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf'
     ageInDpf, preprocessing, subDirs = retrieveInfoLib(libPath, preprocessing = "curvaturePortrait")
     group = 0
     imagesIMDB = []
@@ -84,7 +85,7 @@ if __name__ == '__main__':
         ''' Segmentation inspection '''
         if not loadPreviousDict['preprocparams']:
             print 'Entering segmentation preview'
-            SegmentationPreview(path, width, height, bkg, maxIntensity, maxBkg, mask, useBkg)
+            SegmentationPreview(videoPath, width, height, bkg, maxIntensity, maxBkg, mask, useBkg)
 
             cv2.waitKey(1)
             cv2.destroyAllWindows()

@@ -96,7 +96,7 @@ def computeBkg(paths, EQ, width, height):
     bkg = np.zeros((height,width))
 
     num_cores = multiprocessing.cpu_count()
-    num_cores = 1
+    # num_cores = 1
     numFrame = Parallel(n_jobs=num_cores)(delayed(getNumFrame)(path) for path in paths)
     outputParallel = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg,EQ) for path in paths)
     partialBkg = [out[0] for out in outputParallel]
@@ -224,11 +224,11 @@ Image segmentation
 """
 def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
     #Apply background substraction if requested and threshold image
-    minThresholdScaled = minThreshold * np.mean(frame)
     frame = np.float32(frame)
-    # print frame
+    minThresholdScaled = minThreshold * np.mean(frame)
+    frame = np.true_divide(frame,np.mean(frame))
     frameMasked = frame + mask
-    frameSegmented = uint8caster(frameMasked < minThresholdScaled)
+    frameSegmented = uint8caster(frameMasked < minThreshold)
     if useBkg:
         print 'Subtracting bkg and segmenting frame...'
         bkgMasked = bkg + mask
