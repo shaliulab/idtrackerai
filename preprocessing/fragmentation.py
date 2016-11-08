@@ -318,6 +318,7 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
 
 def fragment(paths):
     info = loadFile(paths[0], 'videoInfo', time=0)
+    info = info.to_dict()[0]
     width = info['width']
     height = info['height']
     numAnimals = int(info['numAnimals'])

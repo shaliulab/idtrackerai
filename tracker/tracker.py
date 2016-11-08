@@ -311,6 +311,7 @@ if __name__ == '__main__':
     fragments = loadFile(path, 'fragments', time=0)
     portraits = loadFile(path, 'portraits', time=0)
     videoInfo = loadFile(path, 'videoInfo', time=0)
+    info = info.to_dict()[0]
     numFrames =  len(portraits)
     numAnimals = videoInfo['numAnimals']
     maxNumBlobs = videoInfo['maxNumBlobs']

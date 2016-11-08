@@ -36,7 +36,7 @@ def getNumFrame(path):
     cap = cv2.VideoCapture(path)
     return int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
-def collectAndSaveVideoInfo(path, height, width, mask, ROICenters, numAnimals, numCores, minThreshold,maxThreshold,maxArea,maxNumBlobs):
+def collectAndSaveVideoInfo(path, height, width, numAnimals, numCores, minThreshold,maxThreshold,maxArea,maxNumBlobs):
     """
     saves general info about the video in a pickle (_videoinfo.pkl)
     """
@@ -44,8 +44,6 @@ def collectAndSaveVideoInfo(path, height, width, mask, ROICenters, numAnimals, n
         'path': path,
         'height':height,
         'width': width,
-        'mask': mask,
-        'ROICenters': ROICenters,
         'numAnimals':numAnimals,
         'numCores':numCores,
         'minThreshold':minThreshold,
@@ -78,15 +76,19 @@ def computeBkgPar(path,bkg,EQ):
     cap = cv2.VideoCapture(path)
     counter = 0
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    maxIntensity = 0
     while counter < numFrame:
         counter += 1;
         ret, frameBkg = cap.read()
         gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
         # gray = checkEq(EQ, gray)
-        gray,_ = frameAverager(gray) ##XXX
+        avIntensity = frameAverager(gray)
+        gray = np.true_divide(gray,avIntensity)
         bkg = bkg + gray
+        if np.max(gray) > maxIntensity:
+            maxIntensity = np.max(gray)
 
-    return bkg
+    return bkg, maxIntensity
 
 def computeBkg(paths, EQ, width, height):
     # This holds even if we have not selected a ROI because then the ROI is
@@ -94,28 +96,39 @@ def computeBkg(paths, EQ, width, height):
     bkg = np.zeros((height,width))
 
     num_cores = multiprocessing.cpu_count()
-    # num_cores = 1
+    num_cores = 1
     numFrame = Parallel(n_jobs=num_cores)(delayed(getNumFrame)(path) for path in paths)
-    partialBkg = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg,EQ) for path in paths)
+    outputParallel = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg,EQ) for path in paths)
+    partialBkg = [out[0] for out in outputParallel]
+    maxIntensity = [out[1] for out in outputParallel]
+    maxIntensity = np.max(maxIntensity)
     bkg = np.sum(np.asarray(partialBkg),axis=0)
     totNumFrame = sum(numFrame)
     bkg = np.true_divide(bkg, totNumFrame)
+    maxBkg = np.max(bkg)
     # bkg is the backgorund computed by summing all the averaged frames
     # of the video and dividing by the number of frames in the video.
-    return bkg
+    return bkg, maxIntensity, maxBkg
 
 def checkBkg(useBkg, usePreviousBkg, paths, EQ, width, height):
-    ''' Compute Bkg '''
+    ''' Compute Bkg ''' ###TODO This can be done in a smarter way...
     path = paths[0]
-    if useBkg:
-        if usePreviousBkg:
-            bkg = loadFile(path, 'bkg',0)
-        else:
-            bkg = computeBkg(paths, EQ, width, height)
-            saveFile(path, bkg, 'bkg', time = 0)
-        return bkg
+    if usePreviousBkg:
+        bkgDict = loadFile(path, 'bkg',0)
+        bkgDict = bkgDict.to_dict()[0]
+        print bkgDict
+        bkg = bkgDict['bkg']
+        maxIntensity = bkgDict['maxIntensity']
+        maxBkg = bkgDict['maxBkg']
     else:
-        return None
+        bkg, maxIntensity, maxBkg = computeBkg(paths, EQ, width, height)
+        bkgDict = {'bkg': bkg, 'maxIntensity': maxIntensity, 'maxBkg': maxBkg}
+        saveFile(path, bkgDict, 'bkg', time = 0)
+
+    if useBkg:
+        return bkg, maxIntensity, maxBkg
+    else:
+        return None, maxIntensity, None
 
 
 # """
@@ -189,9 +202,12 @@ def checkBkg(useBkg, usePreviousBkg, paths, EQ, width, height):
 Normalize by the average intensity
 """
 def frameAverager(frame):
-    avFrame = np.divide(frame,np.mean(frame))
+    # avFrame = np.divide(frame,np.mean(frame))
+    # print 'frame, ', frame
+    # print 'avFrame, ', uint8caster(avFrame)
+    # print 'dif, frame avFrame, ', np.sum(abs(frame-uint8caster(avFrame)))
     # avFrame = np.multiply(np.true_divide(avFrame,np.max(avFrame)),255).astype('uint8')
-    return avFrame, np.mean(avFrame)
+    return np.mean(frame)
 
 """
 Image equalization
@@ -208,19 +224,16 @@ Image segmentation
 """
 def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
     #Apply background substraction if requested and threshold image
+    minThresholdScaled = minThreshold * np.mean(frame)
+    frame = np.float32(frame)
+    # print frame
+    frameMasked = frame + mask
+    frameSegmented = uint8caster(frameMasked < minThresholdScaled)
     if useBkg:
-        frameSubtracted = uint8caster(np.abs(np.subtract(bkg,frame)))
-        frameSubtractedMasked = cv2.addWeighted(frameSubtracted,1,mask,1,0)
-        ### Uncomment to plot
-        # cv2.imshow('frameSubtractedMasked',frameSubtractedMasked)
-        # ret, frame = cv2.threshold(frame,minThreshold,maxThreshold, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        frameSubtractedMasked = 255-frameSubtractedMasked
-        ret, frameSegmented = cv2.threshold(frameSubtractedMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
-    else:
-        frameMasked = cv2.addWeighted(uint8caster(frame),1,mask,1,0)
-        ### Uncomment to plot
-        # cv2.imshow('frameMasked',frameMasked)
-        ret, frameSegmented = cv2.threshold(frameMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
+        print 'Subtracting bkg and segmenting frame...'
+        bkgMasked = bkg + mask
+        bkgSegmented = uint8caster(bkgMasked < minThreshold)
+        frameSegmeted = frameSegmented - bkgSegmented
     return frameSegmented
 
 """

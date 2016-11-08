@@ -35,37 +35,41 @@ def smooth(x,window_len=20,window='hanning'):
        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
 
    s=np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
+   # s = x
    #print(len(s))
    if window == 'flat': #moving average
        w=np.ones(window_len,'d')
    else:
        w=eval('np.'+window+'(window_len)')
 
-   y=np.convolve(w/w.sum(),s,mode='valid')
+   y=np.convolve(s,w/w.sum(),mode='valid')
    return y
 
 def smoother(contour):
     """
     smooth contour by convolution
     """
+    window = 11
     X = contour[:,0]
-    X = np.append(X,X[:5])
+    X = np.append(X,X[:window])
     Y = contour[:,1]
-    Y = np.append(Y,Y[:5])
+    Y = np.append(Y,Y[:window])
 
     bkg = np.ones((np.max(Y),np.max(X)))
 
-    G = cv2.transpose(cv2.getGaussianKernel(5, 16, cv2.CV_64FC1))
+    G = cv2.transpose(cv2.getGaussianKernel(window, 32, cv2.CV_64FC1))
 
     X_smooth = np.convolve(X,G[0],mode='same')
     Y_smooth = np.convolve(Y,G[0],mode='same')
-    X_smooth = X_smooth[2:-3]
-    Y_smooth = Y_smooth[2:-3]
+    X_smooth = X_smooth[np.floor(window/2):-np.ceil(window/2)]
+    Y_smooth = Y_smooth[np.floor(window/2):-np.ceil(window/2)]
     return X_smooth, Y_smooth
 
-def smooth_resample(contour,smooth = False):
-    if smooth:
+def smooth_resample(contour,smoothFlag = False):
+    if smoothFlag:
         x,y  = smoother(contour)
+        # x = smooth(contour[:,0],8)
+        # y = smooth(contour[:,1],8)
     else:
         x = contour[:,0]
         y = contour[:,1]
@@ -212,23 +216,26 @@ def fillSquareFrame(square_frame,bkgSamps):
     square_frame[square_frame == 0] = bkgSamps[indicesSamples]
     return square_frame
 
-def getPortrait(miniframe,cnt,bb,bkgSamp):
+def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     height, width = miniframe.shape
     orientation = np.sign(cv2.contourArea(cnt,oriented=True)) ### TODO this can probably be optimized
+    # print '*************************************'
+    # print 'orientation, ', orientation
 
     # Pass contour to bb coord, resample, smooth, and duplicate
     cnt = full2miniframe(cnt, bb)
     cnt = np.asarray(cnt)
     cnt = np.squeeze(cnt)
-    cnt = smooth_resample(cnt,smooth=True)
+    cnt = smooth_resample(cnt,smoothFlag=True)
     cnt = np.vstack([cnt,cnt])
 
     # Compute curvature
-    curvature = [curv(cnt,i,3,orientation) for i in range(len(cnt))]
+    curvature = [curv(cnt,i,1,orientation) for i in range(len(cnt))]
     curvature = np.asarray(curvature)
 
+
     # Smooth curvature
-    window = 101
+    window = 51
     curvature = smooth(curvature, window)
     index = (window-1)/2
     curvature = curvature[index:-index]
@@ -263,12 +270,14 @@ def getPortrait(miniframe,cnt,bb,bkgSamp):
 
     # Copy miniframe in a bigger frame to rotate
     rowsMin, colsMin = miniframe.shape
+    # print 'shape of the miniframe, ', miniframe.shape
     diag = np.round(np.sqrt(rowsMin**2 + colsMin**2)).astype('int')
     new_frame = np.zeros((diag,diag)).astype('uint8')
     x_offset = np.ceil((diag-colsMin)/2).astype('int')
     y_offset = np.ceil((diag-rowsMin)/2).astype('int')
     new_frame[y_offset:y_offset + rowsMin, x_offset:x_offset+colsMin] = miniframe
     new_frame = fillSquareFrame(new_frame,bkgSamp)
+    # print 'shape of the new miniframe, ', new_frame.shape
 
     # Translate and rotate nose and middle point to the new frame
     new_nose = tuple(np.asarray([nose[0]+x_offset, nose[1]+y_offset]).astype('int'))
@@ -280,14 +289,29 @@ def getPortrait(miniframe,cnt,bb,bkgSamp):
     T = np.matrix([M[0][2],M[1][2]])
     nose_rt = np.asarray(np.add(np.squeeze(np.asarray(np.dot(R, np.asmatrix(new_nose).T))),T).astype('int'))[0]
     minif_rot = cv2.warpAffine(new_frame, M, (diag,diag),flags = cv2.INTER_NEAREST)
-
+    # print 'shape of the new miniframe rotated, ', minif_rot.shape
     # Crop the image in 32x32 frame around the nose
     nose_pixels = [int(nose_rt[0]),int(nose_rt[1])]
+    # print counter
+    # if counter == 251:
+    #     plt.close("all")
+    #     plt.ion()
+    #     plt.figure()
+    #     plt.imshow(minif_rot,interpolation='none',cmap='gray')
+    #     # plt.figure()
+    #     # plt.plot(cnt[:,0],cnt[:,1],'o')
+    #     # plt.show()
+    #     plt.pause(.5)
+    # print 'nose pixels, ', nose_pixels
+    if nose_pixels[1]<7:
+        nose_pixels[1] = 7
     portrait = minif_rot[nose_pixels[1]-7:nose_pixels[1]+25,nose_pixels[0]-16:nose_pixels[0]+16]
+    if portrait.shape[0] != 32 or portrait.shape[0] != 32:
+        raise ValueError('This portrait do not have 32x32 pixels')
 
     # Fill black parts of the portrait with random background
     # portrait = fillSquareFrame(minif_cropped,bkgSamp)
-    return portrait
+    return portrait, curvature, cnt, maxCoord, sorted_locations
 
 def reaper(path, frameIndices):
     # print 'segment number ', i
@@ -311,7 +335,7 @@ def reaper(path, frameIndices):
             # print '----------------', j, counter, path
             # print miniframe
             ### Uncomment to plot
-            cv2.imshow('frame', miniframe)
+            # cv2.imshow('frame', miniframe)
             # cv2.waitKey()
             portrait = getPortrait(miniframe,cnts[j],bbs[j],bkgSamps[j])
 
@@ -338,7 +362,7 @@ def portrait(paths):
 
     num_cores = multiprocessing.cpu_count()
     # paths = [paths[5]]
-    # num_cores = 1
+    num_cores = 1
     allPortraits = Parallel(n_jobs=num_cores)(delayed(reaper)(path,frameIndices) for path in paths)
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)

@@ -89,16 +89,19 @@ def ROIselector(frame):
 
     return mask, centers
 
-def checkROI(useROI, usePreviousROI, frame, path):
+def checkROI(useROI, usePreviousROI, frame, videoPath):
     ''' Select ROI '''
     if useROI:
         if usePreviousROI:
-            mask = loadFile(path, 'ROI',0)
-            centers = loadFile(path, 'centers',0)
+            mask = loadFile(videoPath, 'ROI',0)
+            mask = np.asarray(mask)
+            centers= loadFile(videoPath, 'centers',0)
+            centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
         else:
             print '\n Selecting ROI ...'
             mask, centers = ROIselector(frame)
     else:
+        print '\n No ROI selected ...'
         mask = np.zeros_like(frame)
         centers = []
     return mask, centers
@@ -111,72 +114,79 @@ def playPreview(paths, useBkg, usePreviousBkg, useROI, usePreviousROI, numSegmen
     """
     loads a preview of the video for manual fine-tuning
     """
-    # print 'Starting playPreview'
+    print '\n'
+    print '***** Starting playPreview to selectROI and Bkg...'
     # global numSegment
-    width, height = getVideoInfo(paths)
-    video = os.path.basename(paths[0])
-    folder = os.path.dirname(paths[0])
-    filename, extension = os.path.splitext(video)
-    subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-    # if len(subFolders) > 0:
-    #     subFolder = subFolders[0]
-    # else:
-    subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-    subFolder = subFolders[0]
-    #Load frame to choose ROIs
-    print paths[0]
+    # width, height = getVideoInfo(paths)
+    # video = os.path.basename(paths[0])
+    # folder = os.path.dirname(paths[0])
+    # filename, extension = os.path.splitext(video)
+    # subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
+    # subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
+    # subFolder = subFolders[0]
+
     cap2 = cv2.VideoCapture(paths[0])
     flag, frame = cap2.read()
     cap2.release()
-    print flag
-    # cv2.destroyAllWindows()
-    #frame to grayscale
+    height = frame.shape[0]
+    width = frame.shape[1]
+
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    if numSegment == 0:
-        print 'segment 0 is here'
-        mask, centers = checkROI(useROI, usePreviousROI, frameGray, paths[0])
-        saveFile(paths[0], mask, 'ROI',time = 0)
-        saveFile(paths[0], centers, 'centers',time = 0)
-    else:
-        mask = loadFile(paths[0], 'ROI', time=0)
-        mask = loadFile(paths[0], 'centers', time=0)
+    mask, centers = checkROI(useROI, usePreviousROI, frameGray, paths[0])
+    saveFile(paths[0], mask, 'ROI',time = 0)
+    saveFile(paths[0], centers, 'centers',time = 0)
+    bkg, maxIntensity, maxBkg = checkBkg(useBkg, usePreviousBkg, paths, 0, width, height)
 
-    #if it exists, load it!
-    bkg = checkBkg(useBkg, usePreviousBkg, paths, 0, width, height)
-
-    #save mask and centers
-    #FIXME: probably everytime we save we should check if the file is already there and ask either to overwrite or generate a unique name...
-    print 'numSegment, ', numSegment
-    path = paths[int(numSegment)]
-
-    return path, width, height, bkg, mask, centers
+    return width, height, bkg, maxIntensity, maxBkg, mask, centers
 
 ''' ****************************************************************************
 Segmentation inspector
 **************************************************************************** '''
 
-def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, maxArea = 1000, minThreshold = 136, maxThreshold = 255, size = 1):
+def SegmentationPreview(path, width, height, bkg, maxIntensity, maxBkg, mask, useBkg, minArea = 150, maxArea = 1000, minThreshold = 0.85, maxThreshold = 2, size = 1):
+    print '\n'
+    print '*****Entering segmentation preview...'
     numAnimals = getInput('Number of animals','Type the number of animals')
     numAnimals = int(numAnimals)
+    global maxRangeTh, maxTB
+    maxTB = 200
+    if bkg == None:
+        maxRangeTh = maxIntensity
+    else:
+        maxRangeTh = maxBkg
+    print 'maxRangeTh, ', maxRangeTh
+    maxThreshold = maxRangeTh ###NOTE this is because we are not using the maxThreshold and we set it to the maximum for it not to affect the segmentation
     # print 'Ready to get the cap from the path'
     cap = cv2.VideoCapture(path)
     # print 'Ready to get eh number of frames'
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
+    def TB2th(TB,maxRangeTh,maxTB):
+        th = maxRangeTh * TB / maxTB
+        return th
+    def th2TB(th,maxRangeTh,maxTB):
+        TB = maxTB * th / maxRangeTh
+        return int(TB)
+
     def thresholder(minTh, maxTh):
+        global frameValue, maxRangeTh, maxTB
+        minTh = TB2th(minTh,maxRangeTh,maxTB)
+        maxTh = TB2th(maxTh,maxRangeTh,maxTB)
         # print 'I am in thresholder'
         #threshold the frame, find contours and get portraits of the fish
-        toile = np.zeros_like(avFrame, dtype='uint8')
+        toile = np.zeros_like(origFrame, dtype='uint8')
         # print 'I am going to call segmentVideo'
-        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, bkg, mask, useBkg)
+        segmentedFrame = segmentVideo(origFrame, minTh, maxTh, bkg, mask, useBkg)
         # print '1'
-        contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+        contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+        # contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
         # print '2'
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')
+        # minArea = 250
         # print '3'
+        # print '*********************_______________maxArea__________________', maxArea
+        # print '*********************_______________minArea__________________', minArea
         goodContours = filterContoursBySize(contours,minArea, maxArea)
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(origFrame,1,toile,.5,0)
@@ -191,6 +201,7 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         # print '5'
         numColumns = 5
         numGoodContours = len(goodContours)
+        # print '**************************', numGoodContours
         numBlackPortraits = numColumns - numGoodContours % numColumns
         numPortraits = numGoodContours + numBlackPortraits
         # print '6'
@@ -198,18 +209,46 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         sizePortrait = 32
         portraitsMat = []
         rowPortrait = []
+        # print '****** new frame *******, ', frameValue
+        ### Uncomment to plot
+        # plt.ion()
+        # plt.close("all")
+        # plt.figure()
         while j < numPortraits:
+            # print "portrait, ", j
             if j < numGoodContours:
-                portrait = getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j])
+                # print 'good'
+                # print miniFrames
+                portrait, curvature, cnt,maxCoord, sorted_locations = getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j],frameValue)
                 portrait = np.squeeze(portrait)
+                ### Uncomment to plot
+                # plt.subplot(2,8,j+1)
+                # plt.plot(curvature)
+                # plt.scatter(sorted_locations[0],curvature[sorted_locations[0]],c='y',s=30)
+                # plt.scatter(sorted_locations[1],curvature[sorted_locations[1]],c='r',s=30)
+                #
+                # plt.subplot(2,8,j+8+1)
+                # plt.plot(cnt[:,0],cnt[:,1],'-')
+                # plt.scatter(maxCoord[0][0],maxCoord[0][1],c='y',s=30)
+                # plt.scatter(maxCoord[1][0],maxCoord[1][1],c='r',s=30)
+                # plt.axis('equal')
+
+
             else:
+                # print 'black'
                 portrait = np.zeros((sizePortrait,sizePortrait),dtype='uint8')
             rowPortrait.append(portrait)
             if (j+1) % numColumns == 0:
+                # print 'length rowPortrait, ', len(rowPortrait)
+                # print 'shape one portraits, '
+                # for portrait in rowPortrait:
+                #     print portrait.shape
                 portraitsMat.append(np.hstack(rowPortrait))
                 rowPortrait = []
             j += 1
         # print '7'
+        plt.show()
+        plt.pause(.5)
 
         portraitsMat = np.vstack(portraitsMat)
         #show window containing the trackbars
@@ -223,7 +262,8 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         # print '10'
 
     def scroll(trackbarValue):
-        global avFrame, frameGray, origFrame
+        global avFrame, frameGray, origFrame, frameValue
+        frameValue = trackbarValue
         # print 'setting frame position inside scroll function'
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         #Get frame from video file
@@ -234,11 +274,11 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         #make a copy of frameGray
         origFrame = frameGray.copy()
         #average frame
-        avFrame, avIntensity = frameAverager(origFrame)
-        avFrameCopy = avFrame.copy()
+        avIntensity = frameAverager(origFrame)
+        # avFrameCopy = avFrame.copy()
 
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        cv2.putText(origFrame,str(trackbarValue),(50,50), font, 3,255)
+        # font = cv2.FONT_HERSHEY_SIMPLEX
+        # cv2.putText(origFrame,str(trackbarValue),(50,50), font, 3,255)
         #read thresholds from trackbars
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
@@ -261,7 +301,7 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         # print 'end changeMaxTh'
         pass
 
-    def changeMinArea(x):
+    def changeMinArea(minArea):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
@@ -290,16 +330,16 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         pass
     # print 'Ready create trackbars in Bars window'
     cv2.createTrackbar('start', 'Bars', 0, numFrame-1, scroll )
-    cv2.createTrackbar('minTh', 'Bars', 0, 255, changeMinTh)
-    cv2.createTrackbar('maxTh', 'Bars', 0, 255, changeMaxTh)
+    cv2.createTrackbar('minTh', 'Bars', 0, int(maxTB), changeMinTh)
+    cv2.createTrackbar('maxTh', 'Bars', 0, int(maxTB), changeMaxTh)
     cv2.createTrackbar('minArea', 'Bars', 0, 1000, changeMinArea)
     cv2.createTrackbar('maxArea', 'Bars', 0, 60000, changeMaxArea)
     cv2.createTrackbar('ResUp', 'Bars', 1, 20, resizeImageUp)
     cv2.createTrackbar('ResDown', 'Bars', 1, 20, resizeImageDown)
     # print 'Ready to set the default values'
     defFrame = 1
-    defMinTh = minThreshold
-    defMaxTh = maxThreshold
+    defMinTh = th2TB(minThreshold,maxRangeTh,maxTB)
+    defMaxTh = th2TB(maxThreshold,maxRangeTh,maxTB)
     defMinA = minArea
     defMaxA = maxArea
     defRes = size
@@ -326,8 +366,8 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
     # print 'Waiting for keypress'
     cv2.waitKey(0)
     # print 'Creating dictionary of preprocParams'
-    preprocParams = {'minThreshold': cv2.getTrackbarPos('minTh', 'Bars'),
-        'maxThreshold': cv2.getTrackbarPos('maxTh', 'Bars'),
+    preprocParams = {'minThreshold': TB2th(cv2.getTrackbarPos('minTh', 'Bars'),maxRangeTh,maxTB),
+        'maxThreshold': TB2th(cv2.getTrackbarPos('maxTh', 'Bars'),maxRangeTh,maxTB),
         'minArea': cv2.getTrackbarPos('minArea', 'Bars'),
         'maxArea': cv2.getTrackbarPos('maxArea', 'Bars'),
         'numAnimals': numAnimals}
@@ -346,6 +386,7 @@ def playFragmentation(paths,visualize = False):
     IdInspector
     """
     info = loadFile(paths[0], 'videoInfo', time=0)
+    info = info.to_dict()[0]
     width = info['width']
     height = info['height']
     numAnimals = info['numAnimals']

@@ -79,12 +79,12 @@ if __name__ == '__main__':
             cv2.namedWindow('Bars')
         videoPaths = scanFolder(videoPath)
         numSegment = 0
-        path, width, height, bkg, mask, centers = playPreview(videoPaths, useBkg, loadPreviousDict['bkg'], useROI, loadPreviousDict['ROI'])
+        width, height, bkg, maxIntensity, maxBkg, mask, centers = playPreview(videoPaths, useBkg, loadPreviousDict['bkg'], useROI, loadPreviousDict['ROI'])
 
         ''' Segmentation inspection '''
         if not loadPreviousDict['preprocparams']:
             print 'Entering segmentation preview'
-            SegmentationPreview(path, width, height, bkg, mask, useBkg)
+            SegmentationPreview(path, width, height, bkg, maxIntensity, maxBkg, mask, useBkg)
 
             cv2.waitKey(1)
             cv2.destroyAllWindows()
@@ -100,22 +100,26 @@ if __name__ == '__main__':
                     end = False
                     path = videoPaths[int(numSegment)]
                     preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
+                    preprocParams = preprocParams.to_dict()[0]
                     numAnimalsInGroup = preprocParams['numAnimals']
                     minThreshold = preprocParams['minThreshold']
                     maxThreshold = preprocParams['maxThreshold']
                     minArea = preprocParams['minArea']
                     maxArea = preprocParams['maxArea']
-                    mask= loadFile(videoPaths[0], 'mask',0)
+                    mask = loadFile(videoPaths[0], 'ROI',0)
+                    mask = np.asarray(mask)
                     centers= loadFile(videoPaths[0], 'centers',0)
+                    centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
                     EQ = 0
-                    bkg = checkBkg(useBkg, videoPaths, EQ, width, height)
+                    bkg, maxIntensity, maxBkg = checkBkg(useBkg, videoPaths, EQ, width, height)
                     cv2.namedWindow('Bars')
-                    SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea, maxArea, minThreshold, maxThreshold)
+                    SegmentationPreview(path, width, height, bkg, maxIntensity, maxBkg, mask, useBkg, minArea, maxArea, minThreshold, maxThreshold)
                 cv2.waitKey(1)
                 cv2.destroyAllWindows()
                 cv2.waitKey(1)
         else:
-            preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
+            preprocParams = loadFile(videoPaths[0], 'preprocparams',0)
+            preprocParams = preprocParams.to_dict()[0]
             numAnimalsInGroup = preprocParams['numAnimals']
             minThreshold = preprocParams['minThreshold']
             maxThreshold = preprocParams['maxThreshold']
@@ -144,6 +148,7 @@ if __name__ == '__main__':
         cv2.waitKey(1)
         if not loadPreviousDict['segmentation']:
             preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
+            preprocParams = preprocParams.to_dict()[0]
             numAnimalsInGroup = preprocParams['numAnimals']
             minThreshold = preprocParams['minThreshold']
             maxThreshold = preprocParams['maxThreshold']

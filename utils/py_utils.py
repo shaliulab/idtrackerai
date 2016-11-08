@@ -118,11 +118,11 @@ def scanFolder(path):
 #     # we assume there's an underscore before the timestamp
 #     if name == 'segment' or name == 'segmentation':
 #         nSegment = filename.split('_')[-1]# and before the number of the segment
-#         filename = filename.split('_')[0] + '_' + nSegment + '.pkl'
-#         pd.to_pickle(variabletoSave, subFolder +'/segmentation/'+ filename)
+#         filename = filename.split('_')[0] + '_' + nSegment + '.hdf5'
+#         pd.to_hdf(variabletoSave, subFolder +'/segmentation/'+ filename)
 #     else:
-#         filename = filename.split('_')[0] + '_' + name + '.pkl'
-#         pd.to_pickle(variabletoSave, subFolder + '/'+ filename)
+#         filename = filename.split('_')[0] + '_' + name + '.hdf5'
+#         pd.to_hdf(variabletoSave, subFolder + '/'+ filename)
 #     print 'you just saved: ',subFolder + filename
 
 
@@ -144,14 +144,14 @@ def scanFolder(path):
 #     if name  == 'segmentation':
 #         # print 'i am here'
 #         nSegment = filename.split('_')[-1]
-#         filename = filename.split('_')[0] + '_' + nSegment + '.pkl'
+#         filename = filename.split('_')[0] + '_' + nSegment + '.hdf5'
 #         # print filename
 #         # print subFolder
 #         # print nSegment
-#         return pd.read_pickle(subFolder + 'segmentation/' + filename ), nSegment
+#         return pd.read_hdf(subFolder + 'segmentation/' + filename ), nSegment
 #     else:
-#         filename = filename.split('_')[0] + '_' + name + '.pkl'
-#         return pd.read_pickle(subFolder + filename )
+#         filename = filename.split('_')[0] + '_' + name + '.hdf5'
+#         return pd.read_hdf(subFolder + filename )
 
 def saveFile(path, variabletoSave, name, time = 0):
     """
@@ -173,11 +173,16 @@ def saveFile(path, variabletoSave, name, time = 0):
     # we assume there's an underscore before the timestamp
     if name == 'segment' or name == 'segmentation':
         nSegment = filename.split('_')[-1]# and before the number of the segment
-        filename = 'segm_' + nSegment + '.pkl'
-        pd.to_pickle(variabletoSave, subFolder +'/segmentation/'+ filename)
+        filename = 'segm_' + nSegment + '.hdf5'
+        variabletoSave.to_hdf(subFolder +'/segmentation/'+ filename,name)
     else:
-        filename = name + '.pkl'
-        pd.to_pickle(variabletoSave, subFolder + '/'+ filename)
+        filename = name + '.hdf5'
+        if isinstance(variabletoSave, dict):
+            variabletoSave = pd.DataFrame.from_dict(variabletoSave,orient='index')
+        elif not isinstance(variabletoSave, pd.DataFrame):
+            variabletoSave = pd.DataFrame(variabletoSave)
+        variabletoSave.to_hdf(subFolder + filename,name)
+
     print 'you just saved: ',subFolder + filename
 
 def loadFile(path, name, time=0):
@@ -193,18 +198,16 @@ def loadFile(path, name, time=0):
     # print 'subFolders Loader', subFolders
     # print 'subFolders from loadFile ',subFolders
     subFolder = subFolders[time]
+    print 'Loading ' + name + ' from subfolder ', subFolder
 
     if name  == 'segmentation':
         # print 'i am here'
         nSegment = filename.split('_')[-1]
-        filename = 'segm_' + nSegment + '.pkl'
-        # print filename
-        # print subFolder
-        # print nSegment
-        return pd.read_pickle(subFolder + 'segmentation/' + filename ), nSegment
+        filename = 'segm_' + nSegment + '.hdf5'
+        return pd.read_hdf(subFolder + 'segmentation/' + filename ), nSegment
     else:
-        filename = name + '.pkl'
-        return pd.read_pickle(subFolder + filename )
+        filename = name + '.hdf5'
+        return pd.read_hdf(subFolder + filename )
 
 def copyExistentFiles(path, listNames, time=1):
     """
@@ -223,16 +226,20 @@ def copyExistentFiles(path, listNames, time=1):
     subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
     print subFolders
     if len(subFolders) <= 1:
+        srcSubFolder = 'There is not previous subFolder'
         pass
     else:
         srcSubFolder = subFolders[time]
         dstSubFolder = subFolders[time-1]
         for name in listNames:
             if name == 'segmentation':
-                segDirname = subFolder + '/' + name
+                segDirname = srcSubFolder + '/' + name
                 if os.path.isdir(segDirname):
-                    numSegmentedVideos = len(glob.glob1(segDirname,"*.pkl"))
+                    print 'Segmentation folder exists'
+                    numSegmentedVideos = len(glob.glob1(segDirname,"*.hdf5"))
+                    print
                     if numSegmentedVideos == numVideos:
+                        print 'The number of segments and videos is the same'
                         existentFile[name] = '1'
                         dstSubFolderSeg = dstSubFolder + '/segmentation'
                         srcFiles = os.listdir(segDirname)
@@ -241,16 +248,16 @@ def copyExistentFiles(path, listNames, time=1):
                             if (os.path.isfile(fullFileName)):
                                 shutil.copy(fullFileName, dstSubFolderSeg)
                         # if segmentation is copyed we also copy frameIndices and videoInfo
-                        fullFileName = srcSubFolder + '/frameIndices.pkl'
+                        fullFileName = srcSubFolder + '/frameIndices.hdf5'
                         if os.path.isfile(fullFileName):
                             shutil.copy(fullFileName, dstSubFolder)
-                        fullFileName = srcSubFolder + '/videoInfo.pkl'
+                        fullFileName = srcSubFolder + '/videoInfo.hdf5'
                         if os.path.isfile(fullFileName):
                             shutil.copy(fullFileName, dstSubFolder)
 
             else:
                 if name is 'fragmentation':
-                    segDirname = subFolder + 'segmentation'
+                    segDirname = srcSubFolder + 'segmentation'
                     if os.path.isdir(segDirname):
                         srcFiles = os.listdir(segDirname)
                         if os.path.isdir(segDirname) and len(srcFiles)!=0:
@@ -259,12 +266,12 @@ def copyExistentFiles(path, listNames, time=1):
                                 existentFile[name] = '1'
 
                 else:
-                    fullFileName = srcSubFolder + '/' + name + '.pkl'
+                    fullFileName = srcSubFolder + '/' + name + '.hdf5'
                     if os.path.isfile(fullFileName):
                         existentFile[name] = '1'
                         shutil.copy(fullFileName, dstSubFolder)
                     if name is 'ROI':
-                        fullFileName = srcSubFolder + '/centers.pkl'
+                        fullFileName = srcSubFolder + '/centers.hdf5'
                         if os.path.isfile(fullFileName):
                             shutil.copy(fullFileName, dstSubFolder)
 

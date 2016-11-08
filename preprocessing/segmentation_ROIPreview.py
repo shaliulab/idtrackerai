@@ -28,7 +28,7 @@ from skimage.viewer import ImageViewer
 from scipy import ndimage
 import Tkinter, tkSimpleDialog
 
-def segmentAndSave(path, height, width, mask, bkgSubstraction, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea):
+def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea):
 
     print 'Segmenting video %s' % path
     cap = cv2.VideoCapture(path)
@@ -42,30 +42,40 @@ def segmentAndSave(path, height, width, mask, bkgSubstraction, bkg, EQ, minThres
     while counter < numFrames:
         #Get frame from video file
         ret, frame = cap.read()
+        print ret
+        if ret == False:
+            print "*********************************** ret false"
         #Color to gray scale
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         origFrame = frameGray.copy()
-        avFrame, avIntensity = frameAverager(origFrame)
-        avFrameCopy = avFrame.copy()
-        segmentedFrame = segmentVideo(avFrame, minThreshold, maxThreshold, bkg, mask, bkgSubstraction)
+        # print avIntensity
+        avIntensity = np.mean(origFrame)
+        segmentedFrame = segmentVideo(origFrame, minThreshold, maxThreshold, bkg, mask, useBkg)
+        segmentedFrameCopy = segmentedFrame.copy()
         # Find contours in the segmented image
         boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, origFrame, minArea, maxArea, height, width)
-
+        # print 'minArea, ', minArea
+        # print 'maxArea, ', maxArea
+        # print 'minTh, ', minThreshold
+        # print 'maxTh, ', maxThreshold
+        print counter, len(centroids)
+        if len(centroids) == 0:
+            print "*********************************** 0 blobs detected"
         if len(centroids) > maxNumBlobs:
             maxNumBlobs = len(centroids)
         ### UNCOMMENT TO PLOT ##################################################
-        # cv2.drawContours(origFrame,goodContoursFull,-1,color=(255,0,0),thickness=-1)
-        # cv2.imshow('checkcoord', origFrame)
-        # k = cv2.waitKey(30) & 0xFF
-        # if k == 27: #pres esc to quit
-        #     break
+        cv2.drawContours(origFrame,goodContoursFull,-1,color=(255,0,0),thickness=-1)
+        cv2.imshow('checkcoord', origFrame)
+        k = cv2.waitKey(100) & 0xFF
+        if k == 27: #pres esc to quit
+            break
         ########################################################################
 
         # Add frame imformation to DataFrame
         df.loc[counter] = [avIntensity, boundingBoxes, miniFrames, goodContoursFull, centroids, areas, pixels, len(centroids), bkgSamples]
         counter += 1
 
-    # cap.release()
+    cap.release()
     cv2.destroyAllWindows()
     saveFile(path, df, 'segment', time = 0)
 
@@ -73,7 +83,7 @@ def segmentAndSave(path, height, width, mask, bkgSubstraction, bkg, EQ, minThres
 
 
 def segment(paths, numAnimals,
-            mask, centers, bkgSubstraction, bkg, EQ,
+            mask, centers, useBkg, bkg, EQ,
             minThreshold, maxThreshold,
             minArea, maxArea):
 
@@ -81,16 +91,16 @@ def segment(paths, numAnimals,
     num_cores = multiprocessing.cpu_count()
 
     width, height = getVideoInfo(paths)
-    # num_cores = 1
+    num_cores = 1
     print 'Entering to the parallel loop'
-    OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width, mask, bkgSubstraction, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea) for path in paths)
+    OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea) for path in paths)
     allSegments = [(out[0],out[1]) for out in OupPutParallel]
     # print allSegments
     maxNumBlobs = max([out[2] for out in OupPutParallel])
     # print maxNumBlobs
     allSegments = sorted(allSegments, key=lambda x: x[0][0])
     generateVideoTOC(allSegments, paths[0])
-    collectAndSaveVideoInfo(paths[0], height, width, mask, centers, numAnimals, num_cores, minThreshold,maxThreshold,maxArea,maxNumBlobs)
+    collectAndSaveVideoInfo(paths[0], height, width, numAnimals, num_cores, minThreshold,maxThreshold,maxArea,maxNumBlobs)
 
 # if __name__ == '__main__':
 #
@@ -114,7 +124,7 @@ def segment(paths, numAnimals,
 #
 #     ''' Parameters for the segmentation '''
 #     numAnimals = args.num_animals
-#     bkgSubstraction = args.bkg_subtraction
+#     useBkg = args.bkg_subtraction
 #     selectROI = args.ROI_selection
 #     EQ = args.Eq_image
 #     minThreshold = args.min_th
@@ -126,9 +136,9 @@ def segment(paths, numAnimals,
 #     paths = scanFolder(args.path)
 #     name  = args.folder_name
 #
-#     # prevAndSegm(paths, bkgSubstraction, selectROI,name,numAnimals,EQ)
+#     # prevAndSegm(paths, useBkg, selectROI,name,numAnimals,EQ)
 #
-#     playPreview(paths, bkgSubstraction, selectROI)
+#     playPreview(paths, useBkg, selectROI)
 #     #load parameters after preview
 #     preprocParams= loadFile(paths[0], 'preprocparams',0)
 #     minThreshold = preprocParams['minThreshold']
@@ -140,6 +150,6 @@ def segment(paths, numAnimals,
 #     bkg = loadFile(paths[0], 'bkg', 0)
 #
 #     segment(paths, name, numAnimals,
-#             mask, centers, bkgSubstraction, bkg, EQ,
+#             mask, centers, useBkg, bkg, EQ,
 #             minThreshold, maxThreshold,
 #             minArea, maxArea)
