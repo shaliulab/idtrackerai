@@ -219,22 +219,54 @@ def checkEq(EQ, frame):
         frame = clahe.apply(frame)
     return frame
 
-"""
-Image segmentation
-"""
+# """
+# Image segmentation
+# """
+# def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
+#     #Apply background substraction if requested and threshold image
+#     frame = np.float32(frame)
+#     minThresholdScaled = minThreshold * np.mean(frame)
+#     frame = np.true_divide(frame,np.mean(frame))
+#     frameMasked = frame + mask
+#     frameSegmented = uint8caster(frameMasked < minThreshold)
+#     if useBkg:
+#         print 'Subtracting bkg and segmenting frame...'
+#         bkgMasked = bkg + mask
+#         bkgSegmented = uint8caster(bkgMasked < minThreshold)
+#         frameSegmeted = frameSegmented - bkgSegmented
+#     return frameSegmented
+
 def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
     #Apply background substraction if requested and threshold image
-    frame = np.float32(frame)
-    minThresholdScaled = minThreshold * np.mean(frame)
-    frame = np.true_divide(frame,np.mean(frame))
-    frameMasked = frame + mask
-    frameSegmented = uint8caster(frameMasked < minThreshold)
+    print 'minThreshold, ', minThreshold
+    print 'maxThreshold, ', maxThreshold
     if useBkg:
-        print 'Subtracting bkg and segmenting frame...'
-        bkgMasked = bkg + mask
-        bkgSegmented = uint8caster(bkgMasked < minThreshold)
-        frameSegmeted = frameSegmented - bkgSegmented
+        bkgUINT = uint8caster(bkg)
+        bkgUINTMasked = cv2.addWeighted(bkgUINT,1,mask,1,0)
+        ret, bkgSegmented = cv2.threshold(bkgUINTMasked,minThreshold,maxThreshold,cv2.THRESH_BINARY)
+        print bkgSegmented.shape
+
+        frameUINT = uint8caster(frame)
+        frameUINTMasked = cv2.addWeighted(frameUINT,1,mask,1,0)
+        ret, frameSegmented = cv2.threshold(frameUINTMasked,minThreshold,maxThreshold,cv2.THRESH_BINARY)
+        print frameSegmented.shape
+
+        frameSegmented = frameSegmented - bkgSegmented
+
+
+        # frameSubtracted = uint8caster(np.abs(np.subtract(bkg,frame)))
+        # frameSubtractedMasked = cv2.addWeighted(frameSubtracted,1,mask,1,0)
+        # ## Uncomment to plot
+        # # cv2.imshow('frameSubtractedMasked',frameSubtractedMasked)
+        # # frameSubtractedMasked = 255-frameSubtractedMasked
+        # ret, frameSegmented = cv2.threshold(frameSubtractedMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
+    else:
+        frameMasked = cv2.addWeighted(uint8caster(frame),1,mask,1,0)
+        ### Uncomment to plot
+        # cv2.imshow('frameMasked',frameMasked)
+        ret, frameSegmented = cv2.threshold(frameMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
     return frameSegmented
+
 
 """
 Get information from blobs
