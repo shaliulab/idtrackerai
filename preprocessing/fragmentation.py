@@ -325,7 +325,7 @@ def fragment(paths):
     maxNumBlobs = info['maxNumBlobs']
 
     num_cores = multiprocessing.cpu_count()
-    num_cores = 1
+    # num_cores = 1
     fragmentsIndices = Parallel(n_jobs=num_cores)(delayed(fragmentator)(path, numAnimals, maxNumBlobs) for path in paths)
     fragmentsIndices = sorted(fragmentsIndices, key=lambda x: x[0])
     # print fragmentsIndices

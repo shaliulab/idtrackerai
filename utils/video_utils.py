@@ -76,19 +76,15 @@ def computeBkgPar(path,bkg,EQ):
     cap = cv2.VideoCapture(path)
     counter = 0
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-    maxIntensity = 0
     while counter < numFrame:
         counter += 1;
         ret, frameBkg = cap.read()
         gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
         # gray = checkEq(EQ, gray)
-        avIntensity = frameAverager(gray)
-        gray = np.true_divide(gray,avIntensity)
+        gray = np.divide(gray,np.mean(gray))
         bkg = bkg + gray
-        if np.max(gray) > maxIntensity:
-            maxIntensity = np.max(gray)
 
-    return bkg, maxIntensity
+    return bkg
 
 def computeBkg(paths, EQ, width, height):
     # This holds even if we have not selected a ROI because then the ROI is
@@ -98,37 +94,31 @@ def computeBkg(paths, EQ, width, height):
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
     numFrame = Parallel(n_jobs=num_cores)(delayed(getNumFrame)(path) for path in paths)
-    outputParallel = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg,EQ) for path in paths)
-    partialBkg = [out[0] for out in outputParallel]
-    maxIntensity = [out[1] for out in outputParallel]
-    maxIntensity = np.max(maxIntensity)
+    partialBkg = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg,EQ) for path in paths)
     bkg = np.sum(np.asarray(partialBkg),axis=0)
     totNumFrame = sum(numFrame)
     bkg = np.true_divide(bkg, totNumFrame)
-    maxBkg = np.max(bkg)
     # bkg is the backgorund computed by summing all the averaged frames
     # of the video and dividing by the number of frames in the video.
-    return bkg, maxIntensity, maxBkg
+    return bkg
 
 def checkBkg(useBkg, usePreviousBkg, paths, EQ, width, height):
     ''' Compute Bkg ''' ###TODO This can be done in a smarter way...
     path = paths[0]
-    if usePreviousBkg:
-        bkgDict = loadFile(path, 'bkg',0)
-        bkgDict = bkgDict.to_dict()[0]
-        print bkgDict
-        bkg = bkgDict['bkg']
-        maxIntensity = bkgDict['maxIntensity']
-        maxBkg = bkgDict['maxBkg']
-    else:
-        bkg, maxIntensity, maxBkg = computeBkg(paths, EQ, width, height)
-        bkgDict = {'bkg': bkg, 'maxIntensity': maxIntensity, 'maxBkg': maxBkg}
-        saveFile(path, bkgDict, 'bkg', time = 0)
-
     if useBkg:
-        return bkg, maxIntensity, maxBkg
+        if usePreviousBkg:
+            bkgDict = loadFile(path, 'bkg',0)
+            bkgDict = bkgDict.to_dict()[0]
+            bkg = bkgDict['bkg']
+            # maxIntensity = bkgDict['maxIntensity']
+            # maxBkg = bkgDict['maxBkg']
+        else:
+            bkg = computeBkg(paths, EQ, width, height)
+            bkgDict = {'bkg': bkg}#, 'maxIntensity': maxIntensity, 'maxBkg': maxBkg}
+            saveFile(path, bkgDict, 'bkg', time = 0)
+        return bkg#, maxIntensity, maxBkg
     else:
-        return None, maxIntensity, None
+        return None#, maxIntensity, None
 
 
 # """
@@ -201,13 +191,13 @@ def checkBkg(useBkg, usePreviousBkg, paths, EQ, width, height):
 """
 Normalize by the average intensity
 """
-def frameAverager(frame):
-    # avFrame = np.divide(frame,np.mean(frame))
-    # print 'frame, ', frame
-    # print 'avFrame, ', uint8caster(avFrame)
-    # print 'dif, frame avFrame, ', np.sum(abs(frame-uint8caster(avFrame)))
-    # avFrame = np.multiply(np.true_divide(avFrame,np.max(avFrame)),255).astype('uint8')
-    return np.mean(frame)
+# def frameAverager(frame):
+#     avFrame = np.divide(frame,np.mean(frame))
+#     # print 'frame, ', frame
+#     # print 'avFrame, ', uint8caster(avFrame)
+#     # print 'dif, frame avFrame, ', np.sum(abs(frame-uint8caster(avFrame)))
+#     # avFrame = np.multiply(np.true_divide(avFrame,np.max(avFrame)),255).astype('uint8')
+#     return np.mean(frame)
 
 """
 Image equalization
@@ -238,28 +228,32 @@ def checkEq(EQ, frame):
 
 def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
     #Apply background substraction if requested and threshold image
-    print 'minThreshold, ', minThreshold
-    print 'maxThreshold, ', maxThreshold
+    # print 'minThreshold, ', minThreshold
+    # print 'maxThreshold, ', maxThreshold
+
+    # compute the average frame
+    frame = np.true_divide(frame,np.mean(frame))
     if useBkg:
-        bkgUINT = uint8caster(bkg)
-        bkgUINTMasked = cv2.addWeighted(bkgUINT,1,mask,1,0)
-        ret, bkgSegmented = cv2.threshold(bkgUINTMasked,minThreshold,maxThreshold,cv2.THRESH_BINARY)
-        print bkgSegmented.shape
+        # NOTE this bkg subtraction does not work properly with get_portraits
+        # bkgUINT = uint8caster(bkg)
+        # bkgUINTMasked = cv2.addWeighted(bkgUINT,1,mask,1,0)
+        # ret, bkgSegmented = cv2.threshold(bkgUINTMasked,minThreshold,maxThreshold,cv2.THRESH_BINARY)
+        # print bkgSegmented.shape
+        #
+        # frameUINT = uint8caster(frame)
+        # frameUINTMasked = cv2.addWeighted(frameUINT,1,mask,1,0)
+        # ret, frameSegmented = cv2.threshold(frameUINTMasked,minThreshold,maxThreshold,cv2.THRESH_BINARY)
+        # print frameSegmented.shape
+        #
+        # frameSegmented = frameSegmented - bkgSegmented
 
-        frameUINT = uint8caster(frame)
-        frameUINTMasked = cv2.addWeighted(frameUINT,1,mask,1,0)
-        ret, frameSegmented = cv2.threshold(frameUINTMasked,minThreshold,maxThreshold,cv2.THRESH_BINARY)
-        print frameSegmented.shape
-
-        frameSegmented = frameSegmented - bkgSegmented
-
-
-        # frameSubtracted = uint8caster(np.abs(np.subtract(bkg,frame)))
-        # frameSubtractedMasked = cv2.addWeighted(frameSubtracted,1,mask,1,0)
-        # ## Uncomment to plot
-        # # cv2.imshow('frameSubtractedMasked',frameSubtractedMasked)
-        # # frameSubtractedMasked = 255-frameSubtractedMasked
-        # ret, frameSegmented = cv2.threshold(frameSubtractedMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
+        ### NOTE this bkg subtraction introduces weird flickering in the segmentation that compromises some frames
+        frameSubtracted = uint8caster(np.abs(np.subtract(bkg,frame)))
+        frameSubtractedMasked = cv2.addWeighted(frameSubtracted,1,mask,1,0)
+        ## Uncomment to plot
+        # cv2.imshow('frameSubtractedMasked',frameSubtractedMasked)
+        # frameSubtractedMasked = 255-frameSubtractedMasked
+        ret, frameSegmented = cv2.threshold(frameSubtractedMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
     else:
         frameMasked = cv2.addWeighted(uint8caster(frame),1,mask,1,0)
         ### Uncomment to plot

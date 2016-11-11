@@ -95,12 +95,14 @@ def assignCenters(paths,centers,camera = 1):
     Parallel(n_jobs=num_cores)(delayed(assignCenterAndSave)(path, centers, camera) for path in paths)
 
 def portraitsToIMDB(portraits, numAnimalsInGroup, groupNum):
-    images = np.asarray(flatten(portraits.loc[:,'images'].tolist()))
-    images = np.expand_dims(images, axis=1)
-    imsize = (1,images.shape[2], images.shape[3])
-    labels = np.asarray(flatten(portraits.loc[:,'permutations'].tolist())) + numAnimalsInGroup*groupNum
+    images = np.asarray(flatten([port for port in portraits.loc[:,'images'] if len(port) == numAnimalsInGroup]))
+    images = np.expand_dims(images, axis=1) #this is because the images are in gray scale and we need the channels to be a dimension explicitely
+    imsize = (images.shape[1],images.shape[2], images.shape[3])
+    labels = np.asarray(flatten([perm for perm in portraits.loc[:,'permutations'] if len(perm) == numAnimalsInGroup])) + numAnimalsInGroup*groupNum
+    if len(images) != len(labels):
+        raise ValueError('The number of images and labels should match.')
     print 'Group, ', groupNum
-    print 'Lables, ', labels
+    print 'Labels, ', labels
     labels = np.expand_dims(labels, axis=1)
 
     return imsize, images, labels

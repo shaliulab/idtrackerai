@@ -42,9 +42,9 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
     while counter < numFrames:
         #Get frame from video file
         ret, frame = cap.read()
-        print ret
-        if ret == False:
-            print "*********************************** ret false"
+        # print ret
+        # if ret == False:
+            # print "*********************************** ret false"
         #Color to gray scale
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         origFrame = frameGray.copy()
@@ -58,9 +58,9 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
         # print 'maxArea, ', maxArea
         # print 'minTh, ', minThreshold
         # print 'maxTh, ', maxThreshold
-        print counter, len(centroids)
-        if len(centroids) == 0:
-            print "*********************************** 0 blobs detected"
+        # print counter, len(centroids)
+        # if len(centroids) == 0:
+            # print "*********************************** 0 blobs detected"
         if len(centroids) > maxNumBlobs:
             maxNumBlobs = len(centroids)
         ### UNCOMMENT TO PLOT ##################################################

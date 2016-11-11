@@ -363,7 +363,7 @@ def portrait(paths):
 
     num_cores = multiprocessing.cpu_count()
     # paths = [paths[5]]
-    num_cores = 1
+    # num_cores = 1
     allPortraits = Parallel(n_jobs=num_cores)(delayed(reaper)(path,frameIndices) for path in paths)
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)

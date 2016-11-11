@@ -373,9 +373,9 @@ def selectDir(initialDir):
 def getInput(name,text):
     root = Tkinter.Tk() # dialog needs a root window, or will create an "ugly" one for you
     root.withdraw() # hide the root window
-    password = tkSimpleDialog.askstring(name, text, parent=root)
+    inputString = tkSimpleDialog.askstring(name, text, parent=root)
     root.destroy() # clean up after yourself!
-    return password
+    return inputString.lower()
 
 def displayMessage(title,message):
     window = Tk()
