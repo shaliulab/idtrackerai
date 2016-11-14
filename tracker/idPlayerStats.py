@@ -24,7 +24,9 @@ paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
 
 frameIndices = loadFile(paths[0], 'frameIndices', time=0)
 videoInfo = loadFile(paths[0], 'videoInfo', time=0)
+videoInfo = videoInfo.to_dict()[0]
 stats = loadFile(paths[0], 'statistics', time=0)
+stats = stats.to_dict()[0]
 
 numAnimals = videoInfo['numAnimals']
 width = videoInfo['width']
@@ -38,15 +40,6 @@ allIds = stats['blobIds']
 allProbIds = stats['probBlobIds']
 
 statistics = [allFragProbIds, allIds, allProbIds]
-
-def get_spaced_colors(n):
-    max_value = 16581375 #255**3
-    interval = int(max_value / n)
-    colors = [hex(I)[2:].zfill(6) for I in range(100, max_value, interval)]
-    rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
-    black = (0., 0., 0.)
-    rgbcolorslist.insert(0, black)
-    return rgbcolorslist
 
 def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat):
     plusOne = False # if stat are the identities' indices we will sum 1, because it is nicer
@@ -119,6 +112,8 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat):
                         fontSize = .5
                         thickness = 1
                         color = [0,0,0]
+                    if not sum(stat[globalFrame,i,:]):
+                        cur_id = -1
 
 
                     px = np.unravel_index(pixels[i],(height,width))

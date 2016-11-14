@@ -2,6 +2,7 @@ import cv2
 import sys
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
+sys.path.append('../tracker')
 
 from segmentation_ROIPreview import *
 from fragmentation import *
@@ -9,6 +10,7 @@ from get_portraits import *
 from video_utils import *
 from py_utils import *
 from GUI_utils import *
+from tracker_forGUI import *
 
 import time
 import h5py
@@ -39,7 +41,8 @@ if __name__ == '__main__':
     Selecting library directory
     ************************************************************************ '''
     print '***** Selecting the path to the videos...'
-    pathToVideos = selectDir()
+    initialDir = ''
+    pathToVideos = selectDir(initialDir)
     print 'The path selected is, ', pathToVideos
     # pathToVideos = '/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf'
 
@@ -67,11 +70,19 @@ if __name__ == '__main__':
     processesList = ['ROI', 'bkg', 'preprocparams', 'segmentation','fragmentation','portraits']
     print '\n'
     print '***** Looking for finished steps in previous session...'
-    processesDict, srcSubFolder = copyExistentFiles(videoPath, processesList, time=1)
-    print 'List of processes finished, ', processesDict
-    print '\n'
-    print '***** Selecting files to load from previous session...'
-    loadPreviousDict = selectOptions(processesList, processesDict, text='Already processed steps in this video \n (check to load from ' + srcSubFolder + ')')
+    reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previos preprocessing? ([y]/n)')
+    if reUseAll == 'n':
+        processesDict, srcSubFolder = copyExistentFiles(videoPath, processesList, time=1)
+        print 'List of processes finished, ', processesDict
+        print '\n'
+        print '***** Selecting files to load from previous session...'
+        loadPreviousDict = selectOptions(processesList, processesDict, text='Already processed steps in this video \n (check to load from ' + srcSubFolder + ')')
+
+    elif reUseAll == '' or reUseAll.lower() == 'y' :
+        loadPreviousDict = {'ROI': 1, 'bkg': 1, 'preprocparams': 1, 'segmentation': 1, 'fragmentation': 1, 'portraits': 1}
+    else:
+        raise ValueError('The input introduces do not match the possible options')
+
     print 'List of files that will be used, ', loadPreviousDict
     usePreviousBkg = loadPreviousDict['bkg']
     usePreviousROI = loadPreviousDict['ROI']
@@ -79,11 +90,11 @@ if __name__ == '__main__':
     print 'usePreviousROI, ', usePreviousROI
 
     ''' ROI selection and bkg loading'''
-    width, height, bkg, maxIntensity, maxBkg, mask, centers = playPreview(videoPaths, useBkg, usePreviousBkg, useROI, usePreviousROI)
+    width, height, bkg, mask, centers = playPreview(videoPaths, useBkg, usePreviousBkg, useROI, usePreviousROI)
 
     ''' Segmentation inspection '''
     if not loadPreviousDict['preprocparams']:
-        SegmentationPreview(videoPath, width, height, bkg, maxIntensity, maxBkg, mask, useBkg)
+        SegmentationPreview(videoPath, width, height, bkg, mask, useBkg)
 
         cv2.waitKey(1)
         cv2.destroyAllWindows()
@@ -113,8 +124,8 @@ if __name__ == '__main__':
                 centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
                 EQ = 0
                 ### FIXME put usePreviousBkg to 1 no to recompute it everytime we change the segment
-                bkg, maxIntensity, maxBkg = checkBkg(useBkg, usePreviousBkg, videoPaths, EQ, width, height)
-                SegmentationPreview(path, width, height, bkg, maxIntensity, maxBkg, mask, useBkg, minArea, maxArea, minThreshold, maxThreshold)
+                bkg = checkBkg(useBkg, usePreviousBkg, videoPaths, EQ, width, height)
+                SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea, maxArea, minThreshold, maxThreshold)
             cv2.waitKey(1)
             cv2.destroyAllWindows()
             cv2.waitKey(1)
@@ -173,3 +184,16 @@ if __name__ == '__main__':
     ''' ************************************************************************
     Tracker
     ************************************************************************ '''
+    loadCkpt_folder = selectDir(initialDir)
+    loadCkpt_folder = os.path.relpath(loadCkpt_folder)
+    # inputs = getMultipleInputs('Training parameters', ['ckptName','batch size', 'num. epochs', 'learning rate', 'train (1 (from strach) or 2 (from last check point))'])
+    # print 'inputs, ', inputs
+    print 'Entering into the fineTuner...'
+    ckptName = 'test'
+    batch_size = 50 #int(inputs[1])
+    num_epochs = 70 #int(inputs[2])
+    lr = 0.001 #np.float32(inputs[3])
+    train = 2 #int(inputs[4])
+    fineTuner(videoPath,ckptName,loadCkpt_folder,batch_size,num_epochs,lr,train)
+    print 'Engering into the idAssigner...'
+    idAssigner(videoPath,ckptName,batch_size)

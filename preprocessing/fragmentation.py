@@ -36,11 +36,10 @@ def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
 
     OUTPUT
     trueFragment: True when each animal from frame A overlap with only one animal in frame B
-    permutation: permutation that needs to be applied to miniFrames for the identities in A and B to be conserved
+    s: permutation that needs to be applied to miniFrames for the identities in A and B to be conserved
     """
-    thArea = 5000
+    # thArea = 1000
     # print '*********** NUM ANIMALS **********, ', numAnimals
-    # thArea = 5
     numAnimalsA = len(pixelsFrameA)
     numAnimalsB = len(pixelsFrameB)
     combinations = itertools.product(range(numAnimalsA),range(numAnimalsB)) # compute all the pairwise posibilities for two given number of animals
@@ -64,8 +63,9 @@ def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
         # print sum(possibleCombination[1]==cols) == 1
         # print len(pixelsFrameB[possibleCombination[1]]) < thArea
         # print len(pixelsFrameA[possibleCombination[0]]) < thArea
-        if (sum(possibleCombination[0]==rows) == 1 and sum(possibleCombination[1]==cols) ==1) and \
-            len(pixelsFrameB[possibleCombination[1]]) < thArea and len(pixelsFrameA[possibleCombination[0]]) < thArea:
+        # if (sum(possibleCombination[0]==rows) == 1 and sum(possibleCombination[1]==cols) ==1) and \
+        #     len(pixelsFrameB[possibleCombination[1]]) < thArea and len(pixelsFrameA[possibleCombination[0]]) < thArea:
+        if (sum(possibleCombination[0]==rows) == 1 and sum(possibleCombination[1]==cols) ==1):
             s.append(possibleCombination)
     # print len(s)
     # print type(numAnimals)
@@ -80,10 +80,11 @@ def applyPermutation(maxNumBlobs, permutation, old, missing):
     for (s,p) in permutation:
         if old[s]== -1:
             newIds[p] = missing[count]
+            old[s] = missing[count] ### FIXME this assigns the correct identity to the blob of the previous frame that overlaped properly with the current one, however it creates a problem in the fragments. The first frame of the fragment sometimes does not have the number of animals that it should.
             count += 1
         else:
             newIds[p] = old[s]
-    return newIds
+    return newIds, old
 
 
 def computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals,maxNumBlobs):
@@ -143,20 +144,21 @@ def computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals,maxNumBlobs)
 
         cur_ind = set(old)
         all_ind = set(range(maxNumBlobs))
-        missing = list(all_ind - cur_ind)
+        missing = sorted(list(all_ind - cur_ind))
         # print 'missing individuals, ', missing
 
-        df.loc[i, 'permutation'] = applyPermutation(maxNumBlobs, permutation, old, missing)
+        df.loc[i, 'permutation'], df.loc[i-1,'permutation'] = applyPermutation(maxNumBlobs, permutation, old, missing)
         # print 'newID, ', df.loc[i, 'permutation']
 
         if trueFragment and len(SE)==0: # There is a good overlapping and it is a new fragment
             # print 'There is a good overlapping and it is a new fragment'
-            if missing and missing[-1] == numAnimals: # If all individuals are missing
-                missing[-1] = -1
+            # if missing and missing[-1] == numAnimals: # If all individuals are missing
+            #     missing[-1] = -1
 
-            tofill = np.where(df.loc[i-1,'permutation'] == -1)[0][:len(missing)] #which individuals where not good in the previous frame
-            df.loc[i-1,'permutation'][tofill] = missing # We give new index to the individuals that where not in the previous frame (because they were crossin or dissapeared)
-
+            # print 'ID (previous frame), ', df.loc[i-1,'permutation']
+            # tofill = np.where(df.loc[i-1,'permutation'] == -1)[0][:len(missing)] #which individuals where not good in the previous frame
+            # df.loc[i-1,'permutation'][tofill] = missing # We give new index to the individuals that where not in the previous frame (because they were crossin or dissapeared)
+            # print 'newID (previous frame), ', df.loc[i-1,'permutation']
             if i-1 == 0: # If it is the first frame of the segment we set a Nan because we do not know what happend between this one and the previous segment
                 SE.append(np.nan)
             else:
@@ -167,20 +169,23 @@ def computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals,maxNumBlobs)
             # print 'Fragment, ', SE
             # print 'All fragments so far, ', SEs
             SE, SEs = storeFragmentIndices(SE, SEs, i)
+        # print trueFragment, i, len(columnPixels)-1
         if trueFragment and i == len(columnPixels)-1:
             # print 'This is the last frame of the segment, we close the fragment and put a NaN at the end'
             SE, SEs = storeFragmentIndices(SE, SEs, np.nan)
+    # print '1111111111111111111111111111111111111111111111111111111'
     return df, SEs
 
 def fragmentator(path, numAnimals, maxNumBlobs):
+    print '-----------------------------------'
     print 'Fragmenting video %s' % path
     df, numSegment = loadFile(path, 'segmentation', time=0)
     numSegment = int(numSegment)
     columnNumBlobs = df.loc[:,'numberOfBlobs']
     columnPixels = df.loc[:,'pixels']
 
-
     dfPermutations, fragmentsIndices = computeFragmentOverlap(columnNumBlobs, columnPixels, numAnimals,maxNumBlobs)
+    print 'fragmentsIndices (in fragmentator),', fragmentsIndices
     fragmentsIndices = (numSegment, fragmentsIndices)
     df['permutation'] = dfPermutations
 
@@ -203,7 +208,7 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
     globalFragments = fragmentsIndicesA[:-1]
 
     for i in range(1,len(paths)):
-        print 'Joining segment %s with %s ' % (paths[i-1], paths[i])
+        print '\n Joining segment %s with %s ' % (paths[i-1], paths[i])
         # current segment
         df,_ = loadFile(paths[i], 'segmentation', time=0)
         fragmentsIndicesB = np.add(fragmentsIndices[i][1],globalFrameCounter).tolist()
@@ -239,9 +244,9 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
                     # update permutations if they join
                     cur_ind = set(permutationA)
                     all_ind = set(range(maxBlobs))
-                    missing = list(all_ind - cur_ind)
+                    missing = sorted(list(all_ind - cur_ind))
 
-                    df.set_value(0,'permutation',applyPermutation(maxBlobs, s, permutationA, missing))
+                    df.set_value(0,'permutation',applyPermutation(maxBlobs, s, permutationA, missing)[0])
                     counter = 1
 
                     # while (sum(df.loc[counter,'permutation'] >= 0) == df.loc[counter,'numberOfBlobs'] and counter<len(df)):
@@ -264,18 +269,18 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
                         #     break
                         cur_ind = set(indivA)
                         all_ind = set(range(maxBlobs))
-                        missing = list(all_ind - cur_ind)
+                        missing = sorted(list(all_ind - cur_ind))
 
                         # df.loc[counter, 'permutation'] = applyPermutation(maxBlobs, permutation, indivA, missing)
-                        df.set_value(counter,'permutation',applyPermutation(maxBlobs, permutation, indivA, missing))
+                        df.set_value(counter,'permutation',applyPermutation(maxBlobs, permutation, indivA, missing)[0])
 
-                        if trueFragment and sum(indivA>=0) <= len(pixelsA):
-
-                            if missing and missing[-1] == numAnimals:
-                                missing[-1] = -1
-
-                            tofill = np.where(indivA == -1)[0][:len(missing)]
-                            df.loc[counter-1,'permutation'][tofill] = missing
+                        # if trueFragment and sum(indivA>=0) <= len(pixelsA):
+                        #
+                        #     if missing and missing[-1] == numAnimals:
+                        #         missing[-1] = -1
+                        #
+                        #     tofill = np.where(indivA == -1)[0][:len(missing)]
+                        #     df.loc[counter-1,'permutation'][tofill] = missing
 
                         # if counter == 47:
                         #     print df.loc[counter-1:counter+1]
@@ -306,7 +311,7 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
         fragmentsIndicesB[-1][1] = globalFrameCounter
 
     globalFragments.append(fragmentsIndicesB[-1])
-    print 'Global fragments, ', globalFragments
+    # print 'Global fragments, ', globalFragments
     globalFragments = [map(int,globalFragment) for globalFragment in globalFragments]
     globalFragments = sorted(globalFragments, key=lambda x: x[1]-x[0],reverse=True)
     ### to be changed in the parallel version of this function
@@ -327,11 +332,12 @@ def fragment(paths):
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
     fragmentsIndices = Parallel(n_jobs=num_cores)(delayed(fragmentator)(path, numAnimals, maxNumBlobs) for path in paths)
+    # print 'fragmentIndices (before sorting), ', fragmentsIndices
     fragmentsIndices = sorted(fragmentsIndices, key=lambda x: x[0])
     # print fragmentsIndices
-
+    # print 'fragmentsIndices (before joiningSegments), ', fragmentsIndices
     globalFragments = segmentJoiner(paths, fragmentsIndices, numAnimals, maxNumBlobs)
-    # print globalFragments
+    print globalFragments
 
 # def playFragmentation(paths):
 #     """

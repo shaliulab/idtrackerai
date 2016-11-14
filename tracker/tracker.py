@@ -1,6 +1,6 @@
 import sys
-sys.path.append('../utils')
-sys.path.append('../CNN')
+sys.videoPath.append('../utils')
+sys.videoPath.append('../CNN')
 
 from py_utils import *
 from video_utils import *
@@ -238,12 +238,12 @@ def idProbsUpdated(idProbs,ProbsArray):
 
     return ProbsArray
 
-# def createFolder(path, name = '', timestamp = False):
+# def createFolder(videoPath, name = '', timestamp = False):
 #
 #     ts = '_{:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
 #     name = name + ts
 #
-#     folder = os.path.dirname(path)
+#     folder = os.videoPath.dirname(videoPath)
 #     folderName = folder +'/'+ name + '/segmentation'
 #     os.makedirs(folderName) # create a folder
 #
@@ -251,47 +251,47 @@ def idProbsUpdated(idProbs,ProbsArray):
 #     # os.makedirs(folderName) # create a folder
 #
 #     print folderName + ' has been created'
-def getCkptPath(path,ckptName,train=0,time=0,ckptTime=0,):
+def getCkptvideoPath(videoPath,ckptName,train=0,time=0,ckptTime=0,):
     """
     train = 0 (id assignation)
     train = 1 (first fine-tuning)
     train = 2 (further tuning from previons checkpoint with more references)
     """
 
-    video = os.path.basename(path)
-    folder = os.path.dirname(path)
-    filename, extension = os.path.splitext(video)
+    video = os.videoPath.basename(videoPath)
+    folder = os.videoPath.dirname(videoPath)
+    filename, extension = os.videoPath.splitext(video)
     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
     subFolder = subFolders[time]
 
     if train == 0:
         ckptSubFolders = natural_sort(glob.glob(subFolder +'/ckpt_' + ckptName + '_'+  '*/'))[::-1]
-        ckptPath = ckptSubFolders[ckptTime]
+        ckptvideoPath = ckptSubFolders[ckptTime]
 
-        print 'you will assign identities from the last checkpoint in ', ckptPath
+        print 'you will assign identities from the last checkpoint in ', ckptvideoPath
     elif train == 1:
         ts = '_{:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
         ckptName = ckptName + ts
-        ckptPath = subFolder + '/ckpt_' + ckptName
-        print 'model checkpoints will be saved in ', ckptPath
+        ckptvideoPath = subFolder + '/ckpt_' + ckptName
+        print 'model checkpoints will be saved in ', ckptvideoPath
 
     elif train == 2:
         print subFolder +'ckpt_' + ckptName + '_'+ '*/'
         ckptSubFolders = natural_sort(glob.glob(subFolder +'/ckpt_' + ckptName + '_' + '*/'))[::-1]
         print ckptSubFolders
-        ckptPath = ckptSubFolders[ckptTime]
-        print 'you will keep training from the last checkpoint in ', ckptPath
+        ckptvideoPath = ckptSubFolders[ckptTime]
+        print 'you will keep training from the last checkpoint in ', ckptvideoPath
 
-    return ckptPath
+    return ckptvideoPath
 
 # if False:
 if __name__ == '__main__':
 
     # prep for args
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', default = '', type = str)
-    parser.add_argument('--ckpt_folder_name', default = "", type= str)
-    parser.add_argument('--loadCkpt_folder', default = "../CNN/ckpt_Train_30indiv_36dpf_22000_transfer", type = str)
+    parser.add_argument('--videoPath', default = '', type = str) # videovideoPath
+    parser.add_argument('--ckpt_folder_name', default = "", type= str) # where to save the fine tuned model
+    parser.add_argument('--loadCkpt_folder', default = "../CNN/ckpt_Train_30indiv_36dpf_22000_transfer", type = str) # where to load the model
     parser.add_argument('--num_epochs', default = 50, type = int)
     parser.add_argument('--batch_size', default = 50, type = int)
     parser.add_argument('--learning_rate', default = 0.001, type= float)
@@ -300,7 +300,7 @@ if __name__ == '__main__':
 
     np.set_printoptions(precision=2)
     # read args
-    path = args.path
+    videoPath = args.videoPath
     ckptName = args.ckpt_folder_name
     loadCkpt_folder = args.loadCkpt_folder
     batch_size = args.batch_size
@@ -308,9 +308,9 @@ if __name__ == '__main__':
     lr = args.learning_rate
     train = args.train
     print 'Loading stuff'
-    fragments = loadFile(path, 'fragments', time=0)
-    portraits = loadFile(path, 'portraits', time=0)
-    videoInfo = loadFile(path, 'videoInfo', time=0)
+    fragments = loadFile(videoPath, 'fragments', time=0)
+    portraits = loadFile(videoPath, 'portraits', time=0)
+    videoInfo = loadFile(videoPath, 'videoInfo', time=0)
     info = info.to_dict()[0]
     numFrames =  len(portraits)
     numAnimals = videoInfo['numAnimals']
@@ -319,7 +319,7 @@ if __name__ == '__main__':
     ''' Fine tuning with the longest fragment '''
     if train == 1 or train == 2:
 
-        ckpt_dir = getCkptPath(path,ckptName,train,time=0,ckptTime=0)
+        ckpt_dir = getCkptvideoPath(videoPath,ckptName,train,time=0,ckptTime=0)
         imsize,\
         X_train, Y_train,\
         X_val, Y_val = DataFirstFineTuning(fragments[0], portraits,numAnimals)
@@ -348,7 +348,7 @@ if __name__ == '__main__':
 
     ''' Loop to assign identities to '''
     if train == 0:
-        ckpt_dir = getCkptPath(path,ckptName,train,time=0,ckptTime=0)
+        ckpt_dir = getCkptvideoPath(videoPath,ckptName,train,time=0,ckptTime=0)
         Ids = []
         AllIds = []
         idProbs = []
@@ -404,7 +404,7 @@ if __name__ == '__main__':
             'fragmentIds':IdsFragAssigned,
             'probFragmentIds':ProbsFragAssigned}
 
-        saveFile(path, IdsStatistics, 'statistics', time = 0)
+        saveFile(videoPath, IdsStatistics, 'statistics', time = 0)
         # filename = filename.split('_')[0]
         # pickle.dump(IdsStatistics, open(folder +'/'+ filename + '_statistics' + '.pkl',"wb"))
 

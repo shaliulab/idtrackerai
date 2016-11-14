@@ -61,11 +61,12 @@ def smoother(contour):
 
     X_smooth = np.convolve(X,G[0],mode='same')
     Y_smooth = np.convolve(Y,G[0],mode='same')
-    X_smooth = X_smooth[np.floor(window/2):-np.ceil(window/2)]
-    Y_smooth = Y_smooth[np.floor(window/2):-np.ceil(window/2)]
+    X_smooth = X_smooth[int(np.floor(window/2)):-int(np.ceil(window/2))]
+    Y_smooth = Y_smooth[int(np.floor(window/2)):-int(np.ceil(window/2))]
     return X_smooth, Y_smooth
 
 def smooth_resample(contour,smoothFlag = False):
+    # print 'smoothing-resampling arclength...'
     if smoothFlag:
         x,y  = smoother(contour)
         # x = smooth(contour[:,0],8)
@@ -78,13 +79,14 @@ def smooth_resample(contour,smoothFlag = False):
     y_new = y
 
     # M = 1000
-    M = 1000
+    M = 1500 ### NOTE we change it to 1500 otherwise was getting trapped inside of the while loop
     t = np.linspace(0, len(x_new), M)
     x = np.interp(t, np.arange(len(x_new)), x_new)
     y = np.interp(t, np.arange(len(y_new)), y_new)
     # tol = .1
     tol = .1
     i, idx = 0, [0]
+    # print 'inside the loop'
     while i < len(x):
         total_dist = 0
         for j in range(i+1, len(x)):
@@ -92,6 +94,7 @@ def smooth_resample(contour,smoothFlag = False):
             if total_dist > tol:
                 idx.append(j)
                 break
+
         i = j+1
 
     xn = x[idx]
@@ -170,20 +173,20 @@ def getEncompassingIndices(frameIndices, num_segmnent, goodIndices):
 
     return goodFrameIndices, frameSegment.index.tolist()
 
-def getMFandC(path, frameIndices):
+def getMFandC(videoPath, frameIndices):
     """
-    path: path to dataframe
+    videoPath: videoPath to dataframe
     generate a list of arrays containing miniframes and centroids detected in
-    path at this point we can already discard miniframes that does not belong
+    videoPath at this point we can already discard miniframes that does not belong
     to a specific fragments
     """
     # get number of segment
-    # video = os.path.basename(path)
+    # video = os.videoPath.basename(videoPath)
     # filename, extension = os.path.splitext(video)
     # numSegment = int(filename.split('_')[-1])
     #load dataframe
-    # df = pd.read_pickle(path)
-    df, numSegment = loadFile(path, 'segmentation', time=0)
+    # df = pd.read_pickle(videoPath)
+    df, numSegment = loadFile(videoPath, 'segmentation', time=0)
     # print 'you loaded it!'
     # print df
     # check if permutations are NaN (i.e. the frame is not included in a fragment)
@@ -195,6 +198,7 @@ def getMFandC(path, frameIndices):
     miniframes = np.asarray(df.loc[:, 'miniFrames'])
     contours = np.asarray(df.loc[:, 'contours'])
     bkgSamples = np.asarray(df.loc[:,'bkgSamples'])
+    areas = np.asarray(df.loc[:,'areas'])
 
     goodIndices = np.where(permutationsBool==True)[0]
     goodFrameIndices, segmentIndices = getEncompassingIndices(frameIndices, int(numSegment), goodIndices)
@@ -205,7 +209,7 @@ def getMFandC(path, frameIndices):
     # bkgSamples = bkgSamples[goodIndices]
     # permutations = permutations[goodIndices]
     # #
-    return boundingBoxes.tolist(), miniframes.tolist(), contours.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist()
+    return boundingBoxes.tolist(), miniframes.tolist(), contours.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist(), areas.tolist()
 
 def fillSquareFrame(square_frame,bkgSamps):
     bkgSamps = bkgSamps[bkgSamps > 150]
@@ -314,10 +318,10 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     # return portrait, curvature, cnt, maxCoord, sorted_locations
     return portrait
 
-def reaper(path, frameIndices):
+def reaper(videoPath, frameIndices):
     # print 'segment number ', i
-    print 'reaping', path
-    boundingboxes, miniframes, contours, bkgSamples, goodFrameIndices, segmentIndices, permutations = getMFandC(path,frameIndices)
+    print 'reaping', videoPath
+    boundingboxes, miniframes, contours, bkgSamples, goodFrameIndices, segmentIndices, permutations, areas = getMFandC(videoPath,frameIndices)
     # print 'loading done'
     miniframes = np.asarray(miniframes)
     # print 'miniframes are array'
@@ -333,7 +337,7 @@ def reaper(path, frameIndices):
         cnts = contours[counter]
         bkgSamps = bkgSamples[counter]
         for j, miniframe in enumerate(minif):
-            # print '----------------', j, counter, path
+            # print '----------------', j, counter, videoPath
             # print miniframe
             ### Uncomment to plot
             # cv2.imshow('frame', miniframe)
@@ -353,32 +357,67 @@ def reaper(path, frameIndices):
 
         AllPortraits.set_value(goodFrameIndices[counter], 'images', np.asarray(portraits))
         AllPortraits.set_value(goodFrameIndices[counter], 'permutations', permutations[counter])
+        AllPortraits.set_value(segmentIndices, 'areas', areas)
         # print counter
         counter += 1
-    print 'you just reaped', path
+    print 'you just reaped', videoPath
     return AllPortraits
 
-def portrait(paths):
-    frameIndices = loadFile(paths[0], 'frameIndices', time=0)
+def modelDiffArea(fragments,areas):
+    """
+    fragment: fragment where to stract the areas to cumpute the mean and std of the diffArea
+    areas: areas of all the blobs of the video
+    """
+    goodFrames = flatten([list(range(fragment[0],fragment[1])) for fragment in fragments])
+    individualAreas = np.asarray(flatten(areas[goodFrames].tolist()))
+    meanArea = np.mean(individualAreas)
+    stdArea = np.std(individualAreas)
+    return meanArea, stdArea
+
+def portrait(videoPaths):
+    frameIndices = loadFile(videoPaths[0], 'frameIndices', time=0)
 
     num_cores = multiprocessing.cpu_count()
-    # paths = [paths[5]]
+    # videoPaths = [videoPaths[5]]
     # num_cores = 1
-    allPortraits = Parallel(n_jobs=num_cores)(delayed(reaper)(path,frameIndices) for path in paths)
+    allPortraits = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath,frameIndices) for videoPath in videoPaths)
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)
-    path = paths[0]
-    # folder = os.path.dirname(path)
-    # video = os.path.basename(path)
-    # filename, extension = os.path.splitext(video)
+    videoPath = videoPaths[0]
+    # folder = os.videoPath.dirname(videoPath)
+    # video = os.videoPath.basename(videoPath)
+    # filename, extension = os.videoPath.splitext(video)
     # filename = filename.split('_')[0]
     # allPortraits.to_pickle(folder +'/'+ filename + '_portraits' + '.pkl')
 
-    saveFile(path, allPortraits, 'portraits', time = 0)
+    saveFile(videoPath, allPortraits, 'portraits', time = 0)
+
+    fragments = loadFile(videoPath, 'fragments', time=0)
+    fragments = np.asarray(fragments)
+    meanArea, stdArea = modelDiffArea(fragments, allPortraits.areas)
+    videoInfo = loadFile(videoPath, 'videoInfo', time = 0)
+    videoInfo = videoInfo.to_dict()[0]
+    videoInfo['meanIndivArea'] = meanArea
+    videoInfo['stdIndivArea'] = stdArea
+    saveFile(videoPath,videoInfo,'videoInfo',time=0)
+
+
+
+# videoPath = '../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
+# allPortraits = loadFile(videoPath,'portraits',time=0)
+# fragments = loadFile(videoPath, 'fragments', time=0)
+# fragments = np.asarray(fragments)
+# meanArea, stdArea = modelDiffArea(fragments, allPortraits.areas)
+# videoInfo = loadFile(videoPath, 'videoInfo', time = 0)
+# videoInfo = videoInfo.to_dict()[0]
+# videoInfo['meanIndivArea'] = meanArea
+# videoInfo['stdIndivArea'] = stdArea
+# saveFile(videoPath,videoInfo,'videoInfo',time=0)
+# print meanArea, stdArea
 
 # if __name__ == '__main__':
 #     # frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
 #     # frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
-#     # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-#     paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
-#     portrait(paths)
+#     # videoPaths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+#     videoPaths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+#     portrait(videoPaths)

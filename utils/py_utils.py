@@ -98,6 +98,15 @@ def scanFolder(path):
         paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
     return paths
 
+def get_spaced_colors(n):
+    max_value = 16581375 #255**3
+    interval = int(max_value / n)
+    colors = [hex(I)[2:].zfill(6) for I in range(100, max_value, interval)]
+    rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
+    black = (0., 0., 0.)
+    rgbcolorslist.insert(0, black)
+    return rgbcolorslist
+
 # def saveFile(path, variabletoSave, name, time = 0):
 #     """
 #     All the input are strings!!!
@@ -257,11 +266,14 @@ def copyExistentFiles(path, listNames, time=1):
 
             else:
                 if name is 'fragmentation':
+                    fullFileName = srcSubFolder + '/fragments.hdf5'
+                    if os.path.isfile(fullFileName):
+                        shutil.copy(fullFileName, dstSubFolder)
                     segDirname = srcSubFolder + 'segmentation'
                     if os.path.isdir(segDirname):
                         srcFiles = os.listdir(segDirname)
                         if os.path.isdir(segDirname) and len(srcFiles)!=0:
-                            df,_ = loadFile(path, 'segmentation', time=0)
+                            df,_ = loadFile(path, 'segmentation', time=1)
                             if 'permutation' in list(df.columns):
                                 existentFile[name] = '1'
 
@@ -393,6 +405,32 @@ def displayError(title, message):
     window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
     tkMessageBox.showerror(title=title,message=message,parent=window)
 
+def getMultipleInputs(winTitle, inputTexts):
+    #Gui Things
+    def retrieve_inputs():
+        global inputs
+        inputs = [var.get() for var in variables]
+        window.destroy()
+        return inputs
+    window = Tk()
+    window.title(winTitle)
+    variables = []
+
+
+    for inputText in inputTexts:
+        text = Label(window, text =inputText)
+        guess = Entry(window)
+        variables.append(guess)
+        text.pack()
+        guess.pack()
+    finished = Button(text="ok", command=retrieve_inputs)
+    finished.pack()
+    window.mainloop()
+
+    return inputs
+
+# inputs = getMultipleInputs('ciccio',['p','ccio', 'pagliaccio'])
+# print inputs
 
 # a = 1
 # createFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi', 'test')
