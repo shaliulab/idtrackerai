@@ -402,7 +402,6 @@ def portrait(videoPaths):
     saveFile(videoPath,videoInfo,'videoInfo',time=0)
 
 
-
 # videoPath = '../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
 # allPortraits = loadFile(videoPath,'portraits',time=0)
 # fragments = loadFile(videoPath, 'fragments', time=0)
