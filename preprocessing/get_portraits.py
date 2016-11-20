@@ -400,23 +400,3 @@ def portrait(videoPaths):
     videoInfo['meanIndivArea'] = meanArea
     videoInfo['stdIndivArea'] = stdArea
     saveFile(videoPath,videoInfo,'videoInfo',time=0)
-
-
-# videoPath = '../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
-# allPortraits = loadFile(videoPath,'portraits',time=0)
-# fragments = loadFile(videoPath, 'fragments', time=0)
-# fragments = np.asarray(fragments)
-# meanArea, stdArea = modelDiffArea(fragments, allPortraits.areas)
-# videoInfo = loadFile(videoPath, 'videoInfo', time = 0)
-# videoInfo = videoInfo.to_dict()[0]
-# videoInfo['meanIndivArea'] = meanArea
-# videoInfo['stdIndivArea'] = stdArea
-# saveFile(videoPath,videoInfo,'videoInfo',time=0)
-# print meanArea, stdArea
-
-# if __name__ == '__main__':
-#     # frameIndices = pd.read_pickle('../Conflict8/conflict3and4_frameIndices.pkl')
-#     # frameIndices = pd.read_pickle('../Cafeina5peces/Caffeine5fish_frameIndices.pkl')
-#     # videoPaths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-#     videoPaths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
-#     portrait(videoPaths)

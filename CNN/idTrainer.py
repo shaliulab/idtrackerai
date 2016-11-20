@@ -311,6 +311,8 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
             if stored_exception:
                 raise stored_exception[0], stored_exception[1], stored_exception[2]
 
+    return lossAccDict
+
 """
 Sample calls:
 Training:

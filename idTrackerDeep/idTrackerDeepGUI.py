@@ -5,12 +5,12 @@ sys.path.append('../preprocessing')
 sys.path.append('../tracker')
 
 from segmentation_ROIPreview import *
-from fragmentation import *
+from fragmentation2 import *
 from get_portraits import *
 from video_utils import *
 from py_utils import *
 from GUI_utils import *
-from tracker_forGUI import *
+from tracker_forGUI_2 import *
 
 import time
 import h5py
@@ -194,6 +194,9 @@ if __name__ == '__main__':
     num_epochs = 70 #int(inputs[2])
     lr = 0.001 #np.float32(inputs[3])
     train = 2 #int(inputs[4])
-    fineTuner(videoPath,ckptName,loadCkpt_folder,batch_size,num_epochs,lr,train)
+    lossAccDict = fineTuner(videoPath,ckptName,loadCkpt_folder,batch_size,num_epochs,lr,train)
+    print 'lossAccDict:, '
+    pprint(lossAccDict['indivValAcc'][-1])
+    indivValAcc = lossAccDict['indivValAcc'][-1]
     print 'Engering into the idAssigner...'
-    idAssigner(videoPath,ckptName,batch_size)
+    idAssigner(videoPath,ckptName,batch_size,indivValAcc)

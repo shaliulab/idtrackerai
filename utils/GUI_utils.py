@@ -4,7 +4,7 @@ sys.path.append('../utils')
 sys.path.append('../preprocessing')
 
 from segmentation_ROIPreview import *
-from fragmentation import *
+from fragmentation2 import *
 from get_portraits import *
 from video_utils import *
 from py_utils import *
@@ -382,7 +382,7 @@ Segmentation inspector
 #     cap.release()
 #     cv2.destroyAllWindows()
 
-def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, maxArea = 1000, minThreshold = 136, maxThreshold = 255, size = 1):
+def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, maxArea = 60000, minThreshold = 136, maxThreshold = 255, size = 1):
     numAnimals = getInput('Number of animals','Type the number of animals')
     numAnimals = int(numAnimals)
     # print 'Ready to get the cap from the path'
@@ -666,7 +666,9 @@ def playFragmentation(paths,visualize = False):
             return 'q'
 
         start = cv2.getTrackbarPos('start','IdPlayerFragmentation')
-        return raw_input('Which segment do you want to inspect?')
+        numSegment = getInput('Segment number','Type the segment to be visualized')
+        return numSegment
+        # return raw_input('Which segment do you want to inspect?')
 
     finish = False
     while not finish:
