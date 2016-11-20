@@ -1,14 +1,16 @@
 import os
-import tensorflow as tf
-import numpy as np
-from tf_utils import *
 import sys
 if 'linux' in sys.platform:
     import matplotlib
     matplotlib.use('GtkAgg')
+
+from tf_utils import *
+from py_utils import *
+
 import matplotlib.pyplot as plt
 import warnings
-from py_utils import *
+import tensorflow as tf
+import numpy as np
 import numpy.matlib as npm
 from pprint import *
 from tensorflow.python.platform import gfile

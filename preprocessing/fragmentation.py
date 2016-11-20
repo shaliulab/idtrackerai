@@ -1,7 +1,9 @@
 import cv2
 import sys
 sys.path.append('../utils')
+
 from py_utils import *
+
 import time
 import numpy as np
 from matplotlib import pyplot as plt
@@ -225,29 +227,20 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
         pixelsB = df.iloc[0]['pixels']
         numFramesB = len(df)
         numBlobsB = len(pixelsB)
-        # print sum(permutationA >= 0), permutationA
 
-        '''
-        ************ already from here it is wrong
-        '''
-        print 'permutationA, ', permutationA
         # permutation if a list of indices from 0 to numAminals-1 and -1.
         # if there are not as many positive numbers as numAnimals, it means that in the last frame
         # there was a crossing or there was an extra blob. This means that the last frame of segmA is not included
         # in any fragment and it does not make sense trying to join the last complete fragment of segmA with the first
         # complete fragment of segmB. However it still make sense propagating the permutation for the individual fragments.
         if sum(permutationA >= 0) != numAnimals: # if the last frame of the previous segment is not good (the permutation is NaN)
-            print 'i dont give a fuck of joining'
+            print 'they cannot join'
             globalFragments.append(fragmentsIndicesA[-1])
             if math.isnan(fragmentsIndicesB[0][0]):
                 fragmentsIndicesB[0][0] = globalFrameCounter
 
             globalFragments += fragmentsIndicesB[:-1]
-            fragmentsIndicesA = fragmentsIndicesB
-            permutationA = df.iloc[-1]['permutation'] # I save the permutation of the last frame of the current segment
-            pixelsA = df.iloc[-1]['pixels']
-            numFramesA = numFramesB
-            globalFrameCounter += numFramesA
+
         else: # if the last frame of the previous segment is good ()
             print permutationB, numBlobsB, sum(permutationB >= 0)
             # print '===================================================='
@@ -255,89 +248,60 @@ def segmentJoiner(paths,fragmentsIndices,numAnimals, maxNumBlobs):
                 trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
                 print 'they could join'
                 if trueFragment:
-                    # print 'they join'
+                    print 'they join'
                     newFragment = [fragmentsIndicesA[-1][0],fragmentsIndicesB[0][1]]
 
                     globalFragments.append(newFragment)
                     globalFragments += fragmentsIndicesB[1:-1]
-                    # update permutations if they join
-                    cur_ind = set(permutationA)
-                    all_ind = set(range(maxBlobs))
-                    missing = sorted(list(all_ind - cur_ind))
 
-                    df.set_value(0,'permutation',applyPermutation(maxBlobs, s, permutationA, missing)[0])
-                    counter = 1
-
-                    # while (sum(df.loc[counter,'permutation'] >= 0) == df.loc[counter,'numberOfBlobs'] and counter<len(df)):
-                    while counter<len(df):
-                        # print counter
-                        # print 'Progapagating permutation...'
-                        pixelsA = df.loc[counter-1,'pixels']
-                        pixelsB = df.loc[counter,'pixels']
-                        indivA = df.loc[counter-1, 'permutation']
-                        indivB = df.loc[counter, 'permutation']
-                        # print numAnimals
-                        # print len(pixelsA)
-                        # print len(pixelsB)
-                        trueFragment, permutation, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
-                        # if counter == 47:
-                        #     print 'permutation, ', s
-                        #     print 'overlapMat, ',
-                        #     print overlapMat
-                        # if len(s) != numAnimals:
-                        #     break
-                        cur_ind = set(indivA)
-                        all_ind = set(range(maxBlobs))
-                        missing = sorted(list(all_ind - cur_ind))
-
-                        # df.loc[counter, 'permutation'] = applyPermutation(maxBlobs, permutation, indivA, missing)
-                        df.set_value(counter,'permutation',applyPermutation(maxBlobs, permutation, indivA, missing)[0])
-
-                        # if trueFragment and sum(indivA>=0) <= len(pixelsA):
-                        #
-                        #     if missing and missing[-1] == numAnimals:
-                        #         missing[-1] = -1
-                        #
-                        #     tofill = np.where(indivA == -1)[0][:len(missing)]
-                        #     df.loc[counter-1,'permutation'][tofill] = missing
-
-                        # if counter == 47:
-                        #     print df.loc[counter-1:counter+1]
-                        # df.set_value(counter,'permutation',indivA[s])
-                        counter += 1
                 else:
+                    print 'they do not join'
                     fragmentsIndicesB[0][0] = globalFrameCounter + 1
                     globalFragments += fragmentsIndicesB[:-1]
                     fragmentsIndicesA[-1][1] = globalFrameCounter-1
                     globalFragments.append(fragmentsIndicesA[-1])
 
-            # update segment A
-            fragmentsIndicesA = fragmentsIndicesB
-            permutationA = df.iloc[-1]['permutation'] # I save the permutation of the last frame of the current segment
-            pixelsA = df.iloc[-1]['pixels']
-            numFramesA = numFramesB
-            numBlobsA = numBlobsB
-            globalFrameCounter += numFramesA
-            #save
-            saveFile(paths[i], df, 'segment', time = 0)
-            # video = os.path.basename(paths[i])
-            # filename, extension = os.path.splitext(video)
-            # folder = os.path.dirname(paths[i])
-            # df.to_pickle(folder +'/'+ filename + '.pkl')
+        # update permutations
+        print 'Updating permutations...'
+        trueFragment, permutation, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
+        cur_ind = set(permutationA)
+        all_ind = set(range(maxBlobs))
+        missing = sorted(list(all_ind - cur_ind))
+
+        df.set_value(0,'permutation',applyPermutation(maxBlobs, permutation, permutationA, missing)[0])
+        counter = 1
+        # while (sum(df.loc[counter,'permutation'] >= 0) == df.loc[counter,'numberOfBlobs'] and counter<len(df)):
+        while counter<len(df):
+            # print counter
+            # print 'Progapagating permutation...'
+            pixelsA = df.loc[counter-1,'pixels']
+            pixelsB = df.loc[counter,'pixels']
+            indivA = df.loc[counter-1, 'permutation']
+            indivB = df.loc[counter, 'permutation']
+
+            trueFragment, permutation, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
+            cur_ind = set(indivA)
+            all_ind = set(range(maxBlobs))
+            missing = sorted(list(all_ind - cur_ind))
+
+            df.set_value(counter,'permutation',applyPermutation(maxBlobs, permutation, indivA, missing)[0])
+            counter += 1
+
+        fragmentsIndicesA = fragmentsIndicesB
+        permutationA = df.iloc[-1]['permutation'] # I save the permutation of the last frame of the current segment
+        pixelsA = df.iloc[-1]['pixels']
+        numFramesA = numFramesB
+        globalFrameCounter += numFramesA
+        saveFile(paths[i], df, 'segment', time = 0)
 
     if isinstance(fragmentsIndicesB[-1][1],float):
-        # print 'pass last condition'
         fragmentsIndicesB[-1][1] = globalFrameCounter
 
     globalFragments.append(fragmentsIndicesB[-1])
-    # print 'Global fragments, ', globalFragments
+    print 'Global fragments, ', globalFragments
     globalFragments = [map(int,globalFragment) for globalFragment in globalFragments]
     globalFragments = sorted(globalFragments, key=lambda x: x[1]-x[0],reverse=True)
-    ### to be changed in the parallel version of this function
     saveFile(paths[0], globalFragments, 'fragments', time = 0)
-    # filename = folder +'/'+ filename.split('_')[0] + '_segments.pkl'
-    # pickle.dump(globalFragments, open(filename, 'wb'))
-
     return globalFragments
 
 def fragment(paths):
@@ -357,106 +321,3 @@ def fragment(paths):
     print 'fragmentsIndices (before joiningSegments), ', fragmentsIndices
     globalFragments = segmentJoiner(paths, fragmentsIndices, numAnimals, maxNumBlobs)
     print globalFragments
-
-# def playFragmentation(paths):
-#     """
-#     IdInspector
-#     """
-#     info = loadFile(paths[0], 'videoInfo', time=0)
-#     width = info['width']
-#     height = info['height']
-#     numAnimals = info['numAnimals']
-#     maxNumBlobs = info['maxNumBlobs']
-#     numSegment = 0
-#     # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-#     # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
-#     path = paths[numSegment]
-#
-#     def IdPlayerFragmentation(path,numAnimals, width, height):
-#         df,sNumber = loadFile(path, 'segmentation', time=0)
-#         # video = os.path.basename(path)
-#         # filename, extension = os.path.splitext(video)
-#         # sNumber = int(filename.split('_')[-1])
-#         # folder = os.path.dirname(path)
-#         # df = pd.read_pickle(folder +'/'+ filename + '.pkl')
-#         print 'Visualizing video %s' % path
-#         # print df
-#         cap = cv2.VideoCapture(path)
-#         numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-#         # width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-#         # height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-#
-#         def onChange(trackbarValue):
-#             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-#             centroids = df.loc[trackbarValue,'centroids']
-#             pixelsA = df.loc[trackbarValue-1,'pixels']
-#             pixelsB = df.loc[trackbarValue,'pixels']
-#             permutation = df.loc[trackbarValue,'permutation']
-#             print '------------------------------------------------------------'
-#             print 'previous frame, ', str(trackbarValue-1), ', permutation, ', df.loc[trackbarValue-1,'permutation']
-#             print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
-#             trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
-#             print 'overlapMat, '
-#             print overlapMat
-#             print 'permutation, ', s
-#             # if sNumber == 1 and trackbarValue > 100:
-#             #     trueFragment, s = computeFrameIntersection(df.loc[trackbarValue-1,'pixels'],df.loc[trackbarValue,'pixels'],5)
-#             #     print trueFragment, s
-#             #     result = df.loc[trackbarValue-1,'permutation'][s]
-#             #     print 'result, ', result
-#             #Get frame from video file
-#             ret, frame = cap.read()
-#             #Color to gray scale
-#             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-#             font = cv2.FONT_HERSHEY_SIMPLEX
-#
-#             # Plot segmentated blobs
-#             for i, pixel in enumerate(pixelsB):
-#                 px = np.unravel_index(pixel,(height,width))
-#                 frame[px[0],px[1]] = 255
-#
-#             # plot numbers if not crossing
-#             # if not isinstance(permutation,float):
-#                 # print 'pass'
-#             for i, centroid in enumerate(centroids):
-#                 cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
-#
-#             cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
-#
-#             # Visualization of the process
-#             cv2.imshow('IdPlayerFragmentation',frame)
-#             pass
-#
-#         cv2.namedWindow('IdPlayerFragmentation')
-#         cv2.createTrackbar( 'start', 'IdPlayerFragmentation', 0, numFrame-1, onChange )
-#         # cv2.createTrackbar( 'end'  , 'IdPlayer', numFrame-1, numFrame, onChange )
-#
-#         onChange(1)
-#         cv2.waitKey(0)
-#
-#         start = cv2.getTrackbarPos('start','IdPlayerFragmentation')
-#         return raw_input('Which segment do you want to inspect?')
-#
-#     finish = False
-#     while not finish:
-#         # print 'I am here', numSegment
-#         numSegment = IdPlayerFragmentation(paths[int(numSegment)],numAnimals, width, height)
-#         if numSegment == 'q':
-#             finish = True
-#     cv2.waitKey(1)
-#     cv2.destroyAllWindows()
-#     cv2.waitKey(1)
-
-
-
-
-# if __name__ == '__main__':
-#
-#     # videoPath = '../Conflict8/conflict3and4_20120316T155032_1.avi'
-#     videoPath = '../data/library/33dpf/group_1/group_1.avi'
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument('--path', default = videoPath, type = str)
-#     args = parser.parse_args()
-#     paths = scanFolder(args.path)
-#     fragment(paths)
-#     play(paths)

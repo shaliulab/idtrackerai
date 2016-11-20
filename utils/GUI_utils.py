@@ -3,8 +3,8 @@ import sys
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
 
-from segmentation_ROIPreview import *
-from fragmentation2 import *
+from segmentation import *
+from fragmentation import *
 from get_portraits import *
 from video_utils import *
 from py_utils import *

@@ -4,7 +4,7 @@ sys.path.append('../utils')
 
 from py_utils import *
 from video_utils import *
-from threshold_GUI import *
+# from threshold_GUI import *
 
 import time
 import numpy as np
@@ -101,55 +101,3 @@ def segment(paths, numAnimals,
     allSegments = sorted(allSegments, key=lambda x: x[0][0])
     generateVideoTOC(allSegments, paths[0])
     collectAndSaveVideoInfo(paths[0], height, width, numAnimals, num_cores, minThreshold,maxThreshold,maxArea,maxNumBlobs)
-
-# if __name__ == '__main__':
-#
-#     # videoPath = '../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
-#     # videoPath = '../data/library/25dpf/group_1_camera_1/group_1_camera_1_20160519T103108_1.avi'
-#     # videoPath = '../Conflict8/conflict3and4_20120316T155032_1.avi'
-#     videoPath = '../data/library/33dpf/group_1/group_1.avi'
-#     parser = argparse.ArgumentParser()
-#
-#     parser.add_argument('--path', default = videoPath, type = str)
-#     parser.add_argument('--folder_name', default = '', type = str)
-#     parser.add_argument('--bkg_subtraction', default = 1, type = int)
-#     parser.add_argument('--ROI_selection', default = 1, type = int)
-#     parser.add_argument('--Eq_image', default = 0, type = int)
-#     parser.add_argument('--min_th', default =60, type = int)
-#     parser.add_argument('--max_th', default = 255, type = int)
-#     parser.add_argument('--min_area', default = 250, type = int)
-#     parser.add_argument('--max_area', default = 50000, type = int)
-#     parser.add_argument('--num_animals', default = 8, type = int)
-#     args = parser.parse_args()
-#
-#     ''' Parameters for the segmentation '''
-#     numAnimals = args.num_animals
-#     useBkg = args.bkg_subtraction
-#     selectROI = args.ROI_selection
-#     EQ = args.Eq_image
-#     minThreshold = args.min_th
-#     maxThreshold = args.max_th
-#     minArea = args.min_area # in pixels
-#     maxArea = args.max_area # in pixels
-#
-#     ''' Path to video/s '''
-#     paths = scanFolder(args.path)
-#     name  = args.folder_name
-#
-#     # prevAndSegm(paths, useBkg, selectROI,name,numAnimals,EQ)
-#
-#     playPreview(paths, useBkg, selectROI)
-#     #load parameters after preview
-#     preprocParams= loadFile(paths[0], 'preprocparams',0)
-#     minThreshold = preprocParams['minThreshold']
-#     maxThreshold = preprocParams['maxThreshold']
-#     minArea = preprocParams['minArea']
-#     maxArea = preprocParams['maxArea']
-#     mask= loadFile(paths[0], 'mask',0)
-#     centers= loadFile(paths[0], 'centers',0)
-#     bkg = loadFile(paths[0], 'bkg', 0)
-#
-#     segment(paths, name, numAnimals,
-#             mask, centers, useBkg, bkg, EQ,
-#             minThreshold, maxThreshold,
-#             minArea, maxArea)

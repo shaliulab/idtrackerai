@@ -1,7 +1,9 @@
 import cv2
 import sys
 sys.path.append('../utils')
+
 from py_utils import *
+
 import numpy as np
 from matplotlib import pyplot as plt
 from Tkinter import *

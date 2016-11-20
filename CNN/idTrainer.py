@@ -1,16 +1,18 @@
 import os
 import sys
 sys.path.append('../utils')
-import tensorflow as tf
+
 from tf_utils import *
 from input_data_cnn import *
 from cnn_utils import *
+from cnn_architectures import *
+
+import tensorflow as tf
 import argparse
 import h5py
 import numpy as np
 from checkCheck import *
 from pprint import *
-from cnn_architectures import *
 import warnings
 
 def _add_loss_summary(loss):
