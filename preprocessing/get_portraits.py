@@ -175,21 +175,20 @@ def getEncompassingIndices(frameIndices, num_segmnent, goodIndices):
 
     return goodFrameIndices, frameSegment.index.tolist()
 
-def getMFandC(videoPath, frameIndices):
+def getMFandC(path, frameIndices):
     """
-    videoPath: videoPath to dataframe
+    path: path to dataframe
     generate a list of arrays containing miniframes and centroids detected in
-    videoPath at this point we can already discard miniframes that does not belong
+    path at this point we can already discard miniframes that does not belong
     to a specific fragments
     """
     # get number of segment
-    # video = os.videoPath.basename(videoPath)
+    # video = os.path.basename(path)
     # filename, extension = os.path.splitext(video)
     # numSegment = int(filename.split('_')[-1])
     #load dataframe
-    # df = pd.read_pickle(videoPath)
-    df, numSegment = loadFile(videoPath, 'segmentation', time=0)
-    # print 'you loaded it!'
+    # df = pd.read_pickle(path)
+    df, numSegment = loadFile(path, 'segmentation', time=0)
     # print df
     # check if permutations are NaN (i.e. the frame is not included in a fragment)
     permutationsBool = np.asarray(df['permutation'].notnull())
@@ -198,9 +197,8 @@ def getMFandC(videoPath, frameIndices):
     permutations = np.asarray(df['permutation'])
     boundingBoxes = np.asarray(df.loc[:, 'boundingBoxes'])
     miniframes = np.asarray(df.loc[:, 'miniFrames'])
-    contours = np.asarray(df.loc[:, 'contours'])
+    centroids = np.asarray(df.loc[:, 'centroids'])
     bkgSamples = np.asarray(df.loc[:,'bkgSamples'])
-    areas = np.asarray(df.loc[:,'areas'])
 
     goodIndices = np.where(permutationsBool==True)[0]
     goodFrameIndices, segmentIndices = getEncompassingIndices(frameIndices, int(numSegment), goodIndices)
@@ -211,7 +209,48 @@ def getMFandC(videoPath, frameIndices):
     # bkgSamples = bkgSamples[goodIndices]
     # permutations = permutations[goodIndices]
     # #
-    return boundingBoxes.tolist(), miniframes.tolist(), contours.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist(), areas.tolist()
+    return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist()
+
+# def getEncompassingIndices(frameIndices, num_segmnent, goodIndices):
+#     """
+#     frameIndices = dataframe containing the list of frame per segment
+#     num_segment
+#     goodIndices = indices in which the permutation is defined (non-crossing and overlapping)
+#     """
+#     frameSegment = frameIndices.loc[frameIndices.loc[:,'segment']==num_segmnent]
+#     goodFrameIndices = frameSegment.iloc[goodIndices].index.tolist()
+#
+#     return goodFrameIndices, frameSegment.index.tolist()
+#
+# def getMFandC(videoPath, frameIndices):
+#     """
+#     videoPath: videoPath to dataframe
+#     generate a list of arrays containing miniframes and centroids detected in
+#     videoPath at this point we can already discard miniframes that does not belong
+#     to a specific fragments
+#     """
+#     # get number of segment
+#     # video = os.videoPath.basename(videoPath)
+#     # filename, extension = os.path.splitext(video)
+#     # numSegment = int(filename.split('_')[-1])
+#     #load dataframe
+#     # df = pd.read_pickle(videoPath)
+#
+#     # print 'you loaded it!'
+#     # print df
+#     # check if permutations are NaN (i.e. the frame is not included in a fragment)
+#
+#     #generate a lists of "admissible" miniframes and centroids
+#     df, numSegment = loadFile(videoPath, 'segmentation', time=0)
+#     boundingBoxes = np.asarray(df.loc[:, 'boundingBoxes'])
+#     miniframes = np.asarray(df.loc[:, 'miniFrames'])
+#     contours = np.asarray(df.loc[:, 'contours'])
+#     bkgSamples = np.asarray(df.loc[:,'bkgSamples'])
+#
+#     segmentIndices = frameIndices.loc[frameIndices.loc[:,'segment']==num_segmnent]
+#     segmentIndices.index.tolist()
+#
+#     return boundingBoxes.tolist(), miniframes.tolist(), contours.tolist(), bkgSamples.tolist(), segmentIndices
 
 def fillSquareFrame(square_frame,bkgSamps):
     bkgSamps = bkgSamps[bkgSamps > 150]
@@ -323,12 +362,23 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
 def reaper(videoPath, frameIndices):
     # print 'segment number ', i
     print 'reaping', videoPath
-    boundingboxes, miniframes, contours, bkgSamples, goodFrameIndices, segmentIndices, permutations, areas = getMFandC(videoPath,frameIndices)
-    # print 'loading done'
+    df, numSegment = loadFile(videoPath, 'segmentation', time=0)
+    # print 'numSegment, ', numSegment
+    boundingboxes = np.asarray(df.loc[:, 'boundingBoxes'])
+    miniframes = np.asarray(df.loc[:, 'miniFrames'])
     miniframes = np.asarray(miniframes)
+    contours = np.asarray(df.loc[:, 'contours'])
+    bkgSamples = np.asarray(df.loc[:,'bkgSamples'])
+
+    segmentIndices = frameIndices.loc[frameIndices.loc[:,'segment']==int(numSegment)]
+    segmentIndices = segmentIndices.index.tolist()
+    # print segmentIndices
+    # boundingboxes, miniframes, contours, bkgSamples, segmentIndices = getMFandC(videoPath,frameIndices)
+    # print 'loading done'
+
     # print 'miniframes are array'
     """ Visualise """
-    AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images', 'permutations'])
+    AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images'])
     # print goodFrameIndices
     counter = 0
     while counter < len(miniframes):
@@ -357,48 +407,35 @@ def reaper(videoPath, frameIndices):
         #     break
         ########################################################################
 
-        AllPortraits.set_value(goodFrameIndices[counter], 'images', np.asarray(portraits))
-        AllPortraits.set_value(goodFrameIndices[counter], 'permutations', permutations[counter])
-        AllPortraits.set_value(segmentIndices, 'areas', areas)
-        # print counter
+        AllPortraits.set_value(segmentIndices[counter], 'images', portraits)
         counter += 1
     print 'you just reaped', videoPath
     return AllPortraits
 
-def modelDiffArea(fragments,areas):
-    """
-    fragment: fragment where to stract the areas to cumpute the mean and std of the diffArea
-    areas: areas of all the blobs of the video
-    """
-    goodFrames = flatten([list(range(fragment[0],fragment[1])) for fragment in fragments])
-    individualAreas = np.asarray(flatten(areas[goodFrames].tolist()))
-    meanArea = np.mean(individualAreas)
-    stdArea = np.std(individualAreas)
-    return meanArea, stdArea
+# def modelDiffArea(fragments,areas):
+#     """
+#     fragment: fragment where to stract the areas to cumpute the mean and std of the diffArea
+#     areas: areas of all the blobs of the video
+#     """
+#     goodFrames = flatten([list(range(fragment[0],fragment[1])) for fragment in fragments])
+#     individualAreas = np.asarray(flatten(areas[goodFrames].tolist()))
+#     meanArea = np.mean(individualAreas)
+#     stdArea = np.std(individualAreas)
+#     return meanArea, stdArea
 
-def portrait(videoPaths):
+def portrait(videoPaths, dfGlobal):
     frameIndices = loadFile(videoPaths[0], 'frameIndices', time=0)
-
+    # print 'frameIndices, ', frameIndices
     num_cores = multiprocessing.cpu_count()
-    # videoPaths = [videoPaths[5]]
     # num_cores = 1
     allPortraits = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath,frameIndices) for videoPath in videoPaths)
+
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)
-    videoPath = videoPaths[0]
-    # folder = os.videoPath.dirname(videoPath)
-    # video = os.videoPath.basename(videoPath)
-    # filename, extension = os.videoPath.splitext(video)
-    # filename = filename.split('_')[0]
-    # allPortraits.to_pickle(folder +'/'+ filename + '_portraits' + '.pkl')
+    if list(allPortraits.index) != list(dfGlobal.index):
+        raise ValueError('The list of indexes in allPortraits and dfGlobal should be the same')
+    dfGlobal['images'] = allPortraits
+    dfGlobal['identities'] = dfGlobal['permutations']
 
-    saveFile(videoPath, allPortraits, 'portraits', time = 0)
-
-    fragments = loadFile(videoPath, 'fragments', time=0)
-    fragments = np.asarray(fragments)
-    meanArea, stdArea = modelDiffArea(fragments, allPortraits.areas)
-    videoInfo = loadFile(videoPath, 'videoInfo', time = 0)
-    videoInfo = videoInfo.to_dict()[0]
-    videoInfo['meanIndivArea'] = meanArea
-    videoInfo['stdIndivArea'] = stdArea
-    saveFile(videoPath,videoInfo,'videoInfo',time=0)
+    saveFile(videoPaths[0], dfGlobal, 'portraits', time = 0)
+    return dfGlobal

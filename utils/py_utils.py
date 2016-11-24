@@ -8,6 +8,8 @@ import numpy as np
 import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import *
 import shutil
+import cPickle as pickle
+# import pickle
 
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):
@@ -162,7 +164,8 @@ def get_spaced_colors(n):
 #         filename = filename.split('_')[0] + '_' + name + '.hdf5'
 #         return pd.read_hdf(subFolder + filename )
 
-def saveFile(path, variabletoSave, name, time = 0):
+def saveFile(path, variabletoSave, name, time = 0, hdfpkl = 'hdf'):
+    import cPickle as pickle
     """
     All the input are strings!!!
     path: path to the first segment of the video
@@ -182,19 +185,28 @@ def saveFile(path, variabletoSave, name, time = 0):
     # we assume there's an underscore before the timestamp
     if name == 'segment' or name == 'segmentation':
         nSegment = filename.split('_')[-1]# and before the number of the segment
-        filename = 'segm_' + nSegment + '.hdf5'
-        variabletoSave.to_hdf(subFolder +'/segmentation/'+ filename,name)
+        if hdfpkl == 'hdf':
+            filename = 'segm_' + nSegment + '.hdf5'
+            variabletoSave.to_hdf(subFolder +'/segmentation/'+ filename,name)
+        elif hdfpkl == 'pkl':
+            filename = 'segm_' + nSegment + '.pkl'
+            pickle.dump(variabletoSave,open(subFolder +'/segmentation/'+ filename,'wb'))
     else:
-        filename = name + '.hdf5'
-        if isinstance(variabletoSave, dict):
-            variabletoSave = pd.DataFrame.from_dict(variabletoSave,orient='index')
-        elif not isinstance(variabletoSave, pd.DataFrame):
-            variabletoSave = pd.DataFrame(variabletoSave)
-        variabletoSave.to_hdf(subFolder + filename,name)
+        if hdfpkl == 'hdf':
+            filename = name + '.hdf5'
+            if isinstance(variabletoSave, dict):
+                variabletoSave = pd.DataFrame.from_dict(variabletoSave,orient='index')
+            elif not isinstance(variabletoSave, pd.DataFrame):
+                variabletoSave = pd.DataFrame(variabletoSave)
+            variabletoSave.to_hdf(subFolder + filename,name)
+        elif hdfpkl == 'pkl':
+            filename = name + '.pkl'
+            # filename = os.path.relpath(filename)
+            pickle.dump(variabletoSave,open(subFolder + filename,'wb'))
 
     print 'you just saved: ',subFolder + filename
 
-def loadFile(path, name, time=0):
+def loadFile(path, name, time=0, hdfpkl = 'hdf'):
     """
     loads a pickle. path is the path of the video, while name is a string in the
     set {}
@@ -212,11 +224,19 @@ def loadFile(path, name, time=0):
     if name  == 'segmentation':
         # print 'i am here'
         nSegment = filename.split('_')[-1]
-        filename = 'segm_' + nSegment + '.hdf5'
-        return pd.read_hdf(subFolder + 'segmentation/' + filename ), nSegment
+        if hdfpkl == 'hdf':
+            filename = 'segm_' + nSegment + '.hdf5'
+            return pd.read_hdf(subFolder + 'segmentation/' + filename ), nSegment
+        elif hdfpkl == 'pkl':
+            filename = 'segm_' + nSegment + '.pkl'
+            return pickle.load(open(subFolder + 'segmentation/' + filename) ,'rb'), nSegmen
     else:
-        filename = name + '.hdf5'
-        return pd.read_hdf(subFolder + filename )
+        if hdfpkl == 'hdf':
+            filename = name + '.hdf5'
+            return pd.read_hdf(subFolder + filename )
+        elif hdfpkl == 'pkl':
+            filename = name + '.pkl'
+            return pickle.load(open(subFolder + filename,'rb') )
 
 def copyExistentFiles(path, listNames, time=1):
     """
@@ -266,7 +286,7 @@ def copyExistentFiles(path, listNames, time=1):
 
             else:
                 if name is 'fragmentation':
-                    fullFileName = srcSubFolder + '/fragments.hdf5'
+                    fullFileName = srcSubFolder + '/fragments.pkl'
                     if os.path.isfile(fullFileName):
                         shutil.copy(fullFileName, dstSubFolder)
                     segDirname = srcSubFolder + 'segmentation'

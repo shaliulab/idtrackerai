@@ -21,14 +21,21 @@ import itertools
 import cPickle as pickle
 
 numSegment = 0
-paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+# paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
 
 frameIndices = loadFile(paths[0], 'frameIndices', time=0)
 videoInfo = loadFile(paths[0], 'videoInfo', time=0)
 videoInfo = videoInfo.to_dict()[0]
 stats = loadFile(paths[0], 'statistics', time=0)
 stats = stats.to_dict()[0]
+
+# IdsStatistics = {'blobIds':idSoftMaxAllVideo,
+#     'probBlobIds':PSoftMaxAllVIdeo,
+#     'fragmentIds':idLogP2FragAllVideo,
+#     'probFragmentIds':logP2FragAllVideo,
+#     'FreqFrag': freqFragAllVideo,
+#     'P1Frag': P1FragAllVideo}
 
 numAnimals = videoInfo['numAnimals']
 width = videoInfo['width']
@@ -41,9 +48,10 @@ allFragProbIds = stats['probFragmentIds']
 allIds = stats['blobIds']
 allProbIds = stats['probBlobIds']
 FreqFrag = stats['FreqFrag']
+normFreqFrag = stats[]'normFreqFragAllVideo']
 P1Frag = stats['P1Frag']
 
-statistics = [allFragProbIds, allIds, allProbIds, FreqFrag, P1Frag]
+statistics = [allFragProbIds, allIds, allProbIds, FreqFrag, normFreqFrag, P1Frag]
 
 def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,statistics):
     freq = statistics[3]
@@ -113,14 +121,14 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
                 # print centroid
                 cur_id = allIdentities[globalFrame,i]
                 if statIdentity:
-                    cur_stat = stat[globalFrame,i]+1
-                    fontSize = 1
+                    cur_stat = stat[globalFrame,i]
+                    fontSize = .5
                     text = str(cur_stat)
                     color = [0,0,0]
-                    thickness = 2
+                    thickness = 1
                 else:
                     # text = '{:.2f}'.format(np.round(stat[globalFrame,i,:],decimals=2))
-                    textList = ["%.2f" % float(np.round(s,decimals=2)) for s in stat[globalFrame,i,:]]
+                    textList = ["%.f" % float(np.round(s,decimals=2)) for s in stat[globalFrame,i,:]]
                     text = str.join(", ",textList)
                     text = '[ ' + text + ' ]'
                     fontSize = .5
@@ -184,7 +192,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
     # return raw_input('Which statistics do you wanna visualize (0,1,2,3)?')
 
 finish = False
-statNum = 3
+statNum = 4
 while not finish:
     print 'I am here', numSegment
     numSegment, statNum = IdPlayer(paths[int(numSegment)],allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics)

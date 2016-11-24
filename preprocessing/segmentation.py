@@ -92,12 +92,12 @@ def segment(paths, numAnimals,
 
     width, height = getVideoInfo(paths)
     # num_cores = 1
-    print 'Entering to the parallel loop'
+    print 'Entering to the parallel loop...\n'
     OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea) for path in paths)
     allSegments = [(out[0],out[1]) for out in OupPutParallel]
     # print allSegments
     maxNumBlobs = max([out[2] for out in OupPutParallel])
     # print maxNumBlobs
     allSegments = sorted(allSegments, key=lambda x: x[0][0])
-    generateVideoTOC(allSegments, paths[0])
-    collectAndSaveVideoInfo(paths[0], height, width, numAnimals, num_cores, minThreshold,maxThreshold,maxArea,maxNumBlobs)
+    numFrames = generateVideoTOC(allSegments, paths[0])
+    collectAndSaveVideoInfo(paths[0], numFrames, height, width, numAnimals, num_cores, minThreshold,maxThreshold,maxArea,maxNumBlobs)

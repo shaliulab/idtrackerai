@@ -38,12 +38,13 @@ def getNumFrame(path):
     cap = cv2.VideoCapture(path)
     return int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
-def collectAndSaveVideoInfo(path, height, width, numAnimals, numCores, minThreshold,maxThreshold,maxArea,maxNumBlobs):
+def collectAndSaveVideoInfo(path, numFrames, height, width, numAnimals, numCores, minThreshold,maxThreshold,maxArea,maxNumBlobs):
     """
     saves general info about the video in a pickle (_videoinfo.pkl)
     """
     videoInfo = {
         'path': path,
+        'numFrames': numFrames,
         'height':height,
         'width': width,
         'numAnimals':numAnimals,
@@ -68,7 +69,9 @@ def generateVideoTOC(allSegments, path):
     segmentsTOC = flatten(segmentsTOC)
     framesTOC = flatten(framesTOC)
     videoTOC =  pd.DataFrame({'segment':segmentsTOC, 'frame': framesTOC})
+    numFrames = len(videoTOC)
     saveFile(path, videoTOC, 'frameIndices', time = 0)
+    return numFrames
 
 """
 Compute background and threshold

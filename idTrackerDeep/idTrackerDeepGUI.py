@@ -5,7 +5,7 @@ sys.path.append('../preprocessing')
 sys.path.append('../tracker')
 
 from segmentation import *
-from fragmentation import *
+from fragmentation_serie import *
 from get_portraits import *
 from video_utils import *
 from py_utils import *
@@ -40,7 +40,11 @@ if __name__ == '__main__':
     ''' ************************************************************************
     Selecting library directory
     ************************************************************************ '''
-    print '***** Selecting the path to the videos...'
+    print
+    print '********************************************************************'
+    print 'Selecting the path to the videos...'
+    print '********************************************************************\n'
+
     initialDir = ''
     pathToVideos = selectDir(initialDir)
     print 'The path selected is, ', pathToVideos
@@ -55,29 +59,26 @@ if __name__ == '__main__':
     ''' ************************************************************************
     GUI to select the preprocessing parameters
     *************************************************************************'''
-    print '\n'
-    print '***** Selecting properties for bkg and ROI...'
+    print '********************************************************************'
+    print 'Selecting properties for bkg and ROI...'
+    print '********************************************************************\n'
+
     prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to do BKG or select a ROI?  ')
     useBkg = prepOpts['bkg']
     useROI =  prepOpts['ROI']
     useBkg = int(useBkg)
     useROI = int(useROI)
-    print 'useBkg, ', useBkg
-    print 'useROI, ', useROI
+    print 'useBkg set to ', useBkg
+    print 'useROI set to ', useROI
 
-    #Check for preexistent files generated during a previous session. If they
-    #exist and one wants to keep them they will be loaded
+    print '\nLooking for finished steps in previous session...'
     processesList = ['ROI', 'bkg', 'preprocparams', 'segmentation','fragmentation','portraits']
-    print '\n'
-    print '***** Looking for finished steps in previous session...'
     reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previos preprocessing? ([y]/n)')
     if reUseAll == 'n':
         processesDict, srcSubFolder = copyExistentFiles(videoPath, processesList, time=1)
         print 'List of processes finished, ', processesDict
-        print '\n'
-        print '***** Selecting files to load from previous session...'
+        print '\nSelecting files to load from previous session...'
         loadPreviousDict = selectOptions(processesList, processesDict, text='Already processed steps in this video \n (check to load from ' + srcSubFolder + ')')
-
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         loadPreviousDict = {'ROI': 1, 'bkg': 1, 'preprocparams': 1, 'segmentation': 1, 'fragmentation': 1, 'portraits': 1}
     else:
@@ -86,8 +87,8 @@ if __name__ == '__main__':
     print 'List of files that will be used, ', loadPreviousDict
     usePreviousBkg = loadPreviousDict['bkg']
     usePreviousROI = loadPreviousDict['ROI']
-    print 'usePreviousBkg, ', usePreviousBkg
-    print 'usePreviousROI, ', usePreviousROI
+    print 'usePreviousBkg set to ', usePreviousBkg
+    print 'usePreviousROI set to ', usePreviousROI
 
     ''' ROI selection and bkg loading'''
     width, height, bkg, mask, centers = playPreview(videoPaths, useBkg, usePreviousBkg, useROI, usePreviousROI)
@@ -146,6 +147,9 @@ if __name__ == '__main__':
     ''' ************************************************************************
     Segmentation
     ************************************************************************ '''
+    print '********************************************************************'
+    print 'Segmentation'
+    print '********************************************************************\n'
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
@@ -158,7 +162,7 @@ if __name__ == '__main__':
         minArea = preprocParams['minArea']
         maxArea = preprocParams['maxArea']
         EQ = 0
-        print preprocParams
+        print 'The preprocessing parameters dictionary loaded is ', preprocParams
         segment(videoPaths, numAnimals,
                     mask, centers, useBkg, bkg, EQ,
                     minThreshold, maxThreshold,
@@ -167,36 +171,113 @@ if __name__ == '__main__':
     ''' ************************************************************************
     Fragmentation
     *************************************************************************'''
+    print '********************************************************************'
+    print 'Fragmentation'
+    print '********************************************************************\n'
     if not loadPreviousDict['fragmentation']:
-        fragment(videoPaths)
-        playFragmentation(videoPaths,True) # last parameter is to visualize or not
+        dfGlobal, fragmentsDict = fragment(videoPaths,videoInfo=None)
+
+        playFragmentation(videoPaths,False) # last parameter is to visualize or not
+
         cv2.waitKey(1)
         cv2.destroyAllWindows()
         cv2.waitKey(1)
+    else:
+        dfGlobal = loadFile(videoPaths[0],'portraits',time=0)
+        fragmentsDict = loadFile(videoPaths[0],'fragments',time=0,hdfpkl='pkl')
 
     ''' ************************************************************************
     Portraying
     ************************************************************************ '''
+    print '********************************************************************'
+    print 'Portraying'
+    print '********************************************************************\n'
     if not loadPreviousDict['portraits']:
-        portrait(videoPaths)
-    portraits = loadFile(videoPaths[0], 'portraits', time=0)
+        portraits = portrait(videoPaths,dfGlobal)
+    else:
+        portraits = loadFile(videoPaths[0], 'portraits', time=0)
 
+    cv2.waitKey(1)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
     ''' ************************************************************************
     Tracker
     ************************************************************************ '''
+    print '********************************************************************'
+    print 'Tracker'
+    print '********************************************************************\n'
     loadCkpt_folder = selectDir(initialDir)
     loadCkpt_folder = os.path.relpath(loadCkpt_folder)
     # inputs = getMultipleInputs('Training parameters', ['ckptName','batch size', 'num. epochs', 'learning rate', 'train (1 (from strach) or 2 (from last check point))'])
     # print 'inputs, ', inputs
     print 'Entering into the fineTuner...'
     ckptName = 'test'
-    batch_size = 50 #int(inputs[1])
-    num_epochs = 70 #int(inputs[2])
+    batchSize = 50 #int(inputs[1])
+    numEpochs = 100 #int(inputs[2])
     lr = 0.001 #np.float32(inputs[3])
     train = 1 #int(inputs[4])
-    lossAccDict = fineTuner(videoPath,ckptName,loadCkpt_folder,batch_size,num_epochs,lr,train)
-    print 'lossAccDict:, '
-    pprint(lossAccDict['indivValAcc'][-1])
-    indivValAcc = lossAccDict['indivValAcc'][-1]
+    trainDict = {
+        'loadCkpt_folder':loadCkpt_folder,
+        'ckptName': ckptName,
+        'batchSize': batchSize,
+        'numEpochs': numEpochs,
+        'lr': lr,
+        'train':train}
+
+    ''' first fraining '''
+    print '************** First training'
+    fineTuner(videoPath,trainDict,[0],fragmentsDict,portraits)
     print 'Engering into the idAssigner...'
-    idAssigner(videoPath,ckptName,batch_size,indivValAcc)
+    normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
+    # print portraits
+    # print normFreqFragments
+    fragsForTrain = bestFragmentFinder([0],normFreqFragments,fragmentsDict,numAnimals)
+    # print fragsForTrain
+
+    ''' second training '''
+    print '************** Second training'
+    trainDict = {
+        'loadCkpt_folder':loadCkpt_folder,
+        'ckptName': ckptName,
+        'batchSize': batchSize,
+        'numEpochs': 200,
+        'lr': lr,
+        'train':2}
+    fineTuner(videoPath,trainDict,fragsForTrain,fragmentsDict,portraits)
+    print 'Engering into the idAssigner...'
+    normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
+    # print normFreqFragments
+    fragsForTrain = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals)
+    print fragsForTrain
+
+    ''' Third training '''
+    print '************** Third training'
+    trainDict = {
+        'loadCkpt_folder':loadCkpt_folder,
+        'ckptName': ckptName,
+        'batchSize': batchSize,
+        'numEpochs': 300,
+        'lr': lr,
+        'train':2}
+    fineTuner(videoPath,trainDict,fragsForTrain,fragmentsDict,portraits)
+    print 'Engering into the idAssigner...'
+    normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
+    # print normFreqFragments
+    fragsForTrain = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals)
+    print fragsForTrain
+
+    ''' Forth training '''
+    print '************** Forth training'
+    trainDict = {
+        'loadCkpt_folder':loadCkpt_folder,
+        'ckptName': ckptName,
+        'batchSize': batchSize,
+        'numEpochs': 400,
+        'lr': lr,
+        'train':2}
+    fineTuner(videoPath,trainDict,fragsForTrain,fragmentsDict,portraits)
+    print 'Engering into the idAssigner...'
+    normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
+    # print normFreqFragments
+    fragsForTrain = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals)
+    print fragsForTrain
