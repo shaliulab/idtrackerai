@@ -322,7 +322,7 @@ def CNNplotterFast(lossAccDict):
     ax2.set_axis_bgcolor('none')
 
     ax2.plot(lossSpeed,'ro-',label='training')
-    # plt.plot(valLossSpeed,'bo--',label='validation')
+    plt.plot(valLossSpeed,'bo--',label='validation')
     ax2.set_ylabel('Loss function speed')
 
     ax3 = plt.subplot(263)
@@ -333,7 +333,7 @@ def CNNplotterFast(lossAccDict):
     ax3.set_axis_bgcolor('none')
 
     ax3.plot(lossAccel,'ro-',label='training')
-    # plt.plot(valLossAccel,'bo--',label='validation')
+    plt.plot(valLossAccel,'bo--',label='validation')
     ax3.set_ylabel('Loss function accel.')
 
 
@@ -358,7 +358,7 @@ def CNNplotterFast(lossAccDict):
     ax5.set_axis_bgcolor('none')
 
     ax5.plot(accSpeed,'ro-',label='training')
-    # plt.plot(valAccSpeed,'bo--',label='validation')
+    plt.plot(valAccSpeed,'bo--',label='validation')
     ax5.set_ylabel('Accuray speed')
 
     ax6 = plt.subplot(2,6,9)
@@ -369,7 +369,7 @@ def CNNplotterFast(lossAccDict):
     ax6.set_axis_bgcolor('none')
 
     ax6.plot(accAccel,'ro-',label='training')
-    # plt.plot(valAccAccel,'bo--',label='validation')
+    plt.plot(valAccAccel,'bo--',label='validation')
     ax6.set_ylabel('Accuray accel.')
 
     # Individual accuracies

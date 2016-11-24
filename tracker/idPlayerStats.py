@@ -48,7 +48,7 @@ allFragProbIds = stats['probFragmentIds']
 allIds = stats['blobIds']
 allProbIds = stats['probBlobIds']
 FreqFrag = stats['FreqFrag']
-normFreqFrag = stats[]'normFreqFragAllVideo']
+normFreqFrag = stats['normFreqFragAllVideo']
 P1Frag = stats['P1Frag']
 
 statistics = [allFragProbIds, allIds, allProbIds, FreqFrag, normFreqFrag, P1Frag]
@@ -128,7 +128,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
                     thickness = 1
                 else:
                     # text = '{:.2f}'.format(np.round(stat[globalFrame,i,:],decimals=2))
-                    textList = ["%.f" % float(np.round(s,decimals=2)) for s in stat[globalFrame,i,:]]
+                    textList = ["%.2f" % float(np.round(s,decimals=2)) for s in stat[globalFrame,i,:]]
                     text = str.join(", ",textList)
                     text = '[ ' + text + ' ]'
                     fontSize = .5

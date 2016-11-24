@@ -4,7 +4,7 @@ sys.path.append('../CNN')
 
 from py_utils import *
 from video_utils import *
-from idTrainer import *
+from idTrainerTracker import *
 
 import time
 import numpy as np
@@ -202,6 +202,7 @@ def computeP1(IdProbs):
     freqFrags = []
     idFreqFragForMat = []
     normFreqFrags = []
+    normFreqFragsForMat = []
     numAnimals = IdProbs[0].shape[1]
     for IdProb in IdProbs: #looping on the individual fragments
         # IdTracker way assuming that the indivValAcc is the probability of good assignment for each identity
@@ -237,14 +238,16 @@ def computeP1(IdProbs):
             raise ValueError('P1Frag cannot be 1')
 
         idFreqFrag = int(np.argmax(frequencies) + 1)
+        normFreqFrag = np.true_divide(frequencies,fragLen)
 
         P1Frags.append(P1Frag)
         P1FragsForMat.append(np.matlib.repmat(P1Frag,fragLen,1))
         freqFrags.append(np.matlib.repmat(frequencies,fragLen,1))
-        normFreqFrags.append(np.true_divide(frequencies,fragLen))
+        normFreqFrags.append(normFreqFrag)
+        normFreqFragsForMat.append(np.matlib.repmat(normFreqFrag,fragLen,1))
         idFreqFragForMat.append(np.multiply(np.ones(fragLen),idFreqFrag).astype('int'))
 
-    return P1Frags, P1FragsForMat, freqFrags, normFreqFrags, idFreqFragForMat
+    return P1Frags, P1FragsForMat, freqFrags, normFreqFrags, idFreqFragForMat, normFreqFragsForMat
 
 def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices):
 
@@ -489,7 +492,7 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
         softMaxProbsAll.append(softMaxProbs)
         softMaxIdAll.append(softMaxId)
 
-        P1Frags, P1FragsForMat, freqFrags, normFreqFrags, idFreqFragForMat = computeP1(softMaxProbs)
+        P1Frags, P1FragsForMat, freqFrags, normFreqFrags, idFreqFragForMat, normFreqFragsForMat = computeP1(softMaxProbs)
         P1FragsAll.append(P1Frags)
         freqFragsAll.append(freqFrags)
         normFreqFragsAll.append(normFreqFrags)
@@ -507,7 +510,7 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
         freqFragAllVideo += FreqFragUpdated
 
         # Normalized frequencies per fragment for the whole video (considering the threshold in the probabilities of the softmax)
-        normFreqFragUpdated = probsUptader(normFreqFrags,indivFragments,numFrames,maxNumBlobs,numAnimals)
+        normFreqFragUpdated = probsUptader(normFreqFragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
         normFreqFragAllVideo += normFreqFragUpdated
 
         IdsFragUpdated = idUpdater(idFreqFragForMat,indivFragments,numFrames,maxNumBlobs)

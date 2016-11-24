@@ -213,7 +213,7 @@ if __name__ == '__main__':
     print 'Entering into the fineTuner...'
     ckptName = 'test'
     batchSize = 50 #int(inputs[1])
-    numEpochs = 100 #int(inputs[2])
+    numEpochs = 50 #int(inputs[2])
     lr = 0.001 #np.float32(inputs[3])
     train = 1 #int(inputs[4])
     trainDict = {
@@ -224,60 +224,18 @@ if __name__ == '__main__':
         'lr': lr,
         'train':train}
 
-    ''' first fraining '''
-    print '************** First training'
-    fineTuner(videoPath,trainDict,[0],fragmentsDict,portraits)
-    print 'Engering into the idAssigner...'
-    normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
-    # print portraits
-    # print normFreqFragments
-    fragsForTrain = bestFragmentFinder([0],normFreqFragments,fragmentsDict,numAnimals)
-    # print fragsForTrain
+    fragsForTrain = [0]
+    for i in range(10):
+        print '************** Training ', i
+        print 'training dictionary, ', trainDict
+        fineTuner(videoPath,trainDict,fragsForTrain,fragmentsDict,portraits)
+        normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
+        fragsForTrain = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals)
 
-    ''' second training '''
-    print '************** Second training'
-    trainDict = {
-        'loadCkpt_folder':loadCkpt_folder,
-        'ckptName': ckptName,
-        'batchSize': batchSize,
-        'numEpochs': 200,
-        'lr': lr,
-        'train':2}
-    fineTuner(videoPath,trainDict,fragsForTrain,fragmentsDict,portraits)
-    print 'Engering into the idAssigner...'
-    normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
-    # print normFreqFragments
-    fragsForTrain = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals)
-    print fragsForTrain
-
-    ''' Third training '''
-    print '************** Third training'
-    trainDict = {
-        'loadCkpt_folder':loadCkpt_folder,
-        'ckptName': ckptName,
-        'batchSize': batchSize,
-        'numEpochs': 300,
-        'lr': lr,
-        'train':2}
-    fineTuner(videoPath,trainDict,fragsForTrain,fragmentsDict,portraits)
-    print 'Engering into the idAssigner...'
-    normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
-    # print normFreqFragments
-    fragsForTrain = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals)
-    print fragsForTrain
-
-    ''' Forth training '''
-    print '************** Forth training'
-    trainDict = {
-        'loadCkpt_folder':loadCkpt_folder,
-        'ckptName': ckptName,
-        'batchSize': batchSize,
-        'numEpochs': 400,
-        'lr': lr,
-        'train':2}
-    fineTuner(videoPath,trainDict,fragsForTrain,fragmentsDict,portraits)
-    print 'Engering into the idAssigner...'
-    normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
-    # print normFreqFragments
-    fragsForTrain = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals)
-    print fragsForTrain
+        trainDict = {
+            'loadCkpt_folder':loadCkpt_folder,
+            'ckptName': ckptName,
+            'batchSize': batchSize,
+            'numEpochs': 50 + (i+1)*50,
+            'lr': lr,
+            'train':2}
