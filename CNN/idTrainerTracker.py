@@ -162,6 +162,33 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
             epoch_i = 0
             valIndivAcc = np.zeros(classes)
             while epoch_i <= n_epochs:
+                # print valLossPlot
+                minNumEpochsCheckLoss = 10
+                if len(valLossPlot) > minNumEpochsCheckLoss + start and start > 100:
+                    currLoss = valLossPlot[-1]
+                    prevLoss = valLossPlot[-minNumEpochsCheckLoss]
+                    magCurr = int(np.log10(currLoss))-1
+                    magPrev = int(np.log10(prevLoss))-1
+                    epsilon = .1*10**(magCurr)
+                    epsilon2 = .01*10**(magCurr)
+                    # print 'epsilon 1', epsilon
+                    # print 'epsilon 2', epsilon2
+                    # print 'curLoss', currLoss
+                    # print 'prevLoss', prevLoss
+                    print 'Losses difference ', -currLoss + prevLoss
+                    if magCurr > magPrev:
+                        print 'Oferfitting, passing to new set of images'
+                        break
+                    elif magCurr == magPrev:
+                        if currLoss - prevLoss > epsilon:
+                            print 'Oferfitting, passing to new set of images'
+                            break
+                    if prevLoss - currLoss < epsilon2:
+                        print 'Finished, passing to new set of images'
+                        break
+
+
+
             # for epoch_i in range(n_epochs):
                 try:
                     epoch_counter = start + epoch_i
@@ -183,10 +210,10 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                         indivAccEpoch.append(indivBatchAcc)
 
                         # Print per batch loss and accuracies
-                        if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
-                            print "Batch " + str(iter_i) + \
-                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
-                                ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+                        # if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
+                        #     print "Batch " + str(iter_i) + \
+                        #         ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                        #         ", Training Accuracy= " + "{:.5f}".format(batchAcc)
 
                     trainFeat = batchFeat
                     trainFeatLabels = Y_t[Tindices[iter_i]:Tindices[iter_i+1]]
@@ -228,10 +255,10 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                         indivAccEpoch.append(indivBatchAcc)
 
                         # Print per batch loss and accuracies
-                        if iter_i % round(np.true_divide(Viter_per_epoch,1)) == 0:
-                            print "Batch " + str(iter_i) + \
-                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
-                                ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+                        # if iter_i % round(np.true_divide(Viter_per_epoch,1)) == 0:
+                        #     print "Batch " + str(iter_i) + \
+                        #         ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                        #         ", Training Accuracy= " + "{:.5f}".format(batchAcc)
 
                     valLoss = np.mean(lossEpoch)
                     valAcc = np.mean(accEpoch)
@@ -296,13 +323,13 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                     *******************
                     '''
                     ### uncomment to plot ----
-                    if epoch_i % 10 == 0:
-                        CNNplotterFast(lossAccDict)
-
-                        print 'Saving figure...'
-                        figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
-                        plt.savefig(figname)
-                    print '-------------------------------'
+                    # if epoch_i % 10 == 0:
+                    #     CNNplotterFast(lossAccDict)
+                    #
+                    #     print 'Saving figure...'
+                    #     figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
+                    #     plt.savefig(figname)
+                    # print '-------------------------------'
                     ### ---
 
                     if stored_exception:

@@ -167,6 +167,9 @@ if __name__ == '__main__':
                     mask, centers, useBkg, bkg, EQ,
                     minThreshold, maxThreshold,
                     minArea, maxArea)
+    cv2.waitKey(1)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
 
     ''' ************************************************************************
     Fragmentation
@@ -213,7 +216,7 @@ if __name__ == '__main__':
     print 'Entering into the fineTuner...'
     ckptName = 'test'
     batchSize = 50 #int(inputs[1])
-    numEpochs = 50 #int(inputs[2])
+    numEpochs = 100 #int(inputs[2])
     lr = 0.001 #np.float32(inputs[3])
     train = 1 #int(inputs[4])
     trainDict = {
@@ -225,17 +228,21 @@ if __name__ == '__main__':
         'train':train}
 
     fragsForTrain = [0]
-    for i in range(10):
-        print '************** Training ', i
+
+    continueFlag = True
+    counter = 0
+    while continueFlag:
+        print '************** Training ', counter
         print 'training dictionary, ', trainDict
         fineTuner(videoPath,trainDict,fragsForTrain,fragmentsDict,portraits)
         normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
-        fragsForTrain = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals)
+        fragsForTrain,continueFlag = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals)
 
         trainDict = {
             'loadCkpt_folder':loadCkpt_folder,
             'ckptName': ckptName,
             'batchSize': batchSize,
-            'numEpochs': 50 + (i+1)*50,
+            'numEpochs': 100 + (counter+1)*30,
             'lr': lr,
             'train':2}
+        counter += 1

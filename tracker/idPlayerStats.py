@@ -50,13 +50,16 @@ allProbIds = stats['probBlobIds']
 FreqFrag = stats['FreqFrag']
 normFreqFrag = stats['normFreqFragAllVideo']
 P1Frag = stats['P1Frag']
+P2Frag = stats['P2FragAllVideo']
 
-statistics = [allFragProbIds, allIds, allProbIds, FreqFrag, normFreqFrag, P1Frag]
+statistics = [allFragProbIds, allIds, allProbIds, FreqFrag, normFreqFrag, P1Frag,P2Frag]
 
 def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,statistics):
     freq = statistics[3]
-    P1 = statistics[4]
+    normFreq = statistics[4]
+    P1 = statistics[5]
     logP2 = statistics[0]
+    P2 = statistics[6]
     statIdentity = False # if stat are the identities' indices we will sum 1, because it is nicer
     if stat.dtype == 'int64':
         statIdentity = True
@@ -103,18 +106,12 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
                 for i, pixel in enumerate(previousPixels):
                     cur_id = allIdentities[globalPreviousFrame,i]
                     px = np.unravel_index(pixel,(height,width))
-                    # print px
-                    # print cur_id
-                    # framePreviousShadows[px[0],px[1],:] = colors[cur_id]
-                    # print colors
-                    # print cur_id
                     frame[px[0],px[1],:] = np.multiply(colors[cur_id+1],.3).astype('uint8')+np.multiply(frame[px[0],px[1],:],.7).astype('uint8')
                 if previousFrame > 0 and shadowsCounter <= 11:
                     previousFrame = previousFrame-1
                     shadowsCounter += 1
                 else:
                     break
-                # frameShadows = cv2.addWeighted(frameShadows,.5.,framePreviousShadows,.5.,0)
 
             print '\n *************** global frame, ', globalFrame
             for i, centroid in enumerate(centroids):
@@ -137,19 +134,23 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
                 freqList = ["%0.f" % float(s) for s in freq[globalFrame,i,:]]
                 freqText = str.join(", ",freqList)
                 freqText = '[ ' + freqText + ' ]'
+                normFreqList = ["%0.f" % float(s) for s in normFreq[globalFrame,i,:]]
+                normFreqText = str.join(", ",normFreqList)
+                normFreqText = '[ ' + normFreqText + ' ]'
                 P1List = ["%.4f" % float(s) for s in P1[globalFrame,i,:]]
                 P1Text = str.join(", ",P1List)
                 P1Text = '[ ' + P1Text + ' ]'
-                logP1List = ["%.4f" % float(np.log(s)) for s in P1[globalFrame,i,:]]
-                logP1Text = str.join(", ",logP1List)
-                logP1Text = '[ ' + logP1Text + ' ]'
                 logP2List = ["%.4f" % float(s) for s in logP2[globalFrame,i,:]]
                 logP2Text = str.join(", ",logP2List)
                 logP2Text = '[ ' + logP2Text + ' ]'
+                P2List = ["%.8f" % float(s) for s in P2[globalFrame,i,:]]
+                P2Text = str.join(", ",P2List)
+                P2Text = '[ ' + P2Text + ' ]'
                 print '--------- Id, ', cur_id+1
                 print 'Frequencies', freqText
+                print 'normFrequencies', normFreqText
                 print 'P1, ', P1Text
-                print 'logP1, ', logP1Text
+                print 'P2, ', P2Text
                 print 'logP2, ', logP2Text
                 # if not sum(stat[globalFrame,i,:]):
                 #     cur_id = -1

@@ -261,6 +261,17 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
             overlap = 1
         return overlap
 
+    def computeP2(P1Frag,P1CoexistingFrags):
+        numerator = P1Frag * np.prod(1.-P1CoexistingFrags,axis=0)
+        # if numerator == 0.:
+        #     raise ValueError('numerator of P2 is 0')
+        denominator = np.sum(numerator)
+        if denominator == 0:
+            raise ValueError('denominator of P2 is 0')
+
+        P2 = numerator / denominator
+        return P2
+
     def computeLogP2(P1Frag,P1CoexistingFrags):
         logProb1Fragment = np.log(P1Frag)
         # print 'logProb1Fragment, ', logProb1Fragment
@@ -273,6 +284,7 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
 
     logP2FragsForMat = []
     logP2FragIdForMat = []
+    P2FragsForMat = []
     for j, (P1Frag,indivFragmentInterval) in enumerate(zip(P1Frags,indivFragmentsIntervals)):
         # print '\nIndividual fragment, ', j, ' ----------------'
         # print 'Interval, ', indivFragmentInterval
@@ -291,15 +303,18 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
         P1CoexistingFrags = np.vstack(P1CoexistingFrags)
         # print 'coexisting Probs, ', P1CoexistingFrags
 
+        P2Frag = computeP2(P1Frag,P1CoexistingFrags)
         logP2Frag = computeLogP2(P1Frag,P1CoexistingFrags)
+
         # print 'logP2Frag', logP2Frag
         idFrag = np.argmax(logP2Frag)+1
         # print idFrag
         fragLen = lenFragments[j]
         logP2FragsForMat.append(np.matlib.repmat(logP2Frag,fragLen,1))
+        P2FragsForMat.append(np.matlib.repmat(P2Frag,fragLen,1))
         logP2FragIdForMat.append(np.multiply(np.ones(fragLen),idFrag).astype('int'))
 
-    return logP2FragsForMat, logP2FragIdForMat
+    return logP2FragsForMat, logP2FragIdForMat, P2FragsForMat
 
 def idUpdater(ids,indivFragments,numFrames,maxNumBlobs):
     IdsArray = np.zeros((numFrames,maxNumBlobs))
@@ -530,6 +545,7 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
     '''
     idLogP2FragAllVideo= -np.ones((numFrames,maxNumBlobs)) # fragments identities assigned from P2 to each individual fragment
     logP2FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # logP2 for each individual fragment
+    P2FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals))
     print '******************************************************'
     for i in range(len(oneIndivFragIntervals)):
         # print '******************************************************'
@@ -549,10 +565,14 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
         blobsIndices = list(range(len(oneIndivFragIntervals)))
         blobsIndices.pop(i)
 
-        logP2FragsForMat, logP2FragIdForMat = computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices)
+        logP2FragsForMat, logP2FragIdForMat, P2FragsForMat = computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices)
         # logP2
-        ProbsFragUpdated = probsUptader(logP2FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
-        logP2FragAllVideo += ProbsFragUpdated
+        LogProbsFragUpdated = probsUptader(logP2FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
+        logP2FragAllVideo += LogProbsFragUpdated
+
+        # P2
+        ProbsFragUpdated = probsUptader(P2FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
+        P2FragAllVideo += ProbsFragUpdated
 
         # identities from logP2
         IdsFragUpdated = idUpdater(logP2FragIdForMat,indivFragments,numFrames,maxNumBlobs)
@@ -566,7 +586,8 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
         'idFreqFragAllVideo': idFreqFragAllVideo,
         'P1Frag': P1FragAllVideo,
         'fragmentIds':idLogP2FragAllVideo,
-        'probFragmentIds':logP2FragAllVideo}
+        'probFragmentIds':logP2FragAllVideo,
+        'P2FragAllVideo':P2FragAllVideo}
 
     portraits['identities'] = idFreqFragAllVideo.tolist()
     # saveFile(videoPath,portraits,'portraits',time=0)
@@ -585,56 +606,127 @@ def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals):
     distI = []
     identity = np.identity(numAnimals)
     for i, intervals in enumerate(intervalsFragments): # loop in complete set of fragments
-        print 'fragment, ', i
+        # print 'fragment, ', i
         for j, interval in enumerate(intervals): # loop in individual fragments of the complete set of fragments
-            print 'individual fragment, ', j
+            # print 'individual fragment, ', j
             mat.append(normFreqFragsAll[interval[0]][interval[1]])
         matFragment = np.vstack(mat)
         mat = []
         perm = np.argmax(matFragment,axis=1)
 
         matFragment = matFragment[:,perm]
-        print matFragment
-        print numpy.linalg.norm(matFragment - identity)
-        print lens[i]
-        distI.append(numpy.linalg.norm(matFragment - identity))
+        # print matFragment
+        # print numpy.linalg.norm(matFragment - identity)
+        # print lens[i]
+        distI.append(numpy.linalg.norm(matFragment - identity)) #TODO when optimizing the code one should compute the matrix distance only for fragments above 100 length
 
     distI = np.asarray(distI)
     distI0 = np.min(distI[fragsForTrain])
-    len0 = np.min(lens[fragsForTrain])
+    len0 = np.max(lens[fragsForTrain])
 
     distInorm = distI/np.max(distI)
     lensnorm = np.true_divide(lens,np.max(lens))
 
     ''' measure distance to the best one '''
     distI0norm = np.min(distInorm[fragsForTrain])
-    len0norm = np.min(lensnorm[fragsForTrain])
+    len0norm = np.max(lensnorm[fragsForTrain])
 
     distI0norm = np.ones(len(distI))*distI0norm
     len0norm = np.ones(len(lens))*len0norm
 
     distances = np.sqrt((distI0norm-distInorm)**2 + ((len0norm-lensnorm))**2)
     bestFragments = np.argsort(distances)
-    print 'current fragsForTrain, ', fragsForTrain
-    print 'bestFragments, ', bestFragments
+
+    # force = len0*lens/np.sqrt(distI**3)
+    # bestFragments = np.argsort(-force)
+    # print 'current fragsForTrain, ', fragsForTrain
+    # print 'bestFragments, ', bestFragments
     nextPossibleFragments = bestFragments.tolist()
+    print 'fragsTrain before popping', fragsForTrain
     for fragForTrain in fragsForTrain:
         nextPossibleFragments.pop(nextPossibleFragments.index(fragForTrain))
     nextPossibleFragments = np.asarray(nextPossibleFragments)
-    print 'next possible fragments, ', nextPossibleFragments
-    fragsForTrain.append(nextPossibleFragments[0])
-    print 'new fragsForTrain, ', fragsForTrain
-    distI1 = distI[nextPossibleFragments[0]]
-    len1 = lens[nextPossibleFragments[0]]
+    print 'fragsTrain after popping', nextPossibleFragments
+    # print 'next possible fragments, ', nextPossibleFragments
+    # fragsForTrain.append(nextPossibleFragments[0])
+
+    # best guy
+    bestFragInd = nextPossibleFragments[0]
+    bestFragDist = distI[bestFragInd]
+
+    print len(lens)
+    print len(distI)
+    lensND = np.asarray(lens)
+    distIND = np.asarray(distI)
+    print lensND
+    print distIND
+    acceptableFragIndices = np.where((lensND > 100) & (distIND <= bestFragDist))[0]
+
+
+    fragsForTrain = np.asarray(fragsForTrain)
+    print 'Old Frags for train, ', fragsForTrain
+    print 'acceptableFragIndices, ', acceptableFragIndices
+    newFragsForTrain = np.unique(np.hstack([fragsForTrain,acceptableFragIndices]))
+    print 'Fragments for training, ', fragsForTrain
+
+    if len(newFragsForTrain) <= len(fragsForTrain):
+        print '\nGoing for fragments above 50'
+        acceptableFragIndices = np.where((lensND > 50) & (distIND <= bestFragDist))[0]
+
+        fragsForTrain = np.asarray(fragsForTrain)
+        print 'Old Frags for train, ', fragsForTrain
+        print 'acceptableFragIndices, ', acceptableFragIndices
+        newFragsForTrain = np.unique(np.hstack([fragsForTrain,acceptableFragIndices]))
+
+
+        if len(newFragsForTrain) == len(fragsForTrain):
+            print 'There are no more good fragments'
+            continueFlag = False
+        else:
+            fragsForTrain = newFragsForTrain
+            print 'Fragments for training, ', fragsForTrain
+            continueFlag = True
+    else:
+        fragsForTrain = newFragsForTrain
+        print 'Fragments for training, ', fragsForTrain
+        continueFlag = True
+
+
+    ### selcts the 5 cooler fragments
+    # fragsForTrain.append(nextPossibleFragments[1])
+    # fragsForTrain.append(nextPossibleFragments[2])
+    # fragsForTrain.append(nextPossibleFragments[3])
+    # fragsForTrain.append(nextPossibleFragments[4])
+    # print fragsForTrain
+    # fragsForTrain = flatten(fragsForTrain)
+    # print 'new fragsForTrain, ', fragsForTrain
+    # distI1 = distI[nextPossibleFragments[0]]
+    # len1 = lens[nextPossibleFragments[0]]
+    # distI2 = distI[nextPossibleFragments[1]]
+    # len2 = lens[nextPossibleFragments[1]]
+    # distI3 = distI[nextPossibleFragments[2]]
+    # len3 = lens[nextPossibleFragments[2]]
+    # distI4 = distI[nextPossibleFragments[3]]
+    # len4 = lens[nextPossibleFragments[3]]
+    # distI5 = distI[nextPossibleFragments[4]]
+    # len5 = lens[nextPossibleFragments[4]]
+
+
+
 
     plt.ion()
     plt.figure()
     plt.scatter(distI,lens,c='b')
     plt.scatter(distI[fragsForTrain],lens[fragsForTrain],c='r')
     plt.scatter(distI0,len0,c='b',marker='*')
-    plt.plot([distI0,distI1],[len0,len1],'-k')
+    # plf.scatter(distINDSelected,lensNDSelected,c='r')
+    # plt.plot([distI0,distI1],[len0,len1],'-k')
+    # plt.plot([distI0,distI2],[len0,len2],'-k')
+    # plt.plot([distI0,distI3],[len0,len3],'-k')
+    # plt.plot([distI0,distI4],[len0,len4],'-k')
+    # plt.plot([distI0,distI5],[len0,len5],'-k')
     plt.xlabel('Dist from Identity matrix')
     plt.ylabel('Minimum length of the complete set of fragments')
     plt.show()
 
-    return fragsForTrain
+    return fragsForTrain, continueFlag

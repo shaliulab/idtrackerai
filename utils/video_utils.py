@@ -81,15 +81,17 @@ def computeBkgPar(path,bkg,EQ):
     cap = cv2.VideoCapture(path)
     counter = 0
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    numFramesBkg = 0
     while counter < numFrame:
-        counter += 1;
+        counter += 100;
         ret, frameBkg = cap.read()
         gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
         # gray = checkEq(EQ, gray)
-        gray = np.divide(gray,np.mean(gray))
+        gray = np.true_divide(gray,np.mean(gray))
         bkg = bkg + gray
+        numFramesBkg += 1
 
-    return bkg
+    return bkg, numFramesBkg
 
 def computeBkg(paths, EQ, width, height):
     # This holds even if we have not selected a ROI because then the ROI is
@@ -98,13 +100,20 @@ def computeBkg(paths, EQ, width, height):
 
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    numFrame = Parallel(n_jobs=num_cores)(delayed(getNumFrame)(path) for path in paths)
-    partialBkg = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg,EQ) for path in paths)
+    # numFrame = Parallel(n_jobs=num_cores)(delayed(getNumFrame)(path) for path in paths)
+    output = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg,EQ) for path in paths)
+    partialBkg = [bkg for (bkg,_) in output]
+    totNumFrame = np.sum([numFrame for (_,numFrame) in output])
+    # allBkg = np.asarray(partialBkg)
+    # print '********************** ', np.asarray(partialBkg).shape
     bkg = np.sum(np.asarray(partialBkg),axis=0)
-    totNumFrame = sum(numFrame)
+    # totNumFrame = allBkg.shape[0]
     bkg = np.true_divide(bkg, totNumFrame)
     # bkg is the backgorund computed by summing all the averaged frames
     # of the video and dividing by the number of frames in the video.
+    # print '**********bkg, ', bkg.shape
+    # plt.imshow(bkg)
+    # plt.show()
     return bkg
 
 def checkBkg(useBkg, usePreviousBkg, paths, EQ, width, height):
@@ -112,97 +121,18 @@ def checkBkg(useBkg, usePreviousBkg, paths, EQ, width, height):
     path = paths[0]
     if useBkg:
         if usePreviousBkg:
-            bkgDict = loadFile(path, 'bkg',0)
-            bkgDict = bkgDict.to_dict()[0]
-            bkg = bkgDict['bkg']
+            bkg = loadFile(path, 'bkg',0,hdfpkl='pkl')
+            # bkgDict = bkgDict.to_dict()[0]
+            # bkg = bkgDict['bkg']
             # maxIntensity = bkgDict['maxIntensity']
             # maxBkg = bkgDict['maxBkg']
         else:
             bkg = computeBkg(paths, EQ, width, height)
-            bkgDict = {'bkg': bkg}#, 'maxIntensity': maxIntensity, 'maxBkg': maxBkg}
-            saveFile(path, bkgDict, 'bkg', time = 0)
+            # bkgDict = {'bkg': bkg}#, 'maxIntensity': maxIntensity, 'maxBkg': maxBkg}
+            saveFile(path, bkg, 'bkg', time = 0,hdfpkl='pkl')
         return bkg#, maxIntensity, maxBkg
     else:
         return None#, maxIntensity, None
-
-
-# """
-# ROI selector GUI
-# """
-# def ROIselector(frame):
-#     plt.ion()
-#     f, ax = plt.subplots()
-#     ax.imshow(frame, interpolation='nearest', cmap='gray')
-#     props = {'facecolor': '#000070',
-#              'edgecolor': 'white',
-#              'alpha': 0.3}
-#     rect_tool = RectangleTool(ax, rect_props=props)
-#
-#     plt.show()
-#     numROIs = getInput('Number of ROIs','Type the number of ROIs to be selected')
-#     numROIs = int(numROIs)
-#     print 'The number of ROIs to select is ', numROIs
-#     counter = 0
-#     ROIsCoords = []
-#     centers = []
-#     ROIsShapes = []
-#     mask = np.ones_like(frame,dtype='uint8')*255
-#     while counter < numROIs:
-#         ROIshape = getInput('Roi shape','r= rect, c=circ')
-#         # ROIshape = raw_input('ROI shape (r/c/p)? (press enter after selection)')
-#
-#         if ROIshape == 'r' or ROIshape == 'c':
-#             ROIsShapes.append(ROIshape)
-#
-#             rect_tool.callback_on_enter(rect_tool.extents)
-#             coord = np.asarray(rect_tool.extents).astype('int')
-#
-#             print 'ROI coords, ', coord
-#             # goodROI=raw_input('Is the selection correct? [y]/n: ')
-#             text = 'Is ' + str(coord) + ' the ROI you wanted to select? y/n'
-#             goodROI = getInput('Confirm selection',text)
-#             if goodROI == 'y':
-#                 ROIsCoords.append(coord)
-#                 if ROIshape == 'r':
-#                     cv2.rectangle(mask,(coord[0],coord[2]),(coord[1],coord[3]),0,-1)
-#                     centers.append(None)
-#                 if ROIshape == 'c':
-#                     center = ((coord[1]+coord[0])/2,(coord[3]+coord[2])/2)
-#                     angle = 90
-#                     axes = tuple(sorted(((coord[1]-coord[0])/2,(coord[3]-coord[2])/2)))
-#                     print center, angle, axes
-#                     cv2.ellipse(mask,center,axes,angle,0,360,0,-1)
-#                     centers.append(center)
-#
-#         counter = len(ROIsCoords)
-#     plt.close("all")
-#
-#     return mask, centers
-#
-# def checkROI(selectROI,frame, path):
-#     ''' Select ROI '''
-#     if selectROI:
-#         try:
-#             mask = loadFile(path, 'mask',0)
-#             center = loadFile(path, 'center',0)
-#         except:
-#             print '\n Selecting ROI ...'
-#             mask, centers = ROIselector(frame)
-#     else:
-#         mask = np.zeros_like(frame)
-#         centers = []
-#     return mask, centers
-
-"""
-Normalize by the average intensity
-"""
-# def frameAverager(frame):
-#     avFrame = np.divide(frame,np.mean(frame))
-#     # print 'frame, ', frame
-#     # print 'avFrame, ', uint8caster(avFrame)
-#     # print 'dif, frame avFrame, ', np.sum(abs(frame-uint8caster(avFrame)))
-#     # avFrame = np.multiply(np.true_divide(avFrame,np.max(avFrame)),255).astype('uint8')
-#     return np.mean(frame)
 
 """
 Image equalization
@@ -214,22 +144,6 @@ def checkEq(EQ, frame):
         frame = clahe.apply(frame)
     return frame
 
-# """
-# Image segmentation
-# """
-# def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
-#     #Apply background substraction if requested and threshold image
-#     frame = np.float32(frame)
-#     minThresholdScaled = minThreshold * np.mean(frame)
-#     frame = np.true_divide(frame,np.mean(frame))
-#     frameMasked = frame + mask
-#     frameSegmented = uint8caster(frameMasked < minThreshold)
-#     if useBkg:
-#         print 'Subtracting bkg and segmenting frame...'
-#         bkgMasked = bkg + mask
-#         bkgSegmented = uint8caster(bkgMasked < minThreshold)
-#         frameSegmeted = frameSegmented - bkgSegmented
-#     return frameSegmented
 
 def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
     #Apply background substraction if requested and threshold image
@@ -253,11 +167,14 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
         # frameSegmented = frameSegmented - bkgSegmented
 
         ### NOTE this bkg subtraction introduces weird flickering in the segmentation that compromises some frames
+        # print 'max and min frame, ', np.max(frame), np.min(frame)
+        # print 'max and min bkg, ', np.max(bkg), np.min(bkg)
         frameSubtracted = uint8caster(np.abs(np.subtract(bkg,frame)))
         frameSubtractedMasked = cv2.addWeighted(frameSubtracted,1,mask,1,0)
-        ## Uncomment to plot
-        # cv2.imshow('frameSubtractedMasked',frameSubtractedMasked)
-        # frameSubtractedMasked = 255-frameSubtractedMasked
+        # Uncomment to plot
+        cv2.imshow('frame', uint8caster(frame))
+        cv2.imshow('frameSubtractedMasked',frameSubtractedMasked)
+        frameSubtractedMasked = 255-frameSubtractedMasked
         ret, frameSegmented = cv2.threshold(frameSubtractedMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
     else:
         frameMasked = cv2.addWeighted(uint8caster(frame),1,mask,1,0)

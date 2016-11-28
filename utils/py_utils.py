@@ -296,7 +296,10 @@ def copyExistentFiles(path, listNames, time=1):
                             df,_ = loadFile(path, 'segmentation', time=1)
                             if 'permutation' in list(df.columns):
                                 existentFile[name] = '1'
-
+                elif name is 'bkg':
+                    fullFileName = srcSubFolder + '/bkg.pkl'
+                    if os.path.isfile(fullFileName):
+                        shutil.copy(fullFileName, dstSubFolder)
                 else:
                     fullFileName = srcSubFolder + '/' + name + '.hdf5'
                     if os.path.isfile(fullFileName):
