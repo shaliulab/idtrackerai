@@ -171,35 +171,35 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
         ret, frameSegmented = cv2.threshold(frameMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
     return frameSegmented
 
-def segmentVideoIdTracker(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
-    #Apply background substraction if requested and threshold image
-    # print 'minThreshold, ', minThreshold
-    # print 'maxThreshold, ', maxThreshold
-
-    # compute the average frame
-    mask[mask == 255] = 1
-    frame = np.true_divide(frame,np.mean(frame))
-    if useBkg:
-        frameMasked = frame + mask
-        bkgMasked = bkg + mask
-        # cv2.imshow('frameMasked', uint8caster(frameMasked))
-        # cv2.imshow('bkgMasked',uint8caster(bkgMasked))
-
-        frameMaskedThresholded = frameMasked < minThreshold
-        bkgMaskedThresholded = bkgMasked < minThreshold
-
-        # cv2.imshow('frame', uint8caster(frameMaskedThresholded))
-        # cv2.imshow('bkgMaskedThresholded',uint8caster(bkgMaskedThresholded))
-
-        frameSegmented = frameMaskedThresholded-bkgMaskedThresholded
-        # cv2.imshow('bkgMaskedThresholded',uint8caster(frameSegmented))
-        frameSegmented = np.uint8(frameSegmented)
-        # cv2.waitKey(1)
-    else:
-        frameMasked = frame + mask
-        frameSegmented = frameMasked < minThreshold
-        frameSegmented = np.uint8(frameSegmented)
-    return frameSegmented
+# def segmentVideoIdTracker(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
+#     #Apply background substraction if requested and threshold image
+#     # print 'minThreshold, ', minThreshold
+#     # print 'maxThreshold, ', maxThreshold
+#
+#     # compute the average frame
+#     mask[mask == 255] = 1
+#     frame = np.true_divide(frame,np.mean(frame))
+#     if useBkg:
+#         frameMasked = frame + mask
+#         bkgMasked = bkg + mask
+#         # cv2.imshow('frameMasked', uint8caster(frameMasked))
+#         # cv2.imshow('bkgMasked',uint8caster(bkgMasked))
+#
+#         frameMaskedThresholded = frameMasked < minThreshold
+#         bkgMaskedThresholded = bkgMasked < minThreshold
+#
+#         # cv2.imshow('frame', uint8caster(frameMaskedThresholded))
+#         # cv2.imshow('bkgMaskedThresholded',uint8caster(bkgMaskedThresholded))
+#
+#         frameSegmented = frameMaskedThresholded-bkgMaskedThresholded
+#         # cv2.imshow('bkgMaskedThresholded',uint8caster(frameSegmented))
+#         frameSegmented = np.uint8(frameSegmented)
+#         # cv2.waitKey(1)
+#     else:
+#         frameMasked = frame + mask
+#         frameSegmented = frameMasked < minThreshold
+#         frameSegmented = np.uint8(frameSegmented)
+#     return frameSegmented
 
 
 """

@@ -201,7 +201,7 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
 
     print 'fragments , ', fragments
     print 'numFragments, ', len(fragments)
-    fragments = sorted(fragments, key=lambda x: x[1]-x[0],reverse=True)
+    # fragments = sorted(fragments, key=lambda x: x[1]-x[0],reverse=True)
     # saveFile(videoPaths[0], fragments, 'fragments', time = 0)
     return fragments, dfGlobal
 
@@ -248,6 +248,7 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
                             indivFragmentInterval = indivFragmentInterval + (frame,) # we are using tuples
 
                     else: # if the area is too big, I close the individual fragment and I add the indices to the list of potentialCrossings
+                        print 'changing permutation to -1'
                         potentialCrossings.append((frame,portraitInd)) # save to list of potential crossings
                         newIdentitiesFrame = dfGlobal.loc[frame,'permutations']
                         newIdentitiesFrame[portraitInd] = -1
@@ -300,6 +301,7 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
                         indivFragmentInterval = indivFragmentInterval + (frame,) # we are using tuples
 
                 else: # if the area is too big, I close the individual fragment and I add the indices to the list of potentialCrossings
+                    print 'changing permutation to -1'
                     potentialCrossings.append((frame,portraitInd)) # save to list of potential crossings
                     newIdentitiesFrame = dfGlobal.loc[frame,'permutations']
                     newIdentitiesFrame[portraitInd] = -1
@@ -319,29 +321,28 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
         return  [], [], [], [], dfGlobal
 
 
-# def recomputeGlobalFragments(newdfGlobal,numAnimals):
-#     fragments = []
-#     fragment = []
-#     print '*******************************'
-#     print 'recomputing global fragments...'
-#     # print newdfGlobal
-#     for index in newdfGlobal.index:
-#         # print 'index, ', index
-#         # print 'permutations, ', newdfGlobal.loc[index,'permutations']
-#         # print np.sum(newdfGlobal.loc[index,'permutations']>=0)
-#         # print numAnimals
-#         if np.sum(newdfGlobal.loc[index,'permutations']>=0) == numAnimals and len(newdfGlobal.loc[index,'areas']) ==numAnimals:
-#             if len(fragment) == 0:
-#                 fragment.append(index)
-#         else:
-#             if len(fragment) == 1:
-#                 fragment.append(index-1)
-#                 fragments.append(fragment)
-#                 fragment = []
-#         # print 'fragments, ', fragments
-#
-#     print fragments
-#     return fragments
+def recomputeGlobalFragments(newdfGlobal,numAnimals):
+    fragments = []
+    fragment = []
+    print '*******************************'
+    print 'recomputing global fragments...'
+    # print newdfGlobal
+    for index in newdfGlobal.index:
+        # print 'index, ', index
+        # print 'permutations, ', newdfGlobal.loc[index,'permutations']
+        # print np.sum(newdfGlobal.loc[index,'permutations']>=0)
+        # print numAnimals
+        if np.sum(newdfGlobal.loc[index,'permutations']>=0) == numAnimals and len(newdfGlobal.loc[index,'areas']) ==numAnimals:
+            if len(fragment) == 0:
+                fragment.append(index)
+        else:
+            if len(fragment) == 1:
+                fragment.append(index-1)
+                fragments.append(fragment)
+                fragment = []
+        # print 'fragments, ', fragments
+
+    return fragments
 
 def getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals):
     print '\n Computing individual fragments ******************'
@@ -350,6 +351,7 @@ def getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnim
     oneIndivFragFrames = []
     oneIndivFragLens = []
     oneIndivFragSumLens = []
+    print dfGlobal.loc[80:90]
     for i in range(int(maxNumBlobs)):
         print 'Computing individual fragments for blob index, ', i
         indivFragments,indivFragmentsIntervals, lenFragments,sumFragIndices, newdfGlobal = getIndivFragments(newdfGlobal, i,meanIndivArea,stdIndivArea)
@@ -357,9 +359,10 @@ def getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnim
         oneIndivFragFrames.append(indivFragments)
         oneIndivFragLens.append(lenFragments)
         oneIndivFragSumLens.append(sumFragIndices)
-    # fragments = recomputeGlobalFragments(newdfGlobal,numAnimals)
-    # fragments = np.asarray(fragments)
-    return oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, newdfGlobal#, fragments
+    print dfGlobal.loc[80:90]
+    fragments = recomputeGlobalFragments(newdfGlobal,numAnimals)
+    fragments = np.asarray(fragments)
+    return oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, newdfGlobal, fragments
 
 def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragFrames,numAnimals):
 
@@ -427,7 +430,7 @@ def fragment(videoPaths,videoInfo = None):
     ''' Compute permutations and complete fragments '''
     fragments, dfGlobal = newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames)
     saveFile(videoPaths[0],dfGlobal,'dfGlobal',time=0)
-    playFragmentation(videoPaths,True)
+    playFragmentation(videoPaths,dfGlobal,False)
 
     ''' Compute model area of individual blob '''
     fragments = np.asarray(fragments)
@@ -439,9 +442,12 @@ def fragment(videoPaths,videoInfo = None):
     videoInfo['meanIndivArea'] = meanIndivArea
     videoInfo['stdIndivArea'] = stdIndivArea
     saveFile(videoPaths[0],videoInfo,'videoInfo',time=0)
-
-    # oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, dfGlobal, fragments = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
-    oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, dfGlobal = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
+    print 'fragments before individual fragments, ', fragments
+    oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, dfGlobal, fragments = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
+    print 'fragments after individual fragments, ', fragments
+    print dfGlobal.loc[80:90]
+    playFragmentation(videoPaths,dfGlobal,False)
+    # oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, dfGlobal = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
 
     print '\n dfGlobal', dfGlobal
 

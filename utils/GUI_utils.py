@@ -341,11 +341,109 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
 ''' ****************************************************************************
 Fragmentation inspector
 *****************************************************************************'''
-def playFragmentation(paths,visualize = False):
+# def playFragmentation(paths,visualize = False):
+#     from fragmentation_serie import computeFrameIntersection ### FIXME For some reason it does not import well in the top and I have to import it here
+#     """
+#     IdInspector
+#     """
+#     info = loadFile(paths[0], 'videoInfo', time=0)
+#     info = info.to_dict()[0]
+#     width = info['width']
+#     height = info['height']
+#     numAnimals = info['numAnimals']
+#     maxNumBlobs = info['maxNumBlobs']
+#     numSegment = 0
+#     # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+#     # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
+#     path = paths[numSegment]
+#
+#     def IdPlayerFragmentation(path,numAnimals, width, height,visualize):
+#         df,sNumber = loadFile(path, 'segmentation', time=0)
+#         # video = os.path.basename(path)
+#         # filename, extension = os.path.splitext(video)
+#         # sNumber = int(filename.split('_')[-1])
+#         # folder = os.path.dirname(path)
+#         # df = pd.read_pickle(folder +'/'+ filename + '.pkl')
+#         print 'Visualizing video %s' % path
+#         # print df
+#         cap = cv2.VideoCapture(path)
+#         numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+#         # width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+#         # height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+#
+#         def onChange(trackbarValue):
+#             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+#             centroids = df.loc[trackbarValue,'centroids']
+#             pixelsA = df.loc[trackbarValue-1,'pixels']
+#             pixelsB = df.loc[trackbarValue,'pixels']
+#             permutation = df.loc[trackbarValue,'permutation']
+#             print '------------------------------------------------------------'
+#             print 'previous frame, ', str(trackbarValue-1), ', permutation, ', df.loc[trackbarValue-1,'permutation']
+#             print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
+#             trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
+#             print 'overlapMat, '
+#             print overlapMat
+#             print 'permutation, ', s
+#             # if sNumber == 1 and trackbarValue > 100:
+#             #     trueFragment, s = computeFrameIntersection(df.loc[trackbarValue-1,'pixels'],df.loc[trackbarValue,'pixels'],5)
+#             #     print trueFragment, s
+#             #     result = df.loc[trackbarValue-1,'permutation'][s]
+#             #     print 'result, ', result
+#             #Get frame from video file
+#             ret, frame = cap.read()
+#             #Color to gray scale
+#             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#             font = cv2.FONT_HERSHEY_SIMPLEX
+#
+#             # Plot segmentated blobs
+#             for i, pixel in enumerate(pixelsB):
+#                 px = np.unravel_index(pixel,(height,width))
+#                 frame[px[0],px[1]] = 255
+#
+#             # plot numbers if not crossing
+#             # if not isinstance(permutation,float):
+#                 # print 'pass'
+#             for i, centroid in enumerate(centroids):
+#                 cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
+#
+#             cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
+#
+#             # Visualization of the process
+#             cv2.imshow('IdPlayerFragmentation',frame)
+#             pass
+#
+#         cv2.namedWindow('IdPlayerFragmentation')
+#         cv2.createTrackbar( 'start', 'IdPlayerFragmentation', 0, numFrame-1, onChange )
+#         # cv2.createTrackbar( 'end'  , 'IdPlayer', numFrame-1, numFrame, onChange )
+#
+#         onChange(1)
+#         if visualize: ### FIXME this is because otherwise we have a Fatal Error on the "Bars" window. Apparently the backend needs a waitkey(1)...
+#             cv2.waitKey(0)
+#         else:
+#             cv2.waitKey(1)
+#             return 'q'
+#
+#         start = cv2.getTrackbarPos('start','IdPlayerFragmentation')
+#         numSegment = getInput('Segment number','Type the segment to be visualized')
+#         return numSegment
+#         # return raw_input('Which segment do you want to inspect?')
+#
+#     finish = False
+#     while not finish:
+#         # print 'I am here', numSegment
+#         numSegment = IdPlayerFragmentation(paths[int(numSegment)],numAnimals, width, height,visualize)
+#         if numSegment == 'q':
+#             finish = True
+#         cv2.waitKey(1)
+#         cv2.destroyAllWindows()
+#         cv2.waitKey(1)
+
+def playFragmentation(paths,dfGlobal,visualize = False):
     from fragmentation_serie import computeFrameIntersection ### FIXME For some reason it does not import well in the top and I have to import it here
     """
     IdInspector
     """
+    print dfGlobal.loc[80:90]
     info = loadFile(paths[0], 'videoInfo', time=0)
     info = info.to_dict()[0]
     width = info['width']
@@ -353,6 +451,7 @@ def playFragmentation(paths,visualize = False):
     numAnimals = info['numAnimals']
     maxNumBlobs = info['maxNumBlobs']
     numSegment = 0
+    frameIndices = loadFile(paths[0], 'frameIndices', time=0)
     # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
     # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
     path = paths[numSegment]
@@ -373,12 +472,15 @@ def playFragmentation(paths,visualize = False):
 
         def onChange(trackbarValue):
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+            index = frameIndices[(frameIndices.segment == int(sNumber)) & (frameIndices.frame == trackbarValue)].index[0]
+            print index
+            permutation = dfGlobal.loc[index,'permutations']
             centroids = df.loc[trackbarValue,'centroids']
             pixelsA = df.loc[trackbarValue-1,'pixels']
             pixelsB = df.loc[trackbarValue,'pixels']
-            permutation = df.loc[trackbarValue,'permutation']
+            # permutation = df.loc[trackbarValue,'permutation']
             print '------------------------------------------------------------'
-            print 'previous frame, ', str(trackbarValue-1), ', permutation, ', df.loc[trackbarValue-1,'permutation']
+            print 'previous frame, ', str(trackbarValue-1), ', permutation, ', dfGlobal.loc[index-1,'permutations']
             print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
             trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
             print 'overlapMat, '
@@ -406,7 +508,7 @@ def playFragmentation(paths,visualize = False):
             for i, centroid in enumerate(centroids):
                 cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
 
-            cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
+            cv2.putText(frame,str(index),(50,50), font, 3,(255,0,0))
 
             # Visualization of the process
             cv2.imshow('IdPlayerFragmentation',frame)
