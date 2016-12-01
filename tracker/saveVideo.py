@@ -22,7 +22,8 @@ import cPickle as pickle
 
 numSegment = 0
 # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+# paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
 
 frameIndices = loadFile(paths[0], 'frameIndices', time=0)
 videoInfo = loadFile(paths[0], 'videoInfo', time=0)
@@ -117,8 +118,16 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, stat, show
 
                         px = np.unravel_index(pixels[i],(height,width))
                         frame[px[0],px[1],:] = frameCopy[px[0],px[1],:]
-                        cv2.putText(frame,str(cur_id+1),centroid, font, size,colors[cur_id+1],thickness)
+                        if cur_id == 0:
+                            cv2.putText(frame,'George',centroid, font, size,colors[cur_id+1],thickness)
+                        elif cur_id == 11:
+                            cv2.putText(frame,'Lucy',centroid, font, size,colors[cur_id+1],thickness)
+                        elif cur_id == 14:
+                            cv2.putText(frame,'Tom',centroid, font, size,colors[cur_id+1],thickness)
+                        else:
+                            cv2.putText(frame,str(cur_id+1),centroid, font, size,colors[cur_id+1],thickness)
                         cv2.circle(frame, centroid,2, colors[cur_id+1],2)
+
                 elif sNumber > 1:
                     previousFrame = currentFrame -1
 
@@ -151,7 +160,6 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, stat, show
                             shadowsCounter += 1
                         else:
                             break
-
                     for l, centroid in enumerate(centroids):
                         # print centroid
                         cur_id = allIdentities[globalFrame,l]
@@ -164,7 +172,14 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, stat, show
 
                         px = np.unravel_index(pixels[l],(height,width))
                         frame[px[0],px[1],:] = frameCopy[px[0],px[1],:]
-                        cv2.putText(frame,str(cur_id+1),centroid, font, size,colors[cur_id+1],thickness)
+                        if cur_id == 0:
+                            cv2.putText(frame,'George',centroid, font, size,colors[cur_id+1],thickness)
+                        elif cur_id == 11:
+                            cv2.putText(frame,'Lucy',centroid, font, size,colors[cur_id+1],thickness)
+                        elif cur_id == 14:
+                            cv2.putText(frame,'Tom',centroid, font, size,colors[cur_id+1],thickness)
+                        else:
+                            cv2.putText(frame,str(cur_id+1),centroid, font, size,colors[cur_id+1],thickness)
                         cv2.circle(frame, centroid,2, colors[cur_id+1],2)
 
 

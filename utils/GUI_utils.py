@@ -153,7 +153,7 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         #threshold the frame, find contours and get portraits of the fish
         toile = np.zeros_like(avFrame, dtype='uint8')
         # print 'I am going to call segmentVideo'
-        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, bkg, mask, useBkg)
+        segmentedFrame = segmentVideo(origFrame, minTh, maxTh, bkg, mask, useBkg)
         # currentFrame = cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
         # print 'The frame saved is, ', currentFrame
         # pd.to_pickle(bkg, '/home/lab/Desktop/TF_models/IdTracker/Conflict8Small/bkgGUI.pkl')

@@ -3,7 +3,7 @@ import sys
 sys.path.append('../utils')
 
 from py_utils import *
-# from GUI_utils import *
+from GUI_utils import *
 
 import time
 import numpy as np
@@ -72,7 +72,8 @@ def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
             s.append(possibleCombination)
     # print len(s)
     # print type(numAnimals)
-    if len(s) == numAnimals:
+    # if len(s) == numAnimals:
+    if numAnimalsA == numAnimals and numAnimalsB == numAnimals and len(s) == numAnimals:
         trueFragment = True
 
     return trueFragment, s, overlapMat
@@ -127,7 +128,7 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
         for i in range(len(columnPixels)): # for every frame
             globalFrame = i + globalFrameCounter
             dfGlobal.loc[globalFrame, 'areas'] = df.loc[i,'areas']
-            # print 'segment frame, ', i, ', global frame, ', globalFrame
+            # print '*** segment frame, ', i, ', global frame, ', globalFrame
             if globalFrame != 0: # Becuase we look at the past (i-1 and i), the first frame of the first segment does not make sense
                 # print 'it is not the first global frame '
                 if globalFrame == 1:
@@ -138,10 +139,11 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
                     init = np.multiply(np.ones(maxNumBlobs, dtype='int'),-1)
                     init[:int(columnNumBlobs[0])] = np.arange(int(columnNumBlobs[0]))
                     # dfGlobal.set_value(0,'permutation',init)
+                    # print 'init, ', init
                     dfGlobal.loc[0,'permutations'] = init
                     old = dfGlobal.loc[0,'permutations']
 
-                    dfPermutations.loc[0,'permutation']
+                    dfPermutations.loc[0,'permutation'] = init
 
                 pixelsB = columnPixels[i]
                 trueFragment, permutation, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals) # compute overlapping between blobs
@@ -216,7 +218,7 @@ def modelDiffArea(fragments,areas):
 
 def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
 #     portraitsFrag = np.asarray(portraits.loc[:,'images'].tolist())
-    nStd = 5
+    nStd = 4
     newdfGlobal = dfGlobal.copy()
     areasFrag = np.asarray(dfGlobal.loc[:,'areas'].tolist())
     identities = np.asarray(dfGlobal.loc[:,'permutations'].tolist())
@@ -234,15 +236,11 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
         sumFragIndices = []
         for i, (frame, portraitInd) in enumerate(zip(frames, portraitInds)):
 
-
             if i != len(frames)-1: # if it is not the last frame
-                # if animalInd == 5 and frame >= 5277:
-                #     raise ValueError('Lets see what happened')
+
                 if frames[i+1] - frame == 1 : # if the next frame is a consecutive frame
                     currentArea = areasFrag[frame][portraitInd]
-                    # if frame >= 5270 and frame <= 5276:
-                    #     print 'frame, ', frame
-                    #     print 'currentArea, ', currentArea
+
                     if currentArea < meanIndivArea + nStd*stdIndivArea: # if the area is accepted by the model area
                         indivFragment.append((frame, portraitInd))
 
@@ -320,7 +318,32 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
     else:
         return  [], [], [], [], dfGlobal
 
-def getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs):
+
+# def recomputeGlobalFragments(newdfGlobal,numAnimals):
+#     fragments = []
+#     fragment = []
+#     print '*******************************'
+#     print 'recomputing global fragments...'
+#     # print newdfGlobal
+#     for index in newdfGlobal.index:
+#         # print 'index, ', index
+#         # print 'permutations, ', newdfGlobal.loc[index,'permutations']
+#         # print np.sum(newdfGlobal.loc[index,'permutations']>=0)
+#         # print numAnimals
+#         if np.sum(newdfGlobal.loc[index,'permutations']>=0) == numAnimals and len(newdfGlobal.loc[index,'areas']) ==numAnimals:
+#             if len(fragment) == 0:
+#                 fragment.append(index)
+#         else:
+#             if len(fragment) == 1:
+#                 fragment.append(index-1)
+#                 fragments.append(fragment)
+#                 fragment = []
+#         # print 'fragments, ', fragments
+#
+#     print fragments
+#     return fragments
+
+def getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals):
     print '\n Computing individual fragments ******************'
     newdfGlobal = dfGlobal.copy()
     oneIndivFragIntervals = []
@@ -334,8 +357,9 @@ def getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs):
         oneIndivFragFrames.append(indivFragments)
         oneIndivFragLens.append(lenFragments)
         oneIndivFragSumLens.append(sumFragIndices)
-
-    return oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, newdfGlobal
+    # fragments = recomputeGlobalFragments(newdfGlobal,numAnimals)
+    # fragments = np.asarray(fragments)
+    return oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, newdfGlobal#, fragments
 
 def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragFrames,numAnimals):
 
@@ -360,9 +384,9 @@ def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFrag
         framesAndBlobIndexFragment = []
         for j, (oneIndivFrags, oneIndivFragLen) in enumerate(zip(oneIndivFragIntervals, oneIndivFragLens)):
             print '*** coexistence in one-individual fragments list ', j
-            # print oneIndivFrags
+            print 'one individual fragments, ', oneIndivFrags
             overlaps = np.asarray([getOverlap(fragment,indivFrag) for indivFrag in oneIndivFrags])
-            # print 'overlaps, ', overlaps
+            print 'overlaps, ', overlaps
             coexistingFragments = np.where(overlaps != 0)[0]
             print 'coexisting fragments, ', coexistingFragments
             if len(coexistingFragments) > 1:
@@ -402,6 +426,8 @@ def fragment(videoPaths,videoInfo = None):
 
     ''' Compute permutations and complete fragments '''
     fragments, dfGlobal = newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames)
+    saveFile(videoPaths[0],dfGlobal,'dfGlobal',time=0)
+    playFragmentation(videoPaths,True)
 
     ''' Compute model area of individual blob '''
     fragments = np.asarray(fragments)
@@ -414,7 +440,9 @@ def fragment(videoPaths,videoInfo = None):
     videoInfo['stdIndivArea'] = stdIndivArea
     saveFile(videoPaths[0],videoInfo,'videoInfo',time=0)
 
-    oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, dfGlobal = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs)
+    # oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, dfGlobal, fragments = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
+    oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, dfGlobal = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
+
     print '\n dfGlobal', dfGlobal
 
     fragments, framesAndBlobColumns, intervalsFragments, minLenIndivCompleteFragments = getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragFrames,numAnimals)

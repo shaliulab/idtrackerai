@@ -106,6 +106,14 @@ if __name__ == '__main__':
         while not end:
             numSegment = getInput('Segment number','Type the segment to be visualized')
             if numSegment == 'q' or numSegment == 'quit' or numSegment == 'exit':
+                # useIdTrackerThreshold = getInput('IdTracker threshold','Do you want to segment the video using and idTracker-like threshold?')
+                # if useIdTrackerThreshold == 'y' or useIdTrackerThreshold == '':
+                #     idTrackerThreshold = getInput('IdTracker threshold','Please introduce the value of the idTracker-like threshold.')
+                #     idTrackerThreshold = float(idTrackerThreshold)
+                #     preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
+                #     preprocParams = preprocParams.to_dict()[0]
+                #     preprocParams['idTrackerThreshold'] = idTrackerThreshold
+                #     saveFile(videoPaths[0], preprocParams, 'preprocparams', time = 0)
                 end = True
             else:
                 cv2.namedWindow('Bars')
@@ -153,20 +161,22 @@ if __name__ == '__main__':
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
+
     if not loadPreviousDict['segmentation']:
         preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
         preprocParams = preprocParams.to_dict()[0]
-        numAnimals = preprocParams['numAnimals']
-        minThreshold = preprocParams['minThreshold']
-        maxThreshold = preprocParams['maxThreshold']
-        minArea = preprocParams['minArea']
-        maxArea = preprocParams['maxArea']
+        # numAnimals = preprocParams['numAnimals']
+        # minThreshold = preprocParams['minThreshold']
+        # maxThreshold = preprocParams['maxThreshold']
+        # minArea = preprocParams['minArea']
+        # maxArea = preprocParams['maxArea']
         EQ = 0
         print 'The preprocessing parameters dictionary loaded is ', preprocParams
-        segment(videoPaths, numAnimals,
-                    mask, centers, useBkg, bkg, EQ,
-                    minThreshold, maxThreshold,
-                    minArea, maxArea)
+        # segment(videoPaths, numAnimals,
+        #             mask, centers, useBkg, bkg, EQ,
+        #             minThreshold, maxThreshold,
+        #             minArea, maxArea)
+        segment(videoPaths, mask, centers, useBkg, bkg, EQ)
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)

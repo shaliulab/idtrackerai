@@ -253,10 +253,25 @@ def getMFandC(path, frameIndices):
 #     return boundingBoxes.tolist(), miniframes.tolist(), contours.tolist(), bkgSamples.tolist(), segmentIndices
 
 def fillSquareFrame(square_frame,bkgSamps):
-    bkgSamps = bkgSamps[bkgSamps > 150]
-    numSamples = len(bkgSamps)
-
+    numSamples = 0
+    threshold = 150
+    # print 'lenght bkgSamps, ', len(bkgSamps)
+    # print 'min bkg, max bk', np.min(bkgSamps), np.max(bkgSamps)
+    while numSamples <= 10:
+        # print 'threshold, ', threshold
+        bkgSampsNew = bkgSamps[bkgSamps > threshold]
+        threshold -= 10
+        if threshold == 0:
+            plt.imshow(square_frame,cmap='gray',interpolation='none')
+            plt.show()
+            break
+        numSamples = len(bkgSampsNew)
+    bkgSamps = bkgSampsNew
+    if numSamples == 0:
+        raise ValueError('I do not have enough samples for the background')
+    # print 'numSamples, ', numSamples
     numSamplesRequested = np.sum(square_frame == 0)
+    # print 'numSamplesRequested, ', numSamplesRequested
     indicesSamples = np.random.randint(0,numSamples,numSamplesRequested)
     square_frame[square_frame == 0] = bkgSamps[indicesSamples]
     return square_frame
@@ -355,7 +370,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
         raise ValueError('This portrait do not have 32x32 pixels')
 
     # Fill black parts of the portrait with random background
-    # portrait = fillSquareFrame(minif_cropped,bkgSamp)
+    # portrait = fillSquareFrame(minif_cropped,bkgSamp,threshold)
     # return portrait, curvature, cnt, maxCoord, sorted_locations
     return portrait
 
