@@ -16,6 +16,10 @@ import time
 import h5py
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.colors import Colormap
+from matplotlib import colors
+from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.patches as patches
 from Tkinter import *
 import tkMessageBox
 import argparse
@@ -34,6 +38,20 @@ from os.path import isdir, isfile
 import scipy.spatial.distance as scisd
 from pprint import pprint
 
+def orderVideo(matrixToOrder,permutations,maxNumBlobs):
+    matrixOrdered = np.zeros_like(matrixToOrder)
+
+    for frame in range(len(permutations)):
+        for i in range(maxNumBlobs):
+            index = list(np.where(permutations[frame]==i)[0])
+            # print index
+            if len(index) == 1:
+                matrixOrdered[frame,i] = matrixToOrder[frame,index]
+            else:
+                matrixOrdered[frame,i] = -1
+
+    return matrixOrdered
+
 if __name__ == '__main__':
     cv2.namedWindow('Bars') #FIXME If we do not create the "Bars" window here we have the "Bad window error"...
 
@@ -51,7 +69,9 @@ if __name__ == '__main__':
     # pathToVideos = '/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf'
 
     ''' Path to video/s '''
-    videoPath = natural_sort([v for v in os.listdir(pathToVideos) if isfile(pathToVideos +'/'+ v) if '.avi' in v])[0]
+    # videoPath = natural_sort([v for v in os.listdir(pathToVideos) if isfile(pathToVideos +'/'+ v) if '.avi' in v])[0]
+    extensions = ['.avi', '.mp4']
+    videoPath = natural_sort([v for v in os.listdir(pathToVideos) if isfile(pathToVideos +'/'+ v) if any( ext in v for ext in extensions)])[0]
     videoPath = pathToVideos + '/' + videoPath
     videoPaths = scanFolder(videoPath)
     print 'The list of videos is ', videoPaths
@@ -196,13 +216,15 @@ if __name__ == '__main__':
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
+
     ''' ************************************************************************
     Tracker
     ************************************************************************ '''
     print '********************************************************************'
     print 'Tracker'
     print '********************************************************************\n'
-    loadCkpt_folder = selectDir(initialDir)
+    # loadCkpt_folder = selectDir(initialDir) #select where to load the model
+    loadCkpt_folder = '/home/lab/Desktop/TF_models/IdTracker/CNN/ckpt_Train_25dpf_60indiv_25000_transfer'
     loadCkpt_folder = os.path.relpath(loadCkpt_folder)
     # inputs = getMultipleInputs('Training parameters', ['ckptName','batch size', 'num. epochs', 'learning rate', 'train (1 (from strach) or 2 (from last check point))'])
     # print 'inputs, ', inputs
@@ -220,6 +242,10 @@ if __name__ == '__main__':
         'lr': lr,
         'train':train}
 
+    preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
+    preprocParams = preprocParams.to_dict()[0]
+    numAnimals = preprocParams['numAnimals']
+
     fragsForTrain = [0]
 
     continueFlag = True
@@ -227,15 +253,89 @@ if __name__ == '__main__':
     while continueFlag:
         print '************** Training ', counter
         print 'training dictionary, ', trainDict
+
+        ''' Fine tuning '''
         fineTuner(videoPath,trainDict,fragsForTrain,fragmentsDict,portraits)
+
+        ''' plot and save fragment selected '''
+        fragments = fragmentsDict['fragments']
+        permutations = np.asarray(portraits.loc[:,'permutations'].tolist())
+        maxNumBlobs = len(permutations[0])
+        permOrdered =  orderVideo(permutations,permutations,maxNumBlobs)
+        permOrdered = permOrdered.T.astype('float32')
+
+        plt.close()
+        fig, ax = plt.subplots(figsize=(25, 5))
+        permOrdered[permOrdered >= 0] = .5
+        im = plt.imshow(permOrdered,cmap=plt.cm.gray,interpolation='none',vmin=0.,vmax=1.)
+        im.cmap.set_under('r')
+        # im.set_clim(0, 1.)
+        # cb = plt.colorbar(im)
+
+        # for i in range(len(fragments)):
+        for i in fragsForTrain:
+            ax.add_patch(
+                patches.Rectangle(
+                    (fragments[i,0], -0.5),   # (x,y)
+                    fragments[i,1]-fragments[i,0],  # width
+                    maxNumBlobs,          # height
+                    fill=True,
+                    edgecolor=None,
+                    facecolor='b',
+                    alpha = 0.5
+                )
+            )
+
+        plt.axis('tight')
+        plt.xlabel('Frame number')
+        plt.ylabel('Blob index')
+        plt.gca().set_yticks(range(0,maxNumBlobs,4))
+        plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
+        plt.gca().invert_yaxis()
+        plt.tight_layout()
+
+        print 'Saving figure...'
+        ckpt_dir = getCkptvideoPath(videoPath,ckptName,train=2,time =0)
+        figname = ckpt_dir + '/figures/fragments_' + str(counter) + '.pdf'
+        fig.savefig(figname)
+
+        ''' Identity assignation '''
         normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
+        ''' Computing best next fragments '''
         fragsForTrain,continueFlag = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals)
 
+        ''' Plotting and saving probability matrix'''
+        statistics = loadFile(videoPath, 'statistics', time=0)
+        statistics = statistics.to_dict()[0]
+        P2 = statistics['P2FragAllVideo']
+        P2Ordered =  orderVideo(P2,permutations,maxNumBlobs)
+        P2good = np.max(P2Ordered,axis=2).T
+
+        plt.close()
+        fig, ax = plt.subplots(figsize=(25, 5))
+        im2 = plt.imshow(P2good,cmap=plt.cm.gray,interpolation='none')
+        im2.cmap.set_under('r')
+        im2.set_clim(0, 1)
+        cb = plt.colorbar(im2)
+        # fig.colorbar(im, ax=ax)
+        plt.axis('tight')
+        plt.xlabel('Frame number')
+        plt.ylabel('Blob index')
+        plt.gca().set_yticks(range(0,maxNumBlobs,4))
+        plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
+        plt.gca().invert_yaxis()
+        plt.tight_layout()
+
+        print 'Saving figure...'
+        figname = ckpt_dir + '/figures/P2_' + str(counter) + '.pdf'
+        fig.savefig(figname)
+
+        ''' Updating training Dictionary'''
         trainDict = {
             'loadCkpt_folder':loadCkpt_folder,
             'ckptName': ckptName,
             'batchSize': batchSize,
-            'numEpochs': 100 + (counter+1)*30,
+            'numEpochs': 2000,
             'lr': lr,
             'train':2}
         counter += 1

@@ -435,21 +435,21 @@ def fragment(videoPaths,videoInfo = None):
     ''' Compute model area of individual blob '''
     fragments = np.asarray(fragments)
     meanIndivArea, stdIndivArea = modelDiffArea(fragments, dfGlobal.areas)
-    print 'meanIndivArea, ', meanIndivArea
-    print 'stdindivArea, ', stdIndivArea
+    # print 'meanIndivArea, ', meanIndivArea
+    # print 'stdindivArea, ', stdIndivArea
     videoInfo = loadFile(videoPaths[0], 'videoInfo', time = 0)
     videoInfo = videoInfo.to_dict()[0]
     videoInfo['meanIndivArea'] = meanIndivArea
     videoInfo['stdIndivArea'] = stdIndivArea
     saveFile(videoPaths[0],videoInfo,'videoInfo',time=0)
-    print 'fragments before individual fragments, ', fragments
+    # print 'fragments before individual fragments, ', fragments
     oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, dfGlobal, fragments = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
-    print 'fragments after individual fragments, ', fragments
-    print dfGlobal.loc[80:90]
+    # print 'fragments after individual fragments, ', fragments
+    # print dfGlobal.loc[80:90]
     playFragmentation(videoPaths,dfGlobal,False)
     # oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, dfGlobal = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
 
-    print '\n dfGlobal', dfGlobal
+    # print '\n dfGlobal', dfGlobal
 
     fragments, framesAndBlobColumns, intervalsFragments, minLenIndivCompleteFragments = getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragFrames,numAnimals)
     fragmentsDict = {

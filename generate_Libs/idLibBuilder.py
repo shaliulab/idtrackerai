@@ -3,7 +3,7 @@ import sys
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
 
-from segmentation_ROIPreview import *
+from segmentation import *
 from fragmentation import *
 from get_portraits import *
 from video_utils import *
@@ -58,7 +58,9 @@ if __name__ == '__main__':
 
         ''' Path to video/s '''
         path = libPath + '/' + subDir
-        videoPath = natural_sort([v for v in os.listdir(path) if isfile(path +'/'+ v) if '.avi' in v])[0]
+        extensions = ['.avi', '.mp4']
+        # videoPath = natural_sort([v for v in os.listdir(path) if isfile(path +'/'+ v) if '.avi' in v])[0]
+        videoPath = natural_sort([v for v in os.listdir(path) if isfile(path +'/'+ v) if any( ext in v for ext in extensions)])[0]
         videoPath = path + '/' + videoPath
         videoPaths = scanFolder(videoPath)
 

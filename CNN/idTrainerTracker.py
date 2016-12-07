@@ -79,7 +79,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
         images_pl, labels_pl = placeholder_inputs(batch_size, resolution, classes)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
-        logits, relu = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
+        logits, relu,(W1,W3,W5) = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
 
         cross_entropy = loss(labels_pl,logits)
 
@@ -155,7 +155,8 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                 valIndivAccPlot = lossAccDict['indivValAcc']
 
             # print "Start from:", start
-            opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu]
+            # opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu]
+            opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu, W1,W3,W5]
             opListVal = [cross_entropy, accuracy, indivAcc, relu]
 
             stored_exception = None
@@ -164,30 +165,30 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
             while epoch_i <= n_epochs:
                 # print valLossPlot
                 minNumEpochsCheckLoss = 10
-                if len(valLossPlot) > minNumEpochsCheckLoss + start and start > 100:
-                    currLoss = valLossPlot[-1]
-                    prevLoss = valLossPlot[-minNumEpochsCheckLoss]
-                    magCurr = int(np.log10(currLoss))-1
-                    magPrev = int(np.log10(prevLoss))-1
-                    epsilon = .1*10**(magCurr)
-                    epsilon2 = .01*10**(magCurr)
-                    # print 'epsilon 1', epsilon
-                    # print 'epsilon 2', epsilon2
-                    # print 'curLoss', currLoss
-                    # print 'prevLoss', prevLoss
-                    print 'Losses difference ', -currLoss + prevLoss
-                    if magCurr > magPrev:
-                        print 'Oferfitting, passing to new set of images'
-                        break
-                    elif magCurr == magPrev:
-                        if currLoss - prevLoss > epsilon:
-                            print 'Oferfitting, passing to new set of images'
+                if start + epoch_i > 1:
+                    if len(valLossPlot) > minNumEpochsCheckLoss + start: #and start > 100:
+                        currLoss = valLossPlot[-1]
+                        prevLoss = valLossPlot[-minNumEpochsCheckLoss]
+                        magCurr = int(np.log10(currLoss))-1
+                        magPrev = int(np.log10(prevLoss))-1
+                        epsilon = .1*10**(magCurr)
+                        epsilon2 = .01*10**(magCurr)
+                        # print 'epsilon 1', epsilon
+                        # print 'epsilon 2', epsilon2
+                        # print 'curLoss', currLoss
+                        # print 'prevLoss', prevLoss
+                        print 'Losses difference ', -currLoss + prevLoss
+                        if magCurr > magPrev:
+
+                            print 'Overfitting, passing to new set of images'
                             break
-                    if prevLoss - currLoss < epsilon2:
-                        print 'Finished, passing to new set of images'
-                        break
-
-
+                        elif magCurr == magPrev:
+                            if currLoss - prevLoss > epsilon:
+                                print 'Overfitting, passing to new set of images'
+                                break
+                        if prevLoss - currLoss < epsilon2:
+                            print 'Finished, passing to new set of images'
+                            break
 
             # for epoch_i in range(n_epochs):
                 try:
@@ -200,7 +201,12 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                     ''' TRAINING '''
                     for iter_i in range(Titer_per_epoch):
 
-                        _, batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                        # _, batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                        #     sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
+                        #     images_pl, labels_pl, keep_prob_pl,
+                        #     X_t, Y_t, keep_prob = keep_prob)
+
+                        _, batchLoss, batchAcc, indivBatchAcc, batchFeat, WConv1, WConv3, WConv5, feed_dict = run_batch(
                             sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
                             images_pl, labels_pl, keep_prob_pl,
                             X_t, Y_t, keep_prob = keep_prob)
@@ -316,20 +322,27 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                         'labels': one_hot_to_dense(trainFeatLabels) # labels of the last batch of the references to plot some features
                         }
 
+                    weightsDict = {
+                        'W1': WConv1,
+                        'W3': WConv3,
+                        'W5': WConv5
+                        }
+
                     pickle.dump( lossAccDict , open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
+                    pickle.dump( weightsDict, open( ckpt_dir_model + "/weightsDict.pkl", "wb" ) )
                     '''
                     *******************
                     Plotter
                     *******************
                     '''
                     ### uncomment to plot ----
-                    # if epoch_i % 10 == 0:
-                    #     CNNplotterFast(lossAccDict)
-                    #
-                    #     print 'Saving figure...'
-                    #     figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
-                    #     plt.savefig(figname)
-                    # print '-------------------------------'
+                    if epoch_i % 1 == 0:
+                        CNNplotterFast2(lossAccDict, weightsDict)
+
+                        print 'Saving figure...'
+                        figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
+                        plt.savefig(figname)
+                    print '-------------------------------'
                     ### ---
 
                     if stored_exception:
@@ -352,9 +365,9 @@ python -i cnn_model_summaries.py
 
 Trasnfer:
 python -i cnn_model_summaries.py
---ckpt_folder ckpt_Train_60indiv_36dpf_22000_transfer
---load_ckpt_folder ckpt_Train_60indiv_36dpf_22000_2
---dataset_train 25dpf_60indiv_22000ImPerInd_rotateAndCrop
+--ckpt_folder ckpt_Train_60indiv_25dpf_25000_transfer
+--load_ckpt_folder ckpt_dir_new
+--dataset_train 25dpf_60indiv_26142ImPerInd_curvaturePortrait
 """
 
 if __name__ == '__main__':

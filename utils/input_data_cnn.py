@@ -217,21 +217,59 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
         print([item for item in databaseTrainInfo.attrs.iteritems()])
 
     print 'database %s loaded' %imdbTrain
-
+    print 'num Indiv in IMDB, ', numIndivImdbTrain
+    print 'num Indiv asked for training, ', numIndivTrainTest
     if numIndivImdbTrain < numIndivTrainTest:
         raise ValueError('The number of individuals for training (' + str(numIndivTrainTest) + ') cannot exceed the number of individuals in the database (' + str(numIndivImdbTrain) + ')')
 
     # Get images, labels, and indices of individuals for the train set
     permIndivTrain = permuter(numIndivImdbTrain,'individualsTrain',os.path.exists(ckpt_folder))
+    # print 'permutations indiv, ', permIndivTrain
     indivTrain = permIndivTrain[:numIndivTrainTest]
-    permImagesTrain = permuter(numImagesPerIndivTrain*numIndivTrainTest,'imagesTrain',os.path.exists(ckpt_folder))
+    # print 'indiv indices for training, ', indivTrain
+    # print 'num Images per indiv, ', numImagesPerIndivTrain
+    # print 'numImagesPerIndivTrain*numIndivTrainTest', numImagesPerIndivTrain*numIndivTrainTest
+    # print 'number of Images', len(labelsTrain)
+    permImagesTrain = permuter(len(labelsTrain),'imagesTrain',os.path.exists(ckpt_folder))
+
+
+    # print '***********'
+    # print 'before slicing'
+    # print np.where(labelsTrain == 59)[0]
+    # if len(np.where(labelsTrain == 59)[0]) == 0:
+    #     raise ValueError('There are not labels assigned to id 59')
+    # print '***********'
 
     imagesTrainS, labelsTrainS = sliceDatabase(imagesTrain, labelsTrain, indivTrain)
+    # print 'number of Images after slicing', len(labelsTrain)
+    # print '***********'
+    # print 'before permuting'
+    # print np.where(labelsTrainS == 59)[0]
+    # if len(np.where(labelsTrainS == 59)[0]) == 0:
+    #     raise ValueError('There are not labels assigned to id 59')
+    # print '***********'
 
+    # index59 = np.where(labelsTrainS == 59)[0]
+    # print labelsTrainS[index59]
+    # print np.where(permImagesTrain == index59[0])
     imagesTrainS = imagesTrainS[permImagesTrain]
     labelsTrainS = labelsTrainS[permImagesTrain]
+    #
+    # print '***********'
+    # print 'before splitting'
+    # print np.where(labelsTrainS == 59)
+    # if len(np.where(labelsTrainS == 59)[0]) == 0:
+    #     raise ValueError('There are not labels assigned to id 59')
+    # print '***********'
 
     X_train, Y_train, X_val, Y_val = splitter(imagesTrainS, labelsTrainS, numTrain, numIndivTrainTest, imsizeTrain, numRef)
+
+    # print '***********'
+    # print 'after splitting'
+    # print np.where(np.where(Y_train == 1)[1] == 59)[0]
+    # if len(np.where(np.where(Y_train == 1)[1] == 59)[0]) == 0:
+    #     raise ValueError('There are not labels assigned to id 59')
+    # print '***********'
 
     # check train's dimensions
     cardTrain = int(np.ceil(np.true_divide(np.multiply(numTrain,9),10)))*numIndivTrainTest

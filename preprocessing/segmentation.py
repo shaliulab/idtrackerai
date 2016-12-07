@@ -78,6 +78,10 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
     cap.release()
     cv2.destroyAllWindows()
     saveFile(path, df, 'segment', time = 0)
+    # lst = [df,cap]
+    # del df, cap
+    # del lst
+    gc.collect()
 
     return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist(), maxNumBlobs
 
@@ -90,15 +94,26 @@ def segment(paths,preprocParams, mask, centers, useBkg, bkg, EQ):
     maxArea = preprocParams['maxArea']
 
     width, height = getVideoInfo(paths)
+    ''' splitting paths list into sublists '''
+    pathsSubLists = [paths[i:i+4] for i in range(0,len(paths),4)]
     ''' Entering loop for segmentation of the video '''
-    # num_cores = multiprocessing.cpu_count()
-    num_cores = 1
+    num_cores = multiprocessing.cpu_count()
+    # num_cores = 1
     print 'Entering to the parallel loop...\n'
-    OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea) for path in paths)
-    allSegments = [(out[0],out[1]) for out in OupPutParallel]
-    # print allSegments
-    maxNumBlobs = max([out[2] for out in OupPutParallel])
-    # print maxNumBlobs
+    allSegments = []
+    numBlobs = []
+    for pathsSubList in pathsSubLists:
+        OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea) for path in pathsSubList)
+        allSegmentsSubList = [(out[0],out[1]) for out in OupPutParallel]
+        allSegments.append(allSegmentsSubList)
+        numBlobs.append([out[2] for out in OupPutParallel])
+    allSegments = flatten(allSegments)
+    maxNumBlobs = max(flatten(numBlobs))
+    # OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea) for path in paths)
+    # allSegments = [(out[0],out[1]) for out in OupPutParallel]
+    # # print allSegments
+    # maxNumBlobs = max([out[2] for out in OupPutParallel])
+    # # print maxNumBlobs
     allSegments = sorted(allSegments, key=lambda x: x[0][0])
     numFrames = generateVideoTOC(allSegments, paths[0])
     collectAndSaveVideoInfo(paths[0], numFrames, height, width, numAnimals, num_cores, minThreshold,maxThreshold,maxArea,maxNumBlobs)

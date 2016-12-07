@@ -20,6 +20,59 @@ from scipy import ndimage
 import Tkinter, tkSimpleDialog
 
 """
+Split video
+"""
+def splitVideo(videoPath):
+    # load video
+    cap = cv2.VideoCapture(videoPath)
+    print 'opening cap ', cap.isOpened()
+    # retrieve info
+    video = os.path.basename(videoPath)
+    filename, extension = os.path.splitext(video)
+    folder = os.path.dirname(videoPath)
+    fps = cv2.cv.CV_CAP_PROP_FPS
+    print 'fps ',fps
+    fourcc = cv2.cv.CV_CAP_PROP_FOURCC
+    # print fourcc
+    # fourcc = cv2.cv.CV_FOURCC(*'MP4A')
+    # fourcc = cv2.cv.CV_FOURCC(*'X264')
+    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+    numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    currentFrame = cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
+    # chunk it
+    numSeg = 1
+    name = folder +'/'+ filename + '_' + str(numSeg) + extension
+    out = cv2.VideoWriter(name, fourcc, fps, (width, height))
+    while currentFrame < numFrame:
+        print currentFrame
+        ret = cap.grab()
+        print 'reading ', ret
+        frame = cap.retrieve()
+        print 'frame', frame
+        if ret:
+            if currentFrame % 500 == 0:
+                name = folder +'/'+ filename + '_' + str(numSeg) + extension
+                numSeg += 1
+                out.release()
+                out = cv2.VideoWriter(name, fourcc, fps, (width, height))
+                print 'saving ', name
+
+            out.write(frame)
+            currentFrame += 1
+            ## Uncomment to show the video
+            # cv2.imshow('IdPlayer',frame)
+            # m = cv2.waitKey(30) & 0xFF
+            # if m == 27: #pres esc to quit
+            #     break
+        else:
+            raise ValueError('Something went wrong when loading the video')
+
+    cap.release()
+
+
+# splitVideo('/media/lab/New Volume/Tests big groups/26dpf/34fish_26dpf.avi' )
+"""
 Get general information from video
 """
 def getVideoInfo(paths):

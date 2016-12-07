@@ -41,7 +41,7 @@ def _activation_summary(x):
 def _add_loss_summary(loss):
     tf.scalar_summary(loss.op.name, loss)
 
-def put_kernels_on_grid (kernel, (grid_Y, grid_X), pad=1):
+def put_kernels_on_grid(kernel, (grid_Y, grid_X), pad=1):
     '''Visualize conv. features as an image (mostly for the 1st layer).
     Place kernel into a grid, with some paddings between adjacent filters.
     Args:
@@ -125,7 +125,7 @@ def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filte
             grid_x = int(np.sqrt(n_filters))
             grid_y = grid_x  # to get a square grid for 64 conv1 features
             WtoPlot = tf.slice(W, [0, 0, 0, 0], [filter_size, filter_size, 1, n_filters])
-            grid = put_kernels_on_grid (WtoPlot, (grid_y, grid_x))
+            grid = put_kernels_on_grid(WtoPlot, (grid_y, grid_x))
             tf.image_summary(scopeName + '/features', grid, max_images=1)
 
             # x_min = tf.reduce_min(convb)
@@ -138,7 +138,7 @@ def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filte
             tf.image_summary(scopeName + '/output', convbToPlot, max_images=10)
 
 
-    return convb,w,h
+    return convb,w,h,grid
 
 
 def maxpool2d(name,inputWidth, inputHeight, inputPool, pool=2 , stride=[1,2,2,1] ,pad='VALID'):
@@ -167,6 +167,7 @@ def buildFc(scopeName, inputFc, height, width, n_filters, n_fc, keep_prob):
         fc = tf.add(tf.matmul(inputFc, W), b)
         fc_drop = tf.nn.dropout(fc, keep_prob, name = scope.name)
         _activation_summary(fc_drop)
+
     return fc_drop
 
 def reLU(scopeName, inputRelu):
@@ -273,7 +274,7 @@ def get_legend_str(n):
 
     return [str(i+1) for i in range(n)]
 
-def CNNplotterFast(lossAccDict):
+def CNNplotterFast2(lossAccDict,weightsDict,show=False):
 
     # get variables
     lossPlot, valLossPlot, lossSpeed,valLossSpeed, lossAccel, valLossAccel, \
@@ -284,6 +285,120 @@ def CNNplotterFast(lossAccDict):
         'acc', 'valAcc', 'accSpeed', 'valAccSpeed', 'accAccel', 'valAccAccel',
         'indivAcc', 'indivValAcc',
         'features', 'labels'])
+
+    WConv1, WConv3, WConv5  = getVarFromDict(weightsDict,['W1','W3','W5'])
+
+    # 'Weights': [WConv1,WConv3,WConv5,WFc]
+
+    meanIndivAcc = indivAcc[-1]
+    meanValIndiviAcc = indivValAcc[-1]
+    numIndiv = len(meanIndivAcc)
+    features = features[:30]
+    features = np.reshape(features, [features.shape[0],int(np.sqrt(features.shape[1])),int(np.sqrt(features.shape[1]))])
+    labels = labels[:30]
+
+
+    plt.close()
+    # fig, axes = plt.subplots(nrows=10, ncols=12)
+    # fig = plt.figure()
+    # if show == True:
+    plt.switch_backend('TkAgg')
+    mng = plt.get_current_fig_manager()
+    mng.resize(*mng.window.maxsize())
+
+
+    # loss
+    ax1 = plt.subplot(241)
+    ax1.spines["top"].set_visible(False)
+    ax1.spines["right"].set_visible(False)
+    ax1.get_xaxis().tick_bottom()
+    ax1.get_yaxis().tick_left()
+    ax1.set_axis_bgcolor('none')
+
+    ax1.plot(lossPlot,'or-', label='training')
+    ax1.plot(valLossPlot, 'ob--', label='validation')
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Loss function')
+    ax1.legend(fancybox=True, framealpha=0.05)
+    ax1.set_xlim((0,300))
+    ax1.set_ylim((0,2.))
+
+    # accuracy
+    ax2 = plt.subplot(242)
+    ax2.spines["top"].set_visible(False)
+    ax2.spines["right"].set_visible(False)
+    ax2.get_xaxis().tick_bottom()
+    ax2.get_yaxis().tick_left()
+    ax2.set_axis_bgcolor('none')
+
+    ax2.plot(accPlot, 'or-')
+    ax2.plot(valAccPlot, 'ob--')
+    ax2.set_xlabel('Epoch')
+    ax2.set_ylabel('Accuray')
+    ax2.set_xlim((0,300))
+    ax2.set_ylim((0,1))
+
+
+    # Individual accuracies
+    ax3 = plt.subplot(2, 2, 2)
+    ax3.spines["top"].set_visible(False)
+    ax3.spines["right"].set_visible(False)
+    ax3.get_xaxis().tick_bottom()
+    ax3.get_yaxis().tick_left()
+    ax3.set_axis_bgcolor('none')
+
+    individuals = [str(j) for j in range(1,numIndiv+1)]
+    ind = np.arange(numIndiv)+1
+    # width = 0.25
+    width = 0.35
+    rects1 = ax3.bar(ind-width, meanIndivAcc, width, color='red', alpha=0.4,label='training')
+    rects2 = ax3.bar(ind, meanValIndiviAcc, width, color='blue', alpha=0.4,label='validation')
+    ax3.set_ylim((0,1))
+    ax3.set_xlim((0,numIndiv+1))
+    ax3.set_xlabel('individual')
+    ax3.set_ylabel('Individual accuracy')
+    # ax3.legend(fancybox=True, framealpha=0.05)
+
+    # W1
+    ax4 = plt.subplot(2,3,4)
+    ax4.imshow(np.squeeze(WConv1),interpolation='none',cmap='gray',vmin=0, vmax=1)
+    ax4.set_title('Conv1 filters')
+    ax4.xaxis.set_ticklabels([])
+    ax4.yaxis.set_ticklabels([])
+
+    # W3
+    ax5 = plt.subplot(2,3,5)
+    ax5.imshow(np.squeeze(WConv3),interpolation='none',cmap='gray',vmin=0, vmax=1)
+    ax5.set_title('Conv2 filters')
+    ax5.xaxis.set_ticklabels([])
+    ax5.yaxis.set_ticklabels([])
+
+    # W5
+    ax6 = plt.subplot(2,3,6)
+    ax6.imshow(np.squeeze(WConv5),interpolation='none',cmap='gray',vmin=0, vmax=1)
+    ax6.set_title('Conv3 filters')
+    ax6.xaxis.set_ticklabels([])
+    ax6.yaxis.set_ticklabels([])
+
+    plt.subplots_adjust(bottom=0.1, right=.9, left=0.1, top=.9, wspace = 0.25, hspace=0.25)
+
+    plt.draw()
+    plt.pause(1)
+
+
+def CNNplotterFast(lossAccDict):
+
+    # get variables
+    lossPlot, valLossPlot, lossSpeed,valLossSpeed, lossAccel, valLossAccel, \
+    accPlot, valAccPlot, accSpeed,valAccSpeed, accAccel, valAccAccel, \
+    indivAcc,indivValAcc, \
+    features, labels, weights = getVarFromDict(lossAccDict,[
+        'loss', 'valLoss', 'lossSpeed', 'valLossSpeed', 'lossAccel', 'valLossAccel',
+        'acc', 'valAcc', 'accSpeed', 'valAccSpeed', 'accAccel', 'valAccAccel',
+        'indivAcc', 'indivValAcc',
+        'features', 'labels','Weights'])
+
+    # 'Weights': [WConv1,WConv3,WConv5,WFc]
 
     meanIndivAcc = indivAcc[-1]
     meanValIndiviAcc = indivValAcc[-1]
@@ -385,7 +500,6 @@ def CNNplotterFast(lossAccDict):
     # width = 0.25
     width = 0.35
     rects1 = ax7.barh(ind, meanIndivAcc, width, color='red', alpha=0.4,label='training')
-
     rects2 = ax7.barh(ind+width, meanValIndiviAcc, width, color='blue', alpha=0.4,label='validation')
 
     # rects3 = ax7.barh(ind+width*2, indivAccRef, width, color='green', alpha=0.4,label='validation')

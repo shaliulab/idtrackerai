@@ -372,7 +372,8 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     # Fill black parts of the portrait with random background
     # portrait = fillSquareFrame(minif_cropped,bkgSamp,threshold)
     # return portrait, curvature, cnt, maxCoord, sorted_locations
-    return portrait
+    noseFull = cntBB2Full(nose,bb)
+    return portrait, tuple(noseFull.astype('int'))
 
 def reaper(videoPath, frameIndices):
     # print 'segment number ', i
@@ -394,11 +395,13 @@ def reaper(videoPath, frameIndices):
     # print 'miniframes are array'
     """ Visualise """
     AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images'])
+    AllNoses = pd.DataFrame(index = segmentIndices, columns= ['noses'])
     # print goodFrameIndices
     counter = 0
     while counter < len(miniframes):
         # print counter
         portraits = []
+        noses = []
         bbs = boundingboxes[counter]
         minif = miniframes[counter]
         cnts = contours[counter]
@@ -409,11 +412,11 @@ def reaper(videoPath, frameIndices):
             ### Uncomment to plot
             # cv2.imshow('frame', miniframe)
             # cv2.waitKey()
-            portrait = getPortrait(miniframe,cnts[j],bbs[j],bkgSamps[j])
+            portrait, nose_pixels = getPortrait(miniframe,cnts[j],bbs[j],bkgSamps[j])
 
             # get all the heads in a single list
             portraits.append(portrait)
-
+            noses.append(nose_pixels)
         ### UNCOMMENT TO PLOT ##################################################
         #     cv2.imshow(str(j),portrait)
         #
@@ -423,9 +426,10 @@ def reaper(videoPath, frameIndices):
         ########################################################################
 
         AllPortraits.set_value(segmentIndices[counter], 'images', portraits)
+        AllNoses.set_value(segmentIndices[counter], 'noses', noses)
         counter += 1
     print 'you just reaped', videoPath
-    return AllPortraits
+    return AllPortraits, AllNoses
 
 # def modelDiffArea(fragments,areas):
 #     """
@@ -443,14 +447,19 @@ def portrait(videoPaths, dfGlobal):
     # print 'frameIndices, ', frameIndices
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    allPortraits = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath,frameIndices) for videoPath in videoPaths)
-
+    allPortraitsAndNoses = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath,frameIndices) for videoPath in videoPaths)
+    allPortraits = [t[0] for t in allPortraitsAndNoses]
+    allNoses = [t[1] for t in allPortraitsAndNoses]
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)
+    allNoses = pd.concat(allNoses)
+    allNoses = allNoses.sort_index(axis=0, ascending=True)
+
     if list(allPortraits.index) != list(dfGlobal.index):
         raise ValueError('The list of indexes in allPortraits and dfGlobal should be the same')
     dfGlobal['images'] = allPortraits
     dfGlobal['identities'] = dfGlobal['permutations']
+    dfGlobal['noses'] = allNoses
 
     saveFile(videoPaths[0], dfGlobal, 'portraits', time = 0)
     return dfGlobal

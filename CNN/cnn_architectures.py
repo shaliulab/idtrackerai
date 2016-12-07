@@ -28,7 +28,7 @@ def inference(images, width, height, channels, classes, keep_prob):
     n_filter1 = 16
     stride1 = [1,1,1,1]
     pad1 = 'SAME'
-    conv1, w1, h1 = buildConv2D('conv1', width, height, 1, images_tensor, filter_size1, n_filter1, stride1, pad1)
+    conv1, w1, h1, W1 = buildConv2D('conv1', width, height, 1, images_tensor, filter_size1, n_filter1, stride1, pad1)
     # maxpool2d
     stride2 = [1,2,2,1]
     pool2 = 2
@@ -40,7 +40,7 @@ def inference(images, width, height, channels, classes, keep_prob):
     n_filter3 = 64
     stride3 = [1,1,1,1]
     pad3 = 'SAME'
-    conv3, w3, h3 = buildConv2D('conv2', w2, h2, d2, max_pool2, filter_size3, n_filter3, stride3, pad3)
+    conv3, w3, h3, W3 = buildConv2D('conv2', w2, h2, d2, max_pool2, filter_size3, n_filter3, stride3, pad3)
     # maxpool2d
     stride4 = [1,2,2,1]
     pool4 = 2
@@ -52,7 +52,7 @@ def inference(images, width, height, channels, classes, keep_prob):
     n_filter5 = 100
     stride5 = [1,1,1,1]
     pad5 = 'SAME'
-    conv5, w5, h5 = buildConv2D('conv3', w4, h4, d4, max_pool4, filter_size5, n_filter5, stride5, pad5)
+    conv5, w5, h5, W5 = buildConv2D('conv3', w4, h4, d4, max_pool4, filter_size5, n_filter5, stride5, pad5)
     d5 = n_filter5
     # linearize weights for fully-connected layer
     resolutionS = w5 * h5
@@ -63,7 +63,7 @@ def inference(images, width, height, channels, classes, keep_prob):
     relu = reLU('relu1', fc_drop)
     y_logits = buildSoftMax('softmax1', relu, n_fc, classes)
 
-    return y_logits, relu
+    return y_logits, relu, (W1,W3,W5)
 
 def inference1(images, width, height, channels, classes, keep_prob):
     '''
@@ -87,7 +87,7 @@ def inference1(images, width, height, channels, classes, keep_prob):
     n_filter1 = 16
     stride1 = [1,1,1,1]
     pad1 = 'SAME'
-    conv1, w1, h1 = buildConv2D('conv1', width, height, 1, images_tensor, filter_size1, n_filter1, stride1, pad1)
+    conv1, w1, h1, W1 = buildConv2D('conv1', width, height, 1, images_tensor, filter_size1, n_filter1, stride1, pad1)
     # relu
     relu1 = reLU('relu1', conv1)
     # maxpool2d
@@ -101,7 +101,7 @@ def inference1(images, width, height, channels, classes, keep_prob):
     n_filter3 = 64
     stride3 = [1,1,1,1]
     pad3 = 'SAME'
-    conv3, w3, h3 = buildConv2D('conv2', w2, h2, d2, max_pool2, filter_size3, n_filter3, stride3, pad3)
+    conv3, w3, h3, W3 = buildConv2D('conv2', w2, h2, d2, max_pool2, filter_size3, n_filter3, stride3, pad3)
     # relu
     relu2 = reLU('relu2', conv3)
     # maxpool2d
@@ -115,7 +115,7 @@ def inference1(images, width, height, channels, classes, keep_prob):
     n_filter5 = 100
     stride5 = [1,1,1,1]
     pad5 = 'SAME'
-    conv5, w5, h5 = buildConv2D('conv3', w4, h4, d4, max_pool4, filter_size5, n_filter5, stride5, pad5)
+    conv5, w5, h5, W5 = buildConv2D('conv3', w4, h4, d4, max_pool4, filter_size5, n_filter5, stride5, pad5)
     d5 = n_filter5
     # relu
     relu3 = reLU('relu3', conv5)
@@ -128,4 +128,4 @@ def inference1(images, width, height, channels, classes, keep_prob):
     relu = reLU('relu1', fc_drop)
     y_logits = buildSoftMax('softmax1', relu, n_fc, classes)
 
-    return y_logits, relu
+    return y_logits, relu, (W1,W3,W5)

@@ -146,7 +146,7 @@ def fragmentProbId(X_t, width, height, channels, classes, resolution, loadCkpt_f
         images_pl = tf.placeholder(tf.float32, [None, resolution], name = 'images')
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
-        logits, relu = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
+        logits, relu, (W1,W3,W5) = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
         predictions = tf.cast(tf.add(tf.argmax(logits,1),1),tf.float32)
 
         saver_model = createSaver('soft', False, 'saver_model')
@@ -488,7 +488,7 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
     numGoodLists = np.sum(np.asarray(lensIntervalsLists) != 0)
 
     ckptName = trainDict['ckptName']
-    batchSize = trainDict['batchSize']
+    batchSize = 1000
     ckpt_dir = getCkptvideoPath(videoPath,ckptName,train=0,time=0,ckptTime=0)
 
     '''
@@ -518,11 +518,12 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
             channels, width, height = imsize
             resolution = np.prod(imsize)
             classes = numAnimals
-            numImagesT = batchSize
-            # Get bach indices
+            numImagesT = len(portsFragments) #FIXME
+            # Get batch indices
             Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batchSize)
-
-            # Run forward pass
+            print 'indices test ', Tindices
+            print 'iteration per epoch ', Titer_per_epoch
+            # Run forward pass,
             softMaxProbs, softMaxId = fragmentProbId(portsFragments, width, height, channels,
                 classes, resolution, loadCkpt_folder, batchSize, Tindices, Titer_per_epoch)
 
@@ -616,7 +617,8 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
         'P1Frag': P1FragAllVideo,
         'fragmentIds':idLogP2FragAllVideo,
         'probFragmentIds':logP2FragAllVideo,
-        'P2FragAllVideo':P2FragAllVideo}
+        'P2FragAllVideo':P2FragAllVideo,
+        'overallP2': overallP2}
 
     portraits['identities'] = idFreqFragAllVideo.tolist()
     # saveFile(videoPath,portraits,'portraits',time=0)
@@ -743,19 +745,19 @@ def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals):
 
 
 
-    plt.ion()
-    plt.figure()
-    plt.scatter(distI,lens,c='b')
-    plt.scatter(distI[fragsForTrain],lens[fragsForTrain],c='r')
-    plt.scatter(distI0,len0,c='b',marker='*')
-    # plf.scatter(distINDSelected,lensNDSelected,c='r')
-    # plt.plot([distI0,distI1],[len0,len1],'-k')
-    # plt.plot([distI0,distI2],[len0,len2],'-k')
-    # plt.plot([distI0,distI3],[len0,len3],'-k')
-    # plt.plot([distI0,distI4],[len0,len4],'-k')
-    # plt.plot([distI0,distI5],[len0,len5],'-k')
-    plt.xlabel('Dist from Identity matrix')
-    plt.ylabel('Minimum length of the complete set of fragments')
-    plt.show()
+    # plt.ion()
+    # plt.figure()
+    # plt.scatter(distI,lens,c='b')
+    # plt.scatter(distI[fragsForTrain],lens[fragsForTrain],c='r')
+    # plt.scatter(distI0,len0,c='b',marker='*')
+    # # plf.scatter(distINDSelected,lensNDSelected,c='r')
+    # # plt.plot([distI0,distI1],[len0,len1],'-k')
+    # # plt.plot([distI0,distI2],[len0,len2],'-k')
+    # # plt.plot([distI0,distI3],[len0,len3],'-k')
+    # # plt.plot([distI0,distI4],[len0,len4],'-k')
+    # # plt.plot([distI0,distI5],[len0,len5],'-k')
+    # plt.xlabel('Dist from Identity matrix')
+    # plt.ylabel('Minimum length of the complete set of fragments')
+    # plt.show()
 
     return fragsForTrain, continueFlag

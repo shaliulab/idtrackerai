@@ -174,11 +174,7 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         # cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
         # shower = cv2.addWeighted(origFrame,1,toile,.5,0)
         # showerCopy = shower.copy()
-        # resUp = cv2.getTrackbarPos('ResUp', 'Bars')
-        # resDown = cv2.getTrackbarPos('ResDown', 'Bars')
-        # # print '4'
-        # showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
-        # showerCopy = cv2.resize(showerCopy,None, fx = np.true_divide(1,resDown), fy = np.true_divide(1,resDown))
+
         bbs, miniFrames, _, _, _, goodContours, bkgSamples = blobExtractor(segmentedFrame, origFrame, minArea, maxArea, height, width)
 
         # bbs, miniFrames, _, _, _, bkgSamples = getBlobsInfoPerFrame(origFrame, goodContours, height, width)
@@ -188,6 +184,11 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         showerCopy = shower.copy()
         resUp = cv2.getTrackbarPos('ResUp', 'Bars')
         resDown = cv2.getTrackbarPos('ResDown', 'Bars')
+        # # print '4'
+        showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
+        showerCopy = cv2.resize(showerCopy,None, fx = np.true_divide(1,resDown), fy = np.true_divide(1,resDown))
+        # resUp = cv2.getTrackbarPos('ResUp', 'Bars')
+        # resDown = cv2.getTrackbarPos('ResDown', 'Bars')
         # print '5'
         numColumns = 5
         numGoodContours = len(goodContours)
@@ -200,7 +201,7 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         rowPortrait = []
         while j < numPortraits:
             if j < numGoodContours:
-                portrait = getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j])
+                portrait,_ = getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j])
                 portrait = np.squeeze(portrait)
             else:
                 portrait = np.zeros((sizePortrait,sizePortrait),dtype='uint8')

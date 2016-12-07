@@ -21,18 +21,19 @@ import itertools
 import cPickle as pickle
 
 numSegment = 0
-# paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
+paths = scanFolder('../Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
 # paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
-paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
-
+# paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
+# paths = scanFolder('../BigGroup/manyFish_26dpf_20161110_1.avi')
+print paths
 
 frameIndices = loadFile(paths[0], 'frameIndices', time=0)
 videoInfo = loadFile(paths[0], 'videoInfo', time=0)
 videoInfo = videoInfo.to_dict()[0]
 stats = loadFile(paths[0], 'statistics', time=0)
 stats = stats.to_dict()[0]
-
+dfGlobal = loadFile(paths[0], 'portraits', time=0)
 # IdsStatistics = {'blobIds':idSoftMaxAllVideo,
 #     'probBlobIds':PSoftMaxAllVIdeo,
 #     'fragmentIds':idLogP2FragAllVideo,
@@ -57,7 +58,7 @@ P2Frag = stats['P2FragAllVideo']
 
 statistics = [allFragProbIds, allIds, allProbIds, FreqFrag, normFreqFrag, P1Frag,P2Frag]
 
-def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,statistics):
+def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,statistics,dfGlobal):
     freq = statistics[3]
     normFreq = statistics[4]
     P1 = statistics[5]
@@ -77,6 +78,8 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
     # print 'colors, ',colors
     def onChange(trackbarValue):
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+        index = frameIndices[(frameIndices.segment == int(sNumber)) & (frameIndices.frame == trackbarValue)].index[0]
+        noses = dfGlobal.loc[index,'noses']
         centroids = df.loc[trackbarValue,'centroids']
         pixels = df.loc[trackbarValue,'pixels']
         permutation = df.loc[trackbarValue,'permutation']
@@ -117,7 +120,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
                     break
 
             print '\n *************** global frame, ', globalFrame
-            for i, centroid in enumerate(centroids):
+            for i, (centroid,nose) in enumerate(zip(centroids,noses)):
                 # print centroid
                 cur_id = allIdentities[globalFrame,i]
                 if statIdentity:
@@ -151,10 +154,10 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
                 P2Text = '[ ' + P2Text + ' ]'
                 print '--------- Id, ', cur_id+1
                 print 'Frequencies', freqText
-                print 'normFrequencies', normFreqText
-                print 'P1, ', P1Text
+                # print 'normFrequencies', normFreqText
+                # print 'P1, ', P1Text
                 print 'P2, ', P2Text
-                print 'logP2, ', logP2Text
+                # print 'logP2, ', logP2Text
                 # if not sum(stat[globalFrame,i,:]):
                 #     cur_id = -1
 
@@ -164,6 +167,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
                 cv2.putText(frame,text,centroid, font, fontSize,color,thickness)
                 cv2.putText(frame,str(cur_id+1),(centroid[0]-10,centroid[1]-10) , font, 1,colors[cur_id+1],2)
                 cv2.circle(frame, centroid,2, colors[cur_id+1],2)
+                cv2.circle(frame, nose,2, colors[cur_id+1],2)
 
 
 
@@ -173,7 +177,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
         # blendFrame = cv2.addWeighted(frame,.5,frameShadows,.5,0)
         # print 'shape blend Frame, ', blendFrame.shape
         cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
-
+        frame = cv2.resize(frame,None, fx = np.true_divide(1,1), fy = np.true_divide(1,1))
         # Visualization of the process
         cv2.imshow('IdPlayer',frame)
         pass
@@ -199,6 +203,6 @@ finish = False
 statNum = 4
 while not finish:
     print 'I am here', numSegment
-    numSegment, statNum = IdPlayer(paths[int(numSegment)],allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics)
+    numSegment, statNum = IdPlayer(paths[int(numSegment)],allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics,dfGlobal)
     if numSegment == 'q':
         finish = True
