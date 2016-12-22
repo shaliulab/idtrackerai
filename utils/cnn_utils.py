@@ -104,12 +104,12 @@ def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filte
         W = tf.get_variable(
             'weights',
             [filter_size, filter_size, inputDepth, n_filters],
-            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
             )
         b = tf.get_variable(
             'biases',
             [n_filters],
-            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
             )
         conv = tf.nn.conv2d(
                     input=inputConv,
@@ -157,12 +157,12 @@ def buildFc(scopeName, inputFc, height, width, n_filters, n_fc, keep_prob):
         W = tf.get_variable(
             'weights',
             [height * width * n_filters, n_fc],
-            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
             )
         b = tf.get_variable(
             'biases',
             [n_fc],
-            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
             )
         fc = tf.add(tf.matmul(inputFc, W), b)
         fc_drop = tf.nn.dropout(fc, keep_prob, name = scope.name)
@@ -525,6 +525,71 @@ def CNNplotterFast(lossAccDict):
     plt.subplots_adjust(bottom=0.1, right=.9, left=0.1, top=.9, wspace = 0.5, hspace=0.5)
     plt.draw()
     plt.pause(1)
+
+def CNNplotterFastNoses(lossDict):
+    # get variables
+    lossPlot, valLossPlot, lossSpeed,valLossSpeed, lossAccel, valLossAccel, \
+    coord, coord_hat, miniframes = getVarFromDict(lossDict,[
+        'loss', 'valLoss', 'lossSpeed', 'valLossSpeed', 'lossAccel', 'valLossAccel',
+        'coordinate', 'coordinate_hat', 'miniframes'])
+    try:
+        fig = plt.gcf()
+    except:
+        fig = plt.figure()
+    fig.clear()
+    # plt.close()
+    # fig, axes = plt.subplots(nrows=10, ncols=12)
+    # fig = plt.figure()
+    plt.switch_backend('TkAgg')
+    mng = plt.get_current_fig_manager()
+    mng.resize(*mng.window.maxsize())
+
+
+    # loss
+    ax1 = plt.subplot(231)
+    ax1.spines["top"].set_visible(False)
+    ax1.spines["right"].set_visible(False)
+    ax1.get_xaxis().tick_bottom()
+    ax1.get_yaxis().tick_left()
+    ax1.set_axis_bgcolor('none')
+
+    ax1.plot(lossPlot,'or-', label='training')
+    ax1.plot(valLossPlot, 'ob--', label='validation')
+    ax1.set_ylabel('Loss function')
+    ax1.legend(fancybox=True, framealpha=0.05)
+
+    ax2 = plt.subplot(234)
+    ax2.spines["top"].set_visible(False)
+    ax2.spines["right"].set_visible(False)
+    ax2.get_xaxis().tick_bottom()
+    ax2.get_yaxis().tick_left()
+    ax2.set_axis_bgcolor('none')
+
+    ax2.plot(lossSpeed,'ro-',label='training')
+    plt.plot(valLossSpeed,'bo--',label='validation')
+    ax2.set_ylabel('Loss function speed')
+
+    k=2
+    ax_feats = []
+    for i in range(1,17):
+        ax8 = plt.subplot(4,6,k+i)
+        ax_feats.append(ax8)
+        if (k + i) % 6 == 0:
+            k+= 2
+        ax8.imshow((miniframes[i]), cmap='gray', interpolation='none')
+        ax8.scatter(coord[i,0],coord[i,1], c='r') # remark: the nose of the fish is red since we are writing this piece of code during christmas time!
+        ax8.scatter(coord[i,2],coord[i,3], c='b')
+
+        ax8.scatter(coord_hat[i,0],coord_hat[i,1], c='r', marker='v')
+        ax8.scatter(coord_hat[i,2],coord_hat[i,3], c='b', marker='v')
+
+        # ax8.set_xlim((0,1))
+        # ax8.set_ylim((0,1))
+
+    plt.subplots_adjust(bottom=0.1, right=.9, left=0.1, top=.9, wspace = 0.5, hspace=0.5)
+    plt.draw()
+    plt.pause(1)
+
 
 ''' ****************************************************************************
 CNN statistics and cluster analysis

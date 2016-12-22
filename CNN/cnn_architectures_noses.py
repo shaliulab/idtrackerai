@@ -87,7 +87,7 @@ def inference1(images, width, height, channels, classes, keep_prob):
     n_filter1 = 16
     stride1 = [1,1,1,1]
     pad1 = 'SAME'
-    conv1, w1, h1, W1 = buildConv2D('conv1', width, height, 1, images_tensor, filter_size1, n_filter1, stride1, pad1)
+    conv1, w1, h1, W1 = buildConv2D('conv1', width, height, 1, images_tensor_0_to_1, filter_size1, n_filter1, stride1, pad1)
     # relu
     relu1 = reLU('relu1', conv1)
     # maxpool2d
@@ -123,9 +123,10 @@ def inference1(images, width, height, channels, classes, keep_prob):
     resolutionS = w5 * h5
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
-    n_fc = 100
-    fc_drop = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
+    n_fc1 = 100
+    fc_drop = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc1, keep_prob)
     relu = reLU('relu1', fc_drop)
-    y_logits = buildSoftMax('softmax1', relu, n_fc, classes)
+    n_fc2 = 4
+    y_hat = buildFc('fully-connected2', fc_drop, n_fc1, 1, 1, n_fc2, keep_prob)
 
-    return y_logits, relu, (W1,W3,W5)
+    return y_hat, relu

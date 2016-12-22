@@ -10,24 +10,31 @@ import h5py
 import numpy as np
 from checkCheck import *
 from pprint import *
-from cnn_architectures import *
+from cnn_architectures_noses import *
 import warnings
 
 def _add_loss_summary(loss):
     tf.scalar_summary(loss.op.name, loss)
 
-def loss(y,y_hat):
-    l2diff = tf.sqrt( tf.reduce_sum(tf.square(tf.sub(y, y_hat)),
+def euclideanDist(p,p_hat):
+    return tf.reduce_mean( tf.reduce_sum(tf.square(tf.sub(p, p_hat)),
                                     reduction_indices=1))
 
-    # cross_entropy = tf.reduce_mean(
-    #     tf.nn.softmax_cross_entropy_with_logits(y_logits, y, name = 'CrossEntropy'), name = 'CrossEntropyMean')
-    # _add_loss_summary(cross_entropy)
-    return cross_entropy
+
+def loss(y,y_hat):
+    l2diff = tf.add(euclideanDist(y[:,:2],y_hat[:,:2]),euclideanDist(y[:,2:],y_hat[:,2:]))
+    _add_loss_summary(l2diff)
+    return l2diff
+
+# p = np.asarray([[0. , 1., 1.,2.], [2., 2., 1.,3.]])
+# p_hat = np.asarray([[1. , 0., 2.,1.], [2., 2.,3.,1.]])
+#
+# with  tf.Session() as sess:
+#     print sess.run(loss(p,p_hat))
 
 def optimize(loss,lr):
-    optimizer = tf.train.GradientDescentOptimizer(lr)
-    # optimizer = tf.train.AdamOptimizer(learning_rate=0.01, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
+    # optimizer = tf.train.GradientDescentOptimizer(lr)
+    optimizer = tf.train.AdamOptimizer(learning_rate=0.01, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
     global_step = tf.Variable(0, name='global_step', trainable=False)
     train_op = optimizer.minimize(loss)
     return train_op, global_step
@@ -82,16 +89,16 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
 
         logits, relu = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
 
-        cross_entropy = loss(labels_pl,logits)
+        l2diff = loss(labels_pl,logits)
 
-        train_op, global_step =  optimize(cross_entropy,lr)
+        train_op, global_step =  optimize(l2diff,lr)
 
-        accuracy, indivAcc = evaluation(labels_pl,logits,classes)
+        # accuracy, indivAcc = evaluation(labels_pl,logits,classes)
 
         summary_op = tf.merge_all_summaries()
 
         saver_model = createSaver('soft', False, 'saver_model')
-        saver_softmax = createSaver('soft', True, 'saver_softmax')
+        # saver_softmax = createSaver('soft', True, 'saver_softmax')
 
         with tf.Session() as sess:
             # you need to initialize all variables
@@ -123,7 +130,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                 print 'Shit, we are also loading the softmax'
                 print '********************************************************'
                 restoreFromFolder(ckpt_dir_model, saver_model, sess)
-                restoreFromFolder(ckpt_dir_softmax, saver_softmax, sess)
+                # restoreFromFolder(ckpt_dir_softmax, saver_softmax, sess)
 
             # counter for epochs
             start = global_step.eval() # get last global_step
@@ -148,16 +155,14 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                 lossAccDict = pickle.load( open( ckpt_dir_model + "/lossAcc.pkl", "rb" ) )
                 # ref lists for plotting
                 trainLossPlot = lossAccDict['loss']
-                trainAccPlot = lossAccDict['acc']
-                trainIndivAccPlot = lossAccDict['indivAcc']
+
                 # test lists for plotting
                 valLossPlot = lossAccDict['valLoss']
-                valAccPlot = lossAccDict['valAcc']
-                valIndivAccPlot = lossAccDict['indivValAcc']
+
 
             # print "Start from:", start
-            opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu]
-            opListVal = [cross_entropy, accuracy, indivAcc, relu]
+            opListTrain = [train_op, l2diff, logits]
+            opListVal = [l2diff, logits]
 
             stored_exception = None
             epoch_i = 0
@@ -167,40 +172,27 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                     epoch_counter = start + epoch_i
                     print '**** Epoch %i ****' % epoch_counter
                     lossEpoch = []
-                    accEpoch = []
-                    indivAccEpoch = []
 
                     ''' TRAINING '''
                     for iter_i in range(Titer_per_epoch):
 
-                        _, batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                        _, batchLoss, coords, feed_dict = run_batch(
                             sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
                             images_pl, labels_pl, keep_prob_pl,
                             X_t, Y_t, keep_prob = keep_prob)
 
                         lossEpoch.append(batchLoss)
-                        accEpoch.append(batchAcc)
-                        indivAccEpoch.append(indivBatchAcc)
 
                         # Print per batch loss and accuracies
                         if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
                             print "Batch " + str(iter_i) + \
-                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
-                                ", Training Accuracy= " + "{:.5f}".format(batchAcc)
-
-                    trainFeat = batchFeat
-                    trainFeatLabels = Y_t[Tindices[iter_i]:Tindices[iter_i+1]]
+                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss)
 
                     trainLoss = np.mean(lossEpoch)
-                    trainAcc = np.mean(accEpoch)
-                    trainIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
 
                     # Batch finished
                     print('Train (epoch %d): ' % epoch_counter + \
-                        " Loss=" + "{:.6f}".format(trainLoss) + \
-                        ", Accuracy=" + "{:.5f}".format(trainAcc) + \
-                        ", Individual Accuracy=")
-                    print(trainIndivAcc)
+                        " Loss=" + "{:.6f}".format(trainLoss))
 
                     # Summary writer
                     summary_str = sess.run(summary_op, feed_dict=feed_dict)
@@ -209,41 +201,29 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                     # update global step and save model
                     global_step.assign(global_step + 1).eval() # set and update(eval) global_step with index, i
                     saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
-                    saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
 
                     ''' VALIDATION '''
 
                     lossEpoch = []
-                    accEpoch = []
-                    indivAccEpoch = []
                     for iter_i in range(Viter_per_epoch):
 
-                        batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                        batchLoss, valCoords, feed_dict = run_batch(
                             sess, opListVal, Vindices, iter_i, Viter_per_epoch,
                             images_pl, labels_pl, keep_prob_pl,
                             X_v, Y_v, keep_prob = keep_prob)
 
                         lossEpoch.append(batchLoss)
-                        accEpoch.append(batchAcc)
-                        indivAccEpoch.append(indivBatchAcc)
 
                         # Print per batch loss and accuracies
                         if iter_i % round(np.true_divide(Viter_per_epoch,1)) == 0:
                             print "Batch " + str(iter_i) + \
-                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
-                                ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss)
+
 
                     valLoss = np.mean(lossEpoch)
-                    valAcc = np.mean(accEpoch)
-                    valIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
-
-                    # Batch finished
 
                     print('Validation (epoch %d): ' % epoch_counter + \
-                        " Loss=" + "{:.6f}".format(valLoss) + \
-                        ", Accuracy=" + "{:.5f}".format(valAcc) + \
-                        ", Individual Accuracy=")
-                    print(valIndivAcc)
+                        " Loss=" + "{:.6f}".format(valLoss))
 
                     summary_str = sess.run(summary_op, feed_dict=feed_dict)
                     summary_writerV.add_summary(summary_str, epoch_i)
@@ -256,54 +236,39 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
 
                     # References
                     trainLossPlot.append(trainLoss)
-                    trainAccPlot.append(trainAcc)
-                    trainIndivAccPlot.append(trainIndivAcc)
                     trainLossSpeed, trainLossAccel = computeDerivatives(trainLossPlot)
-                    trainAccSpeed, trainAccAccel = computeDerivatives(trainAccPlot)
-                    trainFeatPlot = trainFeat
 
                     # Test
                     valLossPlot.append(valLoss)
-                    valAccPlot.append(valAcc)
-                    valIndivAccPlot.append(valIndivAcc)
                     valLossSpeed, valLossAccel = computeDerivatives(valLossPlot)
-                    valAccSpeed, valAccAccel = computeDerivatives(valAccPlot)
-
-                    lossAccDict = {
+                    resX_v = np.reshape(np.squeeze(X_v[Vindices[iter_i]:Vindices[iter_i+1]]), [-1, 128,128])
+                    lossDict = {
                         'loss': trainLossPlot,
                         'valLoss': valLossPlot,
                         'lossSpeed': trainLossSpeed,
                         'valLossSpeed': valLossSpeed,
                         'lossAccel': trainLossAccel,
                         'valLossAccel': valLossAccel,
-                        'acc': trainAccPlot,
-                        'valAcc': valAccPlot,
-                        'accSpeed': trainAccSpeed,
-                        'valAccSpeed': valAccSpeed,
-                        'accAccel': trainAccSpeed,
-                        'valAccAccel': valAccSpeed,
-                        'indivAcc': trainIndivAccPlot,
-                        'indivValAcc': valIndivAccPlot,
-                        # 'indivValAccRef': indivAccRef,
-                        'features': trainFeatPlot,
-                        'labels': one_hot_to_dense(trainFeatLabels) # labels of the last batch of the references to plot some features
+                        'coordinate_hat': valCoords*128,
+                        'coordinate' : Y_v[Vindices[iter_i]:Vindices[iter_i+1]]*128,
+                        'miniframes': resX_v
                         }
 
-                    pickle.dump( lossAccDict , open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
+                    pickle.dump( lossDict , open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
                     '''
                     *******************
                     Plotter
                     *******************
                     '''
-                    ### uncomment to plot ----
-                    # if epoch_i % 10 == 0:
-                    #     CNNplotterFast(lossAccDict)
-                    #
-                    #     print 'Saving figure...'
-                    #     figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
-                    #     plt.savefig(figname)
-                    # print '-------------------------------'
-                    ### ---
+                    ## uncomment to plot ----
+                    if epoch_i % 1 == 0:
+                        CNNplotterFastNoses(lossDict)
+
+                        print 'Saving figure...'
+                        figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
+                        plt.savefig(figname)
+                    print '-------------------------------'
+                    ## ---
 
                     if stored_exception:
                         break
@@ -331,13 +296,13 @@ python -i cnn_model_summaries.py
 if __name__ == '__main__':
     # prep for args
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_train', default='36dpf_60indiv_22000ImPerInd_rotateAndCrop', type = str)
+    parser.add_argument('--dataset_train', default='36dpf_8indiv_7998ImPerInd_newMinif', type = str)
     parser.add_argument('--dataset_test', default=None, type = str)
     parser.add_argument('--train', default=1, type=int)
-    parser.add_argument('--ckpt_folder', default = "./ckpt_dir", type= str)
+    parser.add_argument('--ckpt_folder', default = "./ckpt_dir_noses_Adam", type= str)
     parser.add_argument('--load_ckpt_folder', default = "", type = str)
     parser.add_argument('--num_indiv', default = 60, type = int)
-    parser.add_argument('--num_train', default = 22000, type = int)
+    parser.add_argument('--num_train', default = 60000, type = int)
     parser.add_argument('--num_test', default = 0, type = int)
     parser.add_argument('--num_ref', default = 0, type = int)
     parser.add_argument('--num_epochs', default = 500, type = int)
@@ -361,22 +326,18 @@ if __name__ == '__main__':
     print "\n****** Loading database ******\n"
     numIndiv, imsize, \
     X_train, Y_train, \
-    X_val, Y_val, \
-    X_test, Y_test, \
-    X_ref, Y_ref = loadDataBase(pathTrain, num_indiv, num_train, num_test, num_ref, ckpt_dir,pathTest)
+    X_val, Y_val = loadDataBaseNose(pathTrain, ckpt_dir,pathTest)
 
     print '\n train size:    images  labels'
     print X_train.shape, Y_train.shape
+    print X_train[0]
+    print Y_train[0]
     print 'val size:    images  labels'
     print X_val.shape, Y_val.shape
-    print 'test size:    images  labels'
-    print X_test.shape, Y_test.shape
-    print 'ref size:    images  labels'
-    print X_ref.shape, Y_ref.shape
 
     channels, width, height = imsize
     resolution = np.prod(imsize)
-    classes = numIndiv
+    classes = 4
 
     '''
     ************************************************************************
@@ -400,4 +361,4 @@ if __name__ == '__main__':
 
 
         run_training(X_ref, Y_ref, X_test, Y_test, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
-        Vindices, Viter_per_epoch, 0.5,lr)
+        Vindices, Viter_per_epoch, 1.,lr)

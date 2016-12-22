@@ -107,6 +107,18 @@ def portraitsToIMDB(portraits, numAnimalsInGroup, groupNum):
 
     return imsize, images, labels
 
+def newMiniframesToIMDB(newMiniframes):
+    images = np.asarray(flatten([port for port in newMiniframes.loc[:,'images']]))
+    images = np.expand_dims(images, axis=1) #this is because the images are in gray scale and we need the channels to be a dimension explicitely
+    imsize = (images.shape[1],images.shape[2], images.shape[3])
+    labels = np.reshape(np.asarray(zip(flatten(newMiniframes.loc[:,'noses'].tolist()),flatten(newMiniframes.loc[:,'middleP'].tolist()))),[-1,4])
+    # labels = np.asarray(flatten([zip(noses,middlePs) for (noses,middlePs) in zip(flatten(newMiniframes.loc[:,'noses'].tolist()),newMiniframes.loc[:,'middleP'].tolist())))
+    if len(images) != len(labels):
+        raise ValueError('The number of images and labels should match.')
+    # labels = np.expand_dims(labels, axis=1)
+
+    return imsize, images, labels
+
 def retrieveInfoLib(libPath, preprocessing = "curvature_portrait"):
     #the folder's name is the age of the individuals
     ageInDpf = os.path.split(libPath)[-1]
