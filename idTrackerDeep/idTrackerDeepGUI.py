@@ -223,8 +223,8 @@ if __name__ == '__main__':
     print '********************************************************************'
     print 'Tracker'
     print '********************************************************************\n'
-    # loadCkpt_folder = selectDir(initialDir) #select where to load the model
-    loadCkpt_folder = '/home/lab/Desktop/TF_models/IdTracker/CNN/ckpt_Train_25dpf_60indiv_25000_transfer'
+    loadCkpt_folder = selectDir(initialDir) #select where to load the model
+    # loadCkpt_folder = '/home/lab/Desktop/TF_models/IdTracker/CNN/ckpt_Train_25dpf_60indiv_25000_transfer'
     loadCkpt_folder = os.path.relpath(loadCkpt_folder)
     # inputs = getMultipleInputs('Training parameters', ['ckptName','batch size', 'num. epochs', 'learning rate', 'train (1 (from strach) or 2 (from last check point))'])
     # print 'inputs, ', inputs

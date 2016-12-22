@@ -163,7 +163,6 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
             epoch_i = 0
             valIndivAcc = np.zeros(classes)
             while epoch_i <= n_epochs:
-                # print valLossPlot
                 minNumEpochsCheckLoss = 10
                 if start + epoch_i > 1:
                     if len(valLossPlot) > minNumEpochsCheckLoss + start: #and start > 100:
@@ -173,10 +172,6 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                         magPrev = int(np.log10(prevLoss))-1
                         epsilon = .1*10**(magCurr)
                         epsilon2 = .01*10**(magCurr)
-                        # print 'epsilon 1', epsilon
-                        # print 'epsilon 2', epsilon2
-                        # print 'curLoss', currLoss
-                        # print 'prevLoss', prevLoss
                         print 'Losses difference ', -currLoss + prevLoss
                         if magCurr > magPrev:
 
@@ -190,7 +185,6 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                             print 'Finished, passing to new set of images'
                             break
 
-            # for epoch_i in range(n_epochs):
                 try:
                     epoch_counter = start + epoch_i
                     print '**** Epoch %i ****' % epoch_counter
@@ -200,11 +194,6 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
 
                     ''' TRAINING '''
                     for iter_i in range(Titer_per_epoch):
-
-                        # _, batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
-                        #     sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
-                        #     images_pl, labels_pl, keep_prob_pl,
-                        #     X_t, Y_t, keep_prob = keep_prob)
 
                         _, batchLoss, batchAcc, indivBatchAcc, batchFeat, WConv1, WConv3, WConv5, feed_dict = run_batch(
                             sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
@@ -216,10 +205,10 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                         indivAccEpoch.append(indivBatchAcc)
 
                         # Print per batch loss and accuracies
-                        # if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
-                        #     print "Batch " + str(iter_i) + \
-                        #         ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
-                        #         ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+                        if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
+                            print "Batch " + str(iter_i) + \
+                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                                ", Training Accuracy= " + "{:.5f}".format(batchAcc)
 
                     trainFeat = batchFeat
                     trainFeatLabels = Y_t[Tindices[iter_i]:Tindices[iter_i+1]]

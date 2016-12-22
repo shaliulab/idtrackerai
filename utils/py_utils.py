@@ -16,7 +16,7 @@ def getVarFromDict(dictVar,variableNames):
     ''' get variables from a standard python dictionary '''
     return [dictVar[v] for v in variableNames]
 
-### Array utils ####
+
 def maskArray(im1,im2,w1,w2):
     return np.add(np.multiply(im1,w1),np.multiply(im2,w2))
 
@@ -299,6 +299,7 @@ def copyExistentFiles(path, listNames, time=1):
                 elif name is 'bkg':
                     fullFileName = srcSubFolder + '/bkg.pkl'
                     if os.path.isfile(fullFileName):
+                        existentFile[name] = '1'
                         shutil.copy(fullFileName, dstSubFolder)
                 else:
                     fullFileName = srcSubFolder + '/' + name + '.hdf5'

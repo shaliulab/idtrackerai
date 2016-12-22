@@ -1,27 +1,28 @@
 import os
 import sys
 sys.path.append('../utils')
-
+import tensorflow as tf
 from tf_utils import *
 from input_data_cnn import *
 from cnn_utils import *
-from cnn_architectures import *
-
-import tensorflow as tf
 import argparse
 import h5py
 import numpy as np
 from checkCheck import *
 from pprint import *
+from cnn_architectures import *
 import warnings
 
 def _add_loss_summary(loss):
     tf.scalar_summary(loss.op.name, loss)
 
-def loss(y,y_logits):
-    cross_entropy = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(y_logits, y, name = 'CrossEntropy'), name = 'CrossEntropyMean')
-    _add_loss_summary(cross_entropy)
+def loss(y,y_hat):
+    l2diff = tf.sqrt( tf.reduce_sum(tf.square(tf.sub(y, y_hat)),
+                                    reduction_indices=1))
+
+    # cross_entropy = tf.reduce_mean(
+    #     tf.nn.softmax_cross_entropy_with_logits(y_logits, y, name = 'CrossEntropy'), name = 'CrossEntropyMean')
+    # _add_loss_summary(cross_entropy)
     return cross_entropy
 
 def optimize(loss,lr):
@@ -79,7 +80,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
         images_pl, labels_pl = placeholder_inputs(batch_size, resolution, classes)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
-        logits, relu, (W1,W3,W5) = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
+        logits, relu = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
 
         cross_entropy = loss(labels_pl,logits)
 
@@ -155,7 +156,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                 valIndivAccPlot = lossAccDict['indivValAcc']
 
             # print "Start from:", start
-            opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu, W1,W3,W5]
+            opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu]
             opListVal = [cross_entropy, accuracy, indivAcc, relu]
 
             stored_exception = None
@@ -172,7 +173,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                     ''' TRAINING '''
                     for iter_i in range(Titer_per_epoch):
 
-                        _, batchLoss, batchAcc, indivBatchAcc, batchFeat, WConv1, WConv3, WConv5, feed_dict = run_batch(
+                        _, batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
                             sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
                             images_pl, labels_pl, keep_prob_pl,
                             X_t, Y_t, keep_prob = keep_prob)
@@ -285,30 +286,23 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                         'indivValAcc': valIndivAccPlot,
                         # 'indivValAccRef': indivAccRef,
                         'features': trainFeatPlot,
-                        'labels': one_hot_to_dense(trainFeatLabels), # labels of the last batch of the references to plot some features
+                        'labels': one_hot_to_dense(trainFeatLabels) # labels of the last batch of the references to plot some features
                         }
 
-                    weightsDict = {
-                        'W1': WConv1,
-                        'W3': WConv3,
-                        'W5': WConv5
-                        }
-
-                    pickle.dump( lossAccDict, open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
-                    pickle.dump( weightsDict, open( ckpt_dir_model + "/weightsDict.pkl", "wb" ) )
+                    pickle.dump( lossAccDict , open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
                     '''
                     *******************
                     Plotter
                     *******************
                     '''
                     ### uncomment to plot ----
-                    if epoch_i % 1 == 0:
-                        CNNplotterFast2(lossAccDict, weightsDict)
-
-                        print 'Saving figure...'
-                        figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
-                        plt.savefig(figname)
-                    print '-------------------------------'
+                    # if epoch_i % 10 == 0:
+                    #     CNNplotterFast(lossAccDict)
+                    #
+                    #     print 'Saving figure...'
+                    #     figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
+                    #     plt.savefig(figname)
+                    # print '-------------------------------'
                     ### ---
 
                     if stored_exception:
@@ -319,8 +313,6 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
 
             if stored_exception:
                 raise stored_exception[0], stored_exception[1], stored_exception[2]
-
-    return lossAccDict
 
 """
 Sample calls:
@@ -339,13 +331,13 @@ python -i cnn_model_summaries.py
 if __name__ == '__main__':
     # prep for args
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_train', default='36dpf_60indiv_29754ImPerInd_curvaturePortrait', type = str)
+    parser.add_argument('--dataset_train', default='36dpf_60indiv_22000ImPerInd_rotateAndCrop', type = str)
     parser.add_argument('--dataset_test', default=None, type = str)
     parser.add_argument('--train', default=1, type=int)
-    parser.add_argument('--ckpt_folder', default = "./ckpt_dir_new2", type= str)
+    parser.add_argument('--ckpt_folder', default = "./ckpt_dir", type= str)
     parser.add_argument('--load_ckpt_folder', default = "", type = str)
     parser.add_argument('--num_indiv', default = 60, type = int)
-    parser.add_argument('--num_train', default = 25000, type = int)
+    parser.add_argument('--num_train', default = 22000, type = int)
     parser.add_argument('--num_test', default = 0, type = int)
     parser.add_argument('--num_ref', default = 0, type = int)
     parser.add_argument('--num_epochs', default = 500, type = int)
@@ -372,12 +364,6 @@ if __name__ == '__main__':
     X_val, Y_val, \
     X_test, Y_test, \
     X_ref, Y_ref = loadDataBase(pathTrain, num_indiv, num_train, num_test, num_ref, ckpt_dir,pathTest)
-    # 
-    # print '***********'
-    # print np.where(np.where(Y_train == 1)[1] == 59)[0]
-    # if len(np.where(np.where(Y_train == 1)[1] == 59)[0]) == 0:
-    #     raise ValueError('There are not labels assigned to id 59')
-    # print '***********'
 
     print '\n train size:    images  labels'
     print X_train.shape, Y_train.shape
@@ -402,7 +388,6 @@ if __name__ == '__main__':
         numImagesV = Y_val.shape[0]
         Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
         Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
-        print Y_train
 
         run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
         Vindices, Viter_per_epoch,1.,lr)
@@ -413,5 +398,6 @@ if __name__ == '__main__':
         Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
         Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
 
+
         run_training(X_ref, Y_ref, X_test, Y_test, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
-        Vindices, Viter_per_epoch, 1.,lr)
+        Vindices, Viter_per_epoch, 0.5,lr)

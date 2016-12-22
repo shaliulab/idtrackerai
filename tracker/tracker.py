@@ -40,16 +40,12 @@ def DataFineTuning(fragsForTrain, fragmentsDict, portraits,numAnimals):
     for j, frag in enumerate(fragsForTrain): # for each comple fragment that has to be used for the training
         print 'fragment for finetuning number, ', j
         fragment = fragments[frag] # I take the fragment
-        # minLen = minLenIndivCompleteFragments[frag] # I take the minimum lenght of the individual fragments that coexist
         framesColumnsIndivFrags = framesAndBlobColumns[frag] # I take the list of individual fragments in frames and columns
-        # print framesColumnsIndivFrags
         intervalsIndivFrags = intervals[frag] # I take the list of individual fragments in terms of intervals
 
         for i, (framesColumnsIndivFrag,intervalsIndivFrag) in enumerate(zip(framesColumnsIndivFrags,intervalsIndivFrags)):
-            # print framesColumnsIndivFrag
             framesColumnsIndivFrag = np.asarray(framesColumnsIndivFrag)
-            # print framesColumnsIndivFrag.shape
-            # print 'individual fragment, ', i
+            print 'individual fragment, ', i
             if not intervalsIndivFrag in usedIndivIntervals: # I only use individual fragments that have not been used before
                 frames = framesColumnsIndivFrag[:,0]
                 columns = framesColumnsIndivFrag[:,1]
@@ -452,6 +448,8 @@ def fineTuner(videoPath, trainDict, fragsForTrain, fragmentsDict = [], portraits
         Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batchSize)
 
         print 'running with the devil'
+        print 'ckpt_dir', ckpt_dir
+        print 'loadCkpt_folder', loadCkpt_folder
         lossAccDict = run_training(X_train, Y_train, X_val, Y_val,
                         width, height, channels, classes, resolution,
                         ckpt_dir, loadCkpt_folder, batchSize,numEpochs,
@@ -566,7 +564,7 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
     freqFragAllVideo = freqFragAllVideo.astype('int')
 
     '''
-    Loop to Computer P2 for each individual fragment
+    Loop to Compute P2 for each individual fragment
     This loop can be parallelized
     '''
     idLogP2FragAllVideo= -np.ones((numFrames,maxNumBlobs)) # fragments identities assigned from P2 to each individual fragment
@@ -691,7 +689,7 @@ def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals):
     distIND = np.asarray(distI)
     print lensND
     print distIND
-    acceptableFragIndices = np.where((lensND > 100) & (distIND <= bestFragDist))[0]
+    acceptableFragIndices = np.where((lensND > 20) & (distIND <= bestFragDist))[0]
 
 
     fragsForTrain = np.asarray(fragsForTrain)
@@ -702,7 +700,7 @@ def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals):
 
     if len(newFragsForTrain) <= len(fragsForTrain):
         print '\nGoing for fragments above 50'
-        acceptableFragIndices = np.where((lensND > 50) & (distIND <= bestFragDist))[0]
+        acceptableFragIndices = np.where((lensND > 10) & (distIND <= bestFragDist))[0]
 
         fragsForTrain = np.asarray(fragsForTrain)
         print 'Old Frags for train, ', fragsForTrain
@@ -741,9 +739,6 @@ def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals):
     # len4 = lens[nextPossibleFragments[3]]
     # distI5 = distI[nextPossibleFragments[4]]
     # len5 = lens[nextPossibleFragments[4]]
-
-
-
 
     # plt.ion()
     # plt.figure()

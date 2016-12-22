@@ -116,7 +116,6 @@ def phi(ind, cnt): # FIXME we need to understand the arctan2 and return the corr
     # #     atan = -atan
     # return atan
 
-
 def curv(cnt,i,n,orientation):
     left = (i + n) % (len(cnt)-1)
     right = (i - n) % (len(cnt)-1)
