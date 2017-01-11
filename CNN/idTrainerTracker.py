@@ -26,7 +26,7 @@ def loss(y,y_logits):
 
 def optimize(loss,lr):
     optimizer = tf.train.GradientDescentOptimizer(lr)
-    # optimizer = tf.train.AdamOptimizer(learning_rate=0.01, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
+    # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
     global_step = tf.Variable(0, name='global_step', trainable=False)
     train_op = optimizer.minimize(loss)
     return train_op, global_step

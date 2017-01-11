@@ -26,7 +26,7 @@ def loss(y,y_logits):
 
 def optimize(loss,lr):
     optimizer = tf.train.GradientDescentOptimizer(lr)
-    # optimizer = tf.train.AdamOptimizer(learning_rate=0.01, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
+    # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
     global_step = tf.Variable(0, name='global_step', trainable=False)
     train_op = optimizer.minimize(loss)
     return train_op, global_step
@@ -342,15 +342,15 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_train', default='36dpf_60indiv_29754ImPerInd_curvaturePortrait', type = str)
     parser.add_argument('--dataset_test', default=None, type = str)
     parser.add_argument('--train', default=1, type=int)
-    parser.add_argument('--ckpt_folder', default = "./ckpt_dir_new2", type= str)
+    parser.add_argument('--ckpt_folder', default = "./ckpt_dir_new3_Xavier_SGD", type= str)
     parser.add_argument('--load_ckpt_folder', default = "", type = str)
     parser.add_argument('--num_indiv', default = 60, type = int)
-    parser.add_argument('--num_train', default = 25000, type = int)
+    parser.add_argument('--num_train', default = 29000, type = int)
     parser.add_argument('--num_test', default = 0, type = int)
     parser.add_argument('--num_ref', default = 0, type = int)
-    parser.add_argument('--num_epochs', default = 500, type = int)
+    parser.add_argument('--num_epochs', default = 300, type = int)
     parser.add_argument('--batch_size', default = 250, type = int)
-    parser.add_argument('--learning_rate', default = 0.001, type= float)
+    parser.add_argument('--learning_rate', default = 0.01, type= float)
     args = parser.parse_args()
 
     pathTrain = args.dataset_train
@@ -372,12 +372,15 @@ if __name__ == '__main__':
     X_val, Y_val, \
     X_test, Y_test, \
     X_ref, Y_ref = loadDataBase(pathTrain, num_indiv, num_train, num_test, num_ref, ckpt_dir,pathTest)
-    # 
+    #
     # print '***********'
     # print np.where(np.where(Y_train == 1)[1] == 59)[0]
     # if len(np.where(np.where(Y_train == 1)[1] == 59)[0]) == 0:
     #     raise ValueError('There are not labels assigned to id 59')
     # print '***********'
+
+    print '\n values of the images: max min'
+    print np.max(X_train), np.min(X_train)
 
     print '\n train size:    images  labels'
     print X_train.shape, Y_train.shape

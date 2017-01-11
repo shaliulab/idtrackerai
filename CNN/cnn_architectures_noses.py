@@ -28,7 +28,7 @@ def inference(images, width, height, channels, classes, keep_prob):
     n_filter1 = 16
     stride1 = [1,1,1,1]
     pad1 = 'SAME'
-    conv1, w1, h1, W1 = buildConv2D('conv1', width, height, 1, images_tensor, filter_size1, n_filter1, stride1, pad1)
+    conv1, w1, h1, W1 = buildConv2D('conv1', width, height, 1, images_tensor_0_to_1, filter_size1, n_filter1, stride1, pad1)
     # maxpool2d
     stride2 = [1,2,2,1]
     pool2 = 2

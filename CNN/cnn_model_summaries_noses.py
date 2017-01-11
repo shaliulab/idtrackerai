@@ -22,7 +22,8 @@ def euclideanDist(p,p_hat):
 
 
 def loss(y,y_hat):
-    l2diff = tf.add(euclideanDist(y[:,:2],y_hat[:,:2]),euclideanDist(y[:,2:],y_hat[:,2:]))
+    # l2diff = tf.add(euclideanDist(y[:,:2],y_hat[:,:2]),euclideanDist(y[:,2:],y_hat[:,2:]))
+    l2diff = euclideanDist(y,y_hat)
     _add_loss_summary(l2diff)
     return l2diff
 
@@ -299,15 +300,15 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_train', default='36dpf_8indiv_7998ImPerInd_newMinif', type = str)
     parser.add_argument('--dataset_test', default=None, type = str)
     parser.add_argument('--train', default=1, type=int)
-    parser.add_argument('--ckpt_folder', default = "./ckpt_dir_noses_Adam", type= str)
+    parser.add_argument('--ckpt_folder', default = "./ckpt_dir_noses_Adam2", type= str)
     parser.add_argument('--load_ckpt_folder', default = "", type = str)
     parser.add_argument('--num_indiv', default = 60, type = int)
     parser.add_argument('--num_train', default = 60000, type = int)
     parser.add_argument('--num_test', default = 0, type = int)
     parser.add_argument('--num_ref', default = 0, type = int)
     parser.add_argument('--num_epochs', default = 500, type = int)
-    parser.add_argument('--batch_size', default = 250, type = int)
-    parser.add_argument('--learning_rate', default = 0.001, type= float)
+    parser.add_argument('--batch_size', default = 150, type = int)
+    parser.add_argument('--learning_rate', default = 0.00001, type= float)
     args = parser.parse_args()
 
     pathTrain = args.dataset_train

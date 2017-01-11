@@ -22,11 +22,11 @@ import cPickle as pickle
 
 numSegment = 0
 # paths = scanFolder('../Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
 # paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
 # paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../38fish_adult_splitted/adult1darkenes_1.avi')
-paths = scanFolder('/home/lab/Desktop/aggr/video_4/4.avi')
+# paths = scanFolder('/home/lab/Desktop/aggr/video_4/4.avi')
 print paths
 
 frameIndices = loadFile(paths[0], 'frameIndices', time=0)

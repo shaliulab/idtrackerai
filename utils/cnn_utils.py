@@ -104,12 +104,14 @@ def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filte
         W = tf.get_variable(
             'weights',
             [filter_size, filter_size, inputDepth, n_filters],
-            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
+            # initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
+            initializer=tf.contrib.layers.xavier_initializer_conv2d(seed=0)
             )
         b = tf.get_variable(
             'biases',
             [n_filters],
-            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
+            # initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
+            initializer=tf.constant_initializer(0.0)
             )
         conv = tf.nn.conv2d(
                     input=inputConv,
@@ -157,12 +159,14 @@ def buildFc(scopeName, inputFc, height, width, n_filters, n_fc, keep_prob):
         W = tf.get_variable(
             'weights',
             [height * width * n_filters, n_fc],
-            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
+            # initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
+            initializer=tf.contrib.layers.xavier_initializer(seed=0)
             )
         b = tf.get_variable(
             'biases',
             [n_fc],
-            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
+            # initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
+            initializer=tf.constant_initializer(0.0)
             )
         fc = tf.add(tf.matmul(inputFc, W), b)
         fc_drop = tf.nn.dropout(fc, keep_prob, name = scope.name)
@@ -181,12 +185,13 @@ def buildSoftMax(scopeName, inputSoftMax, n_fc, classes):
         W = tf.get_variable(
             'weights',
             [n_fc, classes],
-            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            initializer=tf.contrib.layers.xavier_initializer(seed=0)
             )
         b = tf.get_variable(
             'biases',
             [classes],
-            initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            # initializer=tf.random_normal_initializer(mean=0.0,stddev=0.01)
+            initializer=tf.constant_initializer(0.0)
             )
         logits = tf.add(tf.matmul(inputSoftMax, W), b, name = scope.name)
         _activation_summary(logits)
@@ -537,9 +542,7 @@ def CNNplotterFastNoses(lossDict):
     except:
         fig = plt.figure()
     fig.clear()
-    # plt.close()
-    # fig, axes = plt.subplots(nrows=10, ncols=12)
-    # fig = plt.figure()
+
     plt.switch_backend('TkAgg')
     mng = plt.get_current_fig_manager()
     mng.resize(*mng.window.maxsize())
@@ -553,8 +556,8 @@ def CNNplotterFastNoses(lossDict):
     ax1.get_yaxis().tick_left()
     ax1.set_axis_bgcolor('none')
 
-    ax1.plot(lossPlot,'or-', label='training')
-    ax1.plot(valLossPlot, 'ob--', label='validation')
+    ax1.plot(lossPlot[1:],'or-', label='training')
+    ax1.plot(valLossPlot[1:], 'ob--', label='validation')
     ax1.set_ylabel('Loss function')
     ax1.legend(fancybox=True, framealpha=0.05)
 
@@ -565,8 +568,8 @@ def CNNplotterFastNoses(lossDict):
     ax2.get_yaxis().tick_left()
     ax2.set_axis_bgcolor('none')
 
-    ax2.plot(lossSpeed,'ro-',label='training')
-    plt.plot(valLossSpeed,'bo--',label='validation')
+    ax2.plot(lossSpeed[1:],'ro-',label='training')
+    plt.plot(valLossSpeed[1:],'bo--',label='validation')
     ax2.set_ylabel('Loss function speed')
 
     k=2
@@ -576,15 +579,19 @@ def CNNplotterFastNoses(lossDict):
         ax_feats.append(ax8)
         if (k + i) % 6 == 0:
             k+= 2
-        ax8.imshow((miniframes[i]), cmap='gray', interpolation='none')
-        ax8.scatter(coord[i,0],coord[i,1], c='r') # remark: the nose of the fish is red since we are writing this piece of code during christmas time!
-        ax8.scatter(coord[i,2],coord[i,3], c='b')
+        minif = miniframes[i]
+        minif[minif == 0] = 255
+        ax8.imshow(minif, cmap='gray', interpolation='none')
+        ax8.scatter(coord[i,0],coord[i,1], c='r') # remark: the nose of the fish is red since we are writing this piece of
+        ax8.scatter(coord[i,2],coord[i,3], c='b') #code during christmas time!
 
         ax8.scatter(coord_hat[i,0],coord_hat[i,1], c='r', marker='v')
         ax8.scatter(coord_hat[i,2],coord_hat[i,3], c='b', marker='v')
 
         # ax8.set_xlim((0,1))
         # ax8.set_ylim((0,1))
+    print coord
+    print coord_hat
 
     plt.subplots_adjust(bottom=0.1, right=.9, left=0.1, top=.9, wspace = 0.5, hspace=0.5)
     plt.draw()

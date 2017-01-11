@@ -1,4 +1,5 @@
 import numpy as np
+np.random.seed(0)
 import h5py
 from tf_utils import weight_variable, bias_variable, dense_to_one_hot, one_hot_to_dense
 import cPickle as pickle
@@ -211,6 +212,8 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
     checkDatabase(imdbTrain)
     with h5py.File("../data/" + imdbTrain + '_%i.hdf5', 'r', driver='family') as databaseTrain:
         [databaseTrainInfo, imagesTrain, labelsTrain] = getVarAttrFromHdf5(databaseTrain)
+        # Normalizations of images
+        imagesTrain = imagesTrain/255.
         [imsizeTrain,numIndivImdbTrain,numImagesPerIndivTrain] = getAttrsFromGroup(databaseTrainInfo,['imageSize', 'numIndiv','numImagesPerIndiv'])
         imsizeTrain = tuple(imsizeTrain)
         numImagesPerIndivTrain =  int(numImagesPerIndivTrain)

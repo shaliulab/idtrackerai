@@ -193,7 +193,7 @@ if __name__ == '__main__':
     if not loadPreviousDict['fragmentation']:
         dfGlobal, fragmentsDict = fragment(videoPaths,videoInfo=None)
 
-        playFragmentation(videoPaths,dfGlobal,False) # last parameter is to visualize or not
+        playFragmentation(videoPaths,dfGlobal,True) # last parameter is to visualize or not
 
         cv2.waitKey(1)
         cv2.destroyAllWindows()
@@ -232,7 +232,7 @@ if __name__ == '__main__':
     ckptName = 'test'
     batchSize = 50 #int(inputs[1])
     numEpochs = 100 #int(inputs[2])
-    lr = 0.001 #np.float32(inputs[3])
+    lr = 0.01 #np.float32(inputs[3])
     train = 1 #int(inputs[4])
     trainDict = {
         'loadCkpt_folder':loadCkpt_folder,

@@ -23,12 +23,7 @@ import cPickle as pickle
 import seaborn as sns
 
 numSegment = 0
-# paths = scanFolder('../Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
-# paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
-# paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('../BigGroup/manyFish_26dpf_20161110_1.avi')
-# paths = scanFolder('../38fish_adult_splitted/adult1darkenes_1.avi')
+
 videoPath = selectFile()
 paths = scanFolder(videoPath)
 
@@ -70,21 +65,20 @@ def idTrajectories(allFragIds, numAnimals, show=True):
         segmentCentroids = []
         segmentNoses = []
 
-        for i, IDs in enumerate(allIdsSegment):
-            print 'IDs ', IDs
-            curCentroids = centroids[i]
-            curNoses = noses[i]
+        for j, IDs in enumerate(allIdsSegment):
+            curCentroids = centroids[j]
+            curNoses = noses[j]
 
-            ordCentroids = [(np.nan, np.nan) for i in range(numAnimals)]
-            ordNoses = [(np.nan, np.nan) for i in range(numAnimals)]
-	    print ordCentroids
-	    for i,ID in enumerate(IDs):
-		if ID != -1:
-			ordCentroids[ID] = curCentroids[i]
-			ordNoses[ID] = curNoses[i]
+            ordCentroids = [(np.nan, np.nan) for k in range(numAnimals)]
+            ordNoses = [(np.nan, np.nan) for k in range(numAnimals)]
 
-            segmentCentroids.append(ordCentroids)
-            segmentNoses.append(ordNoses)
+            for l,ID in enumerate(IDs):
+                if ID != -1:
+                    ordCentroids[ID] = curCentroids[l]
+                    ordNoses[ID] = curNoses[l]
+
+                    segmentCentroids.append(ordCentroids)
+                    segmentNoses.append(ordNoses)
 
         centroidTrajectories.append(segmentCentroids)
         nosesTrajectories.append(segmentNoses)
@@ -93,16 +87,14 @@ def idTrajectories(allFragIds, numAnimals, show=True):
     nosesTrajectories = flatten(nosesTrajectories)
     trajDict = {'centroids': centroidTrajectories, 'noses': nosesTrajectories}
     trajectories = pd.DataFrame(data = trajDict)
-
     saveFile(paths[0], trajectories, 'trajectories', time = 0)
 
     if show == True:
         sns.set_style("darkgrid")
 
         centroidTrajectories = np.asarray(centroidTrajectories)
-        # print centroidTrajectories[centroidTrajectories == (-1,-1)]
         nosesTrajectories = np.asarray(nosesTrajectories)
-        # nosesTrajectories[nosesTrajectories == (-1,-1)] =  (np.nan, np.nan)
+
         fig = plt.figure()
         ax1 = fig.add_subplot(1,3,1, projection='3d')
         ax2 = fig.add_subplot(1,3,2, projection='3d')
@@ -123,7 +115,9 @@ def idTrajectories(allFragIds, numAnimals, show=True):
         ax3.spines["right"].set_visible(False)
         ax3.get_xaxis().tick_bottom()
         ax3.set_axis_bgcolor('none')
-
+        plots1 = []
+        plots2 = []
+        plots3 = []
         for ID in range(numAnimals):
             print ID
             centID = centroidTrajectories[:,ID,:]
@@ -135,14 +129,48 @@ def idTrajectories(allFragIds, numAnimals, show=True):
             zs = range(len(xcentID))
 
             label = 'Animal ' + str(ID)
-            ax1.plot(xcentID,ycentID,zs, label=label)
-            ax1.legend(fancybox=True, framealpha=0.05)
-            ax2.plot(xnoseID,ynoseID,zs, label=label)
-            ax2.legend(fancybox=True, framealpha=0.05)
-            ax3.plot(xcentID,ycentID,zs, label=label + ' centroid')
-            ax3.plot(xnoseID,ynoseID,zs, label = label + ' nose')
-            ax3.legend(fancybox=True, framealpha=0.05)
+            p1 = ax1.plot(xcentID,ycentID,zs, label=label)
+            l1 = ax1.legend(fancybox=True, framealpha=0.05)
+            p2 = ax2.plot(xnoseID,ynoseID,zs, label=label)
+            l2 = ax2.legend(fancybox=True, framealpha=0.05)
+            p31 = ax3.plot(xcentID,ycentID,zs, label=label + ' centroid')
+            p32 = ax3.plot(xnoseID,ynoseID,zs, label = label + ' nose')
+            l3 = ax3.legend(fancybox=True, framealpha=0.05)
+            plots1.append(p1)
+            plots2.append(p2)
+            plots3.append([p31,p32])
 
+        plots3 = flatten(plots3)
+        plotted1 = {}
+
+        for legline, origline in zip(l1.get_lines(), flatten(plots1)):
+            legline.set_picker(5)
+            plotted1[legline] = origline
+
+        for legline, origline in zip(l2.get_lines(), flatten(plots2)):
+            legline.set_picker(5)
+            plotted1[legline] = origline
+
+        for legline, origline in zip(l3.get_lines(), flatten(plots3)):
+            legline.set_picker(5)
+            plotted1[legline] = origline
+
+        def onpick(event):
+            # on the pick event, find the orig line corresponding to the
+            # legend proxy line, and toggle the visibility
+            legline = event.artist
+            origline = plotted1[legline]
+            vis = not origline.get_visible()
+            origline.set_visible(vis)
+            # Change the alpha on the line in the legend so we can see what lines
+            # have been toggled
+            if vis:
+                legline.set_alpha(1.0)
+            else:
+                legline.set_alpha(0.2)
+            fig.canvas.draw()
+
+        fig.canvas.mpl_connect('pick_event', onpick)
         plt.show()
     return trajectories
 

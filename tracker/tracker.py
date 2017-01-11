@@ -28,21 +28,29 @@ import collections
 
 def DataFineTuning(fragsForTrain, fragmentsDict, portraits,numAnimals):
     fragments = np.asarray(fragmentsDict['fragments'])
+    # print 'fragments ', fragments
     framesAndBlobColumns = fragmentsDict['framesAndBlobColumns']
+    # print 'framesAndBlobColumns ', framesAndBlobColumns
     minLenIndivCompleteFragments = fragmentsDict['minLenIndivCompleteFragments']
     print 'minLenIndivCompleteFragments', minLenIndivCompleteFragments
-    intervals = fragmentsDict['intervals']
 
+    intervals = fragmentsDict['intervals']
+    # print 'intervals ', intervals
     ''' First I save all the images of each identified individual in a dictionary '''
     usedIndivIntervals = [] # We do not want to reuse individual fragments used already
     refDict = {}
     print '**** Creating dictionary of references ****'
     for j, frag in enumerate(fragsForTrain): # for each comple fragment that has to be used for the training
-        print 'fragment for finetuning number, ', j
+        # print 'fragment for finetuning number, ', j
         fragment = fragments[frag] # I take the fragment
+        # print 'fragment ', fragment
         framesColumnsIndivFrags = framesAndBlobColumns[frag] # I take the list of individual fragments in frames and columns
+        # print 'framesColumnsIndivFrags ', framesColumnsIndivFrags
         intervalsIndivFrags = intervals[frag] # I take the list of individual fragments in terms of intervals
-
+        # print 'intervalsIndivFrags', intervalsIndivFrags
+        # print '------------------------------------------------------------'
+        # print 'the big zip', zip(framesColumnsIndivFrags,intervalsIndivFrags)
+        # print '------------------------------------------------------------'
         for i, (framesColumnsIndivFrag,intervalsIndivFrag) in enumerate(zip(framesColumnsIndivFrags,intervalsIndivFrags)):
             framesColumnsIndivFrag = np.asarray(framesColumnsIndivFrag)
             print 'individual fragment, ', i
@@ -50,22 +58,27 @@ def DataFineTuning(fragsForTrain, fragmentsDict, portraits,numAnimals):
                 frames = framesColumnsIndivFrag[:,0]
                 columns = framesColumnsIndivFrag[:,1]
                 identity = portraits.loc[frames[0],'identities'][columns[0]]
+                # print 'identity ', identity
                 if not identity in refDict.keys(): # if the identity has not been added to the dictionary, I initialize the list
                     refDict[identity] = []
                 for frame,column in zip(frames,columns): # I loop in all the frames of the individual fragment to add them to the dictionary of references
                     refDict[identity].append(portraits.loc[frame,'images'][column])
 
                 usedIndivIntervals.append(intervalsIndivFrag)
+    # print 'refDict keys ', refDict.keys()
+    refDict = {i: refDict[key] for i, key in enumerate(refDict.keys())}
+    print 'refDict keys ', refDict.keys()
+    # print 'num fish ', numAnimals
 
     if len(refDict.keys()) != numAnimals:
-        raise ValueError('The number of identities should be the same as the number of animals ')
+        raise ValueError('The number of identities should be the same as the number of animals. This means that a global fragment does not have as many individual fragments as number of animals ')
 
     ''' I compute the minimum number of references I can take '''
-    minNumRef = np.min([len(refDict[iD]) for iD in range(numAnimals)])
+    minNumRef = np.min([len(refDict[iD]) for iD in refDict.keys()])
     print 'minNumRef, ', minNumRef
     images = []
     labels = []
-    for iD in range(numAnimals):
+    for iD in refDict.keys():
         imagesList = np.asarray(refDict[iD])
         indexes = np.linspace(0,len(imagesList)-1,minNumRef).astype('int')
         images.append(imagesList[indexes])
@@ -84,6 +97,14 @@ def DataFineTuning(fragsForTrain, fragmentsDict, portraits,numAnimals):
     perm = np.random.permutation(numImages)
     images = images[perm]
     labels = labels[perm]
+
+    images_max = np.max(images)
+    if images_max > 1:
+        print 'I am normalizing the images since their maximum is ', images_max
+        images = images/255.
+
+    print '\n values of the images: max min'
+    print np.max(images), np.min(images)
 
     numTrain = np.ceil(np.true_divide(numImages,10)*9).astype('int')
     X_train = images[:numTrain]
@@ -511,6 +532,13 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
         if len(indivFragments) != 0:
             imsize, portsFragments =  DataIdAssignation(portraits, indivFragments)
 
+            images_max = np.max(portsFragments)
+            if images_max > 1:
+                print 'I am normalizing the images since their maximum is ', images_max
+                portsFragments = portsFragments/255.
+
+            print '\n values of the images during identity assigation: max min'
+            print np.max(portsFragments), np.min(portsFragments)
             # Set variables for the forward pass
             loadCkpt_folder = ckpt_dir
             channels, width, height = imsize
@@ -689,7 +717,7 @@ def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals):
     distIND = np.asarray(distI)
     print lensND
     print distIND
-    acceptableFragIndices = np.where((lensND > 20) & (distIND <= bestFragDist))[0]
+    acceptableFragIndices = np.where((lensND > 150) & (distIND <= bestFragDist))[0]
 
 
     fragsForTrain = np.asarray(fragsForTrain)
@@ -700,7 +728,7 @@ def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals):
 
     if len(newFragsForTrain) <= len(fragsForTrain):
         print '\nGoing for fragments above 50'
-        acceptableFragIndices = np.where((lensND > 10) & (distIND <= bestFragDist))[0]
+        acceptableFragIndices = np.where((lensND > 100) & (distIND <= bestFragDist))[0]
 
         fragsForTrain = np.asarray(fragsForTrain)
         print 'Old Frags for train, ', fragsForTrain

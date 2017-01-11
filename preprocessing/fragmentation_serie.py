@@ -393,7 +393,7 @@ def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFrag
             coexistingFragments = np.where(overlaps != 0)[0]
             print 'coexisting fragments, ', coexistingFragments
             if len(coexistingFragments) > 1:
-                raise ValueError('There cannot be two individual fragments from the same list coexisting with a fragment')
+                raise ValueError('There cannot be two individual fragments from the same list coexisting with a global fragment')
             if len(coexistingFragments)!=0:
                 coexistingFragment = coexistingFragments[0]
                 print 'coexisting fragment, ', coexistingFragment, ', interval, ', oneIndivFrags[coexistingFragment], ', length, ', oneIndivFragLen[coexistingFragment]
