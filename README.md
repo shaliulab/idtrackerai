@@ -3,23 +3,23 @@
 
 ### Dependencies needed for the project:
 
-*item os
-*item glob
-*item time
-*item multiprocessing
-*item itertools
-*item tensorflow
-*item cPickle
-*item math
-*item scipy
-*item re
-*item pprint
-*item numpy
-*item matplotlib
-*item cv2
-*item pandas
-*item joblib
-*item scikit-image
-*item cython
-*item natsort
-*item tkinter
+* os
+* glob
+* time
+* multiprocessing
+* itertools
+* tensorflow
+* cPickle
+* math
+* scipy
+* re
+* pprint
+* numpy
+* matplotlib
+* cv2
+* pandas
+* joblib
+* scikit-image
+* cython
+* natsort
+* tkinter
