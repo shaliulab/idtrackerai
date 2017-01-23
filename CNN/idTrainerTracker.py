@@ -173,6 +173,8 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                         epsilon = .1*10**(magCurr)
                         epsilon2 = .01*10**(magCurr)
                         print 'Losses difference ', -currLoss + prevLoss
+                        print 'epsilon (overfitting), ', epsilon
+                        print 'epsilon2 (if it is not changing much), ', epsilon2
                         if magCurr > magPrev:
 
                             print 'Overfitting, passing to new set of images'
@@ -183,6 +185,9 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                                 break
                         if prevLoss - currLoss < epsilon2:
                             print 'Finished, passing to new set of images'
+                            break
+                        if list(valIndivAcc) == list(np.ones(classes)):
+                            print 'Individual validations accuracy is 1 for all the animals'
                             break
 
                 try:

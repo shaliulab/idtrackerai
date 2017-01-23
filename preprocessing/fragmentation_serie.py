@@ -207,7 +207,7 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
 
 def modelDiffArea(fragments,areas):
     """
-    fragment: fragment where to stract the areas to cumpute the mean and std of the diffArea
+    fragment: fragment where to extract the areas to cumpute the mean and std of the diffArea
     areas: areas of all the blobs of the video
     """
     goodFrames = flatten([list(range(fragment[0],fragment[1])) for fragment in fragments])
@@ -453,7 +453,7 @@ def fragment(videoPaths,videoInfo = None):
 
     fragments, framesAndBlobColumns, intervalsFragments, minLenIndivCompleteFragments = getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragFrames,numAnimals)
     fragmentsDict = {
-        'fragments': fragments,
+        'fragments': fragments, #global fragments
         'minLenIndivCompleteFragments': minLenIndivCompleteFragments,
         'framesAndBlobColumns': framesAndBlobColumns,
         'intervals': intervalsFragments,

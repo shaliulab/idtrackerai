@@ -25,72 +25,27 @@ from cnn_utils import *
 from pprint import pprint
 from collections import Counter
 import collections
+from itertools import groupby
+from pprint import pprint
 
-def getAvVelFragment(portraits,framesAndColumns):
-    centroids = []
-    for (frame,column) in framesAndColumns:
-        centroids.append(portraits.loc[frame,'noses'][column])
-    centroids = np.asarray(centroids).astype('float32')
-    vels = np.sqrt(np.sum(np.diff(centroids,axis=0)**2,axis=1))
-    return np.mean(vels)
+def takeImagesLabels(images,identity,minNumRef): # this function runs in parallel
+    imagesList = np.asarray(images)
+    indexes = np.linspace(0,len(imagesList)-1,minNumRef).astype('int')
+    return imagesList[indexes], np.ones(minNumRef)*identity
 
-def DataFineTuning(fragsForTrain, fragmentsDict, portraits,numAnimals):
-    fragments = np.asarray(fragmentsDict['fragments'])
-    # print 'fragments ', fragments
-    framesAndBlobColumns = fragmentsDict['framesAndBlobColumns']
-    # print 'framesAndBlobColumns ', framesAndBlobColumns
-    minLenIndivCompleteFragments = fragmentsDict['minLenIndivCompleteFragments']
-    # print 'minLenIndivCompleteFragments', minLenIndivCompleteFragments
-
-    intervals = fragmentsDict['intervals']
-    # print 'intervals ', intervals
-    ''' First I save all the images of each identified individual in a dictionary '''
-    usedIndivIntervals = [] # We do not want to reuse individual fragments used already
-    refDict = {}
-    print '**** Creating dictionary of references ****'
-    for j, frag in enumerate(fragsForTrain): # for each comple fragment that has to be used for the training
-        # print 'fragment for finetuning number, ', j
-        fragment = fragments[frag] # I take the fragment
-        # print 'fragment ', fragment
-        framesColumnsIndivFrags = framesAndBlobColumns[frag] # I take the list of individual fragments in frames and columns
-        # print 'framesColumnsIndivFrags ', framesColumnsIndivFrags
-        intervalsIndivFrags = intervals[frag] # I take the list of individual fragments in terms of intervals
-        # print 'intervalsIndivFrags', intervalsIndivFrags
-        # print '------------------------------------------------------------'
-        # print 'the big zip', zip(framesColumnsIndivFrags,intervalsIndivFrags)
-        # print '------------------------------------------------------------'
-        for i, (framesColumnsIndivFrag,intervalsIndivFrag) in enumerate(zip(framesColumnsIndivFrags,intervalsIndivFrags)):
-            framesColumnsIndivFrag = np.asarray(framesColumnsIndivFrag)
-            # print 'individual fragment, ', i
-            if not intervalsIndivFrag in usedIndivIntervals: # I only use individual fragments that have not been used before
-                frames = framesColumnsIndivFrag[:,0]
-                columns = framesColumnsIndivFrag[:,1]
-                identity = portraits.loc[frames[0],'identities'][columns[0]]
-                # print 'identity ', identity
-                if not identity in refDict.keys(): # if the identity has not been added to the dictionary, I initialize the list
-                    refDict[identity] = []
-                for frame,column in zip(frames,columns): # I loop in all the frames of the individual fragment to add them to the dictionary of references
-                    refDict[identity].append(portraits.loc[frame,'images'][column])
-
-                usedIndivIntervals.append(intervalsIndivFrag)
-    # print 'refDict keys ', refDict.keys()
-    refDict = {i: refDict[key] for i, key in enumerate(refDict.keys())}
-    print 'refDict keys ', refDict.keys()
-    # print 'num fish ', numAnimals
-
-    if len(refDict.keys()) != numAnimals:
-        raise ValueError('The number of identities should be the same as the number of animals. This means that a global fragment does not have as many individual fragments as number of animals ')
-
+def takeRefFromDict(refDict,indivFragsForTrain): ### TODO this function could be moved to input_data_cnn.py
     ''' I compute the minimum number of references I can take '''
+    print 'lengths of refDict, ', [len(refDict[iD]) for iD in refDict.keys()]
     minNumRef = np.min([len(refDict[iD]) for iD in refDict.keys()])
     print 'minNumRef, ', minNumRef
-    images = []
-    labels = []
-    for iD in refDict.keys():
-        imagesList = np.asarray(refDict[iD])
-        indexes = np.linspace(0,len(imagesList)-1,minNumRef).astype('int')
-        images.append(imagesList[indexes])
-        labels.append(np.ones(minNumRef)*iD)
+    numAnimals = len(refDict.keys())
+
+    num_cores = multiprocessing.cpu_count()
+    num_cores = 1
+    output = Parallel(n_jobs=num_cores)(delayed(takeImagesLabels)(refDict[identity],identity,minNumRef) for identity in range(numAnimals))
+    images = [t[0] for t in output]
+    labels = [t[1] for t in output]
+
     images = np.vstack(images)
     images = np.expand_dims(images,axis=1)
     print 'images shape, ', images.shape
@@ -126,10 +81,47 @@ def DataFineTuning(fragsForTrain, fragmentsDict, portraits,numAnimals):
 
     return imsize, X_train, Y_train, X_val, Y_val
 
+def getImagesRef(indivFrags,oneIndivFragFrames,identity,portraits): # this function runs in parallel
+    images = []
+    for indivFrag in indivFrags:
+        blobIndex = indivFrag[2]
+        indivFragNumber = indivFrag[3]
+        frames = oneIndivFragFrames[blobIndex][indivFragNumber][:,0]
+        columns = oneIndivFragFrames[blobIndex][indivFragNumber][:,1]
+        for frame,column in zip(frames,columns): # I loop in all the frames of the individual fragment to add them to the dictionary of references
+            images.append(portraits.loc[frame,'images'][column])
+
+    return images, identity
+
+def DataFineTuning(indivFragsForTrain, fragmentsDict, portraits,numAnimals):
+    print '--------------------------------------'
+    print 'fragments for training, '
+    pprint(indivFragsForTrain)
+    print '--------------------------------------'
+
+    print '\n Getting images for fine-tuning'
+    oneIndivFragFrames = fragmentsDict['oneIndivFragFrames']
+
+    refDict = {}
+    identities = range(numAnimals)
+    num_cores = multiprocessing.cpu_count()
+    num_cores = 1
+    print '\n Preparing refDict'
+    output = Parallel(n_jobs=num_cores)(delayed(getImagesRef)(indivFragsForTrain[identity],oneIndivFragFrames,identity,portraits) for identity in identities)
+    for (images,identity) in output:
+        print 'identity, ', identity, 'num images,',len(images)
+        refDict[identity] = images
+
+    print '\n Preparing data for CNN'
+    imsize, X_train, Y_train, X_val, Y_val = takeRefFromDict(refDict,indivFragsForTrain)
+
+
+
+    return imsize, X_train, Y_train, X_val, Y_val
+
 def DataIdAssignation(portraits, indivFragments):
     portraitsFrag = np.asarray(portraits.loc[:,'images'].tolist())
-    height = 32
-    width = 32
+    height,width = portraits.loc[0,'images'][0].shape
     imsize = (1, height, width)
     portsFragments = []
     # print 'indivFragments', indivFragments
@@ -252,10 +244,16 @@ def computeP1(IdProbs):
             numerator[numerator == np.inf] = maxFloat
         # print 'numerator, ', numerator
         denominator = np.sum(numerator)
+        if np.any(denominator == np.inf):
+            denominator = maxFloat
         # print 'denominator, ', denominator
         P1Frag = numerator / denominator
         # print 'P1Frag, ', P1Frag
         if np.any(P1Frag == 0.):
+            print 'frequencies, ', frequencies
+            print 'numerator, ', numerator
+            print 'denominator, ', denominator
+            print 'P1Frag, ', P1Frag
             raise ValueError('P1Frag cannot be 0')
         # P1Frag[P1Frag == 1.] = 1. - np.sum(P1Frag[P1Frag!=1.])
         P1Frag[P1Frag == 1.] = 0.9999
@@ -276,7 +274,7 @@ def computeP1(IdProbs):
 
     return P1Frags, P1FragsForMat, freqFrags, normFreqFrags, idFreqFragForMat, normFreqFragsForMat
 
-def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices):
+def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices,blobIndex):
 
     def getOverlap(a, b):
         overlap = max(0, min(a[1], b[1]) - max(a[0], b[0]))
@@ -313,13 +311,14 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
     logP2FragIdForMat = []
     P2FragsForMat = []
     P2Frags = []
-    for j, (P1Frag,indivFragmentInterval) in enumerate(zip(P1Frags,indivFragmentsIntervals)):
+    for j, (P1Frag,indivFragmentInterval) in enumerate(zip(P1Frags,indivFragmentsIntervals)): # loop for every interval in the current blob index
         # print '\nIndividual fragment, ', j, ' ----------------'
         # print 'Interval, ', indivFragmentInterval
         # print 'Individual fragment P1, ', P1Frag
+        lenFragment = lenFragments[j]
         P1CoexistingFrags = []
-
-        for k in blobsIndices:
+        # indivFragmentInterval2 = indivFragmentInterval
+        for k in blobsIndices: # looping on the blob indices to compute the coexistence of the individual fragments
             indivFragmentsIntervals2 = oneIndivFragIntervals[k]
             # print 'coexistence in fragments list ', k
             P1FragsK = np.asarray(P1FragsAll[k])
@@ -341,8 +340,11 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
         logP2FragsForMat.append(np.matlib.repmat(logP2Frag,fragLen,1))
         P2FragsForMat.append(np.matlib.repmat(P2Frag,fragLen,1))
         logP2FragIdForMat.append(np.multiply(np.ones(fragLen),idFrag).astype('int'))
-        P2Frags.append(P2Frag)
-
+        flatIndinvFragmentInterval = (blobIndex,j,) + tuple(flatten(indivFragmentInterval)) + (lenFragment,)
+        # fragIdAndP2 = (np.argmax(P2Frag),np.max(P2Frag))
+        fragIdAndP2 = (np.argmax(P1Frag),np.max(P1Frag))
+        P2Frags.append(fragIdAndP2 + flatIndinvFragmentInterval)
+        # print 'the fucking things we are putting in this fucking list ', fragIdAndP2 + flatIndinvFragmentInterval
     return logP2FragsForMat, logP2FragIdForMat, P2FragsForMat, P2Frags
 
 def computeOverallP2(P2FragsAll,oneIndivFragLens):
@@ -350,7 +352,7 @@ def computeOverallP2(P2FragsAll,oneIndivFragLens):
     weightedP2 = []
     for P2Frags, oneIndivLens in zip(P2FragsAll,oneIndivFragLens):
         P2Frags = np.asarray(P2Frags)
-        P2Frags = np.max(P2Frags,axis=1)
+        P2Frags = P2Frags[:,1] #np.max(P2Frags,axis=1)
         oneIndivLens = np.asarray(oneIndivLens)
         weightedP2.append(P2Frags*oneIndivLens)
         numFrames += np.sum(oneIndivLens)
@@ -414,7 +416,7 @@ def getCkptvideoPath(videoPath,ckptName,train=0,time=0,ckptTime=0,):
 
     return ckptvideoPath
 
-def fineTuner(videoPath, trainDict, fragsForTrain, fragmentsDict = [], portraits = [], videoInfo = []):
+def fineTuner(videoPath, trainDict, indivFragsForTrain, fragmentsDict = [], portraits = [], videoInfo = []):
     """
     videoPath: path to the video that we want to tracker
     trainDict: includes
@@ -426,14 +428,14 @@ def fineTuner(videoPath, trainDict, fragsForTrain, fragmentsDict = [], portraits
         train:  train = 0 (id assignation)
                 train = 1 (first fine-tuning)
                 train = 2 (further tuning from previons checkpoint with more references) no implemented yet, now it keeps training from the previous checkpoint with the same references
-    fragsForTrain: list of fragments indices that should be used for the fine-tunning
+    indivFragsForTrain: list of fragments indices that should be used for the fine-tunning
     fragmentsDict:
     portraits:
     """
     print '--------------------------------'
     print 'Loading fragments, portraits and videoInfo for the tracking...'
     if fragmentsDict == []:
-        fragmentsDict = loadFile(videoPath, 'fragments', time=0)
+        fragmentsDict = loadFile(videoPath, 'fragments', time=0, hdfpkl = 'pkl')
         fragmentsDict = fragmentsDict.to_dict()[0]
     if len(portraits) == 0:
         portraits = loadFile(videoPath, 'portraits', time=0)
@@ -452,15 +454,11 @@ def fineTuner(videoPath, trainDict, fragsForTrain, fragmentsDict = [], portraits
     lr = trainDict['lr']
     train = trainDict['train']
 
-    ''' ************************************************************************
-    Fine tuning with the longest fragment
-    ************************************************************************ '''
     if train == 1 or train == 2:
-        print 'Fine tuning with the first longest fragment...'
         ckpt_dir = getCkptvideoPath(videoPath,ckptName,train,time=0,ckptTime=0)
         imsize,\
         X_train, Y_train,\
-        X_val, Y_val = DataFineTuning(fragsForTrain, fragmentsDict, portraits,numAnimals)
+        X_val, Y_val = DataFineTuning(indivFragsForTrain, fragmentsDict, portraits,numAnimals)
 
         print '\n fine tune train size:    images  labels'
         print X_train.shape, Y_train.shape
@@ -535,7 +533,7 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
     P1FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # P1 for each individual fragment
     for i, (indivFragments, sumFragIndices) in enumerate(zip(oneIndivFragFrames,oneIndivFragSumLens)):
         print '******************************************************'
-        print 'Computing softMax probabilities, id-frequencies, and P1 for list of fragments ', i
+        print 'Computing softMax probabilities, id-frequencies, and P1 for blob index ', i
         # Load data for the assignment (### TODO this can be done in portraits so that we only need to do it once)
         if len(indivFragments) != 0:
             imsize, portsFragments =  DataIdAssignation(portraits, indivFragments)
@@ -626,7 +624,7 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
         blobsIndices = list(range(numGoodLists))
         blobsIndices.pop(i)
 
-        logP2FragsForMat, logP2FragIdForMat, P2FragsForMat, P2Frags = computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices)
+        logP2FragsForMat, logP2FragIdForMat, P2FragsForMat, P2Frags = computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices,i)
         P2FragsAll.append(P2Frags)
         # logP2
         LogProbsFragUpdated = probsUptader(logP2FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
@@ -651,146 +649,112 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
         'P1Frag': P1FragAllVideo,
         'fragmentIds':idLogP2FragAllVideo,
         'probFragmentIds':logP2FragAllVideo,
-        'P2FragAllVideo':P2FragAllVideo,
+        'P2FragAllVideo':P2FragAllVideo, # by single frames
+        'P2FragsAll': P2FragsAll, # organized by individual fragments
         'overallP2': overallP2}
 
     portraits['identities'] = idFreqFragAllVideo.tolist()
     # saveFile(videoPath,portraits,'portraits',time=0)
-    saveFile(videoPath, IdsStatistics, 'statistics', time = 0)
-    return normFreqFragsAll, portraits
+    saveFile(videoPath, IdsStatistics, 'statistics', time = 0,hdfpkl='pkl')
+    return normFreqFragsAll, portraits, P2FragsAll
 
-def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals,minLen,badFragments,portraits,thVels):
-    print ' ****************** Finding next best fragment for references\n'
-    # Load data needed and pass it to arrays
-    fragments = np.asarray(fragmentsDict['fragments'])
-    framesAndBlobColumns = fragmentsDict['framesAndBlobColumns']
-    minLenIndivCompleteFragments = fragmentsDict['minLenIndivCompleteFragments']
-    lens = np.asarray(minLenIndivCompleteFragments)
-    intervalsFragments = fragmentsDict['intervals']
 
-    # Compute distances to the identity matrix for each complete set of individual fragments
-    mat = []
-    distI = []
-    identity = np.identity(numAnimals)
-    for i, intervals in enumerate(intervalsFragments): # loop in complete set of fragments
-        # print 'fragment, ', i
-        for j, interval in enumerate(intervals): # loop in individual fragments of the complete set of fragments
-            # print 'individual fragment, ', j
-            mat.append(normFreqFragsAll[interval[0]][interval[1]])
-        matFragment = np.vstack(mat)
-        mat = []
-        perm = np.argmax(matFragment,axis=1)
-
-        matFragment = matFragment[:,perm]
-        # print matFragment
-        # print numpy.linalg.norm(matFragment - identity)
-        # print lens[i]
-        distI.append(numpy.linalg.norm(matFragment - identity)) #TODO when optimizing the code one should compute the matrix distance only for fragments above 100 length
-    distI = np.asarray(distI)
-    distInorm = distI/np.max(distI)
-    lensnorm = np.true_divide(lens,np.max(lens))
-
-    # Get best values of the parameters length and distance to identity
-    distI0norm = np.min(distInorm[fragsForTrain])
-    distI0norm = np.ones(len(distI))*distI0norm
-    len0norm = np.max(lensnorm[fragsForTrain])
-    len0norm = np.ones(len(lens))*len0norm
-
-    # Compute score of every global fragment with respect to the optimal value of the parameters
-    score = np.sqrt((distI0norm-distInorm)**2 + ((len0norm-lensnorm))**2)
-
-    # Get indicies of the best fragments according to its score
-    fragIndexesSorted = np.argsort(score).tolist()
-
-    # Remove short fragments
-    print '(fragIndexesSorted, len) before eliminating the short ones, ', zip(fragIndexesSorted,lens[fragIndexesSorted])
-    print 'Current minimum length, ', minLen
-    fragIndexesSortedLong = [x for x in fragIndexesSorted if lens[x] > minLen]
-    print '(fragIndexesSorted, len) after eliminating the short ones, ', zip(fragIndexesSortedLong,lens[fragIndexesSortedLong])
-
-    # We only consider fragments that have not been already picked for fine-tuning
-    print 'Current fragsForTrain, ', fragsForTrain
-    print 'Bad fragments, ', badFragments
-    nextPossibleFragments = [frag for frag in fragIndexesSortedLong if frag not in fragsForTrain and frag not in badFragments]
-
-    # Check whether the animals are moving enough so that the images are going to be different enough
-    realNextPossibleFragments = []
-    for frag in nextPossibleFragments:
-        framesAndColumnsGlobalFrag = fragmentsDict['framesAndBlobColumns'][frag]
-        avVels = []
-        print 'Checking whether the fragmentNumber ', frag, ' is good for training'
-        for framesAndColumnsInterval in framesAndColumnsGlobalFrag:
-            avVels.append(getAvVelFragment(portraits,framesAndColumnsInterval))
-        print 'The average velocities for each blob are (pixels/frame), ', avVels
-        if any(np.asarray(avVels)<=thVels):
-            badFragments.append(frag)
-            print 'There is some animal that does not move enough'
-            print 'Bad fragments, ', badFragments
-        else:
-            realNextPossibleFragments.append(frag)
-
-    while len(nextPossibleFragments)==0 and minLen >= 0:
-        print 'The list of possible fragments is the same as the list of fragments used previously for finetuning'
-        print 'We reduce the minLen in 50 units'
-        if minLen > 50:
-            step = 50
-        else:
-            step = 10
-        minLen -= step
-        print 'Current minimum length, ', minLen
-        fragIndexesSortedLong = [x for x in fragIndexesSorted if lens[x] > minLen]
-
-        # We only consider fragments that have not been already picked for fine-tuning
-        print 'Current fragsForTrain, ', fragsForTrain
-        print 'Bad fragments, ', badFragments
-        nextPossibleFragments = [frag for frag in fragIndexesSortedLong if frag not in fragsForTrain and frag not in badFragments]
-        nextPossibleFragments = np.asarray(nextPossibleFragments)
-        print 'Next possible fragments for train', nextPossibleFragments
-
-        realNextPossibleFragments = []
-        for frag in nextPossibleFragments:
-            framesAndColumnsGlobalFrag = fragmentsDict['framesAndBlobColumns'][frag]
-            avVels = []
-            print 'Checking whether the fragmentNumber ', frag, ' is good for training'
-            for framesAndColumnsInterval in framesAndColumnsGlobalFrag:
-                avVels.append(getAvVelFragment(portraits,framesAndColumnsInterval))
-            print 'The average velocities for each blob are (pixels/frame), ', avVels
-            if any(np.asarray(avVels)<=thVels):
-                badFragments.append(frag)
-                print 'There is some animal that does not move enough'
-                print 'Bad fragments, ', badFragments
+def popOut(indivFragsForTrainList, idP2Frags, identity):
+    """
+    This functions pop-out fragments already used during training to avoid to repeat
+    the accumulation of the same fragment twice.
+    REMARK: we are using blobindex and frag number to pop out since it could be that
+            an identity has changed during assignation...
+    """
+    # candidates = idP2Frags
+    # for frag in indivFragsForTrainList:
+    #     candidates = [idP2Frag for idP2Frag in candidates if idP2Frag[2:4] != frag[2:4]]
+    #
+    #     print 'the length of the pooped ', len(candidates)
+    #
+    # if candidates == idP2Frags:
+    #     raise ValueError('We did not pop out shit...')
+    candidates = []
+    print 'number of fragments for identity ', identity, ', ', len(idP2Frags)
+    for idfrag in idP2Frags: # all the fragments of an identity
+        for frag in indivFragsForTrainList: # all
+            if frag[2] != idfrag[2] or frag[3] != idfrag[3]:
+                canAppend = True
             else:
-                realNextPossibleFragments.append(frag)
+                canAppend = False
+                print '----------------------------------------------'
+                print 'I am pooping (out)', idfrag
+                break
+        if canAppend:
+            candidates.append(idfrag)
+    print 'number of fragments for identity ', identity, ' after popping out', len(candidates)
 
-    nextPossibleFragments = np.asarray(realNextPossibleFragments)
-    print 'Next possible fragments for train', nextPossibleFragments
+    return candidates, identity
 
+def chooser(candidates, minLength, identity, chosens = 1):
+    sortedCandidates = sorted(candidates, key=lambda x: (x[1], x[-1]), reverse=True)
+    counter = 0
+    trainFrags = []
+    continueFlag = True
+    while len(trainFrags) != chosens and minLength > 0:
+        for cur_cand in sortedCandidates:
+            if cur_cand[-1] >= minLength:
+                trainFrags.append(cur_cand)
+                if len(trainFrags) == chosens:
+                    break
 
-    if len(nextPossibleFragments) != 0:
+        if len(trainFrags) < chosens:
+            minLength -= 10
 
-        lensND = np.asarray([lens[frag] for frag in nextPossibleFragments])
-        distIND = np.asarray([distI[frag] for frag in nextPossibleFragments])
-        print '(len,dist) of the nextPossibleFragments', zip(lensND,distIND)
-
-        bestFragInd = nextPossibleFragments[0]
-        bestFragDist = distI[bestFragInd]
-        bestFragLen = lens[bestFragInd]
-        print 'BestFragInd, bestFragDist, bestFragLen'
-        print bestFragInd, bestFragDist, bestFragLen
-
-        # acceptableFragIndices = np.where((lensND > 100) & (distIND <= bestFragDist))[0]
-        acceptable = np.where((distIND <= bestFragDist))[0]
-        acceptableFragIndices = nextPossibleFragments[acceptable]
-
-        fragsForTrain = np.asarray(fragsForTrain)
-        print 'Old Frags for train, ', fragsForTrain
-        print 'acceptableFragIndices, ', acceptableFragIndices
-        fragsForTrain = np.unique(np.hstack([fragsForTrain,acceptableFragIndices])).tolist()
-        print 'Fragments for training, ', fragsForTrain
-
-        continueFlag = True
-    else:
-        print 'There are no more good fragments'
+    if len(trainFrags) < chosens and minLength <= 0:
         continueFlag = False
 
-    return fragsForTrain, continueFlag, minLen, badFragments
+    return trainFrags, identity, minLength, continueFlag
+
+def bestFragmentFinder(indivFragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals,P2FragsAll,minLengths):
+
+    """
+    1. Create a dictionary (idDict) organised as follow
+        i. keys are the identities
+        ii. values are lists of the form [(blobIndex, fragmentNumber, length, P2, start, end ), (...),... ]
+            where each tuple belong to one individual fragment. blobIndex and
+            fragmentNumber are used to access the images belonging to the fragment
+            this information is stored in oneIndivFragFrames (in fragmentsDict); length, P2, start and end
+            are used to choose the best candidate for propagation among the individual fragments assigned
+            to a certain identity (key of the dictionary)
+    2. Create candidate dict. Always organised by identity it contains all the individual fragments that
+       will be evaluated in the iterative accumulation process.
+    """
+    print '----------------------------'
+    print 'Entering the bestFragmentFinder'
+    ids = range(numAnimals)
+    P2FragsAll = flatten(P2FragsAll)
+    indivFragsForTrainList = flatten([v for v in indivFragsForTrain.values()])
+    print '----------------------->8'
+    print 'indivFragsForTrainList',
+    pprint(indivFragsForTrainList)
+    idDict = groupByCustom(P2FragsAll, ids, 0)
+    print '----------------------->8'
+    for i in ids:
+        print len(idDict[i]), 'fragments for identity ', i
+    # num_cores = multiprocessing.cpu_count()
+    num_cores = 1
+    output = Parallel(n_jobs=num_cores)(delayed(popOut)(indivFragsForTrainList, idDict[identity], identity) for identity in range(numAnimals))
+    candidateDict = {}
+
+    for (frags,identity) in output:
+        candidateDict[identity] = frags
+
+    # print '----------------------->8'
+    # print 'candidates', len(candidateDict[0])
+
+    output = Parallel(n_jobs=num_cores)(delayed(chooser)(candidateDict[identity], minLengths[identity], identity) for identity in range(numAnimals))
+    for (trainFrags,identity,minLength,continueFlag) in output:
+        if not continueFlag:
+            break
+        indivFragsForTrain[identity].append(tuple(flatten(trainFrags)))
+        minLengths[identity] = minLength
+    print '-------------------------------------'
+    print 'indivFragsForTrain, ', indivFragsForTrain
+    print '-------------------------------------'
+    return indivFragsForTrain, continueFlag, minLengths

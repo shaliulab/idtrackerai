@@ -384,6 +384,7 @@ def reaper(videoPath, frameIndices):
     miniframes = np.asarray(miniframes)
     contours = np.asarray(df.loc[:, 'contours'])
     bkgSamples = np.asarray(df.loc[:,'bkgSamples'])
+    centroidsSegment = np.asarray(df.loc[:,'centroids'])
 
     segmentIndices = frameIndices.loc[frameIndices.loc[:,'segment']==int(numSegment)]
     segmentIndices = segmentIndices.index.tolist()
@@ -395,6 +396,7 @@ def reaper(videoPath, frameIndices):
     """ Visualise """
     AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images'])
     AllNoses = pd.DataFrame(index = segmentIndices, columns= ['noses'])
+    AllCentroids= pd.DataFrame(index = segmentIndices, columns= ['centroids'])
     # print goodFrameIndices
     counter = 0
     while counter < len(miniframes):
@@ -405,6 +407,7 @@ def reaper(videoPath, frameIndices):
         minif = miniframes[counter]
         cnts = contours[counter]
         bkgSamps = bkgSamples[counter]
+        centroids = centroidsSegment[counter]
         for j, miniframe in enumerate(minif):
             # print '----------------', j, counter, videoPath
             # print miniframe
@@ -426,9 +429,10 @@ def reaper(videoPath, frameIndices):
 
         AllPortraits.set_value(segmentIndices[counter], 'images', portraits)
         AllNoses.set_value(segmentIndices[counter], 'noses', noses)
+        AllCentroids.set_value(segmentIndices[counter], 'centroids', centroids)
         counter += 1
     print 'you just reaped', videoPath
-    return AllPortraits, AllNoses
+    return AllPortraits, AllNoses, AllCentroids
 
 # def modelDiffArea(fragments,areas):
 #     """
@@ -449,16 +453,21 @@ def portrait(videoPaths, dfGlobal):
     allPortraitsAndNoses = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath,frameIndices) for videoPath in videoPaths)
     allPortraits = [t[0] for t in allPortraitsAndNoses]
     allNoses = [t[1] for t in allPortraitsAndNoses]
+    allCentroids = [t[2] for t in allPortraitsAndNoses]
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)
     allNoses = pd.concat(allNoses)
     allNoses = allNoses.sort_index(axis=0, ascending=True)
+    allCentroids = pd.concat(allCentroids)
+    allCentroids = allCentroids.sort_index(axis=0, ascending=True)
+
 
     if list(allPortraits.index) != list(dfGlobal.index):
         raise ValueError('The list of indexes in allPortraits and dfGlobal should be the same')
     dfGlobal['images'] = allPortraits
     dfGlobal['identities'] = dfGlobal['permutations']
     dfGlobal['noses'] = allNoses
+    dfGlobal['centroids'] = allCentroids
 
     saveFile(videoPaths[0], dfGlobal, 'portraits', time = 0)
     return dfGlobal

@@ -10,7 +10,7 @@ from get_portraits import *
 from video_utils import *
 from py_utils import *
 from GUI_utils import *
-from tracker import *
+from tracker_indFrags import *
 
 import time
 import h5py
@@ -246,39 +246,57 @@ if __name__ == '__main__':
     preprocParams = preprocParams.to_dict()[0]
     numAnimals = preprocParams['numAnimals']
 
-    indexFragment = 0
-    avVels = [0,0]
-    thVels = 0.9
-    badFragments = []
-    framesAndColumnsGlobalFrag = fragmentsDict['framesAndBlobColumns'][indexFragment]
-    while any(np.asarray(avVels)<=thVels):
-        avVels = []
-        print 'Checking whether the fragmentNumber ', indexFragment, ' is good for training'
-        for framesAndColumnsInterval in framesAndColumnsGlobalFrag:
-            avVels.append(getAvVelFragment(portraits,framesAndColumnsInterval))
-        print 'The average velocities for each blob are (pixels/frame), ', avVels
-        if any(np.asarray(avVels)<=thVels):
-            badFragments.append(indexFragment)
-            indexFragment += 1
-            framesAndColumnsGlobalFrag = fragmentsDict['framesAndBlobColumns'][indexFragment]
-            print 'There is some animal that does not move enough. Going to next longest fragment'
-            print 'Bad fragments, ', badFragments
+    def getStdPositionInterval(portraits,framesAndColumns):
+        centroids = []
+        for (frame,column) in framesAndColumns:
+            centroids.append(portraits.loc[frame,'noses'][column])
+        centroids = np.asarray(centroids)
+        vels = np.diff(centroids,axis=0)
+        plt.ion()
+        plt.figure()
+        plt.plot(centroids[:,0],centroids[:,1])
+        plt.xlim((0,1160))
+        plt.ylim((0,938))
+        return centroids.std(axis=0)
 
+    framesAndColumnsGlobalFrag = fragmentsDict['framesAndBlobColumns'][1]
+    StdGlobalFrag = []
+    for framesAndColumnsInterval in framesAndColumnsGlobalFrag:
+        StdGlobalFrag.append(getStdPositionInterval(portraits,framesAndColumnsInterval))
 
-    print 'The fine-tuning will start with the ', indexFragment, ' longest fragment'
-    fragsForTrain = [indexFragment]
+    print '************************************************************'
+    print 'Global fragment std of the position of each blob, ', StdGlobalFrag
+
+    raw_input("Press Enter to continue...")
+
+    # Set initial list of individual fragments from the longer global fragment
+    indivFragsForTrain = fragmentsDict['intervals'][1]
+    indivFragsForTrainNew = {}
+    for indivFragForTrain in indivFragsForTrain:
+        identity = indivFragForTrain[0]
+        P2 = None # P2 is None because it is the first time and we have not computed it yet
+        blobIndex = indivFragForTrain[0]
+        fragNum = indivFragForTrain[1]
+        start = indivFragForTrain[2][0]
+        end = indivFragForTrain[2][1]
+        length = indivFragForTrain[3]
+        indivFragsForTrainNew[identity] = [(identity,P2,blobIndex,fragNum,start,end,length)]
+    indivFragsForTrain = indivFragsForTrainNew
+
     continueFlag = True
     counter = 0
-    minLen = 150
+    minLength = 150
+    minLengths = np.ones(numAnimals)*minLength
     while continueFlag:
         print '\n************** Training ', counter
         print 'training dictionary, ', trainDict
 
-        ''' Fine tuning '''
-        fineTuner(videoPath,trainDict,fragsForTrain,fragmentsDict,portraits)
+        ''' ********************************************************************
+        Fine tuning
+        *********************************************************************'''
+        fineTuner(videoPath,trainDict,indivFragsForTrain,fragmentsDict,portraits)
 
         ''' plot and save fragment selected '''
-        fragments = fragmentsDict['fragments']
         permutations = np.asarray(portraits.loc[:,'permutations'].tolist())
         maxNumBlobs = len(permutations[0])
         permOrdered =  orderVideo(permutations,permutations,maxNumBlobs)
@@ -287,21 +305,31 @@ if __name__ == '__main__':
         plt.close()
         fig, ax = plt.subplots(figsize=(25, 5))
         permOrdered[permOrdered >= 0] = .5
+        print permOrdered
         im = plt.imshow(permOrdered,cmap=plt.cm.gray,interpolation='none',vmin=0.,vmax=1.)
         im.cmap.set_under('r')
+
         # im.set_clim(0, 1.)
         # cb = plt.colorbar(im)
 
-        # for i in range(len(fragments)):
-        for i in fragsForTrain:
+        indivFragsForTrainList = flatten([v for v in indivFragsForTrain.values()])
+        colors = get_spaced_colors_util(numAnimals,norm=True)
+        # print numAnimals
+        # print colors
+        for frag in indivFragsForTrainList:
+            identity = frag[0]
+            # print identity
+            blobIndex = frag[2]
+            start = frag[4]
+            end = frag[5]
             ax.add_patch(
                 patches.Rectangle(
-                    (fragments[i,0], -0.5),   # (x,y)
-                    fragments[i,1]-fragments[i,0],  # width
-                    maxNumBlobs,          # height
+                    (start, blobIndex-0.5),   # (x,y)
+                    end-start,  # width
+                    1.,          # height
                     fill=True,
                     edgecolor=None,
-                    facecolor='b',
+                    facecolor=colors[identity+1],
                     alpha = 0.5
                 )
             )
@@ -313,20 +341,26 @@ if __name__ == '__main__':
         plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
         plt.gca().invert_yaxis()
         plt.tight_layout()
+        # plt.show()
 
         print 'Saving figure...'
         ckpt_dir = getCkptvideoPath(videoPath,ckptName,train=2,time =0)
         figname = ckpt_dir + '/figures/fragments_' + str(counter) + '.pdf'
         fig.savefig(figname)
 
-        ''' Identity assignation '''
-        normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
-        ''' Computing best next fragments '''
-        fragsForTrain,continueFlag,minLen,badFragments = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals,minLen,badFragments,portraits,thVels)
+        ''' ********************************************************************
+        Id Assignation
+        *********************************************************************'''
+        normFreqFragments, portraits, P2FragsAll = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
+
+        ''' ********************************************************************
+        Compute best next fragments
+        *********************************************************************'''
+        indivFragsForTrain, continueFlag, minLengths = bestFragmentFinder(indivFragsForTrain,normFreqFragments,fragmentsDict,numAnimals,P2FragsAll,minLengths)
 
         ''' Plotting and saving probability matrix'''
-        statistics = loadFile(videoPath, 'statistics', time=0)
-        statistics = statistics.to_dict()[0]
+        statistics = loadFile(videoPath, 'statistics', time=0,hdfpkl='pkl')
+        # statistics = statistics.to_dict()[0]
         P2 = statistics['P2FragAllVideo']
         P2Ordered =  orderVideo(P2,permutations,maxNumBlobs)
         P2good = np.max(P2Ordered,axis=2).T

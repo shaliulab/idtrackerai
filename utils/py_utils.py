@@ -25,7 +25,11 @@ def uint8caster(im):
 
 def flatten(l):
     ''' flatten a list of lists '''
-    return [inner for outer in l for inner in outer]
+    try:
+        ans = [inner for outer in l for inner in outer]
+    except:
+        ans = [y for x in l for y in (x if isinstance(x, tuple) else (x,))]
+    return ans
 
 def cycle(l):
     ''' shift the list one element towards the right
@@ -51,6 +55,17 @@ def countRateSet(array):
     uniqueEl = list(set(array))
     ratePerElement = [(key,len(list(group))) for key, group in groupby(array)]
     return [(el,sum([pair[1] for pair in ratePerElement if pair[0]== el])) for el in uniqueEl]
+
+def groupByCustom(array, keys, ind): #FIXME it can be done matricially
+    """
+    given an array to group and an array of keys returns the array grouped in a
+    dictionary according to the keys listed at the index ind
+    """
+    dictionary = {i: [] for i in keys}
+    for el in array:
+        dictionary[el[ind]].append(el)
+
+    return dictionary
 
 def deleteDuplicates(array):
     # deletes duplicate sublists in list
@@ -100,11 +115,14 @@ def scanFolder(path):
         paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
     return paths
 
-def get_spaced_colors(n):
+def get_spaced_colors_util(n,norm=False):
     max_value = 16581375 #255**3
     interval = int(max_value / n)
     colors = [hex(I)[2:].zfill(6) for I in range(100, max_value, interval)]
-    rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
+    if norm:
+        rgbcolorslist = [(int(i[:2], 16)/255., int(i[2:4], 16)/255., int(i[4:], 16)/255.) for i in colors]
+    else:
+        rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
     black = (0., 0., 0.)
     rgbcolorslist.insert(0, black)
     return rgbcolorslist

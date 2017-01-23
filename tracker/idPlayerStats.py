@@ -21,8 +21,13 @@ import itertools
 import cPickle as pickle
 
 numSegment = 0
+# path = selectFile()
+# paths = scanFolder(path)
 # paths = scanFolder('../Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
-paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+paths = scanFolder('../larvae1/trial_1_1.avi')
+# paths = scanFolder('../nofragsError/_1.avi')
+
+# paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
 # paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
 # paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../38fish_adult_splitted/adult1darkenes_1.avi')
@@ -32,6 +37,7 @@ print paths
 frameIndices = loadFile(paths[0], 'frameIndices', time=0)
 videoInfo = loadFile(paths[0], 'videoInfo', time=0)
 videoInfo = videoInfo.to_dict()[0]
+# stats = loadFile(paths[0], 'statistics', time=0,hdfpkl='pkl')
 stats = loadFile(paths[0], 'statistics', time=0)
 stats = stats.to_dict()[0]
 dfGlobal = loadFile(paths[0], 'portraits', time=0)
@@ -75,7 +81,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-    colors = get_spaced_colors(numAnimals)
+    colors = get_spaced_colors_util(numAnimals)
     # print 'colors, ',colors
     def onChange(trackbarValue):
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)

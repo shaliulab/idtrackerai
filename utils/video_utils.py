@@ -36,21 +36,24 @@ def splitVideo(videoPath):
     # print fourcc
     # fourcc = cv2.cv.CV_FOURCC(*'MP4A')
     # fourcc = cv2.cv.CV_FOURCC(*'X264')
+    fourcc = cv2.cv.CV_FOURCC(*'XVID')
     width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    print 'numFrames, ', numFrame
     currentFrame = cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
     # chunk it
     numSeg = 1
     name = folder +'/'+ filename + '_' + str(numSeg) + extension
     out = cv2.VideoWriter(name, fourcc, fps, (width, height))
     while currentFrame < numFrame:
-        print currentFrame
+        print currentFrame, numFrame
         ret = cap.grab()
-        print 'reading ', ret
+        # print 'reading ', ret
         frame = cap.retrieve()
-        print 'frame', frame
+        # print 'frame', frame
         if ret:
+            print 'ret', ret
             if currentFrame % 500 == 0:
                 name = folder +'/'+ filename + '_' + str(numSeg) + extension
                 numSeg += 1
@@ -58,7 +61,7 @@ def splitVideo(videoPath):
                 out = cv2.VideoWriter(name, fourcc, fps, (width, height))
                 print 'saving ', name
 
-            out.write(frame)
+            out.write(frame[1])
             currentFrame += 1
             ## Uncomment to show the video
             # cv2.imshow('IdPlayer',frame)
@@ -71,7 +74,7 @@ def splitVideo(videoPath):
     cap.release()
 
 
-# splitVideo('/media/lab/New Volume/Tests big groups/26dpf/34fish_26dpf.avi' )
+#splitVideo('/home/lab/Desktop/TF_models/IdTracker/larvae1/trial_1.avi' )
 """
 Get general information from video
 """
