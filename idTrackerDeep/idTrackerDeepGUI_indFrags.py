@@ -83,7 +83,7 @@ if __name__ == '__main__':
     print 'Selecting properties for bkg and ROI...'
     print '********************************************************************\n'
 
-    prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to do BKG or select a ROI?  ')
+    prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to subtract the background or select a Region Of Iinterest?')
     useBkg = prepOpts['bkg']
     useROI =  prepOpts['ROI']
     useBkg = int(useBkg)
@@ -95,14 +95,19 @@ if __name__ == '__main__':
     processesList = ['ROI', 'bkg', 'preprocparams', 'segmentation','fragmentation','portraits']
     reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previos preprocessing? ([y]/n)')
     if reUseAll == 'n':
-        processesDict, srcSubFolder = copyExistentFiles(videoPath, processesList, time=1)
-        print 'List of processes finished, ', processesDict
+        # processesDict, srcSubFolder = copyExistentFiles(videoPath, processesList, time=1)
+        existentFiles, srcSubFolder = getExistentFiles(videoPath, processesList, time=1)
+
+        print 'List of processes finished, ', existentFiles
         print '\nSelecting files to load from previous session...'
-        loadPreviousDict = selectOptions(processesList, processesDict, text='Already processed steps in this video \n (check to load from ' + srcSubFolder + ')')
+        loadPreviousDict = selectOptions(processesList, existentFiles, text='Already processed steps in this video \n (check to load from ' + srcSubFolder + ')')
+        ###
+        
+
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         loadPreviousDict = {'ROI': 1, 'bkg': 1, 'preprocparams': 1, 'segmentation': 1, 'fragmentation': 1, 'portraits': 1}
     else:
-        raise ValueError('The input introduces do not match the possible options')
+        raise ValueError('The input does not match the possible options')
 
     print 'List of files that will be used, ', loadPreviousDict
     usePreviousBkg = loadPreviousDict['bkg']
@@ -246,31 +251,57 @@ if __name__ == '__main__':
     preprocParams = preprocParams.to_dict()[0]
     numAnimals = preprocParams['numAnimals']
 
-    def getStdPositionInterval(portraits,framesAndColumns):
-        centroids = []
-        for (frame,column) in framesAndColumns:
-            centroids.append(portraits.loc[frame,'noses'][column])
-        centroids = np.asarray(centroids)
-        vels = np.diff(centroids,axis=0)
-        plt.ion()
-        plt.figure()
-        plt.plot(centroids[:,0],centroids[:,1])
-        plt.xlim((0,1160))
-        plt.ylim((0,938))
-        return centroids.std(axis=0)
-
-    framesAndColumnsGlobalFrag = fragmentsDict['framesAndBlobColumns'][1]
-    StdGlobalFrag = []
-    for framesAndColumnsInterval in framesAndColumnsGlobalFrag:
-        StdGlobalFrag.append(getStdPositionInterval(portraits,framesAndColumnsInterval))
-
-    print '************************************************************'
-    print 'Global fragment std of the position of each blob, ', StdGlobalFrag
-
-    raw_input("Press Enter to continue...")
-
     # Set initial list of individual fragments from the longer global fragment
-    indivFragsForTrain = fragmentsDict['intervals'][1]
+
+
+
+    def checkVelocityGF(GFIndex,thVel, badFragments):
+        """
+        check velocities of individual fragments given a global fragment indexFragment
+        if all the velocities are high enough returns true
+        """
+
+        GF = fragmentsDict['intervals'][GFIndex]
+        avVels = []
+        goodGF = True
+        for indivFragForTrain in GF:
+            avVel = indivFragForTrain[4]
+
+            if avVel <= thVel:
+                badFragments.append((indivFragForTrain[0], indivFragForTrain[1]))
+
+            avVels.append(avVel)
+
+
+        if any(np.asarray(avVels)<=thVel):
+            goodGF = False
+        print 'Average velocities of the global fragmet, ', avVels
+        print 'Average velocities ',np.asarray(avVels)
+
+        return goodGF, badFragments
+
+    goodGF = False
+    GFIndex = 0
+    thVel = 0.6
+
+    badFragments = []
+    while not goodGF:
+        print 'Checking whether fragment, ', GFIndex, ' is a good fragment.'
+        goodGF, badFragments = checkVelocityGF(GFIndex, thVel, badFragments)
+        print goodGF, badFragments
+        GFIndex += 1
+
+    print 'The global fragment choosen for the first fine-tuning is ', GFIndex
+    GFIndex -= 1
+    indivFragsForTrain = fragmentsDict['intervals'][GFIndex]
+
+    # oneIndivFragDists = fragmentsDict['oneIndivFragDists']
+    # plotDists = np.asarray(flatten(oneIndivFragDists))
+    # plt.ion()
+    # plt.figure()
+    # plt.hist(plotDists, 100)
+    # plt.show()
+    # raw_input('Press ENTER to contiune (2)')
     indivFragsForTrainNew = {}
     for indivFragForTrain in indivFragsForTrain:
         identity = indivFragForTrain[0]
@@ -280,13 +311,16 @@ if __name__ == '__main__':
         start = indivFragForTrain[2][0]
         end = indivFragForTrain[2][1]
         length = indivFragForTrain[3]
-        indivFragsForTrainNew[identity] = [(identity,P2,blobIndex,fragNum,start,end,length)]
+        vel = indivFragForTrain[4]
+        dist  = indivFragForTrain[5]
+        indivFragsForTrainNew[identity] = [(identity, P2, blobIndex, fragNum, start, end, length, vel, dist)]
+
     indivFragsForTrain = indivFragsForTrainNew
 
     continueFlag = True
     counter = 0
-    minLength = 150
-    minLengths = np.ones(numAnimals)*minLength
+    minDist = 1000
+    minDists = np.ones(numAnimals)*minDist
     while continueFlag:
         print '\n************** Training ', counter
         print 'training dictionary, ', trainDict
@@ -356,7 +390,7 @@ if __name__ == '__main__':
         ''' ********************************************************************
         Compute best next fragments
         *********************************************************************'''
-        indivFragsForTrain, continueFlag, minLengths = bestFragmentFinder(indivFragsForTrain,normFreqFragments,fragmentsDict,numAnimals,P2FragsAll,minLengths)
+        indivFragsForTrain, continueFlag, minDists = bestFragmentFinder(indivFragsForTrain,normFreqFragments,fragmentsDict,numAnimals,P2FragsAll,minDists, badFragments)
 
         ''' Plotting and saving probability matrix'''
         statistics = loadFile(videoPath, 'statistics', time=0,hdfpkl='pkl')

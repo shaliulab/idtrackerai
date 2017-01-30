@@ -332,6 +332,64 @@ def copyExistentFiles(path, listNames, time=1):
 
     return existentFile, srcSubFolder
 
+
+def getExistentFiles(path, listNames, time=1):
+    """
+    get processes already computed in the previous session (time = 1 means we are looking back of one step)
+    """
+    existentFile = {name:'0' for name in listNames}
+    # existentFile = dict()
+    createFolder(path, name = '', timestamp = False)
+    video = os.path.basename(path)
+    folder = os.path.dirname(path)
+    #count how many videos we have
+    numVideos = len(glob.glob1(folder,"*.avi"))
+
+    filename, extension = os.path.splitext(video)
+    subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
+    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
+    print subFolders
+    if len(subFolders) <= 1:
+        srcSubFolder = 'There is not previous subFolder'
+        pass
+    else:
+        srcSubFolder = subFolders[time]
+        dstSubFolder = subFolders[time-1]
+        for name in listNames:
+            if name == 'segmentation':
+                segDirname = srcSubFolder + '/' + name
+                if os.path.isdir(segDirname):
+                    print 'Segmentation folder exists'
+                    numSegmentedVideos = len(glob.glob1(segDirname,"*.hdf5"))
+                    print
+                    if numSegmentedVideos == numVideos:
+                        print 'The number of segments and videos is the same'
+                        existentFile[name] = '1'
+                        dstSubFolderSeg = dstSubFolder + '/segmentation'
+            else:
+                if name is 'fragmentation':
+                    fullFileName = srcSubFolder + '/fragments.pkl'
+
+                    segDirname = srcSubFolder + 'segmentation'
+                    if os.path.isdir(segDirname):
+                        srcFiles = os.listdir(segDirname)
+                        if os.path.isdir(segDirname) and len(srcFiles)!=0:
+                            df,_ = loadFile(path, 'segmentation', time=1)
+                            if 'permutation' in list(df.columns):
+                                existentFile[name] = '1'
+                elif name is 'bkg':
+                    fullFileName = srcSubFolder + '/bkg.pkl'
+                    if os.path.isfile(fullFileName):
+                        existentFile[name] = '1'
+                else:
+                    fullFileName = srcSubFolder + '/' + name + '.hdf5'
+                    if os.path.isfile(fullFileName):
+                        existentFile[name] = '1'
+                    if name is 'ROI':
+                        fullFileName = srcSubFolder + '/centers.hdf5'
+
+    return existentFile, srcSubFolder
+
 def createFolder(path, name = '', timestamp = False):
 
     ts = '{:%Y%m%d%H%M%S}_'.format(datetime.datetime.now())

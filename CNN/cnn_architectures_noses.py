@@ -18,11 +18,11 @@ def inference(images, width, height, channels, classes, keep_prob):
             x_max = tf.reduce_max(images_tensor)
             images_tensor_0_to_1 = (images_tensor - x_min) / (x_max - x_min)
 
-            # to tf.image_summary format [batch_size, height, width, channels]
+            # to tf.summary.image format [batch_size, height, width, channels]
             # images_placeholder_transposed = tf.transpose (images_placeholder_0_to_1, [0, 2, 3, 1])
 
             # this will display random images
-            tf.image_summary('_rawImages', images_tensor_0_to_1, max_images=10)
+            tf.summary.image('_rawImages', images_tensor_0_to_1, max_outputs=10)
     # conv1
     filter_size1 = 5
     n_filter1 = 16
@@ -77,11 +77,11 @@ def inference1(images, width, height, channels, classes, keep_prob):
             x_max = tf.reduce_max(images_tensor)
             images_tensor_0_to_1 = (images_tensor - x_min) / (x_max - x_min)
 
-            # to tf.image_summary format [batch_size, height, width, channels]
+            # to tf.summary.image format [batch_size, height, width, channels]
             # images_placeholder_transposed = tf.transpose (images_placeholder_0_to_1, [0, 2, 3, 1])
 
             # this will display random images
-            tf.image_summary('_rawImages', images_tensor_0_to_1, max_images=10)
+            tf.summary.image('_rawImages', images_tensor_0_to_1, max_outputs=10)
     # conv1
     filter_size1 = 5
     n_filter1 = 16

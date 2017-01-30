@@ -37,9 +37,9 @@ print paths
 frameIndices = loadFile(paths[0], 'frameIndices', time=0)
 videoInfo = loadFile(paths[0], 'videoInfo', time=0)
 videoInfo = videoInfo.to_dict()[0]
-# stats = loadFile(paths[0], 'statistics', time=0,hdfpkl='pkl')
-stats = loadFile(paths[0], 'statistics', time=0)
-stats = stats.to_dict()[0]
+stats = loadFile(paths[0], 'statistics', time=0,hdfpkl='pkl')
+# stats = loadFile(paths[0], 'statistics', time=0)
+# stats = stats.to_dict()[0]
 dfGlobal = loadFile(paths[0], 'portraits', time=0)
 # IdsStatistics = {'blobIds':idSoftMaxAllVideo,
 #     'probBlobIds':PSoftMaxAllVIdeo,
@@ -147,7 +147,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
                 freqList = ["%0.f" % float(s) for s in freq[globalFrame,i,:]]
                 freqText = str.join(", ",freqList)
                 freqText = '[ ' + freqText + ' ]'
-                normFreqList = ["%0.f" % float(s) for s in normFreq[globalFrame,i,:]]
+                normFreqList = ["%0.2f" % float(s) for s in normFreq[globalFrame,i,:]]
                 normFreqText = str.join(", ",normFreqList)
                 normFreqText = '[ ' + normFreqText + ' ]'
                 P1List = ["%.4f" % float(s) for s in P1[globalFrame,i,:]]
@@ -160,8 +160,8 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
                 P2Text = str.join(", ",P2List)
                 P2Text = '[ ' + P2Text + ' ]'
                 print '--------- Id, ', cur_id+1
-                print 'Frequencies', freqText
-                # print 'normFrequencies', normFreqText
+                # print 'Frequencies', freqText
+                print 'normFrequencies', normFreqText
                 # print 'P1, ', P1Text
                 print 'P2, ', P2Text
                 # print 'logP2, ', logP2Text

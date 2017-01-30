@@ -246,30 +246,70 @@ if __name__ == '__main__':
     preprocParams = preprocParams.to_dict()[0]
     numAnimals = preprocParams['numAnimals']
 
+    ''' Finding first fragment to fine tune '''
+    # print '******************************************************'
+    # print '******************************************************'
+    minDistIndivCompleteFragments = flatten(fragmentsDict['minDistIndivCompleteFragments'])
+    oneIndivFragVels = np.asarray(flatten(fragmentsDict['oneIndivFragVels']))
+    oneIndivFragLens = np.asarray(flatten(fragmentsDict['oneIndivFragLens']))
+    # plt.ion()
+    #
+    # plt.figure()
+    # plt.hist(minDistIndivCompleteFragments,50)
+    # plt.axvline(np.mean(minDistIndivCompleteFragments),color = 'r')
+    # plt.axvline(np.median(minDistIndivCompleteFragments),color = 'b')
+    # plt.title('Dist')
+    # print 'minDistStd, ', np.std(minDistIndivCompleteFragments)
+    #
+    # plt.figure()
+    # plt.hist(oneIndivFragVels[~np.isnan(oneIndivFragVels)],50)
+    # plt.axvline(np.nanmean(oneIndivFragVels),color = 'r')
+    # plt.axvline(np.nanmedian(oneIndivFragVels),color = 'b')
+    # plt.title('avVels')
+    avVel = np.nanmean(oneIndivFragVels)
+    #
+    # plt.figure()
+    # plt.hist(oneIndivFragLens[~np.isnan(oneIndivFragVels)],50)
+    # plt.axvline(np.nanmean(oneIndivFragLens),color = 'r')
+    # plt.axvline(np.nanmedian(oneIndivFragLens),color = 'b')
+    # plt.title('Lens')
+    avLen = np.nanmean(oneIndivFragLens)
+    #
+    # plt.show()
+    # raw_input('Press ENTER to continue.')
+    # print '******************************************************'
+    # print '******************************************************'
+
+
+    print 'Finding first fragment to fine tune'
     indexFragment = 0
     avVels = [0,0]
-    thVels = 0.9
+    thVels = 0.5
     badFragments = []
-    framesAndColumnsGlobalFrag = fragmentsDict['framesAndBlobColumns'][indexFragment]
+    framesAndColumnsGlobalFrag = fragmentsDict['framesAndBlobColumnsDist']
+    intervalsDist = fragmentsDict['intervalsDist']
     while any(np.asarray(avVels)<=thVels):
         avVels = []
         print 'Checking whether the fragmentNumber ', indexFragment, ' is good for training'
-        for framesAndColumnsInterval in framesAndColumnsGlobalFrag:
+        for framesAndColumnsInterval in framesAndColumnsGlobalFrag[indexFragment]:
+            print framesAndColumnsInterval[0]
+            print framesAndColumnsInterval[-1]
             avVels.append(getAvVelFragment(portraits,framesAndColumnsInterval))
         print 'The average velocities for each blob are (pixels/frame), ', avVels
         if any(np.asarray(avVels)<=thVels):
             badFragments.append(indexFragment)
             indexFragment += 1
-            framesAndColumnsGlobalFrag = fragmentsDict['framesAndBlobColumns'][indexFragment]
-            print 'There is some animal that does not move enough. Going to next longest fragment'
+            print 'There are some animals that does not move enough. Going to next longest fragment'
             print 'Bad fragments, ', badFragments
 
 
     print 'The fine-tuning will start with the ', indexFragment, ' longest fragment'
+    print 'Individual fragments inside the global fragment, ', intervalsDist[indexFragment]
     fragsForTrain = [indexFragment]
     continueFlag = True
     counter = 0
-    minLen = 150
+    minDist = int(avVel * avLen)
+    print 'The threshold for the distance travelled is ', minDist
     while continueFlag:
         print '\n************** Training ', counter
         print 'training dictionary, ', trainDict
@@ -322,11 +362,12 @@ if __name__ == '__main__':
         ''' Identity assignation '''
         normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
         ''' Computing best next fragments '''
-        fragsForTrain,continueFlag,minLen,badFragments = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals,minLen,badFragments,portraits,thVels)
+        fragsForTrain,continueFlag,minDist,badFragments = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals,minDist,badFragments,portraits,thVels)
 
         ''' Plotting and saving probability matrix'''
-        statistics = loadFile(videoPath, 'statistics', time=0)
-        statistics = statistics.to_dict()[0]
+        # statistics = loadFile(videoPath, 'statistics', time=0)
+        # statistics = statistics.to_dict()[0]
+        statistics = loadFile(videoPath, 'statistics', time=0,hdfpkl='pkl')
         P2 = statistics['P2FragAllVideo']
         P2Ordered =  orderVideo(P2,permutations,maxNumBlobs)
         P2good = np.max(P2Ordered,axis=2).T

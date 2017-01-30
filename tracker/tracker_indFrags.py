@@ -105,7 +105,7 @@ def DataFineTuning(indivFragsForTrain, fragmentsDict, portraits,numAnimals):
     refDict = {}
     identities = range(numAnimals)
     num_cores = multiprocessing.cpu_count()
-    num_cores = 1
+    # num_cores = 1
     print '\n Preparing refDict'
     output = Parallel(n_jobs=num_cores)(delayed(getImagesRef)(indivFragsForTrain[identity],oneIndivFragFrames,identity,portraits) for identity in identities)
     for (images,identity) in output:
@@ -274,7 +274,7 @@ def computeP1(IdProbs):
 
     return P1Frags, P1FragsForMat, freqFrags, normFreqFrags, idFreqFragForMat, normFreqFragsForMat
 
-def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices,blobIndex):
+def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, velFragments, distFragments, blobsIndices,blobIndex):
 
     def getOverlap(a, b):
         overlap = max(0, min(a[1], b[1]) - max(a[0], b[0]))
@@ -316,6 +316,8 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
         # print 'Interval, ', indivFragmentInterval
         # print 'Individual fragment P1, ', P1Frag
         lenFragment = lenFragments[j]
+        velFragment = velFragments[j]
+        distFragment = distFragments[j]
         P1CoexistingFrags = []
         # indivFragmentInterval2 = indivFragmentInterval
         for k in blobsIndices: # looping on the blob indices to compute the coexistence of the individual fragments
@@ -340,7 +342,7 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
         logP2FragsForMat.append(np.matlib.repmat(logP2Frag,fragLen,1))
         P2FragsForMat.append(np.matlib.repmat(P2Frag,fragLen,1))
         logP2FragIdForMat.append(np.multiply(np.ones(fragLen),idFrag).astype('int'))
-        flatIndinvFragmentInterval = (blobIndex,j,) + tuple(flatten(indivFragmentInterval)) + (lenFragment,)
+        flatIndinvFragmentInterval = (blobIndex,j,) + tuple(flatten(indivFragmentInterval)) + (lenFragment,) + (velFragment,) + (distFragment,)
         # fragIdAndP2 = (np.argmax(P2Frag),np.max(P2Frag))
         fragIdAndP2 = (np.argmax(P1Frag),np.max(P1Frag))
         P2Frags.append(fragIdAndP2 + flatIndinvFragmentInterval)
@@ -508,6 +510,8 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
     oneIndivFragIntervals = fragmentsDict['oneIndivFragIntervals']
     oneIndivFragSumLens = fragmentsDict['oneIndivFragSumLens']
     oneIndivFragLens = fragmentsDict['oneIndivFragLens']
+    oneIndivFragVels = fragmentsDict['oneIndivFragVels']
+    oneIndivFragDists = fragmentsDict['oneIndivFragDists']
 
     lensIntervalsLists = [len(oneIndivFragInterval) for oneIndivFragInterval in oneIndivFragIntervals]
     numGoodLists = np.sum(np.asarray(lensIntervalsLists) != 0)
@@ -613,6 +617,8 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
         P1Frags = P1FragsAll[i]
         indivFragments = oneIndivFragFrames[i]
         lenFragments = oneIndivFragLens[i]
+        velFragment = oneIndivFragVels[i]
+        distFragment = oneIndivFragDists[i]
         freqFrags = freqFragsAll[i]
         softMaxProbs = softMaxProbsAll[i]
         softMaxId = softMaxIdAll[i]
@@ -624,7 +630,7 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
         blobsIndices = list(range(numGoodLists))
         blobsIndices.pop(i)
 
-        logP2FragsForMat, logP2FragIdForMat, P2FragsForMat, P2Frags = computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices,i)
+        logP2FragsForMat, logP2FragIdForMat, P2FragsForMat, P2Frags = computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, velFragment, distFragment, blobsIndices,i)
         P2FragsAll.append(P2Frags)
         # logP2
         LogProbsFragUpdated = probsUptader(logP2FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
@@ -666,14 +672,7 @@ def popOut(indivFragsForTrainList, idP2Frags, identity):
     REMARK: we are using blobindex and frag number to pop out since it could be that
             an identity has changed during assignation...
     """
-    # candidates = idP2Frags
-    # for frag in indivFragsForTrainList:
-    #     candidates = [idP2Frag for idP2Frag in candidates if idP2Frag[2:4] != frag[2:4]]
-    #
-    #     print 'the length of the pooped ', len(candidates)
-    #
-    # if candidates == idP2Frags:
-    #     raise ValueError('We did not pop out shit...')
+
     candidates = []
     print 'number of fragments for identity ', identity, ', ', len(idP2Frags)
     for idfrag in idP2Frags: # all the fragments of an identity
@@ -691,27 +690,27 @@ def popOut(indivFragsForTrainList, idP2Frags, identity):
 
     return candidates, identity
 
-def chooser(candidates, minLength, identity, chosens = 1):
+def chooser(candidates, minDist, identity, chosens = 1):
     sortedCandidates = sorted(candidates, key=lambda x: (x[1], x[-1]), reverse=True)
     counter = 0
     trainFrags = []
     continueFlag = True
-    while len(trainFrags) != chosens and minLength > 0:
+    while len(trainFrags) != chosens and minDist > 0:
         for cur_cand in sortedCandidates:
-            if cur_cand[-1] >= minLength:
+            if cur_cand[-1] >= minDist:
                 trainFrags.append(cur_cand)
                 if len(trainFrags) == chosens:
                     break
 
         if len(trainFrags) < chosens:
-            minLength -= 10
+            minDist -= 100
 
-    if len(trainFrags) < chosens and minLength <= 0:
+    if len(trainFrags) < chosens and minDist <= 0:
         continueFlag = False
 
-    return trainFrags, identity, minLength, continueFlag
+    return trainFrags, identity, minDist, continueFlag
 
-def bestFragmentFinder(indivFragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals,P2FragsAll,minLengths):
+def bestFragmentFinder(indivFragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals,P2FragsAll,minDists, badFragments):
 
     """
     1. Create a dictionary (idDict) organised as follow
@@ -737,8 +736,8 @@ def bestFragmentFinder(indivFragsForTrain,normFreqFragsAll,fragmentsDict,numAnim
     print '----------------------->8'
     for i in ids:
         print len(idDict[i]), 'fragments for identity ', i
-    # num_cores = multiprocessing.cpu_count()
-    num_cores = 1
+    num_cores = multiprocessing.cpu_count()
+    # num_cores = 1
     output = Parallel(n_jobs=num_cores)(delayed(popOut)(indivFragsForTrainList, idDict[identity], identity) for identity in range(numAnimals))
     candidateDict = {}
 
@@ -748,13 +747,13 @@ def bestFragmentFinder(indivFragsForTrain,normFreqFragsAll,fragmentsDict,numAnim
     # print '----------------------->8'
     # print 'candidates', len(candidateDict[0])
 
-    output = Parallel(n_jobs=num_cores)(delayed(chooser)(candidateDict[identity], minLengths[identity], identity) for identity in range(numAnimals))
-    for (trainFrags,identity,minLength,continueFlag) in output:
+    output = Parallel(n_jobs=num_cores)(delayed(chooser)(candidateDict[identity], minDists[identity], identity) for identity in range(numAnimals))
+    for (trainFrags,identity,minDist,continueFlag) in output:
         if not continueFlag:
             break
         indivFragsForTrain[identity].append(tuple(flatten(trainFrags)))
-        minLengths[identity] = minLength
+        minDists[identity] = minDist
     print '-------------------------------------'
     print 'indivFragsForTrain, ', indivFragsForTrain
     print '-------------------------------------'
-    return indivFragsForTrain, continueFlag, minLengths
+    return indivFragsForTrain, continueFlag, minDists

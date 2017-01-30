@@ -188,7 +188,7 @@ y_logits = tf.matmul(h_fc1_drop, W_fc3) + b_fc3
 
 # %% Define loss/eval/training functions
 cross_entropy = tf.reduce_mean(
-    tf.nn.softmax_cross_entropy_with_logits(y_logits, y))
+    tf.nn.softmax_cross_entropy_with_logits(logits=y_logits,labels=y))
 opt = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
 # opt = tf.train.FtrlOptimizer(0.01, learning_rate_power=-0.5, initial_accumulator_value=0.1, l1_regularization_strength=0.0, l2_regularization_strength=0.5, use_locking=False, name='Ftrl')
 # opt = tf.train.RMSPropOptimizer(learning_rate=0.1, decay=0.16, momentum=0.9, epsilon=1.0, use_locking=False, name='RMSProp')
@@ -217,7 +217,7 @@ for epoch_i in range(n_epochs):
     for iter_i in range(iter_per_epoch - 1):
         batch_xs = X_train[indices[iter_i]:indices[iter_i+1]]
         batch_ys = Y_train[indices[iter_i]:indices[iter_i+1]]
-    
+
     #     if iter_i % 10 == 0:
     #         loss = sess.run(cross_entropy,
     #                         feed_dict={

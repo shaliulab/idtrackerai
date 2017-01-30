@@ -189,7 +189,7 @@ def build_model(resolution, numIndiv):
 
     # %% Define loss/eval/training functions
     cross_entropy = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(y_logits, y))
+        tf.nn.softmax_cross_entropy_with_logits(logits=y_logits,labels=y))
     opt = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
     # opt = tf.train.FtrlOptimizer(0.01, learning_rate_power=-0.5, initial_accumulator_value=0.1, l1_regularization_strength=0.0, l2_regularization_strength=0.5, use_locking=False, name='Ftrl')
     # opt = tf.train.RMSPropOptimizer(learning_rate=0.1, decay=0.16, momentum=0.9, epsilon=1.0, use_locking=False, name='RMSProp')

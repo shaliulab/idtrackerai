@@ -17,7 +17,7 @@ def kMeansCluster(vector_values, num_clusters, max_num_steps, stop_coeficient = 
     tf.square(tf.sub(expanded_vectors, expanded_centroids)), 2)
   assignments = tf.argmin(distances, 0)
 
-  means = tf.pack([
+  means = tf.stack([
     tf.reduce_mean(
         tf.boolean_mask(
             vectors, tf.equal(assignments, c)

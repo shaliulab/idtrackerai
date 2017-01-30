@@ -29,7 +29,7 @@ import collections
 def getAvVelFragment(portraits,framesAndColumns):
     centroids = []
     for (frame,column) in framesAndColumns:
-        centroids.append(portraits.loc[frame,'noses'][column])
+        centroids.append(portraits.loc[frame,'centroids'][column])
     centroids = np.asarray(centroids).astype('float32')
     vels = np.sqrt(np.sum(np.diff(centroids,axis=0)**2,axis=1))
     return np.mean(vels)
@@ -37,7 +37,7 @@ def getAvVelFragment(portraits,framesAndColumns):
 def DataFineTuning(fragsForTrain, fragmentsDict, portraits,numAnimals):
     fragments = np.asarray(fragmentsDict['fragments'])
     # print 'fragments ', fragments
-    framesAndBlobColumns = fragmentsDict['framesAndBlobColumns']
+    framesAndBlobColumns = fragmentsDict['framesAndBlobColumnsDist']
     # print 'framesAndBlobColumns ', framesAndBlobColumns
     minLenIndivCompleteFragments = fragmentsDict['minLenIndivCompleteFragments']
     # print 'minLenIndivCompleteFragments', minLenIndivCompleteFragments
@@ -656,16 +656,18 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
 
     portraits['identities'] = idFreqFragAllVideo.tolist()
     # saveFile(videoPath,portraits,'portraits',time=0)
-    saveFile(videoPath, IdsStatistics, 'statistics', time = 0)
+    saveFile(videoPath, IdsStatistics, 'statistics', time = 0,hdfpkl='pkl')
     return normFreqFragsAll, portraits
 
-def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals,minLen,badFragments,portraits,thVels):
+def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals,minDistTrav,badFragments,portraits,thVels):
     print ' ****************** Finding next best fragment for references\n'
     # Load data needed and pass it to arrays
     fragments = np.asarray(fragmentsDict['fragments'])
     framesAndBlobColumns = fragmentsDict['framesAndBlobColumns']
     minLenIndivCompleteFragments = fragmentsDict['minLenIndivCompleteFragments']
+    minDistIndivCompleteFragments = fragmentsDict['minDistIndivCompleteFragments']
     lens = np.asarray(minLenIndivCompleteFragments)
+    distsTrav = np.asarray(minDistIndivCompleteFragments)
     intervalsFragments = fragmentsDict['intervals']
 
     # Compute distances to the identity matrix for each complete set of individual fragments
@@ -688,25 +690,30 @@ def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals,m
         distI.append(numpy.linalg.norm(matFragment - identity)) #TODO when optimizing the code one should compute the matrix distance only for fragments above 100 length
     distI = np.asarray(distI)
     distInorm = distI/np.max(distI)
-    lensnorm = np.true_divide(lens,np.max(lens))
+    # lensnorm = np.true_divide(lens,np.max(lens))
+    distsTravNorm = np.true_divide(distsTrav,np.max(distsTrav))
 
     # Get best values of the parameters length and distance to identity
     distI0norm = np.min(distInorm[fragsForTrain])
     distI0norm = np.ones(len(distI))*distI0norm
-    len0norm = np.max(lensnorm[fragsForTrain])
-    len0norm = np.ones(len(lens))*len0norm
+    # len0norm = np.max(lensnorm[fragsForTrain])
+    # len0norm = np.ones(len(lens))*len0norm
+    distTrav0norm = np.max(distsTravNorm[fragsForTrain])
+    distTrav0norm = np.ones(len(distsTrav))*distTrav0norm
 
     # Compute score of every global fragment with respect to the optimal value of the parameters
-    score = np.sqrt((distI0norm-distInorm)**2 + ((len0norm-lensnorm))**2)
+    # score = np.sqrt((distI0norm-distInorm)**2 + ((len0norm-lensnorm))**2)
+    score = np.sqrt((distI0norm-distInorm)**2 + ((distTrav0norm-distsTravNorm))**2)
 
     # Get indicies of the best fragments according to its score
     fragIndexesSorted = np.argsort(score).tolist()
 
     # Remove short fragments
-    print '(fragIndexesSorted, len) before eliminating the short ones, ', zip(fragIndexesSorted,lens[fragIndexesSorted])
-    print 'Current minimum length, ', minLen
-    fragIndexesSortedLong = [x for x in fragIndexesSorted if lens[x] > minLen]
-    print '(fragIndexesSorted, len) after eliminating the short ones, ', zip(fragIndexesSortedLong,lens[fragIndexesSortedLong])
+    print '(fragIndexesSorted, distTrav, lens) before eliminating the short ones, ', zip(fragIndexesSorted,distsTrav[fragIndexesSorted],lens[fragIndexesSorted])
+    # print 'Current minimum length, ', minLen
+    print 'Current minimum distance travelled, ', minDistTrav
+    fragIndexesSortedLong = [x for x in fragIndexesSorted if distsTrav[x] > minDistTrav]
+    print '(fragIndexesSorted, distTrav, lens) after eliminating the short ones, ', zip(fragIndexesSortedLong,distsTrav[fragIndexesSortedLong],lens[fragIndexesSortedLong])
 
     # We only consider fragments that have not been already picked for fine-tuning
     print 'Current fragsForTrain, ', fragsForTrain
@@ -729,16 +736,16 @@ def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals,m
         else:
             realNextPossibleFragments.append(frag)
 
-    while len(nextPossibleFragments)==0 and minLen >= 0:
+    while len(realNextPossibleFragments)==0 and minDistTrav >= 0:
         print 'The list of possible fragments is the same as the list of fragments used previously for finetuning'
         print 'We reduce the minLen in 50 units'
-        if minLen > 50:
+        if minDistTrav > 50:
             step = 50
         else:
             step = 10
-        minLen -= step
-        print 'Current minimum length, ', minLen
-        fragIndexesSortedLong = [x for x in fragIndexesSorted if lens[x] > minLen]
+        minDistTrav -= step
+        print 'Current minimum distTrav, ', minDistTrav
+        fragIndexesSortedLong = [x for x in fragIndexesSorted if distsTrav[x] > minDistTrav]
 
         # We only consider fragments that have not been already picked for fine-tuning
         print 'Current fragsForTrain, ', fragsForTrain
@@ -769,14 +776,16 @@ def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals,m
     if len(nextPossibleFragments) != 0:
 
         lensND = np.asarray([lens[frag] for frag in nextPossibleFragments])
+        distsTravND = np.asarray([distsTrav[frag] for frag in nextPossibleFragments])
         distIND = np.asarray([distI[frag] for frag in nextPossibleFragments])
-        print '(len,dist) of the nextPossibleFragments', zip(lensND,distIND)
+        print '(len, distTrav, dist) of the nextPossibleFragments', zip(lensND,distsTravND,distIND)
 
         bestFragInd = nextPossibleFragments[0]
         bestFragDist = distI[bestFragInd]
         bestFragLen = lens[bestFragInd]
-        print 'BestFragInd, bestFragDist, bestFragLen'
-        print bestFragInd, bestFragDist, bestFragLen
+        bestFragDistTrav = distsTrav[bestFragInd]
+        print 'BestFragInd, bestFragDist, bestFragLen, bestFragDistTrav'
+        print bestFragInd, bestFragDist, bestFragLen, bestFragDistTrav
 
         # acceptableFragIndices = np.where((lensND > 100) & (distIND <= bestFragDist))[0]
         acceptable = np.where((distIND <= bestFragDist))[0]
@@ -793,4 +802,4 @@ def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals,m
         print 'There are no more good fragments'
         continueFlag = False
 
-    return fragsForTrain, continueFlag, minLen, badFragments
+    return fragsForTrain, continueFlag, minDistTrav, badFragments

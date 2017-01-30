@@ -1,3 +1,111 @@
+# import cv2
+# import sys
+# sys.path.append('../utils')
+# sys.path.append('../preprocessing')
+#
+# from segmentation import *
+# from fragmentation_serie import *
+# from get_portraits import *
+# from video_utils import *
+# from py_utils import *
+#
+# import time
+# import numpy as np
+# from matplotlib import pyplot as plt
+# from Tkinter import *
+# import tkMessageBox
+# import argparse
+# import os
+# import glob
+# import pandas as pd
+# import time
+# import re
+# from joblib import Parallel, delayed
+# import multiprocessing
+# import itertools
+# import cPickle as pickle
+# import math
+# from natsort import natsorted, ns
+# from os.path import isdir, isfile
+# import scipy.spatial.distance as scisd
+# from tkFileDialog import askopenfilename
+#
+# ''' ****************************************************************************
+# ROI selector GUI
+# *****************************************************************************'''
+# def ROIselector(frame):
+#     plt.ion()
+#     f, ax = plt.subplots()
+#     ax.imshow(frame, interpolation='nearest', cmap='gray')
+#     props = {'facecolor': '#000070',
+#              'edgecolor': 'white',
+#              'alpha': 0.3}
+#     rect_tool = RectangleTool(ax, rect_props=props)
+#     N = 2
+#     params = plt.gcf()
+#     plSize = params.get_size_inches()
+#     params.set_size_inches( (plSize[0]*N, plSize[1]*N) )
+#     mng = plt.get_current_fig_manager()
+#     mng.resize(*mng.window.maxsize())
+#     # thismanager = plt.get_current_fig_manager()
+#     # thismanager.window.SetPosition((500, 0))
+#     plt.show()
+#
+#     numROIs = getInput('Number of ROIs','Type the number of ROIs to be selected')
+#     numROIs = int(numROIs)
+#     print 'The number of ROIs to select is ', numROIs
+#     counter = 0
+#     ROIsCoords = []
+#     centers = []
+#     ROIsShapes = []
+#     mask = np.ones_like(frame,dtype='uint8')*255
+#     while counter < numROIs:
+#         ROIshape = getInput('Roi shape','r= rect, c=circ')
+#
+#         if ROIshape == 'r' or ROIshape == 'c':
+#             ROIsShapes.append(ROIshape)
+#
+#             rect_tool.callback_on_enter(rect_tool.extents)
+#             coord = np.asarray(rect_tool.extents).astype('int')
+#
+#             print 'ROI coords, ', coord
+#             text = 'Is ' + str(coord) + ' the ROI you wanted to select? y/n'
+#             goodROI = getInput('Confirm selection',text)
+#             if goodROI == 'y':
+#                 ROIsCoords.append(coord)
+#                 if ROIshape == 'r':
+#                     cv2.rectangle(mask,(coord[0],coord[2]),(coord[1],coord[3]),0,-1)
+#                     centers.append(None)
+#                 if ROIshape == 'c':
+#                     center = ((coord[1]+coord[0])/2,(coord[3]+coord[2])/2)
+#                     angle = 90
+#                     axes = tuple(sorted(((coord[1]-coord[0])/2,(coord[3]-coord[2])/2)))
+#                     print center, angle, axes
+#                     cv2.ellipse(mask,center,axes,angle,0,360,0,-1)
+#                     centers.append(center)
+#
+#         counter = len(ROIsCoords)
+#     plt.close("all")
+#
+#     return mask, centers
+#
+# def checkROI(useROI, usePreviousROI, frame, videoPath):
+#     ''' Select ROI '''
+#     if useROI:
+#         if usePreviousROI:
+#             mask = loadFile(videoPath, 'ROI',0)
+#             mask = np.asarray(mask)
+#             centers= loadFile(videoPath, 'centers',0)
+#             centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
+#         else:
+#             print '\n Selecting ROI ...'
+#             mask, centers = ROIselector(frame)
+#     else:
+#         print '\n No ROI selected ...'
+#         mask = np.zeros_like(frame)
+#         centers = []
+#     return mask, centers
+
 import cv2
 import sys
 sys.path.append('../utils')
@@ -8,10 +116,13 @@ from fragmentation_serie import *
 from get_portraits import *
 from video_utils import *
 from py_utils import *
+from ROIselect import *
 
 import time
 import numpy as np
-from matplotlib import pyplot as plt
+import matplotlib
+# matplotlib.use('PyQt4')
+import matplotlib.pyplot as plt
 from Tkinter import *
 import tkMessageBox
 import argparse
@@ -34,59 +145,40 @@ from tkFileDialog import askopenfilename
 ROI selector GUI
 *****************************************************************************'''
 def ROIselector(frame):
-    plt.ion()
-    f, ax = plt.subplots()
-    ax.imshow(frame, interpolation='nearest', cmap='gray')
-    props = {'facecolor': '#000070',
-             'edgecolor': 'white',
-             'alpha': 0.3}
-    rect_tool = RectangleTool(ax, rect_props=props)
-    N = 2
-    params = plt.gcf()
-    plSize = params.get_size_inches()
-    params.set_size_inches( (plSize[0]*N, plSize[1]*N) )
-    mng = plt.get_current_fig_manager()
-    mng.resize(*mng.window.maxsize())
-    # thismanager = plt.get_current_fig_manager()
-    # thismanager.window.SetPosition((500, 0))
-    plt.show()
+     ROIsCoords, ROIsShapes = get_ROI(frame)
+     mask = np.ones_like(frame,dtype='uint8')*255
+     centers = []
+     print ROIsCoords
+     for coord,shape in zip(ROIsCoords, ROIsShapes):
+          coord = np.asarray(coord).astype('int')
+          if shape == 'r':
+               cv2.rectangle(mask,(coord[0],coord[2]),(coord[1],coord[3]),0,-1)
+               centers.append(None)
+          if shape == 'c':
+               center = ((coord[1]+coord[0])/2,(coord[3]+coord[2])/2)
+               angle = 90
+               axes = tuple(sorted(((coord[1]-coord[0])/2,(coord[3]-coord[2])/2)))
+               print center, angle, axes
+               cv2.ellipse(mask,center,axes,angle,0,360,0,-1)
+               centers.append(center)
+     return mask, centers
 
-    numROIs = getInput('Number of ROIs','Type the number of ROIs to be selected')
-    numROIs = int(numROIs)
-    print 'The number of ROIs to select is ', numROIs
-    counter = 0
-    ROIsCoords = []
-    centers = []
-    ROIsShapes = []
-    mask = np.ones_like(frame,dtype='uint8')*255
-    while counter < numROIs:
-        ROIshape = getInput('Roi shape','r= rect, c=circ')
 
-        if ROIshape == 'r' or ROIshape == 'c':
-            ROIsShapes.append(ROIshape)
-
-            rect_tool.callback_on_enter(rect_tool.extents)
-            coord = np.asarray(rect_tool.extents).astype('int')
-
-            print 'ROI coords, ', coord
-            text = 'Is ' + str(coord) + ' the ROI you wanted to select? y/n'
-            goodROI = getInput('Confirm selection',text)
-            if goodROI == 'y':
-                ROIsCoords.append(coord)
-                if ROIshape == 'r':
-                    cv2.rectangle(mask,(coord[0],coord[2]),(coord[1],coord[3]),0,-1)
-                    centers.append(None)
-                if ROIshape == 'c':
-                    center = ((coord[1]+coord[0])/2,(coord[3]+coord[2])/2)
-                    angle = 90
-                    axes = tuple(sorted(((coord[1]-coord[0])/2,(coord[3]-coord[2])/2)))
-                    print center, angle, axes
-                    cv2.ellipse(mask,center,axes,angle,0,360,0,-1)
-                    centers.append(center)
-
-        counter = len(ROIsCoords)
-    plt.close("all")
-
+def checkROI(useROI, usePreviousROI, frame, videoPath):
+    ''' Select ROI '''
+    if useROI:
+        if usePreviousROI:
+            mask = loadFile(videoPath, 'ROI',0)
+            mask = np.asarray(mask)
+            centers= loadFile(videoPath, 'centers',0)
+            centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
+        else:
+            print '\n Selecting ROI ...'
+            mask, centers = ROIselector(frame)
+    else:
+        print '\n No ROI selected ...'
+        mask = np.zeros_like(frame)
+        centers = []
     return mask, centers
 
 def checkROI(useROI, usePreviousROI, frame, videoPath):

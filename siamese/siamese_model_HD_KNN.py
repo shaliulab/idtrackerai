@@ -431,7 +431,7 @@ if __name__ == '__main__':
                 figname = ckpt_dir + '/result_' + str(epoch_i) + '.pdf'
                 plt.savefig(figname)
                 print '-------------------------------'
-                # writer = tf.train.SummaryWriter('./logSiameseHD13000', sess.graph)
+                # writer = tf.summary.FileWriter('./logSiameseHD13000', sess.graph)
         if args.train == 0:
 
             featTest = sess.run(h1,

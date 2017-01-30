@@ -16,11 +16,11 @@ from pprint import *
 import warnings
 
 def _add_loss_summary(loss):
-    tf.scalar_summary(loss.op.name, loss)
+    tf.summary.scalar(loss.op.name, loss)
 
 def loss(y,y_logits):
     cross_entropy = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(y_logits, y, name = 'CrossEntropy'), name = 'CrossEntropyMean')
+        tf.nn.softmax_cross_entropy_with_logits(logits=y_logits,labels=y, name = 'CrossEntropy'), name = 'CrossEntropyMean')
     _add_loss_summary(cross_entropy)
     return cross_entropy
 
@@ -87,7 +87,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
 
         accuracy, indivAcc = evaluation(labels_pl,logits,classes)
 
-        summary_op = tf.merge_all_summaries()
+        summary_op = tf.summary.merge_all()
 
         saver_model = createSaver('soft', False, 'saver_model')
         saver_softmax = createSaver('soft', True, 'saver_softmax')
@@ -130,8 +130,8 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
             # We'll now fine tune in minibatches and report accuracy, loss:
             n_epochs = num_epochs - start
 
-            summary_writerT = tf.train.SummaryWriter(ckpt_dir + '/train',sess.graph)
-            summary_writerV = tf.train.SummaryWriter(ckpt_dir + '/val',sess.graph)
+            summary_writerT = tf.summary.FileWriter(ckpt_dir + '/train',sess.graph)
+            summary_writerV = tf.summary.FileWriter(ckpt_dir + '/val',sess.graph)
 
             if start == 0 or not os.path.exists(ckpt_dir_model + "/lossAcc.pkl"):
                 # ref lists for plotting

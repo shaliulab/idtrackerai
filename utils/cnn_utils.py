@@ -35,11 +35,11 @@ def _activation_summary(x):
   # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
   # session. This helps the clarity of presentation on tensorboard.
   tensor_name = re.sub('%s_[0-9]*/' % 'tower', '', x.op.name)
-  tf.histogram_summary(tensor_name + '/activations', x)
-  tf.scalar_summary(tensor_name + '/sparsity', tf.nn.zero_fraction(x))
+  tf.summary.histogram(tensor_name + '/activations', x)
+  tf.summary.scalar(tensor_name + '/sparsity', tf.nn.zero_fraction(x))
 
 def _add_loss_summary(loss):
-    tf.scalar_summary(loss.op.name, loss)
+    tf.summary.scalar(loss.op.name, loss)
 
 def put_kernels_on_grid(kernel, (grid_Y, grid_X), pad=1):
     '''Visualize conv. features as an image (mostly for the 1st layer).
@@ -64,17 +64,17 @@ def put_kernels_on_grid(kernel, (grid_Y, grid_X), pad=1):
     # put NumKernels to the 1st dimension
     x2 = tf.transpose(x1, (3, 0, 1, 2))
     # organize grid on Y axis
-    x3 = tf.reshape(x2, tf.pack([grid_X, Y * grid_Y, X, NumChannels]))
+    x3 = tf.reshape(x2, tf.stack([grid_X, Y * grid_Y, X, NumChannels]))
 
     # switch X and Y axes
     x4 = tf.transpose(x3, (0, 2, 1, 3))
     # organize grid on X axis
-    x5 = tf.reshape(x4, tf.pack([1, X * grid_X, Y * grid_Y, NumChannels]))
+    x5 = tf.reshape(x4, tf.stack([1, X * grid_X, Y * grid_Y, NumChannels]))
 
     # back to normal order (not combining with the next step for clarity)
     x6 = tf.transpose(x5, (2, 1, 3, 0))
 
-    # to tf.image_summary order [batch_size, height, width, channels],
+    # to tf.summary.image order [batch_size, height, width, channels],
     #   where in this case batch_size == 1
     x7 = tf.transpose(x6, (3, 0, 1, 2))
 
@@ -128,7 +128,7 @@ def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filte
             grid_y = grid_x  # to get a square grid for 64 conv1 features
             WtoPlot = tf.slice(W, [0, 0, 0, 0], [filter_size, filter_size, 1, n_filters])
             grid = put_kernels_on_grid(WtoPlot, (grid_y, grid_x))
-            tf.image_summary(scopeName + '/features', grid, max_images=1)
+            tf.summary.image(scopeName + '/features', grid, max_outputs=1)
 
             # x_min = tf.reduce_min(convb)
             # x_max = tf.reduce_max(convb)
@@ -137,7 +137,7 @@ def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filte
             convbToPlot = tf.slice(convb, [0, 0, 0, 0], [-1, w, h, 1])
 
             # this will display random images
-            tf.image_summary(scopeName + '/output', convbToPlot, max_images=10)
+            tf.summary.image(scopeName + '/output', convbToPlot, max_outputs=10)
 
 
     return convb,w,h,grid
@@ -574,22 +574,30 @@ def CNNplotterFastNoses(lossDict):
 
     k=2
     ax_feats = []
-    for i in range(1,17):
-        ax8 = plt.subplot(4,6,k+i)
-        ax_feats.append(ax8)
-        if (k + i) % 6 == 0:
-            k+= 2
-        minif = miniframes[i]
-        minif[minif == 0] = 255
-        ax8.imshow(minif, cmap='gray', interpolation='none')
-        ax8.scatter(coord[i,0],coord[i,1], c='r') # remark: the nose of the fish is red since we are writing this piece of
-        ax8.scatter(coord[i,2],coord[i,3], c='b') #code during christmas time!
+    ax8 = plt.subplot(232)
+    ax8.imshow(miniframes[0], cmap='gray', interpolation='none')
+    ax8.scatter(coord[0,0],coord[0,1], c='r') # remark: the nose of the fish is red since we are writing this piece of
+    ax8.scatter(coord[0,2],coord[0,3], c='b') #code during christmas time!
 
-        ax8.scatter(coord_hat[i,0],coord_hat[i,1], c='r', marker='v')
-        ax8.scatter(coord_hat[i,2],coord_hat[i,3], c='b', marker='v')
+    ax8.scatter(coord_hat[0,0],coord_hat[0,1], c='r', marker='v')
+    ax8.scatter(coord_hat[0,2],coord_hat[0,3], c='b', marker='v')
 
-        # ax8.set_xlim((0,1))
-        # ax8.set_ylim((0,1))
+    # for i in range(1,2):
+    #     ax8 = plt.subplot(4,6,k+i)
+    #     ax_feats.append(ax8)
+    #     if (k + i) % 6 == 0:
+    #         k+= 2
+    #     minif = miniframes[i]
+    #     minif[minif == 0] = 255
+    #     ax8.imshow(minif, cmap='gray', interpolation='none')
+    #     ax8.scatter(coord[i,0],coord[i,1], c='r') # remark: the nose of the fish is red since we are writing this piece of
+    #     ax8.scatter(coord[i,2],coord[i,3], c='b') #code during christmas time!
+    #
+    #     ax8.scatter(coord_hat[i,0],coord_hat[i,1], c='r', marker='v')
+    #     ax8.scatter(coord_hat[i,2],coord_hat[i,3], c='b', marker='v')
+    #
+    #     # ax8.set_xlim((0,1))
+    #     # ax8.set_ylim((0,1))
     print coord
     print coord_hat
 
@@ -689,7 +697,7 @@ def individualAccuracy(labels,logits,classes):
     labelsRep = tf.reshape(tf.tile(labels, [classes]), [classes,tf.shape(labels)[0]])
 
     correct = tf.cast(tf.equal(labels,predictions),tf.float32)
-    indivCorrect = tf.mul(predictions,correct)
+    indivCorrect = tf.multiply(predictions,correct)
 
     indivRep = tf.cast(tf.transpose(tf.reshape(tf.tile(tf.range(1,classes+1), [tf.shape(labels)[0]]), [tf.shape(labels)[0],classes])),tf.float32)
     indivCorrectRep = tf.reshape(tf.tile(indivCorrect, [classes]), [classes,tf.shape(labels)[0]])

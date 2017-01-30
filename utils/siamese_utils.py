@@ -19,33 +19,33 @@ def contrastive_loss1(features1, features2, targets, name=None):
     # Find sup(E_w) [REMARK: this computation is correct iff units in the last
     # layer of the CNN are relu6]
     numFeat = tf.shape(features1)[1]
-    Q = tf.mul(tf.cast(numFeat, tf.float32), 6.)
+    Q = tf.multiply(tf.cast(numFeat, tf.float32), 6.)
     def Lg(Q,l1dist):
         # 2/Q
         coeff = tf.div(2.,Q)
         # E_w^2
         l1dist2 = tf.square(l1dist)
         # 2/Q * E_w
-        return tf.mul(coeff,l1dist2)
+        return tf.multiply(coeff,l1dist2)
 
     def Li(Q,l1dist):
         # 2 * Q
-        coeff1 = tf.mul(2.,Q)
+        coeff1 = tf.multiply(2.,Q)
         # -2.77 / Q
         coeff2 = tf.div(-2.77,Q)
         # (-2.77 / Q) * E_W
-        exponent = tf.mul(coeff2,l1dist)
+        exponent = tf.multiply(coeff2,l1dist)
         #  exp((-2.77 / Q) * E_W)
         exp = tf.exp(exponent)
         # 2 * Q * exp((-2.77 / Q) * E_W)
-        return tf.mul(coeff1,exp)
+        return tf.multiply(coeff1,exp)
 
     LG = Lg(Q,l1dist)# 2/Q * E_w^2
     LI = Li(Q,l1dist) # 2 * Q * exp((-2.77 / Q) * E_W)
     # y * (2 * Q * exp((-2.77 / Q) * E_W))
-    firstadd = tf.mul(targets,LG)
+    firstadd = tf.multiply(targets,LG)
     # (1 - y) * (2/Q * E_w^2)
-    secondadd = tf.mul(tf.sub(1.,targets), LI)
+    secondadd = tf.multiply(tf.sub(1.,targets), LI)
     loss = tf.add(firstadd,secondadd)
     return loss
 
@@ -59,8 +59,8 @@ def contrastive_loss2(features1, features2, targets, name=None):
     zerosTensor = tf.zeros_like(mdist)
     dist = tf.maximum(mdist, zerosTensor)
     # changed 0 in 1
-    firstadd = tf.mul(targets, dist2)
-    secondadd = tf.mul(tf.sub(1.,targets),tf.square(dist))
+    firstadd = tf.multiply(targets, dist2)
+    secondadd = tf.multiply(tf.sub(1.,targets),tf.square(dist))
     loss = tf.add(firstadd, secondadd)
 
     return loss
@@ -98,10 +98,10 @@ def computeROCAccuracy(features1, features2, targets, name=None):
     # print 'FP *******'
     # print sess.run(FP)
 
-    # thTargets = tf.pack([l1dist <= ths[i] for i in range(numThreshold)])
+    # thTargets = tf.stack([l1dist <= ths[i] for i in range(numThreshold)])
     #
-    # TP = tf.pack([tf.reduce_sum(tf.cast(tf.logical_and(tf.equal(targets,True),tf.equal(thTargets[:,i],True)),tf.float32)) for i in range(numThreshold)])
-    # FP = tf.pack([tf.reduce_sum(tf.cast(tf.logical_and(tf.equal(targets,False),tf.equal(thTargets[:,i],True)),tf.float32)) for i in range(numThreshold)])
+    # TP = tf.stack([tf.reduce_sum(tf.cast(tf.logical_and(tf.equal(targets,True),tf.equal(thTargets[:,i],True)),tf.float32)) for i in range(numThreshold)])
+    # FP = tf.stack([tf.reduce_sum(tf.cast(tf.logical_and(tf.equal(targets,False),tf.equal(thTargets[:,i],True)),tf.float32)) for i in range(numThreshold)])
     # # FN = [tf.reduce_sum(tf.cast(tf.logical_and(tf.equal(targets,True),tf.equal(thTarget,False)),tf.float32)) for thTarget in thTargets]
     # # TN = [tf.reduce_sum(tf.cast(tf.logical_and(tf.equal(targets,False),tf.equal(thTarget,False)),tf.float32)) for thTarget in thTargets]
 
@@ -118,7 +118,7 @@ def computeROCAccuracy(features1, features2, targets, name=None):
     FPRshift1 = FPR[1:100]
     factor1 = tf.sub(FPRshift1, FPR[:100-1])
     factor2 = tf.div(tf.add(TPRshift1, TPR[:100-1]),2.)
-    trapzROC = tf.mul(factor1, factor2)
+    trapzROC = tf.multiply(factor1, factor2)
     acc = tf.reduce_sum(trapzROC)
     # print sess.run(acc)
     return FPR, TPR, acc, optimalThInd, ths

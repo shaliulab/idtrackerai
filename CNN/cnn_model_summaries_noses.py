@@ -14,7 +14,7 @@ from cnn_architectures_noses import *
 import warnings
 
 def _add_loss_summary(loss):
-    tf.scalar_summary(loss.op.name, loss)
+    tf.summary.scalar(loss.op.name, loss)
 
 def euclideanDist(p,p_hat):
     return tf.reduce_mean( tf.reduce_sum(tf.square(tf.sub(p, p_hat)),
@@ -22,8 +22,8 @@ def euclideanDist(p,p_hat):
 
 
 def loss(y,y_hat):
-    # l2diff = tf.add(euclideanDist(y[:,:2],y_hat[:,:2]),euclideanDist(y[:,2:],y_hat[:,2:]))
-    l2diff = euclideanDist(y,y_hat)
+    l2diff = tf.add(euclideanDist(y[:,:2],y_hat[:,:2]),euclideanDist(y[:,2:],y_hat[:,2:]))
+    # l2diff = euclideanDist(y,y_hat)
     _add_loss_summary(l2diff)
     return l2diff
 
@@ -96,7 +96,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
 
         # accuracy, indivAcc = evaluation(labels_pl,logits,classes)
 
-        summary_op = tf.merge_all_summaries()
+        summary_op = tf.summary.merge_all()
 
         saver_model = createSaver('soft', False, 'saver_model')
         # saver_softmax = createSaver('soft', True, 'saver_softmax')
@@ -139,8 +139,8 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
             # We'll now fine tune in minibatches and report accuracy, loss:
             n_epochs = num_epochs - start
 
-            summary_writerT = tf.train.SummaryWriter(ckpt_dir + '/train',sess.graph)
-            summary_writerV = tf.train.SummaryWriter(ckpt_dir + '/val',sess.graph)
+            summary_writerT = tf.summary.FileWriter(ckpt_dir + '/train',sess.graph)
+            summary_writerV = tf.summary.FileWriter(ckpt_dir + '/val',sess.graph)
 
             if start == 0 or not os.path.exists(ckpt_dir_model + "/lossAcc.pkl"):
                 # ref lists for plotting
@@ -300,15 +300,15 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_train', default='36dpf_8indiv_7998ImPerInd_newMinif', type = str)
     parser.add_argument('--dataset_test', default=None, type = str)
     parser.add_argument('--train', default=1, type=int)
-    parser.add_argument('--ckpt_folder', default = "./ckpt_dir_noses_Adam2", type= str)
+    parser.add_argument('--ckpt_folder', default = "./ckpt_dir_noses_Adam_new", type= str)
     parser.add_argument('--load_ckpt_folder', default = "", type = str)
     parser.add_argument('--num_indiv', default = 60, type = int)
     parser.add_argument('--num_train', default = 60000, type = int)
     parser.add_argument('--num_test', default = 0, type = int)
     parser.add_argument('--num_ref', default = 0, type = int)
     parser.add_argument('--num_epochs', default = 500, type = int)
-    parser.add_argument('--batch_size', default = 150, type = int)
-    parser.add_argument('--learning_rate', default = 0.00001, type= float)
+    parser.add_argument('--batch_size', default = 1, type = int)
+    parser.add_argument('--learning_rate', default = 0.001, type= float)
     args = parser.parse_args()
 
     pathTrain = args.dataset_train

@@ -111,7 +111,7 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
     fragments = [] # list the indices of fragments in the form SEs = [[s_1^1,e_1^1], ..., [s_n^1, e_n^1]] for every segment
     fragment = []
     globalFrameCounter = 0
-    dfGlobal = pd.DataFrame(index = range(numFrames), columns=['permutations','areas'])
+    dfGlobal = pd.DataFrame(index = range(numFrames), columns=['permutations','areas', 'centroids'])
 
     for j, path in enumerate(videoPaths):
         print '-----------------------------------'
@@ -128,6 +128,7 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
         for i in range(len(columnPixels)): # for every frame
             globalFrame = i + globalFrameCounter
             dfGlobal.loc[globalFrame, 'areas'] = df.loc[i,'areas']
+            dfGlobal.loc[globalFrame, 'centroids'] = df.loc[i,'centroids']
             # print '*** segment frame, ', i, ', global frame, ', globalFrame
             if globalFrame != 0: # Becuase we look at the past (i-1 and i), the first frame of the first segment does not make sense
                 # print 'it is not the first global frame '
@@ -216,11 +217,22 @@ def modelDiffArea(fragments,areas):
     stdArea = np.std(individualAreas)
     return meanArea, stdArea
 
+def computeVelocity(centroids):
+    centroids = np.asarray(centroids).astype('float32')
+    vel = np.sqrt(np.sum(np.diff(centroids,axis=0)**2,axis=1))
+    return vel.tolist(), np.mean(vel)
+
+def computeDistanceTraveled(centroids):
+    '''
+    in pixels
+    '''
+    return np.sum(np.sqrt(np.sum(np.diff(centroids,axis=0)**2,axis=1)),axis=0)
+
 def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
-#     portraitsFrag = np.asarray(portraits.loc[:,'images'].tolist())
-    nStd = 4
+    nStd = 4 # num std for area model of single blob
     newdfGlobal = dfGlobal.copy()
     areasFrag = np.asarray(dfGlobal.loc[:,'areas'].tolist())
+    centroidsFrag = np.asarray(dfGlobal.loc[:,'centroids'].tolist())
     identities = np.asarray(dfGlobal.loc[:,'permutations'].tolist())
     identitiesInd = np.where(identities==animalInd)
     frames = identitiesInd[0]
@@ -232,7 +244,11 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
         indivFragment = []
         indivFragmentInterval = ()
         indivFragmentsIntervals = []
+        indivCentroidsInterval = []
         lenFragments = []
+        avVelFragments = []
+        allVels = []
+        distTravFragments = []
         sumFragIndices = []
         for i, (frame, portraitInd) in enumerate(zip(frames, portraitInds)):
 
@@ -240,9 +256,11 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
 
                 if frames[i+1] - frame == 1 : # if the next frame is a consecutive frame
                     currentArea = areasFrag[frame][portraitInd]
+                    currentCentroid = centroidsFrag[frame][portraitInd]
 
                     if currentArea < meanIndivArea + nStd*stdIndivArea: # if the area is accepted by the model area
                         indivFragment.append((frame, portraitInd))
+                        indivCentroidsInterval.append(currentCentroid)
 
                         if len(indivFragmentInterval) == 0: # is the first frame we append to the interval
                             indivFragmentInterval = indivFragmentInterval + (frame,) # we are using tuples
@@ -265,13 +283,23 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
                             # print len(indivFragment)
                             lenFragments.append(len(indivFragment))
                             sumFragIndices.append(sum(lenFragments))
+                            vels, avVels = computeVelocity(indivCentroidsInterval)
+                            avVelFragments.append(avVels)
+                            allVels.append(vels)
+                            distTraveled = computeDistanceTraveled(indivCentroidsInterval)
+                            distTravFragments.append(distTraveled)
                             indivFragment = []
+                            indivCentroidsInterval = []
                             indivFragmentInterval = ()
+
                 else: #the next frame is not a consecutive frame, I close the individual fragment
                     # print 'they are not consecutive frames, I close the fragment'
                     currentArea = areasFrag[frame][portraitInd]
+                    currentCentroid = centroidsFrag[frame][portraitInd]
+
                     if currentArea < meanIndivArea + nStd*stdIndivArea: # if the area is accepted by the model area
                         indivFragment.append((frame, portraitInd))
+                        indivCentroidsInterval.append(currentCentroid)
 
                         if len(indivFragmentInterval) == 0: # is the first frame we append to the interval
                             indivFragmentInterval = indivFragmentInterval + (frame,) # we are using tuples
@@ -289,16 +317,24 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
                         indivFragmentsIntervals.append(indivFragmentInterval)
                         lenFragments.append(len(indivFragment))
                         sumFragIndices.append(sum(lenFragments))
+                        vels, avVels = computeVelocity(indivCentroidsInterval)
+                        avVelFragments.append(avVels)
+                        allVels.append(vels)
+                        distTraveled = computeDistanceTraveled(indivCentroidsInterval)
+                        distTravFragments.append(distTraveled)
                         indivFragment = []
+                        indivCentroidsInterval = []
                         indivFragmentInterval = ()
             else:
                 # print 'it is the last frame, I close the fragments '
                 currentArea = areasFrag[frame][portraitInd]
                 if currentArea < meanIndivArea + nStd*stdIndivArea: # if the area is accepted by the model area
                     indivFragment.append((frame, portraitInd))
+                    indivCentroidsInterval.append(currentCentroid)
 
                     if len(indivFragmentInterval) == 0: # is the first frame we append to the interval
                         indivFragmentInterval = indivFragmentInterval + (frame,) # we are using tuples
+
 
                 else: # if the area is too big, I close the individual fragment and I add the indices to the list of potentialCrossings
                     print 'changing permutation to -1'
@@ -315,10 +351,17 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
                     indivFragmentInterval = indivFragmentInterval + (frame,)
                     indivFragmentsIntervals.append(indivFragmentInterval)
                     lenFragments.append(len(indivFragment))
+                    vels, avVels = computeVelocity(indivCentroidsInterval) ### NOTE we are not using it now, we will maybe delete it in the future
+                    avVelFragments.append(avVels)
+                    allVels.append(vels)
+                    distTraveled = computeDistanceTraveled(indivCentroidsInterval)
+                    distTravFragments.append(distTraveled)
 
-        return indivFragments,indivFragmentsIntervals, lenFragments,sumFragIndices, newdfGlobal
+
+
+        return indivFragments,indivFragmentsIntervals, lenFragments, sumFragIndices, avVelFragments, allVels, distTravFragments, newdfGlobal
     else:
-        return  [], [], [], [], dfGlobal
+        return  [], [], [], [], [], [], [], dfGlobal
 
 
 def recomputeGlobalFragments(newdfGlobal,numAnimals):
@@ -351,20 +394,33 @@ def getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnim
     oneIndivFragFrames = []
     oneIndivFragLens = []
     oneIndivFragSumLens = []
+    oneIndivFragVels = []
+    oneIndivFragDists = []
+    allVelsVideo = []
     print dfGlobal.loc[80:90]
     for i in range(int(maxNumBlobs)):
         print 'Computing individual fragments for blob index, ', i
-        indivFragments,indivFragmentsIntervals, lenFragments,sumFragIndices, newdfGlobal = getIndivFragments(newdfGlobal, i,meanIndivArea,stdIndivArea)
+        indivFragments,indivFragmentsIntervals, lenFragments,sumFragIndices, avVelFragments, allVels, distTravFragments, newdfGlobal = getIndivFragments(newdfGlobal, i,meanIndivArea,stdIndivArea)
         oneIndivFragIntervals.append(indivFragmentsIntervals)
         oneIndivFragFrames.append(indivFragments)
         oneIndivFragLens.append(lenFragments)
         oneIndivFragSumLens.append(sumFragIndices)
+        oneIndivFragVels.append(avVelFragments)
+        allVelsVideo.append(allVels)
+        oneIndivFragDists.append(distTravFragments)
+
+    # allVelsVideo = flatten(allVelsVideo)
+    #
+    # flatVel = np.asarray(flatten(flatten(allVelsVideo)))
+    # plt.figure()
+    # plt.hist(np.log(np.add(flatVel[~np.isnan(flatVel)],0.000000000000000001)),  bins=150)
+    # plt.show()
     print dfGlobal.loc[80:90]
     fragments = recomputeGlobalFragments(newdfGlobal,numAnimals)
     fragments = np.asarray(fragments)
-    return oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, newdfGlobal, fragments
+    return oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, oneIndivFragVels, oneIndivFragDists, newdfGlobal, fragments
 
-def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragFrames,numAnimals):
+def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragVels,oneIndivFragFrames,oneIndivFragDists,numAnimals):
 
     def getOverlap(a, b):
         overlap = max(0, min(a[1], b[1]) - max(a[0], b[0]))
@@ -377,16 +433,22 @@ def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFrag
         return overlap
 
     minLenIndivCompleteFragments = [] # list of the minimum length of the individuals fragments of a complete fragment
+    minDistIndivCompleteFragments = []
     intervalsFragments = [] # list of lists of (fragmentsListIndex,fragmentIndex,fragmentInterval,lenfragment)
+    intervalsFragmentsDist = []
     framesAndBlobColumns = [] # list of lists of nx2 arrays where n is the len of the individual fragment. the first column is the frame and the second column is the column of the blob
+    framesAndBlobColumnsDist = []
     for i, fragment in enumerate(fragments):
         print '******************************************************'
         print '\n Computing lengths of one-individual fragments in complete fragment, ', i, fragment
         lenIndivFrag = []
+        distIndivFrag = []
         intervalsFragment = []
         framesAndBlobIndexFragment = []
         for j, (oneIndivFrags, oneIndivFragLen) in enumerate(zip(oneIndivFragIntervals, oneIndivFragLens)):
+            oneIndivFragDist = oneIndivFragDists[j]
             print '*** coexistence in one-individual fragments list ', j
+            oneIndivFragVel = oneIndivFragVels[j]
             print 'one individual fragments, ', oneIndivFrags
             overlaps = np.asarray([getOverlap(fragment,indivFrag) for indivFrag in oneIndivFrags])
             print 'overlaps, ', overlaps
@@ -396,27 +458,50 @@ def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFrag
                 raise ValueError('There cannot be two individual fragments from the same list coexisting with a global fragment')
             if len(coexistingFragments)!=0:
                 coexistingFragment = coexistingFragments[0]
-                print 'coexisting fragment, ', coexistingFragment, ', interval, ', oneIndivFrags[coexistingFragment], ', length, ', oneIndivFragLen[coexistingFragment]
-                intervalsFragment.append((j,coexistingFragment,oneIndivFrags[coexistingFragment],oneIndivFragLen[coexistingFragment]))
+                print 'coexisting fragment, ', coexistingFragment, ', interval, ', oneIndivFrags[coexistingFragment], ', length, ', oneIndivFragLen[coexistingFragment], ', dist, ', oneIndivFragDist[coexistingFragment]
+                intervalsFragment.append((j,coexistingFragment,oneIndivFrags[coexistingFragment],oneIndivFragLen[coexistingFragment], oneIndivFragVel[coexistingFragment], oneIndivFragDist[coexistingFragment]))
                 framesAndBlobIndexFragment.append(oneIndivFragFrames[j][coexistingFragment])
                 lenIndivFrag.append(oneIndivFragLen[coexistingFragment])
+                distIndivFrag.append(oneIndivFragDist[coexistingFragment])
 
         if len(intervalsFragment) != numAnimals:
             raise ValueError('The number of one-individual intervals should be the same as the number of animals in the video')
         intervalsFragments.append(intervalsFragment)
         framesAndBlobColumns.append(framesAndBlobIndexFragment)
         minLenIndivCompleteFragments.append(np.min(lenIndivFrag))
+        minDistIndivCompleteFragments.append(np.min(distIndivFrag))
     print '******************************************************'
     minLenIndivCompleteFragments = np.asarray(minLenIndivCompleteFragments)
+    minDistIndivCompleteFragments = np.asarray(minDistIndivCompleteFragments)
 
     argsort = minLenIndivCompleteFragments.argsort()[::-1]
+    argsortDist = minDistIndivCompleteFragments.argsort()[::-1]
 
-    fragments = fragments[argsort]
+    # print '******************************************************'
+    # print '******************************************************'
+    # print 'argsort, ', argsort
+    # print 'argsortDist, ', argsortDist
+    # plt.ion()
+    # plt.figure()
+    # plt.plot(np.asarray(argsortDist).argsort(),np.asarray(argsort).argsort(),'o')
+    # plt.show()
+    # print '******************************************************'
+    # print '******************************************************'
+    #
+    # raw_input('Press ENTER to continue.')
+
+    fragments = fragments[argsortDist]
+    # fragments = fragments[argsort]
     minLenIndivCompleteFragments = minLenIndivCompleteFragments[argsort]
-    framesAndBlobColumns =  [framesAndBlobColumns[i] for i in argsort]
-    intervalsFragments = [intervalsFragments[i] for i in argsort]
+    minDistIndivCompleteFragments = minDistIndivCompleteFragments[argsortDist]
 
-    return fragments, framesAndBlobColumns, intervalsFragments , minLenIndivCompleteFragments.tolist()
+    framesAndBlobColumnsLen =  [framesAndBlobColumns[i] for i in argsort]
+    intervalsFragmentsLen = [intervalsFragments[i] for i in argsort]
+
+    framesAndBlobColumnsDist =  [framesAndBlobColumns[i] for i in argsortDist]
+    intervalsFragmentsDist = [intervalsFragments[i] for i in argsortDist]
+
+    return fragments, framesAndBlobColumnsLen, intervalsFragmentsLen , minLenIndivCompleteFragments.tolist(), minDistIndivCompleteFragments.tolist(), framesAndBlobColumnsDist, intervalsFragmentsDist
 
 def fragment(videoPaths,videoInfo = None):
     ''' Load videoInfo if needed '''
@@ -443,7 +528,7 @@ def fragment(videoPaths,videoInfo = None):
     videoInfo['stdIndivArea'] = stdIndivArea
     saveFile(videoPaths[0],videoInfo,'videoInfo',time=0)
     # print 'fragments before individual fragments, ', fragments
-    oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, dfGlobal, fragments = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
+    oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, oneIndivFragVels, oneIndivFragDists, dfGlobal, fragments = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
     # print 'fragments after individual fragments, ', fragments
     # print dfGlobal.loc[80:90]
     playFragmentation(videoPaths,dfGlobal,False)
@@ -451,16 +536,21 @@ def fragment(videoPaths,videoInfo = None):
 
     # print '\n dfGlobal', dfGlobal
 
-    fragments, framesAndBlobColumns, intervalsFragments, minLenIndivCompleteFragments = getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragFrames,numAnimals)
+    fragments, framesAndBlobColumns, intervalsFragments, minLenIndivCompleteFragments, minDistIndivCompleteFragments, framesAndBlobColumnsDist, intervalsFragmentsDist = getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragVels,oneIndivFragFrames,oneIndivFragDists,numAnimals)
     fragmentsDict = {
         'fragments': fragments, #global fragments
         'minLenIndivCompleteFragments': minLenIndivCompleteFragments,
+        'minDistIndivCompleteFragments': minDistIndivCompleteFragments,
         'framesAndBlobColumns': framesAndBlobColumns,
+        'framesAndBlobColumnsDist': framesAndBlobColumnsDist,
         'intervals': intervalsFragments,
+        'intervalsDist': intervalsFragmentsDist,
         'oneIndivFragIntervals': oneIndivFragIntervals,
         'oneIndivFragFrames': oneIndivFragFrames,
         'oneIndivFragLens': oneIndivFragLens,
-        'oneIndivFragSumLens': oneIndivFragSumLens
+        'oneIndivFragSumLens': oneIndivFragSumLens,
+        'oneIndivFragVels': oneIndivFragVels,
+        'oneIndivFragDists': oneIndivFragDists
         }
     saveFile(videoPaths[0],fragmentsDict,'fragments',time=0, hdfpkl='pkl')
     saveFile(videoPaths[0],dfGlobal,'portraits',time=0)
