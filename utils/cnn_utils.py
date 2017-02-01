@@ -325,7 +325,7 @@ def CNNplotterFast2(lossAccDict,weightsDict,show=False):
     ax1.set_xlabel('Epoch')
     ax1.set_ylabel('Loss function')
     ax1.legend(fancybox=True, framealpha=0.05)
-    ax1.set_xlim((0,300))
+    ax1.set_xlim((0,1000))
     ax1.set_ylim((0,2.))
 
     # accuracy
@@ -340,7 +340,7 @@ def CNNplotterFast2(lossAccDict,weightsDict,show=False):
     ax2.plot(valAccPlot, 'ob--')
     ax2.set_xlabel('Epoch')
     ax2.set_ylabel('Accuray')
-    ax2.set_xlim((0,300))
+    ax2.set_xlim((0,1000))
     ax2.set_ylim((0,1))
 
 

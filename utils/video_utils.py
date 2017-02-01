@@ -111,7 +111,7 @@ def collectAndSaveVideoInfo(path, numFrames, height, width, numAnimals, numCores
         'maxNumBlobs':maxNumBlobs
         }
     print videoInfo
-    saveFile(path, videoInfo, 'videoInfo',time = 0)
+    saveFile(path, videoInfo, 'videoInfo',hdfpkl='pkl')
 
 def generateVideoTOC(allSegments, path):
     """
@@ -126,7 +126,7 @@ def generateVideoTOC(allSegments, path):
     framesTOC = flatten(framesTOC)
     videoTOC =  pd.DataFrame({'segment':segmentsTOC, 'frame': framesTOC})
     numFrames = len(videoTOC)
-    saveFile(path, videoTOC, 'frameIndices', time = 0)
+    saveFile(path, videoTOC, 'frameIndices')
     return numFrames
 
 """
@@ -178,7 +178,7 @@ def checkBkg(useBkg, usePreviousBkg, paths, EQ, width, height):
     path = paths[0]
     if useBkg:
         if usePreviousBkg:
-            bkg = loadFile(path, 'bkg',0,hdfpkl='pkl')
+            bkg = loadFile(path, 'bkg',hdfpkl='pkl')
             # bkgDict = bkgDict.to_dict()[0]
             # bkg = bkgDict['bkg']
             # maxIntensity = bkgDict['maxIntensity']
@@ -186,7 +186,7 @@ def checkBkg(useBkg, usePreviousBkg, paths, EQ, width, height):
         else:
             bkg = computeBkg(paths, EQ, width, height)
             # bkgDict = {'bkg': bkg}#, 'maxIntensity': maxIntensity, 'maxBkg': maxBkg}
-            saveFile(path, bkg, 'bkg', time = 0,hdfpkl='pkl')
+            saveFile(path, bkg, 'bkg', hdfpkl='pkl')
         return bkg#, maxIntensity, maxBkg
     else:
         return None#, maxIntensity, None

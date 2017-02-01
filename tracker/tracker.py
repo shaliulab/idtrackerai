@@ -25,6 +25,7 @@ from cnn_utils import *
 from pprint import pprint
 from collections import Counter
 import collections
+import datetime
 
 def getAvVelFragment(portraits,framesAndColumns):
     centroids = []
@@ -380,41 +381,50 @@ def probsUptader(vectorPerFrame,indivFragments,numFrames,maxNumBlobs,numAnimals)
 
     return ProbsArray
 
-def getCkptvideoPath(videoPath,ckptName,train=0,time=0,ckptTime=0,):
+def getCkptvideoPath(videoPath, accumCounter, train=0,ckptTime=0):
     """
     train = 0 (id assignation)
     train = 1 (first fine-tuning)
     train = 2 (further tuning from previons checkpoint with more references)
     """
 
+    def getLastSession(subFolders):
+        if len(subFolders) == 0:
+            lastIndex = 0
+        else:
+            subFolders = natural_sort(subFolders)[::-1]
+            lastIndex = int(subFolders[0].split('_')[-1])
+        return lastIndex
+
     video = os.path.basename(videoPath)
     folder = os.path.dirname(videoPath)
     filename, extension = os.path.splitext(video)
-    subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-    subFolder = subFolders[time]
+    subFolder = folder + '/CNN_models'
+    subSubFolders = glob.glob(subFolder +"/*")
+    lastIndex = getLastSession(subSubFolders)
 
-    if train == 0:
-        ckptSubFolders = natural_sort(glob.glob(subFolder +'/ckpt_' + ckptName + '_'+  '*/'))[::-1]
-        ckptvideoPath = ckptSubFolders[ckptTime]
+    if train == 0 or train == 2:
+        sessionPath = subFolder + '/Session_' + str(lastIndex)
+        ckptvideoPath = sessionPath + '/AccumulationStep_' + str(accumCounter)
+        if train == 0:
+            print 'you will assign identities from the last checkpoint in ', ckptvideoPath
+        else:
+            print 'you will keep training from the last checkpoint in ', ckptvideoPath
 
-        print 'you will assign identities from the last checkpoint in ', ckptvideoPath
     elif train == 1:
-        ts = '_{:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
-        ckptName = ckptName + ts
-        ckptvideoPath = subFolder + '/ckpt_' + ckptName
+        sessionPath = subFolder + '/Session_' + str(lastIndex + 1)
+        os.makedirs(sessionPath)
+        print 'You just created ', sessionPath
+        figurePath = sessionPath + '/figures'
+        os.makedirs(figurePath)
+        print 'You just created ', figurePath
+        ckptvideoPath = sessionPath + '/AccumulationStep_' + str(accumCounter)
         print 'model checkpoints will be saved in ', ckptvideoPath
 
-    elif train == 2:
-        print subFolder +'ckpt_' + ckptName + '_'+ '*/'
-        ckptSubFolders = natural_sort(glob.glob(subFolder +'/ckpt_' + ckptName + '_' + '*/'))[::-1]
-        print ckptSubFolders
-        ckptvideoPath = ckptSubFolders[ckptTime]
-        print 'you will keep training from the last checkpoint in ', ckptvideoPath
+    figurePath = sessionPath + '/figures'
+    return ckptvideoPath, figurePath
 
-    return ckptvideoPath
-
-def fineTuner(videoPath, trainDict, fragsForTrain, fragmentsDict = [], portraits = [], videoInfo = []):
+def fineTuner(videoPath, trainDict, fragsForTrain, accumCounter, lossAccDict, fragmentsDict = [], portraits = [], videoInfo = []):
     """
     videoPath: path to the video that we want to tracker
     trainDict: includes
@@ -433,13 +443,12 @@ def fineTuner(videoPath, trainDict, fragsForTrain, fragmentsDict = [], portraits
     print '--------------------------------'
     print 'Loading fragments, portraits and videoInfo for the tracking...'
     if fragmentsDict == []:
-        fragmentsDict = loadFile(videoPath, 'fragments', time=0)
+        fragmentsDict = loadFile(videoPath, 'fragments')
         fragmentsDict = fragmentsDict.to_dict()[0]
     if len(portraits) == 0:
-        portraits = loadFile(videoPath, 'portraits', time=0)
+        portraits = loadFile(videoPath, 'portraits')
     if videoInfo == []:
-        videoInfo = loadFile(videoPath, 'videoInfo', time=0)
-        videoInfo = videoInfo.to_dict()[0]
+        videoInfo = loadFile(videoPath, 'videoInfo', hdfpkl='pkl')
 
     numFrames =  len(portraits)
     numAnimals = int(videoInfo['numAnimals'])
@@ -455,49 +464,49 @@ def fineTuner(videoPath, trainDict, fragsForTrain, fragmentsDict = [], portraits
     ''' ************************************************************************
     Fine tuning with the longest fragment
     ************************************************************************ '''
-    if train == 1 or train == 2:
-        print 'Fine tuning with the first longest fragment...'
-        ckpt_dir = getCkptvideoPath(videoPath,ckptName,train,time=0,ckptTime=0)
-        imsize,\
-        X_train, Y_train,\
-        X_val, Y_val = DataFineTuning(fragsForTrain, fragmentsDict, portraits,numAnimals)
+    print 'Fine tuning with the first longest fragment...'
+    ckpt_dir, fig_dir = getCkptvideoPath(videoPath, accumCounter, train)
+    imsize,\
+    X_train, Y_train,\
+    X_val, Y_val = DataFineTuning(fragsForTrain, fragmentsDict, portraits,numAnimals)
 
-        print '\n fine tune train size:    images  labels'
-        print X_train.shape, Y_train.shape
-        print 'val fine tune size:    images  labels'
-        print X_val.shape, Y_val.shape
+    print '\n fine tune train size:    images  labels'
+    print X_train.shape, Y_train.shape
+    print 'val fine tune size:    images  labels'
+    print X_val.shape, Y_val.shape
 
-        channels, width, height = imsize
-        resolution = np.prod(imsize)
-        classes = numAnimals
+    channels, width, height = imsize
+    resolution = np.prod(imsize)
+    classes = numAnimals
 
-        numImagesT = Y_train.shape[0]
-        numImagesV = Y_val.shape[0]
-        Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batchSize)
-        Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batchSize)
+    numImagesT = Y_train.shape[0]
+    numImagesV = Y_val.shape[0]
+    Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batchSize)
+    Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batchSize)
 
-        print 'running with the devil'
-        print 'ckpt_dir', ckpt_dir
-        print 'loadCkpt_folder', loadCkpt_folder
-        lossAccDict = run_training(X_train, Y_train, X_val, Y_val,
-                        width, height, channels, classes, resolution,
-                        ckpt_dir, loadCkpt_folder, batchSize,numEpochs,
-                        Tindices, Titer_per_epoch,
-                        Vindices, Viter_per_epoch,
-                        1.,lr) #dropout
-    # return lossAccDict
-# def idAssigner(videoPath,ckptName,batchSize,indivValAcc):
-def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo = []):
+    print 'running with the devil'
+    print 'ckpt_dir', ckpt_dir
+    print 'loadCkpt_folder', loadCkpt_folder
+    lossAccDict = run_training(X_train, Y_train, X_val, Y_val,
+                    width, height, channels, classes, resolution,
+                    ckpt_dir, fig_dir, loadCkpt_folder, accumCounter,
+                    batchSize,numEpochs, lossAccDict,
+                    Tindices, Titer_per_epoch,
+                    Vindices, Viter_per_epoch,
+                    1.,lr) #dropout
+    return lossAccDict
+
+def idAssigner(videoPath,trainDict,accumCounter, ckpt_dir, fragmentsDict = [],portraits = [], videoInfo = []):
     '''
     videoPath: path to the video to which we want ot assign identities
     ckptName: name of the checkpoint folder with the model for the assignation of identities
     '''
     if len(portraits) == 0:
-        portraits = loadFile(videoPath, 'portraits', time=0)
+        portraits = loadFile(videoPath, 'portraits')
 
     if len(videoInfo) == 0:
-        videoInfo = loadFile(videoPath, 'videoInfo', time=0)
-        videoInfo = videoInfo.to_dict()[0]
+        videoInfo = loadFile(videoPath, 'videoInfo', hdfpkl='pkl')
+    print videoInfo
     numFrames =  len(portraits)
     numAnimals = videoInfo['numAnimals']
     maxNumBlobs = videoInfo['maxNumBlobs']
@@ -505,7 +514,7 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
     stdIndivArea = videoInfo['stdIndivArea']
 
     if len(fragmentsDict) == 0:
-        fragmentsDict = loadFile(videoPath, 'fragments', time=0, hdfpkl='pkl')
+        fragmentsDict = loadFile(videoPath, 'fragments', hdfpkl='pkl')
     oneIndivFragFrames = fragmentsDict['oneIndivFragFrames']
     oneIndivFragIntervals = fragmentsDict['oneIndivFragIntervals']
     oneIndivFragSumLens = fragmentsDict['oneIndivFragSumLens']
@@ -516,7 +525,7 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
 
     ckptName = trainDict['ckptName']
     batchSize = 1000
-    ckpt_dir = getCkptvideoPath(videoPath,ckptName,train=0,time=0,ckptTime=0)
+    ckpt_dir, fig_dir = getCkptvideoPath(videoPath,accumCounter,train=0,ckptTime=0)
 
     '''
     Loop to IndivFragments, Ids in frames of IndivFragments, P1 given the Ids
@@ -655,8 +664,12 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
         'overallP2': overallP2}
 
     portraits['identities'] = idFreqFragAllVideo.tolist()
-    # saveFile(videoPath,portraits,'portraits',time=0)
-    saveFile(videoPath, IdsStatistics, 'statistics', time = 0,hdfpkl='pkl')
+    # e(videoPath,portraits,'portraits',time=0)
+
+    pickle.dump( IdsStatistics , open( ckpt_dir + "/statistics.pkl", "wb" ) )
+    sessionPath = '/'.join(ckpt_dir.split('/')[:-1])
+    pickle.dump( IdsStatistics , open( sessionPath + "/statistics.pkl", "wb" ) )
+    # saveFile(ckpt_dir, IdsStatistics, 'statistics',hdfpkl='pkl')
     return normFreqFragsAll, portraits
 
 def bestFragmentFinder(fragsForTrain,normFreqFragsAll,fragmentsDict,numAnimals,minDistTrav,badFragments,portraits,thVels):

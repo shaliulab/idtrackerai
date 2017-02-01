@@ -33,7 +33,6 @@ paths = scanFolder('/home/lab/Desktop/aggr/video_4/4.avi')
 
 frameIndices = loadFile(paths[0], 'frameIndices', time=0)
 videoInfo = loadFile(paths[0], 'videoInfo', time=0)
-videoInfo = videoInfo.to_dict()[0]
 height = videoInfo['height']
 width = videoInfo['width']
 stats = loadFile(paths[0], 'statistics', time=0)
@@ -124,7 +123,7 @@ def idTrajectories(allFragIds, numAnimals, height, width, show=True):
     trajDict = {'centroids': centroidTrajectories, 'noses': nosesTrajectories, 'miniframes': miniframeTrajectories, 'bbs': bbsTrajectories}
     trajectories = pd.DataFrame(data = trajDict)
 
-    
+
     # saveFile(path, trajectories, 'trajectories_with_miniframes', time = 0)
     #
     # if show == True:

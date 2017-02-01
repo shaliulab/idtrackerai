@@ -92,17 +92,21 @@ if __name__ == '__main__':
     print 'useROI set to ', useROI
 
     print '\nLooking for finished steps in previous session...'
-    processesList = ['ROI', 'bkg', 'preprocparams', 'segmentation','fragmentation','portraits']
+    processesList = ['ROI', 'bkg', 'preprocparams', 'segmentation','fragments','portraits']
     reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previos preprocessing? ([y]/n)')
     if reUseAll == 'n':
-        processesDict, srcSubFolder = copyExistentFiles(videoPath, processesList, time=1)
-        print 'List of processes finished, ', processesDict
+
+        existentFiles, srcSubFolder = getExistentFiles(videoPath, processesList)
+        print 'are you the path? ', srcSubFolder
+        print 'List of processes finished, ', existentFiles
         print '\nSelecting files to load from previous session...'
-        loadPreviousDict = selectOptions(processesList, processesDict, text='Already processed steps in this video \n (check to load from ' + srcSubFolder + ')')
+        loadPreviousDict = selectOptions(processesList, existentFiles, text='Already processed steps in this video \n (check to load from ' + srcSubFolder + ')')
+
     elif reUseAll == '' or reUseAll.lower() == 'y' :
-        loadPreviousDict = {'ROI': 1, 'bkg': 1, 'preprocparams': 1, 'segmentation': 1, 'fragmentation': 1, 'portraits': 1}
+        loadPreviousDict = {'ROI': 1, 'bkg': 1, 'preprocparams': 1, 'segmentation': 1, 'fragments': 1, 'portraits': 1}
+
     else:
-        raise ValueError('The input introduces do not match the possible options')
+        raise ValueError('The input introduced do not match the possible options')
 
     print 'List of files that will be used, ', loadPreviousDict
     usePreviousBkg = loadPreviousDict['bkg']
@@ -111,7 +115,7 @@ if __name__ == '__main__':
     print 'usePreviousROI set to ', usePreviousROI
 
     ''' ROI selection and bkg loading'''
-    width, height, bkg, mask, centers = playPreview(videoPaths, useBkg, usePreviousBkg, useROI, usePreviousROI)
+    width, height, bkg, mask, centers = playPreview(videoPaths, useBkg, usePreviousBkg, useROI, usePreviousROI, numSegment=0)
 
     ''' Segmentation inspection '''
     if not loadPreviousDict['preprocparams']:
@@ -132,16 +136,15 @@ if __name__ == '__main__':
                 end = False
                 usePreviousBkg = 1
                 path = videoPaths[int(numSegment)]
-                preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
-                preprocParams = preprocParams.to_dict()[0]
+                preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
                 numAnimals = preprocParams['numAnimals']
                 minThreshold = preprocParams['minThreshold']
                 maxThreshold = preprocParams['maxThreshold']
                 minArea = int(preprocParams['minArea'])
                 maxArea = int(preprocParams['maxArea'])
-                mask = loadFile(videoPaths[0], 'ROI',0)
+                mask = loadFile(videoPaths[0], 'ROI')
                 mask = np.asarray(mask)
-                centers= loadFile(videoPaths[0], 'centers',0)
+                centers= loadFile(videoPaths[0], 'centers')
                 centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
                 EQ = 0
                 ### FIXME put usePreviousBkg to 1 no to recompute it everytime we change the segment
@@ -151,8 +154,7 @@ if __name__ == '__main__':
             cv2.destroyAllWindows()
             cv2.waitKey(1)
     else:
-        preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
-        preprocParams = preprocParams.to_dict()[0]
+        preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
         numAnimals = preprocParams['numAnimals']
         minThreshold = preprocParams['minThreshold']
         maxThreshold = preprocParams['maxThreshold']
@@ -175,8 +177,7 @@ if __name__ == '__main__':
     cv2.waitKey(1)
 
     if not loadPreviousDict['segmentation']:
-        preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
-        preprocParams = preprocParams.to_dict()[0]
+        preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
         EQ = 0
         print 'The preprocessing parameters dictionary loaded is ', preprocParams
         segment(videoPaths, preprocParams, mask, centers, useBkg, bkg, EQ)
@@ -190,7 +191,7 @@ if __name__ == '__main__':
     print '********************************************************************'
     print 'Fragmentation'
     print '********************************************************************\n'
-    if not loadPreviousDict['fragmentation']:
+    if not loadPreviousDict['fragments']:
         dfGlobal, fragmentsDict = fragment(videoPaths,videoInfo=None)
 
         playFragmentation(videoPaths,dfGlobal,True) # last parameter is to visualize or not
@@ -199,8 +200,8 @@ if __name__ == '__main__':
         cv2.destroyAllWindows()
         cv2.waitKey(1)
     else:
-        dfGlobal = loadFile(videoPaths[0],'portraits',time=0)
-        fragmentsDict = loadFile(videoPaths[0],'fragments',time=0,hdfpkl='pkl')
+        dfGlobal = loadFile(videoPaths[0],'portraits')
+        fragmentsDict = loadFile(videoPaths[0],'fragments',hdfpkl='pkl')
 
     ''' ************************************************************************
     Portraying
@@ -211,7 +212,7 @@ if __name__ == '__main__':
     if not loadPreviousDict['portraits']:
         portraits = portrait(videoPaths,dfGlobal)
     else:
-        portraits = loadFile(videoPaths[0], 'portraits', time=0)
+        portraits = loadFile(videoPaths[0], 'portraits')
 
     cv2.waitKey(1)
     cv2.destroyAllWindows()
@@ -224,12 +225,11 @@ if __name__ == '__main__':
     print 'Tracker'
     print '********************************************************************\n'
     loadCkpt_folder = selectDir(initialDir) #select where to load the model
-    # loadCkpt_folder = '/home/lab/Desktop/TF_models/IdTracker/CNN/ckpt_Train_25dpf_60indiv_25000_transfer'
     loadCkpt_folder = os.path.relpath(loadCkpt_folder)
     # inputs = getMultipleInputs('Training parameters', ['ckptName','batch size', 'num. epochs', 'learning rate', 'train (1 (from strach) or 2 (from last check point))'])
     # print 'inputs, ', inputs
     print 'Entering into the fineTuner...'
-    ckptName = 'test'
+    ckptName = 'session'
     batchSize = 50 #int(inputs[1])
     numEpochs = 100 #int(inputs[2])
     lr = 0.01 #np.float32(inputs[3])
@@ -242,8 +242,7 @@ if __name__ == '__main__':
         'lr': lr,
         'train':train}
 
-    preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
-    preprocParams = preprocParams.to_dict()[0]
+    preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
     numAnimals = preprocParams['numAnimals']
 
     ''' Finding first fragment to fine tune '''
@@ -307,15 +306,24 @@ if __name__ == '__main__':
     print 'Individual fragments inside the global fragment, ', intervalsDist[indexFragment]
     fragsForTrain = [indexFragment]
     continueFlag = True
-    counter = 0
+    accumCounter = 0
+    lossAccDict = {}
     minDist = int(avVel * avLen)
     print 'The threshold for the distance travelled is ', minDist
     while continueFlag:
-        print '\n************** Training ', counter
+        print '\n************** Training ', accumCounter
         print 'training dictionary, ', trainDict
 
         ''' Fine tuning '''
-        fineTuner(videoPath,trainDict,fragsForTrain,fragmentsDict,portraits)
+        lossAccDict = fineTuner(videoPath, trainDict, fragsForTrain, accumCounter, lossAccDict, fragmentsDict, portraits)
+
+        ckpt_dir, fig_dir = getCkptvideoPath(videoPath,accumCounter, train=2)
+        sessionPath = '/'.join(ckpt_dir.split('/')[:-1])
+        pickle.dump( lossAccDict , open( sessionPath + "/lossAcc.pkl", "wb" ) )
+        print 'You just saved the lossAccDict'
+        if accumCounter == 0:
+            pickle.dump( preprocParams , open( sessionPath + "/preprocparams.pkl", "wb" ) )
+        # pickle.dump( weightsDict, open( sessionPath + "/weightsDict.pkl", "wb" ) )
 
         ''' plot and save fragment selected '''
         fragments = fragmentsDict['fragments']
@@ -355,19 +363,17 @@ if __name__ == '__main__':
         plt.tight_layout()
 
         print 'Saving figure...'
-        ckpt_dir = getCkptvideoPath(videoPath,ckptName,train=2,time =0)
-        figname = ckpt_dir + '/figures/fragments_' + str(counter) + '.pdf'
+        figname = fig_dir + '/fragments_' + str(accumCounter) + '.pdf'
         fig.savefig(figname)
 
         ''' Identity assignation '''
-        normFreqFragments, portraits = idAssigner(videoPath,trainDict,fragmentsDict,portraits)
+        normFreqFragments, portraits = idAssigner(videoPath,trainDict,accumCounter,ckpt_dir,fragmentsDict,portraits)
         ''' Computing best next fragments '''
         fragsForTrain,continueFlag,minDist,badFragments = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals,minDist,badFragments,portraits,thVels)
 
         ''' Plotting and saving probability matrix'''
-        # statistics = loadFile(videoPath, 'statistics', time=0)
-        # statistics = statistics.to_dict()[0]
-        statistics = loadFile(videoPath, 'statistics', time=0,hdfpkl='pkl')
+        # statistics = loadFile(ckpt_dir, 'statistics', hdfpkl='pkl')
+        statistics = pickle.load( open( ckpt_dir + "/statistics.pkl", "rb" ) )
         P2 = statistics['P2FragAllVideo']
         P2Ordered =  orderVideo(P2,permutations,maxNumBlobs)
         P2good = np.max(P2Ordered,axis=2).T
@@ -388,15 +394,15 @@ if __name__ == '__main__':
         plt.tight_layout()
 
         print 'Saving figure...'
-        figname = ckpt_dir + '/figures/P2_' + str(counter) + '.pdf'
+        figname = fig_dir + '/P2_' + str(accumCounter) + '.pdf'
         fig.savefig(figname)
 
         ''' Updating training Dictionary'''
         trainDict = {
-            'loadCkpt_folder':loadCkpt_folder,
+            'loadCkpt_folder':ckpt_dir,
             'ckptName': ckptName,
             'batchSize': batchSize,
             'numEpochs': 2000,
             'lr': lr,
             'train':2}
-        counter += 1
+        accumCounter += 1

@@ -24,23 +24,39 @@ numSegment = 0
 # path = selectFile()
 # paths = scanFolder(path)
 # paths = scanFolder('../Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
-paths = scanFolder('../larvae1/trial_1_1.avi')
+# paths = scanFolder('../larvae1/trial_1_1.avi')
 # paths = scanFolder('../nofragsError/_1.avi')
 
-# paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
+paths = scanFolder('../videos/Conflict8/conflict3and4_20120316T155032_1.avi')
 # paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
 # paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../38fish_adult_splitted/adult1darkenes_1.avi')
 # paths = scanFolder('/home/lab/Desktop/aggr/video_4/4.avi')
-print paths
+# print paths
+videoPath = paths[0]
+frameIndices = loadFile(videoPath, 'frameIndices')
+videoInfo = loadFile(videoPath, 'videoInfo', hdfpkl='pkl')
+# stats = loadFile(paths[0], 'statistics',hdfpkl='pkl')
+def getLastSession(subFolders):
+    if len(subFolders) == 0:
+        lastIndex = 0
+    else:
+        subFolders = natural_sort(subFolders)[::-1]
+        lastIndex = int(subFolders[0].split('_')[-1])
+    return lastIndex
 
-frameIndices = loadFile(paths[0], 'frameIndices', time=0)
-videoInfo = loadFile(paths[0], 'videoInfo', time=0)
-videoInfo = videoInfo.to_dict()[0]
-stats = loadFile(paths[0], 'statistics', time=0,hdfpkl='pkl')
+video = os.path.basename(videoPath)
+folder = os.path.dirname(videoPath)
+filename, extension = os.path.splitext(video)
+subFolder = folder + '/CNN_models'
+subSubFolders = glob.glob(subFolder +"/*")
+lastIndex = getLastSession(subSubFolders)
+sessionPath = subFolder + '/Session_' + str(lastIndex)
+
+stats = pickle.load( open( sessionPath + "/statistics.pkl", "rb" ) )
 # stats = loadFile(paths[0], 'statistics', time=0)
 # stats = stats.to_dict()[0]
-dfGlobal = loadFile(paths[0], 'portraits', time=0)
+dfGlobal = loadFile(paths[0], 'portraits')
 # IdsStatistics = {'blobIds':idSoftMaxAllVideo,
 #     'probBlobIds':PSoftMaxAllVIdeo,
 #     'fragmentIds':idLogP2FragAllVideo,
@@ -75,7 +91,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
     if stat.dtype == 'int64':
         statIdentity = True
 
-    df, sNumber = loadFile(path, 'segmentation', time=0)
+    df, sNumber = loadFile(path, 'segmentation')
     sNumber = int(sNumber)
     cap = cv2.VideoCapture(path)
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))

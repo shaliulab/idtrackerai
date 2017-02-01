@@ -1,111 +1,3 @@
-# import cv2
-# import sys
-# sys.path.append('../utils')
-# sys.path.append('../preprocessing')
-#
-# from segmentation import *
-# from fragmentation_serie import *
-# from get_portraits import *
-# from video_utils import *
-# from py_utils import *
-#
-# import time
-# import numpy as np
-# from matplotlib import pyplot as plt
-# from Tkinter import *
-# import tkMessageBox
-# import argparse
-# import os
-# import glob
-# import pandas as pd
-# import time
-# import re
-# from joblib import Parallel, delayed
-# import multiprocessing
-# import itertools
-# import cPickle as pickle
-# import math
-# from natsort import natsorted, ns
-# from os.path import isdir, isfile
-# import scipy.spatial.distance as scisd
-# from tkFileDialog import askopenfilename
-#
-# ''' ****************************************************************************
-# ROI selector GUI
-# *****************************************************************************'''
-# def ROIselector(frame):
-#     plt.ion()
-#     f, ax = plt.subplots()
-#     ax.imshow(frame, interpolation='nearest', cmap='gray')
-#     props = {'facecolor': '#000070',
-#              'edgecolor': 'white',
-#              'alpha': 0.3}
-#     rect_tool = RectangleTool(ax, rect_props=props)
-#     N = 2
-#     params = plt.gcf()
-#     plSize = params.get_size_inches()
-#     params.set_size_inches( (plSize[0]*N, plSize[1]*N) )
-#     mng = plt.get_current_fig_manager()
-#     mng.resize(*mng.window.maxsize())
-#     # thismanager = plt.get_current_fig_manager()
-#     # thismanager.window.SetPosition((500, 0))
-#     plt.show()
-#
-#     numROIs = getInput('Number of ROIs','Type the number of ROIs to be selected')
-#     numROIs = int(numROIs)
-#     print 'The number of ROIs to select is ', numROIs
-#     counter = 0
-#     ROIsCoords = []
-#     centers = []
-#     ROIsShapes = []
-#     mask = np.ones_like(frame,dtype='uint8')*255
-#     while counter < numROIs:
-#         ROIshape = getInput('Roi shape','r= rect, c=circ')
-#
-#         if ROIshape == 'r' or ROIshape == 'c':
-#             ROIsShapes.append(ROIshape)
-#
-#             rect_tool.callback_on_enter(rect_tool.extents)
-#             coord = np.asarray(rect_tool.extents).astype('int')
-#
-#             print 'ROI coords, ', coord
-#             text = 'Is ' + str(coord) + ' the ROI you wanted to select? y/n'
-#             goodROI = getInput('Confirm selection',text)
-#             if goodROI == 'y':
-#                 ROIsCoords.append(coord)
-#                 if ROIshape == 'r':
-#                     cv2.rectangle(mask,(coord[0],coord[2]),(coord[1],coord[3]),0,-1)
-#                     centers.append(None)
-#                 if ROIshape == 'c':
-#                     center = ((coord[1]+coord[0])/2,(coord[3]+coord[2])/2)
-#                     angle = 90
-#                     axes = tuple(sorted(((coord[1]-coord[0])/2,(coord[3]-coord[2])/2)))
-#                     print center, angle, axes
-#                     cv2.ellipse(mask,center,axes,angle,0,360,0,-1)
-#                     centers.append(center)
-#
-#         counter = len(ROIsCoords)
-#     plt.close("all")
-#
-#     return mask, centers
-#
-# def checkROI(useROI, usePreviousROI, frame, videoPath):
-#     ''' Select ROI '''
-#     if useROI:
-#         if usePreviousROI:
-#             mask = loadFile(videoPath, 'ROI',0)
-#             mask = np.asarray(mask)
-#             centers= loadFile(videoPath, 'centers',0)
-#             centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
-#         else:
-#             print '\n Selecting ROI ...'
-#             mask, centers = ROIselector(frame)
-#     else:
-#         print '\n No ROI selected ...'
-#         mask = np.zeros_like(frame)
-#         centers = []
-#     return mask, centers
-
 import cv2
 import sys
 sys.path.append('../utils')
@@ -118,10 +10,8 @@ from video_utils import *
 from py_utils import *
 from ROIselect import *
 
-import time
 import numpy as np
 import matplotlib
-# matplotlib.use('PyQt4')
 import matplotlib.pyplot as plt
 from Tkinter import *
 import tkMessageBox
@@ -168,26 +58,9 @@ def checkROI(useROI, usePreviousROI, frame, videoPath):
     ''' Select ROI '''
     if useROI:
         if usePreviousROI:
-            mask = loadFile(videoPath, 'ROI',0)
+            mask = loadFile(videoPath, 'ROI')
             mask = np.asarray(mask)
-            centers= loadFile(videoPath, 'centers',0)
-            centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
-        else:
-            print '\n Selecting ROI ...'
-            mask, centers = ROIselector(frame)
-    else:
-        print '\n No ROI selected ...'
-        mask = np.zeros_like(frame)
-        centers = []
-    return mask, centers
-
-def checkROI(useROI, usePreviousROI, frame, videoPath):
-    ''' Select ROI '''
-    if useROI:
-        if usePreviousROI:
-            mask = loadFile(videoPath, 'ROI',0)
-            mask = np.asarray(mask)
-            centers= loadFile(videoPath, 'centers',0)
+            centers= loadFile(videoPath, 'centers')
             centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
         else:
             print '\n Selecting ROI ...'
@@ -208,25 +81,15 @@ def playPreview(paths, useBkg, usePreviousBkg, useROI, usePreviousROI, numSegmen
     """
     print '\n'
     print '***** Starting playPreview to selectROI and Bkg...'
-    # global numSegment
-    # width, height = getVideoInfo(paths)
-    # video = os.path.basename(paths[0])
-    # folder = os.path.dirname(paths[0])
-    # filename, extension = os.path.splitext(video)
-    # subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-    # subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-    # subFolder = subFolders[0]
-
     cap2 = cv2.VideoCapture(paths[0])
     flag, frame = cap2.read()
     cap2.release()
     height = frame.shape[0]
     width = frame.shape[1]
-
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     mask, centers = checkROI(useROI, usePreviousROI, frameGray, paths[0])
-    saveFile(paths[0], mask, 'ROI',time = 0)
-    saveFile(paths[0], centers, 'centers',time = 0)
+    saveFile(paths[0], mask, 'ROI')
+    saveFile(paths[0], centers, 'centers')
     bkg = checkBkg(useBkg, usePreviousBkg, paths, 0, width, height)
 
     return width, height, bkg, mask, centers
@@ -425,7 +288,7 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         'maxArea': cv2.getTrackbarPos('maxArea', 'Bars'),
         'numAnimals': numAnimals}
     # print 'Saving dictionary of preprocParams'
-    saveFile(path, preprocParams, 'preprocparams', time = 0)
+    saveFile(path, preprocParams, 'preprocparams',hdfpkl='pkl')
     print 'The video will be preprocessed according to the following parameters: ', preprocParams
 
     cap.release()
@@ -434,123 +297,25 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
 ''' ****************************************************************************
 Fragmentation inspector
 *****************************************************************************'''
-# def playFragmentation(paths,visualize = False):
-#     from fragmentation_serie import computeFrameIntersection ### FIXME For some reason it does not import well in the top and I have to import it here
-#     """
-#     IdInspector
-#     """
-#     info = loadFile(paths[0], 'videoInfo', time=0)
-#     info = info.to_dict()[0]
-#     width = info['width']
-#     height = info['height']
-#     numAnimals = info['numAnimals']
-#     maxNumBlobs = info['maxNumBlobs']
-#     numSegment = 0
-#     # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-#     # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
-#     path = paths[numSegment]
-#
-#     def IdPlayerFragmentation(path,numAnimals, width, height,visualize):
-#         df,sNumber = loadFile(path, 'segmentation', time=0)
-#         # video = os.path.basename(path)
-#         # filename, extension = os.path.splitext(video)
-#         # sNumber = int(filename.split('_')[-1])
-#         # folder = os.path.dirname(path)
-#         # df = pd.read_pickle(folder +'/'+ filename + '.pkl')
-#         print 'Visualizing video %s' % path
-#         # print df
-#         cap = cv2.VideoCapture(path)
-#         numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-#         # width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-#         # height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-#
-#         def onChange(trackbarValue):
-#             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-#             centroids = df.loc[trackbarValue,'centroids']
-#             pixelsA = df.loc[trackbarValue-1,'pixels']
-#             pixelsB = df.loc[trackbarValue,'pixels']
-#             permutation = df.loc[trackbarValue,'permutation']
-#             print '------------------------------------------------------------'
-#             print 'previous frame, ', str(trackbarValue-1), ', permutation, ', df.loc[trackbarValue-1,'permutation']
-#             print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
-#             trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
-#             print 'overlapMat, '
-#             print overlapMat
-#             print 'permutation, ', s
-#             # if sNumber == 1 and trackbarValue > 100:
-#             #     trueFragment, s = computeFrameIntersection(df.loc[trackbarValue-1,'pixels'],df.loc[trackbarValue,'pixels'],5)
-#             #     print trueFragment, s
-#             #     result = df.loc[trackbarValue-1,'permutation'][s]
-#             #     print 'result, ', result
-#             #Get frame from video file
-#             ret, frame = cap.read()
-#             #Color to gray scale
-#             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-#             font = cv2.FONT_HERSHEY_SIMPLEX
-#
-#             # Plot segmentated blobs
-#             for i, pixel in enumerate(pixelsB):
-#                 px = np.unravel_index(pixel,(height,width))
-#                 frame[px[0],px[1]] = 255
-#
-#             # plot numbers if not crossing
-#             # if not isinstance(permutation,float):
-#                 # print 'pass'
-#             for i, centroid in enumerate(centroids):
-#                 cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
-#
-#             cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
-#
-#             # Visualization of the process
-#             cv2.imshow('IdPlayerFragmentation',frame)
-#             pass
-#
-#         cv2.namedWindow('IdPlayerFragmentation')
-#         cv2.createTrackbar( 'start', 'IdPlayerFragmentation', 0, numFrame-1, onChange )
-#         # cv2.createTrackbar( 'end'  , 'IdPlayer', numFrame-1, numFrame, onChange )
-#
-#         onChange(1)
-#         if visualize: ### FIXME this is because otherwise we have a Fatal Error on the "Bars" window. Apparently the backend needs a waitkey(1)...
-#             cv2.waitKey(0)
-#         else:
-#             cv2.waitKey(1)
-#             return 'q'
-#
-#         start = cv2.getTrackbarPos('start','IdPlayerFragmentation')
-#         numSegment = getInput('Segment number','Type the segment to be visualized')
-#         return numSegment
-#         # return raw_input('Which segment do you want to inspect?')
-#
-#     finish = False
-#     while not finish:
-#         # print 'I am here', numSegment
-#         numSegment = IdPlayerFragmentation(paths[int(numSegment)],numAnimals, width, height,visualize)
-#         if numSegment == 'q':
-#             finish = True
-#         cv2.waitKey(1)
-#         cv2.destroyAllWindows()
-#         cv2.waitKey(1)
-
 def playFragmentation(paths,dfGlobal,visualize = False):
     from fragmentation_serie import computeFrameIntersection ### FIXME For some reason it does not import well in the top and I have to import it here
     """
     IdInspector
     """
     print dfGlobal.loc[80:90]
-    info = loadFile(paths[0], 'videoInfo', time=0)
-    info = info.to_dict()[0]
+    info = loadFile(paths[0], 'videoInfo', hdfpkl = 'pkl')
     width = info['width']
     height = info['height']
     numAnimals = info['numAnimals']
     maxNumBlobs = info['maxNumBlobs']
     numSegment = 0
-    frameIndices = loadFile(paths[0], 'frameIndices', time=0)
+    frameIndices = loadFile(paths[0], 'frameIndices')
     # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
     # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
     path = paths[numSegment]
 
     def IdPlayerFragmentation(path,numAnimals, width, height,visualize):
-        df,sNumber = loadFile(path, 'segmentation', time=0)
+        df,sNumber = loadFile(path, 'segmentation')
         # video = os.path.basename(path)
         # filename, extension = os.path.splitext(video)
         # sNumber = int(filename.split('_')[-1])

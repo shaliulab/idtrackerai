@@ -77,10 +77,7 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
 
     cap.release()
     cv2.destroyAllWindows()
-    saveFile(path, df, 'segment', time = 0)
-    # lst = [df,cap]
-    # del df, cap
-    # del lst
+    saveFile(path, df, 'segment')
     gc.collect()
 
     return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist(), maxNumBlobs

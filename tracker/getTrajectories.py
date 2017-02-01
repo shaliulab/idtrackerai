@@ -28,8 +28,7 @@ videoPath = selectFile()
 paths = scanFolder(videoPath)
 
 frameIndices = loadFile(paths[0], 'frameIndices', time=0)
-videoInfo = loadFile(paths[0], 'videoInfo', time=0)
-videoInfo = videoInfo.to_dict()[0]
+videoInfo = loadFile(paths[0], 'videoInfo', time=0, hdfpkl='pkl')
 stats = loadFile(paths[0], 'statistics', time=0)
 stats = stats.to_dict()[0]
 numAnimals = videoInfo['numAnimals']

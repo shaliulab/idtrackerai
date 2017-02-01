@@ -24,7 +24,7 @@ import itertools
 import cPickle as pickle
 import seaborn as sns
 import h5py
-from pprint import pprint 
+from pprint import pprint
 
 numSegment = 0
 
@@ -33,7 +33,6 @@ paths = scanFolder(videoPath)
 
 frameIndices = loadFile(paths[0], 'frameIndices', time=0)
 videoInfo = loadFile(paths[0], 'videoInfo', time=0)
-videoInfo = videoInfo.to_dict()[0]
 stats = loadFile(paths[0], 'statistics', time=0)
 stats = stats.to_dict()[0]
 numAnimals = videoInfo['numAnimals']

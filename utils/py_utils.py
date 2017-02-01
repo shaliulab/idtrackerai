@@ -127,62 +127,7 @@ def get_spaced_colors_util(n,norm=False):
     rgbcolorslist.insert(0, black)
     return rgbcolorslist
 
-# def saveFile(path, variabletoSave, name, time = 0):
-#     """
-#     All the input are strings!!!
-#     path: path to the first segment of the video
-#     name: string to add to the name of the video (wihtout timestamps)
-#     folder: path to the folder in which the file has to be stored
-#     """
-#     if os.path.exists(path)==False:
-#         raise ValueError("the video %s does not exist!" %path)
-#     video = os.path.basename(path)
-#     filename, extension = os.path.splitext(video)
-#     folder = os.path.dirname(path)
-#     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-#     subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-#     # print 'subFolders Saver', subFolders
-#     subFolder = subFolders[time]
-#     filename, extension = os.path.splitext(video)
-#     # we assume there's an underscore before the timestamp
-#     if name == 'segment' or name == 'segmentation':
-#         nSegment = filename.split('_')[-1]# and before the number of the segment
-#         filename = filename.split('_')[0] + '_' + nSegment + '.hdf5'
-#         pd.to_hdf(variabletoSave, subFolder +'/segmentation/'+ filename)
-#     else:
-#         filename = filename.split('_')[0] + '_' + name + '.hdf5'
-#         pd.to_hdf(variabletoSave, subFolder + '/'+ filename)
-#     print 'you just saved: ',subFolder + filename
-
-
-
-# def loadFile(path, name, time=0):
-#     """
-#     loads a pickle. path is the path of the video, while name is a string in the
-#     set {}
-#     """
-#     video = os.path.basename(path)
-#     folder = os.path.dirname(path)
-#     filename, extension = os.path.splitext(video)
-#     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-#     subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-#     # print 'subFolders Loader', subFolders
-#     # print 'subFolders from loadFile ',subFolders
-#     subFolder = subFolders[time]
-#
-#     if name  == 'segmentation':
-#         # print 'i am here'
-#         nSegment = filename.split('_')[-1]
-#         filename = filename.split('_')[0] + '_' + nSegment + '.hdf5'
-#         # print filename
-#         # print subFolder
-#         # print nSegment
-#         return pd.read_hdf(subFolder + 'segmentation/' + filename ), nSegment
-#     else:
-#         filename = filename.split('_')[0] + '_' + name + '.hdf5'
-#         return pd.read_hdf(subFolder + filename )
-
-def saveFile(path, variabletoSave, name, time = 0, hdfpkl = 'hdf'):
+def saveFile(path, variabletoSave, name, hdfpkl = 'hdf'):
     import cPickle as pickle
     """
     All the input are strings!!!
@@ -195,36 +140,34 @@ def saveFile(path, variabletoSave, name, time = 0, hdfpkl = 'hdf'):
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)
     folder = os.path.dirname(path)
-    subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-    # print 'subFolders Saver', subFolders
-    subFolder = subFolders[time]
     filename, extension = os.path.splitext(video)
-    # we assume there's an underscore before the timestamp
+
     if name == 'segment' or name == 'segmentation':
+        subfolder = '/preprocessing/segmentation/'
         nSegment = filename.split('_')[-1]# and before the number of the segment
         if hdfpkl == 'hdf':
             filename = 'segm_' + nSegment + '.hdf5'
-            variabletoSave.to_hdf(subFolder +'/segmentation/'+ filename,name)
+            variabletoSave.to_hdf(folder + subfolder + filename,name)
         elif hdfpkl == 'pkl':
             filename = 'segm_' + nSegment + '.pkl'
-            pickle.dump(variabletoSave,open(subFolder +'/segmentation/'+ filename,'wb'))
+            pickle.dump(variabletoSave,open(folder + subfolder+ filename,'wb'))
     else:
+        subfolder = '/preprocessing/'
         if hdfpkl == 'hdf':
             filename = name + '.hdf5'
             if isinstance(variabletoSave, dict):
                 variabletoSave = pd.DataFrame.from_dict(variabletoSave,orient='index')
             elif not isinstance(variabletoSave, pd.DataFrame):
                 variabletoSave = pd.DataFrame(variabletoSave)
-            variabletoSave.to_hdf(subFolder + filename,name)
+            variabletoSave.to_hdf(folder + subfolder + filename,name)
         elif hdfpkl == 'pkl':
             filename = name + '.pkl'
             # filename = os.path.relpath(filename)
-            pickle.dump(variabletoSave,open(subFolder + filename,'wb'))
+            pickle.dump(variabletoSave,open(folder + subfolder + filename,'wb'))
 
-    print 'you just saved: ',subFolder + filename
+    print 'You just saved ',folder + subfolder + filename
 
-def loadFile(path, name, time=0, hdfpkl = 'hdf'):
+def loadFile(path, name, hdfpkl = 'hdf'):
     """
     loads a pickle. path is the path of the video, while name is a string in the
     set {}
@@ -232,180 +175,85 @@ def loadFile(path, name, time=0, hdfpkl = 'hdf'):
     video = os.path.basename(path)
     folder = os.path.dirname(path)
     filename, extension = os.path.splitext(video)
-    subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-    # print 'subFolders Loader', subFolders
-    # print 'subFolders from loadFile ',subFolders
-    subFolder = subFolders[time]
-    print 'Loading ' + name + ' from subfolder ', subFolder
 
     if name  == 'segmentation':
-        # print 'i am here'
+        subfolder = '/preprocessing/segmentation/'
         nSegment = filename.split('_')[-1]
         if hdfpkl == 'hdf':
             filename = 'segm_' + nSegment + '.hdf5'
-            return pd.read_hdf(subFolder + 'segmentation/' + filename ), nSegment
+            return pd.read_hdf(folder + subfolder + filename ), nSegment
         elif hdfpkl == 'pkl':
             filename = 'segm_' + nSegment + '.pkl'
-            return pickle.load(open(subFolder + 'segmentation/' + filename) ,'rb'), nSegmen
+            return pickle.load(open(folder + subfolder + filename) ,'rb'), nSegmen
     else:
+        subfolder = '/preprocessing/'
         if hdfpkl == 'hdf':
             filename = name + '.hdf5'
-            return pd.read_hdf(subFolder + filename )
+            return pd.read_hdf(folder + subfolder + filename )
         elif hdfpkl == 'pkl':
             filename = name + '.pkl'
-            return pickle.load(open(subFolder + filename,'rb') )
+            return pickle.load(open(folder + subfolder + filename,'rb') )
 
-def copyExistentFiles(path, listNames, time=1):
+    print 'You just loaded ', folder + subfolder + filename
+
+def getExistentFiles(path, listNames):
     """
-    Load data from previous session (time = 1 means we are looking back of one step)
+    get processes already computed in a previous session
     """
     existentFile = {name:'0' for name in listNames}
-    # existentFile = dict()
-    createFolder(path, name = '', timestamp = False)
     video = os.path.basename(path)
     folder = os.path.dirname(path)
+
+    createFolder(path)
+
     #count how many videos we have
     numVideos = len(glob.glob1(folder,"*.avi"))
 
     filename, extension = os.path.splitext(video)
-    subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-    print subFolders
-    if len(subFolders) <= 1:
-        srcSubFolder = 'There is not previous subFolder'
-        pass
-    else:
-        srcSubFolder = subFolders[time]
-        dstSubFolder = subFolders[time-1]
-        for name in listNames:
-            if name == 'segmentation':
-                segDirname = srcSubFolder + '/' + name
-                if os.path.isdir(segDirname):
-                    print 'Segmentation folder exists'
-                    numSegmentedVideos = len(glob.glob1(segDirname,"*.hdf5"))
-                    print
-                    if numSegmentedVideos == numVideos:
-                        print 'The number of segments and videos is the same'
-                        existentFile[name] = '1'
-                        dstSubFolderSeg = dstSubFolder + '/segmentation'
-                        srcFiles = os.listdir(segDirname)
-                        for fileName in srcFiles:
-                            fullFileName = os.path.join(segDirname, fileName)
-                            if (os.path.isfile(fullFileName)):
-                                shutil.copy(fullFileName, dstSubFolderSeg)
-                        # if segmentation is copyed we also copy frameIndices and videoInfo
-                        fullFileName = srcSubFolder + '/frameIndices.hdf5'
-                        if os.path.isfile(fullFileName):
-                            shutil.copy(fullFileName, dstSubFolder)
-                        fullFileName = srcSubFolder + '/videoInfo.hdf5'
-                        if os.path.isfile(fullFileName):
-                            shutil.copy(fullFileName, dstSubFolder)
+    subFolders = glob.glob(folder +"/*/")
 
-            else:
-                if name is 'fragmentation':
-                    fullFileName = srcSubFolder + '/fragments.pkl'
-                    if os.path.isfile(fullFileName):
-                        shutil.copy(fullFileName, dstSubFolder)
-                    segDirname = srcSubFolder + 'segmentation'
-                    if os.path.isdir(segDirname):
-                        srcFiles = os.listdir(segDirname)
-                        if os.path.isdir(segDirname) and len(srcFiles)!=0:
-                            df,_ = loadFile(path, 'segmentation', time=1)
-                            if 'permutation' in list(df.columns):
-                                existentFile[name] = '1'
-                elif name is 'bkg':
-                    fullFileName = srcSubFolder + '/bkg.pkl'
-                    if os.path.isfile(fullFileName):
-                        existentFile[name] = '1'
-                        shutil.copy(fullFileName, dstSubFolder)
-                else:
-                    fullFileName = srcSubFolder + '/' + name + '.hdf5'
-                    if os.path.isfile(fullFileName):
-                        existentFile[name] = '1'
-                        shutil.copy(fullFileName, dstSubFolder)
-                    if name is 'ROI':
-                        fullFileName = srcSubFolder + '/centers.hdf5'
-                        if os.path.isfile(fullFileName):
-                            shutil.copy(fullFileName, dstSubFolder)
-
-
-    return existentFile, srcSubFolder
-
-
-def getExistentFiles(path, listNames, time=1):
-    """
-    get processes already computed in the previous session (time = 1 means we are looking back of one step)
-    """
-    existentFile = {name:'0' for name in listNames}
-    # existentFile = dict()
-    createFolder(path, name = '', timestamp = False)
-    video = os.path.basename(path)
-    folder = os.path.dirname(path)
-    #count how many videos we have
-    numVideos = len(glob.glob1(folder,"*.avi"))
-
-    filename, extension = os.path.splitext(video)
-    subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-    print subFolders
-    if len(subFolders) <= 1:
-        srcSubFolder = 'There is not previous subFolder'
-        pass
-    else:
-        srcSubFolder = subFolders[time]
-        dstSubFolder = subFolders[time-1]
-        for name in listNames:
-            if name == 'segmentation':
-                segDirname = srcSubFolder + '/' + name
-                if os.path.isdir(segDirname):
-                    print 'Segmentation folder exists'
-                    numSegmentedVideos = len(glob.glob1(segDirname,"*.hdf5"))
-                    print
-                    if numSegmentedVideos == numVideos:
-                        print 'The number of segments and videos is the same'
-                        existentFile[name] = '1'
-                        dstSubFolderSeg = dstSubFolder + '/segmentation'
-            else:
-                if name is 'fragmentation':
-                    fullFileName = srcSubFolder + '/fragments.pkl'
-
-                    segDirname = srcSubFolder + 'segmentation'
-                    if os.path.isdir(segDirname):
-                        srcFiles = os.listdir(segDirname)
-                        if os.path.isdir(segDirname) and len(srcFiles)!=0:
-                            df,_ = loadFile(path, 'segmentation', time=1)
-                            if 'permutation' in list(df.columns):
-                                existentFile[name] = '1'
-                elif name is 'bkg':
-                    fullFileName = srcSubFolder + '/bkg.pkl'
-                    if os.path.isfile(fullFileName):
-                        existentFile[name] = '1'
-                else:
-                    fullFileName = srcSubFolder + '/' + name + '.hdf5'
-                    if os.path.isfile(fullFileName):
-                        existentFile[name] = '1'
-                    if name is 'ROI':
-                        fullFileName = srcSubFolder + '/centers.hdf5'
+    srcSubFolder = folder + '/preprocessing/'
+    for name in listNames:
+        if name == 'segmentation':
+            segDirname = srcSubFolder + name
+            if os.path.isdir(segDirname):
+                print 'Segmentation folder exists'
+                numSegmentedVideos = len(glob.glob1(segDirname,"*.hdf5"))
+                print
+                if numSegmentedVideos == numVideos:
+                    print 'The number of segments and videos is the same'
+                    existentFile[name] = '1'
+        else:
+            extensions = ['.pkl', '.hdf5']
+            for ext in extensions:
+                fullFileName = srcSubFolder + '/' + name + ext
+                if os.path.isfile(fullFileName):
+                    existentFile[name] = '1'
 
     return existentFile, srcSubFolder
 
 def createFolder(path, name = '', timestamp = False):
 
-    ts = '{:%Y%m%d%H%M%S}_'.format(datetime.datetime.now())
-    name = ts + name
-
     folder = os.path.dirname(path)
-    folderName = folder +'/'+ name + '/segmentation'
-    os.makedirs(folderName) # create a folder
+    folderName = folder +'/preprocessing'
+    if timestamp :
+        ts = '{:%Y%m%d%H%M%S}_'.format(datetime.datetime.now())
+        folderName = folderName + '_' + ts
 
-    # folderName = folderName
-    # os.makedirs(folderName) # create a folder
-
-    print folderName + ' has been created'
-#
-# createFolder('/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf/group_1_camera_1/group_1_camera_1_20160508T094501_1.avi', name = '', timestamp = False)
-# copyExistentFiles('/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf/group_1_camera_1/group_1_camera_1_20160508T094501_1.avi', ['mask', 'centers', 'bkg','segmentation'], time=1)
+    if os.path.isdir(folderName):
+        print 'Preprocessing folder exists'
+        subFolder = folderName + '/segmentation'
+        if os.path.isdir(subFolder):
+            print 'Segmentation folder exists'
+        else:
+            os.makedirs(subFolder)
+            print subFolder + ' has been created'
+    else:
+        os.makedirs(folderName)
+        print folderName + ' has been created'
+        subFolder = folderName + '/segmentation'
+        os.makedirs(subFolder)
+        print subFolder + ' has been created'
 
 """
 Display messages and errors

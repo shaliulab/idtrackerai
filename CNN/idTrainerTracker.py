@@ -73,7 +73,7 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
 
     return outList
 
-def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder,batch_size, num_epochs,Tindices, Titer_per_epoch,
+def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, ckpt_dir, fig_dir, loadCkpt_folder, accumCounter, batch_size, num_epochs, lossAccDict, Tindices, Titer_per_epoch,
 Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
     with tf.Graph().as_default():
         images_pl, labels_pl = placeholder_inputs(batch_size, resolution, classes)
@@ -99,12 +99,12 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
             print "\n****** Starting training session ******\n"
             # Create folder for checkpoint if does not exist
             print "\n****** Checking Folders (save/restore) ******\n"
-            [ckpt_dir_model,ckpt_dir_softmax,ckpt_dir_figures] = createCkptFolder( ckpt_dir, ['model', 'softmax', 'figures'])
+            [ckpt_dir_model,ckpt_dir_softmax] = createCkptFolder( ckpt_dir, ['model', 'softmax'])
 
             # Load weights from a pretrained model if there is not any model saved
             # in the ckpt folder of the test
             ckpt = tf.train.get_checkpoint_state(ckpt_dir_model)
-            if not (ckpt and ckpt.model_checkpoint_path):
+            if (not (ckpt and ckpt.model_checkpoint_path)) and accumCounter == 0:
                 if loadCkpt_folder:
                     print '********************************************************'
                     print 'We are only loading the model'
@@ -117,12 +117,14 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                 else:
                     warnings.warn('It is not possible to perform knowledge transfer, give a folder containing a trained model')
             else:
+                loadCkpt_folder_model = loadCkpt_folder + '/model'
+                loadCkpt_folder_softmax = loadCkpt_folder + '/softmax'
                 print "\n"
                 print '********************************************************'
-                print 'Shit, we are also loading the softmax'
+                print 'We are also loading the softmax'
                 print '********************************************************'
-                restoreFromFolder(ckpt_dir_model, saver_model, sess)
-                restoreFromFolder(ckpt_dir_softmax, saver_softmax, sess)
+                restoreFromFolder(loadCkpt_folder_model, saver_model, sess)
+                restoreFromFolder(loadCkpt_folder_softmax, saver_softmax, sess)
 
             # counter for epochs
             start = global_step.eval() # get last global_step
@@ -133,7 +135,8 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
             summary_writerT = tf.summary.FileWriter(ckpt_dir + '/train',sess.graph)
             summary_writerV = tf.summary.FileWriter(ckpt_dir + '/val',sess.graph)
 
-            if start == 0 or not os.path.exists(ckpt_dir_model + "/lossAcc.pkl"):
+            sessionPath = '/'.join(ckpt_dir.split('/')[:-1])
+            if accumCounter == 0:
                 # ref lists for plotting
                 trainLossPlot = []
                 trainAccPlot = []
@@ -143,8 +146,6 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                 valAccPlot = []
                 valIndivAccPlot = []
             else:
-                ''' load from pickle '''
-                lossAccDict = pickle.load( open( ckpt_dir_model + "/lossAcc.pkl", "rb" ) )
                 # ref lists for plotting
                 trainLossPlot = lossAccDict['loss']
                 trainAccPlot = lossAccDict['acc']
@@ -322,8 +323,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                         'W5': WConv5
                         }
 
-                    pickle.dump( lossAccDict , open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
-                    pickle.dump( weightsDict, open( ckpt_dir_model + "/weightsDict.pkl", "wb" ) )
+
                     '''
                     *******************
                     Plotter
@@ -334,7 +334,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                         CNNplotterFast2(lossAccDict, weightsDict)
 
                         print 'Saving figure...'
-                        figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
+                        figname = fig_dir + '/result_' + str(global_step.eval()) + '.pdf'
                         plt.savefig(figname)
                     print '-------------------------------'
                     ### ---
@@ -426,7 +426,7 @@ if __name__ == '__main__':
         Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
         Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
 
-        run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
+        run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, accumCounter, batch_size, num_epochs, Tindices, Titer_per_epoch,
         Vindices, Viter_per_epoch,1.,lr)
 
     if args.train == 0:

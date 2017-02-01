@@ -81,7 +81,7 @@ def smooth_resample(contour,smoothFlag = False):
     y_new = y
 
     # M = 1000
-    M = 1500 ### NOTE we change it to 1500 otherwise was getting trapped inside of the while loop
+    M = 1600 ### NOTE we change it to 1500 otherwise was getting trapped inside of the while loop
     t = np.linspace(0, len(x_new), M)
     x = np.interp(t, np.arange(len(x_new)), x_new)
     y = np.interp(t, np.arange(len(y_new)), y_new)
@@ -187,7 +187,7 @@ def getMFandC(path, frameIndices):
     # numSegment = int(filename.split('_')[-1])
     #load dataframe
     # df = pd.read_pickle(path)
-    df, numSegment = loadFile(path, 'segmentation', time=0)
+    df, numSegment = loadFile(path, 'segmentation')
     # print df
     # check if permutations are NaN (i.e. the frame is not included in a fragment)
     permutationsBool = np.asarray(df['permutation'].notnull())
@@ -202,54 +202,8 @@ def getMFandC(path, frameIndices):
     goodIndices = np.where(permutationsBool==True)[0]
     goodFrameIndices, segmentIndices = getEncompassingIndices(frameIndices, int(numSegment), goodIndices)
     goodFrameIndices = segmentIndices
-    # boundingBoxes = boundingBoxes[goodIndices]
-    # miniframes = miniframes[goodIndices]
-    # centroids = centroids[goodIndices]
-    # bkgSamples = bkgSamples[goodIndices]
-    # permutations = permutations[goodIndices]
-    # #
-    return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist()
 
-# def getEncompassingIndices(frameIndices, num_segmnent, goodIndices):
-#     """
-#     frameIndices = dataframe containing the list of frame per segment
-#     num_segment
-#     goodIndices = indices in which the permutation is defined (non-crossing and overlapping)
-#     """
-#     frameSegment = frameIndices.loc[frameIndices.loc[:,'segment']==num_segmnent]
-#     goodFrameIndices = frameSegment.iloc[goodIndices].index.tolist()
-#
-#     return goodFrameIndices, frameSegment.index.tolist()
-#
-# def getMFandC(videoPath, frameIndices):
-#     """
-#     videoPath: videoPath to dataframe
-#     generate a list of arrays containing miniframes and centroids detected in
-#     videoPath at this point we can already discard miniframes that does not belong
-#     to a specific fragments
-#     """
-#     # get number of segment
-#     # video = os.videoPath.basename(videoPath)
-#     # filename, extension = os.path.splitext(video)
-#     # numSegment = int(filename.split('_')[-1])
-#     #load dataframe
-#     # df = pd.read_pickle(videoPath)
-#
-#     # print 'you loaded it!'
-#     # print df
-#     # check if permutations are NaN (i.e. the frame is not included in a fragment)
-#
-#     #generate a lists of "admissible" miniframes and centroids
-#     df, numSegment = loadFile(videoPath, 'segmentation', time=0)
-#     boundingBoxes = np.asarray(df.loc[:, 'boundingBoxes'])
-#     miniframes = np.asarray(df.loc[:, 'miniFrames'])
-#     contours = np.asarray(df.loc[:, 'contours'])
-#     bkgSamples = np.asarray(df.loc[:,'bkgSamples'])
-#
-#     segmentIndices = frameIndices.loc[frameIndices.loc[:,'segment']==num_segmnent]
-#     segmentIndices.index.tolist()
-#
-#     return boundingBoxes.tolist(), miniframes.tolist(), contours.tolist(), bkgSamples.tolist(), segmentIndices
+    return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist()
 
 def fillSquareFrame(square_frame,bkgSamps):
     numSamples = 0
@@ -377,7 +331,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
 def reaper(videoPath, frameIndices):
     # print 'segment number ', i
     print 'reaping', videoPath
-    df, numSegment = loadFile(videoPath, 'segmentation', time=0)
+    df, numSegment = loadFile(videoPath, 'segmentation')
     # print 'numSegment, ', numSegment
     boundingboxes = np.asarray(df.loc[:, 'boundingBoxes'])
     miniframes = np.asarray(df.loc[:, 'miniFrames'])
@@ -434,19 +388,8 @@ def reaper(videoPath, frameIndices):
     print 'you just reaped', videoPath
     return AllPortraits, AllNoses, AllCentroids
 
-# def modelDiffArea(fragments,areas):
-#     """
-#     fragment: fragment where to stract the areas to cumpute the mean and std of the diffArea
-#     areas: areas of all the blobs of the video
-#     """
-#     goodFrames = flatten([list(range(fragment[0],fragment[1])) for fragment in fragments])
-#     individualAreas = np.asarray(flatten(areas[goodFrames].tolist()))
-#     meanArea = np.mean(individualAreas)
-#     stdArea = np.std(individualAreas)
-#     return meanArea, stdArea
-
 def portrait(videoPaths, dfGlobal):
-    frameIndices = loadFile(videoPaths[0], 'frameIndices', time=0)
+    frameIndices = loadFile(videoPaths[0], 'frameIndices')
     # print 'frameIndices, ', frameIndices
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
@@ -469,5 +412,5 @@ def portrait(videoPaths, dfGlobal):
     dfGlobal['noses'] = allNoses
     dfGlobal['centroids'] = allCentroids
 
-    saveFile(videoPaths[0], dfGlobal, 'portraits', time = 0)
+    saveFile(videoPaths[0], dfGlobal, 'portraits')
     return dfGlobal

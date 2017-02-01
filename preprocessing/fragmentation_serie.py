@@ -116,7 +116,7 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
     for j, path in enumerate(videoPaths):
         print '-----------------------------------'
         print 'Fragmenting video %s' % path
-        df, numSegment = loadFile(path, 'segmentation', time=0)
+        df, numSegment = loadFile(path, 'segmentation')
         numFramesSegment = len(df)
         # print 'Num frames in segment, ', numFramesSegment
         columnNumBlobs = df.loc[:,'numberOfBlobs']
@@ -166,7 +166,7 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
                     dfPermutations.loc[numFramesA-1,'permutation'] = dfGlobal.loc[globalFrame-1,'permutations']
                     # I save the permutations to the data frame of the segmentation
                     dfA['permutation'] = dfPermutations
-                    saveFile(videoPaths[j-1], dfA, 'segment', time = 0)
+                    saveFile(videoPaths[j-1], dfA, 'segment')
                     dfPermutations = pd.DataFrame(index = range(len(columnPixels)), columns=['permutation'])
                     dfPermutations.loc[i,'permutation'] = dfGlobal.loc[globalFrame, 'permutations']
                 else:
@@ -194,7 +194,7 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
                     dfA = df.copy()
                     if j == len(videoPaths)-1:
                         dfA['permutation'] = dfPermutations
-                        saveFile(path, dfA, 'segment', time = 0)
+                        saveFile(path, dfA, 'segment')
 
                 pixelsA = pixelsB
                 numFramesA = numFramesSegment
@@ -202,8 +202,6 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
 
     print 'fragments , ', fragments
     print 'numFragments, ', len(fragments)
-    # fragments = sorted(fragments, key=lambda x: x[1]-x[0],reverse=True)
-    # saveFile(videoPaths[0], fragments, 'fragments', time = 0)
     return fragments, dfGlobal
 
 def modelDiffArea(fragments,areas):
@@ -447,18 +445,18 @@ def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFrag
         framesAndBlobIndexFragment = []
         for j, (oneIndivFrags, oneIndivFragLen) in enumerate(zip(oneIndivFragIntervals, oneIndivFragLens)):
             oneIndivFragDist = oneIndivFragDists[j]
-            print '*** coexistence in one-individual fragments list ', j
+            # print '*** coexistence in one-individual fragments list ', j
             oneIndivFragVel = oneIndivFragVels[j]
-            print 'one individual fragments, ', oneIndivFrags
+            # print 'one individual fragments, ', oneIndivFrags
             overlaps = np.asarray([getOverlap(fragment,indivFrag) for indivFrag in oneIndivFrags])
-            print 'overlaps, ', overlaps
+            # print 'overlaps, ', overlaps
             coexistingFragments = np.where(overlaps != 0)[0]
-            print 'coexisting fragments, ', coexistingFragments
+            # print 'coexisting fragments, ', coexistingFragments
             if len(coexistingFragments) > 1:
                 raise ValueError('There cannot be two individual fragments from the same list coexisting with a global fragment')
             if len(coexistingFragments)!=0:
                 coexistingFragment = coexistingFragments[0]
-                print 'coexisting fragment, ', coexistingFragment, ', interval, ', oneIndivFrags[coexistingFragment], ', length, ', oneIndivFragLen[coexistingFragment], ', dist, ', oneIndivFragDist[coexistingFragment]
+                # print 'coexisting fragment, ', coexistingFragment, ', interval, ', oneIndivFrags[coexistingFragment], ', length, ', oneIndivFragLen[coexistingFragment], ', dist, ', oneIndivFragDist[coexistingFragment]
                 intervalsFragment.append((j,coexistingFragment,oneIndivFrags[coexistingFragment],oneIndivFragLen[coexistingFragment], oneIndivFragVel[coexistingFragment], oneIndivFragDist[coexistingFragment]))
                 framesAndBlobIndexFragment.append(oneIndivFragFrames[j][coexistingFragment])
                 lenIndivFrag.append(oneIndivFragLen[coexistingFragment])
@@ -506,15 +504,14 @@ def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFrag
 def fragment(videoPaths,videoInfo = None):
     ''' Load videoInfo if needed '''
     if videoInfo == None:
-        videoInfo = loadFile(videoPaths[0], 'videoInfo', time = 0)
-        videoInfo = videoInfo.to_dict()[0]
+        videoInfo = loadFile(videoPaths[0], 'videoInfo', hdfpkl='pkl')
         numFrames = videoInfo['numFrames']
         numAnimals = videoInfo['numAnimals']
         maxNumBlobs = videoInfo['maxNumBlobs']
 
     ''' Compute permutations and complete fragments '''
     fragments, dfGlobal = newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames)
-    saveFile(videoPaths[0],dfGlobal,'dfGlobal',time=0)
+    saveFile(videoPaths[0],dfGlobal,'dfGlobal')
     playFragmentation(videoPaths,dfGlobal,False)
 
     ''' Compute model area of individual blob '''
@@ -522,11 +519,10 @@ def fragment(videoPaths,videoInfo = None):
     meanIndivArea, stdIndivArea = modelDiffArea(fragments, dfGlobal.areas)
     # print 'meanIndivArea, ', meanIndivArea
     # print 'stdindivArea, ', stdIndivArea
-    videoInfo = loadFile(videoPaths[0], 'videoInfo', time = 0)
-    videoInfo = videoInfo.to_dict()[0]
+    videoInfo = loadFile(videoPaths[0], 'videoInfo', hdfpkl='pkl')
     videoInfo['meanIndivArea'] = meanIndivArea
     videoInfo['stdIndivArea'] = stdIndivArea
-    saveFile(videoPaths[0],videoInfo,'videoInfo',time=0)
+    saveFile(videoPaths[0],videoInfo,'videoInfo', hdfpkl = 'pkl')
     # print 'fragments before individual fragments, ', fragments
     oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, oneIndivFragVels, oneIndivFragDists, dfGlobal, fragments = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
     # print 'fragments after individual fragments, ', fragments
@@ -552,8 +548,8 @@ def fragment(videoPaths,videoInfo = None):
         'oneIndivFragVels': oneIndivFragVels,
         'oneIndivFragDists': oneIndivFragDists
         }
-    saveFile(videoPaths[0],fragmentsDict,'fragments',time=0, hdfpkl='pkl')
-    saveFile(videoPaths[0],dfGlobal,'portraits',time=0)
+    saveFile(videoPaths[0],fragmentsDict,'fragments', hdfpkl='pkl')
+    saveFile(videoPaths[0],dfGlobal,'portraits')
 
     return dfGlobal, fragmentsDict
 

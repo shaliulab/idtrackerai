@@ -443,7 +443,6 @@ def fineTuner(videoPath, trainDict, indivFragsForTrain, fragmentsDict = [], port
         portraits = loadFile(videoPath, 'portraits', time=0)
     if videoInfo == []:
         videoInfo = loadFile(videoPath, 'videoInfo', time=0)
-        videoInfo = videoInfo.to_dict()[0]
 
     numFrames =  len(portraits)
     numAnimals = int(videoInfo['numAnimals'])
@@ -497,7 +496,6 @@ def idAssigner(videoPath,trainDict,fragmentsDict = [],portraits = [], videoInfo 
 
     if len(videoInfo) == 0:
         videoInfo = loadFile(videoPath, 'videoInfo', time=0)
-        videoInfo = videoInfo.to_dict()[0]
     numFrames =  len(portraits)
     numAnimals = videoInfo['numAnimals']
     maxNumBlobs = videoInfo['maxNumBlobs']

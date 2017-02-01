@@ -406,11 +406,10 @@ def newMiniframesBuilder(videoPaths):
    #  fragments = np.asarray(fragments)
    #  meanArea, stdArea = modelDiffArea(fragments, allPortraits.areas)
    #  videoInfo = loadFile(videoPath, 'videoInfo', time = 0)
-   #  videoInfo = videoInfo.to_dict()[0]
    #  videoInfo['meanIndivArea'] = meanArea
    #  videoInfo['stdIndivArea'] = stdArea
    #  saveFile(videoPath,videoInfo,'videoInfo',time=0)
-# 
+#
 # videoPaths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi')
 # frameIndices = loadFile(videoPaths[0], 'frameIndices', time=0)
 # # AllNewMiniframes = reaper(videoPaths[0], frameIndices)

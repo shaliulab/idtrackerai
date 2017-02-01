@@ -208,56 +208,56 @@ def IdPlayerPreview(path, width, height, bkg, mask, bkgSubstraction, minArea, ma
     # cv2.destroyWindow('IdPlayer')
 
 
-def playPreview(paths, bkgSubstraction, selectROI, numSegment=0):
-    """
-    loads a preview of the video for manual fine-tuning
-    """
-    # print 'Starting playPreview'
-    # global numSegment
-    width, height = getVideoInfo(paths)
-    video = os.path.basename(paths[0])
-    folder = os.path.dirname(paths[0])
-    filename, extension = os.path.splitext(video)
-    subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-    # if len(subFolders) > 0:
-    #     subFolder = subFolders[0]
-    # else:
-    if numSegment==0:
-        createFolder(paths[0], name = '', timestamp = True)
-    subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
-    subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
-    subFolder = subFolders[0]
-    #Load frame to choose ROIs
-    cap2 = cv2.VideoCapture(paths[0])
-    _, frame = cap2.read()
-    cap2.release()
-    # cv2.destroyAllWindows()
-    #frame to grayscale
-    frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    if numSegment == 0:
-        print 'segment 0 is here'
-        mask, centers = checkROI(selectROI, frameGray, paths[0])
-        saveFile(paths[0], mask, 'mask',time = 0)
-        saveFile(paths[0], centers, 'centers',time = 0)
-    else:
-        mask = loadFile(paths[0], 'mask', time=0)
-
-    #set the name for the background if it does not exists
-    filename = subFolder + filename.split('_')[0] + '_bkg.pkl'
-    #if it exists, load it!
-    bkg = checkBkg(bkgSubstraction, paths, 0, width, height)
-    #set parameters for the GUI
-    maxArea = 1000
-    minArea = 150
-    minThreshold = 150
-
-    #save mask and centers
-    #FIXME: probably everytime we save we should check if the file is already there and ask either to overwrite or generate a unique name...
-    print 'numSegment, ', numSegment
-    path = paths[int(numSegment)]
-
-    return path, width, height, bkg, mask, bkgSubstraction, minArea, maxArea, minThreshold
+# def playPreview(paths, bkgSubstraction, selectROI, numSegment=0):
+#     """
+#     loads a preview of the video for manual fine-tuning
+#     """
+#     # print 'Starting playPreview'
+#     # global numSegment
+#     width, height = getVideoInfo(paths)
+#     video = os.path.basename(paths[0])
+#     folder = os.path.dirname(paths[0])
+#     filename, extension = os.path.splitext(video)
+#     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
+#     subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
+#     # if len(subFolders) > 0:
+#     #     subFolder = subFolders[0]
+#     # else:
+#     if numSegment==0:
+#         createFolder(paths[0], name = '', timestamp = True)
+#     subFolders = natural_sort(glob.glob(folder +"/*/"))[::-1]
+#     subFolders = [subFolder for subFolder in subFolders if subFolder.split('/')[-2][0].isdigit()]
+#     subFolder = subFolders[0]
+#     #Load frame to choose ROIs
+#     cap2 = cv2.VideoCapture(paths[0])
+#     _, frame = cap2.read()
+#     cap2.release()
+#     # cv2.destroyAllWindows()
+#     #frame to grayscale
+#     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#     if numSegment == 0:
+#         print 'segment 0 is here'
+#         mask, centers = checkROI(selectROI, frameGray, paths[0])
+#         saveFile(paths[0], mask, 'mask',time = 0)
+#         saveFile(paths[0], centers, 'centers',time = 0)
+#     else:
+#         mask = loadFile(paths[0], 'mask', time=0)
+#
+#     #set the name for the background if it does not exists
+#     filename = subFolder + filename.split('_')[0] + '_bkg.pkl'
+#     #if it exists, load it!
+#     bkg = checkBkg(bkgSubstraction, paths, 0, width, height)
+#     #set parameters for the GUI
+#     maxArea = 1000
+#     minArea = 150
+#     minThreshold = 150
+#
+#     #save mask and centers
+#     #FIXME: probably everytime we save we should check if the file is already there and ask either to overwrite or generate a unique name...
+#     print 'numSegment, ', numSegment
+#     path = paths[int(numSegment)]
+#
+#     return path, width, height, bkg, mask, bkgSubstraction, minArea, maxArea, minThreshold
 
 if __name__ == '__main__':
     videoPath = '../data/library/25dpf/group_1_camera_1/group_1_camera_1_20160519T103108_1.avi'
