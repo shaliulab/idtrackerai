@@ -16,7 +16,7 @@ from pprint import *
 from tensorflow.python.platform import gfile
 import cPickle as pickle
 import re
-
+import pyautogui
 '''
 ****************************************************************************
 Tensorboard
@@ -279,6 +279,9 @@ def get_legend_str(n):
 
     return [str(i+1) for i in range(n)]
 
+
+
+
 def CNNplotterFast2(lossAccDict,weightsDict,show=False):
 
     # get variables
@@ -303,17 +306,16 @@ def CNNplotterFast2(lossAccDict,weightsDict,show=False):
     labels = labels[:30]
 
 
-    plt.close()
-    # fig, axes = plt.subplots(nrows=10, ncols=12)
-    # fig = plt.figure()
-    # if show == True:
-    plt.switch_backend('TkAgg')
-    mng = plt.get_current_fig_manager()
-    mng.resize(*mng.window.maxsize())
-
+    # plt.switch_backend('TkAgg')
+    # mng = plt.get_current_fig_manager()
+    # mng.resize(*mng.window.maxsize())
+    w, h = pyautogui.size()
+    print w,h
+    fig = plt.figure("fine-tuning", figsize=(w/(2*96),h/96))
+    plt.clf()
 
     # loss
-    ax1 = plt.subplot(241)
+    ax1 = fig.add_subplot(241)
     ax1.spines["top"].set_visible(False)
     ax1.spines["right"].set_visible(False)
     ax1.get_xaxis().tick_bottom()
@@ -329,7 +331,7 @@ def CNNplotterFast2(lossAccDict,weightsDict,show=False):
     ax1.set_ylim((0,2.))
 
     # accuracy
-    ax2 = plt.subplot(242)
+    ax2 = fig.add_subplot(242)
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
     ax2.get_xaxis().tick_bottom()
@@ -345,7 +347,7 @@ def CNNplotterFast2(lossAccDict,weightsDict,show=False):
 
 
     # Individual accuracies
-    ax3 = plt.subplot(2, 2, 2)
+    ax3 = fig.add_subplot(2, 2, 2)
     ax3.spines["top"].set_visible(False)
     ax3.spines["right"].set_visible(False)
     ax3.get_xaxis().tick_bottom()
@@ -365,30 +367,30 @@ def CNNplotterFast2(lossAccDict,weightsDict,show=False):
     # ax3.legend(fancybox=True, framealpha=0.05)
 
     # W1
-    ax4 = plt.subplot(2,3,4)
+    ax4 = fig.add_subplot(2,3,4)
     ax4.imshow(np.squeeze(WConv1),interpolation='none',cmap='gray',vmin=0, vmax=1)
     ax4.set_title('Conv1 filters')
     ax4.xaxis.set_ticklabels([])
     ax4.yaxis.set_ticklabels([])
 
     # W3
-    ax5 = plt.subplot(2,3,5)
+    ax5 = fig.add_subplot(2,3,5)
     ax5.imshow(np.squeeze(WConv3),interpolation='none',cmap='gray',vmin=0, vmax=1)
     ax5.set_title('Conv2 filters')
     ax5.xaxis.set_ticklabels([])
     ax5.yaxis.set_ticklabels([])
 
     # W5
-    ax6 = plt.subplot(2,3,6)
+    ax6 = fig.add_subplot(2,3,6)
     ax6.imshow(np.squeeze(WConv5),interpolation='none',cmap='gray',vmin=0, vmax=1)
     ax6.set_title('Conv3 filters')
     ax6.xaxis.set_ticklabels([])
     ax6.yaxis.set_ticklabels([])
 
-    plt.subplots_adjust(bottom=0.1, right=.9, left=0.1, top=.9, wspace = 0.25, hspace=0.25)
+    # plt.subplots_adjust(bottom=0.1, right=.9, left=0.1, top=.9, wspace = 0.25, hspace=0.25)
 
     plt.draw()
-    plt.pause(1)
+    plt.pause(0.00000001)
 
 
 def CNNplotterFast(lossAccDict):

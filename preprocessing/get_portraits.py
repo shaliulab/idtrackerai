@@ -290,7 +290,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     y_offset = np.ceil((diag-rowsMin)/2).astype('int')
     new_frame[y_offset:y_offset + rowsMin, x_offset:x_offset+colsMin] = miniframe
     new_frame = fillSquareFrame(new_frame,bkgSamp)
-    # print 'shape of the new miniframe, ', new_frame.shape
+    print 'shape of the new miniframe, ', new_frame.shape
 
     # Translate and rotate nose and middle point to the new frame
     new_nose = tuple(np.asarray([nose[0]+x_offset, nose[1]+y_offset]).astype('int'))
@@ -315,12 +315,13 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     #     # plt.plot(cnt[:,0],cnt[:,1],'o')
     #     # plt.show()
     #     plt.pause(.5)
-    # print 'nose pixels, ', nose_pixels
+    print 'nose pixels, ', nose_pixels
     if nose_pixels[1]<7:
         nose_pixels[1] = 7
     portrait = minif_rot[nose_pixels[1]-7:nose_pixels[1]+25,nose_pixels[0]-16:nose_pixels[0]+16]
-    if portrait.shape[0] != 32 or portrait.shape[0] != 32:
-        raise ValueError('This portrait do not have 32x32 pixels')
+    if portrait.shape[0] != 32 or portrait.shape[1] != 32:
+        print portrait.shape
+        raise ValueError('This portrait do not have 32x32 pixels. Chenges in light during the video could deteriorate the blobs: try and rais the threshold in the preprocessing parametersm, and run segmentation and fragmentation again.')
 
     # Fill black parts of the portrait with random background
     # portrait = fillSquareFrame(minif_cropped,bkgSamp,threshold)
