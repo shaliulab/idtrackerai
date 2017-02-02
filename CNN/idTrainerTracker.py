@@ -6,6 +6,7 @@ from tf_utils import *
 from input_data_cnn import *
 from cnn_utils import *
 from cnn_architectures import *
+from plotters import *
 
 import tensorflow as tf
 import argparse
@@ -73,7 +74,7 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
 
     return outList
 
-def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, trainDict, accumDict, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch):
+def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, trainDict, accumDict, fragmentsDict, portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch):
 
     # get data from trainDict
     loadCkpt_folder = trainDict['loadCkpt_folder']
@@ -191,20 +192,21 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                         print 'Losses difference ', -currLoss + prevLoss
                         print 'epsilon (overfitting), ', epsilon
                         print 'epsilon2 (if it is not changing much), ', epsilon2
-                        if magCurr > magPrev:
+                        if np.mean(valIndivAcc) > .9:
+                            if magCurr > magPrev:
 
-                            print 'Overfitting, passing to new set of images'
-                            break
-                        elif magCurr == magPrev:
-                            if currLoss - prevLoss > epsilon:
                                 print 'Overfitting, passing to new set of images'
                                 break
-                        if prevLoss - currLoss < epsilon2:
-                            print 'Finished, passing to new set of images'
-                            break
-                        if list(valIndivAcc) == list(np.ones(classes)):
-                            print 'Individual validations accuracy is 1 for all the animals'
-                            break
+                            elif magCurr == magPrev:
+                                if currLoss - prevLoss > epsilon:
+                                    print 'Overfitting, passing to new set of images'
+                                    break
+                            if prevLoss - currLoss < epsilon2:
+                                print 'Finished, passing to new set of images'
+                                break
+                            if list(valIndivAcc) == list(np.ones(classes)):
+                                print 'Individual validations accuracy is 1 for all the animals'
+                                break
 
                 try:
                     epoch_counter = start + epoch_i
@@ -346,7 +348,8 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                     '''
                     ### uncomment to plot ----
                     if epoch_i % 1 == 0:
-                        CNNplotterFast2(lossAccDict, weightsDict)
+                        # CNNplotterFast2(lossAccDict, weightsDict)
+                        CNNplotterFast22(lossAccDict, weightsDict,accumDict,fragmentsDict,portraits,sessionPath)
 
                         print 'Saving figure...'
                         figname = fig_dir + '/result_' + str(global_step.eval()) + '.pdf'

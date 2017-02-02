@@ -311,7 +311,7 @@ def CNNplotterFast2(lossAccDict,weightsDict,show=False):
     # mng = plt.get_current_fig_manager()
     # mng.resize(*mng.window.maxsize())
     w, h = pyautogui.size()
-    print w,h
+    # print w,h
     fig = plt.figure("fine-tuning", figsize=(w/(2*96),h/96))
     plt.clf()
 

@@ -111,6 +111,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals):
     labels = dense_to_one_hot(labels, numAnimals)
     numImages = len(labels)
 
+    np.random.seed(0)
     perm = np.random.permutation(numImages)
     images = images[perm]
     labels = labels[perm]
@@ -479,7 +480,7 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict = [], portraits = [
     print '\nEntering training\n'
     trainDict = run_training(X_train, Y_train, X_val, Y_val,
                     width, height, channels, classes, resolution,
-                    trainDict, accumDict,
+                    trainDict, accumDict, fragmentsDict, portraits,
                     Tindices, Titer_per_epoch,
                     Vindices, Viter_per_epoch)
     trainDict['loadCkpt_folder'] = ckpt_dir

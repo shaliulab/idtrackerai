@@ -11,6 +11,7 @@ from video_utils import *
 from py_utils import *
 from GUI_utils import *
 from tracker import *
+from plotters import *
 
 import time
 import h5py
@@ -37,20 +38,6 @@ from natsort import natsorted, ns
 from os.path import isdir, isfile
 import scipy.spatial.distance as scisd
 from pprint import pprint
-
-def orderVideo(matrixToOrder,permutations,maxNumBlobs):
-    matrixOrdered = np.zeros_like(matrixToOrder)
-
-    for frame in range(len(permutations)):
-        for i in range(maxNumBlobs):
-            index = list(np.where(permutations[frame]==i)[0])
-            # print index
-            if len(index) == 1:
-                matrixOrdered[frame,i] = matrixToOrder[frame,index]
-            else:
-                matrixOrdered[frame,i] = -1
-
-    return matrixOrdered
 
 if __name__ == '__main__':
     cv2.namedWindow('Bars') #FIXME If we do not create the "Bars" window here we have the "Bad window error"...
@@ -296,7 +283,7 @@ if __name__ == '__main__':
 
         ''' Best fragment search '''
         accumDict = bestFragmentFinder(accumDict, normFreqFragments, fragmentsDict, numAnimals, portraits)
-
+        # fragmentAccumPlotter(fragmentsDict,portraits,accumDict,figurePath)
 
         pprint(accumDict)
         print '---------------\n'
@@ -311,78 +298,9 @@ if __name__ == '__main__':
         ''' Identity assignation '''
         normFreqFragments, portraits = idAssigner(videoPath, trainDict, accumDict['counter'], fragmentsDict, portraits)
 
-        ''' Save variables '''
-
-        # pickle.dump( weightsDict, open( sessionPath + "/weightsDict.pkl", "wb" ) )
+        # P2AccumPlotter(fragmentsDict,portraits,accumDict,figurePath,trainDict['ckpt_dir'])
 
         ''' Updating training Dictionary'''
         trainDict['train'] = 2
         trainDict['numEpochs'] = 2000
         accumDict['counter'] += 1
-
-        ''' plot and save fragment selected '''
-        # fragments = fragmentsDict['fragments']
-        # permutations = np.asarray(portraits.loc[:,'permutations'].tolist())
-        # maxNumBlobs = len(permutations[0])
-        # permOrdered =  orderVideo(permutations,permutations,maxNumBlobs)
-        # permOrdered = permOrdered.T.astype('float32')
-        #
-        # plt.close()
-        # fig, ax = plt.subplots(figsize=(25, 5))
-        # permOrdered[permOrdered >= 0] = .5
-        # im = plt.imshow(permOrdered,cmap=plt.cm.gray,interpolation='none',vmin=0.,vmax=1.)
-        # im.cmap.set_under('r')
-        # # im.set_clim(0, 1.)
-        # # cb = plt.colorbar(im)
-        #
-        # # for i in range(len(fragments)):
-        # for i in fragsForTrain:
-        #     ax.add_patch(
-        #         patches.Rectangle(
-        #             (fragments[i,0], -0.5),   # (x,y)
-        #             fragments[i,1]-fragments[i,0],  # width
-        #             maxNumBlobs,          # height
-        #             fill=True,
-        #             edgecolor=None,
-        #             facecolor='b',
-        #             alpha = 0.5
-        #         )
-        #     )
-        #
-        # plt.axis('tight')
-        # plt.xlabel('Frame number')
-        # plt.ylabel('Blob index')
-        # plt.gca().set_yticks(range(0,maxNumBlobs,4))
-        # plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
-        # plt.gca().invert_yaxis()
-        # plt.tight_layout()
-        #
-        # print 'Saving figure...'
-        # figname = fig_dir + '/fragments_' + str(accumCounter) + '.pdf'
-        # fig.savefig(figname)
-
-        ''' Plotting and saving probability matrix'''
-        # # statistics = loadFile(ckpt_dir, 'statistics', hdfpkl='pkl')
-        # statistics = pickle.load( open( ckpt_dir + "/statistics.pkl", "rb" ) )
-        # P2 = statistics['P2FragAllVideo']
-        # P2Ordered =  orderVideo(P2,permutations,maxNumBlobs)
-        # P2good = np.max(P2Ordered,axis=2).T
-        #
-        # plt.close()
-        # fig, ax = plt.subplots(figsize=(25, 5))
-        # im2 = plt.imshow(P2good,cmap=plt.cm.gray,interpolation='none')
-        # im2.cmap.set_under('r')
-        # im2.set_clim(0, 1)
-        # cb = plt.colorbar(im2)
-        # # fig.colorbar(im, ax=ax)
-        # plt.axis('tight')
-        # plt.xlabel('Frame number')
-        # plt.ylabel('Blob index')
-        # plt.gca().set_yticks(range(0,maxNumBlobs,4))
-        # plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
-        # plt.gca().invert_yaxis()
-        # plt.tight_layout()
-        #
-        # print 'Saving figure...'
-        # figname = fig_dir + '/P2_' + str(accumCounter) + '.pdf'
-        # fig.savefig(figname)
