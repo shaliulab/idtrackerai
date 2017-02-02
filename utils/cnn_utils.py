@@ -306,6 +306,7 @@ def CNNplotterFast2(lossAccDict,weightsDict,show=False):
     labels = labels[:30]
 
 
+
     # plt.switch_backend('TkAgg')
     # mng = plt.get_current_fig_manager()
     # mng.resize(*mng.window.maxsize())
