@@ -205,78 +205,106 @@ if __name__ == '__main__':
     cv2.destroyAllWindows()
     cv2.waitKey(1)
 
-    ''' ************************************************************************
+    '''
+    ************************************************************************
     Tracker
-    ************************************************************************ '''
+    ************************************************************************
+    '''
     print '********************************************************************'
     print 'Tracker'
     print '********************************************************************\n'
     preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
     numAnimals = preprocParams['numAnimals']
 
-    loadCkpt_folder = selectDir(initialDir) #select where to load the model
-    loadCkpt_folder = os.path.relpath(loadCkpt_folder)
-    # inputs = getMultipleInputs('Training parameters', ['batch size', 'num. epochs', 'learning rate', 'train (1 (from strach) or 2 (from last check point))'])
-    # print 'inputs, ', inputs
-    print 'Entering into the fineTuner...'
-    batchSize = 50 #int(inputs[1])
-    numEpochs = 100 #int(inputs[2])
-    lr = 0.01 #np.float32(inputs[3])
-    train = 1 #int(inputs[4])
+    restoreFromAccPoint = getInput('Restore from a previous accumulation step','Do you want to restore from an accumulation point? y/[n]')
 
-    ''' Initialization of variables for the accumulation loop'''
-    def createSessionFolder(videoPath):
-        def getLastSession(subFolders):
-            if len(subFolders) == 0:
-                lastIndex = 0
+    if restoreFromAccPoint == 'n' or restoreFromAccPoint == '':
+        loadCkpt_folder = selectDir(initialDir) #select where to load the model
+        loadCkpt_folder = os.path.relpath(loadCkpt_folder)
+        # inputs = getMultipleInputs('Training parameters', ['batch size', 'num. epochs', 'learning rate', 'train (1 (from strach) or 2 (from last check point))'])
+        # print 'inputs, ', inputs
+        print 'Entering into the fineTuner...'
+        batchSize = 50 #int(inputs[1])
+        numEpochs = 100 #int(inputs[2])
+        lr = 0.01 #np.float32(inputs[3])
+        train = 1 #int(inputs[4])
+
+        ''' Initialization of variables for the accumulation loop'''
+        def createSessionFolder(videoPath):
+            def getLastSession(subFolders):
+                if len(subFolders) == 0:
+                    lastIndex = 0
+                else:
+                    subFolders = natural_sort(subFolders)[::-1]
+                    lastIndex = int(subFolders[0].split('_')[-1])
+                return lastIndex
+
+            video = os.path.basename(videoPath)
+            folder = os.path.dirname(videoPath)
+            filename, extension = os.path.splitext(video)
+            subFolder = folder + '/CNN_models'
+            subSubFolders = glob.glob(subFolder +"/*")
+            lastIndex = getLastSession(subSubFolders)
+            sessionPath = subFolder + '/Session_' + str(lastIndex + 1)
+            os.makedirs(sessionPath)
+            print 'You just created ', sessionPath
+            figurePath = sessionPath + '/figures'
+            os.makedirs(figurePath)
+            print 'You just created ', figurePath
+
+            return sessionPath, figurePath
+
+        sessionPath, figurePath = createSessionFolder(videoPath)
+        pickle.dump( preprocParams , open( sessionPath + "/preprocparams.pkl", "wb" ))
+
+
+        accumDict = {
+                'counter': 0,
+                'thVels': 0.5,
+                'minDist': 0,
+                'fragsForTrain': [], # to be saved
+                'newFragForTrain': [],
+                'badFragments': [], # to be saved
+                'continueFlag': True}
+
+        trainDict = {
+                'loadCkpt_folder':loadCkpt_folder,
+                'ckpt_dir': '',
+                'fig_dir': figurePath,
+                'sess_dir': sessionPath,
+                'batchSize': batchSize,
+                'numEpochs': numEpochs,
+                'lr': lr,
+                'keep_prob': 1.,
+                'train':train,
+                'lossAccDict':{},
+                'refDict':{},
+                'framesColumnsRefDict': {}, #to be saved
+                'usedIndivIntervals': []}
+
+        normFreqFragments = None
+    elif restoreFromAccPoint == 'y':
+        restoreFromAccPointPath = selectDir('./')
+
+        if 'AccumulationStep_' not in restoreFromAccPointPath:
+            raise ValueError('Select an AccumulationStep folder to restore from it.')
+        else:
+            countpkl = 0
+            for file in os.listdir(restoreFromAccPointPath):
+                if file.endswith(".pkl"):
+                    countpkl += 1
+            if countpkl != 3:
+                raise ValueError('It is not possible to restore from here. Select an accumulation point in which statistics.pkl, accumDict.pkl, and trainDict.pkl have been saved.')
             else:
-                subFolders = natural_sort(subFolders)[::-1]
-                lastIndex = int(subFolders[0].split('_')[-1])
-            return lastIndex
 
-        video = os.path.basename(videoPath)
-        folder = os.path.dirname(videoPath)
-        filename, extension = os.path.splitext(video)
-        subFolder = folder + '/CNN_models'
-        subSubFolders = glob.glob(subFolder +"/*")
-        lastIndex = getLastSession(subSubFolders)
-        sessionPath = subFolder + '/Session_' + str(lastIndex + 1)
-        os.makedirs(sessionPath)
-        print 'You just created ', sessionPath
-        figurePath = sessionPath + '/figures'
-        os.makedirs(figurePath)
-        print 'You just created ', figurePath
+                statistics = pickle.load( open( restoreFromAccPointPath + "/statistics.pkl", "rb" ) )
+                accumDict = pickle.load( open( restoreFromAccPointPath + "/accumDict.pkl", "rb" ) )
+                trainDict = pickle.load( open( restoreFromAccPointPath + "/trainDict.pkl", "rb" ) )
+                normFreqFragments = statistics['normFreqFragsAll']
+                portraits = accumDict['portraits']
+    else:
+        raise ValueError('You typed ' + restoreFromAccPoint + ' the accepted values are y or n.')
 
-        return sessionPath, figurePath
-
-    sessionPath, figurePath = createSessionFolder(videoPath)
-    pickle.dump( preprocParams , open( sessionPath + "/preprocparams.pkl", "wb" ))
-
-    accumDict = {
-            'counter': 0,
-            'thVels': 0.5,
-            'minDist': 0,
-            'fragsForTrain': [],
-            'newFragForTrain': [],
-            'badFragments': [],
-            'continueFlag': True}
-
-    trainDict = {
-            'loadCkpt_folder':loadCkpt_folder,
-            'ckpt_dir': '',
-            'fig_dir': figurePath,
-            'sess_dir': sessionPath,
-            'batchSize': batchSize,
-            'numEpochs': numEpochs,
-            'lr': lr,
-            'keep_prob': 1.,
-            'train':train,
-            'lossAccDict':{},
-            'refDict':{},
-            'framesColumnsRefDict': {},
-            'usedIndivIntervals': []}
-
-    normFreqFragments = None
 
     while accumDict['continueFlag']:
         print '\n*** Accumulation ', accumDict['counter'], ' ***'
@@ -304,3 +332,9 @@ if __name__ == '__main__':
         trainDict['train'] = 2
         trainDict['numEpochs'] = 2000
         accumDict['counter'] += 1
+        accumDict['portraits'] = portraits
+        # Variables to be saved in order to restore the accumulation
+        print 'saving dictionaries to enable restore from accumulation'
+        pickle.dump( accumDict , open( trainDict['ckpt_dir'] + "/accumDict.pkl", "wb" ) )
+        pickle.dump( trainDict , open( trainDict['ckpt_dir'] + "/trainDict.pkl", "wb" ) )
+        print 'dictionaries saved in ', trainDict['ckpt_dir']
