@@ -303,7 +303,7 @@ def CNNplotterFast2(lossAccDict,weightsDict,show=False):
     labels = labels[:30]
 
 
-    plt.close()
+    # plt.close()
     # fig, axes = plt.subplots(nrows=10, ncols=12)
     # fig = plt.figure()
     # if show == True:

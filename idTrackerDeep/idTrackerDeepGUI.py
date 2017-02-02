@@ -224,185 +224,165 @@ if __name__ == '__main__':
     print '********************************************************************'
     print 'Tracker'
     print '********************************************************************\n'
+    preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
+    numAnimals = preprocParams['numAnimals']
+
     loadCkpt_folder = selectDir(initialDir) #select where to load the model
     loadCkpt_folder = os.path.relpath(loadCkpt_folder)
-    # inputs = getMultipleInputs('Training parameters', ['ckptName','batch size', 'num. epochs', 'learning rate', 'train (1 (from strach) or 2 (from last check point))'])
+    # inputs = getMultipleInputs('Training parameters', ['batch size', 'num. epochs', 'learning rate', 'train (1 (from strach) or 2 (from last check point))'])
     # print 'inputs, ', inputs
     print 'Entering into the fineTuner...'
-    ckptName = 'session'
     batchSize = 50 #int(inputs[1])
     numEpochs = 100 #int(inputs[2])
     lr = 0.01 #np.float32(inputs[3])
     train = 1 #int(inputs[4])
+
+    ''' Initialization of variables for the accumulation loop'''
+    def createSessionFolder(videoPath):
+        def getLastSession(subFolders):
+            if len(subFolders) == 0:
+                lastIndex = 0
+            else:
+                subFolders = natural_sort(subFolders)[::-1]
+                lastIndex = int(subFolders[0].split('_')[-1])
+            return lastIndex
+
+        video = os.path.basename(videoPath)
+        folder = os.path.dirname(videoPath)
+        filename, extension = os.path.splitext(video)
+        subFolder = folder + '/CNN_models'
+        subSubFolders = glob.glob(subFolder +"/*")
+        lastIndex = getLastSession(subSubFolders)
+        sessionPath = subFolder + '/Session_' + str(lastIndex + 1)
+        os.makedirs(sessionPath)
+        print 'You just created ', sessionPath
+        figurePath = sessionPath + '/figures'
+        os.makedirs(figurePath)
+        print 'You just created ', figurePath
+
+        return sessionPath, figurePath
+
+    sessionPath, figurePath = createSessionFolder(videoPath)
+    pickle.dump( preprocParams , open( sessionPath + "/preprocparams.pkl", "wb" ))
+
+    accumDict = {
+            'counter': 0,
+            'thVels': 0.5,
+            'minDist': 0,
+            'fragsForTrain': [],
+            'newFragForTrain': [],
+            'badFragments': [],
+            'continueFlag': True}
+
     trainDict = {
-        'loadCkpt_folder':loadCkpt_folder,
-        'ckptName': ckptName,
-        'batchSize': batchSize,
-        'numEpochs': numEpochs,
-        'lr': lr,
-        'train':train}
+            'loadCkpt_folder':loadCkpt_folder,
+            'ckpt_dir': '',
+            'fig_dir': figurePath,
+            'sess_dir': sessionPath,
+            'batchSize': batchSize,
+            'numEpochs': numEpochs,
+            'lr': lr,
+            'keep_prob': 1.,
+            'train':train,
+            'lossAccDict':{},
+            'refDict':{},
+            'framesColumnsRefDict': {},
+            'usedIndivIntervals': []}
 
-    preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
-    numAnimals = preprocParams['numAnimals']
+    normFreqFragments = None
 
-    ''' Finding first fragment to fine tune '''
-    # print '******************************************************'
-    # print '******************************************************'
-    minDistIndivCompleteFragments = flatten(fragmentsDict['minDistIndivCompleteFragments'])
-    oneIndivFragVels = np.asarray(flatten(fragmentsDict['oneIndivFragVels']))
-    oneIndivFragLens = np.asarray(flatten(fragmentsDict['oneIndivFragLens']))
-    # plt.ion()
-    #
-    # plt.figure()
-    # plt.hist(minDistIndivCompleteFragments,50)
-    # plt.axvline(np.mean(minDistIndivCompleteFragments),color = 'r')
-    # plt.axvline(np.median(minDistIndivCompleteFragments),color = 'b')
-    # plt.title('Dist')
-    # print 'minDistStd, ', np.std(minDistIndivCompleteFragments)
-    #
-    # plt.figure()
-    # plt.hist(oneIndivFragVels[~np.isnan(oneIndivFragVels)],50)
-    # plt.axvline(np.nanmean(oneIndivFragVels),color = 'r')
-    # plt.axvline(np.nanmedian(oneIndivFragVels),color = 'b')
-    # plt.title('avVels')
-    avVel = np.nanmean(oneIndivFragVels)
-    #
-    # plt.figure()
-    # plt.hist(oneIndivFragLens[~np.isnan(oneIndivFragVels)],50)
-    # plt.axvline(np.nanmean(oneIndivFragLens),color = 'r')
-    # plt.axvline(np.nanmedian(oneIndivFragLens),color = 'b')
-    # plt.title('Lens')
-    avLen = np.nanmean(oneIndivFragLens)
-    #
-    # plt.show()
-    # raw_input('Press ENTER to continue.')
-    # print '******************************************************'
-    # print '******************************************************'
+    while accumDict['continueFlag']:
+        print '\n*** Accumulation ', accumDict['counter'], ' ***'
+
+        ''' Best fragment search '''
+        accumDict = bestFragmentFinder(accumDict, normFreqFragments, fragmentsDict, numAnimals, portraits)
 
 
-    print 'Finding first fragment to fine tune'
-    indexFragment = 0
-    avVels = [0,0]
-    thVels = 0.5
-    badFragments = []
-    framesAndColumnsGlobalFrag = fragmentsDict['framesAndBlobColumnsDist']
-    intervalsDist = fragmentsDict['intervalsDist']
-    while any(np.asarray(avVels)<=thVels):
-        avVels = []
-        print 'Checking whether the fragmentNumber ', indexFragment, ' is good for training'
-        for framesAndColumnsInterval in framesAndColumnsGlobalFrag[indexFragment]:
-            print framesAndColumnsInterval[0]
-            print framesAndColumnsInterval[-1]
-            avVels.append(getAvVelFragment(portraits,framesAndColumnsInterval))
-        print 'The average velocities for each blob are (pixels/frame), ', avVels
-        if any(np.asarray(avVels)<=thVels):
-            badFragments.append(indexFragment)
-            indexFragment += 1
-            print 'There are some animals that does not move enough. Going to next longest fragment'
-            print 'Bad fragments, ', badFragments
-
-
-    print 'The fine-tuning will start with the ', indexFragment, ' longest fragment'
-    print 'Individual fragments inside the global fragment, ', intervalsDist[indexFragment]
-    fragsForTrain = [indexFragment]
-    continueFlag = True
-    accumCounter = 0
-    lossAccDict = {}
-    minDist = int(avVel * avLen)
-    print 'The threshold for the distance travelled is ', minDist
-    while continueFlag:
-        print '\n************** Training ', accumCounter
-        print 'training dictionary, ', trainDict
+        pprint(accumDict)
+        print '---------------\n'
 
         ''' Fine tuning '''
-        lossAccDict = fineTuner(videoPath, trainDict, fragsForTrain, accumCounter, lossAccDict, fragmentsDict, portraits)
+        trainDict = fineTuner(videoPath, accumDict, trainDict, fragmentsDict, portraits)
 
-        ckpt_dir, fig_dir = getCkptvideoPath(videoPath,accumCounter, train=2)
-        sessionPath = '/'.join(ckpt_dir.split('/')[:-1])
-        pickle.dump( lossAccDict , open( sessionPath + "/lossAcc.pkl", "wb" ) )
-        print 'You just saved the lossAccDict'
-        if accumCounter == 0:
-            pickle.dump( preprocParams , open( sessionPath + "/preprocparams.pkl", "wb" ) )
-        # pickle.dump( weightsDict, open( sessionPath + "/weightsDict.pkl", "wb" ) )
-
-        ''' plot and save fragment selected '''
-        fragments = fragmentsDict['fragments']
-        permutations = np.asarray(portraits.loc[:,'permutations'].tolist())
-        maxNumBlobs = len(permutations[0])
-        permOrdered =  orderVideo(permutations,permutations,maxNumBlobs)
-        permOrdered = permOrdered.T.astype('float32')
-
-        plt.close()
-        fig, ax = plt.subplots(figsize=(25, 5))
-        permOrdered[permOrdered >= 0] = .5
-        im = plt.imshow(permOrdered,cmap=plt.cm.gray,interpolation='none',vmin=0.,vmax=1.)
-        im.cmap.set_under('r')
-        # im.set_clim(0, 1.)
-        # cb = plt.colorbar(im)
-
-        # for i in range(len(fragments)):
-        for i in fragsForTrain:
-            ax.add_patch(
-                patches.Rectangle(
-                    (fragments[i,0], -0.5),   # (x,y)
-                    fragments[i,1]-fragments[i,0],  # width
-                    maxNumBlobs,          # height
-                    fill=True,
-                    edgecolor=None,
-                    facecolor='b',
-                    alpha = 0.5
-                )
-            )
-
-        plt.axis('tight')
-        plt.xlabel('Frame number')
-        plt.ylabel('Blob index')
-        plt.gca().set_yticks(range(0,maxNumBlobs,4))
-        plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
-        plt.gca().invert_yaxis()
-        plt.tight_layout()
-
-        print 'Saving figure...'
-        figname = fig_dir + '/fragments_' + str(accumCounter) + '.pdf'
-        fig.savefig(figname)
+        print 'loadCkpt_folder ', trainDict['loadCkpt_folder']
+        print 'ckpt_dir ', trainDict['ckpt_dir']
+        print '---------------\n'
 
         ''' Identity assignation '''
-        normFreqFragments, portraits = idAssigner(videoPath,trainDict,accumCounter,ckpt_dir,fragmentsDict,portraits)
-        ''' Computing best next fragments '''
-        fragsForTrain,continueFlag,minDist,badFragments = bestFragmentFinder(fragsForTrain,normFreqFragments,fragmentsDict,numAnimals,minDist,badFragments,portraits,thVels)
+        normFreqFragments, portraits = idAssigner(videoPath, trainDict, accumDict['counter'], fragmentsDict, portraits)
 
-        ''' Plotting and saving probability matrix'''
-        # statistics = loadFile(ckpt_dir, 'statistics', hdfpkl='pkl')
-        statistics = pickle.load( open( ckpt_dir + "/statistics.pkl", "rb" ) )
-        P2 = statistics['P2FragAllVideo']
-        P2Ordered =  orderVideo(P2,permutations,maxNumBlobs)
-        P2good = np.max(P2Ordered,axis=2).T
+        ''' Save variables '''
 
-        plt.close()
-        fig, ax = plt.subplots(figsize=(25, 5))
-        im2 = plt.imshow(P2good,cmap=plt.cm.gray,interpolation='none')
-        im2.cmap.set_under('r')
-        im2.set_clim(0, 1)
-        cb = plt.colorbar(im2)
-        # fig.colorbar(im, ax=ax)
-        plt.axis('tight')
-        plt.xlabel('Frame number')
-        plt.ylabel('Blob index')
-        plt.gca().set_yticks(range(0,maxNumBlobs,4))
-        plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
-        plt.gca().invert_yaxis()
-        plt.tight_layout()
-
-        print 'Saving figure...'
-        figname = fig_dir + '/P2_' + str(accumCounter) + '.pdf'
-        fig.savefig(figname)
+        # pickle.dump( weightsDict, open( sessionPath + "/weightsDict.pkl", "wb" ) )
 
         ''' Updating training Dictionary'''
-        trainDict = {
-            'loadCkpt_folder':ckpt_dir,
-            'ckptName': ckptName,
-            'batchSize': batchSize,
-            'numEpochs': 2000,
-            'lr': lr,
-            'train':2}
-        accumCounter += 1
+        trainDict['train'] = 2
+        trainDict['numEpochs'] = 2000
+        accumDict['counter'] += 1
+
+        ''' plot and save fragment selected '''
+        # fragments = fragmentsDict['fragments']
+        # permutations = np.asarray(portraits.loc[:,'permutations'].tolist())
+        # maxNumBlobs = len(permutations[0])
+        # permOrdered =  orderVideo(permutations,permutations,maxNumBlobs)
+        # permOrdered = permOrdered.T.astype('float32')
+        #
+        # plt.close()
+        # fig, ax = plt.subplots(figsize=(25, 5))
+        # permOrdered[permOrdered >= 0] = .5
+        # im = plt.imshow(permOrdered,cmap=plt.cm.gray,interpolation='none',vmin=0.,vmax=1.)
+        # im.cmap.set_under('r')
+        # # im.set_clim(0, 1.)
+        # # cb = plt.colorbar(im)
+        #
+        # # for i in range(len(fragments)):
+        # for i in fragsForTrain:
+        #     ax.add_patch(
+        #         patches.Rectangle(
+        #             (fragments[i,0], -0.5),   # (x,y)
+        #             fragments[i,1]-fragments[i,0],  # width
+        #             maxNumBlobs,          # height
+        #             fill=True,
+        #             edgecolor=None,
+        #             facecolor='b',
+        #             alpha = 0.5
+        #         )
+        #     )
+        #
+        # plt.axis('tight')
+        # plt.xlabel('Frame number')
+        # plt.ylabel('Blob index')
+        # plt.gca().set_yticks(range(0,maxNumBlobs,4))
+        # plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
+        # plt.gca().invert_yaxis()
+        # plt.tight_layout()
+        #
+        # print 'Saving figure...'
+        # figname = fig_dir + '/fragments_' + str(accumCounter) + '.pdf'
+        # fig.savefig(figname)
+
+        ''' Plotting and saving probability matrix'''
+        # # statistics = loadFile(ckpt_dir, 'statistics', hdfpkl='pkl')
+        # statistics = pickle.load( open( ckpt_dir + "/statistics.pkl", "rb" ) )
+        # P2 = statistics['P2FragAllVideo']
+        # P2Ordered =  orderVideo(P2,permutations,maxNumBlobs)
+        # P2good = np.max(P2Ordered,axis=2).T
+        #
+        # plt.close()
+        # fig, ax = plt.subplots(figsize=(25, 5))
+        # im2 = plt.imshow(P2good,cmap=plt.cm.gray,interpolation='none')
+        # im2.cmap.set_under('r')
+        # im2.set_clim(0, 1)
+        # cb = plt.colorbar(im2)
+        # # fig.colorbar(im, ax=ax)
+        # plt.axis('tight')
+        # plt.xlabel('Frame number')
+        # plt.ylabel('Blob index')
+        # plt.gca().set_yticks(range(0,maxNumBlobs,4))
+        # plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
+        # plt.gca().invert_yaxis()
+        # plt.tight_layout()
+        #
+        # print 'Saving figure...'
+        # figname = fig_dir + '/P2_' + str(accumCounter) + '.pdf'
+        # fig.savefig(figname)

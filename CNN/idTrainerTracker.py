@@ -73,8 +73,22 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
 
     return outList
 
-def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, ckpt_dir, fig_dir, loadCkpt_folder, accumCounter, batch_size, num_epochs, lossAccDict, Tindices, Titer_per_epoch,
-Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
+def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, trainDict, accumDict, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch):
+
+    # get data from trainDict
+    loadCkpt_folder = trainDict['loadCkpt_folder']
+    ckpt_dir = trainDict['ckpt_dir']
+    fig_dir = trainDict['fig_dir']
+    sessionPath = trainDict['sess_dir']
+    num_epochs = trainDict['numEpochs']
+    batch_size = trainDict['batchSize']
+    lr = trainDict['lr']
+    keep_prob = trainDict['keep_prob']
+    lossAccDict = trainDict['lossAccDict']
+
+    # get data from accumDict
+    accumCounter = accumDict['counter']
+
     with tf.Graph().as_default():
         images_pl, labels_pl = placeholder_inputs(batch_size, resolution, classes)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
@@ -123,6 +137,8 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                 print '********************************************************'
                 print 'We are also loading the softmax'
                 print '********************************************************'
+                print 'loading weigths from ' + loadCkpt_folder + '/model'
+                print 'loading softmax from ' + loadCkpt_folder + '/softmax'
                 restoreFromFolder(loadCkpt_folder_model, saver_model, sess)
                 restoreFromFolder(loadCkpt_folder_softmax, saver_softmax, sess)
 
@@ -135,7 +151,6 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
             summary_writerT = tf.summary.FileWriter(ckpt_dir + '/train',sess.graph)
             summary_writerV = tf.summary.FileWriter(ckpt_dir + '/val',sess.graph)
 
-            sessionPath = '/'.join(ckpt_dir.split('/')[:-1])
             if accumCounter == 0:
                 # ref lists for plotting
                 trainLossPlot = []
@@ -193,7 +208,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
 
                 try:
                     epoch_counter = start + epoch_i
-                    print '**** Epoch %i ****' % epoch_counter
+                    print '\n**** Epoch %i ****' % epoch_counter
                     lossEpoch = []
                     accEpoch = []
                     indivAccEpoch = []
@@ -336,7 +351,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                         print 'Saving figure...'
                         figname = fig_dir + '/result_' + str(global_step.eval()) + '.pdf'
                         plt.savefig(figname)
-                    print '-------------------------------'
+                    print '\n-------------------------------\n'
                     ### ---
 
                     if stored_exception:
@@ -348,7 +363,10 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
             if stored_exception:
                 raise stored_exception[0], stored_exception[1], stored_exception[2]
 
-    return lossAccDict
+    pickle.dump( lossAccDict , open( sessionPath + "/lossAcc.pkl", "wb" ) )
+    print 'You just saved the lossAccDict'
+    trainDict['lossAccDict'] = lossAccDict
+    return trainDict
 
 """
 Sample calls:

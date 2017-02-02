@@ -23,11 +23,16 @@ import cPickle as pickle
 numSegment = 0
 # path = selectFile()
 # paths = scanFolder(path)
+# paths = scanFolder('/media/chaos/New Volume/cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
+paths = scanFolder('/media/chaos/New Volume/motherfucker2/Caffeine5fish_20140206T122428_1.avi')
+# '/media/chaos/New Volume/motherfucker2/Caffeine5fish_20140206T122428_1.avi'
+
+
 # paths = scanFolder('../Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../larvae1/trial_1_1.avi')
 # paths = scanFolder('../nofragsError/_1.avi')
 
-paths = scanFolder('../videos/Conflict8/conflict3and4_20120316T155032_1.avi')
+# paths = scanFolder('../videos/Conflict8/conflict3and4_20120316T155032_1.avi')
 # paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
 # paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../38fish_adult_splitted/adult1darkenes_1.avi')
