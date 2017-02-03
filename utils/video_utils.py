@@ -138,15 +138,15 @@ def computeBkgPar(path,bkg,EQ):
     counter = 0
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     numFramesBkg = 0
-    while counter < numFrame:
-        counter += 1;
+    frameInds = range(0,numFrame,100)
+    for ind in frameInds:
+        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
         ret, frameBkg = cap.read()
-        if counter % 100 == 0:
-            gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
-            # gray = checkEq(EQ, gray)
-            gray = np.true_divide(gray,np.mean(gray))
-            bkg = bkg + gray
-            numFramesBkg += 1
+        gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
+        # gray = checkEq(EQ, gray)
+        gray = np.true_divide(gray,np.mean(gray))
+        bkg = bkg + gray
+        numFramesBkg += 1
 
     return bkg, numFramesBkg
 

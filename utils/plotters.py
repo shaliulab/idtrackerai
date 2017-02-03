@@ -266,6 +266,8 @@ def CNNplotterFast22(lossAccDict,weightsDict,accumDict,fragmentsDict,portraits,s
     ax8.spines["top"].set_visible(False)
     ax8.spines["right"].set_visible(False)
     ax8.plot(range(len(P2)),P2,'or-')
+    for i,p2 in enumerate(P2):
+        ax8.text(i,p2,str(p2))
     ax8.set_xlabel('Accumulation step')
     ax8.set_ylabel('Overall P2')
 
