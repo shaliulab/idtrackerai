@@ -638,11 +638,9 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
         IdsFragUpdated = idUpdater(logP2FragIdForMat,indivFragments,numFrames,maxNumBlobs)
         idLogP2FragAllVideo += IdsFragUpdated
 
-    SaveAllP2s = []
     sessionPath = '/'.join(ckpt_dir.split('/')[:-1])
     overallP2 = computeOverallP2(P2FragsAll,oneIndivFragLens)
-    SaveAllP2s.append(overallP2)
-    pickle.dump( SaveAllP2s , open( sessionPath + "/P2s.pkl", "wb" ) )
+
     print '**** overallP2, ', overallP2
     idLogP2FragAllVideo = idLogP2FragAllVideo.astype('int')
     IdsStatistics = {'blobIds':idSoftMaxAllVideo,
@@ -663,7 +661,7 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
     pickle.dump( IdsStatistics , open( ckpt_dir + "/statistics.pkl", "wb" ) )
     pickle.dump( IdsStatistics , open( sessionPath + "/statistics.pkl", "wb" ) )
     # saveFile(ckpt_dir, IdsStatistics, 'statistics',hdfpkl='pkl')
-    return normFreqFragsAll, portraits
+    return normFreqFragsAll, portraits, overallP2
 
 def bestFragmentFinder(accumDict, normFreqFragsAll, fragmentsDict, numAnimals, portraits):
     print '\n--- Entering the bestFragmentFinder ---'

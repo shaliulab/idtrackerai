@@ -260,11 +260,8 @@ def CNNplotterFast22(lossAccDict,weightsDict,accumDict,fragmentsDict,portraits,s
     ax7.invert_yaxis()
 
     # P2
-    if accumDict['counter'] > 0:
-        P2 = pickle.load(open( sessionPath + "/P2s.pkl", "rb" ))
-    else:
-        print 'P2 has not been computed'
-        P2 = [1./numIndiv]
+    P2 = accumDict['overallP2']
+
     ax8 = fig.add_subplot(616)
     ax8.spines["top"].set_visible(False)
     ax8.spines["right"].set_visible(False)

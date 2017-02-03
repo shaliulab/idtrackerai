@@ -265,6 +265,7 @@ if __name__ == '__main__':
                 'fragsForTrain': [], # to be saved
                 'newFragForTrain': [],
                 'badFragments': [], # to be saved
+                'overallP2': [1./numAnimals],
                 'continueFlag': True}
 
         trainDict = {
@@ -324,7 +325,7 @@ if __name__ == '__main__':
         print '---------------\n'
 
         ''' Identity assignation '''
-        normFreqFragments, portraits = idAssigner(videoPath, trainDict, accumDict['counter'], fragmentsDict, portraits)
+        normFreqFragments, portraits, overallP2 = idAssigner(videoPath, trainDict, accumDict['counter'], fragmentsDict, portraits)
 
         # P2AccumPlotter(fragmentsDict,portraits,accumDict,figurePath,trainDict['ckpt_dir'])
 
@@ -333,6 +334,7 @@ if __name__ == '__main__':
         trainDict['numEpochs'] = 2000
         accumDict['counter'] += 1
         accumDict['portraits'] = portraits
+        accumDict['overallP2'].append(overallP2)
         # Variables to be saved in order to restore the accumulation
         print 'saving dictionaries to enable restore from accumulation'
         pickle.dump( accumDict , open( trainDict['ckpt_dir'] + "/accumDict.pkl", "wb" ) )
