@@ -219,9 +219,9 @@ def createSaver(varName, include, name):
     name, if include is True or the contrary if include is False
     '''
     if include:
-        saver = tf.train.Saver([v for v in tf.all_variables() if varName in v.name], name = name)
+        saver = tf.train.Saver([v for v in tf.global_variables() if varName in v.name], name = name)
     elif not include:
-        saver = tf.train.Saver([v for v in tf.all_variables() if varName not in v.name], name = name)
+        saver = tf.train.Saver([v for v in tf.global_variables() if varName not in v.name], name = name)
     else:
         raise ValueError('The second argument has to be a boolean')
 

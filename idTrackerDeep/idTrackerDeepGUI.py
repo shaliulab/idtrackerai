@@ -257,7 +257,6 @@ if __name__ == '__main__':
         sessionPath, figurePath = createSessionFolder(videoPath)
         pickle.dump( preprocParams , open( sessionPath + "/preprocparams.pkl", "wb" ))
 
-
         accumDict = {
                 'counter': 0,
                 'thVels': 0.5,
@@ -297,7 +296,7 @@ if __name__ == '__main__':
             if countpkl != 3:
                 raise ValueError('It is not possible to restore from here. Select an accumulation point in which statistics.pkl, accumDict.pkl, and trainDict.pkl have been saved.')
             else:
-
+                
                 statistics = pickle.load( open( restoreFromAccPointPath + "/statistics.pkl", "rb" ) )
                 accumDict = pickle.load( open( restoreFromAccPointPath + "/accumDict.pkl", "rb" ) )
                 trainDict = pickle.load( open( restoreFromAccPointPath + "/trainDict.pkl", "rb" ) )
