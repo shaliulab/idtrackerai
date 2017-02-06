@@ -280,7 +280,8 @@ if __name__ == '__main__':
                 'lossAccDict':{},
                 'refDict':{},
                 'framesColumnsRefDict': {}, #to be saved
-                'usedIndivIntervals': []}
+                'usedIndivIntervals': [],
+                'idUsedIntervals': []}
 
         normFreqFragments = None
     elif restoreFromAccPoint == 'y':
@@ -296,7 +297,7 @@ if __name__ == '__main__':
             if countpkl != 3:
                 raise ValueError('It is not possible to restore from here. Select an accumulation point in which statistics.pkl, accumDict.pkl, and trainDict.pkl have been saved.')
             else:
-                
+
                 statistics = pickle.load( open( restoreFromAccPointPath + "/statistics.pkl", "rb" ) )
                 accumDict = pickle.load( open( restoreFromAccPointPath + "/accumDict.pkl", "rb" ) )
                 trainDict = pickle.load( open( restoreFromAccPointPath + "/trainDict.pkl", "rb" ) )
