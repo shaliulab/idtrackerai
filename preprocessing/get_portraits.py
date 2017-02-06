@@ -81,7 +81,7 @@ def smooth_resample(contour,smoothFlag = False):
     y_new = y
 
     # M = 1000
-    M = 1600 ### NOTE we change it to 1500 otherwise was getting trapped inside of the while loop
+    M = 2000 ### NOTE we change it to 1500 otherwise was getting trapped inside of the while loop
     t = np.linspace(0, len(x_new), M)
     x = np.interp(t, np.arange(len(x_new)), x_new)
     y = np.interp(t, np.arange(len(y_new)), y_new)
@@ -290,7 +290,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     y_offset = np.ceil((diag-rowsMin)/2).astype('int')
     new_frame[y_offset:y_offset + rowsMin, x_offset:x_offset+colsMin] = miniframe
     new_frame = fillSquareFrame(new_frame,bkgSamp)
-    print 'shape of the new miniframe, ', new_frame.shape
+    # print 'shape of the new miniframe, ', new_frame.shape
 
     # Translate and rotate nose and middle point to the new frame
     new_nose = tuple(np.asarray([nose[0]+x_offset, nose[1]+y_offset]).astype('int'))
@@ -315,7 +315,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     #     # plt.plot(cnt[:,0],cnt[:,1],'o')
     #     # plt.show()
     #     plt.pause(.5)
-    print 'nose pixels, ', nose_pixels
+    # print 'nose pixels, ', nose_pixels
     if nose_pixels[1]<7:
         nose_pixels[1] = 7
     portrait = minif_rot[nose_pixels[1]-7:nose_pixels[1]+25,nose_pixels[0]-16:nose_pixels[0]+16]

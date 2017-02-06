@@ -109,7 +109,7 @@ def P2AccumPlotter(fragmentsDict,portraits,accumDict,figurePath,ckpt_dir):
     figname = figurePath + '/P2_' + str(accumCounter) + '.pdf'
     fig.savefig(figname)
 
-def CNNplotterFast22(lossAccDict,weightsDict,accumDict,fragmentsDict,portraits,sessionPath,show=False):
+def CNNplotterFast22(lossAccDict,weightsDict,accumDict,fragmentsDict,portraits,sessionPath,show=False, plotFlag=True):
 
     # get variables
     lossPlot, valLossPlot, lossSpeed,valLossSpeed, lossAccel, valLossAccel, \
@@ -276,5 +276,7 @@ def CNNplotterFast22(lossAccDict,weightsDict,accumDict,fragmentsDict,portraits,s
 
     plt.subplots_adjust(bottom=0.05, right=.95, left=0.05, top=.95, wspace = 0.25, hspace=0.25)
 
-    plt.draw()
+    if plotFlag:
+        plt.draw()
+
     plt.pause(0.00000001)

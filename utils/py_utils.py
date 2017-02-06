@@ -105,6 +105,20 @@ def natural_sort(l):
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
     return sorted(l, key = alphanum_key)
 
+def getSubfolders(folder):
+    ''' returns subfolders of a given path'''
+    return [os.path.join(folder, path) for path in os.listdir(folder) if os.path.isdir(os.path.join(folder, path))]
+
+def getFiles(folder):
+    ''' returns files of a given path'''
+    return [name for name in os.listdir(folder) if os.path.isfile(os.path.join(folder, name))]
+
+def getFilesAndSubfolders(folder):
+    ''' returns files and subfodlers of a given path in two different lists'''
+    files = [name for name in os.listdir(folder) if os.path.isfile(os.path.join(folder, name))]
+    subfolders = [name for name in os.listdir(folder) if os.path.isdir(os.path.join(folder, name))]
+    return files, subfolders
+
 def scanFolder(path):
     paths = [path]
     video = os.path.basename(path)

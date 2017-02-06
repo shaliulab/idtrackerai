@@ -35,7 +35,7 @@ def getAvVelFragment(portraits,framesAndColumns):
     vels = np.sqrt(np.sum(np.diff(centroids,axis=0)**2,axis=1))
     return np.mean(vels)
 
-def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals):
+def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals, printFlag = True):
 
     # get fragments data
     fragments = np.asarray(fragmentsDict['fragments'])
@@ -52,9 +52,13 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals):
     usedIndivIntervals = trainDict['usedIndivIntervals']
 
     ''' First I save all the images of each identified individual in a dictionary '''
-    print '\n**** Creating dictionary of references ****'
+    if printFlag:
+        print '\n**** Creating dictionary of references ****'
+
     for j, frag in enumerate(newFragForTrain): # for each complete fragment that has to be used for the training
-        print '\nGetting references from global fragment ', frag
+        if printFlag:
+            print '\nGetting references from global fragment ', frag
+
         fragment = fragments[frag] # I take the fragment
         framesColumnsIndivFrags = framesAndBlobColumns[frag] # I take the list of individual fragments in frames and columns
         intervalsIndivFrags = intervals[frag] # I take the list of individual fragments in terms of intervals
@@ -79,7 +83,8 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals):
 
     if accumDict['counter'] == 0:
         refDict = {i: refDict[key] for i, key in enumerate(refDict.keys())}
-        print '\n The keys of the refDict are ', refDict.keys()
+        if printFlag:
+            print '\n The keys of the refDict are ', refDict.keys()
 
     # if len(refDict.keys()) != numAnimals:
     #     raise ValueError('The number of identities should be the same as the number of animals. This means that a global fragment does not have as many individual fragments as number of animals ')
@@ -91,10 +96,14 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals):
 
     ''' I compute the minimum number of references I can take '''
     minNumRef = np.min([len(refDict[iD]) for iD in refDict.keys()])
-    print '\nMinimum number of references per identities: ', minNumRef
+
+    if printFlag:
+        print '\nMinimum number of references per identities: ', minNumRef
 
     ''' I build the images and labels to feed the network '''
-    print '\nBuilding arrays of images and labels'
+    if printFlag:
+        print '\nBuilding arrays of images and labels'
+
     images = []
     labels = []
     for iD in refDict.keys():
@@ -171,7 +180,7 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl, keep_
 
     return outList
 
-def fragmentProbId(X_t, width, height, channels, classes, resolution, loadCkpt_folder, batchSize, Tindices, Titer_per_epoch , keep_prob = 1.0):
+def fragmentProbId(X_t, width, height, channels, classes, resolution, loadCkpt_folder, batchSize, Tindices, Titer_per_epoch , keep_prob = 1.0, printFlag = True):
     with tf.Graph().as_default():
 
         images_pl = tf.placeholder(tf.float32, [None, resolution], name = 'images')
@@ -189,11 +198,13 @@ def fragmentProbId(X_t, width, height, channels, classes, resolution, loadCkpt_f
             # Load weights from a pretrained model if there is not any model saved
             # in the ckpt folder of the test
             if loadCkpt_folder:
-                print '********************************************************'
-                print 'We are also loading the softmax'
-                print '********************************************************'
-                print 'loading weigths from ' + loadCkpt_folder + '/model'
-                print 'loading softmax from ' + loadCkpt_folder + '/softmax'
+                if printFlag:
+                    print '********************************************************'
+                    print 'We are also loading the softmax'
+                    print '********************************************************'
+                    print 'loading weigths from ' + loadCkpt_folder + '/model'
+                    print 'loading softmax from ' + loadCkpt_folder + '/softmax'
+
                 restoreFromFolder(loadCkpt_folder + '/model', saver_model, sess)
                 restoreFromFolder(loadCkpt_folder + '/softmax', saver_softmax, sess)
 
@@ -224,6 +235,7 @@ def fragmentProbId(X_t, width, height, channels, classes, resolution, loadCkpt_f
 
             softMaxId = flatten(softMaxId)
             softMaxProbs = flatten(softMaxProbs)
+
     return np.asarray(softMaxProbs), np.asarray(softMaxId).astype('int')
 
 def computeP1(IdProbs):
@@ -311,9 +323,7 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
 
     def computeLogP2(P1Frag,P1CoexistingFrags):
         logProb1Fragment = np.log(P1Frag)
-        # print 'logProb1Fragment, ', logProb1Fragment
-        # print 'logCoexisting, ',  np.log(1.-P1CoexistingFrags)
-        logCoexisting = np.log(1.-P1CoexistingFrags)
+        logCoexisting = np.log(1. - P1CoexistingFrags)
         sumLogProbs1CF = np.sum(logCoexisting,axis=0)
 
         logP2Frag = logProb1Fragment + sumLogProbs1CF
@@ -323,6 +333,7 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
     logP2FragIdForMat = []
     P2FragsForMat = []
     P2Frags = []
+
     for j, (P1Frag,indivFragmentInterval) in enumerate(zip(P1Frags,indivFragmentsIntervals)):
         # print '\nIndividual fragment, ', j, ' ----------------'
         # print 'Interval, ', indivFragmentInterval
@@ -358,19 +369,17 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
 def computeOverallP2(P2FragsAll,oneIndivFragLens):
     numFrames = 0
     weightedP2 = []
+
     for P2Frags, oneIndivLens in zip(P2FragsAll,oneIndivFragLens):
         P2Frags = np.asarray(P2Frags)
         P2Frags = np.max(P2Frags,axis=1)
         oneIndivLens = np.asarray(oneIndivLens)
         weightedP2.append(P2Frags*oneIndivLens)
         numFrames += np.sum(oneIndivLens)
+
     overallP2 = np.true_divide(np.sum(np.asarray(flatten(weightedP2))),numFrames)
+
     return overallP2
-
-# fragments =  pickle.load(open('/home/lab/Desktop/TF_models/IdTracker/Medaka/20161129174648_/fragments.pkl','rb'))
-# oneIndivFragLens = fragments['oneIndivFragLens']
-
-
 
 def idUpdater(ids,indivFragments,numFrames,maxNumBlobs):
     IdsArray = np.zeros((numFrames,maxNumBlobs))
@@ -379,10 +388,12 @@ def idUpdater(ids,indivFragments,numFrames,maxNumBlobs):
         frames = np.asarray(indivFragment)[:,0]
         columns = np.asarray(indivFragment)[:,1]
         IdsArray[frames,columns] = Id[0]
+
     return IdsArray
 
 def probsUptader(vectorPerFrame,indivFragments,numFrames,maxNumBlobs,numAnimals):
     ProbsArray = np.zeros((numFrames,maxNumBlobs,numAnimals))
+
     for (vectorPerFrame,indivFragment) in zip(vectorPerFrame,indivFragments):
         frames = np.asarray(indivFragment)[:,0]
         columns = np.asarray(indivFragment)[:,1]
@@ -423,9 +434,9 @@ def getCkptvideoPath(videoPath, accumCounter, train=0):
 
     return ckptvideoPath
 
-def fineTuner(videoPath, accumDict, trainDict, fragmentsDict = [], portraits = [], videoInfo = []):
-
-    print '\n--- Entering the fineTuner ---'
+def fineTuner(videoPath, accumDict, trainDict, fragmentsDict = [], portraits = [], videoInfo = [], plotFlag = True, printFlag = True):
+    if printFlag:
+        print '\n--- Entering the fineTuner ---'
 
     # Load data if needed
     if fragmentsDict == []:
@@ -452,7 +463,9 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict = [], portraits = [
     # get information from acuumDict
     accumCounter = accumDict['counter']
 
-    print '\nGetting next checkpoint folder'
+    if printFlag:
+        print '\nGetting next checkpoint folder'
+
     ckpt_dir = getCkptvideoPath(videoPath, accumCounter, train)
     trainDict['ckpt_dir'] = ckpt_dir
 
@@ -461,10 +474,11 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict = [], portraits = [
     X_val, Y_val,\
     trainDict = DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals)
 
-    print '\n fine tune train size:    images  labels'
-    print X_train.shape, Y_train.shape
-    print 'validation fine tune size:    images  labels'
-    print X_val.shape, Y_val.shape
+    if printFlag:
+        print '\n fine tune train size:    images  labels'
+        print X_train.shape, Y_train.shape
+        print 'validation fine tune size:    images  labels'
+        print X_val.shape, Y_val.shape
 
     channels, width, height = imsize
     resolution = np.prod(imsize)
@@ -475,9 +489,10 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict = [], portraits = [
     Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batchSize)
     Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batchSize)
 
-    print '\nrunning with the devil'
-    print 'The models will be loaded from (loadCkpt_folder)', loadCkpt_folder
-    print '\nEntering training\n'
+    if printFlag:
+        print '\nrunning with the devil'
+        print 'The models will be loaded from (loadCkpt_folder)', loadCkpt_folder
+        print '\nEntering training\n'
     trainDict = run_training(X_train, Y_train, X_val, Y_val,
                     width, height, channels, classes, resolution,
                     trainDict, accumDict, fragmentsDict, portraits,
@@ -486,7 +501,7 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict = [], portraits = [
     trainDict['loadCkpt_folder'] = ckpt_dir
     return trainDict
 
-def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits = [], videoInfo = []):
+def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits = [], videoInfo = [], plotFlag = True, printFlag = True):
     '''
     videoPath: path to the video to which we want ot assign identities
     '''
@@ -495,7 +510,10 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
 
     if len(videoInfo) == 0:
         videoInfo = loadFile(videoPath, 'videoInfo', hdfpkl='pkl')
-    print videoInfo
+
+    if printFlag:
+        print videoInfo
+
     numFrames =  len(portraits)
     numAnimals = videoInfo['numAnimals']
     maxNumBlobs = videoInfo['maxNumBlobs']
@@ -504,6 +522,7 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
 
     if len(fragmentsDict) == 0:
         fragmentsDict = loadFile(videoPath, 'fragments', hdfpkl='pkl')
+
     oneIndivFragFrames = fragmentsDict['oneIndivFragFrames']
     oneIndivFragIntervals = fragmentsDict['oneIndivFragIntervals']
     oneIndivFragSumLens = fragmentsDict['oneIndivFragSumLens']
@@ -531,20 +550,26 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
     normFreqFragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals))
     idFreqFragAllVideo= -np.ones((numFrames,maxNumBlobs))
     P1FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # P1 for each individual fragment
+
     for i, (indivFragments, sumFragIndices) in enumerate(zip(oneIndivFragFrames,oneIndivFragSumLens)):
-        print '\n******************************************************'
-        print 'Computing softMax probabilities, id-frequencies, and P1 for list of fragments ', i
+        if printFlag:
+            print '\n******************************************************'
+            print 'Computing softMax probabilities, id-frequencies, and P1 for list of fragments ', i
         # Load data for the assignment (### TODO this can be done in portraits so that we only need to do it once)
         if len(indivFragments) != 0:
             imsize, portsFragments =  DataIdAssignation(portraits, indivFragments)
 
             images_max = np.max(portsFragments)
             if images_max > 1:
-                print 'I am normalizing the images since their maximum is ', images_max
+                if printFlag:
+                    print 'I am normalizing the images since their maximum is ', images_max
+
                 portsFragments = portsFragments/255.
 
-            print '\n values of the images during identity assigation: max min'
-            print np.max(portsFragments), np.min(portsFragments)
+            if printFlag:
+                print '\n values of the images during identity assigation: max min'
+                print np.max(portsFragments), np.min(portsFragments)
+
             # Set variables for the forward pass
             loadCkpt_folder = ckpt_dir
             channels, width, height = imsize
@@ -553,8 +578,11 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
             numImagesT = len(portsFragments) #FIXME
             # Get batch indices
             Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batchSize)
-            print 'indices test ', Tindices
-            print 'iteration per epoch ', Titer_per_epoch
+
+            if printFlag:
+                print 'indices test ', Tindices
+                print 'iteration per epoch ', Titer_per_epoch
+
             # Run forward pass,
             softMaxProbs, softMaxId = fragmentProbId(portsFragments, width, height, channels,
                 classes, resolution, loadCkpt_folder, batchSize, Tindices, Titer_per_epoch)
@@ -605,10 +633,15 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
     logP2FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # logP2 for each individual fragment
     P2FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals))
     P2FragsAll = []
-    print '******************************************************'
+
+    if printFlag:
+        print '******************************************************'
+
     for i in range(numGoodLists):
         # print '******************************************************'
-        print 'Computing logP2 for list of fragments, ', i
+        if printFlag:
+            print 'Computing logP2 for list of fragments, ', i
+
         indivFragmentsIntervals = oneIndivFragIntervals[i]
         P1Frags = P1FragsAll[i]
         indivFragments = oneIndivFragFrames[i]
@@ -641,7 +674,9 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
     sessionPath = '/'.join(ckpt_dir.split('/')[:-1])
     overallP2 = computeOverallP2(P2FragsAll,oneIndivFragLens)
 
-    print '**** overallP2, ', overallP2
+    if printFlag:
+        print '**** overallP2, ', overallP2
+
     idLogP2FragAllVideo = idLogP2FragAllVideo.astype('int')
     IdsStatistics = {'blobIds':idSoftMaxAllVideo,
         'probBlobIds':PSoftMaxAllVIdeo,
@@ -660,7 +695,7 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
 
     pickle.dump( IdsStatistics , open( ckpt_dir + "/statistics.pkl", "wb" ) )
     pickle.dump( IdsStatistics , open( sessionPath + "/statistics.pkl", "wb" ) )
-    # saveFile(ckpt_dir, IdsStatistics, 'statistics',hdfpkl='pkl')
+
     return normFreqFragsAll, portraits, overallP2
 
 def bestFragmentFinder(accumDict, normFreqFragsAll, fragmentsDict, numAnimals, portraits):
@@ -719,6 +754,20 @@ def bestFragmentFinder(accumDict, normFreqFragsAll, fragmentsDict, numAnimals, p
 
     else:
 
+        def computeUniqueness(fragMat, numAnimals):
+            unique = True
+            fragMat = np.asarray(fragMat)
+            # rawsMax = np.max(fragMat, axis=1)
+            rawsArgMax = np.argmax(fragMat, axis=1)
+            ids = range(numAnimals)
+            # misId --> discard
+            if ids != list(rawsArgMax):
+                unique = False
+            # too uncertain --> discard NOTE: commented since the distance should take care of it
+            # if np.min(rawsMax) < 0.5:
+            #     unique = False
+            return unique
+
         print '\nFinding next best fragment for references'
         # Load data needed and pass it to arrays
         fragments = np.asarray(fragmentsDict['fragments'])
@@ -732,6 +781,7 @@ def bestFragmentFinder(accumDict, normFreqFragsAll, fragmentsDict, numAnimals, p
         # Compute distances to the identity matrix for each complete set of individual fragments
         mat = []
         distI = []
+        notUnique = []
         identity = np.identity(numAnimals)
         for i, intervals in enumerate(intervalsFragments): # loop in complete set of fragments
             # print 'fragment, ', i
@@ -743,7 +793,14 @@ def bestFragmentFinder(accumDict, normFreqFragsAll, fragmentsDict, numAnimals, p
             perm = np.argmax(matFragment,axis=1)
 
             matFragment = matFragment[:,perm]
-            # print matFragment
+            uniqueness = computeUniqueness(matFragment, numAnimals)
+            if not uniqueness:
+                notUnique.append(i)
+                print '------------------------------'
+                print str(i) + ' is not unique'
+                print '------------------------------'
+
+            # print 'permuted mat fragment \n', matFragment
             # print numpy.linalg.norm(matFragment - identity)
             # print lens[i]
             distI.append(numpy.linalg.norm(matFragment - identity)) #TODO when optimizing the code one should compute the matrix distance only for fragments above 100 length
@@ -763,6 +820,8 @@ def bestFragmentFinder(accumDict, normFreqFragsAll, fragmentsDict, numAnimals, p
 
         # Compute score of every global fragment with respect to the optimal value of the parameters
         # score = np.sqrt((distI0norm-distInorm)**2 + ((len0norm-lensnorm))**2)
+
+        ###NOTE: I wuold avoid the sqrt, it's only time consuming
         score = np.sqrt((distI0norm-distInorm)**2 + ((distTrav0norm-distsTravNorm))**2)
 
         # Get indices of the best fragments according to its score
@@ -777,7 +836,7 @@ def bestFragmentFinder(accumDict, normFreqFragsAll, fragmentsDict, numAnimals, p
         # We only consider fragments that have not been already picked for fine-tuning
         print '\nCurrent fragsForTrain, ', fragsForTrain
         print 'Bad fragments, ', badFragments
-        nextPossibleFragments = [frag for frag in fragIndexesSortedLong if frag not in fragsForTrain and frag not in badFragments]
+        nextPossibleFragments = [frag for frag in fragIndexesSortedLong if frag not in fragsForTrain and frag not in badFragments and frag not in notUnique]
 
         # Check whether the animals are moving enough so that the images are going to be different enough
         realNextPossibleFragments = []
@@ -811,7 +870,7 @@ def bestFragmentFinder(accumDict, normFreqFragsAll, fragmentsDict, numAnimals, p
             # We only consider fragments that have not been already picked for fine-tuning
             print 'Current fragsForTrain, ', fragsForTrain
             print 'Bad fragments, ', badFragments
-            nextPossibleFragments = [frag for frag in fragIndexesSortedLong if frag not in fragsForTrain and frag not in badFragments]
+            nextPossibleFragments = [frag for frag in fragIndexesSortedLong if frag not in fragsForTrain and frag not in badFragments and frag not in notUnique]
             nextPossibleFragments = np.asarray(nextPossibleFragments)
             print 'Next possible fragments for train', nextPossibleFragments
 

@@ -74,7 +74,7 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
 
     return outList
 
-def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, trainDict, accumDict, fragmentsDict, portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch):
+def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, trainDict, accumDict, fragmentsDict, portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch, plotFlag = True, printFlag = True):
 
     # get data from trainDict
     loadCkpt_folder = trainDict['loadCkpt_folder']
@@ -109,11 +109,14 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
 
         with tf.Session() as sess:
             # you need to initialize all variables
-            tf.initialize_all_variables().run()
+            # tf.initialize_all_variables().run() #NOTE deprecated
+            tf.global_variables_initializer().run()
 
-            print "\n****** Starting training session ******\n"
-            # Create folder for checkpoint if does not exist
-            print "\n****** Checking Folders (save/restore) ******\n"
+            if printFlag:
+                print "\n****** Starting training session ******\n"
+                # Create folder for checkpoint if does not exist
+                print "\n****** Checking Folders (save/restore) ******\n"
+
             [ckpt_dir_model,ckpt_dir_softmax] = createCkptFolder( ckpt_dir, ['model', 'softmax'])
 
             # Load weights from a pretrained model if there is not any model saved
@@ -121,11 +124,15 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
             ckpt = tf.train.get_checkpoint_state(ckpt_dir_model)
             if (not (ckpt and ckpt.model_checkpoint_path)) and accumCounter == 0:
                 if loadCkpt_folder:
-                    print '********************************************************'
-                    print 'We are only loading the model'
-                    print '********************************************************'
+                    if printFlag:
+                        print '********************************************************'
+                        print 'We are only loading the model'
+                        print '********************************************************'
                     loadCkpt_folder = loadCkpt_folder + '/model'
-                    print 'loading weigths from ' + loadCkpt_folder
+
+                    if printFlag:
+                        print 'loading weigths from ' + loadCkpt_folder
+
                     restoreFromFolder(loadCkpt_folder, saver_model, sess)
                     global_step.assign(0).eval()
 
@@ -134,18 +141,23 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
             else:
                 loadCkpt_folder_model = loadCkpt_folder + '/model'
                 loadCkpt_folder_softmax = loadCkpt_folder + '/softmax'
-                print "\n"
-                print '********************************************************'
-                print 'We are also loading the softmax'
-                print '********************************************************'
-                print 'loading weigths from ' + loadCkpt_folder + '/model'
-                print 'loading softmax from ' + loadCkpt_folder + '/softmax'
+
+                if printFlag:
+                    print "\n"
+                    print '********************************************************'
+                    print 'We are also loading the softmax'
+                    print '********************************************************'
+                    print 'loading weigths from ' + loadCkpt_folder + '/model'
+                    print 'loading softmax from ' + loadCkpt_folder + '/softmax'
                 restoreFromFolder(loadCkpt_folder_model, saver_model, sess)
                 restoreFromFolder(loadCkpt_folder_softmax, saver_softmax, sess)
 
             # counter for epochs
             start = global_step.eval() # get last global_step
-            print "\nStart from:", start
+
+            if printFlag:
+                print "\nStart from:", start
+
             # We'll now fine tune in minibatches and report accuracy, loss:
             n_epochs = num_epochs - start
 
@@ -189,28 +201,40 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                         magPrev = int(np.log10(prevLoss))-1
                         epsilon = .1*10**(magCurr)
                         epsilon2 = .01*10**(magCurr)
-                        print 'Losses difference ', -currLoss + prevLoss
-                        print 'epsilon (overfitting), ', epsilon
-                        print 'epsilon2 (if it is not changing much), ', epsilon2
-                        if np.mean(valIndivAcc) > .9:
-                            if magCurr > magPrev:
 
-                                print 'Overfitting, passing to new set of images'
+                        if printFlag:
+                            print 'Losses difference ', -currLoss + prevLoss
+                            print 'epsilon (overfitting), ', epsilon
+                            print 'epsilon2 (if it is not changing much), ', epsilon2
+
+                        if np.mean(valIndivAcc) > .8: ###NOTE: decreased to .8 for large groups (38 animals)
+                            if magCurr > magPrev:
+                                if printFlag:
+                                    print 'Overfitting, passing to new set of images'
+
                                 break
                             elif magCurr == magPrev:
                                 if currLoss - prevLoss > epsilon:
-                                    print 'Overfitting, passing to new set of images'
+                                    if printFlag:
+                                        print 'Overfitting, passing to new set of images'
+
                                     break
                             if prevLoss - currLoss < epsilon2:
-                                print 'Finished, passing to new set of images'
+                                if printFlag:
+                                    print 'Finished, passing to new set of images'
+
                                 break
                             if list(valIndivAcc) == list(np.ones(classes)):
-                                print 'Individual validations accuracy is 1 for all the animals'
+                                if printFlag:
+                                    print 'Individual validations accuracy is 1 for all the animals'
                                 break
 
                 try:
                     epoch_counter = start + epoch_i
-                    print '\n**** Epoch %i ****' % epoch_counter
+
+                    if printFlag:
+                        print '\n**** Epoch %i ****' % epoch_counter
+
                     lossEpoch = []
                     accEpoch = []
                     indivAccEpoch = []
@@ -228,10 +252,11 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                         indivAccEpoch.append(indivBatchAcc)
 
                         # Print per batch loss and accuracies
-                        if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
-                            print "Batch " + str(iter_i) + \
-                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
-                                ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+                        if printFlag:
+                            if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
+                                print "Batch " + str(iter_i) + \
+                                    ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                                    ", Training Accuracy= " + "{:.5f}".format(batchAcc)
 
                     trainFeat = batchFeat
                     trainFeatLabels = Y_t[Tindices[iter_i]:Tindices[iter_i+1]]
@@ -241,11 +266,12 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                     trainIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
 
                     # Batch finished
-                    print('Train (epoch %d): ' % epoch_counter + \
-                        " Loss=" + "{:.6f}".format(trainLoss) + \
-                        ", Accuracy=" + "{:.5f}".format(trainAcc) + \
-                        ", Individual Accuracy=")
-                    print(trainIndivAcc)
+                    if printFlag:
+                        print('Train (epoch %d): ' % epoch_counter + \
+                            " Loss=" + "{:.6f}".format(trainLoss) + \
+                            ", Accuracy=" + "{:.5f}".format(trainAcc) + \
+                            ", Individual Accuracy=")
+                        print(trainIndivAcc)
 
                     # Summary writer
                     summary_str = sess.run(summary_op, feed_dict=feed_dict)
@@ -283,12 +309,12 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                     valIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
 
                     # Batch finished
-
-                    print('Validation (epoch %d): ' % epoch_counter + \
-                        " Loss=" + "{:.6f}".format(valLoss) + \
-                        ", Accuracy=" + "{:.5f}".format(valAcc) + \
-                        ", Individual Accuracy=")
-                    print(valIndivAcc)
+                    if printFlag:
+                        print('Validation (epoch %d): ' % epoch_counter + \
+                            " Loss=" + "{:.6f}".format(valLoss) + \
+                            ", Accuracy=" + "{:.5f}".format(valAcc) + \
+                            ", Individual Accuracy=")
+                        print(valIndivAcc)
 
                     summary_str = sess.run(summary_op, feed_dict=feed_dict)
                     summary_writerV.add_summary(summary_str, epoch_i)
@@ -347,9 +373,10 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                     *******************
                     '''
                     ### uncomment to plot ----
+
                     if epoch_i % 1 == 0:
                         # CNNplotterFast2(lossAccDict, weightsDict)
-                        CNNplotterFast22(lossAccDict, weightsDict,accumDict,fragmentsDict,portraits,sessionPath)
+                        CNNplotterFast22(lossAccDict, weightsDict,accumDict,fragmentsDict,portraits,sessionPath, plotFlag)
 
                         print 'Saving figure...'
                         figname = fig_dir + '/result_' + str(global_step.eval()) + '.pdf'
