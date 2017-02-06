@@ -50,6 +50,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals, pr
     refDict = trainDict['refDict']
     framesColumnsRefDict = trainDict['framesColumnsRefDict']
     usedIndivIntervals = trainDict['usedIndivIntervals']
+    idUsedIntervals = trainDict['idUsedIntervals']
 
     ''' First I save all the images of each identified individual in a dictionary '''
     if printFlag:
@@ -79,6 +80,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals, pr
                     refDict[identity].append(portraits.loc[frame,'images'][column])
                     framesColumnsRefDict[identity].append((frame,column))
 
+                idUsedIntervals.append(identity)
                 usedIndivIntervals.append(intervalsIndivFrag)
 
     if accumDict['counter'] == 0:
@@ -93,6 +95,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals, pr
     trainDict['refDict'] = refDict
     trainDict['framesColumnsRefDict'] = framesColumnsRefDict
     trainDict['usedIndivIntervals'] = usedIndivIntervals
+    trainDict['idUsedIntervals'] = idUsedIntervals
 
     ''' I compute the minimum number of references I can take '''
     minNumRef = np.min([len(refDict[iD]) for iD in refDict.keys()])
@@ -690,7 +693,8 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
         'normFreqFragsAll':normFreqFragsAll,
         'overallP2': overallP2}
 
-    portraits['identities'] = idFreqFragAllVideo.tolist()
+    # portraits['identities'] = idFreqFragAllVideo.tolist()
+    portraits['identities'] = idLogP2FragAllVideo.tolist()
     # e(videoPath,portraits,'portraits',time=0)
 
     pickle.dump( IdsStatistics , open( ckpt_dir + "/statistics.pkl", "wb" ) )

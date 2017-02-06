@@ -86,6 +86,14 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
     lr = trainDict['lr']
     keep_prob = trainDict['keep_prob']
     lossAccDict = trainDict['lossAccDict']
+    usedIndivIntervals = trainDict['usedIndivIntervals']
+    idUsedIntervals = trainDict['idUsedIntervals']
+    idUsedIndivIntervals = zip(usedIndivIntervals,idUsedIntervals)
+    print '********************************************************************'
+    print '********************************************************************'
+    pprint(idUsedIndivIntervals)
+    print '********************************************************************'
+    print '********************************************************************'
 
     # get data from accumDict
     accumCounter = accumDict['counter']
@@ -376,7 +384,7 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
 
                     if epoch_i % 1 == 0:
                         # CNNplotterFast2(lossAccDict, weightsDict)
-                        CNNplotterFast22(lossAccDict, weightsDict,accumDict,fragmentsDict,portraits,sessionPath, plotFlag)
+                        CNNplotterFast22(lossAccDict, weightsDict, idUsedIndivIntervals, accumDict,fragmentsDict,portraits,sessionPath, plotFlag)
 
                         print 'Saving figure...'
                         figname = fig_dir + '/result_' + str(global_step.eval()) + '.pdf'

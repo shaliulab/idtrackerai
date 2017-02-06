@@ -1,3 +1,4 @@
+from __future__ import division
 from itertools import groupby
 import os
 import glob
@@ -10,6 +11,7 @@ from Tkinter import *
 import shutil
 import cPickle as pickle
 # import pickle
+
 
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):
@@ -134,7 +136,7 @@ def get_spaced_colors_util(n,norm=False):
     interval = int(max_value / n)
     colors = [hex(I)[2:].zfill(6) for I in range(100, max_value, interval)]
     if norm:
-        rgbcolorslist = [(int(i[:2], 16)/255., int(i[2:4], 16)/255., int(i[4:], 16)/255.) for i in colors]
+        rgbcolorslist = [(int(i[4:], 16)/256., int(i[2:4], 16)/256., int(i[:2], 16)/256.) for i in colors]
     else:
         rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
     black = (0., 0., 0.)

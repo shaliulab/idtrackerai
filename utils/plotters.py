@@ -109,7 +109,7 @@ def P2AccumPlotter(fragmentsDict,portraits,accumDict,figurePath,ckpt_dir):
     figname = figurePath + '/P2_' + str(accumCounter) + '.pdf'
     fig.savefig(figname)
 
-def CNNplotterFast22(lossAccDict,weightsDict,accumDict,fragmentsDict,portraits,sessionPath,show=False, plotFlag=True):
+def CNNplotterFast22(lossAccDict,weightsDict, idUsedIndivIntervals, accumDict,fragmentsDict,portraits,sessionPath,show=False, plotFlag=True):
 
     # get variables
     lossPlot, valLossPlot, lossSpeed,valLossSpeed, lossAccel, valLossAccel, \
@@ -235,22 +235,42 @@ def CNNplotterFast22(lossAccDict,weightsDict,accumDict,fragmentsDict,portraits,s
     permOrdered = permOrdered.T.astype('float32')
 
     ax7 = fig.add_subplot(615)
-    permOrdered[permOrdered >= 0] = .5
+    permOrdered[permOrdered >= 0] = 1.
     im = plt.imshow(permOrdered,cmap=plt.cm.gray,interpolation='none',vmin=0.,vmax=1.)
     im.cmap.set_under('r')
 
-    for i in fragsForTrain:
+    colors = get_spaced_colors_util(numIndiv,norm=True)
+    # print numAnimals
+    # print colors
+    for (frag,ID) in idUsedIndivIntervals:
+        # print identity
+        blobIndex = frag[0]
+        start = frag[2][0]
+        end = frag[2][1]
         ax7.add_patch(
             patches.Rectangle(
-                (fragments[i,0], -0.5),   # (x,y)
-                fragments[i,1]-fragments[i,0],  # width
-                maxNumBlobs,          # height
+                (start, blobIndex-0.5),   # (x,y)
+                end-start,  # width
+                1.,          # height
                 fill=True,
                 edgecolor=None,
-                facecolor='b',
-                alpha = 0.5
+                facecolor=colors[ID+1],
+                alpha = 1.
             )
         )
+
+    # for i in fragsForTrain:
+    #     ax7.add_patch(
+    #         patches.Rectangle(
+    #             (fragments[i,0], -0.5),   # (x,y)
+    #             fragments[i,1]-fragments[i,0],  # width
+    #             maxNumBlobs,          # height
+    #             fill=True,
+    #             edgecolor=None,
+    #             facecolor='b',
+    #             alpha = 0.5
+    #         )
+    #     )
 
     ax7.axis('tight')
     ax7.set_xlabel('Frame number')
@@ -270,9 +290,6 @@ def CNNplotterFast22(lossAccDict,weightsDict,accumDict,fragmentsDict,portraits,s
         ax8.text(i,p2,str(p2))
     ax8.set_xlabel('Accumulation step')
     ax8.set_ylabel('Overall P2')
-
-
-
 
     plt.subplots_adjust(bottom=0.05, right=.95, left=0.05, top=.95, wspace = 0.25, hspace=0.25)
 
