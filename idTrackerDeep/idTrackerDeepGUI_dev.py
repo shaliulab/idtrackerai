@@ -29,10 +29,7 @@ from plotters import *
 if __name__ == '__main__':
     cv2.namedWindow('Bars') #FIXME If we do not create the "Bars" window here we have the "Bad window error"...
 
-    ''' ************************************************************************
-    Selecting video directory
-    ************************************************************************ '''
-    print '********************************************************************'
+    print '\n********************************************************************'
     print 'Selecting the path to the videos...'
     print '********************************************************************\n'
 
@@ -42,101 +39,63 @@ if __name__ == '__main__':
     videoPaths = scanFolder(videoPath) ### FIXME if the video selected does not finish with '_1' the scanFolder function won't select all of them. This can be improved
     print 'The list of videos is ', videoPaths
 
-    ''' ************************************************************************
-    GUI to select the preprocessing parameters
-    *************************************************************************'''
-    print '********************************************************************'
-    print 'Selecting preprocessing parameters...'
+    print '\n********************************************************************'
+    print 'Asking user whether to reuse preprocessing steps...'
     print '********************************************************************\n'
-
-    prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to do BKG or select a ROI?  ')
-    useBkg = int(prepOpts['bkg'])
-    useROI =  int(prepOpts['ROI'])
-    print 'useBkg set to ', useBkg
-    print 'useROI set to ', useROI
-
-    print '\n Asking user whether to reuse preprocessing parameters or not... '
     reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previos preprocessing? ([y]/n)')
 
-
     if reUseAll == 'n':
+        print '\n********************************************************************'
+        print 'Selecting preprocessing parameters...'
+        print '********************************************************************\n'
+
+        prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to do BKG or select a ROI?  ')
+        useBkg = int(prepOpts['bkg'])
+        useROI =  int(prepOpts['ROI'])
+        print 'useBkg set to ', useBkg
+        print 'useROI set to ', useROI
+
         print '\nLooking for finished steps in previous session...'
         processesList = ['ROI', 'bkg', 'preprocparams', 'segmentation','fragments','portraits']
 
         existentFiles, srcSubFolder = getExistentFiles(videoPath, processesList)
-        print 'are you the path? ', srcSubFolder
         print 'List of processes finished, ', existentFiles
         print '\nSelecting files to load from previous session...'
         loadPreviousDict = selectOptions(processesList, existentFiles, text='Already processed steps in this video \n (check to load from ' + srcSubFolder + ')')
 
+        usePreviousROI = loadPreviousDict['ROI']
+        usePreviousBkg = loadPreviousDict['bkg']
+        usePreviousPrecParams = loadPreviousDict['preprocparams']
+        print 'usePreviousROI set to ', usePreviousROI
+        print 'usePreviousBkg set to ', usePreviousBkg
+        print 'usePreviousPrecParams set to ', usePreviousPrecParams
+
+        ''' ROI selection/loading '''
+        width, height, mask, centers = ROISelectorPreview(videoPaths, useROI, usePreviousROI, numSegment=0)
+        ''' BKG computation/loading '''
+        bkg = checkBkg(videoPaths, useBkg, usePreviousBkg, 0, width, height)
+
+        ''' Selection/loading preprocessing parameters '''
+        preprocParams = selectPreprocParams(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg)
+        print 'The video will be preprocessed according to the following parameters: ', preprocParams
+
+        ''' Loading preprocessing image '''
+        img = cv2.imread('../utils/loadingIdDeep.png')
+        cv2.imshow('Bars',img)
+        cv2.waitKey(1000)
+        cv2.destroyAllWindows()
+        cv2.waitKey(1)
+
     elif reUseAll == '' or reUseAll.lower() == 'y' :
+        print '\n********************************************************************'
+        print 'The preprocessing paramemters will be loaded from last time they were computed.'
+        print '********************************************************************\n'
         loadPreviousDict = {'ROI': 1, 'bkg': 1, 'preprocparams': 1, 'segmentation': 1, 'fragments': 1, 'portraits': 1}
 
     else:
         raise ValueError('The input introduced do not match the possible options')
 
-    print 'List of files that will be used, ', loadPreviousDict
-    usePreviousBkg = loadPreviousDict['bkg']
-    usePreviousROI = loadPreviousDict['ROI']
-    print 'usePreviousBkg set to ', usePreviousBkg
-    print 'usePreviousROI set to ', usePreviousROI
-
-    ''' ROI selection and bkg loading'''
-    width, height, bkg, mask, centers = ROISelectorPreview(videoPaths, useBkg, usePreviousBkg, useROI, usePreviousROI, numSegment=0)
-
-    ''' Segmentation inspection '''
-    if not loadPreviousDict['preprocparams']:
-        SegmentationPreview(videoPath, width, height, bkg, mask, useBkg)
-
-        cv2.waitKey(1)
-        cv2.destroyAllWindows()
-        cv2.waitKey(1)
-        numSegment = getInput('Segment number','Type the segment to be visualized')
-
-        end = False
-        while not end:
-            numSegment = getInput('Segment number','Type the segment to be visualized')
-            if numSegment == 'q' or numSegment == 'quit' or numSegment == 'exit':
-                end = True
-            else:
-                cv2.namedWindow('Bars')
-                end = False
-                usePreviousBkg = 1
-                path = videoPaths[int(numSegment)]
-                preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
-                numAnimals = preprocParams['numAnimals']
-                minThreshold = preprocParams['minThreshold']
-                maxThreshold = preprocParams['maxThreshold']
-                minArea = int(preprocParams['minArea'])
-                maxArea = int(preprocParams['maxArea'])
-                mask = loadFile(videoPaths[0], 'ROI')
-                mask = np.asarray(mask)
-                centers= loadFile(videoPaths[0], 'centers')
-                centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
-                EQ = 0
-                ### FIXME put usePreviousBkg to 1 no to recompute it everytime we change the segment
-                bkg = checkBkg(useBkg, usePreviousBkg, videoPaths, EQ, width, height)
-                SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea, maxArea, minThreshold, maxThreshold)
-            cv2.waitKey(1)
-            cv2.destroyAllWindows()
-            cv2.waitKey(1)
-    else:
-        preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
-        numAnimals = preprocParams['numAnimals']
-        minThreshold = preprocParams['minThreshold']
-        maxThreshold = preprocParams['maxThreshold']
-        minArea = int(preprocParams['minArea'])
-        maxArea = int(preprocParams['maxArea'])
-    img = cv2.imread('../utils/loadingIdDeep.png')
-    cv2.imshow('Bars',img)
-    cv2.waitKey(1000)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-
-    ''' ************************************************************************
-    Segmentation
-    ************************************************************************ '''
-    print '********************************************************************'
+    print '\n********************************************************************'
     print 'Segmentation'
     print '********************************************************************\n'
     cv2.waitKey(1)
@@ -152,10 +111,7 @@ if __name__ == '__main__':
     cv2.destroyAllWindows()
     cv2.waitKey(1)
 
-    ''' ************************************************************************
-    Fragmentation
-    *************************************************************************'''
-    print '********************************************************************'
+    print '\n********************************************************************'
     print 'Fragmentation'
     print '********************************************************************\n'
     if not loadPreviousDict['fragments']:
@@ -170,10 +126,7 @@ if __name__ == '__main__':
         dfGlobal = loadFile(videoPaths[0],'portraits')
         fragmentsDict = loadFile(videoPaths[0],'fragments',hdfpkl='pkl')
 
-    ''' ************************************************************************
-    Portraying
-    ************************************************************************ '''
-    print '********************************************************************'
+    print '\n********************************************************************'
     print 'Portraying'
     print '********************************************************************\n'
     if not loadPreviousDict['portraits']:
@@ -185,12 +138,7 @@ if __name__ == '__main__':
     cv2.destroyAllWindows()
     cv2.waitKey(1)
 
-    '''
-    ************************************************************************
-    Tracker
-    ************************************************************************
-    '''
-    print '********************************************************************'
+    print '\n********************************************************************'
     print 'Tracker'
     print '********************************************************************\n'
     preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')

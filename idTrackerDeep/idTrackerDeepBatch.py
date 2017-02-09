@@ -5,7 +5,7 @@ sys.path.append('../preprocessing')
 sys.path.append('../tracker')
 
 from segmentation import *
-from fragmentation_serie import *
+from fragmentation import *
 from get_portraits import *
 from video_utils import *
 from py_utils import *

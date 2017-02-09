@@ -24,18 +24,30 @@ import seaborn as sns
 
 numSegment = 0
 
-videoPath = selectFile()
-paths = scanFolder(videoPath)
+''' select statistics file '''
+statisticsPath = selectFile()
+print 'The trajectories will be build from the statiscits file ', statisticsPath
+sessionPath = os.path.dirname(statisticsPath)
+print 'The trajectories will be build from the session ', sessionPath
+CNN_modelsPath = os.path.dirname(sessionPath)
+print 'The CNN_models folder is ', CNN_modelsPath
+pathToVideos = os.path.dirname(CNN_modelsPath)
+print 'The video folder is ', pathToVideos
+''' get videoPath from statistics file '''
 
-frameIndices = loadFile(paths[0], 'frameIndices')
-videoInfo = loadFile(paths[0], 'videoInfo', hdfpkl='pkl')
-stats = loadFile(paths[0], 'statistics', hdfpkl = 'pkl')
+extensions = ['.avi', '.mp4']
+videoPath = natural_sort([v for v in os.listdir(pathToVideos) if os.path.isfile(pathToVideos +'/'+ v) if any( ext in v for ext in extensions)])[0]
+videoPath = pathToVideos + '/' + videoPath
+videoPaths = scanFolder(videoPath)
+
+videoInfo = loadFile(videoPaths[0], 'videoInfo', hdfpkl='pkl')
+stats = loadFile(videoPaths[0], 'statistics', hdfpkl = 'pkl',sessionPath = sessionPath)
 numAnimals = videoInfo['numAnimals']
 allFragIds = stats['fragmentIds']
-dfGlobal = loadFile(paths[0], 'portraits')
+dfGlobal = loadFile(videoPaths[0], 'portraits')
 
 def idTrajectories(allFragIds, numAnimals, show=True):
-    path = paths[0]
+    path = videoPaths[0]
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)
     folder = os.path.dirname(path)
@@ -45,47 +57,27 @@ def idTrajectories(allFragIds, numAnimals, show=True):
     centroidTrajectories = []
     nosesTrajectories = []
 
-    for i, path in enumerate(paths):
-        # capture video to get frame information relative to the segment and then release it
-        cap = cv2.VideoCapture(path)
-        numFrameSegment = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        cap.release()
-        # take the identities relative to the segment, load dataframe to have centroids
-        allIdsSegment = allFragIds[frameCounter : frameCounter + numFrameSegment]
-        df, sNumber = loadFile(path, 'segmentation', time=0)
-        sNumber = int(sNumber)
+    centroids = dfGlobal['centroids'].tolist()
+    noses = dfGlobal['noses'].tolist()
 
-        centroids = df['centroids'].tolist()
-        noses = dfGlobal['noses'].tolist()
-        noses = noses[frameCounter : frameCounter + numFrameSegment]
+    for j, IDs in enumerate(allFragIds):
+        curCentroids = centroids[j]
+        curNoses = noses[j]
 
-        frameCounter += numFrameSegment
-        segmentCentroids = []
-        segmentNoses = []
+        ordCentroids = [(np.nan, np.nan) for k in range(numAnimals)]
+        ordNoses = [(np.nan, np.nan) for k in range(numAnimals)]
 
-        for j, IDs in enumerate(allIdsSegment):
-            curCentroids = centroids[j]
-            curNoses = noses[j]
+        for l,ID in enumerate(IDs):
+            if ID != -1:
+                ordCentroids[ID] = curCentroids[l]
+                ordNoses[ID] = curNoses[l]
 
-            ordCentroids = [(np.nan, np.nan) for k in range(numAnimals)]
-            ordNoses = [(np.nan, np.nan) for k in range(numAnimals)]
+        centroidTrajectories.append(ordCentroids)
+        nosesTrajectories.append(ordNoses)
 
-            for l,ID in enumerate(IDs):
-                if ID != -1:
-                    ordCentroids[ID] = curCentroids[l]
-                    ordNoses[ID] = curNoses[l]
-
-                    segmentCentroids.append(ordCentroids)
-                    segmentNoses.append(ordNoses)
-
-        centroidTrajectories.append(segmentCentroids)
-        nosesTrajectories.append(segmentNoses)
-
-    centroidTrajectories = flatten(centroidTrajectories)
-    nosesTrajectories = flatten(nosesTrajectories)
     trajDict = {'centroids': centroidTrajectories, 'noses': nosesTrajectories}
     trajectories = pd.DataFrame(data = trajDict)
-    saveFile(paths[0], trajectories, 'trajectories', time = 0)
+    saveFile(videoPaths[0], trajectories, 'trajectories',hdfpkl = 'pkl',sessionPath = sessionPath)
 
     if show == True:
         sns.set_style("darkgrid")

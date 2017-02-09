@@ -208,11 +208,11 @@ def IdPlayerPreview(path, width, height, bkg, mask, bkgSubstraction, minArea, ma
     # cv2.destroyWindow('IdPlayer')
 
 
-# def playPreview(paths, bkgSubstraction, selectROI, numSegment=0):
+# def ROISelectorPreview(paths, bkgSubstraction, selectROI, numSegment=0):
 #     """
 #     loads a preview of the video for manual fine-tuning
 #     """
-#     # print 'Starting playPreview'
+#     # print 'Starting ROISelectorPreview'
 #     # global numSegment
 #     width, height = getVideoInfo(paths)
 #     video = os.path.basename(paths[0])
@@ -277,7 +277,7 @@ if __name__ == '__main__':
     cv2.namedWindow('Bars')
 
     numSegment = 0
-    path, width, height, bkg, mask, bkgSubstraction, minArea, maxArea, minThreshold = playPreview(paths, bkgSubstraction, selectROI)
+    path, width, height, bkg, mask, bkgSubstraction, minArea, maxArea, minThreshold = ROISelectorPreview(paths, bkgSubstraction, selectROI)
     IdPlayerPreview(path, width, height, bkg, mask, bkgSubstraction, minArea, maxArea, minThreshold)
 
 

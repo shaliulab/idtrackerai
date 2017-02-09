@@ -122,6 +122,7 @@ def getFilesAndSubfolders(folder):
     return files, subfolders
 
 def scanFolder(path):
+    ### NOTE if the video selected does not finish with '_1' the scanFolder function won't select all of them. This can be improved
     paths = [path]
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)

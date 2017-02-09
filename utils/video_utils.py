@@ -173,7 +173,7 @@ def computeBkg(paths, EQ, width, height):
     # plt.show()
     return bkg
 
-def checkBkg(useBkg, usePreviousBkg, paths, EQ, width, height):
+def checkBkg(paths, useBkg, usePreviousBkg, EQ, width, height):
     ''' Compute Bkg ''' ###TODO This can be done in a smarter way...
     path = paths[0]
     if useBkg:

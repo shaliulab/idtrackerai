@@ -4,7 +4,7 @@ sys.path.append('../utils')
 sys.path.append('../preprocessing')
 
 from segmentation import *
-from fragmentation_serie import *
+from fragmentation import *
 from get_portraits import *
 from video_utils import *
 from py_utils import *
@@ -71,16 +71,10 @@ def checkROI(useROI, usePreviousROI, frame, videoPath):
         centers = []
     return mask, centers
 
-''' ****************************************************************************
-First preview for ROI, numAnimals, inspect segmentation,
-**************************************************************************** '''
-
-def playPreview(paths, useBkg, usePreviousBkg, useROI, usePreviousROI, numSegment=0):
+def ROISelectorPreview(paths, useROI, usePreviousROI, numSegment=0):
     """
     loads a preview of the video for manual fine-tuning
     """
-    print '\n'
-    print '***** Starting playPreview to selectROI and Bkg...'
     cap2 = cv2.VideoCapture(paths[0])
     flag, frame = cap2.read()
     cap2.release()
@@ -90,66 +84,44 @@ def playPreview(paths, useBkg, usePreviousBkg, useROI, usePreviousROI, numSegmen
     mask, centers = checkROI(useROI, usePreviousROI, frameGray, paths[0])
     saveFile(paths[0], mask, 'ROI')
     saveFile(paths[0], centers, 'centers')
-    bkg = checkBkg(useBkg, usePreviousBkg, paths, 0, width, height)
 
-    return width, height, bkg, mask, centers
+    return width, height, mask, centers
 
-def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, maxArea = 60000, minThreshold = 136, maxThreshold = 255, size = 1):
-    numAnimals = getInput('Number of animals','Type the number of animals')
-    numAnimals = int(numAnimals)
-    # print 'Ready to get the cap from the path'
+''' ****************************************************************************
+First preview numAnimals, inspect parameters for segmentation and portraying
+**************************************************************************** '''
+
+def SegmentationPreview(path, width, height, bkg, mask, useBkg, numAnimals = None, minArea = 150, maxArea = 60000, minThreshold = 136, maxThreshold = 255, size = 1):
+    if numAnimals == None:
+        numAnimals = getInput('Number of animals','Type the number of animals')
+        numAnimals = int(numAnimals)
+
     global cap
     cap = cv2.VideoCapture(path)
-    # print 'Ready to get eh number of frames'
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
     def thresholder(minTh, maxTh):
-        # print 'I am in thresholder'
-        #threshold the frame, find contours and get portraits of the fish
         toile = np.zeros_like(avFrame, dtype='uint8')
-        # print 'I am going to call segmentVideo'
         segmentedFrame = segmentVideo(origFrame, minTh, maxTh, bkg, mask, useBkg)
-        # currentFrame = cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
-        # print 'The frame saved is, ', currentFrame
-        # pd.to_pickle(bkg, '/home/lab/Desktop/TF_models/IdTracker/Conflict8Small/bkgGUI.pkl')
-        # pd.to_pickle(frame, '/home/lab/Desktop/TF_models/IdTracker/Conflict8Small/frameGUI.pkl')
-        # pd.to_pickle(origFrame, '/home/lab/Desktop/TF_models/IdTracker/Conflict8Small/origFrame1GUI.pkl')
-        # pd.to_pickle(avFrameCopy, '/home/lab/Desktop/TF_models/IdTracker/Conflict8Small/avFrame1GUI.pkl')
-        # pd.to_pickle(segmentedFrame, '/home/lab/Desktop/TF_models/IdTracker/Conflict8Small/Segmentedframe1GUI.pkl')
-        # print '1'
         contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-        # print '2'
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')
-        # print 'minArea, ', minArea
-        # print 'maxArea, ', maxArea
-        # print 'avIntensity, ', avIntensity
-        # print '3'
-        # goodContours = filterContoursBySize(contours,minArea, maxArea)
-        # cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
-        # shower = cv2.addWeighted(origFrame,1,toile,.5,0)
-        # showerCopy = shower.copy()
-
         bbs, miniFrames, _, _, _, goodContours, bkgSamples = blobExtractor(segmentedFrame, origFrame, minArea, maxArea, height, width)
-
-        # bbs, miniFrames, _, _, _, bkgSamples = getBlobsInfoPerFrame(origFrame, goodContours, height, width)
 
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(origFrame,1,toile,.5,0)
         showerCopy = shower.copy()
         resUp = cv2.getTrackbarPos('ResUp', 'Bars')
         resDown = cv2.getTrackbarPos('ResDown', 'Bars')
-        # # print '4'
+
         showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
         showerCopy = cv2.resize(showerCopy,None, fx = np.true_divide(1,resDown), fy = np.true_divide(1,resDown))
-        # resUp = cv2.getTrackbarPos('ResUp', 'Bars')
-        # resDown = cv2.getTrackbarPos('ResDown', 'Bars')
-        # print '5'
+
         numColumns = 5
         numGoodContours = len(goodContours)
         numBlackPortraits = numColumns - numGoodContours % numColumns
         numPortraits = numGoodContours + numBlackPortraits
-        # print '6'
+
         j = 0
         sizePortrait = 32
         portraitsMat = []
@@ -165,41 +137,26 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
                 portraitsMat.append(np.hstack(rowPortrait))
                 rowPortrait = []
             j += 1
-        # print '7'
 
         portraitsMat = np.vstack(portraitsMat)
-        #show window containing the trackbars
-        # print '8'
+
         cv2.imshow('Bars',np.squeeze(portraitsMat))
-        #show frame, and react to changes in Bars
-        # print '9'
+
         cv2.imshow('IdPlayer', showerCopy)
         cv2.moveWindow('Bars', 10,10 )
         cv2.moveWindow('IdPlayer', 200, 10 )
-        # print '10'
 
     def scroll(trackbarValue):
         global frame, avFrame, frameGray, origFrame, avFrameCopy
-        # print 'setting frame position inside scroll function'
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-        #Get frame from video file
         ret, frame = cap.read()
-
-        #Color to gray scale
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        #make a copy of frameGray
         origFrame = frameGray.copy()
-        #average frame
         avFrame = np.divide(frameGray,np.mean(frameGray))
         avFrameCopy = avFrame.copy()
-
-        # font = cv2.FONT_HERSHEY_SIMPLEX
-        # cv2.putText(origFrame,str(trackbarValue),(50,50), font, 3,255)
-        #read thresholds from trackbars
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        # print 'end scroll'
         pass
 
 
@@ -207,44 +164,38 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        # print 'end changeMinTh'
         pass
 
     def changeMaxTh(maxTh):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        # print 'end changeMaxTh'
         pass
 
     def changeMinArea(x):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        # print 'end changeMinArea'
         pass
 
     def changeMaxArea(maxArea):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        # print 'end changeMaxArea'
         pass
 
     def resizeImageUp(res):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        # print 'end resizeImageUp'
         pass
 
     def resizeImageDown(res):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        # print 'end resizeImageDown'
         pass
-    # print 'Ready create trackbars in Bars window'
+
     cv2.createTrackbar('start', 'Bars', 0, numFrame-1, scroll )
     cv2.createTrackbar('minTh', 'Bars', 0, 255, changeMinTh)
     cv2.createTrackbar('maxTh', 'Bars', 0, 255, changeMaxTh)
@@ -252,14 +203,14 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
     cv2.createTrackbar('maxArea', 'Bars', 0, 60000, changeMaxArea)
     cv2.createTrackbar('ResUp', 'Bars', 1, 20, resizeImageUp)
     cv2.createTrackbar('ResDown', 'Bars', 1, 20, resizeImageDown)
-    # print 'Ready to set the default values'
+
     defFrame = 1
     defMinTh = minThreshold
     defMaxTh = maxThreshold
     defMinA = minArea
     defMaxA = maxArea
     defRes = size
-    # print 'Ready to call the scroll function'
+
     scroll(defFrame)
     cv2.setTrackbarPos('start', 'Bars', defFrame)
     changeMaxArea(defMaxA)
@@ -274,31 +225,77 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea = 150, m
     cv2.setTrackbarPos('ResUp', 'Bars', defRes)
     resizeImageDown(defRes)
     cv2.setTrackbarPos('ResDown', 'Bars', defRes)
-    # print 'Ready to get trackbarPosition'
+
     start = cv2.getTrackbarPos('start','Bars')
     minThresholdStart = cv2.getTrackbarPos('minTh', 'Bars')
     minAreaStart = cv2.getTrackbarPos('minArea', 'Bars')
     maxAreaStart = cv2.getTrackbarPos('maxArea', 'Bars')
-    # print 'Waiting for keypress'
+
     cv2.waitKey(0)
-    # print 'Creating dictionary of preprocParams'
+
     preprocParams = {'minThreshold': cv2.getTrackbarPos('minTh', 'Bars'),
         'maxThreshold': cv2.getTrackbarPos('maxTh', 'Bars'),
         'minArea': cv2.getTrackbarPos('minArea', 'Bars'),
         'maxArea': cv2.getTrackbarPos('maxArea', 'Bars'),
         'numAnimals': numAnimals}
-    # print 'Saving dictionary of preprocParams'
-    saveFile(path, preprocParams, 'preprocparams',hdfpkl='pkl')
-    print 'The video will be preprocessed according to the following parameters: ', preprocParams
+
+    # saveFile(path, preprocParams, 'preprocparams',hdfpkl='pkl')
 
     cap.release()
     cv2.destroyAllWindows()
+
+    return preprocParams
+
+def selectPreprocParams(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg):
+    if not usePreviousPrecParams:
+        videoPath = videoPaths[0]
+        preprocParams = SegmentationPreview(videoPath, width, height, bkg, mask, useBkg)
+
+        cv2.waitKey(1)
+        cv2.destroyAllWindows()
+        cv2.waitKey(1)
+        # numSegment = getInput('Segment number','Type the segment to be visualized')
+
+        end = False
+        while not end:
+            numSegment = getInput('Segment number','Type the segment to be visualized')
+            if numSegment == 'q' or numSegment == 'quit' or numSegment == 'exit':
+                end = True
+            else:
+                cv2.namedWindow('Bars')
+                end = False
+                usePreviousBkg = 1
+                path = videoPaths[int(numSegment)]
+                numAnimals = preprocParams['numAnimals']
+                minThreshold = preprocParams['minThreshold']
+                maxThreshold = preprocParams['maxThreshold']
+                minArea = int(preprocParams['minArea'])
+                maxArea = int(preprocParams['maxArea'])
+
+                mask = loadFile(videoPaths[0], 'ROI')
+                mask = np.asarray(mask)
+                centers= loadFile(videoPaths[0], 'centers')
+                centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
+                EQ = 0
+                ### FIXME put usePreviousBkg to 1 no to recompute it everytime we change the segment
+                bkg = checkBkg(videoPaths, useBkg, usePreviousBkg, EQ, width, height)
+
+                preprocParams = SegmentationPreview(path, width, height, bkg, mask, useBkg, numAnimals, minArea, maxArea, minThreshold, maxThreshold)
+
+            cv2.waitKey(1)
+            cv2.destroyAllWindows()
+            cv2.waitKey(1)
+
+        saveFile(path, preprocParams, 'preprocparams',hdfpkl='pkl')
+    else:
+        preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
+    return preprocParams
 
 ''' ****************************************************************************
 Fragmentation inspector
 *****************************************************************************'''
 def playFragmentation(paths,dfGlobal,visualize = False):
-    from fragmentation_serie import computeFrameIntersection ### FIXME For some reason it does not import well in the top and I have to import it here
+    from fragmentation import computeFrameIntersection ### FIXME For some reason it does not import well in the top and I have to import it here
     """
     IdInspector
     """
@@ -310,23 +307,13 @@ def playFragmentation(paths,dfGlobal,visualize = False):
     maxNumBlobs = info['maxNumBlobs']
     numSegment = 0
     frameIndices = loadFile(paths[0], 'frameIndices')
-    # paths = scanFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-    # paths = scanFolder('../Conflict8/conflict3and4_20120316T155032_1.avi') #'../Conflict8/conflict3and4_20120316T155032_1.pkl'
     path = paths[numSegment]
 
     def IdPlayerFragmentation(path,numAnimals, width, height,visualize):
         df,sNumber = loadFile(path, 'segmentation')
-        # video = os.path.basename(path)
-        # filename, extension = os.path.splitext(video)
-        # sNumber = int(filename.split('_')[-1])
-        # folder = os.path.dirname(path)
-        # df = pd.read_pickle(folder +'/'+ filename + '.pkl')
         print 'Visualizing video %s' % path
-        # print df
         cap = cv2.VideoCapture(path)
         numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-        # width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        # height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 
         def onChange(trackbarValue):
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
@@ -336,7 +323,6 @@ def playFragmentation(paths,dfGlobal,visualize = False):
             centroids = df.loc[trackbarValue,'centroids']
             pixelsA = df.loc[trackbarValue-1,'pixels']
             pixelsB = df.loc[trackbarValue,'pixels']
-            # permutation = df.loc[trackbarValue,'permutation']
             print '------------------------------------------------------------'
             print 'previous frame, ', str(trackbarValue-1), ', permutation, ', dfGlobal.loc[index-1,'permutations']
             print 'current frame, ', str(trackbarValue), ', permutation, ', permutation

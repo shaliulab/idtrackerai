@@ -9,7 +9,7 @@ sys.path.append('../utils')
 sys.path.append('../preprocessing')
 
 from segmentation import *
-from fragmentation_serie import *
+from fragmentation import *
 from get_portraits import *
 from video_utils import *
 from py_utils import *

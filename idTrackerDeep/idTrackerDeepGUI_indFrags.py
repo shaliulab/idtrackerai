@@ -5,7 +5,7 @@ sys.path.append('../preprocessing')
 sys.path.append('../tracker')
 
 from segmentation import *
-from fragmentation_serie import *
+from fragmentation import *
 from get_portraits import *
 from video_utils import *
 from py_utils import *
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     print 'usePreviousROI set to ', usePreviousROI
 
     ''' ROI selection and bkg loading'''
-    width, height, bkg, mask, centers = playPreview(videoPaths, useBkg, usePreviousBkg, useROI, usePreviousROI)
+    width, height, bkg, mask, centers = ROISelectorPreview(videoPaths, useBkg, usePreviousBkg, useROI, usePreviousROI)
 
     ''' Segmentation inspection '''
     if not loadPreviousDict['preprocparams']:

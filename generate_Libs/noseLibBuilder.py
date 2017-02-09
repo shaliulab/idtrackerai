@@ -97,7 +97,7 @@ if __name__ == '__main__':
                     cv2.namedWindow('Bars')
                 videoPaths = scanFolder(videoPath)
                 numSegment = 0
-                width, height, bkg, mask, centers = playPreview(videoPaths, useBkg, usePreviousBkg, useROI, usePreviousROI)
+                width, height, bkg, mask, centers = ROISelectorPreview(videoPaths, useBkg, usePreviousBkg, useROI, usePreviousROI)
 
                 ''' Segmentation inspection '''
                 if not loadPreviousDict['preprocparams']:
