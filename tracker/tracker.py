@@ -41,7 +41,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals, pr
     fragments = np.asarray(fragmentsDict['fragments'])
     framesAndBlobColumns = fragmentsDict['framesAndBlobColumnsDist']
     minLenIndivCompleteFragments = fragmentsDict['minLenIndivCompleteFragments']
-    intervals = fragmentsDict['intervals']
+    intervals = fragmentsDict['intervalsDist']
 
     # get accumulation data
     newFragForTrain = accumDict['newFragForTrain']
@@ -437,16 +437,11 @@ def getCkptvideoPath(videoPath, accumCounter, train=0):
 
     return ckptvideoPath
 
-def fineTuner(videoPath, accumDict, trainDict, fragmentsDict = [], portraits = [], videoInfo = [], plotFlag = True, printFlag = True):
+def fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portraits, videoInfo = [], plotFlag = True, printFlag = True):
     if printFlag:
         print '\n--- Entering the fineTuner ---'
 
     # Load data if needed
-    if fragmentsDict == []:
-        fragmentsDict = loadFile(videoPath, 'fragments')
-        fragmentsDict = fragmentsDict.to_dict()[0]
-    if len(portraits) == 0:
-        portraits = loadFile(videoPath, 'portraits')
     if videoInfo == []:
         videoInfo = loadFile(videoPath, 'videoInfo', hdfpkl='pkl')
 
@@ -496,13 +491,13 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict = [], portraits = [
         print '\nrunning with the devil'
         print 'The models will be loaded from (loadCkpt_folder)', loadCkpt_folder
         print '\nEntering training\n'
-    trainDict = run_training(X_train, Y_train, X_val, Y_val,
+    trainDict, handlesDict = run_training(X_train, Y_train, X_val, Y_val,
                     width, height, channels, classes, resolution,
-                    trainDict, accumDict, fragmentsDict, portraits,
+                    trainDict, accumDict, fragmentsDict, handlesDict, portraits,
                     Tindices, Titer_per_epoch,
                     Vindices, Viter_per_epoch)
     trainDict['loadCkpt_folder'] = ckpt_dir
-    return trainDict
+    return trainDict, handlesDict
 
 def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits = [], videoInfo = [], plotFlag = True, printFlag = True):
     '''
@@ -693,9 +688,8 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
         'normFreqFragsAll':normFreqFragsAll,
         'overallP2': overallP2}
 
-    # portraits['identities'] = idFreqFragAllVideo.tolist()
     portraits['identities'] = idLogP2FragAllVideo.tolist()
-    # e(videoPath,portraits,'portraits',time=0)
+    saveFile(videoPath,portraits,'portraits')
 
     pickle.dump( IdsStatistics , open( ckpt_dir + "/statistics.pkl", "wb" ) )
     pickle.dump( IdsStatistics , open( sessionPath + "/statistics.pkl", "wb" ) )
@@ -755,6 +749,13 @@ def bestFragmentFinder(accumDict, normFreqFragsAll, fragmentsDict, numAnimals, p
         print '\nThe fine-tuning will start with the ', indexFragment, ' longest global fragment'
         print 'Individual fragments inside the global fragment, ', intervalsDist[indexFragment]
         continueFlag = True
+        accumDict['minDist'] = minDistTrav
+        accumDict['fragsForTrain'] = fragsForTrain
+        accumDict['badFragments'] = badFragments
+        accumDict['newFragForTrain'] = acceptableFragIndices
+
+        continueFlag = True
+        accumDict['continueFlag'] = continueFlag
 
     else:
 
@@ -924,15 +925,18 @@ def bestFragmentFinder(accumDict, normFreqFragsAll, fragmentsDict, numAnimals, p
             print 'Fragments for training, ', fragsForTrain
             acceptableFragIndices = acceptableFragIndices.tolist()
 
+            accumDict['minDist'] = minDistTrav
+            accumDict['fragsForTrain'] = fragsForTrain
+            accumDict['badFragments'] = badFragments
+            accumDict['newFragForTrain'] = acceptableFragIndices
+
             continueFlag = True
+            accumDict['continueFlag'] = continueFlag
         else:
             print '\nThere are no more good fragments'
             continueFlag = False
+            accumDict['continueFlag'] = continueFlag
 
-    accumDict['minDist'] = minDistTrav
-    accumDict['fragsForTrain'] = fragsForTrain
-    accumDict['badFragments'] = badFragments
-    accumDict['newFragForTrain'] = acceptableFragIndices
-    accumDict['continueFlag'] = continueFlag
+
 
     return accumDict

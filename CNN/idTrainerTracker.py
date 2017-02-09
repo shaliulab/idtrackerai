@@ -74,7 +74,7 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
 
     return outList
 
-def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, trainDict, accumDict, fragmentsDict, portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch, plotFlag = True, printFlag = True):
+def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, trainDict, accumDict, fragmentsDict, handlesDict, portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch, plotFlag = True, printFlag = True):
 
     # get data from trainDict
     loadCkpt_folder = trainDict['loadCkpt_folder']
@@ -384,7 +384,8 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
 
                     if epoch_i % 1 == 0:
                         # CNNplotterFast2(lossAccDict, weightsDict)
-                        CNNplotterFast22(lossAccDict, weightsDict, idUsedIndivIntervals, accumDict,fragmentsDict,portraits,sessionPath, plotFlag)
+                        # CNNplotterFast22(lossAccDict, weightsDict, idUsedIndivIntervals, accumDict,fragmentsDict,portraits,sessionPath, plotFlag)
+                        handlesDict = CNNplotterFast22(epoch_counter,epoch_i,handlesDict,lossAccDict, idUsedIndivIntervals, accumDict,fragmentsDict,portraits,sessionPath)
 
                         print 'Saving figure...'
                         figname = fig_dir + '/result_' + str(global_step.eval()) + '.pdf'
@@ -404,7 +405,7 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
     pickle.dump( lossAccDict , open( sessionPath + "/lossAcc.pkl", "wb" ) )
     print 'You just saved the lossAccDict'
     trainDict['lossAccDict'] = lossAccDict
-    return trainDict
+    return trainDict, handlesDict
 
 """
 Sample calls:

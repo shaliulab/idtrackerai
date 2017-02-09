@@ -27,87 +27,87 @@ def orderVideo(matrixToOrder,permutations,maxNumBlobs):
                 matrixOrdered[frame,i] = -1
 
     return matrixOrdered
+#
+# def fragmentAccumPlotter(fragmentsDict,portraits,accumDict,figurePath):
+#
+#     fragsForTrain = accumDict['fragsForTrain']
+#     accumCounter = accumDict['counter']
+#
+#     fragments = fragmentsDict['fragments']
+#     permutations = np.asarray(portraits.loc[:,'permutations'].tolist())
+#     maxNumBlobs = len(permutations[0])
+#     permOrdered =  orderVideo(permutations,permutations,maxNumBlobs)
+#     permOrdered = permOrdered.T.astype('float32')
+#
+#     ''' Fragments '''
+#     fig = plt.figure("fragments-accum",figsize=(25, 5))
+#     plt.clf()
+#     ax = fig.add_subplot(111)
+#     permOrdered[permOrdered >= 0] = .5
+#     im = plt.imshow(permOrdered,cmap=plt.cm.gray,interpolation='none',vmin=0.,vmax=1.)
+#     im.cmap.set_under('r')
+#
+#     for i in fragsForTrain:
+#         ax.add_patch(
+#             patches.Rectangle(
+#                 (fragments[i,0], -0.5),   # (x,y)
+#                 fragments[i,1]-fragments[i,0],  # width
+#                 maxNumBlobs,          # height
+#                 fill=True,
+#                 edgecolor=None,
+#                 facecolor='b',
+#                 alpha = 0.5
+#             )
+#         )
+#
+#     plt.axis('tight')
+#     plt.xlabel('Frame number')
+#     plt.ylabel('Blob index')
+#     plt.gca().set_yticks(range(0,maxNumBlobs,4))
+#     plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
+#     plt.gca().invert_yaxis()
+#     plt.tight_layout()
+#
+#     print 'Saving figure...'
+#     figname = figurePath + '/fragments_' + str(accumCounter) + '.pdf'
+#     fig.savefig(figname)
 
-def fragmentAccumPlotter(fragmentsDict,portraits,accumDict,figurePath):
-
-    fragsForTrain = accumDict['fragsForTrain']
-    accumCounter = accumDict['counter']
-
-    fragments = fragmentsDict['fragments']
-    permutations = np.asarray(portraits.loc[:,'permutations'].tolist())
-    maxNumBlobs = len(permutations[0])
-    permOrdered =  orderVideo(permutations,permutations,maxNumBlobs)
-    permOrdered = permOrdered.T.astype('float32')
-
-    ''' Fragments '''
-    fig = plt.figure("fragments-accum",figsize=(25, 5))
-    plt.clf()
-    ax = fig.add_subplot(111)
-    permOrdered[permOrdered >= 0] = .5
-    im = plt.imshow(permOrdered,cmap=plt.cm.gray,interpolation='none',vmin=0.,vmax=1.)
-    im.cmap.set_under('r')
-
-    for i in fragsForTrain:
-        ax.add_patch(
-            patches.Rectangle(
-                (fragments[i,0], -0.5),   # (x,y)
-                fragments[i,1]-fragments[i,0],  # width
-                maxNumBlobs,          # height
-                fill=True,
-                edgecolor=None,
-                facecolor='b',
-                alpha = 0.5
-            )
-        )
-
-    plt.axis('tight')
-    plt.xlabel('Frame number')
-    plt.ylabel('Blob index')
-    plt.gca().set_yticks(range(0,maxNumBlobs,4))
-    plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
-    plt.gca().invert_yaxis()
-    plt.tight_layout()
-
-    print 'Saving figure...'
-    figname = figurePath + '/fragments_' + str(accumCounter) + '.pdf'
-    fig.savefig(figname)
-
-def P2AccumPlotter(fragmentsDict,portraits,accumDict,figurePath,ckpt_dir):
-
-    fragsForTrain = accumDict['fragsForTrain']
-    accumCounter = accumDict['counter']
-
-    fragments = fragmentsDict['fragments']
-    permutations = np.asarray(portraits.loc[:,'permutations'].tolist())
-    maxNumBlobs = len(permutations[0])
-    permOrdered =  orderVideo(permutations,permutations,maxNumBlobs)
-    permOrdered = permOrdered.T.astype('float32')
-
-    ''' P2 '''
-    statistics = pickle.load( open( ckpt_dir + "/statistics.pkl", "rb" ) )
-    P2 = statistics['P2FragAllVideo']
-    P2Ordered =  orderVideo(P2,permutations,maxNumBlobs)
-    P2good = np.max(P2Ordered,axis=2).T
-
-    fig = plt.figure("P2-accum",figsize=(25, 5))
-    plt.clf()
-    ax = fig.add_subplot(111)
-    im2 = plt.imshow(P2good,cmap=plt.cm.gray,interpolation='none')
-    im2.cmap.set_under('r')
-    im2.set_clim(0, 1)
-    cb = plt.colorbar(im2)
-    # fig.colorbar(im, ax=ax)
-    plt.axis('tight')
-    plt.xlabel('Frame number')
-    plt.ylabel('Blob index')
-    plt.gca().set_yticks(range(0,maxNumBlobs,4))
-    plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
-    plt.gca().invert_yaxis()
-    plt.tight_layout()
-
-    print 'Saving figure...'
-    figname = figurePath + '/P2_' + str(accumCounter) + '.pdf'
-    fig.savefig(figname)
+# def P2AccumPlotter(fragmentsDict,portraits,accumDict,figurePath,ckpt_dir):
+#
+#     fragsForTrain = accumDict['fragsForTrain']
+#     accumCounter = accumDict['counter']
+#
+#     fragments = fragmentsDict['fragments']
+#     permutations = np.asarray(portraits.loc[:,'permutations'].tolist())
+#     maxNumBlobs = len(permutations[0])
+#     permOrdered =  orderVideo(permutations,permutations,maxNumBlobs)
+#     permOrdered = permOrdered.T.astype('float32')
+#
+#     ''' P2 '''
+#     statistics = pickle.load( open( ckpt_dir + "/statistics.pkl", "rb" ) )
+#     P2 = statistics['P2FragAllVideo']
+#     P2Ordered =  orderVideo(P2,permutations,maxNumBlobs)
+#     P2good = np.max(P2Ordered,axis=2).T
+#
+#     fig = plt.figure("P2-accum",figsize=(25, 5))
+#     plt.clf()
+#     ax = fig.add_subplot(111)
+#     im2 = plt.imshow(P2good,cmap=plt.cm.gray,interpolation='none')
+#     im2.cmap.set_under('r')
+#     im2.set_clim(0, 1)
+#     cb = plt.colorbar(im2)
+#     # fig.colorbar(im, ax=ax)
+#     plt.axis('tight')
+#     plt.xlabel('Frame number')
+#     plt.ylabel('Blob index')
+#     plt.gca().set_yticks(range(0,maxNumBlobs,4))
+#     plt.gca().set_yticklabels(range(1,maxNumBlobs+1,4))
+#     plt.gca().invert_yaxis()
+#     plt.tight_layout()
+#
+#     print 'Saving figure...'
+#     figname = figurePath + '/P2_' + str(accumCounter) + '.pdf'
+#     fig.savefig(figname)
 
 def CNNplotterFast22(lossAccDict,weightsDict, idUsedIndivIntervals, accumDict,fragmentsDict,portraits,sessionPath,show=False, plotFlag=True):
 
@@ -127,7 +127,7 @@ def CNNplotterFast22(lossAccDict,weightsDict, idUsedIndivIntervals, accumDict,fr
 
     meanIndivAcc = indivAcc[-1]
     meanValIndiviAcc = indivValAcc[-1]
-    numIndiv = len(meanIndivAcc)
+    numAnimals = len(meanIndivAcc)
     features = features[:30]
     features = np.reshape(features, [features.shape[0],int(np.sqrt(features.shape[1])),int(np.sqrt(features.shape[1]))])
     labels = labels[:30]
@@ -191,14 +191,14 @@ def CNNplotterFast22(lossAccDict,weightsDict, idUsedIndivIntervals, accumDict,fr
     ax3.get_yaxis().tick_left()
     ax3.set_axis_bgcolor('none')
 
-    individuals = [str(j) for j in range(1,numIndiv+1)]
-    ind = np.arange(numIndiv)+1
+    individuals = [str(j) for j in range(1,numAnimals+1)]
+    ind = np.arange(numAnimals)+1
     # width = 0.25
     width = 0.35
     rects1 = ax3.bar(ind-width, meanIndivAcc, width, color='red', alpha=0.4,label='training')
     rects2 = ax3.bar(ind, meanValIndiviAcc, width, color='blue', alpha=0.4,label='validation')
     ax3.set_ylim((0,1))
-    ax3.set_xlim((0,numIndiv+1))
+    ax3.set_xlim((0,numAnimals+1))
     ax3.set_xlabel('individual')
     ax3.set_ylabel('Individual accuracy')
     # ax3.legend(fancybox=True, framealpha=0.05)
@@ -239,7 +239,7 @@ def CNNplotterFast22(lossAccDict,weightsDict, idUsedIndivIntervals, accumDict,fr
     im = plt.imshow(permOrdered,cmap=plt.cm.gray,interpolation='none',vmin=0.,vmax=1.)
     im.cmap.set_under('r')
 
-    colors = get_spaced_colors_util(numIndiv,norm=True)
+    colors = get_spaced_colors_util(numAnimals,norm=True)
     # print numAnimals
     # print colors
     for (frag,ID) in idUsedIndivIntervals:
@@ -297,3 +297,165 @@ def CNNplotterFast22(lossAccDict,weightsDict, idUsedIndivIntervals, accumDict,fr
         plt.draw()
 
     plt.pause(0.00000001)
+
+def CNNplotterFast22(epoch_counter, epoch_i, handlesDict,lossAccDict, idUsedIndivIntervals, accumDict,fragmentsDict,portraits,sessionPath, plotFlag=True):
+
+    # get variables
+    lossPlot, valLossPlot, accPlot, valAccPlot,indivAcc,indivValAcc = getVarFromDict(lossAccDict,['loss', 'valLoss','acc', 'valAcc', 'indivAcc', 'indivValAcc'])
+    meanIndivAcc = indivAcc[-1]
+    meanValIndiviAcc = indivValAcc[-1]
+    numAnimals = len(meanIndivAcc)
+
+    w, h = pyautogui.size()
+    # plt.clf()
+    if epoch_counter == 0 or handlesDict['restoring']:
+        fig, axarr = plt.subplots(5,1,num = "fine-tuning", figsize = (w/(2*96),h/96))
+    else:
+        fig = plt.gcf()
+        axarr = fig.axes
+
+    if len(lossPlot) < 100:
+        xlim = 100
+    elif len(lossPlot) < 250:
+        xlim = 250
+    elif len(lossPlot) < 500:
+        xlim = 500
+    elif len(lossPlot) < 750:
+        xlim = 750
+    else:
+        xlim = 1000
+
+    if epoch_counter == 0 or handlesDict['restoring']:
+        handlesDict['restoring'] = False
+        # loss
+        ax1 = axarr[0]
+        ax1.spines["top"].set_visible(False)
+        ax1.spines["right"].set_visible(False)
+        ax1.get_xaxis().tick_bottom()
+        ax1.get_yaxis().tick_left()
+        ax1.set_axis_bgcolor('none')
+        ax1.set_xlabel('Epoch')
+        ax1.set_ylabel('Loss function')
+        ax1.legend(fancybox=True, framealpha=0.05)
+        ax1.set_xlim((0,xlim))
+        ax1.set_ylim((0,2.))
+        handlesDict['TrainLoss'], = ax1.plot(lossPlot,'r-', label='training')
+        handlesDict['ValLoss'], = ax1.plot(valLossPlot, 'b-', label='validation')
+
+        # accuracy
+        ax2 = axarr[1]
+        ax2.spines["top"].set_visible(False)
+        ax2.spines["right"].set_visible(False)
+        ax2.get_xaxis().tick_bottom()
+        ax2.get_yaxis().tick_left()
+        ax2.set_axis_bgcolor('none')
+        ax2.set_xlabel('Epoch')
+        ax2.set_ylabel('Accuray')
+        ax2.set_xlim((0,xlim))
+        ax2.set_ylim((0,1))
+        handlesDict['TrainAcc'], = ax2.plot(accPlot, 'r-')
+        handlesDict['ValAcc'], = ax2.plot(valAccPlot, 'b-')
+
+        # Individual accuracies
+        ax3 = axarr[2]
+        ax3.spines["top"].set_visible(False)
+        ax3.spines["right"].set_visible(False)
+        ax3.get_xaxis().tick_bottom()
+        ax3.get_yaxis().tick_left()
+        ax3.set_axis_bgcolor('none')
+        ax3.set_ylim((0,1))
+        ax3.set_xlim((0,numAnimals+1))
+        ax3.set_xlabel('individual')
+        ax3.set_ylabel('Individual accuracy')
+
+        width = 0.35
+        individuals = [str(j) for j in range(1,numAnimals+1)]
+        ind = np.arange(numAnimals)+1
+        handlesDict['TrainIndivAcc'] = ax3.bar(ind-width, meanIndivAcc, width, color='red', alpha=0.4,label='training')
+        handlesDict['ValIndivAcc'] = ax3.bar(ind, meanValIndiviAcc, width, color='blue', alpha=0.4,label='validation')
+
+    else:
+
+        # loss
+        handlesDict['TrainLoss'].set_ydata(lossPlot), handlesDict['TrainLoss'].set_xdata(range(len(lossPlot)))
+        handlesDict['ValLoss'].set_ydata(valLossPlot),  handlesDict['ValLoss'].set_xdata(range(len(valLossPlot)))
+        ax1 = axarr[0]
+        ax1.set_xlim((0,xlim))
+
+        # accuracy
+        handlesDict['TrainAcc'].set_ydata(accPlot), handlesDict['TrainAcc'].set_xdata(range(len(accPlot)))
+        handlesDict['ValAcc'].set_ydata(valAccPlot),  handlesDict['ValAcc'].set_xdata(range(len(valAccPlot)))
+        ax1 = axarr[1]
+        ax1.set_xlim((0,xlim))
+
+        # Individual accuracies
+        for i in range(numAnimals):
+            handlesDict['TrainIndivAcc'][i].set_height(meanIndivAcc[i])
+            handlesDict['ValIndivAcc'][i].set_height(meanValIndiviAcc[i])
+
+
+    if epoch_i == 0:
+        # Fragments accumulation
+        fragsForTrain = accumDict['fragsForTrain']
+        accumCounter = accumDict['counter']
+
+        fragments = fragmentsDict['fragments']
+        permutations = np.asarray(portraits.loc[:,'permutations'].tolist())
+        maxNumBlobs = len(permutations[0])
+        permOrdered =  orderVideo(permutations,permutations,maxNumBlobs)
+        permOrdered = permOrdered.T.astype('float32')
+
+        ax4 = axarr[3]
+        ax4.cla()
+        permOrdered[permOrdered >= 0] = 1.
+        im = ax4.imshow(permOrdered,cmap=plt.cm.gray,interpolation='none',vmin=0.,vmax=1.)
+        im.cmap.set_under('k')
+
+        colors = get_spaced_colors_util(numAnimals,norm=True)
+        # print numAnimals
+        # print colors
+        for (frag,ID) in idUsedIndivIntervals:
+            # print identity
+            blobIndex = frag[0]
+            start = frag[2][0]
+            end = frag[2][1]
+            ax4.add_patch(
+                patches.Rectangle(
+                    (start, blobIndex-0.5),   # (x,y)
+                    end-start,  # width
+                    1.,          # height
+                    fill=True,
+                    edgecolor=None,
+                    facecolor=colors[ID+1],
+                    alpha = 1.
+                )
+            )
+
+        ax4.axis('tight')
+        ax4.set_xlabel('Frame number')
+        ax4.set_ylabel('Blob index')
+        ax4.set_yticks(range(0,maxNumBlobs,4))
+        ax4.set_yticklabels(range(1,maxNumBlobs+1,4))
+        ax4.invert_yaxis()
+
+        # P2
+        P2 = accumDict['overallP2']
+
+        ax5 = axarr[4]
+        ax5.cla()
+        ax5.spines["top"].set_visible(False)
+        ax5.spines["right"].set_visible(False)
+        ax5.plot(range(len(P2)),P2,'or-')
+        for i,p2 in enumerate(P2):
+            ax5.text(i,p2,str(p2))
+        ax5.set_xlabel('Accumulation step')
+        ax5.set_ylabel('Overall P2')
+
+        plt.subplots_adjust(bottom=0.05, right=.95, left=0.05, top=.95, wspace = 0.25, hspace=0.25)
+
+    if plotFlag:
+        plt.draw()
+
+    plt.pause(0.00000001)
+
+    return handlesDict

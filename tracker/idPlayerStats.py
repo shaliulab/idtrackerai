@@ -32,7 +32,8 @@ numSegment = 0
 # paths = scanFolder('../Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../videos/larvae1/trial_1_1.avi')
 # paths = scanFolder('../videos/nofragsError/_1.avi')
-paths = scanFolder('../videos/Conflicto8/conflict3and4_20120316T155032_1.avi')
+# paths = scanFolder('../videos/Conflicto8/conflict3and4_20120316T155032_1.avi')
+paths = scanFolder('../videos/cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
 # paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../videos/38fish_adult_splitted/adult1darkenes_1.avi')
@@ -204,7 +205,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
 
         # blendFrame = cv2.addWeighted(frame,.5,frameShadows,.5,0)
         # print 'shape blend Frame, ', blendFrame.shape
-        cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
+        cv2.putText(frame,str(globalFrame),(50,50), font, 3,(255,0,0))
         frame = cv2.resize(frame,None, fx = np.true_divide(1,1), fy = np.true_divide(1,1))
         # Visualization of the process
         cv2.imshow('IdPlayer',frame)

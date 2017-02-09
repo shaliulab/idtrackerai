@@ -43,7 +43,7 @@ if __name__ == '__main__':
     cv2.namedWindow('Bars') #FIXME If we do not create the "Bars" window here we have the "Bad window error"...
 
     ''' ************************************************************************
-    Selecting library directory
+    Selecting video directory
     ************************************************************************ '''
     print
     print '********************************************************************'
@@ -51,7 +51,8 @@ if __name__ == '__main__':
     print '********************************************************************\n'
 
     initialDir = ''
-    pathToVideos = selectDir(initialDir)
+    pathToVideo = selectFile()
+    pathToVideos = os.path.dirname(pathToVideo)
     print 'The path selected is, ', pathToVideos
     # pathToVideos = '/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf'
 
@@ -283,6 +284,8 @@ if __name__ == '__main__':
                 'usedIndivIntervals': [],
                 'idUsedIntervals': []}
 
+        handlesDict = {'restoring': False}
+
         normFreqFragments = None
     elif restoreFromAccPoint == 'y':
         restoreFromAccPointPath = selectDir('./')
@@ -303,9 +306,10 @@ if __name__ == '__main__':
                 trainDict = pickle.load( open( restoreFromAccPointPath + "/trainDict.pkl", "rb" ) )
                 normFreqFragments = statistics['normFreqFragsAll']
                 portraits = accumDict['portraits']
+
+        handlesDict = {'restoring': True}
     else:
         raise ValueError('You typed ' + restoreFromAccPoint + ' the accepted values are y or n.')
-
 
     while accumDict['continueFlag']:
         print '\n*** Accumulation ', accumDict['counter'], ' ***'
@@ -318,7 +322,7 @@ if __name__ == '__main__':
         print '---------------\n'
 
         ''' Fine tuning '''
-        trainDict = fineTuner(videoPath, accumDict, trainDict, fragmentsDict, portraits)
+        trainDict, handlesDict = fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portraits)
 
         print 'loadCkpt_folder ', trainDict['loadCkpt_folder']
         print 'ckpt_dir ', trainDict['ckpt_dir']
@@ -331,7 +335,7 @@ if __name__ == '__main__':
 
         ''' Updating training Dictionary'''
         trainDict['train'] = 2
-        trainDict['numEpochs'] = 2000
+        trainDict['numEpochs'] = 10000
         accumDict['counter'] += 1
         accumDict['portraits'] = portraits
         accumDict['overallP2'].append(overallP2)

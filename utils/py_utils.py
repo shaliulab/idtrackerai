@@ -143,7 +143,7 @@ def get_spaced_colors_util(n,norm=False):
     rgbcolorslist.insert(0, black)
     return rgbcolorslist
 
-def saveFile(path, variabletoSave, name, hdfpkl = 'hdf'):
+def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = ''):
     import cPickle as pickle
     """
     All the input are strings!!!
@@ -163,10 +163,16 @@ def saveFile(path, variabletoSave, name, hdfpkl = 'hdf'):
         nSegment = filename.split('_')[-1]# and before the number of the segment
         if hdfpkl == 'hdf':
             filename = 'segm_' + nSegment + '.hdf5'
-            variabletoSave.to_hdf(folder + subfolder + filename,name)
+            pathToSave = folder + subfolder + filename
+            variabletoSave.to_hdf(pathToSave,name)
         elif hdfpkl == 'pkl':
             filename = 'segm_' + nSegment + '.pkl'
-            pickle.dump(variabletoSave,open(folder + subfolder+ filename,'wb'))
+            pathToSave = folder + subfolder+ filename
+            pickle.dump(variabletoSave,open(pathToSave,'wb'))
+    elif name == 'trajectories':
+        filename = 'trajectories.pkl'
+        pathToSave = sessionPath + '/' + filename
+        pickle.dump(variabletoSave,open(pathToSave,'wb'))
     else:
         subfolder = '/preprocessing/'
         if hdfpkl == 'hdf':
@@ -175,15 +181,17 @@ def saveFile(path, variabletoSave, name, hdfpkl = 'hdf'):
                 variabletoSave = pd.DataFrame.from_dict(variabletoSave,orient='index')
             elif not isinstance(variabletoSave, pd.DataFrame):
                 variabletoSave = pd.DataFrame(variabletoSave)
-            variabletoSave.to_hdf(folder + subfolder + filename,name)
+            pathToSave = folder + subfolder + filename
+            variabletoSave.to_hdf(pathToSave,name)
         elif hdfpkl == 'pkl':
             filename = name + '.pkl'
             # filename = os.path.relpath(filename)
-            pickle.dump(variabletoSave,open(folder + subfolder + filename,'wb'))
+            pathToSave = folder + subfolder + filename
+            pickle.dump(variabletoSave,open(pathToSave,'wb'))
 
-    print 'You just saved ',folder + subfolder + filename
+    print 'You just saved ', pathToSave
 
-def loadFile(path, name, hdfpkl = 'hdf'):
+def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
     """
     loads a pickle. path is the path of the video, while name is a string in the
     set {}
@@ -201,6 +209,9 @@ def loadFile(path, name, hdfpkl = 'hdf'):
         elif hdfpkl == 'pkl':
             filename = 'segm_' + nSegment + '.pkl'
             return pickle.load(open(folder + subfolder + filename) ,'rb'), nSegmen
+    elif name == 'statistics':
+        filename = 'statistics.pkl'
+        return pickle.load(open(sessionPath + '/' + filename,'rb') )
     else:
         subfolder = '/preprocessing/'
         if hdfpkl == 'hdf':
