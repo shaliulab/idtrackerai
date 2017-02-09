@@ -33,8 +33,7 @@ def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
     trueFragment: True when each animal from frame A overlap with only one animal in frame B
     s: permutation that needs to be applied to miniFrames for the identities in A and B to be conserved
     """
-    # thArea = 1000
-    # print '*********** NUM ANIMALS **********, ', numAnimals
+
     numAnimalsA = len(pixelsFrameA)
     numAnimalsB = len(pixelsFrameB)
     combinations = itertools.product(range(numAnimalsA),range(numAnimalsB)) # compute all the pairwise posibilities for two given number of animals
@@ -47,24 +46,12 @@ def computeFrameIntersection(pixelsFrameA,pixelsFrameB,numAnimals):
         overlapMat[combination] = inter
 
     rows = overlapMat.nonzero()[0]
-    # print 'rows, ', rows
     cols = overlapMat.nonzero()[1]
-    # print 'cols, ', cols
     possibleCombinations = zip(rows,cols)
     s = []
     for possibleCombination in possibleCombinations:
-        # print 'possibleCombination, ', possibleCombination
-        # print sum(possibleCombination[0]==rows) == 1
-        # print sum(possibleCombination[1]==cols) == 1
-        # print len(pixelsFrameB[possibleCombination[1]]) < thArea
-        # print len(pixelsFrameA[possibleCombination[0]]) < thArea
-        # if (sum(possibleCombination[0]==rows) == 1 and sum(possibleCombination[1]==cols) ==1) and \
-        #     len(pixelsFrameB[possibleCombination[1]]) < thArea and len(pixelsFrameA[possibleCombination[0]]) < thArea:
         if (sum(possibleCombination[0]==rows) == 1 and sum(possibleCombination[1]==cols) ==1):
             s.append(possibleCombination)
-    # print len(s)
-    # print type(numAnimals)
-    # if len(s) == numAnimals:
     if numAnimalsA == numAnimals and numAnimalsB == numAnimals and len(s) == numAnimals:
         trueFragment = True
 
@@ -121,18 +108,15 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
             globalFrame = i + globalFrameCounter
             dfGlobal.loc[globalFrame, 'areas'] = df.loc[i,'areas']
             dfGlobal.loc[globalFrame, 'centroids'] = df.loc[i,'centroids']
-            # print '*** segment frame, ', i, ', global frame, ', globalFrame
+
             if globalFrame != 0: # Becuase we look at the past (i-1 and i), the first frame of the first segment does not make sense
-                # print 'it is not the first global frame '
+
                 if globalFrame == 1:
-                    # print 'it is the second global frame '
                     # If it is the first time we look at the past we need to define pixelsA and the previous permutation,
                     # in the next iterations they will be defined recursively form pixelsB and from the permutation in i
                     pixelsA = columnPixels[i-1]
                     init = np.multiply(np.ones(maxNumBlobs, dtype='int'),-1)
                     init[:int(columnNumBlobs[0])] = np.arange(int(columnNumBlobs[0]))
-                    # dfGlobal.set_value(0,'permutation',init)
-                    # print 'init, ', init
                     dfGlobal.loc[0,'permutations'] = init
                     old = dfGlobal.loc[0,'permutations']
 
@@ -140,12 +124,6 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
 
                 pixelsB = columnPixels[i]
                 trueFragment, permutation, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals) # compute overlapping between blobs
-                # print 'numBlobsA', len(pixelsA)
-                # print 'numBlobsB', len(pixelsB)
-                # print 'trueFragment, ', trueFragment
-                # print 'overlapMat, '
-                # print overlapMat
-                # print 'permutation, ', permutation
 
                 cur_ind = set(old)
                 all_ind = set(range(maxNumBlobs))
@@ -167,21 +145,19 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
 
 
                 if trueFragment: # the current frame has a good overlap with the previous one
-                    # print 'There is a good overlaping between A and B'
+
                     if len(fragment)==0: # it is a new fragment
-                        # print 'It is a new fragment'
                         fragment.append(globalFrame-1)
 
                     if j == len(videoPaths)-1 and i == numFramesSegment-1: # if it is the last frame
-                        # print 'It is the last frame of the video'
                         fragment, fragments = storeFragmentIndices(fragment, fragments, globalFrame+1)
+
                 else: # the current frame do not have a good overlap with the previous one
-                    # print 'There is not a good overlaping between A and B'
+
                     fragment, fragments = storeFragmentIndices(fragment, fragments, globalFrame)
-                    # print 'This are the fragments so far, ', fragments
 
                 if i == numFramesSegment-1: # it is the last frame of the segment
-                    # print 'It is the last frame of the segment'
+
                     globalFrameCounter += numFramesSegment
                     dfA = df.copy()
                     if j == len(videoPaths)-1:
@@ -228,9 +204,9 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
     frames = identitiesInd[0]
     portraitInds = identitiesInd[1]
     potentialCrossings = []
+
     if frames.size != 0: # there are frames assigned to this individualIndex
-        # _, height, width =  portraitsFrag[0].shape
-        indivFragments = []
+            indivFragments = []
         indivFragment = []
         indivFragmentInterval = ()
         indivFragmentsIntervals = []
@@ -256,21 +232,19 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
                             indivFragmentInterval = indivFragmentInterval + (frame,) # we are using tuples
 
                     else: # if the area is too big, I close the individual fragment and I add the indices to the list of potentialCrossings
-                        # print 'changing permutation to -1'
+
                         potentialCrossings.append((frame,portraitInd)) # save to list of potential crossings
                         newIdentitiesFrame = dfGlobal.loc[frame,'permutations']
                         newIdentitiesFrame[portraitInd] = -1
                         newdfGlobal.set_value(frame, 'permutations', newIdentitiesFrame)
 
                         if len(indivFragment) != 0:
-                            # I close the individual fragment and I open a new one
                             indivFragment = np.asarray(indivFragment)
                             indivFragments.append(indivFragment)
 
                             indivFragmentInterval = indivFragmentInterval + (frame-1,)
                             indivFragmentsIntervals.append(indivFragmentInterval)
 
-                            # print len(indivFragment)
                             lenFragments.append(len(indivFragment))
                             sumFragIndices.append(sum(lenFragments))
                             vels, avVels = computeVelocity(indivCentroidsInterval)
@@ -283,7 +257,6 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
                             indivFragmentInterval = ()
 
                 else: #the next frame is not a consecutive frame, I close the individual fragment
-                    # print 'they are not consecutive frames, I close the fragment'
                     currentArea = areasFrag[frame][portraitInd]
                     currentCentroid = centroidsFrag[frame][portraitInd]
 
@@ -316,7 +289,6 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
                         indivCentroidsInterval = []
                         indivFragmentInterval = ()
             else:
-                # print 'it is the last frame, I close the fragments '
                 currentArea = areasFrag[frame][portraitInd]
                 if currentArea < meanIndivArea + nStd*stdIndivArea: # if the area is accepted by the model area
                     indivFragment.append((frame, portraitInd))
@@ -327,7 +299,6 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
 
 
                 else: # if the area is too big, I close the individual fragment and I add the indices to the list of potentialCrossings
-                    # print 'changing permutation to -1'
                     potentialCrossings.append((frame,portraitInd)) # save to list of potential crossings
                     newIdentitiesFrame = dfGlobal.loc[frame,'permutations']
                     newIdentitiesFrame[portraitInd] = -1
@@ -359,12 +330,7 @@ def recomputeGlobalFragments(newdfGlobal,numAnimals):
     fragment = []
     print '*******************************'
     print 'recomputing global fragments...'
-    # print newdfGlobal
     for index in newdfGlobal.index:
-        # print 'index, ', index
-        # print 'permutations, ', newdfGlobal.loc[index,'permutations']
-        # print np.sum(newdfGlobal.loc[index,'permutations']>=0)
-        # print numAnimals
         if np.sum(newdfGlobal.loc[index,'permutations']>=0) == numAnimals and len(newdfGlobal.loc[index,'areas']) ==numAnimals:
             if len(fragment) == 0:
                 fragment.append(index)
@@ -373,7 +339,6 @@ def recomputeGlobalFragments(newdfGlobal,numAnimals):
                 fragment.append(index-1)
                 fragments.append(fragment)
                 fragment = []
-        # print 'fragments, ', fragments
 
     return fragments
 
@@ -398,13 +363,6 @@ def getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnim
         oneIndivFragVels.append(avVelFragments)
         allVelsVideo.append(allVels)
         oneIndivFragDists.append(distTravFragments)
-
-    # allVelsVideo = flatten(allVelsVideo)
-    #
-    # flatVel = np.asarray(flatten(flatten(allVelsVideo)))
-    # plt.figure()
-    # plt.hist(np.log(np.add(flatVel[~np.isnan(flatVel)],0.000000000000000001)),  bins=150)
-    # plt.show()
 
     fragments = recomputeGlobalFragments(newdfGlobal,numAnimals)
     fragments = np.asarray(fragments)
@@ -467,21 +425,7 @@ def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFrag
     argsort = minLenIndivCompleteFragments.argsort()[::-1]
     argsortDist = minDistIndivCompleteFragments.argsort()[::-1]
 
-    # print '******************************************************'
-    # print '******************************************************'
-    # print 'argsort, ', argsort
-    # print 'argsortDist, ', argsortDist
-    # plt.ion()
-    # plt.figure()
-    # plt.plot(np.asarray(argsortDist).argsort(),np.asarray(argsort).argsort(),'o')
-    # plt.show()
-    # print '******************************************************'
-    # print '******************************************************'
-    #
-    # raw_input('Press ENTER to continue.')
-
     fragments = fragments[argsortDist]
-    # fragments = fragments[argsort]
     minLenIndivCompleteFragments = minLenIndivCompleteFragments[argsort]
     minDistIndivCompleteFragments = minDistIndivCompleteFragments[argsortDist]
 
@@ -501,7 +445,7 @@ def fragment(videoPaths,videoInfo = None):
         numAnimals = videoInfo['numAnimals']
         maxNumBlobs = videoInfo['maxNumBlobs']
 
-    ''' Compute permutations and complete fragments '''
+    ''' Compute permutations and global fragments '''
     fragments, dfGlobal = newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames)
     saveFile(videoPaths[0],dfGlobal,'dfGlobal')
     playFragmentation(videoPaths,dfGlobal,False)
@@ -509,21 +453,15 @@ def fragment(videoPaths,videoInfo = None):
     ''' Compute model area of individual blob '''
     fragments = np.asarray(fragments)
     meanIndivArea, stdIndivArea = modelDiffArea(fragments, dfGlobal.areas)
-    # print 'meanIndivArea, ', meanIndivArea
-    # print 'stdindivArea, ', stdIndivArea
     videoInfo = loadFile(videoPaths[0], 'videoInfo', hdfpkl='pkl')
     videoInfo['meanIndivArea'] = meanIndivArea
     videoInfo['stdIndivArea'] = stdIndivArea
     saveFile(videoPaths[0],videoInfo,'videoInfo', hdfpkl = 'pkl')
-    # print 'fragments before individual fragments, ', fragments
+
+    ''' Get individual fragments '''
     oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, oneIndivFragVels, oneIndivFragDists, dfGlobal, fragments = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
-    # print 'fragments after individual fragments, ', fragments
-    # print dfGlobal.loc[80:90]
-    playFragmentation(videoPaths,dfGlobal,False)
-    # oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, dfGlobal = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
 
-    # print '\n dfGlobal', dfGlobal
-
+    ''' Get coexistence of individual fragments in global fragments '''
     fragments, framesAndBlobColumns, intervalsFragments, minLenIndivCompleteFragments, minDistIndivCompleteFragments, framesAndBlobColumnsDist, intervalsFragmentsDist = getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragVels,oneIndivFragFrames,oneIndivFragDists,numAnimals)
     fragmentsDict = {
         'fragments': fragments, #global fragments
@@ -544,7 +482,3 @@ def fragment(videoPaths,videoInfo = None):
     saveFile(videoPaths[0],dfGlobal,'portraits')
 
     return dfGlobal, fragmentsDict
-
-# videoPath = '/home/lab/Desktop/TF_models/IdTracker/Cafeina5peces/Caffeine5fish_20140206T122428_1.avi'
-# videoPaths = scanFolder(videoPath)
-# fragment(videoPaths)
