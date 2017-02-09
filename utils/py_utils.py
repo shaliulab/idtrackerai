@@ -10,8 +10,6 @@ import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import *
 import shutil
 import cPickle as pickle
-# import pickle
-
 
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):

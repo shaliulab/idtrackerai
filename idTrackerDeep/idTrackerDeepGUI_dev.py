@@ -1,4 +1,4 @@
-# Improt starndar libraires
+# Import standard libraries
 import os
 from os.path import isdir, isfile
 import sys
@@ -107,6 +107,7 @@ if __name__ == '__main__':
         EQ = 0
         print 'The preprocessing parameters dictionary loaded is ', preprocParams
         segment(videoPaths, preprocParams, mask, centers, useBkg, bkg, EQ)
+
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
@@ -117,7 +118,7 @@ if __name__ == '__main__':
     if not loadPreviousDict['fragments']:
         dfGlobal, fragmentsDict = fragment(videoPaths,videoInfo=None)
 
-        playFragmentation(videoPaths,dfGlobal,True) # last parameter is to visualize or not
+        playFragmentation(videoPaths,dfGlobal,visualize=False)
 
         cv2.waitKey(1)
         cv2.destroyAllWindows()

@@ -1,32 +1,20 @@
-import cv2
+# Import standard libraries
+import os
 import sys
+import numpy as np
+import multiprocessing
+
+# Import third party libraries
+import cv2
+import pandas as pd
+from joblib import Parallel, delayed
+import gc
+
+# Import application/library specifics
 sys.path.append('../utils')
 
 from py_utils import *
 from video_utils import *
-# from threshold_GUI import *
-
-import time
-import numpy as np
-from matplotlib import pyplot as plt
-from Tkinter import *
-import tkMessageBox
-import argparse
-import os
-import glob
-import pandas as pd
-import time
-import re
-from joblib import Parallel, delayed
-import multiprocessing
-import cPickle as pickle
-import gc
-import datetime
-from skimage import data
-from skimage.viewer.canvastools import RectangleTool, PaintTool
-from skimage.viewer import ImageViewer
-from scipy import ndimage
-import Tkinter, tkSimpleDialog
 
 def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea):
 
@@ -42,9 +30,6 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
     while counter < numFrames:
         #Get frame from video file
         ret, frame = cap.read()
-        # print ret
-        # if ret == False:
-            # print "*********************************** ret false"
         #Color to gray scale
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         origFrame = frameGray.copy()
@@ -54,13 +39,6 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
         segmentedFrameCopy = segmentedFrame.copy()
         # Find contours in the segmented image
         boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, origFrame, minArea, maxArea, height, width)
-        # print 'minArea, ', minArea
-        # print 'maxArea, ', maxArea
-        # print 'minTh, ', minThreshold
-        # print 'maxTh, ', maxThreshold
-        # print counter, len(centroids)
-        # if len(centroids) == 0:
-            # print "*********************************** 0 blobs detected"
         if len(centroids) > maxNumBlobs:
             maxNumBlobs = len(centroids)
         ### UNCOMMENT TO PLOT ##################################################

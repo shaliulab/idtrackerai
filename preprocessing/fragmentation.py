@@ -1,26 +1,18 @@
-import cv2
+# Import standard libraries
 import sys
+import numpy as np
+from matplotlib import pyplot as plt
+
+# Import third party libraries
+import pandas as pd
+import itertools
+
+# Import application/library specifics
 sys.path.append('../utils')
 
 from py_utils import *
 from GUI_utils import *
 
-import time
-import numpy as np
-from matplotlib import pyplot as plt
-from Tkinter import *
-import tkMessageBox
-import argparse
-import os
-import glob
-import pandas as pd
-import time
-import re
-from joblib import Parallel, delayed
-import multiprocessing
-import itertools
-import cPickle as pickle
-import math
 
 def computeIntersection(pixelsA,pixelsB):
     """
@@ -200,8 +192,8 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
                 numFramesA = numFramesSegment
                 old = dfGlobal.loc[globalFrame,'permutations']
 
-    print 'fragments , ', fragments
-    print 'numFragments, ', len(fragments)
+    print '\nGlobal fragments , ', fragments
+    print 'numFragments, ', len(fragments),  '\n'
     return fragments, dfGlobal
 
 def modelDiffArea(fragments,areas):
@@ -264,7 +256,7 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
                             indivFragmentInterval = indivFragmentInterval + (frame,) # we are using tuples
 
                     else: # if the area is too big, I close the individual fragment and I add the indices to the list of potentialCrossings
-                        print 'changing permutation to -1'
+                        # print 'changing permutation to -1'
                         potentialCrossings.append((frame,portraitInd)) # save to list of potential crossings
                         newIdentitiesFrame = dfGlobal.loc[frame,'permutations']
                         newIdentitiesFrame[portraitInd] = -1
@@ -335,7 +327,7 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
 
 
                 else: # if the area is too big, I close the individual fragment and I add the indices to the list of potentialCrossings
-                    print 'changing permutation to -1'
+                    # print 'changing permutation to -1'
                     potentialCrossings.append((frame,portraitInd)) # save to list of potential crossings
                     newIdentitiesFrame = dfGlobal.loc[frame,'permutations']
                     newIdentitiesFrame[portraitInd] = -1
@@ -386,7 +378,7 @@ def recomputeGlobalFragments(newdfGlobal,numAnimals):
     return fragments
 
 def getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals):
-    print '\n Computing individual fragments ******************'
+    print '\nComputing individual fragments ******************'
     newdfGlobal = dfGlobal.copy()
     oneIndivFragIntervals = []
     oneIndivFragFrames = []
@@ -395,7 +387,7 @@ def getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnim
     oneIndivFragVels = []
     oneIndivFragDists = []
     allVelsVideo = []
-    print dfGlobal.loc[80:90]
+
     for i in range(int(maxNumBlobs)):
         print 'Computing individual fragments for blob index, ', i
         indivFragments,indivFragmentsIntervals, lenFragments,sumFragIndices, avVelFragments, allVels, distTravFragments, newdfGlobal = getIndivFragments(newdfGlobal, i,meanIndivArea,stdIndivArea)
@@ -413,7 +405,7 @@ def getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnim
     # plt.figure()
     # plt.hist(np.log(np.add(flatVel[~np.isnan(flatVel)],0.000000000000000001)),  bins=150)
     # plt.show()
-    print dfGlobal.loc[80:90]
+
     fragments = recomputeGlobalFragments(newdfGlobal,numAnimals)
     fragments = np.asarray(fragments)
     return oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, oneIndivFragVels, oneIndivFragDists, newdfGlobal, fragments
@@ -438,7 +430,7 @@ def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFrag
     framesAndBlobColumnsDist = []
     for i, fragment in enumerate(fragments):
         print '******************************************************'
-        print '\n Computing lengths of one-individual fragments in complete fragment, ', i, fragment
+        print 'Computing lengths of one-individual fragments in complete fragment, ', i, fragment
         lenIndivFrag = []
         distIndivFrag = []
         intervalsFragment = []

@@ -1,23 +1,16 @@
-import cv2
-import sys
-sys.path.append('../utils')
-
-from py_utils import *
-
-import numpy as np
-from matplotlib import pyplot as plt
-from Tkinter import *
-import tkMessageBox
+# Import standard libraries
 import os
-import glob
-import pandas as pd
-from joblib import Parallel, delayed
+import sys
+import numpy as np
 import multiprocessing
-from skimage import data
-from skimage.viewer.canvastools import RectangleTool, PaintTool
-from skimage.viewer import ImageViewer
-from scipy import ndimage
-import Tkinter, tkSimpleDialog
+
+# Import third party libraries
+import cv2
+from joblib import Parallel, delayed
+
+# Import application/library specifics
+sys.path.append('../utils')
+from py_utils import *
 
 """
 Split video
@@ -78,28 +71,28 @@ def splitVideo(videoPath):
 """
 Get general information from video
 """
-def getVideoInfo(paths):
-    if len(paths) == 1:
-        path = paths
-    elif len(paths) > 1:
-        path = paths[0]
+def getVideoInfo(videoPaths):
+    if len(videoPaths) == 1:
+        videoPath = videoPaths
+    elif len(videoPaths) > 1:
+        videoPath = videoPaths[0]
     else:
-        raise ValueError('the path (or list of path) seems to be empty')
-    cap = cv2.VideoCapture(paths[0])
+        raise ValueError('the videoPath (or list of videoPaths) seems to be empty')
+    cap = cv2.VideoCapture(videoPaths[0])
     width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     return width, height
 
-def getNumFrame(path):
-    cap = cv2.VideoCapture(path)
+def getNumFrame(videoPath):
+    cap = cv2.VideoCapture(videoPath)
     return int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
-def collectAndSaveVideoInfo(path, numFrames, height, width, numAnimals, numCores, minThreshold,maxThreshold,maxArea,maxNumBlobs):
+def collectAndSaveVideoInfo(videoPath, numFrames, height, width, numAnimals, numCores, minThreshold,maxThreshold,maxArea,maxNumBlobs):
     """
     saves general info about the video in a pickle (_videoinfo.pkl)
     """
     videoInfo = {
-        'path': path,
+        'path': videoPath,
         'numFrames': numFrames,
         'height':height,
         'width': width,
@@ -110,10 +103,10 @@ def collectAndSaveVideoInfo(path, numFrames, height, width, numAnimals, numCores
         'maxArea': maxArea,
         'maxNumBlobs':maxNumBlobs
         }
-    print videoInfo
-    saveFile(path, videoInfo, 'videoInfo',hdfpkl='pkl')
+    print 'videoInfo, ', videoInfo
+    saveFile(videoPath, videoInfo, 'videoInfo',hdfpkl='pkl')
 
-def generateVideoTOC(allSegments, path):
+def generateVideoTOC(allSegments, videoPath):
     """
     generates a dataframe mapping frames to segments and save it as pickle
     """
@@ -126,15 +119,15 @@ def generateVideoTOC(allSegments, path):
     framesTOC = flatten(framesTOC)
     videoTOC =  pd.DataFrame({'segment':segmentsTOC, 'frame': framesTOC})
     numFrames = len(videoTOC)
-    saveFile(path, videoTOC, 'frameIndices')
+    saveFile(videoPath, videoTOC, 'frameIndices')
     return numFrames
 
 """
 Compute background and threshold
 """
-def computeBkgPar(path,bkg,EQ):
-    print 'Adding video %s to background' % path
-    cap = cv2.VideoCapture(path)
+def computeBkgPar(videoPath,bkg,EQ):
+    print 'Adding video %s to background' % videoPath
+    cap = cv2.VideoCapture(videoPath)
     counter = 0
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     numFramesBkg = 0
@@ -150,46 +143,32 @@ def computeBkgPar(path,bkg,EQ):
 
     return bkg, numFramesBkg
 
-def computeBkg(paths, EQ, width, height):
+def computeBkg(videoPaths, EQ, width, height):
     # This holds even if we have not selected a ROI because then the ROI is
     # initialized as the full frame
     bkg = np.zeros((height,width))
 
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    # numFrame = Parallel(n_jobs=num_cores)(delayed(getNumFrame)(path) for path in paths)
-    output = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(path,bkg,EQ) for path in paths)
+    output = Parallel(n_jobs=num_cores)(delayed(computeBkgPar)(videoPath,bkg,EQ) for videoPath in videoPaths)
     partialBkg = [bkg for (bkg,_) in output]
     totNumFrame = np.sum([numFrame for (_,numFrame) in output])
-    # allBkg = np.asarray(partialBkg)
-    # print '********************** ', np.asarray(partialBkg).shape
     bkg = np.sum(np.asarray(partialBkg),axis=0)
-    # totNumFrame = allBkg.shape[0]
     bkg = np.true_divide(bkg, totNumFrame)
-    # bkg is the backgorund computed by summing all the averaged frames
-    # of the video and dividing by the number of frames in the video.
-    # print '**********bkg, ', bkg.shape
-    # plt.imshow(bkg)
-    # plt.show()
     return bkg
 
-def checkBkg(paths, useBkg, usePreviousBkg, EQ, width, height):
+def checkBkg(videoPaths, useBkg, usePreviousBkg, EQ, width, height):
     ''' Compute Bkg ''' ###TODO This can be done in a smarter way...
-    path = paths[0]
+    videoPath = videoPaths[0]
     if useBkg:
         if usePreviousBkg:
-            bkg = loadFile(path, 'bkg',hdfpkl='pkl')
-            # bkgDict = bkgDict.to_dict()[0]
-            # bkg = bkgDict['bkg']
-            # maxIntensity = bkgDict['maxIntensity']
-            # maxBkg = bkgDict['maxBkg']
+            bkg = loadFile(videoPath, 'bkg',hdfpkl='pkl')
         else:
-            bkg = computeBkg(paths, EQ, width, height)
-            # bkgDict = {'bkg': bkg}#, 'maxIntensity': maxIntensity, 'maxBkg': maxBkg}
-            saveFile(path, bkg, 'bkg', hdfpkl='pkl')
-        return bkg#, maxIntensity, maxBkg
+            bkg = computeBkg(videoPaths, EQ, width, height)
+            saveFile(videoPath, bkg, 'bkg', hdfpkl='pkl')
+        return bkg
     else:
-        return None#, maxIntensity, None
+        return None
 
 """
 Image equalization
@@ -204,18 +183,14 @@ def checkEq(EQ, frame):
 
 def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
     #Apply background substraction if requested and threshold image
-    # print 'minThreshold, ', minThreshold
-    # print 'maxThreshold, ', maxThreshold
 
     # compute the average frame
     frame = np.true_divide(frame,np.mean(frame))
     if useBkg:
 
-        # print 'max and min frame, ', np.max(frame), np.min(frame)
-        # print 'max and min bkg, ', np.max(bkg), np.min(bkg)
         frameSubtracted = uint8caster(np.abs(np.subtract(bkg,frame)))
         frameSubtractedMasked = cv2.addWeighted(frameSubtracted,1,mask,1,0)
-        # Uncomment to plot
+        ### Uncomment to plot
         # cv2.imshow('frame', uint8caster(frame))
         # cv2.imshow('frameSubtractedMasked',frameSubtractedMasked)
         frameSubtractedMasked = 255-frameSubtractedMasked
@@ -227,37 +202,6 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
         # cv2.imshow('frameMasked',frameMasked)
         ret, frameSegmented = cv2.threshold(frameMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
     return frameSegmented
-
-# def segmentVideoIdTracker(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
-#     #Apply background substraction if requested and threshold image
-#     # print 'minThreshold, ', minThreshold
-#     # print 'maxThreshold, ', maxThreshold
-#
-#     # compute the average frame
-#     mask[mask == 255] = 1
-#     frame = np.true_divide(frame,np.mean(frame))
-#     if useBkg:
-#         frameMasked = frame + mask
-#         bkgMasked = bkg + mask
-#         # cv2.imshow('frameMasked', uint8caster(frameMasked))
-#         # cv2.imshow('bkgMasked',uint8caster(bkgMasked))
-#
-#         frameMaskedThresholded = frameMasked < minThreshold
-#         bkgMaskedThresholded = bkgMasked < minThreshold
-#
-#         # cv2.imshow('frame', uint8caster(frameMaskedThresholded))
-#         # cv2.imshow('bkgMaskedThresholded',uint8caster(bkgMaskedThresholded))
-#
-#         frameSegmented = frameMaskedThresholded-bkgMaskedThresholded
-#         # cv2.imshow('bkgMaskedThresholded',uint8caster(frameSegmented))
-#         frameSegmented = np.uint8(frameSegmented)
-#         # cv2.waitKey(1)
-#     else:
-#         frameMasked = frame + mask
-#         frameSegmented = frameMasked < minThreshold
-#         frameSegmented = np.uint8(frameSegmented)
-#     return frameSegmented
-
 
 """
 Get information from blobs
@@ -371,7 +315,6 @@ def getBlobsInfoPerFrame(frame, contours, height, width):
     return boundingBoxes, miniFrames, centroids, areas, pixels, bkgSamples
 
 def blobExtractor(segmentedFrame, frame, minArea, maxArea, height, width):
-    # contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
     # Filter contours by size
     goodContoursFull = filterContoursBySize(contours,minArea, maxArea)

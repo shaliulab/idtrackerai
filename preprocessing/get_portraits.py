@@ -1,28 +1,22 @@
-import cv2
+# Import standard libraries
 import sys
-sys.path.append('../utils')
+import numpy as np
+import multiprocessing
+import math
 
+# Import third party libraries
+from matplotlib import pyplot as plt
+import cv2
+import pandas as pd
+from joblib import Parallel, delayed
+
+# Import application/library specifics
+sys.path.append('../utils')
 from py_utils import *
 from video_utils import *
 
-import time
-import numpy as np
-from matplotlib import pyplot as plt
-from Tkinter import *
-import tkMessageBox
-import argparse
-import os
-import glob
-import pandas as pd
-import re
-from joblib import Parallel, delayed
-import multiprocessing
-import cPickle as pickle
-import math
-
 def smooth(x,window_len=20,window='hanning'):
    """smooth the data using a window with requested size."""
-
    if x.ndim != 1:
        raise ValueError, "smooth only accepts 1 dimension arrays."
 
@@ -81,7 +75,7 @@ def smooth_resample(contour,smoothFlag = False):
     y_new = y
 
     # M = 1000
-    M = 2000 ### NOTE we change it to 1500 otherwise was getting trapped inside of the while loop
+    M = 2000 ### FIXME we change it to 2000 otherwise was getting trapped inside of the while loop
     t = np.linspace(0, len(x_new), M)
     x = np.interp(t, np.arange(len(x_new)), x_new)
     y = np.interp(t, np.arange(len(y_new)), y_new)
@@ -182,13 +176,7 @@ def getMFandC(path, frameIndices):
     to a specific fragments
     """
     # get number of segment
-    # video = os.path.basename(path)
-    # filename, extension = os.path.splitext(video)
-    # numSegment = int(filename.split('_')[-1])
-    #load dataframe
-    # df = pd.read_pickle(path)
     df, numSegment = loadFile(path, 'segmentation')
-    # print df
     # check if permutations are NaN (i.e. the frame is not included in a fragment)
     permutationsBool = np.asarray(df['permutation'].notnull())
 
@@ -208,8 +196,6 @@ def getMFandC(path, frameIndices):
 def fillSquareFrame(square_frame,bkgSamps):
     numSamples = 0
     threshold = 150
-    # print 'lenght bkgSamps, ', len(bkgSamps)
-    # print 'min bkg, max bk', np.min(bkgSamps), np.max(bkgSamps)
     while numSamples <= 10:
         # print 'threshold, ', threshold
         bkgSampsNew = bkgSamps[bkgSamps > threshold]
@@ -232,8 +218,6 @@ def fillSquareFrame(square_frame,bkgSamps):
 def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     height, width = miniframe.shape
     orientation = np.sign(cv2.contourArea(cnt,oriented=True)) ### TODO this can probably be optimized
-    # print '*************************************'
-    # print 'orientation, ', orientation
 
     # Pass contour to bb coord, resample, smooth, and duplicate
     cnt = full2miniframe(cnt, bb)
@@ -323,9 +307,6 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
         print portrait.shape
         raise ValueError('This portrait do not have 32x32 pixels. Chenges in light during the video could deteriorate the blobs: try and rais the threshold in the preprocessing parametersm, and run segmentation and fragmentation again.')
 
-    # Fill black parts of the portrait with random background
-    # portrait = fillSquareFrame(minif_cropped,bkgSamp,threshold)
-    # return portrait, curvature, cnt, maxCoord, sorted_locations
     noseFull = cntBB2Full(nose,bb)
     return portrait, tuple(noseFull.astype('int'))
 
@@ -343,9 +324,6 @@ def reaper(videoPath, frameIndices):
 
     segmentIndices = frameIndices.loc[frameIndices.loc[:,'segment']==int(numSegment)]
     segmentIndices = segmentIndices.index.tolist()
-    # print segmentIndices
-    # boundingboxes, miniframes, contours, bkgSamples, segmentIndices = getMFandC(videoPath,frameIndices)
-    # print 'loading done'
 
     # print 'miniframes are array'
     """ Visualise """

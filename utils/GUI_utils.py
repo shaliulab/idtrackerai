@@ -1,5 +1,17 @@
-import cv2
+# Import standard libraries
+import os
 import sys
+import numpy as np
+
+# Import third party libraries
+import cv2
+from pylab import *
+from skimage import data
+from skimage.viewer.canvastools import RectangleTool
+from skimage.viewer import ImageViewer
+from skimage.draw import polygon
+
+# Import application/library specifics
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
 
@@ -8,37 +20,44 @@ from fragmentation import *
 from get_portraits import *
 from video_utils import *
 from py_utils import *
-from ROIselect import *
-
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-from Tkinter import *
-import tkMessageBox
-import argparse
-import os
-import glob
-import pandas as pd
-import time
-import re
-from joblib import Parallel, delayed
-import multiprocessing
-import itertools
-import cPickle as pickle
-import math
-from natsort import natsorted, ns
-from os.path import isdir, isfile
-import scipy.spatial.distance as scisd
-from tkFileDialog import askopenfilename
 
 ''' ****************************************************************************
 ROI selector GUI
 *****************************************************************************'''
+### FIXME The ROI selector can be improved
+### FIXME Mask and centers might be saved in a single dictionary with a pkl
+
+def get_rect_coord(extents):
+    global viewer,coord_list, coord_shape
+    coord_list.append(extents)
+    coord_shape.append(getInput('Select ROI shape', 'type r for rectangular ROI and c for circular'))
+
+def get_ROI(im):
+    global viewer,coord_list, coord_shape
+
+    selecting=True
+    while selecting:
+        viewer = ImageViewer(im)
+        coord_list = []
+        coord_shape = []
+        rect_tool = RectangleTool(viewer, on_enter=get_rect_coord)
+
+        print "Draw a ROI, press ENTER to validate and repeat the procedure to draw more than one ROI. Close the window when you are finished"
+
+        viewer.show()
+
+        finished=getInput('Confirm selection','Is the selection correct? [y]/n: ')
+        if finished!='n':
+            selecting = False
+        else:
+            get_ROI(im)
+    return coord_list, coord_shape
+
 def ROIselector(frame):
      ROIsCoords, ROIsShapes = get_ROI(frame)
      mask = np.ones_like(frame,dtype='uint8')*255
      centers = []
-     print ROIsCoords
+     print 'ROICoords, ', ROIsCoords
      for coord,shape in zip(ROIsCoords, ROIsShapes):
           coord = np.asarray(coord).astype('int')
           if shape == 'r':
@@ -91,7 +110,13 @@ def ROISelectorPreview(paths, useROI, usePreviousROI, numSegment=0):
 First preview numAnimals, inspect parameters for segmentation and portraying
 **************************************************************************** '''
 
-def SegmentationPreview(path, width, height, bkg, mask, useBkg, numAnimals = None, minArea = 150, maxArea = 60000, minThreshold = 136, maxThreshold = 255, size = 1):
+def SegmentationPreview(path, width, height, bkg, mask, useBkg, preprocParams,  size = 1):
+    ### FIXME Currently the scale factor of the image is not passed everytime we change the segment. It need to be changed so that we do not need to resize everytime we open a new segmen.
+    minArea = preprocParams['minArea']
+    maxArea = preprocParams['maxArea']
+    minThreshold = preprocParams['minThreshold']
+    maxThreshold = preprocParams['maxThreshold']
+    numAnimals = preprocParams['numAnimals']
     if numAnimals == None:
         numAnimals = getInput('Number of animals','Type the number of animals')
         numAnimals = int(numAnimals)
@@ -233,13 +258,12 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, numAnimals = Non
 
     cv2.waitKey(0)
 
-    preprocParams = {'minThreshold': cv2.getTrackbarPos('minTh', 'Bars'),
-        'maxThreshold': cv2.getTrackbarPos('maxTh', 'Bars'),
-        'minArea': cv2.getTrackbarPos('minArea', 'Bars'),
-        'maxArea': cv2.getTrackbarPos('maxArea', 'Bars'),
-        'numAnimals': numAnimals}
-
-    # saveFile(path, preprocParams, 'preprocparams',hdfpkl='pkl')
+    preprocParams = {
+                'minThreshold': cv2.getTrackbarPos('minTh', 'Bars'),
+                'maxThreshold': cv2.getTrackbarPos('maxTh', 'Bars'),
+                'minArea': cv2.getTrackbarPos('minArea', 'Bars'),
+                'maxArea': cv2.getTrackbarPos('maxArea', 'Bars'),
+                'numAnimals': numAnimals}
 
     cap.release()
     cv2.destroyAllWindows()
@@ -249,12 +273,18 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, numAnimals = Non
 def selectPreprocParams(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg):
     if not usePreviousPrecParams:
         videoPath = videoPaths[0]
-        preprocParams = SegmentationPreview(videoPath, width, height, bkg, mask, useBkg)
+        preprocParams = {
+                    'minThreshold': 136,
+                    'maxThreshold': 255,
+                    'minArea': 150,
+                    'maxArea': 60000,
+                    'numAnimals': None
+                    }
+        preprocParams = SegmentationPreview(videoPath, width, height, bkg, mask, useBkg,preprocParams)
 
         cv2.waitKey(1)
         cv2.destroyAllWindows()
         cv2.waitKey(1)
-        # numSegment = getInput('Segment number','Type the segment to be visualized')
 
         end = False
         while not end:
@@ -265,12 +295,7 @@ def selectPreprocParams(videoPaths, usePreviousPrecParams, width, height, bkg, m
                 cv2.namedWindow('Bars')
                 end = False
                 usePreviousBkg = 1
-                path = videoPaths[int(numSegment)]
-                numAnimals = preprocParams['numAnimals']
-                minThreshold = preprocParams['minThreshold']
-                maxThreshold = preprocParams['maxThreshold']
-                minArea = int(preprocParams['minArea'])
-                maxArea = int(preprocParams['maxArea'])
+                videoPath = videoPaths[int(numSegment)]
 
                 mask = loadFile(videoPaths[0], 'ROI')
                 mask = np.asarray(mask)
@@ -280,13 +305,13 @@ def selectPreprocParams(videoPaths, usePreviousPrecParams, width, height, bkg, m
                 ### FIXME put usePreviousBkg to 1 no to recompute it everytime we change the segment
                 bkg = checkBkg(videoPaths, useBkg, usePreviousBkg, EQ, width, height)
 
-                preprocParams = SegmentationPreview(path, width, height, bkg, mask, useBkg, numAnimals, minArea, maxArea, minThreshold, maxThreshold)
+                preprocParams = SegmentationPreview(videoPath, width, height, bkg, mask, useBkg, preprocParams)
 
             cv2.waitKey(1)
             cv2.destroyAllWindows()
             cv2.waitKey(1)
 
-        saveFile(path, preprocParams, 'preprocparams',hdfpkl='pkl')
+        saveFile(videoPath, preprocParams, 'preprocparams',hdfpkl='pkl')
     else:
         preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
     return preprocParams
@@ -299,87 +324,74 @@ def playFragmentation(paths,dfGlobal,visualize = False):
     """
     IdInspector
     """
-    print dfGlobal.loc[80:90]
-    info = loadFile(paths[0], 'videoInfo', hdfpkl = 'pkl')
-    width = info['width']
-    height = info['height']
-    numAnimals = info['numAnimals']
-    maxNumBlobs = info['maxNumBlobs']
-    numSegment = 0
-    frameIndices = loadFile(paths[0], 'frameIndices')
-    path = paths[numSegment]
+    if visualize:
+        info = loadFile(paths[0], 'videoInfo', hdfpkl = 'pkl')
+        width = info['width']
+        height = info['height']
+        numAnimals = info['numAnimals']
+        maxNumBlobs = info['maxNumBlobs']
+        numSegment = 0
+        frameIndices = loadFile(paths[0], 'frameIndices')
+        path = paths[numSegment]
 
-    def IdPlayerFragmentation(path,numAnimals, width, height,visualize):
-        df,sNumber = loadFile(path, 'segmentation')
-        print 'Visualizing video %s' % path
-        cap = cv2.VideoCapture(path)
-        numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+        def IdPlayerFragmentation(path,numAnimals, width, height):
+            df,sNumber = loadFile(path, 'segmentation')
+            print 'Visualizing video %s' % path
+            cap = cv2.VideoCapture(path)
+            numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
-        def onChange(trackbarValue):
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-            index = frameIndices[(frameIndices.segment == int(sNumber)) & (frameIndices.frame == trackbarValue)].index[0]
-            print index
-            permutation = dfGlobal.loc[index,'permutations']
-            centroids = df.loc[trackbarValue,'centroids']
-            pixelsA = df.loc[trackbarValue-1,'pixels']
-            pixelsB = df.loc[trackbarValue,'pixels']
-            print '------------------------------------------------------------'
-            print 'previous frame, ', str(trackbarValue-1), ', permutation, ', dfGlobal.loc[index-1,'permutations']
-            print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
-            trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
-            print 'overlapMat, '
-            print overlapMat
-            print 'permutation, ', s
-            # if sNumber == 1 and trackbarValue > 100:
-            #     trueFragment, s = computeFrameIntersection(df.loc[trackbarValue-1,'pixels'],df.loc[trackbarValue,'pixels'],5)
-            #     print trueFragment, s
-            #     result = df.loc[trackbarValue-1,'permutation'][s]
-            #     print 'result, ', result
-            #Get frame from video file
-            ret, frame = cap.read()
-            #Color to gray scale
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            font = cv2.FONT_HERSHEY_SIMPLEX
+            def onChange(trackbarValue):
+                cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+                index = frameIndices[(frameIndices.segment == int(sNumber)) & (frameIndices.frame == trackbarValue)].index[0]
+                print index
+                permutation = dfGlobal.loc[index,'permutations']
+                centroids = df.loc[trackbarValue,'centroids']
+                pixelsA = df.loc[trackbarValue-1,'pixels']
+                pixelsB = df.loc[trackbarValue,'pixels']
+                print '------------------------------------------------------------'
+                print 'previous frame, ', str(trackbarValue-1), ', permutation, ', dfGlobal.loc[index-1,'permutations']
+                print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
+                trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
+                print 'overlapMat, '
+                print overlapMat
+                print 'permutation, ', s
 
-            # Plot segmentated blobs
-            for i, pixel in enumerate(pixelsB):
-                px = np.unravel_index(pixel,(height,width))
-                frame[px[0],px[1]] = 255
+                #Get frame from video file
+                ret, frame = cap.read()
+                #Color to gray scale
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                font = cv2.FONT_HERSHEY_SIMPLEX
 
-            # plot numbers if not crossing
-            # if not isinstance(permutation,float):
-                # print 'pass'
-            for i, centroid in enumerate(centroids):
-                cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
+                # Plot segmentated blobs
+                for i, pixel in enumerate(pixelsB):
+                    px = np.unravel_index(pixel,(height,width))
+                    frame[px[0],px[1]] = 255
 
-            cv2.putText(frame,str(index),(50,50), font, 3,(255,0,0))
+                for i, centroid in enumerate(centroids):
+                    cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
 
-            # Visualization of the process
-            cv2.imshow('IdPlayerFragmentation',frame)
-            pass
+                cv2.putText(frame,str(index),(50,50), font, 3,(255,0,0))
 
-        cv2.namedWindow('IdPlayerFragmentation')
-        cv2.createTrackbar( 'start', 'IdPlayerFragmentation', 0, numFrame-1, onChange )
-        # cv2.createTrackbar( 'end'  , 'IdPlayer', numFrame-1, numFrame, onChange )
+                # Visualization of the process
+                cv2.imshow('IdPlayerFragmentation',frame)
+                pass
 
-        onChange(1)
-        if visualize: ### FIXME this is because otherwise we have a Fatal Error on the "Bars" window. Apparently the backend needs a waitkey(1)...
+            cv2.namedWindow('IdPlayerFragmentation')
+            cv2.createTrackbar( 'start', 'IdPlayerFragmentation', 0, numFrame-1, onChange )
+
+            onChange(1)
             cv2.waitKey(0)
-        else:
+
+            start = cv2.getTrackbarPos('start','IdPlayerFragmentation')
+            numSegment = getInput('Segment number','Type the segment to be visualized')
+            return numSegment
+
+        finish = False
+        while not finish:
+            # print 'I am here', numSegment
+            numSegment = IdPlayerFragmentation(paths[int(numSegment)],numAnimals, width, height)
+            if numSegment == 'q':
+                finish = True
             cv2.waitKey(1)
-            return 'q'
-
-        start = cv2.getTrackbarPos('start','IdPlayerFragmentation')
-        numSegment = getInput('Segment number','Type the segment to be visualized')
-        return numSegment
-        # return raw_input('Which segment do you want to inspect?')
-
-    finish = False
-    while not finish:
-        # print 'I am here', numSegment
-        numSegment = IdPlayerFragmentation(paths[int(numSegment)],numAnimals, width, height,visualize)
-        if numSegment == 'q':
-            finish = True
-        cv2.waitKey(1)
-        cv2.destroyAllWindows()
-        cv2.waitKey(1)
+            cv2.destroyAllWindows()
+            cv2.waitKey(1)
