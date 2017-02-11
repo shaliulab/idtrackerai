@@ -9,6 +9,8 @@ from matplotlib import pyplot as plt
 import cv2
 import pandas as pd
 from joblib import Parallel, delayed
+import scipy.ndimage
+from scipy.signal import argrelmax
 
 # Import application/library specifics
 sys.path.append('../utils')
@@ -61,12 +63,9 @@ def smoother(contour):
     Y_smooth = Y_smooth[int(np.floor(window/2)):-int(np.ceil(window/2))]
     return X_smooth, Y_smooth
 
-def smooth_resample(contour,smoothFlag = False):
-    # print 'smoothing-resampling arclength...'
+def smooth_resample(counter, contour,smoothFlag = False):
     if smoothFlag:
         x,y  = smoother(contour)
-        # x = smooth(contour[:,0],8)
-        # y = smooth(contour[:,1],8)
     else:
         x = contour[:,0]
         y = contour[:,1]
@@ -74,16 +73,22 @@ def smooth_resample(contour,smoothFlag = False):
     x_new = x
     y_new = y
 
-    # M = 1000
-    M = 2000 ### FIXME we change it to 2000 otherwise was getting trapped inside of the while loop
+
+    M = 1000
+    while 2*len(x_new) >= M: ### FIXME When the contour is too big we need to increase the number of points for the resampling.
+    # Mainly this happens because the contour does not belong to a single animal. We need to check whether there is a better way of discarding blobs belonging to crossings.
+        M += 500
+
     t = np.linspace(0, len(x_new), M)
     x = np.interp(t, np.arange(len(x_new)), x_new)
     y = np.interp(t, np.arange(len(y_new)), y_new)
-    # tol = .1
     tol = .1
     i, idx = 0, [0]
-    # print 'inside the loop'
+    i_new = i
+    print 'inside the loop, ', counter
+    print 'len contour, ', len(x_new)
     while i < len(x):
+        # print 'i, ', i
         total_dist = 0
         for j in range(i+1, len(x)):
             total_dist += np.sqrt((x[j]-x[j-1])**2 + (y[j]-y[j-1])**2)
@@ -92,6 +97,21 @@ def smooth_resample(contour,smoothFlag = False):
                 break
 
         i = j+1
+        if i == i_new:
+            print 'i, ', i
+            print 'tol, ', tol
+            print 'total_dist, ', total_dist
+            print 'M, ', M
+            print 'len contour, ', len(x_new)
+            print 'perimiter, ', np.sum(np.sqrt(np.diff(x_new)**2 + np.diff(y_new)**2))
+            plt.ion()
+            plt.plot(x,y,'-b')
+            plt.pause(3)
+            plt.show()
+            raise ValueError('It got stuck in the while loop of the resampling of the contour to compute the curvature')
+
+        i_new = i
+
 
     xn = x[idx]
     yn = y[idx]
@@ -197,7 +217,7 @@ def fillSquareFrame(square_frame,bkgSamps):
     numSamples = 0
     threshold = 150
     while numSamples <= 10:
-        # print 'threshold, ', threshold
+
         bkgSampsNew = bkgSamps[bkgSamps > threshold]
         threshold -= 10
         if threshold == 0:
@@ -208,9 +228,8 @@ def fillSquareFrame(square_frame,bkgSamps):
     bkgSamps = bkgSampsNew
     if numSamples == 0:
         raise ValueError('I do not have enough samples for the background')
-    # print 'numSamples, ', numSamples
+
     numSamplesRequested = np.sum(square_frame == 0)
-    # print 'numSamplesRequested, ', numSamplesRequested
     indicesSamples = np.random.randint(0,numSamples,numSamplesRequested)
     square_frame[square_frame == 0] = bkgSamps[indicesSamples]
     return square_frame
@@ -223,7 +242,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     cnt = full2miniframe(cnt, bb)
     cnt = np.asarray(cnt)
     cnt = np.squeeze(cnt)
-    cnt = smooth_resample(cnt,smoothFlag=True)
+    cnt = smooth_resample(counter, cnt,smoothFlag=True)
     cnt = np.vstack([cnt,cnt])
 
     # Compute curvature
@@ -267,7 +286,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
 
     # Copy miniframe in a bigger frame to rotate
     rowsMin, colsMin = miniframe.shape
-    # print 'shape of the miniframe, ', miniframe.shape
+
     diag = np.round(np.sqrt(rowsMin**2 + colsMin**2)).astype('int')
     new_frame = np.zeros((diag,diag)).astype('uint8')
     x_offset = np.ceil((diag-colsMin)/2).astype('int')
@@ -286,7 +305,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     T = np.matrix([M[0][2],M[1][2]])
     nose_rt = np.asarray(np.add(np.squeeze(np.asarray(np.dot(R, np.asmatrix(new_nose).T))),T).astype('int'))[0]
     minif_rot = cv2.warpAffine(new_frame, M, (diag,diag),flags = cv2.INTER_NEAREST)
-    # print 'shape of the new miniframe rotated, ', minif_rot.shape
+
     # Crop the image in 32x32 frame around the nose
     nose_pixels = [int(nose_rt[0]),int(nose_rt[1])]
     # print counter
@@ -311,10 +330,9 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     return portrait, tuple(noseFull.astype('int'))
 
 def reaper(videoPath, frameIndices):
-    # print 'segment number ', i
     print 'reaping', videoPath
     df, numSegment = loadFile(videoPath, 'segmentation')
-    # print 'numSegment, ', numSegment
+
     boundingboxes = np.asarray(df.loc[:, 'boundingBoxes'])
     miniframes = np.asarray(df.loc[:, 'miniFrames'])
     miniframes = np.asarray(miniframes)
@@ -325,15 +343,14 @@ def reaper(videoPath, frameIndices):
     segmentIndices = frameIndices.loc[frameIndices.loc[:,'segment']==int(numSegment)]
     segmentIndices = segmentIndices.index.tolist()
 
-    # print 'miniframes are array'
+
     """ Visualise """
     AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images'])
     AllNoses = pd.DataFrame(index = segmentIndices, columns= ['noses'])
     AllCentroids= pd.DataFrame(index = segmentIndices, columns= ['centroids'])
-    # print goodFrameIndices
+
     counter = 0
     while counter < len(miniframes):
-        # print counter
         portraits = []
         noses = []
         bbs = boundingboxes[counter]
@@ -342,12 +359,10 @@ def reaper(videoPath, frameIndices):
         bkgSamps = bkgSamples[counter]
         centroids = centroidsSegment[counter]
         for j, miniframe in enumerate(minif):
-            # print '----------------', j, counter, videoPath
-            # print miniframe
             ### Uncomment to plot
             # cv2.imshow('frame', miniframe)
             # cv2.waitKey()
-            portrait, nose_pixels = getPortrait(miniframe,cnts[j],bbs[j],bkgSamps[j])
+            portrait, nose_pixels = getPortrait(miniframe,cnts[j],bbs[j],bkgSamps[j],j)
 
             # get all the heads in a single list
             portraits.append(portrait)
@@ -369,9 +384,8 @@ def reaper(videoPath, frameIndices):
 
 def portrait(videoPaths, dfGlobal):
     frameIndices = loadFile(videoPaths[0], 'frameIndices')
-    # print 'frameIndices, ', frameIndices
-    num_cores = multiprocessing.cpu_count()
-    # num_cores = 1
+    # num_cores = multiprocessing.cpu_count()
+    num_cores = 1
     allPortraitsAndNoses = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath,frameIndices) for videoPath in videoPaths)
     allPortraits = [t[0] for t in allPortraitsAndNoses]
     allNoses = [t[1] for t in allPortraitsAndNoses]

@@ -195,7 +195,7 @@ def computeDistanceTraveled(centroids):
     return np.sum(np.sqrt(np.sum(np.diff(centroids,axis=0)**2,axis=1)),axis=0)
 
 def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
-    nStd = 4 # num std for area model of single blob
+    nStd = 4 # FIXME Maybe find a better strategy to discard blobs belonging to crossings
     newdfGlobal = dfGlobal.copy()
     areasFrag = np.asarray(dfGlobal.loc[:,'areas'].tolist())
     centroidsFrag = np.asarray(dfGlobal.loc[:,'centroids'].tolist())
@@ -206,7 +206,7 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
     potentialCrossings = []
 
     if frames.size != 0: # there are frames assigned to this individualIndex
-            indivFragments = []
+        indivFragments = []
         indivFragment = []
         indivFragmentInterval = ()
         indivFragmentsIntervals = []

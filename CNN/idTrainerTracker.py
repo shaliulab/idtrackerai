@@ -207,11 +207,11 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                         prevLoss = valLossPlot[-minNumEpochsCheckLoss]
                         magCurr = int(np.log10(currLoss))-1
                         magPrev = int(np.log10(prevLoss))-1
-                        epsilon = .1*10**(magCurr)
+                        epsilon = -.1*10**(magCurr)
                         epsilon2 = .01*10**(magCurr)
 
                         if printFlag:
-                            print 'Losses difference ', -currLoss + prevLoss
+                            print 'Losses difference (prev - curr) ', prevLoss-currLoss
                             print 'epsilon (overfitting), ', epsilon
                             print 'epsilon2 (if it is not changing much), ', epsilon2
 
@@ -222,12 +222,12 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
 
                                 break
                             elif magCurr == magPrev:
-                                if currLoss - prevLoss > epsilon:
+                                if (prevLoss - currLoss) < epsilon:
                                     if printFlag:
                                         print 'Overfitting, passing to new set of images'
 
                                     break
-                            if prevLoss - currLoss < epsilon2:
+                            if (prevLoss - currLoss) < epsilon2:
                                 if printFlag:
                                     print 'Finished, passing to new set of images'
 

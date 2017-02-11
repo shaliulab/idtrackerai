@@ -1,5 +1,4 @@
 # Import standard libraries
-# import os
 import sys
 import numpy as np
 np.set_printoptions(precision=2)
@@ -16,22 +15,6 @@ from tf_utils import *
 from input_data_cnn import *
 from cnn_utils import *
 
-# import time
-
-
-# import argparse
-# import glob
-# import pandas as pd
-# import re
-# from joblib import Parallel, delayed
-# import multiprocessing
-# import cPickle as pickle
-# import tensorflow as tf
-
-# from pprint import pprint
-# from collections import Counter
-# import collections
-# import datetime
 
 def getAvVelFragment(portraits,framesAndColumns):
     centroids = []
