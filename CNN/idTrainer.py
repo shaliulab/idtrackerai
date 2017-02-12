@@ -344,7 +344,7 @@ if __name__ == '__main__':
     parser.add_argument('--train', default=1, type=int)
     parser.add_argument('--ckpt_folder', default = "./ckpt_dir_new3_Xavier_SGD", type= str)
     parser.add_argument('--load_ckpt_folder', default = "", type = str)
-    parser.add_argument('--num_indiv', default = 60, type = int)
+    parser.add_argument('--num_indiv', default = 2, type = int)
     parser.add_argument('--num_train', default = 29000, type = int)
     parser.add_argument('--num_test', default = 0, type = int)
     parser.add_argument('--num_ref', default = 0, type = int)

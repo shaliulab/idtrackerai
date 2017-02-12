@@ -2,7 +2,7 @@ import os
 import sys
 if 'linux' in sys.platform:
     import matplotlib
-    matplotlib.use('GtkAgg')
+    matplotlib.use('TkAgg')
 
 from tf_utils import *
 from py_utils import *
@@ -323,12 +323,12 @@ def CNNplotterFast2(lossAccDict,weightsDict,show=False):
     ax1.get_yaxis().tick_left()
     ax1.set_axis_bgcolor('none')
 
-    ax1.plot(lossPlot,'or-', label='training')
-    ax1.plot(valLossPlot, 'ob--', label='validation')
+    ax1.plot(lossPlot,'r-', label='training')
+    ax1.plot(valLossPlot, 'b-', label='validation')
     ax1.set_xlabel('Epoch')
     ax1.set_ylabel('Loss function')
     ax1.legend(fancybox=True, framealpha=0.05)
-    ax1.set_xlim((0,1000))
+    ax1.set_xlim((0,300))
     ax1.set_ylim((0,2.))
 
     # accuracy
@@ -339,11 +339,11 @@ def CNNplotterFast2(lossAccDict,weightsDict,show=False):
     ax2.get_yaxis().tick_left()
     ax2.set_axis_bgcolor('none')
 
-    ax2.plot(accPlot, 'or-')
-    ax2.plot(valAccPlot, 'ob--')
+    ax2.plot(accPlot, 'r-')
+    ax2.plot(valAccPlot, 'b-')
     ax2.set_xlabel('Epoch')
     ax2.set_ylabel('Accuray')
-    ax2.set_xlim((0,1000))
+    ax2.set_xlim((0,300))
     ax2.set_ylim((0,1))
 
 
