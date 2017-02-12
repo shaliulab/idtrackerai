@@ -281,6 +281,30 @@ def createFolder(path, name = '', timestamp = False):
         os.makedirs(subFolder)
         print subFolder + ' has been created'
 
+def createSessionFolder(videoPath):
+    def getLastSession(subFolders):
+        if len(subFolders) == 0:
+            lastIndex = 0
+        else:
+            subFolders = natural_sort(subFolders)[::-1]
+            lastIndex = int(subFolders[0].split('_')[-1])
+        return lastIndex
+
+    video = os.path.basename(videoPath)
+    folder = os.path.dirname(videoPath)
+    filename, extension = os.path.splitext(video)
+    subFolder = folder + '/CNN_models'
+    subSubFolders = glob.glob(subFolder +"/*")
+    lastIndex = getLastSession(subSubFolders)
+    sessionPath = subFolder + '/Session_' + str(lastIndex + 1)
+    os.makedirs(sessionPath)
+    print 'You just created ', sessionPath
+    figurePath = sessionPath + '/figures'
+    os.makedirs(figurePath)
+    print 'You just created ', figurePath
+
+    return sessionPath, figurePath
+
 """
 Display messages and errors
 """

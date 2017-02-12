@@ -27,13 +27,16 @@ from collections import Counter
 import collections
 import datetime
 
-def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals, printFlag = True):
+def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, numAnimals, printFlag = True):
 
     # get fragments data
     fragments = np.asarray(fragmentsDict['fragments'])
     framesAndBlobColumns = fragmentsDict['framesAndBlobColumnsDist']
     minLenIndivCompleteFragments = fragmentsDict['minLenIndivCompleteFragments']
     intervals = fragmentsDict['intervalsDist']
+
+    # identities
+    identities = statistics['fragmentIds'].tolist()
 
     # get accumulation data
     newFragForTrain = accumDict['newFragForTrain']
@@ -62,7 +65,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals, pr
             if not intervalsIndivFrag in usedIndivIntervals: # I only use individual fragments that have not been used before
                 frames = framesColumnsIndivFrag[:,0]
                 columns = framesColumnsIndivFrag[:,1]
-                identity = portraits.loc[frames[0],'identities'][columns[0]]
+                identity = identities[frames[0]][columns[0]]
 
                 if not identity in refDict.keys(): # if the identity has not been added to the dictionary, I initialize the list
                     refDict[identity] = []
@@ -169,7 +172,7 @@ def getCkptvideoPath(videoPath, accumCounter, train=0):
 
     return ckptvideoPath
 
-def fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portraits, videoInfo = [], plotFlag = True, printFlag = True):
+def fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portraits, statistics, videoInfo = [], plotFlag = True, printFlag = True):
     if printFlag:
         print '\n--- Entering the fineTuner ---'
 
@@ -202,7 +205,7 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portr
     imsize,\
     X_train, Y_train,\
     X_val, Y_val,\
-    trainDict = DataFineTuning(accumDict, trainDict, fragmentsDict, portraits,numAnimals)
+    trainDict = DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, numAnimals)
 
     if printFlag:
         print '\n fine tune train size:    images  labels'

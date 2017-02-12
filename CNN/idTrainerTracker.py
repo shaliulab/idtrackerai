@@ -218,23 +218,23 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                         if np.mean(valIndivAcc) > .8: ###NOTE: decreased to .8 for large groups (38 animals)
                             if magCurr > magPrev:
                                 if printFlag:
-                                    print 'Overfitting, passing to new set of images'
+                                    print '\nOverfitting, passing to new set of images'
 
                                 break
                             elif magCurr == magPrev:
                                 if (prevLoss - currLoss) < epsilon:
                                     if printFlag:
-                                        print 'Overfitting, passing to new set of images'
+                                        print '\nOverfitting, passing to new set of images'
 
                                     break
                             if (prevLoss - currLoss) < epsilon2:
                                 if printFlag:
-                                    print 'Finished, passing to new set of images'
+                                    print '\nFinished, passing to new set of images'
 
                                 break
                             if list(valIndivAcc) == list(np.ones(classes)):
                                 if printFlag:
-                                    print 'Individual validations accuracy is 1 for all the animals'
+                                    print '\nIndividual validations accuracy is 1 for all the animals'
                                 break
 
                 try:

@@ -85,8 +85,6 @@ def smooth_resample(counter, contour,smoothFlag = False):
     tol = .1
     i, idx = 0, [0]
     i_new = i
-    print 'inside the loop, ', counter
-    print 'len contour, ', len(x_new)
     while i < len(x):
         # print 'i, ', i
         total_dist = 0
@@ -384,8 +382,8 @@ def reaper(videoPath, frameIndices):
 
 def portrait(videoPaths, dfGlobal):
     frameIndices = loadFile(videoPaths[0], 'frameIndices')
-    # num_cores = multiprocessing.cpu_count()
-    num_cores = 1
+    num_cores = multiprocessing.cpu_count()
+    # num_cores = 1
     allPortraitsAndNoses = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath,frameIndices) for videoPath in videoPaths)
     allPortraits = [t[0] for t in allPortraitsAndNoses]
     allNoses = [t[1] for t in allPortraitsAndNoses]
