@@ -77,6 +77,146 @@ def matToH5(pathToDatabase):
 # matlabImdb = ['imdb_15indiv_15000_1000_32_rotateAndCrop_25dpf_s1.mat']
 # [matToH5('../matlabexports/' + m) for m in matlabImdb]
 
+''' loadDataBase '''
+def loadIMDB(IMDBname):
+    # check if the train database exists, and load it!
+    print '\nloading %s...' %IMDBname
+    checkDatabase(IMDBname)
+    with h5py.File("../data/" + IMDBname + '_%i.hdf5', 'r', driver='family') as databaseTrain:
+        [databaseTrainInfo, imagesTrain, labelsTrain] = getVarAttrFromHdf5(databaseTrain)
+        # Normalizations of images
+        imagesTrain = imagesTrain/255.
+        [imsizeTrain,numIndivImdb,numImagesPerIndiv] = getAttrsFromGroup(databaseTrainInfo,['imageSize', 'numIndiv','numImagesPerIndiv'])
+        imsizeTrain = tuple(imsizeTrain)
+        numImagesPerIndiv =  int(numImagesPerIndiv)
+        print([item for item in databaseTrainInfo.attrs.iteritems()])
+
+    print 'database %s loaded' %IMDBname
+    return databaseTrainInfo, imagesTrain, labelsTrain, imsizeTrain,numIndivImdb,numImagesPerIndiv
+
+
+def checkDatabase(imdb):
+    # checks if the dataset given in input is already stored in the folder data
+    if not os.path.exists('../data/' + imdb + '_0.hdf5'):
+        raise ValueError('The database ' + imdb + ' does not exist in the directory /data. Copy there your database or create it (if .mat use matToH5)')
+
+def dimensionChecker(shape, dim):
+    # compares two tuples (taking the order into account). Here it is used to
+    # test the dimensionality of tensors (ndarrays).
+    if shape != dim:
+        raise ValueError('something is wrong! Expected dimension: ' + str(dim) + ' found: ' + str(shape) )
+
+def getVarAttrFromHdf5(database):
+    # collect the info
+    groups = database.keys()
+    grp = database['database']
+    datanames = grp.keys()
+    images = grp['images'][()]
+    labels = grp['labels'][()]
+    # info = [item for item in grp.attrs.iteritems()]
+    return grp, images, labels
+
+def getAttrsFromGroup(grp, variables):
+    # retrieve an array from a h5py file
+    return [grp.attrs[var] for var in variables]
+
+def permuter(N,name,load):
+    # creates a permutation of N elements and stores it if load is False,
+    # otherwise it loads it.
+    print 'Creating permutation for %s' % name
+    if not load:
+        perm = np.random.permutation(N)
+        # Save a permutation into a pickle file.
+        permutation = { "perm": perm }
+        pickle.dump( permutation, open( "../temp/permutation_" + name + ".pkl", "wb" ) )
+        print ' No permutation exists, new one created'
+    else:
+        permutation = pickle.load( open( "../temp/permutation_" + name + ".pkl", "rb" ) )
+        print ' Permutation loaded'
+        perm = permutation['perm']
+
+    return perm
+
+def sliceDatabase(images, labels, indicesIndiv):
+    ''' Select images and labels relative to a subset of individuals'''
+    print 'Slicing database...'
+    images = np.array(flatten([images[labels==ind] for ind in indicesIndiv]))
+    labels = np.array(flatten([i*np.ones(sum(labels==ind)).astype(int) for i,ind in enumerate(indicesIndiv)]))
+    return images, labels
+
+def splitter(images, labels, numImages, numIndiv, imsize, numRef):
+    # split (90-10%) a permuted database according to the number of requested images
+    # remeber to PERMUTE images and labels before splitting them!
+    numImages = numImages * numIndiv
+    resolution = np.prod(imsize)
+    num_val = int(np.ceil(np.true_divide(numImages,10)))
+    num_train = int(numImages - num_val)
+
+    X_train = images[:num_train]
+    Y_train = labels[:num_train]
+    X_val = images[num_train:num_train+num_val]
+    Y_val = labels[num_train:num_train+num_val]
+
+    # reshape images
+    X_train = np.reshape(X_train, [num_train, resolution])
+    X_val = np.reshape(X_val, [num_val, resolution])
+    # dense to one hot, i.e. [i]-->[0,0,...0,1 (ith position),0,..,0]
+    Y_train = dense_to_one_hot(Y_train, n_classes=numIndiv)
+    Y_val = dense_to_one_hot(Y_val, n_classes=numIndiv)
+
+    # # take references from validation
+    # if numRef > 0:
+    #     X_val, Y_val, X_ref, Y_ref = refTaker(X_val, Y_val, numRef, numIndiv)
+    # else:
+    #     X_ref = []
+    #     Y_ref = []
+
+    return X_train, Y_train, X_val, Y_val #, X_ref, Y_ref
+
+def cropper(images, labels, numImages, numIndiv, imsize, numRef,loadRefPerm):
+    # crop a permuted database according to the number of requested images
+    # remeber to PERMUTE images and labels before cropping them!
+    resolution = np.prod(imsize)
+    numImages = numImages * numIndiv
+    X_test = images[:numImages]
+    Y_test = labels[:numImages]
+
+    # reshape images
+    X_test = np.reshape(X_test, [numImages, resolution])
+    # dense to one hot, i.e. [i]-->[0,0,...0,1 (ith position),0,..,0]
+    Y_test = dense_to_one_hot(Y_test, n_classes=numIndiv)
+
+    # take references from test
+    if numRef > 0:
+        X_test, Y_test, X_ref, Y_ref = refTaker(X_test, Y_test, numRef, numIndiv,loadRefPerm)
+    else:
+        print 'Zero references requested, the list of references will be empty...'
+        X_ref = np.asarray([])
+        Y_ref = np.asarray([])
+
+    return X_test, Y_test, X_ref, Y_ref
+
+def refTaker(X,Y,numRef,numIndiv,loadRefPerm):
+    X_ref = []
+    Y_ref = []
+    # Maybe improve this part (GPU?)
+    for i in range(numIndiv):
+        refIndices = np.where(one_hot_to_dense(Y)==i)[0][:numRef]
+
+        X_ref.append(X[refIndices])
+        Y_ref.append(Y[refIndices])
+        X = np.delete(X,refIndices,axis=0)
+        Y = np.delete(Y,refIndices,axis=0)
+
+    # We need to permute the references since they have been created in order
+    X_ref = np.asarray(flatten(X_ref))
+    Y_ref = np.asarray(flatten(Y_ref))
+    perm = permuter(len(Y_ref),'references',loadRefPerm)
+    X_ref = X_ref[perm]
+    Y_ref = Y_ref[perm]
+
+    return X, Y, X_ref, Y_ref
+
 def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckpt_folder="", imdbTest = None):
     '''
     imdbTrain: name of the database used for training and validation
@@ -85,139 +225,7 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
     numTrain: number of images (per individual) for training (10% for validation)
     numTest: number of images (per individual) for testing
     '''
-
-    def checkDatabase(imdb):
-        # checks if the dataset given in input is already stored in the folder data
-        if not os.path.exists('../data/' + imdb + '_0.hdf5'):
-            raise ValueError('The database ' + imdb + ' does not exist in the directory /data. Copy there your database or create it (if .mat use matToH5)')
-
-    def dimensionChecker(shape, dim):
-        # compares two tuples (taking the order into account). Here it is used to
-        # test the dimensionality of tensors (ndarrays).
-        if shape != dim:
-            raise ValueError('something is wrong! Expected dimension: ' + str(dim) + ' found: ' + str(shape) )
-
-    def getVarAttrFromHdf5(database):
-        # collect the info
-        groups = database.keys()
-        grp = database['database']
-        datanames = grp.keys()
-        images = grp['images'][()]
-        labels = grp['labels'][()]
-        # info = [item for item in grp.attrs.iteritems()]
-        return grp, images, labels
-
-    def getAttrsFromGroup(grp, variables):
-        # retrieve an array from a h5py file
-        return [grp.attrs[var] for var in variables]
-
-    def permuter(N,name,load):
-        # creates a permutation of N elements and stores it if load is False,
-        # otherwise it loads it.
-        print 'Creating permutation for %s' % name
-        if not load:
-            perm = np.random.permutation(N)
-            # Save a permutation into a pickle file.
-            permutation = { "perm": perm }
-            pickle.dump( permutation, open( "../temp/permutation_" + name + ".pkl", "wb" ) )
-            print ' No permutation exists, new one created'
-        else:
-            permutation = pickle.load( open( "../temp/permutation_" + name + ".pkl", "rb" ) )
-            print ' Permutation loaded'
-            perm = permutation['perm']
-
-        return perm
-
-    def sliceDatabase(images, labels, indicesIndiv):
-        ''' Select images and labels relative to a subset of individuals'''
-        print 'Slicing database...'
-        images = np.array(flatten([images[labels==ind] for ind in indicesIndiv]))
-        labels = np.array(flatten([i*np.ones(sum(labels==ind)).astype(int) for i,ind in enumerate(indicesIndiv)]))
-        return images, labels
-
-    def splitter(images, labels, numImages, numIndiv, imsize, numRef):
-        # split (90-10%) a permuted database according to the number of requested images
-        # remeber to PERMUTE images and labels before splitting them!
-        numImages = numImages * numIndiv
-        resolution = np.prod(imsize)
-        num_val = int(np.ceil(np.true_divide(numImages,10)))
-        num_train = int(numImages - num_val)
-
-        X_train = images[:num_train]
-        Y_train = labels[:num_train]
-        X_val = images[num_train:num_train+num_val]
-        Y_val = labels[num_train:num_train+num_val]
-
-        # reshape images
-        X_train = np.reshape(X_train, [num_train, resolution])
-        X_val = np.reshape(X_val, [num_val, resolution])
-        # dense to one hot, i.e. [i]-->[0,0,...0,1 (ith position),0,..,0]
-        Y_train = dense_to_one_hot(Y_train, n_classes=numIndiv)
-        Y_val = dense_to_one_hot(Y_val, n_classes=numIndiv)
-
-        # # take references from validation
-        # if numRef > 0:
-        #     X_val, Y_val, X_ref, Y_ref = refTaker(X_val, Y_val, numRef, numIndiv)
-        # else:
-        #     X_ref = []
-        #     Y_ref = []
-
-        return X_train, Y_train, X_val, Y_val #, X_ref, Y_ref
-
-    def cropper(images, labels, numImages, numIndiv, imsize, numRef,loadRefPerm):
-        # crop a permuted database according to the number of requested images
-        # remeber to PERMUTE images and labels before cropping them!
-        resolution = np.prod(imsize)
-        numImages = numImages * numIndiv
-        X_test = images[:numImages]
-        Y_test = labels[:numImages]
-
-        # reshape images
-        X_test = np.reshape(X_test, [numImages, resolution])
-        # dense to one hot, i.e. [i]-->[0,0,...0,1 (ith position),0,..,0]
-        Y_test = dense_to_one_hot(Y_test, n_classes=numIndiv)
-
-        # take references from test
-        if numRef > 0:
-            X_test, Y_test, X_ref, Y_ref = refTaker(X_test, Y_test, numRef, numIndiv,loadRefPerm)
-        else:
-            print 'Zero references requested, the list of references will be empty...'
-            X_ref = np.asarray([])
-            Y_ref = np.asarray([])
-
-        return X_test, Y_test, X_ref, Y_ref
-
-    def refTaker(X,Y,numRef,numIndiv,loadRefPerm):
-        X_ref = []
-        Y_ref = []
-        # Maybe improve this part (GPU?)
-        for i in range(numIndiv):
-            refIndices = np.where(one_hot_to_dense(Y)==i)[0][:numRef]
-
-            X_ref.append(X[refIndices])
-            Y_ref.append(Y[refIndices])
-            X = np.delete(X,refIndices,axis=0)
-            Y = np.delete(Y,refIndices,axis=0)
-
-        # We need to permute the references since they have been created in order
-        X_ref = np.asarray(flatten(X_ref))
-        Y_ref = np.asarray(flatten(Y_ref))
-        perm = permuter(len(Y_ref),'references',loadRefPerm)
-        X_ref = X_ref[perm]
-        Y_ref = Y_ref[perm]
-
-        return X, Y, X_ref, Y_ref
-
-    # check if the train database exists, and load it!
-    checkDatabase(imdbTrain)
-    with h5py.File("../data/" + imdbTrain + '_%i.hdf5', 'r', driver='family') as databaseTrain:
-        [databaseTrainInfo, imagesTrain, labelsTrain] = getVarAttrFromHdf5(databaseTrain)
-        # Normalizations of images
-        imagesTrain = imagesTrain/255.
-        [imsizeTrain,numIndivImdbTrain,numImagesPerIndivTrain] = getAttrsFromGroup(databaseTrainInfo,['imageSize', 'numIndiv','numImagesPerIndiv'])
-        imsizeTrain = tuple(imsizeTrain)
-        numImagesPerIndivTrain =  int(numImagesPerIndivTrain)
-        print([item for item in databaseTrainInfo.attrs.iteritems()])
+    databaseTrainInfo, imagesTrain, labelsTrain, imsizeTrain, numIndivImdbTrain, numImagesPerIndivTrain = loadIMDB(imdbTrain)
 
     print 'database %s loaded' %imdbTrain
     print 'num Indiv in IMDB, ', numIndivImdbTrain
