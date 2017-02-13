@@ -70,9 +70,6 @@ def computeDistToIdAndUniqueness(fragmentsDict, numAnimals, statistics):
         # misId --> discard
         if ids != list(rawsArgMax):
             unique = False
-        # too uncertain --> discard NOTE: commented since the distance should take care of it
-        # if np.min(rawsMax) < 0.5:
-        #     unique = False
         return unique
 
     mat = []

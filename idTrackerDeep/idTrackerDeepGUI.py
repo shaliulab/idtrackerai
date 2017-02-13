@@ -153,7 +153,7 @@ if __name__ == '__main__':
         accumDict, trainDict, handlesDict, statistics = initializeTracker(videoPath,numAnimals,portraits, preprocParams)
 
     elif restoreFromAccPoint == 'y':
-        accumDict, trainDict, handlesDict, statistic = restoreTracker()
+        accumDict, trainDict, handlesDict, statistics = restoreTracker()
 
     else:
         raise ValueError('You typed ' + restoreFromAccPoint + ' the accepted values are y or n.')
