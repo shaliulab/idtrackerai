@@ -144,7 +144,7 @@ def sliceDatabase(images, labels, indicesIndiv):
     labels = np.array(flatten([i*np.ones(sum(labels==ind)).astype(int) for i,ind in enumerate(indicesIndiv)]))
     return images, labels
 
-def splitter(images, labels, numImages, numIndiv, imsize, numRef):
+def splitter(images, labels, numImages, numIndiv, imsize):
     # split (90-10%) a permuted database according to the number of requested images
     # remeber to PERMUTE images and labels before splitting them!
     numImages = numImages * numIndiv
@@ -164,14 +164,7 @@ def splitter(images, labels, numImages, numIndiv, imsize, numRef):
     Y_train = dense_to_one_hot(Y_train, n_classes=numIndiv)
     Y_val = dense_to_one_hot(Y_val, n_classes=numIndiv)
 
-    # # take references from validation
-    # if numRef > 0:
-    #     X_val, Y_val, X_ref, Y_ref = refTaker(X_val, Y_val, numRef, numIndiv)
-    # else:
-    #     X_ref = []
-    #     Y_ref = []
-
-    return X_train, Y_train, X_val, Y_val #, X_ref, Y_ref
+    return X_train, Y_train, X_val, Y_val
 
 def cropper(images, labels, numImages, numIndiv, imsize, numRef,loadRefPerm):
     # crop a permuted database according to the number of requested images

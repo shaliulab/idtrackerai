@@ -74,7 +74,8 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
     return outList
 
 def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder,batch_size, num_epochs,Tindices, Titer_per_epoch,
-Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
+Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
+
     with tf.Graph().as_default():
         images_pl, labels_pl = placeholder_inputs(batch_size, resolution, classes)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
@@ -161,7 +162,44 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
             stored_exception = None
             epoch_i = 0
             while epoch_i <= n_epochs:
-            # for epoch_i in range(n_epochs):
+
+                minNumEpochsCheckLoss = 10
+                if start + epoch_i > 1:
+                    if len(valLossPlot) > minNumEpochsCheckLoss + start: #and start > 100:
+                        currLoss = valLossPlot[-1]
+                        prevLoss = valLossPlot[-minNumEpochsCheckLoss]
+                        magCurr = int(np.log10(currLoss))-1
+                        magPrev = int(np.log10(prevLoss))-1
+                        epsilon = -.1*10**(magCurr)
+                        epsilon2 = .01*10**(magCurr)
+
+                        if printFlag:
+                            print 'Losses difference (prev - curr) ', prevLoss-currLoss
+                            print 'epsilon (overfitting), ', epsilon
+                            print 'epsilon2 (if it is not changing much), ', epsilon2
+
+                        if np.mean(valIndivAcc) > .8: ###NOTE: decreased to .8 for large groups (38 animals)
+                            if magCurr > magPrev:
+                                if printFlag:
+                                    print '\nOverfitting, passing to new set of images'
+
+                                break
+                            elif magCurr == magPrev:
+                                if (prevLoss - currLoss) < epsilon:
+                                    if printFlag:
+                                        print '\nOverfitting, passing to new set of images'
+
+                                    break
+                            if (prevLoss - currLoss) < epsilon2:
+                                if printFlag:
+                                    print '\nFinished, passing to new set of images'
+
+                                break
+                            if list(valIndivAcc) == list(np.ones(classes)):
+                                if printFlag:
+                                    print '\nIndividual validations accuracy is 1 for all the animals'
+                                break
+
                 try:
                     epoch_counter = start + epoch_i
                     print '**** Epoch %i ****' % epoch_counter
@@ -283,7 +321,6 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01):
                         'valAccAccel': valAccSpeed,
                         'indivAcc': trainIndivAccPlot,
                         'indivValAcc': valIndivAccPlot,
-                        # 'indivValAccRef': indivAccRef,
                         'features': trainFeatPlot,
                         'labels': one_hot_to_dense(trainFeatLabels), # labels of the last batch of the references to plot some features
                         }
@@ -372,12 +409,6 @@ if __name__ == '__main__':
     X_val, Y_val, \
     X_test, Y_test, \
     X_ref, Y_ref = loadDataBase(pathTrain, num_indiv, num_train, num_test, num_ref, ckpt_dir,pathTest)
-    #
-    # print '***********'
-    # print np.where(np.where(Y_train == 1)[1] == 59)[0]
-    # if len(np.where(np.where(Y_train == 1)[1] == 59)[0]) == 0:
-    #     raise ValueError('There are not labels assigned to id 59')
-    # print '***********'
 
     print '\n values of the images: max min'
     print np.max(X_train), np.min(X_train)
