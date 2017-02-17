@@ -154,6 +154,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                 valLossPlot = lossAccDict['valLoss']
                 valAccPlot = lossAccDict['valAcc']
                 valIndivAccPlot = lossAccDict['indivValAcc']
+                valIndivAcc = valIndivAccPlot
 
             # print "Start from:", start
             opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu, W1,W3,W5]
@@ -165,9 +166,11 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
 
                 minNumEpochsCheckLoss = 10
                 if start + epoch_i > 1:
-                    if len(valLossPlot) > minNumEpochsCheckLoss + start: #and start > 100:
+                    if start + epoch_i > minNumEpochsCheckLoss: #and start > 100:
                         currLoss = valLossPlot[-1]
                         prevLoss = valLossPlot[-minNumEpochsCheckLoss]
+                        print 'currLoss, ', currLoss
+                        print 'prevLoss, ', prevLoss
                         magCurr = int(np.log10(currLoss))-1
                         magPrev = int(np.log10(prevLoss))-1
                         epsilon = -.1*10**(magCurr)
@@ -190,11 +193,11 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                                         print '\nOverfitting, passing to new set of images'
 
                                     break
-                            if (prevLoss - currLoss) < epsilon2:
-                                if printFlag:
-                                    print '\nFinished, passing to new set of images'
-
-                                break
+                            # if (prevLoss - currLoss) > 0 and (prevLoss - currLoss) < epsilon2:
+                            #     if printFlag:
+                            #         print '\nFinished, passing to new set of images'
+                            #
+                            #     break
                             if list(valIndivAcc) == list(np.ones(classes)):
                                 if printFlag:
                                     print '\nIndividual validations accuracy is 1 for all the animals'
@@ -376,13 +379,13 @@ python -i cnn_model_summaries.py
 if __name__ == '__main__':
     # prep for args
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_train', default='36dpf_60indiv_29754ImPerInd_curvaturePortrait', type = str)
+    parser.add_argument('--dataset_train', default='25dpf_60indiv_26142imperind_curvatureportrait2', type = str)
     parser.add_argument('--dataset_test', default=None, type = str)
     parser.add_argument('--train', default=1, type=int)
-    parser.add_argument('--ckpt_folder', default = "./ckpt_dir_new3_Xavier_SGD", type= str)
+    parser.add_argument('--ckpt_folder', default = "./test", type= str)
     parser.add_argument('--load_ckpt_folder', default = "", type = str)
-    parser.add_argument('--num_indiv', default = 2, type = int)
-    parser.add_argument('--num_train', default = 29000, type = int)
+    parser.add_argument('--num_indiv', default = 60, type = int)
+    parser.add_argument('--num_train', default = 25000, type = int)
     parser.add_argument('--num_test', default = 0, type = int)
     parser.add_argument('--num_ref', default = 0, type = int)
     parser.add_argument('--num_epochs', default = 300, type = int)
