@@ -11,147 +11,223 @@ from pprint import pprint
 # sns.set(style="darkgrid")
 
 # Import application/library specifics
+os.chdir('../')
 sys.path.append('../utils')
 sys.path.append('../CNN')
 
 from idTrainer import *
 from input_data_cnn import *
 
-def runRepetition(P1B1Dict, trainDict,  imSize, images, labels, numIndivImdb, numImagesPerIndiv, numIndiv, i, rep):
+class P1B1(object):
 
-    # Get individual indices for this repetition
-    permIndiv = permuter(numIndivImdb,'individualsTrain',[])
-    indivIndices = permIndiv[:numIndiv]
-    P1B1Dict['IndivIndices'][str(numIndiv)].append(indivIndices)
+    def __init__(self, job = 1, IMDBPath = 'IdTrackerDee/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5', repList = ['1']):
 
-    # Get images and labels of the current individuals
-    imagesS, labelsS = sliceDatabase(images, labels, indivIndices)
+        def getIMDBNameFromPath(IMDBPath):
+            filename, extension = os.path.splitext(IMDBPath)
+            IMDBName = '_'.join(filename.split('/')[-1].split('_')[:-1])
 
-    # Get images permutation for this set of images
-    permImages = permuter(numImagesPerIndiv*numIndiv,'imagesTrain',[])
-    P1B1Dict['ImagesIndices'][str(numIndiv)].append(permImages)
+            return IMDBName
 
-    # Permute images
-    imagesS = imagesS[permImages]
-    labelsS = labelsS[permImages]
+        if IMDBPath == 'd':
+            IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5
+            print 'Using default library, ', IMDBPath
 
-    # Split in train and validation
-    X_train, Y_train, X_val, Y_val = splitter(imagesS, labelsS, P1B1Dict['numImagesToUse'], numIndiv, imSize)
+        # Dataset from which the figure is created
+        self.IMDBPath = IMDBPath
+        self.IMDBName = getIMDBNameFromPath(self.IMDBPath)
+        # Main parameters of the figure
+        self.groupSizes = [2, 3, 5, 10, 25, 50]
+        self.job = job
+        self.repList = map(int, repList)
+        self.numRepetitions = len(repList)
+        self.numImagesToUse = 25000
+        self.batchSize = 250
+        self.numEpochs = 300
+        self.lr = 0.01
+        self.keep_prob = 1.0
+        # Initialize variables
+        self.IndivIndices = {}
+        self.ImagesIndices = {}
+        self.LossAccDicts = {}
+        self.trainAccs = np.ones((self.numRepetitions,len(self.groupSizes))) * np.nan
+        self.valAccs = np.ones((self.numRepetitions,len(self.groupSizes))) * np.nan
 
-    # check train's dimensions
-    cardTrain = int(np.ceil(np.true_divide(np.multiply(P1B1Dict['numImagesToUse'],9),10)))*numIndiv
-    dimTrainL = (cardTrain, numIndiv)
-    dimTrainI = (cardTrain, images.shape[2]*images.shape[3])
-    dimensionChecker(X_train.shape, dimTrainI)
-    dimensionChecker(Y_train.shape, dimTrainL)
+    def compute(self):
 
-    # check val's dimensions
-    cardVal = int(np.ceil(np.true_divide(P1B1Dict['numImagesToUse'],10)))*numIndiv
-    dimValL = (cardVal, numIndiv)
-    dimValI = (cardVal, images.shape[2] * images.shape[3])
-    dimensionChecker(X_val.shape, dimValI)
-    dimensionChecker(Y_val.shape, dimValL)
+        def runRepetition(self, images, labels, groupSize, groupSizeCounter, rep):
 
-    # Update ckpt_dir and loadCkpt_folder
-    ckpt_dir = './P1B1/numIndiv_%s_rep_%s' %(numIndiv, rep)
-    loadCkpt_folder = ''
+            # Get individual and image indices for this repetition
+            print 'Individual indices dictionary', self.IndivIndices
+            print 'Number of repetitions already stored', len(self.IndivIndices[groupSize])
+            if len(self.IndivIndices[groupSize]) >= rep + 1:
+                print 'Restoring individual indices for rep ', rep
+                indivIndices = self.IndivIndices[groupSize][rep]
 
-    # Compute index batches
-    numImagesT = Y_train.shape[0]
-    numImagesV = Y_val.shape[0]
-    Tindices, Titer_per_epoch = get_batch_indices(numImagesT,trainDict['batchSize'])
-    Vindices, Viter_per_epoch = get_batch_indices(numImagesV,trainDict['batchSize'])
+                print 'Restoring images permutation for rep ', rep
+                permImages = self.ImagesIndices[groupSize][rep]
+            else:
+                print 'Seeding the random generator...'
+                np.random.seed(rep)
 
-    # Run training
-    lossAccDict = run_training(X_train, Y_train, X_val, Y_val,
-                                trainDict['width'], trainDict['height'], trainDict['channels'], numIndiv, trainDict['resolution'],
-                                ckpt_dir, loadCkpt_folder,
-                                trainDict['batchSize'], trainDict['numEpochs'],
-                                Tindices, Titer_per_epoch,
-                                Vindices, Viter_per_epoch,
-                                trainDict['keep_prob'],trainDict['lr'])
+                permIndiv = permuter(self.numIndivImdb,'individualsTrain',[])
+                indivIndices = permIndiv[:groupSize]
+                self.IndivIndices[groupSize].append(indivIndices)
 
-    P1B1Dict['LossAccDicts'][str(numIndiv)].append(lossAccDict)
-    P1B1Dict['trainAccs'][rep,i] = lossAccDict['acc'][-1]
-    P1B1Dict['valAccs'][rep,i] = lossAccDict['valAcc'][-1]
+                permImages = permuter(self.numImagesPerIndiv*groupSize,'imagesTrain',[])
+                self.ImagesIndices[groupSize].append(permImages)
 
-    return P1B1Dict
+            # Get images and labels of the current individuals
+            imagesS, labelsS = sliceDatabase(images, labels, indivIndices)
 
-def computeDataP1B1(P1B1Dict):
-    IMDBname = P1B1Dict['IMDBname']
-    trainDict = P1B1Dict['trainDict']
+            # Permute images
+            imagesS = imagesS[permImages]
+            labelsS = labelsS[permImages]
 
-    P1B1Dict['IndivIndices'] = {}
-    P1B1Dict['ImagesIndices'] = {}
-    P1B1Dict['LossAccDicts'] = {}
-    P1B1Dict['trainAccs'] = np.ones((P1B1Dict['numRepetitions'],len(P1B1Dict['numIndivList']))) * np.nan
-    P1B1Dict['valAccs'] = np.ones((P1B1Dict['numRepetitions'],len(P1B1Dict['numIndivList']))) * np.nan
+            # Split in train and validation
+            X_train, Y_train, X_val, Y_val = splitter(imagesS, labelsS, self.numImagesToUse, groupSize, self.imSize)
 
+            # check train's dimensions
+            cardTrain = int(np.ceil(np.true_divide(np.multiply(self.numImagesToUse,9),10)))*groupSize
+            dimTrainL = (cardTrain, groupSize)
+            dimTrainI = (cardTrain, images.shape[2]*images.shape[3])
+            dimensionChecker(X_train.shape, dimTrainI)
+            dimensionChecker(Y_train.shape, dimTrainL)
 
-    # Load IMDB
-    databaseInfo, images, labels, imSize, numIndivImdb, numImagesPerIndiv = loadIMDB(IMDBname)
-    # P1B1Dict['IMDBInfo'] = databaseInfo
+            # check val's dimensions
+            cardVal = int(np.ceil(np.true_divide(self.numImagesToUse,10)))*groupSize
+            dimValL = (cardVal, groupSize)
+            dimValI = (cardVal, images.shape[2] * images.shape[3])
+            dimensionChecker(X_val.shape, dimValI)
+            dimensionChecker(Y_val.shape, dimValL)
 
-    # Training parameters
-    channels, width, height = imSize
-    resolution = np.prod(imSize)
-    trainDict['channels'] = channels
-    trainDict['width'] = width
-    trainDict['height'] = height
-    trainDict['resolution'] = resolution
+            # Update ckpt_dir and loadCkpt_folder
+            ckpt_dir = './P1B1/CNN_models/numIndiv_%s_rep_%s' %(groupSize, rep)
+            loadCkpt_folder = ''
 
-    # Main loop
-    for i, numIndiv in enumerate(P1B1Dict['numIndivList']):
-        P1B1Dict['IndivIndices'][str(numIndiv)] = []
-        P1B1Dict['ImagesIndices'][str(numIndiv)] = []
-        P1B1Dict['LossAccDicts'][str(numIndiv)] = []
+            # Compute index batches
+            numImagesT = Y_train.shape[0]
+            numImagesV = Y_val.shape[0]
+            Tindices, Titer_per_epoch = get_batch_indices(numImagesT,self.batchSize)
+            Vindices, Viter_per_epoch = get_batch_indices(numImagesV,self.batchSize)
 
-        for rep in range(P1B1Dict['numRepetitions']):
+            # Run training
+            lossAccDict = run_training(X_train, Y_train, X_val, Y_val,
+                                        self.width, self.height, self.channels, groupSize, self.resolution,
+                                        ckpt_dir, loadCkpt_folder,
+                                        self.batchSize, self.numEpochs,
+                                        Tindices, Titer_per_epoch,
+                                        Vindices, Viter_per_epoch,
+                                        self.keep_prob,self.lr)
 
-            P1B1Dict = runRepetition(P1B1Dict, trainDict, imSize, images, labels, numIndivImdb, numImagesPerIndiv, numIndiv, i, rep)
+            self.LossAccDicts[groupSize].append(lossAccDict)
+            self.trainAccs[rep,groupSizeCounter] = lossAccDict['acc'][-1]
+            self.valAccs[rep,groupSizeCounter] = lossAccDict['valAcc'][-1]
 
-            print '\nSaving dictionary...'
-            pickle.dump(P1B1Dict,open('./CNN_models/P1B1Dict.pkl','wb'))
+        # Load IMDB
+        _, images, labels, self.imSize, self.numIndivImdb, self.numImagesPerIndiv = loadIMDB(self.IMDBName)
 
-    return P1B1Dict
+        # Training parameters
+        self.channels, self.width, self.height = self.imSize
+        self.resolution = np.prod(self.imSize)
 
-def plotP1B1(P1B1Dict):
-    import seaborn as sns
-    sns.set(style="white")
-    trainAccs = P1B1Dict['trainAccs']
-    valAccs = P1B1Dict['valAccs']
-    numIndivList = P1B1Dict['numIndivList']
+        # Check arrays dimensions
+        if p.trainAccs.shape[0] < p.numRepetitions or p.trainAccs.shape[1] < len(p.groupSizes):
+            print 'Enlarging array to fit new repetitions or groups sizes'
+            trainAccs = np.ones((p.numRepetitions,len(p.groupSizes))) * np.nan
+            valAccs = np.ones((p.numRepetitions,len(p.groupSizes))) * np.nan
+            trainAccs[:p.trainAccs.shape[0],:p.trainAccs.shape[1]] = p.trainAccs
+            valAccs[:p.trainAccs.shape[0],:p.trainAccs.shape[1]] = p.valAccs
+            p.trainAccs = trainAccs
+            p.valAccs = valAccs
 
-    sns.tsplot(data=trainAccs,time = numIndivList, err_style="unit_points", color="r",value='accuracy',estimator=np.median)
-    sns.tsplot(data=valAccs, time = numIndivList ,err_style="unit_points", color="b",value='accuracy',estimator=np.median)
-    sns.plt.xlabel('numer of individuals')
-    sns.plt.ylim((0.5,1.02))
-    sns.plt.xlim((1,51))
-    plt.legend(['training','validation'],loc='lower left')
-    sns.despine()
-    sns.plt.show()
+        # Main loop
+        for groupSizeCounter, groupSize in enumerate(self.groupSizes):
+            # Initialize lists for this group size
+            if groupSize not in self.IndivIndices.keys():
+                print 'Initializing lists IndivIndices, ImagesIndices, LossAccDicts'
+                self.IndivIndices[groupSize] = []
+                self.ImagesIndices[groupSize] = []
+                self.LossAccDicts[groupSize] = []
 
+            for rep in range(self.numRepetitions):
+                print '\n***************************************************************'
+                print '***************************************************************'
+                print 'Group size, ', groupSize
+                print 'Repetition, ', rep
+                print '\n'
+
+                runRepetition(self, images, labels, groupSize, groupSizeCounter, rep)
+
+                print '\nSaving dictionary...'
+                pickle.dump(self.__dict__,open('./P1B1/CNN_models/P1B1Dict.pkl','wb'))
+                print '***************************************************************'
+                print '***************************************************************\n'
+
+    def plot(self):
+        import seaborn as sns
+        sns.set(style="white")
+
+        plt.ion()
+        plt.figure()
+        sns.tsplot(data=self.trainAccs,time = self.groupSizes, err_style="unit_points", color="r",value='accuracy',estimator=np.median)
+        sns.tsplot(data=self.valAccs, time = self.groupSizes ,err_style="unit_points", color="b",value='accuracy',estimator=np.median)
+        sns.plt.xlabel('Group size')
+        sns.plt.ylim((0.5,1.02))
+        sns.plt.xlim((0,np.max(self.groupSizes)+1))
+        # sns.plt.legend(['training','validation'],loc='lower left') ### FIXME plot legend
+        sns.despine()
+        sns.plt.show()
+
+        figname = './P1B1/CNN_models/P1B1.pdf'
+        plt.savefig(figname)
 
 if __name__ == '__main__':
+    '''
+    argv[1]: useCondor (bool flag)
+    argv[2]: job number
+    argv[3]: dataBase
+    argv[4:]: repetitions
+    '''
 
-    trainDict = {
-            'batchSize': 250,
-            'numEpochs': 300,
-            'lr': 0.01,
-            'keep_prob': 1.,
-            }
+    useCondor = int(sys.argv[1])
+    if not useCondor:
+        restore =  getInput('Restore P1B1', 'Do you wanna restore P1B1 from a dictionary (P1B1Dict.pkl)? y/[n]')
+        # restore = 'n'
+        if restore == 'y':
+            p = P1B1()
+            P1B1Dict = pickle.load(open('./P1B1/CNN_models/P1B1Dict.pkl','rb'))
+            p.__dict__.update(P1B1Dict)
+            print 'The attributes of the class are:'
+            # pprint(p.__dict__)
+            print 'The group sizes are, ', p.groupSizes
+            print 'The number of repetitions are, ', p.numRepetitions
+            computeFlag =  getInput('Plot or compute', 'Do you wanna compute more repetitions or add more groupSizes? y/[n]')
+            if computeFlag == 'y':
+                repetitions =  getInput('Repetition', 'How many repetitions do you want (current %i)?' %p.numRepetitions)
+                repetitions = int(repetitions)
+                p.numRepetitions = repetitions
 
-    P1B1Dict = {
-            'IMDBname': '36dpf_60indiv_29754ImPerInd_curvaturePortrait', # the IMDB is assumed to be in the folder data
-            'numIndivList': [2, 3, 5, 10, 25, 50],
-            'numRepetitions': 5,
-            'numImagesToUse': 29000, # 10% will be used for validation
-            'trainDict': trainDict,
-                }
+                groupSizes = getInput('GroupSizes', 'Insert the group sizes separated by comas (current ' + str(p.groupSizes) + ' )')
+                groupSizes = [int(i) for i in groupSizes.split(',')]
+                p.groupSizes = groupSizes
 
-    compute = False
-    if compute:
-        P1B1Dict = computeDataP1B1(P1B1Dict)
-    print '\nPlotting data...'
-    P1B1Dict = pickle.load(open('./P1B1/P1B1Dict.pkl','rb'))
-    plotP1B1(P1B1Dict)
+                numEpochs = getInput('numEpochs', 'Insert the number of Epochs (current ' + str(p.numEpochs) + ' )')
+                p.numEpochs = int(numEpochs)
+
+                p.compute()
+                p.plot()
+
+            else:
+                p.plot()
+
+        elif restore == 'n' or restore == '':
+            IMDBPath = selectFile()
+            # print 'Computing with default values'
+            p = P1B1(IMDBPath = IMDBPath)
+            pprint(p.__dict__)
+            p.compute()
+            p.plot()
+
+    elif useCondor:
+        p = P1B1(job = int(sys.argv[2]), IMDBPath = sys.argv[3], repList = sys.argb[4:])
+        p.compute()

@@ -71,7 +71,7 @@ def matToH5(pathToDatabase):
 
     f.close()
 
-    print 'Database saved as %s ' % nameDatabase
+    print '\nDatabase saved as %s ' % nameDatabase
 
 # matlabImdb = ['imdb_60indiv_11000_11000_32_rotateAndCrop_25dpf_s1_perm_0.mat', 'imdb_60indiv_11000_11000_32_rotateAndCrop_36dpf_s1_perm_0.mat']
 # matlabImdb = ['imdb_15indiv_15000_1000_32_rotateAndCrop_25dpf_s1.mat']
@@ -91,7 +91,7 @@ def loadIMDB(IMDBname):
         numImagesPerIndiv =  int(numImagesPerIndiv)
         print([item for item in databaseTrainInfo.attrs.iteritems()])
 
-    print 'database %s loaded' %IMDBname
+    print '\ndatabase %s loaded' %IMDBname
     return databaseTrainInfo, imagesTrain, labelsTrain, imsizeTrain,numIndivImdb,numImagesPerIndiv
 
 
@@ -123,23 +123,23 @@ def getAttrsFromGroup(grp, variables):
 def permuter(N,name,load):
     # creates a permutation of N elements and stores it if load is False,
     # otherwise it loads it.
-    print 'Creating permutation for %s' % name
+    print '\nCreating permutation for %s' % name
     if not load:
         perm = np.random.permutation(N)
         # Save a permutation into a pickle file.
         permutation = { "perm": perm }
         pickle.dump( permutation, open( "../temp/permutation_" + name + ".pkl", "wb" ) )
-        print ' No permutation exists, new one created'
+        print '\nNo permutation exists, new one created'
     else:
         permutation = pickle.load( open( "../temp/permutation_" + name + ".pkl", "rb" ) )
-        print ' Permutation loaded'
+        print '\nPermutation loaded'
         perm = permutation['perm']
 
-    return perm
+    return perm.tolist()
 
 def sliceDatabase(images, labels, indicesIndiv):
     ''' Select images and labels relative to a subset of individuals'''
-    print 'Slicing database...'
+    print '\nSlicing database...'
     images = np.array(flatten([images[labels==ind] for ind in indicesIndiv]))
     labels = np.array(flatten([i*np.ones(sum(labels==ind)).astype(int) for i,ind in enumerate(indicesIndiv)]))
     return images, labels
@@ -154,6 +154,7 @@ def splitter(images, labels, numImages, numIndiv, imsize):
 
     X_train = images[:num_train]
     Y_train = labels[:num_train]
+    print '\nnumAnimals, ', np.max(Y_train) + 1
     X_val = images[num_train:num_train+num_val]
     Y_val = labels[num_train:num_train+num_val]
 
@@ -183,7 +184,7 @@ def cropper(images, labels, numImages, numIndiv, imsize, numRef,loadRefPerm):
     if numRef > 0:
         X_test, Y_test, X_ref, Y_ref = refTaker(X_test, Y_test, numRef, numIndiv,loadRefPerm)
     else:
-        print 'Zero references requested, the list of references will be empty...'
+        print '\nZero references requested, the list of references will be empty...'
         X_ref = np.asarray([])
         Y_ref = np.asarray([])
 
@@ -234,15 +235,19 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
     print 'num Images per indiv, ', numImagesPerIndivTrain
     print 'numImagesPerIndivTrain*numIndivTrainTest', numImagesPerIndivTrain*numIndivTrainTest
     print 'number of Images', len(labelsTrain)
-    permImagesTrain = permuter(numImagesPerIndivTrain*numIndivTrainTest,'imagesTrain',os.path.exists(ckpt_folder))
+    permImagesTrain = permuter(len(labelsTrain),'imagesTrain',os.path.exists(ckpt_folder))
+    print 'length of the permutation, ', len(permImagesTrain)
 
     imagesTrainS, labelsTrainS = sliceDatabase(imagesTrain, labelsTrain, indivTrain)
+
+    print 'num images after slicing, ', len(labelsTrainS)
 
     imagesTrainS = imagesTrainS[permImagesTrain]
     labelsTrainS = labelsTrainS[permImagesTrain]
 
+    print 'num images after permuting, ', len(labelsTrainS)
 
-    X_train, Y_train, X_val, Y_val = splitter(imagesTrainS, labelsTrainS, numTrain, numIndivTrainTest, imsizeTrain, numRef)
+    X_train, Y_train, X_val, Y_val = splitter(imagesTrainS, labelsTrainS, numTrain, numIndivTrainTest, imsizeTrain)
 
     # check train's dimensions
     cardTrain = int(np.ceil(np.true_divide(np.multiply(numTrain,9),10)))*numIndivTrainTest
