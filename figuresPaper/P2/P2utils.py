@@ -1,6 +1,6 @@
 import cv2
 import sys
-sys.path.append('../utils')
+sys.path.append('../../utils')
 
 from py_utils import *
 
@@ -8,6 +8,11 @@ import time
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.colors import Colormap
+from matplotlib import colors
+from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.patches as patches
+
 from Tkinter import *
 import tkMessageBox
 import argparse
@@ -21,9 +26,9 @@ import multiprocessing
 import itertools
 import cPickle as pickle
 import seaborn as sns
+import pyautogui
 
-
-def idTrajectories(videoPath, sessionPath, allFragIds, dfGlobal, numAnimals, show=True):
+def idTrajectories(videoPath, sessionPath, allFragIds, dfGlobal, numAnimals):
 
     centroidTrajectories = []
     nosesTrajectories = []
@@ -49,16 +54,9 @@ def idTrajectories(videoPath, sessionPath, allFragIds, dfGlobal, numAnimals, sho
     trajDict = {'centroids': centroidTrajectories, 'noses': nosesTrajectories}
     saveFile(videoPath, trajDict, 'trajectories',hdfpkl = 'pkl',sessionPath = sessionPath)
 
-    if show == True:
-        fig = plt.figure()
-        ax1 = fig.add_subplot(1,3,1, projection='3d')
-        ax2 = fig.add_subplot(1,3,2, projection='3d')
-        ax3 = fig.add_subplot(1,3,3, projection='3d')
-        trajDict = loadFile(path, 'trajectories', hdfpkl = 'pkl',sessionPath = sessionPath)
-        plotTrajectories(trajDict, fig, ax1, ax2, ax3)
     return trajDict
 
-def plotTrajectories(trajDict, numAnimals, fig, ax1, ax2, ax3, plotBoth=False):
+def plotTrajectories(trajDict, numAnimals, fig, ax1, ax2, ax3, framesToPlot=[], plotBoth=False):
     sns.set_style("darkgrid")
 
     centroidTrajectories = np.asarray(trajDict['centroids'])
@@ -89,10 +87,18 @@ def plotTrajectories(trajDict, numAnimals, fig, ax1, ax2, ax3, plotBoth=False):
         # print ID
         centID = centroidTrajectories[:,ID,:]
         noseID = nosesTrajectories[:,ID,:]
-        xcentID = centID[:,0]
-        ycentID = centID[:,1]
-        xnoseID = noseID[:,0]
-        ynoseID = noseID[:,1]
+
+        if len(framesToPlot) != 0:
+            start = framesToPlot[0]
+            end = framesToPlot[1]
+        else:
+            start = 0
+            end = len(centID)
+
+        xcentID = centID[:,0][start:end]
+        ycentID = centID[:,1][start:end]
+        xnoseID = noseID[:,0][start:end]
+        ynoseID = noseID[:,1][start:end]
         zs = range(len(xcentID))
 
         label = 'Animal ' + str(ID)
@@ -141,32 +147,73 @@ def plotTrajectories(trajDict, numAnimals, fig, ax1, ax2, ax3, plotBoth=False):
         fig.canvas.draw()
 
     fig.canvas.mpl_connect('pick_event', onpick)
-    # plt.show()
 
-if __name__ == '__main__':
+def orderVideo(matrixToOrder,permutations,maxNumBlobs):
+    matrixOrdered = np.zeros_like(matrixToOrder)
 
-    numSegment = 0
+    for frame in range(len(permutations)):
+        for i in range(maxNumBlobs):
+            index = list(np.where(permutations[frame]==i)[0])
+            # print index
+            if len(index) == 1:
+                matrixOrdered[frame,i] = matrixToOrder[frame,index]
+            else:
+                matrixOrdered[frame,i] = -1
 
-    ''' select statistics file '''
-    statisticsPath = selectFile()
-    print 'The trajectories will be build from the statiscits file ', statisticsPath
-    sessionPath = os.path.dirname(statisticsPath)
-    print 'The trajectories will be build from the session ', sessionPath
-    CNN_modelsPath = os.path.dirname(sessionPath)
-    print 'The CNN_models folder is ', CNN_modelsPath
-    pathToVideos = os.path.dirname(CNN_modelsPath)
-    print 'The video folder is ', pathToVideos
-    ''' get videoPath from statistics file '''
+    return matrixOrdered
 
-    extensions = ['.avi', '.mp4']
-    videoPath = natural_sort([v for v in os.listdir(pathToVideos) if os.path.isfile(pathToVideos +'/'+ v) if any( ext in v for ext in extensions)])[0]
-    videoPath = pathToVideos + '/' + videoPath
-    videoPaths = scanFolder(videoPath)
+def plotFragments(accumDict, fragmentsDict, portraits, idUsedIndivIntervals, numAnimals, ax):
+    fragsForTrain = accumDict['fragsForTrain']
+    accumCounter = accumDict['counter']
 
-    videoInfo = loadFile(videoPaths[0], 'videoInfo', hdfpkl='pkl')
-    stats = loadFile(videoPaths[0], 'statistics', hdfpkl = 'pkl',sessionPath = sessionPath)
-    numAnimals = videoInfo['numAnimals']
-    allFragIds = stats['fragmentIds']
-    dfGlobal = loadFile(videoPaths[0], 'portraits')
+    fragments = fragmentsDict['fragments']
+    permutations = np.asarray(portraits.loc[:,'permutations'].tolist())
+    maxNumBlobs = len(permutations[0])
+    permOrdered =  orderVideo(permutations,permutations,maxNumBlobs)
+    permOrdered = permOrdered.T.astype('float32')
 
-    idTrajectories(allFragIds, dfGlobal, numAnimals)
+    ax.cla()
+    permOrdered[permOrdered >= 0] = 1.
+    im = ax.imshow(permOrdered,cmap=plt.cm.gray,interpolation='none',vmin=0.,vmax=1.)
+    im.cmap.set_under('k')
+
+    colors = get_spaced_colors_util(numAnimals,norm=True)
+    # print numAnimals
+    # print colors
+    for (frag,ID) in idUsedIndivIntervals:
+        # print identity
+        blobIndex = frag[0]
+        start = frag[2][0]
+        end = frag[2][1]
+        ax.add_patch(
+            patches.Rectangle(
+                (start, blobIndex-0.5),   # (x,y)
+                end-start,  # width
+                1.,          # height
+                fill=True,
+                edgecolor=None,
+                facecolor=colors[ID+1],
+                alpha = 1.
+            )
+        )
+
+    ax.axis('tight')
+    ax.set_xlabel('Frame number')
+    ax.set_ylabel('Blob index')
+    ax.set_yticks(range(0,maxNumBlobs,4))
+    ax.set_yticklabels(range(1,maxNumBlobs+1,4))
+    ax.invert_yaxis()
+
+def plotAccLoss(trainPlot, valPlot, ax, xlim, ylim = 1.):
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_facecolor('none')
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('Loss function')
+    ax.legend(fancybox=True, framealpha=0.05)
+    ax.set_xlim((0,xlim))
+    ax.set_ylim((0,ylim))
+    ax.plot(trainPlot,'r-', label='training')
+    ax.plot(valPlot, 'b-', label='validation')

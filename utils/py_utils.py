@@ -198,6 +198,7 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
     video = os.path.basename(path)
     folder = os.path.dirname(path)
     filename, extension = os.path.splitext(video)
+    subfolder = ''
 
     if name  == 'segmentation':
         subfolder = '/preprocessing/segmentation/'
@@ -210,6 +211,9 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
             return pickle.load(open(folder + subfolder + filename) ,'rb'), nSegmen
     elif name == 'statistics':
         filename = 'statistics.pkl'
+        return pickle.load(open(sessionPath + '/' + filename,'rb') )
+    elif name == 'trajectories':
+        filename = 'trajectories.pkl'
         return pickle.load(open(sessionPath + '/' + filename,'rb') )
     else:
         subfolder = '/preprocessing/'

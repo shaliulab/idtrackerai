@@ -374,7 +374,7 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
                         'W5': WConv5
                         }
 
-
+                    pickle.dump( lossAccDict, open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
                     '''
                     *******************
                     Plotter

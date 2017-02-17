@@ -24,7 +24,7 @@ from GUI_utils import *
 from idAssigner import *
 from fragmentFinder import *
 from fineTuner import *
-from tracker_dev import *
+from tracker import *
 from plotters import *
 
 
