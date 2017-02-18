@@ -13,7 +13,7 @@ import scipy.ndimage
 from scipy.signal import argrelmax
 
 # Import application/library specifics
-sys.path.append('../utils')
+sys.path.append('IdTrackerDeep/utils')
 from py_utils import *
 from video_utils import *
 

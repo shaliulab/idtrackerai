@@ -11,9 +11,9 @@ import cv2
 from pprint import pprint
 
 # Import application/library specifics
-sys.path.append('../utils')
-sys.path.append('../preprocessing')
-sys.path.append('../tracker')
+sys.path.append('IdTrackerDeep/utils')
+sys.path.append('IdTrackerDeep/preprocessing')
+sys.path.append('IdTrackerDeep/tracker')
 
 from segmentation import *
 from fragmentation import *
@@ -82,7 +82,7 @@ if __name__ == '__main__':
         print 'The video will be preprocessed according to the following parameters: ', preprocParams
 
         ''' Loading preprocessing image '''
-        img = cv2.imread('../utils/loadingIdDeep.png')
+        img = cv2.imread('IdTrackerDeep/utils/loadingIdDeep.png')
         cv2.imshow('Bars',img)
         cv2.waitKey(1000)
         cv2.destroyAllWindows()

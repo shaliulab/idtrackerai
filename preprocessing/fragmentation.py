@@ -8,7 +8,7 @@ import pandas as pd
 import itertools
 
 # Import application/library specifics
-sys.path.append('../utils')
+sys.path.append('IdTrackerDeep/utils')
 
 from py_utils import *
 from GUI_utils import *

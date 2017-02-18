@@ -14,8 +14,8 @@ sns.set(style="white", context="talk")
 import pyautogui
 
 # Import application/library specifics
-sys.path.append('../utils')
-sys.path.append('../preprocessing')
+sys.path.append('IdTrackerDeep/utils')
+sys.path.append('IdTrackerDeep/preprocessing')
 
 from segmentation import *
 from fragmentation import *

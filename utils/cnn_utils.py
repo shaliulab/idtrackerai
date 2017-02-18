@@ -16,7 +16,7 @@ from pprint import *
 from tensorflow.python.platform import gfile
 import cPickle as pickle
 import re
-import pyautogui
+# import pyautogui
 '''
 ****************************************************************************
 Tensorboard

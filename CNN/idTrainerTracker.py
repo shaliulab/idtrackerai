@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append('../utils')
+sys.path.append('IdTrackerDeep/utils')
 
 from tf_utils import *
 from input_data_cnn import *

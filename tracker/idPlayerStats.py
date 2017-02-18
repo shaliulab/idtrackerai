@@ -1,6 +1,6 @@
 import cv2
 import sys
-sys.path.append('../utils')
+sys.path.append('IdTrackerDeep/utils')
 
 from py_utils import *
 
@@ -33,7 +33,7 @@ numSegment = 0
 # paths = scanFolder('../videos/larvae1/trial_1_1.avi')
 # paths = scanFolder('../videos/nofragsError/_1.avi')
 # paths = scanFolder('../videos/cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-paths = scanFolder('../videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi')
+paths = scanFolder('IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../videos/Conflicto8/conflict3and4_20120316T155032_1.avi')
 # paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
 # paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')

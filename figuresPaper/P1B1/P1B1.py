@@ -11,16 +11,15 @@ from pprint import pprint
 # sns.set(style="darkgrid")
 
 # Import application/library specifics
-os.chdir('../')
-sys.path.append('../utils')
-sys.path.append('../CNN')
+sys.path.append('IdTrackerDeep/utils')
+sys.path.append('IdTrackerDeep/CNN')
 
 from idTrainer import *
 from input_data_cnn import *
 
 class P1B1(object):
 
-    def __init__(self, job = 1, IMDBPath = 'IdTrackerDee/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5', repList = ['1']):
+    def __init__(self, job = 1, IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5', repList = ['1']):
 
         def getIMDBNameFromPath(IMDBPath):
             filename, extension = os.path.splitext(IMDBPath)
@@ -29,42 +28,45 @@ class P1B1(object):
             return IMDBName
 
         if IMDBPath == 'd':
-            IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5
+            IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5'
             print 'Using default library, ', IMDBPath
 
         # Dataset from which the figure is created
         self.IMDBPath = IMDBPath
         self.IMDBName = getIMDBNameFromPath(self.IMDBPath)
         # Main parameters of the figure
-        self.groupSizes = [2, 3, 5, 10, 25, 50]
         self.job = job
+        self.groupSizes = [2, 5, 10, 25, 50]
+        self.numGroups = len(self.groupSizes)
         self.repList = map(int, repList)
         self.numRepetitions = len(repList)
-        self.numImagesToUse = 25000
+        self.IMDBSizes = [20,50,100,500,1000,10000,25000]
+        self.numIMDBSizes = len(self.IMDBSizes)
         self.batchSize = 250
-        self.numEpochs = 300
+        self.numEpochs = 3
         self.lr = 0.01
         self.keep_prob = 1.0
         # Initialize variables
         self.IndivIndices = {}
         self.ImagesIndices = {}
         self.LossAccDicts = {}
-        self.trainAccs = np.ones((self.numRepetitions,len(self.groupSizes))) * np.nan
-        self.valAccs = np.ones((self.numRepetitions,len(self.groupSizes))) * np.nan
+        self.trainAccs = np.ones((self.numIMDBSizes,self.numGroups,self.numRepetitions)) * np.nan
+        self.valAccs = np.ones((self.numIMDBSizes,self.numGroups,self.numRepetitions)) * np.nan
 
     def compute(self):
 
-        def runRepetition(self, images, labels, groupSize, groupSizeCounter, rep):
+        def runRepetition(self, images, labels, g, n, r):
+            groupSize = self.groupSizes[g]
+            numImagesToUse = self.IMDBSizes[n]
+            rep = self.repList[r]
 
-            # Get individual and image indices for this repetition
-            print 'Individual indices dictionary', self.IndivIndices
-            print 'Number of repetitions already stored', len(self.IndivIndices[groupSize])
-            if len(self.IndivIndices[groupSize]) >= rep + 1:
+            # Get individuals for this repetition
+            print 'Individual indices per group size', self.IndivIndices
+            print 'Number of repetitions already computed', len(self.IndivIndices[groupSize])
+            if len(self.IndivIndices[groupSize]) >= r + 1:
                 print 'Restoring individual indices for rep ', rep
-                indivIndices = self.IndivIndices[groupSize][rep]
+                indivIndices = self.IndivIndices[groupSize][r]
 
-                print 'Restoring images permutation for rep ', rep
-                permImages = self.ImagesIndices[groupSize][rep]
             else:
                 print 'Seeding the random generator...'
                 np.random.seed(rep)
@@ -73,35 +75,43 @@ class P1B1(object):
                 indivIndices = permIndiv[:groupSize]
                 self.IndivIndices[groupSize].append(indivIndices)
 
-                permImages = permuter(self.numImagesPerIndiv*groupSize,'imagesTrain',[])
-                self.ImagesIndices[groupSize].append(permImages)
 
-            # Get images and labels of the current individuals
+            # Get images of the current individuals
             imagesS, labelsS = sliceDatabase(images, labels, indivIndices)
+
+            # Get permutation of for this repetition
+            if len(self.ImagesIndices[groupSize][numImagesToUse]) >= r + 1:
+                print 'Restoring images permutation for rep ', rep
+                permImages = self.ImagesIndices[groupSize][numImagesToUse][r]
+
+            else:
+                permImages = permuter(len(labelsS),'imagesTrain',[])
+                self.ImagesIndices[groupSize][numImagesToUse].append(permImages)
 
             # Permute images
             imagesS = imagesS[permImages]
             labelsS = labelsS[permImages]
 
             # Split in train and validation
-            X_train, Y_train, X_val, Y_val = splitter(imagesS, labelsS, self.numImagesToUse, groupSize, self.imSize)
+            X_train, Y_train, X_val, Y_val = splitter(imagesS, labelsS, numImagesToUse, groupSize, self.imSize)
+            print 'len Y_train + Y_val, ', len(Y_train) + len(Y_val)
 
             # check train's dimensions
-            cardTrain = int(np.ceil(np.true_divide(np.multiply(self.numImagesToUse,9),10)))*groupSize
+            cardTrain = int(np.ceil(np.true_divide(np.multiply(numImagesToUse,9),10)))*groupSize
             dimTrainL = (cardTrain, groupSize)
             dimTrainI = (cardTrain, images.shape[2]*images.shape[3])
             dimensionChecker(X_train.shape, dimTrainI)
             dimensionChecker(Y_train.shape, dimTrainL)
 
             # check val's dimensions
-            cardVal = int(np.ceil(np.true_divide(self.numImagesToUse,10)))*groupSize
+            cardVal = int(np.ceil(np.true_divide(numImagesToUse,10)))*groupSize
             dimValL = (cardVal, groupSize)
             dimValI = (cardVal, images.shape[2] * images.shape[3])
             dimensionChecker(X_val.shape, dimValI)
             dimensionChecker(Y_val.shape, dimValL)
 
             # Update ckpt_dir and loadCkpt_folder
-            ckpt_dir = './P1B1/CNN_models/numIndiv_%s_rep_%s' %(groupSize, rep)
+            ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models/numIndiv_%i/numIndiv_%i_numImages_%i_rep_%i' %(groupSize, groupSize, numImagesToUse, rep)
             loadCkpt_folder = ''
 
             # Compute index batches
@@ -119,9 +129,10 @@ class P1B1(object):
                                         Vindices, Viter_per_epoch,
                                         self.keep_prob,self.lr)
 
-            self.LossAccDicts[groupSize].append(lossAccDict)
-            self.trainAccs[rep,groupSizeCounter] = lossAccDict['acc'][-1]
-            self.valAccs[rep,groupSizeCounter] = lossAccDict['valAcc'][-1]
+            print 'Time in seconds, ', np.sum(lossAccDict['epochTime'])
+            self.LossAccDicts[groupSize][numImagesToUse].append(lossAccDict)
+            self.trainAccs[n,g,r] = lossAccDict['acc'][-1]
+            self.valAccs[n,g,r] = lossAccDict['valAcc'][-1]
 
         # Load IMDB
         _, images, labels, self.imSize, self.numIndivImdb, self.numImagesPerIndiv = loadIMDB(self.IMDBName)
@@ -131,62 +142,76 @@ class P1B1(object):
         self.resolution = np.prod(self.imSize)
 
         # Check arrays dimensions
-        if p.trainAccs.shape[0] < p.numRepetitions or p.trainAccs.shape[1] < len(p.groupSizes):
+        print 'Checking array dimension'
+        if self.trainAccs.shape[0] < self.numIMDBSizes or self.trainAccs.shape[1] < self.numGroups or self.trainAccs.shape[2] < self.numRepetitions:
             print 'Enlarging array to fit new repetitions or groups sizes'
-            trainAccs = np.ones((p.numRepetitions,len(p.groupSizes))) * np.nan
-            valAccs = np.ones((p.numRepetitions,len(p.groupSizes))) * np.nan
-            trainAccs[:p.trainAccs.shape[0],:p.trainAccs.shape[1]] = p.trainAccs
-            valAccs[:p.trainAccs.shape[0],:p.trainAccs.shape[1]] = p.valAccs
-            p.trainAccs = trainAccs
-            p.valAccs = valAccs
+            trainAccs = np.ones((self.numIMDBSizes,self.numGroups,self.numRepetitions)) * np.nan
+            valAccs = np.ones((self.numIMDBSizes,self.numGroups,self.numRepetitions)) * np.nan
+            trainAccs[:self.trainAccs.shape[0],:self.trainAccs.shape[1],:self.trainAccs.shape[2]] = self.trainAccs
+            valAccs[:self.trainAccs.shape[0],:self.trainAccs.shape[1],:self.trainAccs.shape[2]] = self.valAccs
+            self.trainAccs = trainAccs
+            self.valAccs = valAccs
 
         # Main loop
-        for groupSizeCounter, groupSize in enumerate(self.groupSizes):
-            # Initialize lists for this group size
-            if groupSize not in self.IndivIndices.keys():
-                print 'Initializing lists IndivIndices, ImagesIndices, LossAccDicts'
-                self.IndivIndices[groupSize] = []
-                self.ImagesIndices[groupSize] = []
-                self.LossAccDicts[groupSize] = []
+        for g in range(self.numGroups):
 
-            for rep in range(self.numRepetitions):
-                print '\n***************************************************************'
-                print '***************************************************************'
-                print 'Group size, ', groupSize
-                print 'Repetition, ', rep
-                print '\n'
+            if self.groupSizes[g] not in self.IndivIndices.keys():
+                print 'Initializing lists IndivIndices, ImagesIndices, LossAccDicts for the new groupSize, ', self.groupSizes[g]
+                self.IndivIndices[self.groupSizes[g]] = []
+                self.ImagesIndices[self.groupSizes[g]] = {}
+                self.LossAccDicts[self.groupSizes[g]] = {}
 
-                runRepetition(self, images, labels, groupSize, groupSizeCounter, rep)
+            for n in range(self.numIMDBSizes):
 
-                print '\nSaving dictionary...'
-                pickle.dump(self.__dict__,open('./P1B1/CNN_models/P1B1Dict.pkl','wb'))
-                print '***************************************************************'
-                print '***************************************************************\n'
+                if self.IMDBSizes[n] not in self.ImagesIndices[self.groupSizes[g]].keys():
+                    print 'Initializing lists ImagesIndices, LossAccDicts for the new IMDBSize', self.IMDBSizes[n]
+                    self.ImagesIndices[self.groupSizes[g]][self.IMDBSizes[n]] = []
+                    self.LossAccDicts[self.groupSizes[g]][self.IMDBSizes[n]] = []
+
+                for r in range(self.numRepetitions):
+                    print '\n******************************************************************************************************************************'
+                    print '******************************************************************************************************************************'
+                    print 'Group size, ', self.groupSizes[g]
+                    print 'numImagesToUse, ', self.IMDBSizes[n]
+                    print 'Repetition, ', self.repList[r]
+
+                    runRepetition(self, images, labels, g, n, r)
+
+                    print '\nSaving dictionary...'
+                    pickle.dump(self.__dict__,open('IdTrackerDeep/figuresPaper/P1B1/CNN_models/P1B1Dict_%i.pkl' %self.job,'wb'))
+                    print '******************************************************************************************************************************'
+                    print '******************************************************************************************************************************\n'
 
     def plot(self):
+        print '\nPlotting data...'
         import seaborn as sns
         sns.set(style="white")
 
+        trainsAccsAv = np.nanmedian(p.trainAccs,axis = 2)
+        valAccsAv = np.nanmedian(p.valAccs,axis = 2)
+
         plt.ion()
-        plt.figure()
-        sns.tsplot(data=self.trainAccs,time = self.groupSizes, err_style="unit_points", color="r",value='accuracy',estimator=np.median)
-        sns.tsplot(data=self.valAccs, time = self.groupSizes ,err_style="unit_points", color="b",value='accuracy',estimator=np.median)
-        sns.plt.xlabel('Group size')
-        sns.plt.ylim((0.5,1.02))
-        sns.plt.xlim((0,np.max(self.groupSizes)+1))
-        # sns.plt.legend(['training','validation'],loc='lower left') ### FIXME plot legend
-        sns.despine()
+        fig, ax1 = plt.subplots()
+        sns.heatmap(valAccsAv, annot=True, ax=ax1,vmin=0., vmax=1, cbar=False)
+        ax1.set_xlabel('Group size')
+        ax1.set_ylabel('Num im/indiv')
+        ax1.set_xticklabels(p.groupSizes)
+        ax1.set_yticklabels(p.IMDBSizes[::-1])
+        ax1.invert_yaxis()
+        ax1.set_title('Validation')
+
         sns.plt.show()
 
-        figname = './P1B1/CNN_models/P1B1.pdf'
+        figname = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models/P1B1.pdf'
         plt.savefig(figname)
 
 if __name__ == '__main__':
     '''
     argv[1]: useCondor (bool flag)
     argv[2]: job number
-    argv[3]: dataBase
+    argv[3]: dataBase if 'd' is default
     argv[4:]: repetitions
+    P1B1.py 1 1 d 1 2 (useCondor,job1,default library,repetitions[1 2])
     '''
 
     useCondor = int(sys.argv[1])
@@ -195,7 +220,8 @@ if __name__ == '__main__':
         # restore = 'n'
         if restore == 'y':
             p = P1B1()
-            P1B1Dict = pickle.load(open('./P1B1/CNN_models/P1B1Dict.pkl','rb'))
+            print 'Loading P1B1 dictionary'
+            P1B1Dict = pickle.load(open('IdTrackerDeep/figuresPaper/P1B1/CNN_models/P1B1Dict_1.pkl','rb'))
             p.__dict__.update(P1B1Dict)
             print 'The attributes of the class are:'
             # pprint(p.__dict__)
@@ -229,5 +255,5 @@ if __name__ == '__main__':
             p.plot()
 
     elif useCondor:
-        p = P1B1(job = int(sys.argv[2]), IMDBPath = sys.argv[3], repList = sys.argb[4:])
+        p = P1B1(job = int(sys.argv[2]), IMDBPath = sys.argv[3], repList = sys.argv[4:])
         p.compute()

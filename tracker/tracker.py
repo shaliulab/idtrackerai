@@ -11,9 +11,9 @@ import cv2
 from pprint import pprint
 
 # Import application/library specifics
-sys.path.append('../utils')
-sys.path.append('../preprocessing')
-sys.path.append('../tracker')
+sys.path.append('IdTrackerDeep/utils')
+sys.path.append('IdTrackerDeep/preprocessing')
+sys.path.append('IdTrackerDeep/tracker')
 
 from video_utils import *
 from py_utils import *
