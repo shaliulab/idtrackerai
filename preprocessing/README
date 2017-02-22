@@ -1,0 +1,23 @@
+README _preprocessing Fran
+
+.old
+ - does nothing
+
+Blob detection:
+  preprocessing:
+    read idTrackerDeepGUI.py from line 31 to 98
+    ---it should not be changed in order to affect the computation of the heads
+
+  segmentation.py
+    given some parameters (threshold, minimal area of the blob, et cetera) gives
+    blobs as output
+
+ fragmentation.py
+    looks at blob overlapping in order to identify individual non-crossing fragments of the video
+
+ get_portraits.py
+    takes a miniframe (bounding box of a blob - fish), outputs the head in a square 32x32
+    the function getPortrait is the responsible for the generation of the final square image of the head of the fish
+
+to visualise the frame, change preprocessing params on the fly and see the result of the reaping (head-cut and orientation)
+you can use the function SegmentationPreview in GUI_utils line 206

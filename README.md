@@ -1,5 +1,6 @@
 # idTrackerDeep
 
+Python 2.7
 
 ### Dependencies needed for the project:
 
@@ -8,7 +9,7 @@
 * time
 * multiprocessing
 * itertools
-* tensorflow
+* tensorflow > 1
 * cPickle
 * math
 * scipy
@@ -16,7 +17,7 @@
 * pprint
 * numpy
 * matplotlib
-* cv2
+* cv2 > 2.4.8
 * pandas
 * joblib
 * scikit-image

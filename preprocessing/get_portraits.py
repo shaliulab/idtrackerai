@@ -322,17 +322,18 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     portrait = minif_rot[nose_pixels[1]-7:nose_pixels[1]+25,nose_pixels[0]-16:nose_pixels[0]+16]
     if portrait.shape[0] != 32 or portrait.shape[1] != 32:
         print portrait.shape
-        raise ValueError('This portrait do not have 32x32 pixels. Chenges in light during the video could deteriorate the blobs: try and rais the threshold in the preprocessing parametersm, and run segmentation and fragmentation again.')
+        raise ValueError('This portrait do not have 32x32 pixels. Changes in light during the video could deteriorate the blobs: try and rais the threshold in the preprocessing parametersm, and run segmentation and fragmentation again.')
 
     noseFull = cntBB2Full(nose,bb)
     return portrait, tuple(noseFull.astype('int'))
 
 def reaper(videoPath, frameIndices):
+    # only function called from idTrackerDeepGUI
     print 'reaping', videoPath
     df, numSegment = loadFile(videoPath, 'segmentation')
 
-    boundingboxes = np.asarray(df.loc[:, 'boundingBoxes'])
-    miniframes = np.asarray(df.loc[:, 'miniFrames'])
+    boundingboxes = np.asarray(df.loc[:, 'boundingBoxes']) #coordinate in the frame
+    miniframes = np.asarray(df.loc[:, 'miniFrames']) #image containing the blob, same size
     miniframes = np.asarray(miniframes)
     contours = np.asarray(df.loc[:, 'contours'])
     bkgSamples = np.asarray(df.loc[:,'bkgSamples'])

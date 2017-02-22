@@ -17,7 +17,7 @@ from py_utils import *
 from video_utils import *
 
 def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea):
-
+    # locally called
     print 'Segmenting video %s' % path
     cap = cv2.VideoCapture(path)
     video = os.path.basename(path)
@@ -61,7 +61,7 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
     return np.multiply(numSegment,np.ones(numFrames)).astype('int').tolist(), np.arange(numFrames).tolist(), maxNumBlobs
 
 def segment(paths,preprocParams, mask, centers, useBkg, bkg, EQ):
-
+    # this func is called from idTrackerDeepGUI
     numAnimals = preprocParams['numAnimals']
     minThreshold = preprocParams['minThreshold']
     maxThreshold = preprocParams['maxThreshold']
