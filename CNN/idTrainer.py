@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append('../utils')
+sys.path.append('IdTrackerDeep/utils')
 
 from tf_utils import *
 from input_data_cnn import *
@@ -14,6 +14,7 @@ import numpy as np
 from checkCheck import *
 from pprint import *
 import warnings
+import time
 
 def _add_loss_summary(loss):
     tf.summary.scalar(loss.op.name, loss)
@@ -143,6 +144,8 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                 valLossPlot = []
                 valAccPlot = []
                 valIndivAccPlot = []
+                # time for each epoch
+                epochTime = []
             else:
                 ''' load from pickle '''
                 lossAccDict = pickle.load( open( ckpt_dir_model + "/lossAcc.pkl", "rb" ) )
@@ -156,14 +159,18 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                 valIndivAccPlot = lossAccDict['indivValAcc']
                 valIndivAcc = valIndivAccPlot
 
+                epochTime = lossAccDict['epochTime']
+
             # print "Start from:", start
             opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu, W1,W3,W5]
             opListVal = [cross_entropy, accuracy, indivAcc, relu]
 
             stored_exception = None
             epoch_i = 0
+            overfittingCounter = 0
+            overfittingCounterTh = 5
             while epoch_i <= n_epochs:
-
+                t0 = time.time()
                 minNumEpochsCheckLoss = 10
                 if start + epoch_i > 1:
                     if start + epoch_i > minNumEpochsCheckLoss: #and start > 100:
@@ -178,26 +185,24 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
 
                         if printFlag:
                             print 'Losses difference (prev - curr) ', prevLoss-currLoss
-                            print 'epsilon (overfitting), ', epsilon
                             print 'epsilon2 (if it is not changing much), ', epsilon2
+                            print 'OverfittingCounter, ', overfittingCounter
+                            print 'Threshold for overfittingCounter, ', overfittingCounterTh
+
 
                         if np.mean(valIndivAcc) > .8: ###NOTE: decreased to .8 for large groups (38 animals)
-                            if magCurr > magPrev:
+
+                            if (prevLoss - currLoss) < 0:
+                                overfittingCounter += 1
                                 if printFlag:
-                                    print '\nOverfitting, passing to new set of images'
-
-                                break
-                            elif magCurr == magPrev:
-                                if (prevLoss - currLoss) < epsilon:
+                                    print '\nOverfitting counter, ', overfittingCounter
+                                if overfittingCounter >= overfittingCounterTh:
                                     if printFlag:
-                                        print '\nOverfitting, passing to new set of images'
+                                        print '\n The network is overfitting, we stop the training'
+                                        break
+                            else:
+                                overfittingCounter = 0
 
-                                    break
-                            # if (prevLoss - currLoss) > 0 and (prevLoss - currLoss) < epsilon2:
-                            #     if printFlag:
-                            #         print '\nFinished, passing to new set of images'
-                            #
-                            #     break
                             if list(valIndivAcc) == list(np.ones(classes)):
                                 if printFlag:
                                     print '\nIndividual validations accuracy is 1 for all the animals'
@@ -243,13 +248,13 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                     print(trainIndivAcc)
 
                     # Summary writer
-                    summary_str = sess.run(summary_op, feed_dict=feed_dict)
-                    summary_writerT.add_summary(summary_str, epoch_i)
+                    # summary_str = sess.run(summary_op, feed_dict=feed_dict)
+                    # summary_writerT.add_summary(summary_str, epoch_i)
 
-                    # update global step and save model
+                    # # update global step and save model
                     global_step.assign(global_step + 1).eval() # set and update(eval) global_step with index, i
-                    saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
-                    saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
+                    # saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
+                    # saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
 
                     ''' VALIDATION '''
 
@@ -285,8 +290,11 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                         ", Individual Accuracy=")
                     print(valIndivAcc)
 
-                    summary_str = sess.run(summary_op, feed_dict=feed_dict)
-                    summary_writerV.add_summary(summary_str, epoch_i)
+                    # summary_str = sess.run(summary_op, feed_dict=feed_dict)
+                    # summary_writerV.add_summary(summary_str, epoch_i)
+
+                    epochTime.append(time.time()-t0)
+                    print 'Epoch time in seconds, ', epochTime[-1]
 
                     '''
                     **************************************
@@ -326,6 +334,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                         'indivValAcc': valIndivAccPlot,
                         'features': trainFeatPlot,
                         'labels': one_hot_to_dense(trainFeatLabels), # labels of the last batch of the references to plot some features
+                        'epochTime': epochTime
                         }
 
                     weightsDict = {
@@ -334,21 +343,26 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                         'W5': WConv5
                         }
 
-                    pickle.dump( lossAccDict, open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
-                    pickle.dump( weightsDict, open( ckpt_dir_model + "/weightsDict.pkl", "wb" ) )
+                    # # update global step and save model
+                    # global_step.assign(global_step + 1).eval() # set and update(eval) global_step with index, i
+                    # saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
+                    # saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
+
+                    # pickle.dump( lossAccDict, open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
+                    # pickle.dump( weightsDict, open( ckpt_dir_model + "/weightsDict.pkl", "wb" ) )
                     '''
                     *******************
                     Plotter
                     *******************
                     '''
                     ### uncomment to plot ----
-                    if epoch_i % 1 == 0:
-                        CNNplotterFast2(lossAccDict, weightsDict)
-
-                        print 'Saving figure...'
-                        figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
-                        plt.savefig(figname)
-                    print '-------------------------------'
+                    # if epoch_i % 1 == 0:
+                    #     CNNplotterFast2(lossAccDict, weightsDict)
+                    #
+                    #     print 'Saving figure...'
+                    #     figname = ckpt_dir + '/figures/result_' + str(global_step.eval()) + '.pdf'
+                    #     plt.savefig(figname)
+                    # print '-------------------------------'
                     ### ---
 
                     if stored_exception:
@@ -359,6 +373,10 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
 
             if stored_exception:
                 raise stored_exception[0], stored_exception[1], stored_exception[2]
+
+            # update global step and save model
+            saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
+            saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
 
     return lossAccDict
 

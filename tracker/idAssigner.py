@@ -1,6 +1,6 @@
 import sys
-sys.path.append('../utils')
-sys.path.append('../CNN')
+sys.path.append('IdTrackerDeep/utils')
+sys.path.append('IdTrackerDeep/CNN')
 
 from py_utils import *
 from video_utils import *

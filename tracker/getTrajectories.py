@@ -1,6 +1,6 @@
 import cv2
 import sys
-sys.path.append('../utils')
+sys.path.append('IdTrackerDeep/utils')
 
 from py_utils import *
 

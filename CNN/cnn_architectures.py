@@ -1,6 +1,6 @@
 from __future__ import division
 import sys
-sys.path.append('../utils')
+sys.path.append('IdTrackerDeep/utils')
 import tensorflow as tf
 from tf_utils import *
 from cnn_utils import *
@@ -71,7 +71,7 @@ def inference1(images, width, height, channels, classes, keep_prob):
     '''
     Gives predictions for a given set of images
     '''
-    
+
 
     with tf.variable_scope('Input') as scope:
         images_tensor = tf.reshape(images, [-1, width, height, channels],name='images')

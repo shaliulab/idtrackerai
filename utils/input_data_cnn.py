@@ -46,11 +46,11 @@ def matToH5(pathToDatabase):
     # get labels in {0,...,numIndiv-1}
     label = np.subtract(label,1)
 
-    if not os.path.exists('../data'): # Checkpoint folder does not exist
-        os.makedirs('../data') # we create a checkpoint folder
+    if not os.path.exists('IdTrackerDeep/data'): # Checkpoint folder does not exist
+        os.makedirs('IdTrackerDeep/data') # we create a checkpoint folder
 
     nameDatabase =  ageInDpf + '_' + str(numIndiv) + 'indiv_' + str(int(numImagesPerIndiv)) + 'ImPerInd_' + preprocessing
-    f = h5py.File('../data/' + nameDatabase + '_%i.hdf5', driver='family')
+    f = h5py.File('IdTrackerDeep/data/' + nameDatabase + '_%i.hdf5', driver='family')
     grp = f.create_group("database")
 
 
@@ -82,7 +82,7 @@ def loadIMDB(IMDBname):
     # check if the train database exists, and load it!
     print '\nloading %s...' %IMDBname
     checkDatabase(IMDBname)
-    with h5py.File("../data/" + IMDBname + '_%i.hdf5', 'r', driver='family') as databaseTrain:
+    with h5py.File("IdTrackerDeep/data/" + IMDBname + '_%i.hdf5', 'r', driver='family') as databaseTrain:
         [databaseTrainInfo, imagesTrain, labelsTrain] = getVarAttrFromHdf5(databaseTrain)
         # Normalizations of images
         imagesTrain = imagesTrain/255.
@@ -97,7 +97,7 @@ def loadIMDB(IMDBname):
 
 def checkDatabase(imdb):
     # checks if the dataset given in input is already stored in the folder data
-    if not os.path.exists('../data/' + imdb + '_0.hdf5'):
+    if not os.path.exists('IdTrackerDeep/data/' + imdb + '_0.hdf5'):
         raise ValueError('The database ' + imdb + ' does not exist in the directory /data. Copy there your database or create it (if .mat use matToH5)')
 
 def dimensionChecker(shape, dim):
@@ -123,16 +123,16 @@ def getAttrsFromGroup(grp, variables):
 def permuter(N,name,load):
     # creates a permutation of N elements and stores it if load is False,
     # otherwise it loads it.
-    print '\nCreating permutation for %s' % name
+    print 'Creating permutation for %s' % name
     if not load:
         perm = np.random.permutation(N)
         # Save a permutation into a pickle file.
         permutation = { "perm": perm }
-        pickle.dump( permutation, open( "../temp/permutation_" + name + ".pkl", "wb" ) )
-        print '\nNo permutation exists, new one created'
+        pickle.dump( permutation, open( "IdTrackerDeep/temp/permutation_" + name + ".pkl", "wb" ) )
+        print 'No permutation exists, new one created'
     else:
-        permutation = pickle.load( open( "../temp/permutation_" + name + ".pkl", "rb" ) )
-        print '\nPermutation loaded'
+        permutation = pickle.load( open( "IdTrackerDeep/temp/permutation_" + name + ".pkl", "rb" ) )
+        print 'Permutation loaded'
         perm = permutation['perm']
 
     return perm.tolist()
@@ -276,7 +276,7 @@ def loadDataBase(imdbTrain, numIndivTrainTest, numTrain, numTest, numRef=50, ckp
         if imdbTest != None:
             print 'Loading the database for testing...'
             checkDatabase(imdbTest)
-            with h5py.File("../data/" + imdbTest + '_%i.hdf5', 'r', driver='family') as databaseTest:
+            with h5py.File("IdTrackerDeep/data/" + imdbTest + '_%i.hdf5', 'r', driver='family') as databaseTest:
                 [databaseTestInfo, imagesTest, labelsTest] = getVarAttrFromHdf5(databaseTest)
                 [imsizeTest,numIndivImdbTest,numImagesPerIndivTest] = getAttrsFromGroup(databaseTestInfo,['imageSize', 'numIndiv','numImagesPerIndiv'])
                 imsizeTest = tuple(imsizeTest)
@@ -336,7 +336,7 @@ def loadDataBaseNose(imdbTrain, ckpt_folder="", imdbTest = None):
 
     def checkDatabase(imdb):
         # checks if the dataset given in input is already stored in the folder data
-        if not os.path.exists('../data/' + imdb + '_0.hdf5'):
+        if not os.path.exists('IdTrackerDeep/data/' + imdb + '_0.hdf5'):
             raise ValueError('The database ' + imdb + ' does not exist in the directory /data. Copy there your database or create it (if .mat use matToH5)')
 
     def dimensionChecker(shape, dim):
@@ -367,10 +367,10 @@ def loadDataBaseNose(imdbTrain, ckpt_folder="", imdbTest = None):
             perm = np.random.permutation(N)
             # Save a permutation into a pickle file.
             permutation = { "perm": perm }
-            pickle.dump( permutation, open( "../temp/permutation_" + name + ".pkl", "wb" ) )
+            pickle.dump( permutation, open( "IdTrackerDeep/temp/permutation_" + name + ".pkl", "wb" ) )
             print ' No permutation exists, new one created'
         else:
-            permutation = pickle.load( open( "../temp/permutation_" + name + ".pkl", "rb" ) )
+            permutation = pickle.load( open( "IdTrackerDeep/temp/permutation_" + name + ".pkl", "rb" ) )
             print ' Permutation loaded'
             perm = permutation['perm']
 
@@ -397,7 +397,7 @@ def loadDataBaseNose(imdbTrain, ckpt_folder="", imdbTest = None):
 
     # check if the train database exists, and load it!
     checkDatabase(imdbTrain)
-    with h5py.File("../data/" + imdbTrain + '_%i.hdf5', 'r', driver='family') as databaseTrain:
+    with h5py.File("IdTrackerDeep/data/" + imdbTrain + '_%i.hdf5', 'r', driver='family') as databaseTrain:
         [databaseTrainInfo, imagesTrain, labelsTrain] = getVarAttrFromHdf5(databaseTrain)
         [imsizeTrain,numIndivImdbTrain,numImagesPerIndivTrain] = getAttrsFromGroup(databaseTrainInfo,['imageSize', 'numIndiv','numImagesPerIndiv'])
         imsizeTrain = tuple(imsizeTrain)
@@ -440,10 +440,10 @@ def dataHelper0(path, num_train, num_test, num_valid, ckpt_folder):
         perm = np.random.permutation(len(label))
         # Save a permutation into a pickle file.
         permutation = { "perm": perm }
-        pickle.dump( permutation, open( "../temp/permutation.p", "wb" ) )
+        pickle.dump( permutation, open( "IdTrackerDeep/temp/permutation.p", "wb" ) )
         print ' No permutation exists, new one created'
     else:
-        permutation = pickle.load( open( "../temp/permutation.p", "rb" ) )
+        permutation = pickle.load( open( "IdTrackerDeep/temp/permutation.p", "rb" ) )
         print ' Permutation loaded'
         perm = permutation['perm']
 

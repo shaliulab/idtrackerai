@@ -11,7 +11,7 @@ from joblib import Parallel, delayed
 import gc
 
 # Import application/library specifics
-sys.path.append('../utils')
+sys.path.append('IdTrackerDeep/utils')
 
 from py_utils import *
 from video_utils import *

@@ -5,8 +5,8 @@ np.set_printoptions(precision=2)
 import numpy.matlib
 
 # Import application/library specifics
-sys.path.append('../utils')
-sys.path.append('../CNN')
+sys.path.append('IdTrackerDeep/utils')
+sys.path.append('IdTrackerDeep/CNN')
 
 from py_utils import *
 from video_utils import *
