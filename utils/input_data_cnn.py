@@ -1,14 +1,17 @@
+# Import standard libraries
+import os
 import numpy as np
 np.random.seed(0)
+
+# Import third party libraries
+import tensorflow as tf
 import h5py
-from tf_utils import weight_variable, bias_variable, dense_to_one_hot, one_hot_to_dense
 import cPickle as pickle
-import os
-from pprint import *
+
+# Import application/library specifics
+from tf_utils import weight_variable, bias_variable, dense_to_one_hot, one_hot_to_dense
 from py_utils import *
-import json
-import msgpack as msg
-import msgpack_numpy as msgnp
+
 
 def matToH5(pathToDatabase):
 
@@ -67,7 +70,7 @@ def matToH5(pathToDatabase):
     grp.attrs['ageInDpf'] = ageInDpf
     grp.attrs['preprocessing'] = preprocessing
 
-    pprint([item for item in grp.attrs.iteritems()])
+    print([item for item in grp.attrs.iteritems()])
 
     f.close()
 
@@ -123,16 +126,16 @@ def getAttrsFromGroup(grp, variables):
 def permuter(N,name,load):
     # creates a permutation of N elements and stores it if load is False,
     # otherwise it loads it.
-    print 'Creating permutation for %s' % name
+    print '\nCreating permutation for %s' % name
     if not load:
         perm = np.random.permutation(N)
         # Save a permutation into a pickle file.
         permutation = { "perm": perm }
         pickle.dump( permutation, open( "IdTrackerDeep/temp/permutation_" + name + ".pkl", "wb" ) )
-        print 'No permutation exists, new one created'
+        print '\nNo permutation exists, new one created'
     else:
         permutation = pickle.load( open( "IdTrackerDeep/temp/permutation_" + name + ".pkl", "rb" ) )
-        print 'Permutation loaded'
+        print '\nPermutation loaded'
         perm = permutation['perm']
 
     return perm.tolist()

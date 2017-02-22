@@ -1,20 +1,20 @@
+# Import standard libraries
 import os
 import sys
+import numpy as np
+import warnings
+import time
+
+# Import third party libraries
+import tensorflow as tf
+
+# Import application/library specifics
 sys.path.append('IdTrackerDeep/utils')
 
 from tf_utils import *
 from input_data_cnn import *
 from cnn_utils import *
 from cnn_architectures import *
-
-import tensorflow as tf
-import argparse
-import h5py
-import numpy as np
-from checkCheck import *
-from pprint import *
-import warnings
-import time
 
 def _add_loss_summary(loss):
     tf.summary.scalar(loss.op.name, loss)
@@ -470,3 +470,4 @@ if __name__ == '__main__':
 
         run_training(X_ref, Y_ref, X_test, Y_test, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
         Vindices, Viter_per_epoch, 1.,lr)
+
