@@ -438,6 +438,7 @@ def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFrag
     return fragments, framesAndBlobColumnsLen, intervalsFragmentsLen , minLenIndivCompleteFragments.tolist(), minDistIndivCompleteFragments.tolist(), framesAndBlobColumnsDist, intervalsFragmentsDist
 
 def fragment(videoPaths,videoInfo = None):
+    # only func called from idTrackerDeepGUI
     ''' Load videoInfo if needed '''
     if videoInfo == None:
         videoInfo = loadFile(videoPaths[0], 'videoInfo', hdfpkl='pkl')
