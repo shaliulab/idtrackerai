@@ -85,7 +85,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
 
         cross_entropy = loss(labels_pl,logits)
 
-        train_op, global_step =  optimizeAdam(cross_entropy,lr)
+        train_op, global_step =  optimize(cross_entropy,lr)
 
         accuracy, indivAcc = evaluation(labels_pl,logits,classes)
 
