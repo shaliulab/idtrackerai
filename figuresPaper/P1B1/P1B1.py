@@ -48,8 +48,8 @@ class P1B1(object):
                         self.LossAccDicts[gCNN][g][n] = []
 
         if IMDBPath == 'd':
-            IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5'
-            # IMDBPath = 'IdTrackerDeep/data/25dpf_60indiv_26142imperind_curvatureportrait2_0.hdf5'
+            # IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5'
+            IMDBPath = 'IdTrackerDeep/data/25dpf_60indiv_26142imperind_curvatureportrait2_0.hdf5'
 
             print 'Using default library, ', IMDBPath
 
@@ -67,7 +67,7 @@ class P1B1(object):
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        self.IMDBSizes = [20,50,100,500,1000,10000,25000]
+        self.IMDBSizes = [20, 100, 500, 1000, 10000, 25000]
         self.numIMDBSizes = len(self.IMDBSizes)
 
         # Initialize figure arrays
@@ -194,7 +194,7 @@ class P1B1(object):
                 loadCkpt_folder = ''
             elif self.kt:
                 # By default we will use the first repetition and the model train with the whole library 25000 images.
-                loadCkpt_folder = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models/numIndiv_%i/numImages_%i/rep_%i' %(self.groupSizesCNN[gCNN], self.groupSizesCNN[gCNN], 25000, 0)
+                loadCkpt_folder = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models/numIndiv_%i/numImages_%i/rep_%i' %(self.groupSizesCNN[gCNN], 25000, 1)
                 print 'Knowledge transfer from ', loadCkpt_folder
 
             for g in range(self.numGroups):
@@ -397,3 +397,4 @@ if __name__ == '__main__':
     elif useCondor:
         p = P1B1(job = int(sys.argv[2]), IMDBPath = sys.argv[3], repList = sys.argv[4], groupSizesCNN = sys.argv[5])
 	p.compute()
+

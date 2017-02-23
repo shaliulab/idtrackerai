@@ -174,8 +174,14 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                 minNumEpochsCheckLoss = 10
                 if start + epoch_i > 1:
                     if start + epoch_i > minNumEpochsCheckLoss: #and start > 100:
+			float_info = sys.float_info
+    			minFloat = float_info[3]
                         currLoss = valLossPlot[-1]
                         prevLoss = valLossPlot[-minNumEpochsCheckLoss]
+			if currLoss == 0.:
+			    currLoss = minFloat
+			if prevLoss == 0.:
+			    prevLoss = minFloat
                         print 'currLoss, ', currLoss
                         print 'prevLoss, ', prevLoss
                         magCurr = int(np.log10(currLoss))-1
