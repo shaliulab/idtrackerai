@@ -279,6 +279,7 @@ class P1B1(object):
         print 'repList, ', self.repList
         self.trainAccs = np.concatenate(trainAccs,axis=3)
         self.valAccs = np.concatenate(valAccs,axis=3)
+
         print 'trainAccs, ', self.trainAccs
         print 'valAccs, ', self.valAccs
         self.IndivIndices = IndivIndices
@@ -311,6 +312,7 @@ class P1B1(object):
                             self.epochsToAcc[n,g,gCNN,r] = np.where(np.asarray(lossAccDict['valAcc'])>=accTh)[0][0]
                             self.timeToAcc[n,g,gCNN,r] = np.sum(lossAccDict['epochTime'][:int(self.epochsToAcc[n,g,gCNN,r])])
 
+
     def plotArray(self,arrayName,ax,title):
         import seaborn as sns
         sns.set(style="white")
@@ -339,7 +341,6 @@ class P1B1(object):
         self.plotArray('totalEpochs',axarr[1,0],'Total number of epochs')
 
         figname = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsKT/P1B1_resultsKT.pdf'
-
         print 'Saving figure'
         fig.savefig(figname)
         print 'Figure saved'

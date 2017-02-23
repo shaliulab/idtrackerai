@@ -1,20 +1,20 @@
+# Import standard libraries
 import os
 import sys
+import numpy as np
+import warnings
+import time
+
+# Import third party libraries
+import tensorflow as tf
+
+# Import application/library specifics
 sys.path.append('IdTrackerDeep/utils')
 
 from tf_utils import *
 from input_data_cnn import *
 from cnn_utils import *
 from cnn_architectures import *
-
-import tensorflow as tf
-import argparse
-import h5py
-import numpy as np
-from checkCheck import *
-from pprint import *
-import warnings
-import time
 
 def _add_loss_summary(loss):
     tf.summary.scalar(loss.op.name, loss)
@@ -174,8 +174,14 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                 minNumEpochsCheckLoss = 10
                 if start + epoch_i > 1:
                     if start + epoch_i > minNumEpochsCheckLoss: #and start > 100:
+                        float_info = sys.float_info
+    			        minFloat = float_info[3]
                         currLoss = valLossPlot[-1]
                         prevLoss = valLossPlot[-minNumEpochsCheckLoss]
+                        if currLoss == 0.:
+                            currLoss = minFloat
+                        if prevLoss == 0.:
+                            prevLoss = minFloat
                         print 'currLoss, ', currLoss
                         print 'prevLoss, ', prevLoss
                         magCurr = int(np.log10(currLoss))-1
