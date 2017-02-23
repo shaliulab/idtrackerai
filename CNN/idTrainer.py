@@ -85,7 +85,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
 
         cross_entropy = loss(labels_pl,logits)
 
-        train_op, global_step =  optimize(cross_entropy,lr)
+        train_op, global_step =  optimizeAdam(cross_entropy,lr)
 
         accuracy, indivAcc = evaluation(labels_pl,logits,classes)
 
@@ -195,24 +195,21 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                             print 'OverfittingCounter, ', overfittingCounter
                             print 'Threshold for overfittingCounter, ', overfittingCounterTh
 
-
-                        if np.mean(valIndivAcc) > .8: ###NOTE: decreased to .8 for large groups (38 animals)
-
-                            if (prevLoss - currLoss) < 0:
-                                overfittingCounter += 1
+                        if (prevLoss - currLoss) < 0:
+                            overfittingCounter += 1
+                            if printFlag:
+                                print '\nOverfitting counter, ', overfittingCounter
+                            if overfittingCounter >= overfittingCounterTh:
                                 if printFlag:
-                                    print '\nOverfitting counter, ', overfittingCounter
-                                if overfittingCounter >= overfittingCounterTh:
-                                    if printFlag:
-                                        print '\n The network is overfitting, we stop the training'
-                                        break
-                            else:
-                                overfittingCounter = 0
+                                    print '\n The network is overfitting, we stop the training'
+                                    break
+                        else:
+                            overfittingCounter = 0
 
-                            if list(valIndivAcc) == list(np.ones(classes)):
-                                if printFlag:
-                                    print '\nIndividual validations accuracy is 1 for all the animals'
-                                break
+                        if list(valIndivAcc) == list(np.ones(classes)):
+                            if printFlag:
+                                print '\nIndividual validations accuracy is 1 for all the animals'
+                            break
 
                 try:
                     epoch_counter = start + epoch_i
@@ -383,6 +380,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
             # update global step and save model
             saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
             saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
+            pickle.dump( lossAccDict, open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
 
     return lossAccDict
 
@@ -476,4 +474,3 @@ if __name__ == '__main__':
 
         run_training(X_ref, Y_ref, X_test, Y_test, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
         Vindices, Viter_per_epoch, 1.,lr)
-

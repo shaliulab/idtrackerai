@@ -67,7 +67,7 @@ class P1B1(object):
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        self.IMDBSizes = [20, 100, 500, 1000, 10000, 25000]
+        self.IMDBSizes = [20,50,100,250,500,750]
         self.numIMDBSizes = len(self.IMDBSizes)
 
         # Initialize figure arrays
@@ -80,7 +80,7 @@ class P1B1(object):
         else:
             self.kt = True
         self.batchSize = 250
-        self.numEpochs = 300
+        self.numEpochs = 5000
         self.lr = 0.01
         self.keep_prob = 1.0
 
@@ -246,39 +246,46 @@ class P1B1(object):
             valAccs.append(P1B1Dict['valAccs'])
 
             print 'Updating IndivIndices, ImagesIndices and LossAccDicts'
-            for g in self.groupSizes:
-                if g not in IndivIndices.keys():
-                    print 'Initializing lists IndivIndices, ImagesIndices, LossAccDicts for the new groupSize, ', g
-                    IndivIndices[g] = []
-                    ImagesIndices[g] = {}
-                    LossAccDicts[g] = {}
+            for gCNN in self.groupSizesCNN:
+                if gCNN not in IndivIndices.keys():
+                    IndivIndices[gCNN] = {}
+                    ImagesIndices[gCNN] = {}
+                    LossAccDicts[gCNN] = {}
 
-                for indivIndices in P1B1Dict['IndivIndices'][g]:
-                    IndivIndices[g].append(indivIndices)
+                for g in self.groupSizes:
+                    if g not in IndivIndices[gCNN].keys():
+                        IndivIndices[gCNN][g] = []
+                        ImagesIndices[gCNN][g] = {}
+                        LossAccDicts[gCNN][g] = {}
 
-                for n in self.IMDBSizes:
-                    print 'Group size %i IMDB size %i' %(g,n)
-                    if n not in ImagesIndices[g].keys():
-                        print 'Initializing lists ImagesIndices, LossAccDicts for the new IMDBSize', n
-                        ImagesIndices[g][n] = []
-                        LossAccDicts[g][n] = []
+                    for indivIndices in P1B1Dict['IndivIndices'][gCNN][g]:
+                        IndivIndices[gCNN][g].append(indivIndices)
 
-                    for imagesIndices, lossAccDict in zip(P1B1Dict['ImagesIndices'][g][n],P1B1Dict['LossAccDicts'][g][n]):
-                        ImagesIndices[g][n].append(imagesIndices)
-                        LossAccDicts[g][n].append(lossAccDict)
+                    for n in self.IMDBSizes:
+                        print 'Group size CNN %i Group size %i IMDB size %i' %(gCNN,g,n)
+                        if n not in ImagesIndices[gCNN][g].keys():
+                            print 'Initializing lists ImagesIndices, LossAccDicts for the new IMDBSize', n
+                            ImagesIndices[gCNN][g][n] = []
+                            LossAccDicts[gCNN][g][n] = []
+
+                        for r, (imagesIndices, lossAccDict) in enumerate(zip(P1B1Dict['ImagesIndices'][gCNN][g][n],P1B1Dict['LossAccDicts'][gCNN][g][n])):
+                            print 'Group size CNN %i Group size %i IMDB size %i REp %i' %(gCNN,g,n,r)
+                            ImagesIndices[gCNN][g][n].append(imagesIndices)
+                            LossAccDicts[gCNN][g][n].append(lossAccDict)
 
         # Update object
         self.repList = flatten(repList)
         self.numRepetitions = len(self.repList)
         print 'repList, ', self.repList
-        self.trainAccs = np.concatenate(trainAccs,axis=2)
-        self.valAccs = np.concatenate(valAccs,axis=2)
+        self.trainAccs = np.concatenate(trainAccs,axis=3)
+        self.valAccs = np.concatenate(valAccs,axis=3)
+
         print 'trainAccs, ', self.trainAccs
         print 'valAccs, ', self.valAccs
         self.IndivIndices = IndivIndices
         self.ImagesIndices = ImagesIndices
         self.LossAccDicts = LossAccDicts
-        print 'Num of lossAccDicts', len(IndivIndices[g]), len(IndivIndices[g][n]), len(LossAccDicts[g][n])
+        print 'Num of lossAccDicts', len(IndivIndices[gCNN][g]), len(ImagesIndices[gCNN][g][n]), len(LossAccDicts[gCNN][g][n])
 
         # Save dictionary
         print '\nSaving dictionary...'
@@ -286,29 +293,32 @@ class P1B1(object):
 
     def computeTimes(self,accTh = 0.8):
         self.accTh = accTh
-        self.totalTime = np.ones((self.numIMDBSizes,self.numGroups,self.numRepetitions)) * np.nan
-        self.epochTime = np.ones((self.numIMDBSizes,self.numGroups,self.numRepetitions)) * np.nan
-        self.totalEpochs = np.ones((self.numIMDBSizes,self.numGroups,self.numRepetitions)) * np.nan
-        self.timeToAcc = np.ones((self.numIMDBSizes,self.numGroups,self.numRepetitions)) * np.nan
-        self.epochsToAcc = np.ones((self.numIMDBSizes,self.numGroups,self.numRepetitions)) * np.nan
+        self.totalTime = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
+        self.epochTime = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
+        self.totalEpochs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
+        self.timeToAcc = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
+        self.epochsToAcc = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
 
-        for g,groupSize in enumerate(self.groupSizes):
-            for n,IMDBSize in enumerate(self.IMDBSizes):
-                for r, lossAccDict in enumerate(self.LossAccDicts[groupSize][IMDBSize]):
-                    self.totalTime[n,g,r] = np.sum(lossAccDict['epochTime'])
-                    self.epochTime[n,g,r] = np.mean(lossAccDict['epochTime'])
-                    self.totalEpochs[n,g,r] = len(lossAccDict['epochTime'])
-                    if np.where(np.asarray(lossAccDict['valAcc'])>=accTh)[0].any():
+        for gCNN, groupSizeCNN in enumerate(self.groupSizesCNN):
+            for g,groupSize in enumerate(self.groupSizes):
+                for n,IMDBSize in enumerate(self.IMDBSizes):
+                    print 'Group size CNN %i Group size %i IMDB size %i' %(groupSizeCNN,groupSize,IMDBSize)
+                    for r, lossAccDict in enumerate(self.LossAccDicts[groupSizeCNN][groupSize][IMDBSize]):
+                        self.totalTime[n,g,gCNN,r] = np.sum(lossAccDict['epochTime'])
+                        self.epochTime[n,g,gCNN,r] = np.mean(lossAccDict['epochTime'])
+                        self.totalEpochs[n,g,gCNN,r] = len(lossAccDict['epochTime'])
+                        if np.where(np.asarray(lossAccDict['valAcc'])>=accTh)[0].any():
 
-                        self.epochsToAcc[n,g,r] = np.where(np.asarray(lossAccDict['valAcc'])>=accTh)[0][0]
-                        self.timeToAcc[n,g,r] = np.sum(lossAccDict['epochTime'][:int(self.epochsToAcc[n,g,r])])
+                            self.epochsToAcc[n,g,gCNN,r] = np.where(np.asarray(lossAccDict['valAcc'])>=accTh)[0][0]
+                            self.timeToAcc[n,g,gCNN,r] = np.sum(lossAccDict['epochTime'][:int(self.epochsToAcc[n,g,gCNN,r])])
+
 
     def plotArray(self,arrayName,ax,title):
         import seaborn as sns
         sns.set(style="white")
-        arrayMedian = np.nanmedian(getattr(self, arrayName),axis = 2)
+        arrayMedian = np.nanmedian(getattr(self, arrayName),axis = 3)
 
-        sns.heatmap(arrayMedian, annot=True, ax=ax, cbar=False, fmt='.2f')
+        sns.heatmap(arrayMedian[:,:,0], annot=True, ax=ax, cbar=False, fmt='.2f')
         ax.set_xlabel('Group size')
         ax.set_ylabel('Num im/indiv')
         ax.set_xticklabels(p.groupSizes)
@@ -321,7 +331,8 @@ class P1B1(object):
         sns.set(style="white")
 
         fig, axarr = plt.subplots(2,3,sharex=True,sharey=True, figsize=(20, 10), dpi=300)
-        fig.suptitle('Training from strach (group size vs number of images per individual)')
+        fig.suptitle('Knowlede transfer from CNN of 50 indiv 25000 images (group size vs number of images per individual)')
+        # fig.suptitle('Training from strach (group size vs number of images per individual)')
         self.plotArray('valAccs',axarr[0,0],'Accuracy in validation')
         self.plotArray('epochsToAcc',axarr[0,1],'Number of epochs to accuracy threshold %.2f' %self.accTh)
         self.plotArray('timeToAcc',axarr[0,2],'Time to accuracy threshold  %.2f (sec)' %self.accTh)
@@ -329,8 +340,7 @@ class P1B1(object):
         self.plotArray('epochTime',axarr[1,2],'Single epoch time in (sec)')
         self.plotArray('totalEpochs',axarr[1,0],'Total number of epochs')
 
-        figname = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models/P1B1_results.pdf'
-
+        figname = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsKT/P1B1_resultsKT.pdf'
         print 'Saving figure'
         fig.savefig(figname)
         print 'Figure saved'
@@ -345,56 +355,25 @@ if __name__ == '__main__':
     P1B1.py 1 1 d 1_2 2_5 (useCondor,job1,default library,repetitions[1 2],groupSizesCNN[2 5])
     '''
 
-    useCondor = int(sys.argv[1])
-    if not useCondor:
-        restore =  getInput('Restore P1B1', 'Do you wanna restore P1B1 from a dictionary (P1B1Dict.pkl)? y/[n]')
-        # restore = 'n'
-        if restore == 'y':
-            p = P1B1()
-            P1B1DictPath = selectFile()
-            P1B1DictsPaths = scanFolder(P1B1DictPath)
-            manyDicts = False
-            if len(P1B1DictsPaths) > 1:
-                manyDicts = True
-            print 'Loading dictionary...'
-            P1B1Dict = pickle.load(open(P1B1DictPath,'rb'))
-            p.__dict__.update(P1B1Dict)
-            print 'The attributes of the class are:'
-            # pprint(p.__dict__)
-            print 'The group sizes are, ', p.groupSizes
-            print 'The number of repetitions are, ', p.numRepetitions
-            computeFlag =  getInput('Plot or compute', 'Do you wanna compute more repetitions or add more groupSizes? y/[n]')
-            if computeFlag == 'y':
-                repetitions =  getInput('Repetition', 'How many repetitions do you want (current %i)?' %p.numRepetitions)
-                repetitions = int(repetitions)
-                p.numRepetitions = repetitions
+    plotFlag = int(sys.argv[1])
+    if not plotFlag:
+        p = P1B1()
+        P1B1DictPath = selectFile()
+        P1B1DictsPaths = scanFolder(P1B1DictPath)
+        manyDicts = False
+        if len(P1B1DictsPaths) > 1:
+            manyDicts = True
+        print 'Loading dictionary to update p object...'
+        P1B1Dict = pickle.load(open(P1B1DictPath,'rb'))
+        p.__dict__.update(P1B1Dict)
+        print 'The group sizes are, ', p.groupSizes
+        print 'The IMDB sizes are, ', p.IMDBSizes
+        if manyDicts:
+            p.joinDicts(P1B1Dict=P1B1DictPath)
+        p.computeTimes(accTh = 0.8)
+        p.plotResults()
 
-                groupSizes = getInput('GroupSizes', 'Insert the group sizes separated by comas (current ' + str(p.groupSizes) + ' )')
-                groupSizes = [int(i) for i in groupSizes.split(',')]
-                p.groupSizes = groupSizes
-
-                numEpochs = getInput('numEpochs', 'Insert the number of Epochs (current ' + str(p.numEpochs) + ' )')
-                p.numEpochs = int(numEpochs)
-
-                p.compute()
-                p.plotAccuracy()
-
-            else:
-                if manyDicts:
-                    p.joinDicts(P1B1Dict=P1B1DictPath)
-                p.computeTimes(accTh = 0.8)
-                p.plotResults()
-
-
-        elif restore == 'n' or restore == '':
-            IMDBPath = selectFile()
-            # print 'Computing with default values'
-            p = P1B1(IMDBPath = IMDBPath)
-            pprint(p.__dict__)
-            p.compute()
-            p.plotAccuracy()
-
-    elif useCondor:
+    elif plotFlag:
         p = P1B1(job = int(sys.argv[2]), IMDBPath = sys.argv[3], repList = sys.argv[4], groupSizesCNN = sys.argv[5])
 	p.compute()
 

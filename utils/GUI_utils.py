@@ -204,6 +204,7 @@ First preview numAnimals, inspect parameters for segmentation and portraying
 **************************************************************************** '''
 
 def SegmentationPreview(path, width, height, bkg, mask, useBkg, preprocParams,  size = 1):
+
     ### FIXME Currently the scale factor of the image is not passed everytime we change the segment. It need to be changed so that we do not need to resize everytime we open a new segmen.
     minArea = preprocParams['minArea']
     maxArea = preprocParams['maxArea']
