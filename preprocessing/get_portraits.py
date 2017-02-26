@@ -15,154 +15,7 @@ sys.path.append('IdTrackerDeep/utils')
 from py_utils import loadFile, saveFile
 from video_utils import cntBB2Full
 
-def smooth(x,window_len=20,window='hanning'):
-   """smooth the data using a window with requested size."""
-   if x.ndim != 1:
-       raise ValueError, "smooth only accepts 1 dimension arrays."
-
-   if x.size < window_len:
-       raise ValueError, "Input vector needs to be bigger than window size."
-
-
-   if window_len<3:
-       return x
-
-   if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-       raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
-
-   s=np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
-   # s = x
-   #print(len(s))
-   if window == 'flat': #moving average
-       w=np.ones(window_len,'d')
-   else:
-       w=eval('np.'+window+'(window_len)')
-
-   y=np.convolve(s,w/w.sum(),mode='valid')
-   return y
-
-def smoother(contour):
-    """
-    smooth contour by convolution
-    """
-    window = 11
-    X = contour[:,0]
-    X = np.append(X,X[:window])
-    Y = contour[:,1]
-    Y = np.append(Y,Y[:window])
-
-    G = cv2.transpose(cv2.getGaussianKernel(window, 32, cv2.CV_64FC1))
-
-    X_smooth = np.convolve(X,G[0],mode='same')
-    Y_smooth = np.convolve(Y,G[0],mode='same')
-    X_smooth = X_smooth[int(np.floor(window/2)):-int(np.ceil(window/2))]
-    Y_smooth = Y_smooth[int(np.floor(window/2)):-int(np.ceil(window/2))]
-    return X_smooth, Y_smooth
-
-def smooth_resample(counter, contour,smoothFlag = False):
-    if smoothFlag:
-        x,y  = smoother(contour)
-    else:
-        x = contour[:,0]
-        y = contour[:,1]
-
-    x_new = x
-    y_new = y
-
-
-    M = 1000
-    while 2*len(x_new) >= M: ### FIXME When the contour is too big we need to increase the number of points for the resampling.
-    # Mainly this happens because the contour does not belong to a single animal. We need to check whether there is a better way of discarding blobs belonging to crossings.
-        M += 500
-
-    t = np.linspace(0, len(x_new), M)
-    x = np.interp(t, np.arange(len(x_new)), x_new)
-    y = np.interp(t, np.arange(len(y_new)), y_new)
-    tol = .1
-    i, idx = 0, [0]
-    i_new = i
-    while i < len(x):
-        # print 'i, ', i
-        total_dist = 0
-        for j in range(i+1, len(x)):
-            total_dist += np.sqrt((x[j]-x[j-1])**2 + (y[j]-y[j-1])**2)
-            if total_dist > tol:
-                idx.append(j)
-                break
-
-        i = j+1
-        if i == i_new:
-            print 'i, ', i
-            print 'tol, ', tol
-            print 'total_dist, ', total_dist
-            print 'M, ', M
-            print 'len contour, ', len(x_new)
-            print 'perimiter, ', np.sum(np.sqrt(np.diff(x_new)**2 + np.diff(y_new)**2))
-            plt.ion()
-            plt.plot(x,y,'-b')
-            plt.pause(3)
-            plt.show()
-            raise ValueError('It got stuck in the while loop of the resampling of the contour to compute the curvature')
-
-        i_new = i
-
-
-    xn = x[idx]
-    yn = y[idx]
-    sContour = [[x,y] for (x,y) in zip(xn,yn)]
-
-    return sContour
-
-def phi(ind, cnt): # FIXME we need to understand the arctan2 and return the correct angle to compute the curvature and do not have artifacts
-    cnt = np.squeeze(cnt)
-    points = [cnt[(ind-1) % (len(cnt)-1)], cnt[(ind+1) % (len(cnt)-1)]]
-    return math.atan2((points[1][1] - points[0][1]), (points[1][0] - points[0][0]))
-    # atan = np.arctan2((points[1][1] - points[0][1]), (points[1][0] - points[0][0]))
-    # if atan > 0:
-    #     atan = np.pi*2 - atan
-    # # else:
-    # #     atan = -atan
-    # return atan
-
-def curv(cnt,i,n,orientation):
-    left = (i + n) % (len(cnt)-1)
-    right = (i - n) % (len(cnt)-1)
-    phi_l = phi(left, cnt) #% 360
-    phi_r = phi(right, cnt) #% 360
-
-    if cnt[left+1][0] <= cnt[right+1][0]:
-        if phi_l <= 0:
-            phi_l += 2*np.pi
-        if phi_r <= 0:
-            phi_r += 2*np.pi
-
-    return orientation*(phi_l - phi_r) /(2*n+1) # good one
-
-def get_extrema(curvature):
-    gradients = np.diff(curvature)
-    maxima_num=0
-    minima_num=0
-    max_locations=[]
-    min_locations=[]
-    count=0
-    for i in gradients[:-1]:
-        count+=1
-
-        if ((cmp(i,0)>0) & (cmp(gradients[count],0)<0) & (i != gradients[count])):
-            maxima_num+=1
-            max_locations.append(count)
-
-        if ((cmp(i,0)<0) & (cmp(gradients[count],0)>0) & (i != gradients[count])):
-            minima_num+=1
-            min_locations.append(count)
-
-    return np.asarray(max_locations), np.asarray(min_locations)
-
-def getMiddle(points):
-    l = points.shape[0]
-    b = np.sum(points, axis=0)
-    b = np.divide(b,l)
-    return b
+from fishcontour import FishContour
 
 def full2miniframe(point, boundingBox):
     """
@@ -188,7 +41,6 @@ def getMFandC(path, frameIndices):
     generate a list of arrays containing miniframes and centroids detected in
     path at this point we can already discard miniframes that does not belong
     to a specific fragments
-    Used in get_miniframes.py
     """
     # get number of segment
     df, numSegment = loadFile(path, 'segmentation')
@@ -209,6 +61,7 @@ def getMFandC(path, frameIndices):
     return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist()
 
 def fillSquareFrame(square_frame,bkgSamps):
+    '''Used in get_miniframes.py'''
     numSamples = 0
     threshold = 150
     while numSamples <= 10:
@@ -229,103 +82,52 @@ def fillSquareFrame(square_frame,bkgSamps):
     square_frame[square_frame == 0] = bkgSamps[indicesSamples]
     return square_frame
 
-def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
-    '''This function is called from idTrackerDeepGUI and from reaper'''
-    orientation = np.sign(cv2.contourArea(cnt,oriented=True)) ### TODO this can probably be optimized
+def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None,px_nose_above_center = 9):
+    """Given a miniframe (i.e. a minimal rectangular image containing an animal)
+    it returns a 32x32 image centered on the head.
 
-    # Pass contour to bb coord, resample, smooth, and duplicate
-    cnt = full2miniframe(cnt, bb)
-    cnt = np.asarray(cnt)
-    cnt = np.squeeze(cnt)
-    cnt = smooth_resample(counter, cnt,smoothFlag=True)
-    cnt = np.vstack([cnt,cnt])
+    :param miniframe: A numpy 2-dimensional array
+    :param cnt: A cv2-style contour, i.e. (x,:,y)
+    :param bb: Coordinates of the left-top corner of miniframe in the big frame
+    :param bkgSamp: Not used in my implementation
+    :param counter: Not used in my implementation
+    :param px_nose_above_center: Number of pixels of nose above the center of portrait
+    :return a smaller 2-dimensional array, and a tuple with all the nose coordinates in frame reference
+    """
 
-    # Compute curvature
-    curvature = [curv(cnt,i,3,orientation) for i in range(len(cnt))]
-    curvature = np.asarray(curvature)
+    # Extra parameters
+    half_side_sq = 16 # Because we said that the final portrait is 32x32
+    overhead = 30 # Extra pixels when performing rotation, around sqrt(half_side_sq**2 + (half_side_sq+px_nose_above_center)**2)
 
+    # Calculating nose coordinates in the full frame reference
+    contour_cnt = FishContour.fromcv2contour(cnt)
+    noseFull, rot_ang, _ = contour_cnt.find_nose_and_orientation()
 
-    # Smooth curvature
-    window = 51
-    curvature = smooth(curvature, window)
-    index = (window-1)/2
-    curvature = curvature[index:-index]
+    # Calculating nose coordinates in miniframe reference
+    nose = full2miniframe(noseFull,bb) #Float
+    nose_pixels = np.array([int(nose[0]),int(nose[1])]) #int
 
-    # Crop contour and curvature from the first zero curvature point
-    zero = np.argmin(np.abs(curvature[:len(curvature)/2]))
-    i1 = zero
-    i2 = zero+len(cnt)/2
-    cnt = cnt[i1:i2]
-    curvature = curvature[i1:i2]
-
-    ### Uncomment to plot
-    # plt.close("all")
-    # plt.ion()
-    # plt.figure()
-    # plt.plot(curvature)
-    # plt.figure()
-    # plt.plot(cnt[:,0],cnt[:,1],'o')
-    # plt.show()
-    # plt.pause(.5)
-
-    # Find first two maxima (tail and nose), get middle point, and angle of rotation
-    max_locations, min_locations = get_extrema(curvature)
-    sorted_locations = max_locations[np.argsort(curvature[max_locations])][::-1]
-    maxCoord = [cnt[max_loc,:] for max_loc in sorted_locations]
-    nose = maxCoord[1]
-    cntL = cnt.shape[0]
-    steps = 50
-    support = np.asarray([cnt[(sorted_locations[1] + steps) % cntL,:], cnt[(sorted_locations[1] - steps) % cntL,:]])
-    m = getMiddle(support)
-    rot_ang = -(-np.arctan2(nose[1]-m[1],nose[0]-m[0])-np.pi/2)*180/np.pi
-
-    # Copy miniframe in a bigger frame to rotate
-    rowsMin, colsMin = miniframe.shape
-
-    diag = np.round(np.sqrt(rowsMin**2 + colsMin**2)).astype('int')
-    new_frame = np.zeros((diag,diag)).astype('uint8')
-    x_offset = np.ceil((diag-colsMin)/2).astype('int')
-    y_offset = np.ceil((diag-rowsMin)/2).astype('int')
-    new_frame[y_offset:y_offset + rowsMin, x_offset:x_offset+colsMin] = miniframe
-    new_frame = fillSquareFrame(new_frame,bkgSamp)
-    # print 'shape of the new miniframe, ', new_frame.shape
-
-    # Translate and rotate nose and middle point to the new frame
-    new_nose = tuple(np.asarray([nose[0]+x_offset, nose[1]+y_offset]).astype('int'))
-    new_m = tuple(np.asarray([m[0]+x_offset, m[1]+y_offset]).astype('int'))
-
-    # Get roto-translation matrix and rotate nose and miniframe
-    M = cv2.getRotationMatrix2D(new_m, rot_ang,1)
-    R = np.matrix([M[0][0:2], M[1][0:2]])
-    T = np.matrix([M[0][2],M[1][2]])
-    nose_rt = np.asarray(np.add(np.squeeze(np.asarray(np.dot(R, np.asmatrix(new_nose).T))),T).astype('int'))[0]
-    minif_rot = cv2.warpAffine(new_frame, M, (diag,diag),flags = cv2.INTER_NEAREST)
+    # Get roto-translation matrix and rotated miniframe
+    # Rotation is performed around nose, nose coordinates stay constant
+    # Final image gives an overhead above the nose coordinates, so the whole head should
+    # stay visible in the final frame.
+    # borderMode=cv2.BORDER_WRAP determines how source image is extended when needed
+    M = cv2.getRotationMatrix2D(nose, rot_ang,1)
+    minif_rot = cv2.warpAffine(miniframe, M, tuple(nose_pixels+overhead), borderMode=cv2.BORDER_WRAP, flags = cv2.INTER_NEAREST)
 
     # Crop the image in 32x32 frame around the nose
-    nose_pixels = [int(nose_rt[0]),int(nose_rt[1])]
-    # print counter
-    # if counter == 251:
-    #     plt.close("all")
-    #     plt.ion()
-    #     plt.figure()
-    #     plt.imshow(minif_rot,interpolation='none',cmap='gray')
-    #     # plt.figure()
-    #     # plt.plot(cnt[:,0],cnt[:,1],'o')
-    #     # plt.show()
-    #     plt.pause(.5)
-    # print 'nose pixels, ', nose_pixels
-    if nose_pixels[1]<7:
-        nose_pixels[1] = 7
-    portrait = minif_rot[nose_pixels[1]-7:nose_pixels[1]+25,nose_pixels[0]-16:nose_pixels[0]+16]
-    if portrait.shape[0] != 32 or portrait.shape[1] != 32:
-        print portrait.shape
-        raise ValueError('This portrait do not have 32x32 pixels. Changes in light during the video could deteriorate the blobs: try and rais the threshold in the preprocessing parametersm, and run segmentation and fragmentation again.')
+    x_range = xrange(nose_pixels[0]-half_side_sq,nose_pixels[0]+half_side_sq)
+    y_range = xrange(nose_pixels[1]-half_side_sq+px_nose_above_center,nose_pixels[1]+half_side_sq+px_nose_above_center) #7,25
+    portrait = minif_rot.take(y_range,mode='wrap',axis=0).take(x_range,mode='wrap',axis=1)
 
-    noseFull = cntBB2Full(nose,bb)
+    #if portrait.shape[0] != 32 or portrait.shape[1] != 32: #This is redundant now by my use of take
+    #    print portrait.shape
+    #    raise ValueError('This portrait do not have 32x32 pixels. Changes in light during the video could deteriorate the blobs: try and rais the threshold in the preprocessing parametersm, and run segmentation and fragmentation again.')
+
     return portrait, tuple(noseFull.astype('int'))
 
 def reaper(videoPath, frameIndices):
-    # this function called from get_miniframes, get_portraits
+    # only function called from idTrackerDeepGUI
     print 'reaping', videoPath
     df, numSegment = loadFile(videoPath, 'segmentation')
 
@@ -364,11 +166,11 @@ def reaper(videoPath, frameIndices):
             portraits.append(portrait)
             noses.append(nose_pixels)
         ### UNCOMMENT TO PLOT ##################################################
-        #     cv2.imshow(str(j),portrait)
+        #    cv2.imshow(str(j),portrait)
         #
-        # k = cv2.waitKey(100) & 0xFF
-        # if k == 27: #pres esc to quit
-        #     break
+        #k = cv2.waitKey(100) & 0xFF
+        #if k == 27: #pres esc to quit
+        #    break
         ########################################################################
 
         AllPortraits.set_value(segmentIndices[counter], 'images', portraits)
