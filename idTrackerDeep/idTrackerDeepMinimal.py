@@ -15,7 +15,7 @@ sys.path.append('IdTrackerDeep/tracker')
 
 from segmentation import *
 from fragmentation import *
-from get_portraits import *
+from get_portraits import getPortrait
 from video_utils import *
 from py_utils import *
 from GUI_utils import *

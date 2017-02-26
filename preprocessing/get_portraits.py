@@ -9,13 +9,11 @@ from matplotlib import pyplot as plt
 import cv2
 import pandas as pd
 from joblib import Parallel, delayed
-import scipy.ndimage
-from scipy.signal import argrelmax
 
 # Import application/library specifics
 sys.path.append('IdTrackerDeep/utils')
-from py_utils import *
-from video_utils import *
+from py_utils import loadFile, saveFile
+from video_utils import cntBB2Full
 
 def smooth(x,window_len=20,window='hanning'):
    """smooth the data using a window with requested size."""
@@ -52,8 +50,6 @@ def smoother(contour):
     X = np.append(X,X[:window])
     Y = contour[:,1]
     Y = np.append(Y,Y[:window])
-
-    bkg = np.ones((np.max(Y),np.max(X)))
 
     G = cv2.transpose(cv2.getGaussianKernel(window, 32, cv2.CV_64FC1))
 
@@ -192,6 +188,7 @@ def getMFandC(path, frameIndices):
     generate a list of arrays containing miniframes and centroids detected in
     path at this point we can already discard miniframes that does not belong
     to a specific fragments
+    Used in get_miniframes.py
     """
     # get number of segment
     df, numSegment = loadFile(path, 'segmentation')
@@ -233,7 +230,7 @@ def fillSquareFrame(square_frame,bkgSamps):
     return square_frame
 
 def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
-    height, width = miniframe.shape
+    '''This function is called from idTrackerDeepGUI and from reaper'''
     orientation = np.sign(cv2.contourArea(cnt,oriented=True)) ### TODO this can probably be optimized
 
     # Pass contour to bb coord, resample, smooth, and duplicate
@@ -328,7 +325,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None):
     return portrait, tuple(noseFull.astype('int'))
 
 def reaper(videoPath, frameIndices):
-    # only function called from idTrackerDeepGUI
+    # this function called from get_miniframes, get_portraits
     print 'reaping', videoPath
     df, numSegment = loadFile(videoPath, 'segmentation')
 
