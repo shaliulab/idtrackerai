@@ -147,13 +147,18 @@ def sliceDatabase(images, labels, indicesIndiv):
     labels = np.array(flatten([i*np.ones(sum(labels==ind)).astype(int) for i,ind in enumerate(indicesIndiv)]))
     return images, labels
 
-def splitter(images, labels, numImages, numIndiv, imsize):
+def splitter(images, labels, numImages, numIndiv, imsize, numImForTrain = None):
     # split (90-10%) a permuted database according to the number of requested images
     # remeber to PERMUTE images and labels before splitting them!
     numImages = numImages * numIndiv
     resolution = np.prod(imsize)
-    num_val = int(np.ceil(np.true_divide(numImages,10)))
-    num_train = int(numImages - num_val)
+    if numImForTrain == None:
+        num_val = int(np.ceil(np.true_divide(numImages,10)))
+        num_train = int(numImages - num_val)
+    else:
+        num_train = numImForTrain
+        num_val = numImages - num_train
+
 
     X_train = images[:num_train]
     Y_train = labels[:num_train]

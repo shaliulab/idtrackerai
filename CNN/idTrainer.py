@@ -32,6 +32,13 @@ def optimize(loss,lr):
     train_op = optimizer.minimize(loss)
     return train_op, global_step
 
+def optimizeSoftmax(loss,lr,softVariables):
+    optimizer = tf.train.GradientDescentOptimizer(lr)
+    # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
+    global_step = tf.Variable(0, name='global_step', trainable=False)
+    train_op = optimizer.minimize(loss,var_list=softVariables)
+    return train_op, global_step
+
 def evaluation(y,y_logits,classes):
     accuracy, indivAcc = individualAccuracy(y,y_logits,classes)
     return accuracy, indivAcc
@@ -75,7 +82,7 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
     return outList
 
 def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder,batch_size, num_epochs,Tindices, Titer_per_epoch,
-Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearningFlag = False):
+Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearningFlag = False,onlySoftmax=False):
 
     with tf.Graph().as_default():
         images_pl, labels_pl = placeholder_inputs(batch_size, resolution, classes)
@@ -85,6 +92,23 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
 
         cross_entropy = loss(labels_pl,logits)
 
+        # softVariables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="softmax1")
+        # with tf.variable_scope("softmax1", reuse=True):
+        #     softW = tf.get_variable("weights")
+        #     softB = tf.get_variable("biases")
+        # print softW
+        # print softB
+
+        # if onlySoftmax:
+        #     print '********************************************************'
+        #     print 'We will only train the softmax...'
+        #     print '********************************************************'
+        #     train_op, global_step = optimizeSoftmax(loss,lr,[softW,softB])
+        # else:
+        #     print '********************************************************'
+        #     print 'We will only train the whole network...'
+        #     print '********************************************************'
+        #     train_op, global_step =  optimize(cross_entropy,lr)
         train_op, global_step =  optimize(cross_entropy,lr)
 
         accuracy, indivAcc = evaluation(labels_pl,logits,classes)

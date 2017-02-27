@@ -102,7 +102,9 @@ class P1B1(object):
             groupSizeCNN = self.groupSizesCNN[gCNN]
             groupSize = self.groupSizes[g]
             numImForTrain = self.IMDBSizes[n]
-            numImToUse = numImForTrain + np.ceil(numImForTrain*.1)
+            numImToUse = numImForTrain + int(numImForTrain*.1)
+            print 'Number of images for training, ', numImForTrain
+            print 'Total number of images per animal, ', numImToUse
             rep = self.repList[r]
 
             # Get individuals for this repetition
@@ -180,18 +182,24 @@ class P1B1(object):
             # imagesSA, labelsSA = dataAugmenter(imagesS, labelsS)
 
             # Split in train and validation
-            X_train, Y_train, X_val, Y_val = splitter(imagesS, labelsS, numImToUse, groupSize, self.imSize)
+            X_train, Y_train, X_val, Y_val = splitter(imagesS, labelsS, numImToUse, groupSize, self.imSize, numImForTrain * groupSize)
             print 'len Y_train + Y_val, ', len(Y_train) + len(Y_val)
+            print 'X_val shape', X_val.shape
+            print 'Y_val shape', Y_val.shape
+            print 'X_train shape', X_train.shape
+            print 'Y_train shape', Y_train.shape
 
             # check train's dimensions
-            cardTrain = int(np.ceil(np.true_divide(np.multiply(numImToUse,9),10)))*groupSize
+            cardTrain = int(numImForTrain)*groupSize
+            print 'cardTrain, ', cardTrain
             dimTrainL = (cardTrain, groupSize)
             dimTrainI = (cardTrain, images.shape[2]*images.shape[3])
             dimensionChecker(X_train.shape, dimTrainI)
             dimensionChecker(Y_train.shape, dimTrainL)
 
             # check val's dimensions
-            cardVal = int(np.ceil(np.true_divide(numImToUse,10)))*groupSize
+            cardVal = int(np.ceil(numImForTrain*.1))*groupSize
+            print 'cardVal, ', cardVal
             dimValL = (cardVal, groupSize)
             dimValI = (cardVal, images.shape[2] * images.shape[3])
             dimensionChecker(X_val.shape, dimValI)
@@ -217,7 +225,8 @@ class P1B1(object):
                                         Tindices, Titer_per_epoch,
                                         Vindices, Viter_per_epoch,
                                         self.keep_prob,self.lr,
-                                        checkLearningFlag = self.checkLearningFlag)
+                                        checkLearningFlag = self.checkLearningFlag,
+                                        onlySoftmax=True)
 
             print 'Time in seconds, ', np.sum(lossAccDict['epochTime'])
             self.LossAccDicts[groupSizeCNN][groupSize][numImForTrain].append(lossAccDict)
