@@ -58,7 +58,7 @@ class P1B1(object):
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        self.IMDBSizes = [20,50,100,250,500,750,1000,3000,25000] # Images for training
+        self.IMDBSizes = [20,50,100,250,500,750,1000,3000,23000] # Images for training
         # self.IMDBSizes = [20,50,100,250]
         self.numIMDBSizes = len(self.IMDBSizes)
 
@@ -102,6 +102,7 @@ class P1B1(object):
             groupSizeCNN = self.groupSizesCNN[gCNN]
             groupSize = self.groupSizes[g]
             numImForTrain = self.IMDBSizes[n]
+            if numIm
             numImToUse = numImForTrain + np.ceil(numImForTrain*.1)
             rep = self.repList[r]
 
