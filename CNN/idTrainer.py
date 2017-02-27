@@ -75,7 +75,7 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
     return outList
 
 def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder,batch_size, num_epochs,Tindices, Titer_per_epoch,
-Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
+Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearningFlag = False):
 
     with tf.Graph().as_default():
         images_pl, labels_pl = placeholder_inputs(batch_size, resolution, classes)
@@ -206,6 +206,10 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                         else:
                             overfittingCounter = 0
 
+                        if (prevLoss - currLoss) < epsilon2 and checkLearningFlag:
+                            if printFlag:
+                                print '\nFinished, the network it is not learning more, we stop training'
+                            break
                         if list(valIndivAcc) == list(np.ones(classes)):
                             if printFlag:
                                 print '\nIndividual validations accuracy is 1 for all the animals'

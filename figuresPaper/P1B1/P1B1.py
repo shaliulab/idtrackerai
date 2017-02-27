@@ -67,7 +67,7 @@ class P1B1(object):
         self.valAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
 
         # CNN parameters
-        if self.condition == 'KT' or self.condition == 'KTC':
+        if 'KT' in self.condition:
             self.kt = True
         else:
             self.kt = False
@@ -75,6 +75,10 @@ class P1B1(object):
         self.numEpochs = 5000
         self.lr = 0.01
         self.keep_prob = 1.0
+        if 'V' in self.condition:
+            self.checkLearningFlag = True
+        else:
+            self.checkLearningFlag = False
 
 	if IMDBPath == 'd':
 	    if self.kt == False:
@@ -194,7 +198,7 @@ class P1B1(object):
 
             # Update ckpt_dir
             if not self.kt:
-                ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsS/numIndiv_%i/numImages_%i/rep_%i' %(groupSize, numImagesToUse, rep)
+                ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/numIndiv_%i/numImages_%i/rep_%i' %(self.condition,groupSize, numImagesToUse, rep)
             elif self.kt:
                 ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/CNN_%i/numIndiv_%i/numImages_%i/rep_%i' %(self.condition, groupSizeCNN, groupSize, numImagesToUse, rep)
 
@@ -211,7 +215,8 @@ class P1B1(object):
                                         self.batchSize, self.numEpochs,
                                         Tindices, Titer_per_epoch,
                                         Vindices, Viter_per_epoch,
-                                        self.keep_prob,self.lr)
+                                        self.keep_prob,self.lr,
+                                        checkLearningFlag = self.checkLearningFlag)
 
             print 'Time in seconds, ', np.sum(lossAccDict['epochTime'])
             self.LossAccDicts[groupSizeCNN][groupSize][numImagesToUse].append(lossAccDict)
