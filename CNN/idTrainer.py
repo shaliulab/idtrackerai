@@ -184,6 +184,10 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
             			    prevLoss = minFloat
                         print 'currLoss, ', currLoss
                         print 'prevLoss, ', prevLoss
+                        if np.isnan(currLoss):
+                            if printFlag:
+                                print '\nThe validation loss is infinite, we stop the training'
+                            break
                         magCurr = int(np.log10(currLoss))-1
                         magPrev = int(np.log10(prevLoss))-1
                         epsilon = -.1*10**(magCurr)

@@ -58,7 +58,7 @@ class P1B1(object):
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        self.IMDBSizes = [20,50,100,250,500,750,1000,25000]
+        self.IMDBSizes = [20,50,100,250,500,750,1000,3000,25000] # Images for training
         # self.IMDBSizes = [20,50,100,250]
         self.numIMDBSizes = len(self.IMDBSizes)
 
@@ -101,7 +101,8 @@ class P1B1(object):
         def runRepetition(self, loadCkpt_folder, images, labels, gCNN, g, n, r):
             groupSizeCNN = self.groupSizesCNN[gCNN]
             groupSize = self.groupSizes[g]
-            numImagesToUse = self.IMDBSizes[n]
+            numImForTrain = self.IMDBSizes[n]
+            numImToUse = numImForTrain + np.ceil(numImForTrain*.1)
             rep = self.repList[r]
 
             # Get individuals for this repetition
@@ -153,44 +154,44 @@ class P1B1(object):
                 print 'number of images before extracting correlated ones: ', len(imagesS)
                 print 'number of labels before extracting correlated ones: ', len(labelsS)
 
-                imagesS, labelsS, firstFrameIndices = getCorrelatedImages(imagesS,labelsS,numImagesToUse)
+                imagesS, labelsS, firstFrameIndices = getCorrelatedImages(imagesS,labelsS,numImToUse)
 
                 print 'number of images after extracting correlated ones: ', len(imagesS)
                 print 'number of labels after extracting correlated ones: ', len(labelsS)
 
             # Get permutation of for this repetition
-            if len(self.ImagesIndices[groupSizeCNN][groupSize][numImagesToUse]) >= r + 1:
+            if len(self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain]) >= r + 1:
                 print 'Restoring images permutation for rep ', rep
-                permImages = self.ImagesIndices[groupSizeCNN][groupSize][numImagesToUse][r]
+                permImages = self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain][r]
 
             else:
                 permImages = permuter(len(labelsS),'imagesTrain',[])
-                self.ImagesIndices[groupSizeCNN][groupSize][numImagesToUse].append(permImages)
+                self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain].append(permImages)
 
             # Permute images
             imagesS = imagesS[permImages]
             labelsS = labelsS[permImages]
 
             # Select images needed
-            imagesS = imagesS[:numImagesToUse * groupSize]
-            labelsS = labelsS[:numImagesToUse * groupSize]
+            imagesS = imagesS[:numImToUse * groupSize]
+            labelsS = labelsS[:numImToUse * groupSize]
 
             # # Data augmentation ### TODO code data augmentation
             # imagesSA, labelsSA = dataAugmenter(imagesS, labelsS)
 
             # Split in train and validation
-            X_train, Y_train, X_val, Y_val = splitter(imagesS, labelsS, numImagesToUse, groupSize, self.imSize)
+            X_train, Y_train, X_val, Y_val = splitter(imagesS, labelsS, numImToUse, groupSize, self.imSize)
             print 'len Y_train + Y_val, ', len(Y_train) + len(Y_val)
 
             # check train's dimensions
-            cardTrain = int(np.ceil(np.true_divide(np.multiply(numImagesToUse,9),10)))*groupSize
+            cardTrain = int(np.ceil(np.true_divide(np.multiply(numImToUse,9),10)))*groupSize
             dimTrainL = (cardTrain, groupSize)
             dimTrainI = (cardTrain, images.shape[2]*images.shape[3])
             dimensionChecker(X_train.shape, dimTrainI)
             dimensionChecker(Y_train.shape, dimTrainL)
 
             # check val's dimensions
-            cardVal = int(np.ceil(np.true_divide(numImagesToUse,10)))*groupSize
+            cardVal = int(np.ceil(np.true_divide(numImToUse,10)))*groupSize
             dimValL = (cardVal, groupSize)
             dimValI = (cardVal, images.shape[2] * images.shape[3])
             dimensionChecker(X_val.shape, dimValI)
@@ -198,9 +199,9 @@ class P1B1(object):
 
             # Update ckpt_dir
             if not self.kt:
-                ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/numIndiv_%i/numImages_%i/rep_%i' %(self.condition,groupSize, numImagesToUse, rep)
+                ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/numIndiv_%i/numImages_%i/rep_%i' %(self.condition,groupSize, numImForTrain, rep)
             elif self.kt:
-                ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/CNN_%i/numIndiv_%i/numImages_%i/rep_%i' %(self.condition, groupSizeCNN, groupSize, numImagesToUse, rep)
+                ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/CNN_%i/numIndiv_%i/numImages_%i/rep_%i' %(self.condition, groupSizeCNN, groupSize, numImForTrain, rep)
 
             # Compute index batches
             numImagesT = Y_train.shape[0]
@@ -219,7 +220,7 @@ class P1B1(object):
                                         checkLearningFlag = self.checkLearningFlag)
 
             print 'Time in seconds, ', np.sum(lossAccDict['epochTime'])
-            self.LossAccDicts[groupSizeCNN][groupSize][numImagesToUse].append(lossAccDict)
+            self.LossAccDicts[groupSizeCNN][groupSize][numImForTrain].append(lossAccDict)
             self.trainAccs[n,g,gCNN,r] = lossAccDict['acc'][-1]
             self.valAccs[n,g,gCNN,r] = lossAccDict['valAcc'][-1]
 
@@ -253,7 +254,7 @@ class P1B1(object):
                             print 'Knowledge transfer from ', loadCkpt_folder
                             print 'GroupSizeCNN, ',self.groupSizesCNN[gCNN]
                         print 'Group size, ', self.groupSizes[g]
-                        print 'numImagesToUse, ', self.IMDBSizes[n]
+                        print 'numImForTrain, ', self.IMDBSizes[n]
                         print 'Repetition, ', self.repList[r]
 
                         runRepetition(self, loadCkpt_folder, images, labels, gCNN, g, n, r)
