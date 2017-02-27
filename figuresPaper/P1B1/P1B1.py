@@ -53,13 +53,13 @@ class P1B1(object):
         # Figure parameters
         self.groupSizesCNN = map(int,groupSizesCNN.split('_'))
         self.numGroupsCNN = len(self.groupSizesCNN)
-        # self.groupSizes = [2, 5, 10, 25, 50]
-        self.groupSizes = [10, 25, 50]
+        self.groupSizes = [2, 5, 10, 25, 50]
+        # self.groupSizes = [10, 25, 50]
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        # self.IMDBSizes = [20,50,100,250,500,750,1000,25000]
-        self.IMDBSizes = [20,50,100,250]
+        self.IMDBSizes = [20,50,100,250,500,750,1000,25000]
+        # self.IMDBSizes = [20,50,100,250]
         self.numIMDBSizes = len(self.IMDBSizes)
 
         # Initialize figure arrays
