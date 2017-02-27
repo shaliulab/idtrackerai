@@ -315,6 +315,10 @@ class P1B1(object):
         self.repList = flatten(repList)
         self.numRepetitions = len(self.repList)
         print 'repList, ', self.repList
+        print 'trainAccs shape, ',trainAccs[0].shape
+        print 'valAccs shape, ', valAccs[0].shape
+        print 'trainAccs shape, ',trainAccs[1].shape
+        print 'valAccs shape, ', valAccs[1].shape
         self.trainAccs = np.concatenate(trainAccs,axis=3)
         self.valAccs = np.concatenate(valAccs,axis=3)
 
@@ -354,15 +358,39 @@ class P1B1(object):
     def plotArray(self,arrayName,ax,title):
         import seaborn as sns
         sns.set(style="white")
-        arrayMean = np.nanmean(getattr(self, arrayName),axis = 3)
+        array = getattr(self, arrayName)
+        arrayMedian = np.nanmedian(array,axis = 3)
 
-        sns.heatmap(arrayMean[:,:,0], annot=True, ax=ax, cbar=False, fmt='.2f')
+        sns.heatmap(arrayMedian[:,:,0], annot=True, ax=ax, cbar=False, fmt='.2f')
         ax.set_xlabel('Group size')
         ax.set_ylabel('Num im/indiv')
-        ax.set_xticklabels(p.groupSizes)
-        ax.set_yticklabels(p.IMDBSizes[::-1])
+        ax.set_xticklabels(self.groupSizes)
+        ax.set_yticklabels(self.IMDBSizes[::-1])
         ax.invert_yaxis()
         ax.set_title(title)
+
+    def plotArray2(self,arrayName,ax,title,ylim,ylabel):
+        import seaborn as sns
+        from matplotlib import pyplot as plt
+        from cycler import cycler
+        colormap = plt.cm.jet
+        colors = [colormap(i) for i in np.linspace(0, 0.9, len(self.IMDBSizes))]
+        ax.set_prop_cycle(cycler('color',colors))
+        sns.set(style="white")
+        array = getattr(self, arrayName)
+        arrayMedian = np.nanmedian(array[:-1],axis = 3)
+
+        ax.plot(self.groupSizes, np.squeeze(arrayMedian).T)
+        ax.set_xlabel('Group size')
+        if ylim:
+            ax.set_ylim(ylim)
+        ax.set_ylabel(ylabel)
+        ax.set_xticks(self.groupSizes)
+        ax.set_xticklabels(self.groupSizes)
+        if arrayName == 'valAccs':
+            ax.legend(self.IMDBSizes,title='Images/individual')
+        ax.set_title(title)
+
 
     def plotResults(self):
         import seaborn as sns
@@ -389,6 +417,33 @@ class P1B1(object):
         fig.savefig(figname)
         print 'Figure saved'
 
+    def plotResults2(self):
+        import seaborn as sns
+        from matplotlib import pyplot as plt
+        sns.set(style="white")
+
+        fig, axarr = plt.subplots(2,3,sharex=True, figsize=(20, 10), dpi=300)
+        if self.condition == 'S':
+            fig.suptitle('Training from strach')
+        elif self.condition == 'KT':
+            fig.suptitle('Knowledge transfer from CNN of 50 indiv 25000 images')
+        elif self.condition == 'KTC':
+            fig.suptitle('Knowledge transfer from CNN of 50 indiv 25000 images (correlated images)')
+        # fig.suptitle('Training from strach (group size vs number of images per individual)')
+        self.plotArray2('valAccs',axarr[0,0],'Accuracy in validation',ylim=(0.,1.),ylabel='Accuracy')
+        self.plotArray2('epochsToAcc',axarr[0,1],'Number of epochs to accuracy threshold %.2f' %self.accTh,ylim=(0,400),ylabel='Number of pochs')
+        self.plotArray2('timeToAcc',axarr[0,2],'Time to accuracy threshold  %.2f (sec)' %self.accTh,ylim=(0,250),ylabel='Time (sec)')
+        self.plotArray2('totalTime',axarr[1,1],'Total time in (sec)',ylim=(0,300),ylabel='Time (sec)')
+        self.plotArray2('epochTime',axarr[1,2],'Single epoch time in (sec)',ylim=(0,2.5),ylabel='Time (sec)')
+        self.plotArray2('totalEpochs',axarr[1,0],'Total number of epochs',ylim=(0,800),ylabel='Number of epochs')
+
+        figname = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1_results2%s.pdf' %(self.condition, self.condition)
+        print 'Saving figure'
+        fig.savefig(figname)
+        print 'Figure saved'
+
+
+
 if __name__ == '__main__':
     '''
     argv[1]: useCondor (bool flag)
@@ -404,7 +459,7 @@ if __name__ == '__main__':
     plotFlag = int(sys.argv[1])
     if not plotFlag:
 
-        P1B1DictPath = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict.pkl' %sys.argv[6]
+        P1B1DictPath = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict_job_1.pkl' %sys.argv[6]
         print 'P1B1DictPath, ', P1B1DictPath
         condition = sys.argv[6]
         P1B1DictsPaths = scanFolder(P1B1DictPath)
@@ -419,8 +474,9 @@ if __name__ == '__main__':
         print 'The IMDB sizes are, ', p.IMDBSizes
         if manyDicts:
             p.joinDicts(P1B1Dict=P1B1DictPath)
-        p.computeTimes(accTh = 0.6)
+        p.computeTimes(accTh = 0.8)
         p.plotResults()
+        p.plotResults2()
 
     elif plotFlag:
         p = P1B1(job = int(sys.argv[2]), IMDBPath = sys.argv[3], repList = sys.argv[4], groupSizesCNN = sys.argv[5], condition = sys.argv[6])
