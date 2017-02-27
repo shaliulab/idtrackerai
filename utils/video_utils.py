@@ -67,7 +67,7 @@ def splitVideo(videoPath):
     cap.release()
 
 
-# splitVideo('/media/chaos/EMPTY/adult2darkness/adult1darkness.avi' )
+# splitVideo('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/flies8/testflies_7.avi' )
 """
 Get general information from video
 """
@@ -302,16 +302,19 @@ def getBlobsInfoPerFrame(frame, contours, height, width):
     bkgSamples = []
     for i, cnt in enumerate(contours):
         boundingBox, miniFrame, pixelsInFullF, bkgSample = getMiniFrame(frame, cnt, height, width)
+        #bkgsamples
         bkgSamples.append(bkgSample)
+        #bounding boxes
         boundingBoxes.append(boundingBox)
         # miniframes
         miniFrames.append(miniFrame)
-        # centroid
+        # centroids
         centroids.append(getCentroid(cnt))
-        # area
+        # areas
         areas.append(cv2.contourArea(cnt))
-        # pixels list
+        # pixels lists
         pixels.append(pixelsInFullF)
+
     return boundingBoxes, miniFrames, centroids, areas, pixels, bkgSamples
 
 def blobExtractor(segmentedFrame, frame, minArea, maxArea, height, width):

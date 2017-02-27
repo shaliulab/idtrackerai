@@ -60,7 +60,7 @@ class FishContour():
         smoother = smooth(self)
         nose_i = find_max(abs(smoother.curvature()),n=2)
         return self.c[nose_i,:]
-    
+
     def find_nose_and_orientation(self,head_size = HEAD_DIAMETER):
         """It returns nose coordinates, angle needed to rotate so nose points to negative y
         and the centroid of the head
@@ -73,7 +73,7 @@ class FishContour():
         orvec = nose - head_centroid
         angle = np.degrees(np.arctan2(orvec[1],orvec[0]))
         return nose,angle+90,head_centroid
-    
+
     def ascvcontour(self):
         """Returns a contour in opencv style, i.e. (x,0,y).
         It is needed in cv2.moments() in OpenCV 2, in version 3 not really
@@ -84,9 +84,14 @@ class FishContour():
         """Returns the centroid of the contour
         """
         M = cv2.moments(self.ascvcontour())
-        cX = (M["m10"] / M["m00"])
-        cY = (M["m01"] / M["m00"])
-        return (cX,cY) 
+        try:
+            cX = (M["m10"] / M["m00"])
+            cY = (M["m01"] / M["m00"])
+        except:
+            cX = 0
+            cY = 0
+            print 'Warning: M["m00"] might be zero'
+        return (cX,cY)
 
 def smooth(contour):
     """Returns a smoother FishContour() with the same length.
@@ -95,6 +100,3 @@ def smooth(contour):
     :param contour: instance of FishContour()
     """
     return FishContour(scipy.ndimage.filters.gaussian_filter1d(contour.c, SMOOTH_SIGMA, mode='wrap',axis=0))
-
-
-

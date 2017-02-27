@@ -30,10 +30,11 @@ numSegment = 0
 # paths = scanFolder('/media/chaos/New Volume/motherfucker2/Caffeine5fish_20140206T122428_1.avi')
 # '/media/chaos/New Volume/motherfucker2/Caffeine5fish_20140206T122428_1.avi'
 # paths = scanFolder('../Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('../videos/larvae1/trial_1_1.avi')
+# paths = scanFolder('IdTrackerDeep/videos/larvae1/trial_1_1.avi')
+paths = scanFolder('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/flies8/testflies_7_1.avi')
 # paths = scanFolder('../videos/nofragsError/_1.avi')
 # paths = scanFolder('../videos/cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-paths = scanFolder('IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi')
+# paths = scanFolder('IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../videos/Conflicto8/conflict3and4_20120316T155032_1.avi')
 # paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
 # paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')

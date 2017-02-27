@@ -1,6 +1,6 @@
 import cv2
 import sys
-sys.path.append('../utils')
+sys.path.append('IdTrackerDeep/utils')
 
 from py_utils import *
 
@@ -26,12 +26,39 @@ numSegment = 0
 # paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
 # paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('../BigGroup/manyFish_26dpf_20161110_1.avi')
-paths = scanFolder('../38fish_adult_splitted/adult1darkenes_1.avi')
+# paths = scanFolder('../38fish_adult_splitted/adult1darkenes_1.avi')
+paths = scanFolder('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/flies8/testflies_7_1.avi')
+videoPath = paths[0]
+frameIndices = loadFile(videoPath, 'frameIndices')
+videoInfo = loadFile(videoPath, 'videoInfo', hdfpkl='pkl')
+# stats = loadFile(paths[0], 'statistics',hdfpkl='pkl')
+def getLastSession(subFolders):
+    if len(subFolders) == 0:
+        lastIndex = 0
+    else:
+        subFolders = natural_sort(subFolders)[::-1]
+        lastIndex = int(subFolders[0].split('_')[-1])
+    return lastIndex
 
-frameIndices = loadFile(paths[0], 'frameIndices', time=0)
-videoInfo = loadFile(paths[0], 'videoInfo', time=0, hdfpkl='pkl')
-stats = pickle.load( open( ckpt_dir + "/statistics.pkl", "rb" ) )
-dfGlobal = loadFile(paths[0], 'portraits', time=0)
+video = os.path.basename(videoPath)
+folder = os.path.dirname(videoPath)
+filename, extension = os.path.splitext(video)
+subFolder = folder + '/CNN_models'
+subSubFolders = glob.glob(subFolder +"/*")
+lastIndex = getLastSession(subSubFolders)
+sessionPath = subFolder + '/Session_' + str(lastIndex)
+print sessionPath
+
+stats = pickle.load( open( sessionPath + "/statistics.pkl", "rb" ) )
+# stats = loadFile(paths[0], 'statistics', time=0)
+# stats = stats.to_dict()[0]
+dfGlobal = loadFile(paths[0], 'portraits')
+# IdsStatistics = {'blobIds':idSoftMaxAllVideo,
+#     'probBlobIds':PSoftMaxAllVIdeo,
+#     'fragmentIds':idLogP2FragAllVideo,
+#     'probFragmentIds':logP2FragAllVideo,
+#     'FreqFrag': freqFragAllVideo,
+#     'P1Frag': P1FragAllVideo}
 
 numAnimals = videoInfo['numAnimals']
 width = videoInfo['width']
@@ -42,8 +69,29 @@ allFragProbIds = stats['probFragmentIds']
 
 allIds = stats['blobIds']
 allProbIds = stats['probBlobIds']
+FreqFrag = stats['FreqFrag']
+normFreqFrag = stats['normFreqFragAllVideo']
+P1Frag = stats['P1Frag']
+P2Frag = stats['P2FragAllVideo']
 
-statistics = [allFragProbIds, allIds, allProbIds]
+statistics = [allFragProbIds, allIds, allProbIds, FreqFrag, normFreqFrag, P1Frag,P2Frag]
+
+# frameIndices = loadFile(paths[0], 'frameIndices')
+# videoInfo = loadFile(paths[0], 'videoInfo', hdfpkl='pkl')
+# stats = pickle.load( open( ckpt_dir + "/statistics.pkl", "rb" ) )
+# dfGlobal = loadFile(paths[0], 'portraits')
+
+# numAnimals = videoInfo['numAnimals']
+# width = videoInfo['width']
+# height = videoInfo['height']
+
+# allFragIds = stats['fragmentIds']
+# allFragProbIds = stats['probFragmentIds']
+
+# allIds = stats['blobIds']
+# allProbIds = stats['probBlobIds']
+
+# statistics = [allFragProbIds, allIds, allProbIds]
 
 
 # path = paths[numSegment]
@@ -60,12 +108,12 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, stat, dfGl
     out = cv2.VideoWriter(name, fourcc, 15.0, (width, height))
     for i, path in enumerate(paths):
         print i
-        df, sNumber = loadFile(path, 'segmentation', time=0)
+        df, sNumber = loadFile(path, 'segmentation')
 
         # allPortraits = allPortraits.sort_index(axis=0,ascending=True)
         sNumber = int(sNumber)
         if sNumber > 0:
-            dfpast, _ = loadFile(paths[i-1], 'segmentation', time=0)
+            dfpast, _ = loadFile(paths[i-1], 'segmentation')
             numFramesPast = len(dfpast)
             for j in range(1,shadowsNumber):
                 df.loc[-j] = dfpast.iloc[-j]
@@ -73,7 +121,7 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, stat, dfGl
         numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
         width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-        colors = get_spaced_colors(numAnimals)
+        colors = get_spaced_colors_util(numAnimals)
         currentFrame = cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
         while currentFrame < numFrame:
             ind = frameIndices[(frameIndices.segment == int(sNumber)) & (frameIndices.frame == currentFrame)].index[0]
@@ -127,14 +175,14 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, stat, dfGl
                         if blackBkg == False:
                             px = np.unravel_index(pixels[l],(height,width))
                             frame[px[0],px[1],:] = frameCopy[px[0],px[1],:]
-                            if cur_id == 0:
-                                cv2.putText(frame,'Mattia',centroid, font, size,colors[cur_id+1],thickness)
-                            elif cur_id == 14:
-                                cv2.putText(frame,'Paco',centroid, font, size,colors[cur_id+1],thickness)
+                            # if cur_id == 0:
+                            #     cv2.putText(frame,'Mattia',centroid, font, size,colors[cur_id+1],thickness)
+                            # elif cur_id == 14:
+                            #     cv2.putText(frame,'Paco',centroid, font, size,colors[cur_id+1],thickness)
                         #     elif cur_id == 14:
                         #         cv2.putText(frame,'Tom',centroid, font, size,colors[cur_id+1],thickness)
                         #     else:
-                        #         cv2.putText(frame,str(cur_id+1),centroid, font, size,colors[cur_id+1],thickness)
+                            cv2.putText(frame,str(cur_id+1),centroid, font, size,colors[cur_id+1],thickness)
                         # cv2.circle(frame, centroid,2, colors[cur_id+1],2)
                         # cv2.circle(frame, nose,2, colors[cur_id+1],2)
 
@@ -175,15 +223,15 @@ def IdSaver(paths,allIdentities,frameIndices,numAnimals,width,height, stat, dfGl
                         if blackBkg == False:
                             px = np.unravel_index(pixels[l],(height,width))
                             frame[px[0],px[1],:] = frameCopy[px[0],px[1],:]
-                            if cur_id == 0:
-                                cv2.putText(frame,'Mattia',centroid, font, size,colors[cur_id+1],thickness)
-                            elif cur_id == 14:
-                                # cv2.putText(frame,'Paco',centroid, font, size,colors[cur_id+1],thickness)
-                                cv2.putText(frame,'Paco',centroid, font, size,colors[cur_id+1],thickness)
+                            # if cur_id == 0:
+                            #     cv2.putText(frame,'Mattia',centroid, font, size,colors[cur_id+1],thickness)
+                            # elif cur_id == 14:
+                            #     # cv2.putText(frame,'Paco',centroid, font, size,colors[cur_id+1],thickness)
+                            #     cv2.putText(frame,'Paco',centroid, font, size,colors[cur_id+1],thickness)
                         #     elif cur_id == 14:
                         #         cv2.putText(frame,'Tom',centroid, font, size,colors[cur_id+1],thickness)
                         #     else:
-                        #         cv2.putText(frame,str(cur_id+1),centroid, font, size,colors[cur_id+1],thickness)
+                            cv2.putText(frame,str(cur_id+1),centroid, font, size,colors[cur_id+1],thickness)
                         # cv2.circle(frame, centroid,2, colors[cur_id+1],2)
                         # cv2.circle(frame, nose,2, colors[cur_id+1],2)
 

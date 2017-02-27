@@ -132,6 +132,7 @@ def computeP1(IdProbs):
     """
     float_info = sys.float_info
     maxFloat = float_info[0]
+    minFloat = float_info[3]
     P1Frags = []
     P1FragsForMat = []
     freqFrags = []
@@ -163,6 +164,9 @@ def computeP1(IdProbs):
         # print 'denominator, ', denominator
         P1Frag = numerator / denominator
         # print 'P1Frag, ', P1Frag
+        if np.any(P1Frag == 0.):
+            P1Frag[P1Frag == 0.] = minFloat
+            
         if np.any(P1Frag == 0.):
             raise ValueError('P1Frag cannot be 0')
         # P1Frag[P1Frag == 1.] = 1. - np.sum(P1Frag[P1Frag!=1.])
