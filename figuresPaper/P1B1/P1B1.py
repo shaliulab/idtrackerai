@@ -102,7 +102,6 @@ class P1B1(object):
             groupSizeCNN = self.groupSizesCNN[gCNN]
             groupSize = self.groupSizes[g]
             numImForTrain = self.IMDBSizes[n]
-            if numIm
             numImToUse = numImForTrain + np.ceil(numImForTrain*.1)
             rep = self.repList[r]
 
