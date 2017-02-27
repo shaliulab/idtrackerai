@@ -174,42 +174,42 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
                 minNumEpochsCheckLoss = 10
                 if start + epoch_i > 1:
                     if start + epoch_i > minNumEpochsCheckLoss: #and start > 100:
-			float_info = sys.float_info
-    			minFloat = float_info[3]
+                        float_info = sys.float_info
+                        minFloat = float_info[3]
                         currLoss = valLossPlot[-1]
                         prevLoss = valLossPlot[-minNumEpochsCheckLoss]
-			if currLoss == 0.:
-			    currLoss = minFloat
-			if prevLoss == 0.:
-			    prevLoss = minFloat
-                        print 'currLoss, ', currLoss
-                        print 'prevLoss, ', prevLoss
-                        magCurr = int(np.log10(currLoss))-1
-                        magPrev = int(np.log10(prevLoss))-1
-                        epsilon = -.1*10**(magCurr)
-                        epsilon2 = .01*10**(magCurr)
+            			if currLoss == 0.:
+            			    currLoss = minFloat
+            			if prevLoss == 0.:
+            			    prevLoss = minFloat
+                            print 'currLoss, ', currLoss
+                            print 'prevLoss, ', prevLoss
+                            magCurr = int(np.log10(currLoss))-1
+                            magPrev = int(np.log10(prevLoss))-1
+                            epsilon = -.1*10**(magCurr)
+                            epsilon2 = .01*10**(magCurr)
 
-                        if printFlag:
-                            print 'Losses difference (prev - curr) ', prevLoss-currLoss
-                            print 'epsilon2 (if it is not changing much), ', epsilon2
-                            print 'OverfittingCounter, ', overfittingCounter
-                            print 'Threshold for overfittingCounter, ', overfittingCounterTh
-
-                        if (prevLoss - currLoss) < 0:
-                            overfittingCounter += 1
                             if printFlag:
-                                print '\nOverfitting counter, ', overfittingCounter
-                            if overfittingCounter >= overfittingCounterTh:
+                                print 'Losses difference (prev - curr) ', prevLoss-currLoss
+                                print 'epsilon2 (if it is not changing much), ', epsilon2
+                                print 'OverfittingCounter, ', overfittingCounter
+                                print 'Threshold for overfittingCounter, ', overfittingCounterTh
+
+                            if (prevLoss - currLoss) < 0:
+                                overfittingCounter += 1
                                 if printFlag:
-                                    print '\n The network is overfitting, we stop the training'
-                                    break
-                        else:
-                            overfittingCounter = 0
+                                    print '\nOverfitting counter, ', overfittingCounter
+                                if overfittingCounter >= overfittingCounterTh:
+                                    if printFlag:
+                                        print '\n The network is overfitting, we stop the training'
+                                        break
+                            else:
+                                overfittingCounter = 0
 
-                        if list(valIndivAcc) == list(np.ones(classes)):
-                            if printFlag:
-                                print '\nIndividual validations accuracy is 1 for all the animals'
-                            break
+                            if list(valIndivAcc) == list(np.ones(classes)):
+                                if printFlag:
+                                    print '\nIndividual validations accuracy is 1 for all the animals'
+                                break
 
                 try:
                     epoch_counter = start + epoch_i
