@@ -1,3 +1,5 @@
+from __future__ import division
+
 # Import standard libraries
 import os
 import sys
@@ -35,7 +37,7 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
         origFrame = frameGray.copy()
         # print avIntensity
         avIntensity = np.mean(origFrame)
-        segmentedFrame = segmentVideo(origFrame, minThreshold, maxThreshold, bkg, mask, useBkg)
+        segmentedFrame = segmentVideo(origFrame/avIntensity, minThreshold, maxThreshold, bkg, mask, useBkg)
         # segmentedFrameCopy = segmentedFrame.copy()
         # Find contours in the segmented image
         boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, origFrame, minArea, maxArea, height, width)

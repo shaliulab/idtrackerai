@@ -221,7 +221,7 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, preprocParams,  
 
     def thresholder(minTh, maxTh):
         toile = np.zeros_like(avFrame, dtype='uint8')
-        segmentedFrame = segmentVideo(origFrame, minTh, maxTh, bkg, mask, useBkg)
+        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, bkg, mask, useBkg)
         contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')

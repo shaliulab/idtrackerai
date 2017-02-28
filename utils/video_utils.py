@@ -128,7 +128,6 @@ Compute background and threshold
 def computeBkgPar(videoPath,bkg,EQ):
     print 'Adding video %s to background' % videoPath
     cap = cv2.VideoCapture(videoPath)
-    counter = 0
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     numFramesBkg = 0
     frameInds = range(0,numFrame,100)
@@ -182,13 +181,19 @@ def checkEq(EQ, frame):
 
 
 def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
-    #Apply background substraction if requested and threshold image
+    """Applies background substraction if requested and thresholds image
+    :param frame: original frame normalised by the mean
+    :param minThreshold: minimum intensity threshold (1-255)
+    :param maxThreshold: maximum intensity threshold (1-255)
+    :param bkg: background frame (normalised by mean???)
+    :param mask: boolean mask of region of interest where thresholding is performed
+    :param useBkg: boolean determining if background substraction is performed
+    """
+    # compute the average frame NO LONGER NEEDED; I CHECKED INPUT IS ALWAYS NORMALISED BY MEAN
+    #stride = 20
+    #frame = np.true_divide(frame,np.mean(frame[::stride,::stride]))
 
-    # compute the average frame
-    stride = 20
-    frame = np.true_divide(frame,np.mean(frame[::stride,::stride]))
     if useBkg:
-
         frameSubtracted = uint8caster(np.abs(np.subtract(bkg,frame)))
         frameSubtractedMasked = cv2.addWeighted(frameSubtracted,1,mask,1,0)
         ### Uncomment to plot
