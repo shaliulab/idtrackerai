@@ -185,7 +185,8 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
     #Apply background substraction if requested and threshold image
 
     # compute the average frame
-    frame = np.true_divide(frame,np.mean(frame))
+    stride = 20
+    frame = np.true_divide(frame,np.mean(frame[::stride,::stride]))
     if useBkg:
 
         frameSubtracted = uint8caster(np.abs(np.subtract(bkg,frame)))
@@ -276,6 +277,7 @@ def getPixelsList(cnt, width, height):
     return zip(pts[0],pts[1])
 
 def sampleBkg(cntBB, miniFrame):
+    #FIXME TO BE REMOVED
     frame = np.zeros((500,500)).astype('uint8')
     cv2.drawContours(miniFrame, [cntBB], -1, color=255, thickness = -1)
     # Access the image pixels and create a 1D numpy array then add to list
@@ -287,10 +289,11 @@ def getMiniFrame(frame, cnt, height, width):
     miniFrame = frame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
     cntBB = cnt2BoundingBox(cnt,boundingBox)
     miniFrameBkg = miniFrame.copy()
-    bkgSample = sampleBkg(cntBB, miniFrameBkg)
-    pixelsInBB = getPixelsList(cntBB, np.abs(boundingBox[0][0]-boundingBox[1][0]), np.abs(boundingBox[0][1]-boundingBox[1][1]))
-    pixelsInFullF = pixelsInBB + np.asarray([boundingBox[0][1],boundingBox[0][0]])
-    pixelsInFullFF = np.ravel_multi_index([pixelsInFullF[:,0],pixelsInFullF[:,1]],(height,width))
+    # bkgSample = sampleBkg(cntBB, miniFrameBkg)
+    bkgSample = None
+    pixelsInBB = getPixelsList(cntBB, np.abs(boundingBox[0][0] - boundingBox[1][0]), np.abs(boundingBox[0][1] - boundingBox[1][1]))
+    pixelsInFullF = pixelsInBB + np.asarray([boundingBox[0][1], boundingBox[0][0]])
+    pixelsInFullFF = np.ravel_multi_index([pixelsInFullF[:,0], pixelsInFullF[:,1]],(height,width))
     return boundingBox, miniFrame, pixelsInFullFF, bkgSample
 
 def getBlobsInfoPerFrame(frame, contours, height, width):
