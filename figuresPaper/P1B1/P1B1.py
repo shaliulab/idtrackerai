@@ -80,11 +80,16 @@ class P1B1(object):
         else:
             self.checkLearningFlag = False
 
-	if IMDBPath == 'd':
-	    if self.kt == False:
-            	IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5'
-	    elif self.kt == True:
-            	IMDBPath = 'IdTrackerDeep/data/25dpf_60indiv_26142imperind_curvatureportrait2_0.hdf5'
+        if 'X' in self.condition:
+            self.onlySoftmax = True
+        else:
+            self.onlySoftmax = False
+
+    	if IMDBPath == 'd':
+    	    if self.kt == False:
+                	IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5'
+    	    elif self.kt == True:
+                	IMDBPath = 'IdTrackerDeep/data/25dpf_60indiv_26142imperind_curvatureportrait2_0.hdf5'
 
             print 'Using default library, ', IMDBPath
 
@@ -226,7 +231,7 @@ class P1B1(object):
                                         Vindices, Viter_per_epoch,
                                         self.keep_prob,self.lr,
                                         checkLearningFlag = self.checkLearningFlag,
-                                        onlySoftmax=True)
+                                        onlySoftmax=self.onlySoftmax)
 
             print 'Time in seconds, ', np.sum(lossAccDict['epochTime'])
             self.LossAccDicts[groupSizeCNN][groupSize][numImForTrain].append(lossAccDict)
@@ -474,7 +479,7 @@ if __name__ == '__main__':
     plotFlag = int(sys.argv[1])
     if not plotFlag:
 
-        P1B1DictPath = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict_job_1.pkl' %sys.argv[6]
+        P1B1DictPath = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict.pkl' %sys.argv[6]
         print 'P1B1DictPath, ', P1B1DictPath
         condition = sys.argv[6]
         P1B1DictsPaths = scanFolder(P1B1DictPath)

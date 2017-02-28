@@ -131,6 +131,6 @@ def inference1(images, width, height, channels, classes, keep_prob):
     n_fc = 100
     fc_drop = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
     relu = reLU('relu1', fc_drop)
-    y_logits = buildSoftMax('softmax1', relu, n_fc, classes)
+    y_logits, softVar = buildSoftMax('softmax1', relu, n_fc, classes)
 
-    return y_logits, relu, (W1,W3,W5)
+    return y_logits, relu, (W1,W3,W5), softVar

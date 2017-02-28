@@ -29,14 +29,14 @@ def optimize(loss,lr):
     optimizer = tf.train.GradientDescentOptimizer(lr)
     # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
     global_step = tf.Variable(0, name='global_step', trainable=False)
-    train_op = optimizer.minimize(loss)
+    train_op = optimizer.minimize(loss=loss)
     return train_op, global_step
 
 def optimizeSoftmax(loss,lr,softVariables):
     optimizer = tf.train.GradientDescentOptimizer(lr)
     # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
     global_step = tf.Variable(0, name='global_step', trainable=False)
-    train_op = optimizer.minimize(loss,var_list=softVariables)
+    train_op = optimizer.minimize(loss,var_list = softVariables)
     return train_op, global_step
 
 def evaluation(y,y_logits,classes):
@@ -88,28 +88,29 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
         images_pl, labels_pl = placeholder_inputs(batch_size, resolution, classes)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
-        logits, relu, (W1,W3,W5) = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
+        logits, relu, (W1,W3,W5), softVar = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
 
         cross_entropy = loss(labels_pl,logits)
+        #
+        # softVar = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="softmax1")
+        with tf.variable_scope("softmax1", reuse=True) as scope:
+            softW = tf.get_variable("weights")
+            softB = tf.get_variable("biases")
+        print softW
+        print softB
+        softVar = [softW,softB]
 
-        # softVariables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="softmax1")
-        # with tf.variable_scope("softmax1", reuse=True):
-        #     softW = tf.get_variable("weights")
-        #     softB = tf.get_variable("biases")
-        # print softW
-        # print softB
-
-        # if onlySoftmax:
-        #     print '********************************************************'
-        #     print 'We will only train the softmax...'
-        #     print '********************************************************'
-        #     train_op, global_step = optimizeSoftmax(loss,lr,[softW,softB])
-        # else:
-        #     print '********************************************************'
-        #     print 'We will only train the whole network...'
-        #     print '********************************************************'
-        #     train_op, global_step =  optimize(cross_entropy,lr)
-        train_op, global_step =  optimize(cross_entropy,lr)
+        if onlySoftmax:
+            print '********************************************************'
+            print 'We will only train the softmax...'
+            print '********************************************************'
+            train_op, global_step = optimizeSoftmax(cross_entropy,lr,softVar)
+        else:
+            print '********************************************************'
+            print 'We will only train the whole network...'
+            print '********************************************************'
+            train_op, global_step =  optimize(cross_entropy,lr)
+        # train_op, global_step =  optimize(cross_entropy,lr)
 
         accuracy, indivAcc = evaluation(labels_pl,logits,classes)
 
@@ -186,13 +187,17 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
                 epochTime = lossAccDict['epochTime']
 
             # print "Start from:", start
-            opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu, W1,W3,W5]
+            opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu, W1,W3,W5, softVar[0]]
             opListVal = [cross_entropy, accuracy, indivAcc, relu]
 
             stored_exception = None
             epoch_i = 0
             overfittingCounter = 0
             overfittingCounterTh = 5
+            # WConv1old = 0.
+            # WConv3old = 0.
+            # WConv5old = 0.
+            # softWold = 0.
             while epoch_i <= n_epochs:
                 t0 = time.time()
                 minNumEpochsCheckLoss = 10
@@ -253,7 +258,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
                     ''' TRAINING '''
                     for iter_i in range(Titer_per_epoch):
 
-                        _, batchLoss, batchAcc, indivBatchAcc, batchFeat, WConv1, WConv3, WConv5, feed_dict = run_batch(
+                        _, batchLoss, batchAcc, indivBatchAcc, batchFeat, WConv1, WConv3, WConv5, softW, feed_dict = run_batch(
                             sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
                             images_pl, labels_pl, keep_prob_pl,
                             X_t, Y_t, keep_prob = keep_prob)
@@ -262,11 +267,21 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
                         accEpoch.append(batchAcc)
                         indivAccEpoch.append(indivBatchAcc)
 
+                        # print 'Mean change of WConv1', np.mean(WConv1 - WConv1old)
+                        # print 'Mean change of WConv3', np.mean(WConv3 - WConv3old)
+                        # print 'Mean change of WConv5', np.mean(WConv5 - WConv5old)
+                        # print 'Mean change of WSoft', np.mean(softW - softWold)
+                        # WConv1old = WConv1
+                        # WConv3old = WConv3
+                        # WConv5old = WConv5
+                        # softWold = softW
+
                         # Print per batch loss and accuracies
                         if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
                             print "Batch " + str(iter_i) + \
                                 ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
                                 ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+
 
                     trainFeat = batchFeat
                     trainFeatLabels = Y_t[Tindices[iter_i]:Tindices[iter_i+1]]

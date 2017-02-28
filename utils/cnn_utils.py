@@ -188,7 +188,7 @@ def buildSoftMax(scopeName, inputSoftMax, n_fc, classes):
             )
         logits = tf.add(tf.matmul(inputSoftMax, W), b, name = scope.name)
         _activation_summary(logits)
-    return logits
+    return logits, [W,b]
 
 # def buildSoftMaxWeights(inputSoftMax,n_fc,classes):
 #     # the same as build softmax, but outputs the weights for visualization
