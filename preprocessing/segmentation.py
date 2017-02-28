@@ -13,8 +13,8 @@ import gc
 # Import application/library specifics
 sys.path.append('IdTrackerDeep/utils')
 
-from py_utils import *
-from video_utils import *
+from py_utils import flatten
+from video_utils import saveFile, collectAndSaveVideoInfo, generateVideoTOC, segmentVideo, getVideoInfo, blobExtractor
 
 def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea):
     # locally called
@@ -36,7 +36,7 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
         # print avIntensity
         avIntensity = np.mean(origFrame)
         segmentedFrame = segmentVideo(origFrame, minThreshold, maxThreshold, bkg, mask, useBkg)
-        segmentedFrameCopy = segmentedFrame.copy()
+        # segmentedFrameCopy = segmentedFrame.copy()
         # Find contours in the segmented image
         boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, origFrame, minArea, maxArea, height, width)
         if len(centroids) > maxNumBlobs:
