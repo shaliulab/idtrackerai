@@ -34,13 +34,13 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
         ret, frame = cap.read()
         #Color to gray scale
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        origFrame = frameGray.copy()
+        #origFrame = frameGray.copy()
         # print avIntensity
-        avIntensity = np.mean(origFrame)
-        segmentedFrame = segmentVideo(origFrame/avIntensity, minThreshold, maxThreshold, bkg, mask, useBkg)
+        avIntensity = np.float32(np.mean(frameGray))
+        segmentedFrame = segmentVideo(frameGray/avIntensity, minThreshold, maxThreshold, bkg, mask, useBkg)
         # segmentedFrameCopy = segmentedFrame.copy()
         # Find contours in the segmented image
-        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, origFrame, minArea, maxArea, height, width)
+        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, frameGray, minArea, maxArea, height, width)
         if len(centroids) > maxNumBlobs:
             maxNumBlobs = len(centroids)
         ### UNCOMMENT TO PLOT ##################################################

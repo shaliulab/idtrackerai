@@ -136,7 +136,7 @@ def computeBkgPar(videoPath,bkg,EQ):
         ret, frameBkg = cap.read()
         gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
         # gray = checkEq(EQ, gray)
-        gray = np.true_divide(gray,np.mean(gray))
+        gray = np.true_divide(gray,np.float32(np.mean(gray)))
         bkg = bkg + gray
         numFramesBkg += 1
 
@@ -145,7 +145,7 @@ def computeBkgPar(videoPath,bkg,EQ):
 def computeBkg(videoPaths, EQ, width, height):
     # This holds even if we have not selected a ROI because then the ROI is
     # initialized as the full frame
-    bkg = np.zeros((height,width))
+    bkg = np.zeros((height,width),dtype=np.float32)
 
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
@@ -165,7 +165,7 @@ def checkBkg(videoPaths, useBkg, usePreviousBkg, EQ, width, height):
         else:
             bkg = computeBkg(videoPaths, EQ, width, height)
             saveFile(videoPath, bkg, 'bkg', hdfpkl='pkl')
-        return bkg
+        return bkg.astype(np.float32)
     else:
         return None
 
@@ -180,33 +180,28 @@ def checkEq(EQ, frame):
     return frame
 
 
-def segmentVideo(frame, minThreshold, maxThreshold, bkg, mask, useBkg):
+def segmentVideo(frame, minThreshold, maxThreshold, bkg, ROI, useBkg):
     """Applies background substraction if requested and thresholds image
-    :param frame: original frame normalised by the mean
+    :param frame: original frame normalised by the mean. Must be float32
     :param minThreshold: minimum intensity threshold (1-255)
     :param maxThreshold: maximum intensity threshold (1-255)
-    :param bkg: background frame (normalised by mean???)
-    :param mask: boolean mask of region of interest where thresholding is performed
+    :param bkg: background frame (normalised by mean???). Must be float32
+    :param mask: boolean mask of region of interest where thresholding is performed.
     :param useBkg: boolean determining if background substraction is performed
     """
     # compute the average frame NO LONGER NEEDED; I CHECKED INPUT IS ALWAYS NORMALISED BY MEAN
     #stride = 20
     #frame = np.true_divide(frame,np.mean(frame[::stride,::stride]))
 
+    #print("In segmentVideo, frame is ",frame.dtype)
+
     if useBkg:
-        frameSubtracted = uint8caster(np.abs(np.subtract(bkg,frame)))
-        frameSubtractedMasked = cv2.addWeighted(frameSubtracted,1,mask,1,0)
-        ### Uncomment to plot
-        # cv2.imshow('frame', uint8caster(frame))
-        # cv2.imshow('frameSubtractedMasked',frameSubtractedMasked)
-        frameSubtractedMasked = 255-frameSubtractedMasked
-        # cv2.imshow('frameSubtractedMasked',frameSubtractedMasked)
-        ret, frameSegmented = cv2.threshold(frameSubtractedMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
-    else:
-        frameMasked = cv2.addWeighted(uint8caster(frame),1,mask,1,0)
-        ### Uncomment to plot
-        # cv2.imshow('frameMasked',frameMasked)
-        ret, frameSegmented = cv2.threshold(frameMasked,minThreshold,maxThreshold, cv2.THRESH_BINARY)
+        frame = cv2.absdiff(bkg,frame) #this is the only step where frame normalization is important, because the background is normalised
+
+    frameMasked = cv2.bitwise_or(frame,frame)#, mask=ROI)
+    frameSegmented = cv2.inRange(frameMasked * (255.0/frameMasked.max()), minThreshold, maxThreshold)
+
+
     return frameSegmented
 
 """
@@ -293,7 +288,7 @@ def getMiniFrame(frame, cnt, height, width):
     boundingBox = getBoundigBox(cnt, width, height)
     miniFrame = frame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
     cntBB = cnt2BoundingBox(cnt,boundingBox)
-    miniFrameBkg = miniFrame.copy()
+    #miniFrameBkg = miniFrame.copy()
     # bkgSample = sampleBkg(cntBB, miniFrameBkg)
     bkgSample = None
     pixelsInBB = getPixelsList(cntBB, np.abs(boundingBox[0][0] - boundingBox[1][0]), np.abs(boundingBox[0][1] - boundingBox[1][1]))

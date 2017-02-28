@@ -20,9 +20,9 @@ def getVarFromDict(dictVar,variableNames):
 def maskArray(im1,im2,w1,w2):
     return np.add(np.multiply(im1,w1),np.multiply(im2,w2))
 
-def uint8caster(im):
-    """Expects im to be normalised by the mean"""
-    return np.multiply(np.true_divide(im,np.max(im)),255).astype('uint8')
+#def uint8caster(im):
+#    """Expects im to be normalised by the mean"""
+#    return np.multiply(np.true_divide(im,np.max(im)),255).astype('uint8')
     # im = (im*255.0/3.0)
     # np.minimum(im,255,im)
     # return im.astype('uint8') #NOTE:giving some segmentatio issues (without bkg substraction) on conflicto threshold around 80
