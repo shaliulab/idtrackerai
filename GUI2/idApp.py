@@ -65,8 +65,9 @@ class ROISelector(BoxLayout):
         super(ROISelector, self).__init__(**kwargs)
         self.orientation = 'horizontal'
         self.videoPaths = videoPaths
+        self.size_hint = (1.,1.)
         self.ROIs = []
-        self.playSegment()
+        # self.playSegment()
 
     def playSegment(self, segNum=0):
         #capture video and get some parameters
@@ -77,7 +78,7 @@ class ROISelector(BoxLayout):
         self.fps = self.capture.get(cv2.cv.CV_CAP_PROP_FPS)
         self.numFrame = self.capture.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
         #create image to store the video
-        self.showFrame = Image(keep_ratio=False, allow_stretch=True)
+        self.showFrame = Image(keep_ratio=False, allow_stretch=True, size_hint = (1.,1.))
         self.add_widget(self.showFrame)
         #visualise everything
         self.visualiseFrame()
@@ -147,13 +148,13 @@ class PreprocInterfaceManager(BoxLayout):
         self.initWindowWidth = self.window.width
         self.window.bind(on_resize=self.updateROIs)
         self.ready = False
+        print 'daddy width ', PreprocInterfaceManager.width
 
     def storePath(self,string):
         self.path = string
         print self.path
         self.videoPaths = scanFolder(self.path)
         self.clear_widgets()
-
         self.gotoBtn = Button(id='go_to_preprocessing', text='Go to preprocessing',size_hint=(.2,.5))
         # tabList = Root.get_tab_list(Root)
         # print tabList
