@@ -1,4 +1,5 @@
 # This file is a reduced version of idTrackerDeepGUI, to work in preprocessing without the need of using tensorflow
+# JUST FOR TESTING PURPOSES!
 
 
 # Import standard libraries

@@ -74,8 +74,8 @@ def segment(paths,preprocParams, mask, centers, useBkg, bkg, EQ):
     ''' splitting paths list into sublists '''
     pathsSubLists = [paths[i:i+4] for i in range(0,len(paths),4)]
     ''' Entering loop for segmentation of the video '''
-    # num_cores = multiprocessing.cpu_count()
-    num_cores = 1
+    num_cores = multiprocessing.cpu_count()
+    #num_cores = 1
     print 'Entering to the parallel loop...\n'
     allSegments = []
     numBlobs = []

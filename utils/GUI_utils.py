@@ -183,6 +183,12 @@ def checkROI(useROI, usePreviousROI, frame, videoPath):
         centers = []
     return mask, centers
 
+def adaptROI(mask):
+    """"Changes convention of mask here (255 invalid, 0 valid) to the
+    OpenCV convention used in segmentation (0 invalid, 255 valid)
+    """
+    return 255-mask
+
 def ROISelectorPreview(paths, useROI, usePreviousROI, numSegment=0):
     """
     loads a preview of the video for manual fine-tuning
@@ -197,7 +203,7 @@ def ROISelectorPreview(paths, useROI, usePreviousROI, numSegment=0):
     saveFile(paths[0], mask, 'ROI')
     saveFile(paths[0], centers, 'centers')
 
-    return width, height, mask, centers
+    return width, height, adaptROI(mask), centers
 
 ''' ****************************************************************************
 First preview numAnimals, inspect parameters for segmentation and portraying

@@ -24,3 +24,6 @@ Python 2.7
 * cython
 * natsort
 * tkinter
+* msgpack-numpy
+* msgpack
+* h5py
