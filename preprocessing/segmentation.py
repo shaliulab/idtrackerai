@@ -72,9 +72,10 @@ def segment(paths,preprocParams, mask, centers, useBkg, bkg, EQ):
 
     width, height = getVideoInfo(paths)
     ''' splitting paths list into sublists '''
-    pathsSubLists = [paths[i:i+4] for i in range(0,len(paths),4)]
-    ''' Entering loop for segmentation of the video '''
     num_cores = multiprocessing.cpu_count()
+    pathsSubLists = [paths[i:i+num_cores] for i in range(0,len(paths),num_cores)]
+    ''' Entering loop for segmentation of the video '''
+
     #num_cores = 1
     print 'Entering to the parallel loop...\n'
     allSegments = []
