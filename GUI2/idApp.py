@@ -18,6 +18,7 @@ from kivy.uix.slider import Slider
 from kivy.uix.scatter import Scatter
 from kivy.graphics import *
 from kivy.graphics.svg import Svg
+from kivy.clock import Clock
 
 import os
 import cPickle as pickle
@@ -41,7 +42,6 @@ def scanFolder(path):
     if filename[-2:] == '_1':
         paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
     return paths
-
 
 class SelectFile(BoxLayout):
     def __init__(self,**kwargs):
@@ -67,6 +67,7 @@ class ROISelector(BoxLayout):
         self.videoPaths = videoPaths
         self.size_hint = (1.,1.)
         self.ROIs = []
+        self.touches = []
         # self.playSegment()
 
     def playSegment(self, segNum=0):
@@ -82,18 +83,22 @@ class ROISelector(BoxLayout):
         self.add_widget(self.showFrame)
         #visualise everything
         self.visualiseFrame()
+        Clock.schedule_once(self.visualiseFrame, 1) #NOTE: it is ugly, I know
 
     def visualiseFrame(self,value=0):
         self.capture.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,value)
         ret, frame = self.capture.read()
         # convert it to texture
         buf1 = cv2.flip(frame, 0)
+        self.frame = cv2.cvtColor( frame, cv2.COLOR_RGB2GRAY )
         buf = buf1.tostring()
-        textureFrame = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+        textureFrame = Texture.create(size=(self.frame.shape[1], self.frame.shape[0]), colorfmt='bgr')
         textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
         # display image from the texture
         self.showFrame.texture = textureFrame
-        self.ROIcv2 = np.ones_like(frame,dtype='uint8')*255
+        self.ROIcv2 = np.ones_like(self.frame,dtype='uint8')*255
+        self.initImW = self.width
+        self.initImH = self.height
 
     def on_touch_down(self, touch):
             self.touches = []
@@ -106,24 +111,35 @@ class ROISelector(BoxLayout):
                 #     self.ellStart = Ellipse(pos=(touch.x - d / 2, touch.y - d / 2), size=(d, d))
 
     def on_touch_up(self, touch):
-            if self.showFrame.collide_point(*touch.pos):
-                try:
-                    self.touches.append(touch.pos)
-                    rect = [self.touches[0], self.touches[-1]]
-                    sorted(rect, key=lambda x:x[1], reverse=True)
-                    rectS = np.diff(rect, axis=0)[0]
-                    with self.showFrame.canvas:
-                        Color(1, 1, 0,.5)
-                        self.rect = Rectangle(pos=(rect[0][0], rect[0][1]), size=(rectS[0],rectS[1]))
-                        self.ROIs.append(self.rect)
-                        print 'point1 ', (rect[0][0], rect[0][1])
-                        print 'point2', (rect[1][0], rect[1][1])
-                        cv2.rectangle(self.ROIcv2,(rect[0][0], rect[0][1]),(rect[1][0], rect[1][1]),0,-1)
-                        cv2.imshow('test',self.ROIcv2)
-                        cv2.waitKey(0)
+            if self.showFrame.collide_point(*touch.pos) and len(self.touches) > 0:
+                # try:
+                self.touches.append(touch.pos)
+                rect = [self.touches[0], self.touches[-1]]
+                sorted(rect, key=lambda x:x[1], reverse=True)
+                rectS = np.diff(rect, axis=0)[0]
+                with self.showFrame.canvas:
+                    Color(1, 1, 0,.5)
+                    self.rect = Rectangle(pos=(rect[0][0], rect[0][1]), size=(rectS[0],rectS[1]))
+                    self.ROIs.append(self.rect)
+                    print 'point1 ', (rect[0][0], rect[0][1])
+                    print 'point2', (rect[1][0], rect[1][1])
+                    ratioH = self.initImH / self.showFrame.texture.height
+                    ratioW = self.initImW / self.showFrame.texture.width
+                    print 'ratioh', ratioH
+                    print 'ratiow', ratioW
+                    newRectP1 = (self.rect.pos[0] / ratioW, (self.rect.pos[0] + self.rect.size[0]) / ratioW)
+                    newRectP2 = (self.rect.pos[1] / ratioH, (self.rect.pos[1] + self.rect.size[1]) / ratioH)
+                    print 'new rectangle position p1 ', newRectP1
+                    print 'new rectangle position p2 ', newRectP2
+                    print 'frame dimensions', self.ROIcv2.shape
+                    
+                    cv2.rectangle(self.frame,(int(newRectP1[0]), int(self.frame.shape[1]-newRectP2[0])),(int(newRectP1[1]), int(self.frame.shape[1]-newRectP2[1])),0,-1)
+                    cv2.imshow('test',self.frame)
+                    cv2.waitKey(0)
+
                     self.touches = []
-                except:
-                    print 'stay on the figure to draw a ROI'
+                # except:
+                #     print 'stay on the figure to draw a ROI'
 
     def delete_ROI(self, *args):
         try:
@@ -147,8 +163,10 @@ class PreprocInterfaceManager(BoxLayout):
         self.initWindowHeight = self.window.height
         self.initWindowWidth = self.window.width
         self.window.bind(on_resize=self.updateROIs)
+
+
         self.ready = False
-        print 'daddy width ', PreprocInterfaceManager.width
+
 
     def storePath(self,string):
         self.path = string
@@ -163,9 +181,14 @@ class PreprocInterfaceManager(BoxLayout):
         print '...........'
         print Root.ids
         print '............'
+        self.ImageLayout = BoxLayout()
+        self.add_widget(self.ImageLayout)
         self.ROIselect = ROISelector(self.videoPaths)
-        self.add_widget(self.ROIselect)
+        self.ImageLayout.add_widget(self.ROIselect)
         self.ready = True
+
+        self.ROIselect.playSegment()
+        # self.ROIselect.showFrame.size = self.size
 
         self.videoSlider = Slider(id='video_slider', min=0, max=100, step=1, value=0, size_hint=(1.,.2))
         self.videoSlider.bind(value=self.getValue)
@@ -182,13 +205,10 @@ class PreprocInterfaceManager(BoxLayout):
         self.layoutFooter.add_widget(self.saveROIBtn)
         self.clearROIBtn.bind(on_press=self.ROIselect.delete_ROI)
         self.layoutFooter.add_widget(self.gotoBtn)
-        self.ROIselect.initImW = self.ROIselect.showFrame.width
-        self.ROIselect.initImH = self.ROIselect.showFrame.height
+
+
         self.updateROIs(self.window, self.window.width, self.window.height)
-        self.ROIselect.initImW = self.ROIselect.showFrame.width
-        self.ROIselect.initImH = self.ROIselect.showFrame.height
-        # print 'fanculo ',self.ROIselect.initImW,self.ROIselect.initImH
-        # self.window.size = (self.window.width+1, self.window.height+1)
+
 
     def getValue(self, instance, value):
         ROISelector.visualiseFrame(self.ROIselect, value)
@@ -227,8 +247,8 @@ class PreprocInterfaceManager(BoxLayout):
             self.ROIselect.initImH = self.curImgH
             self.ROIselect.initImW = self.curImgW
         # except:
-        else:
-            print 'ROIselect does not exist yet'
+        # else:
+        #     print 'ROIselect does not exist yet'
 
 class Root(TabbedPanel):
     pathToVideo = StringProperty("You did not select a video yet")
