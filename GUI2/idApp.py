@@ -66,9 +66,9 @@ class ROISelector(BoxLayout):
         self.orientation = 'horizontal'
         self.videoPaths = videoPaths
         self.size_hint = (1.,1.)
-        self.ROIs = []
-        self.touches = []
-        # self.playSegment()
+        self.ROIs = [] #store rectangles on the GUI
+        self.ROIOut  = [] #pass them to opencv
+        self.touches = [] #store touch events on the figure
 
     def playSegment(self, segNum=0):
         #capture video and get some parameters
@@ -132,10 +132,12 @@ class ROISelector(BoxLayout):
                     print 'new rectangle position p1 ', newRectP1
                     print 'new rectangle position p2 ', newRectP2
                     print 'frame dimensions', self.ROIcv2.shape
-                    
-                    cv2.rectangle(self.frame,(int(newRectP1[0]), int(self.frame.shape[1]-newRectP2[0])),(int(newRectP1[1]), int(self.frame.shape[1]-newRectP2[1])),0,-1)
-                    cv2.imshow('test',self.frame)
-                    cv2.waitKey(0)
+                    point1 = (int(newRectP1[0]), int(self.frame.shape[1]-newRectP2[0]))
+                    point2 = (int(newRectP1[1]), int(self.frame.shape[1]-newRectP2[1]))
+
+                    self.ROIOut.append([point1,point2])
+                    # cv2.imshow('test',self.frame)
+                    # cv2.waitKey(0)
 
                     self.touches = []
                 # except:
@@ -143,15 +145,12 @@ class ROISelector(BoxLayout):
 
     def delete_ROI(self, *args):
         try:
-            print 'you rectangles should be ', self.ROIs
-            rect = self.ROIs[-1]
-            self.ROIs = self.ROIs[:-1]
-            print 'the rectangle you should have selected: ',rect
-            self.showFrame.canvas.remove(rect)
-                # clear(rect)
+            rect = self.ROIs[-1] #clear from the app ROIs collection
+            self.ROIs = self.ROIs[:-1] #clear from the cv2 ROIs collection
+            self.ROIOut = self.ROIOut[:-1]
+            self.showFrame.canvas.remove(rect) #clear from the image in the visualisation
         except:
             print('Select one ROI first')
-
 
 class PreprocInterfaceManager(BoxLayout):
     def __init__(self, **kwargs):
@@ -249,6 +248,10 @@ class PreprocInterfaceManager(BoxLayout):
         # except:
         # else:
         #     print 'ROIselect does not exist yet'
+    def roiSaver(self):
+        for p in self.ROIselect.ROIOut:
+            cv2.rectangle(self.ROIselect.ROIcv2,p[0], p[1],0,-1)
+        
 
 class Root(TabbedPanel):
     pathToVideo = StringProperty("You did not select a video yet")

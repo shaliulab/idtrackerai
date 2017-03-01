@@ -183,8 +183,8 @@ def checkEq(EQ, frame):
 def segmentVideo(frame, minThreshold, maxThreshold, bkg, ROI, useBkg):
     """Applies background substraction if requested and thresholds image
     :param frame: original frame normalised by the mean. Must be float32
-    :param minThreshold: minimum intensity threshold (1-255)
-    :param maxThreshold: maximum intensity threshold (1-255)
+    :param minThreshold: minimum intensity threshold (0-255)
+    :param maxThreshold: maximum intensity threshold (0-255)
     :param bkg: background frame (normalised by mean???). Must be float32
     :param mask: boolean mask of region of interest where thresholding is performed. uint8, 255 valid, 0 invalid.
     :param useBkg: boolean determining if background subtraction is performed
@@ -192,10 +192,10 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, ROI, useBkg):
     if useBkg:
         frame = cv2.absdiff(bkg,frame) #only step where frame normalization is important, because the background is normalised
 
-    frameMasked = cv2.bitwise_or(frame,frame, mask=ROI) #Applying the mask
-    frameSegmented = cv2.inRange(frameMasked * (255.0/frameMasked.max()), minThreshold, maxThreshold)
 
-    return frameSegmented
+    frameSegmented = cv2.inRange(frame * (255.0/frame.max()), minThreshold, maxThreshold) #output: 255 in range, else 0
+    frameSegmentedMasked = cv2.bitwise_and(frameSegmented,frameSegmented, mask=ROI) #Applying the mask
+    return frameSegmentedMasked
 
 """
 Get information from blobs

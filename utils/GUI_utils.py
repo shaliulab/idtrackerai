@@ -27,6 +27,9 @@ from py_utils import *
 ROI selector GUI
 *****************************************************************************'''
 def getMask(im):
+    """Returns a uint8 mask following openCV convention 
+    as used in segmentation (0 invalid, 255 valid)
+    """
     def line_select_callback(eclick, erelease):
         'eclick and erelease are the press and release events'
         global coord
@@ -53,7 +56,7 @@ def getMask(im):
             current_ax.add_patch(p)
             plt.draw()
             coord = np.asarray(c).astype('int')
-            cv2.rectangle(maskout,(coord[0],coord[1]),(coord[2],coord[3]),0,-1)
+            cv2.rectangle(maskout,(coord[0],coord[1]),(coord[2],coord[3]),255,-1)
             centers.append(None)
 
         if event.key == 'c':
@@ -70,7 +73,7 @@ def getMask(im):
             center = ((coord[2]+coord[0])/2,(coord[3]+coord[1])/2)
             angle = 90
             axes = tuple(sorted(((coord[2]-coord[0])/2,(coord[3]-coord[1])/2)))
-            cv2.ellipse(maskout,center,axes,angle,0,360,0,-1)
+            cv2.ellipse(maskout,center,axes,angle,0,360,255,-1)
             centers.append(center)
 
     coordinates = []
@@ -86,7 +89,7 @@ def getMask(im):
     sns.despine(fig=fig, top=True, right=True, left=True, bottom=True)
     current_ax.imshow(im, cmap = 'gray')
     mask = np.zeros_like(im)
-    maskout = np.ones_like(im,dtype='uint8')*255
+    maskout = np.zeros_like(im,dtype='uint8')
     mask_ax.imshow(mask, cmap = 'gray')
 
     toggle_selector.RS = RectangleSelector(current_ax, line_select_callback,
@@ -112,9 +115,10 @@ def checkROI(useROI, usePreviousROI, frame, videoPath):
         else:
             print '\n Selecting ROI ...'
             mask, centers = getMask(frame)
+            # mask = adaptROI(mask)
     else:
         print '\n No ROI selected ...'
-        mask = np.zeros_like(frame)
+        mask = np.ones_like(frame)*255
         centers = []
     return mask, centers
 
@@ -122,7 +126,7 @@ def adaptROI(mask):
     """"Changes convention of mask here (255 invalid, 0 valid) to the
     OpenCV convention used in segmentation (0 invalid, 255 valid)
     """
-    return 255-mask
+    return 255 - mask
 
 def ROISelectorPreview(paths, useROI, usePreviousROI, numSegment=0):
     """
@@ -138,7 +142,7 @@ def ROISelectorPreview(paths, useROI, usePreviousROI, numSegment=0):
     saveFile(paths[0], mask, 'ROI')
     saveFile(paths[0], centers, 'centers')
 
-    return width, height, adaptROI(mask), centers
+    return width, height, mask, centers
 
 ''' ****************************************************************************
 First preview numAnimals, inspect parameters for segmentation and portraying
