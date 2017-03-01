@@ -23,7 +23,7 @@ import cPickle as pickle
 import seaborn as sns
 
 
-def idTrajectories(videoPath, sessionPath, allFragIds, dfGlobal, numAnimals, show=True):
+def idTrajectories(videoPath, sessionPath, allFragIds, dfGlobal, numAnimals):
 
     centroidTrajectories = []
     nosesTrajectories = []
@@ -40,6 +40,9 @@ def idTrajectories(videoPath, sessionPath, allFragIds, dfGlobal, numAnimals, sho
 
         for l,ID in enumerate(IDs):
             if ID != -1:
+                print ID,l
+                print curCentroids
+                print curNoses
                 ordCentroids[ID] = curCentroids[l]
                 ordNoses[ID] = curNoses[l]
 
@@ -49,17 +52,14 @@ def idTrajectories(videoPath, sessionPath, allFragIds, dfGlobal, numAnimals, sho
     trajDict = {'centroids': centroidTrajectories, 'noses': nosesTrajectories}
     saveFile(videoPath, trajDict, 'trajectories',hdfpkl = 'pkl',sessionPath = sessionPath)
 
-    if show == True:
-        fig = plt.figure()
-        ax1 = fig.add_subplot(1,3,1, projection='3d')
-        ax2 = fig.add_subplot(1,3,2, projection='3d')
-        ax3 = fig.add_subplot(1,3,3, projection='3d')
-        trajDict = loadFile(path, 'trajectories', hdfpkl = 'pkl',sessionPath = sessionPath)
-        plotTrajectories(trajDict, fig, ax1, ax2, ax3)
     return trajDict
 
-def plotTrajectories(trajDict, numAnimals, fig, ax1, ax2, ax3, plotBoth=False):
+def plotTrajectories(trajDict, numAnimals,framesToPlot=[], plotBoth=False):
     sns.set_style("darkgrid")
+    fig = plt.figure(figsize =(10,10))
+    ax1 = plt.subplot2grid((1, 3), (0, 0), colspan=1, rowspan=1, projection='3d')
+    ax2 = plt.subplot2grid((1, 3), (0, 1), colspan=1, rowspan=1, projection='3d')
+    ax3 = plt.subplot2grid((1, 3), (0, 2), colspan=1, rowspan=1, projection='3d')
 
     centroidTrajectories = np.asarray(trajDict['centroids'])
     nosesTrajectories = np.asarray(trajDict['noses'])
@@ -89,10 +89,18 @@ def plotTrajectories(trajDict, numAnimals, fig, ax1, ax2, ax3, plotBoth=False):
         # print ID
         centID = centroidTrajectories[:,ID,:]
         noseID = nosesTrajectories[:,ID,:]
-        xcentID = centID[:,0]
-        ycentID = centID[:,1]
-        xnoseID = noseID[:,0]
-        ynoseID = noseID[:,1]
+
+        if len(framesToPlot) != 0:
+            start = framesToPlot[0]
+            end = framesToPlot[1]
+        else:
+            start = 0
+            end = len(centID)
+
+        xcentID = centID[:,0][start:end]
+        ycentID = centID[:,1][start:end]
+        xnoseID = noseID[:,0][start:end]
+        ynoseID = noseID[:,1][start:end]
         zs = range(len(xcentID))
 
         label = 'Animal ' + str(ID)
@@ -141,7 +149,7 @@ def plotTrajectories(trajDict, numAnimals, fig, ax1, ax2, ax3, plotBoth=False):
         fig.canvas.draw()
 
     fig.canvas.mpl_connect('pick_event', onpick)
-    # plt.show()
+    plt.show()
 
 if __name__ == '__main__':
 
@@ -149,7 +157,7 @@ if __name__ == '__main__':
 
     ''' select statistics file '''
     statisticsPath = selectFile()
-    print 'The trajectories will be build from the statiscits file ', statisticsPath
+    print 'The trajectories will be build from the statistics file ', statisticsPath
     sessionPath = os.path.dirname(statisticsPath)
     print 'The trajectories will be build from the session ', sessionPath
     CNN_modelsPath = os.path.dirname(sessionPath)
@@ -169,4 +177,5 @@ if __name__ == '__main__':
     allFragIds = stats['fragmentIds']
     dfGlobal = loadFile(videoPaths[0], 'portraits')
 
-    idTrajectories(allFragIds, dfGlobal, numAnimals)
+    trajDict = idTrajectories(videoPath, sessionPath, allFragIds, dfGlobal, numAnimals)
+    # plotTrajectories(trajDict, numAnimals, framesToPlot=[500,1000], plotBoth=False)

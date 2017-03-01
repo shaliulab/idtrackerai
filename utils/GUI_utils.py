@@ -27,7 +27,7 @@ from py_utils import *
 ROI selector GUI
 *****************************************************************************'''
 def getMask(im):
-    """Returns a uint8 mask following openCV convention 
+    """Returns a uint8 mask following openCV convention
     as used in segmentation (0 invalid, 255 valid)
     """
     def line_select_callback(eclick, erelease):
@@ -121,12 +121,6 @@ def checkROI(useROI, usePreviousROI, frame, videoPath):
         mask = np.ones_like(frame)*255
         centers = []
     return mask, centers
-
-def adaptROI(mask):
-    """"Changes convention of mask here (255 invalid, 0 valid) to the
-    OpenCV convention used in segmentation (0 invalid, 255 valid)
-    """
-    return 255 - mask
 
 def ROISelectorPreview(paths, useROI, usePreviousROI, numSegment=0):
     """
