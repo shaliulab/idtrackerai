@@ -44,7 +44,7 @@ if __name__ == '__main__':
     print '\n********************************************************************'
     print 'Asking user whether to reuse preprocessing steps...'
     print '********************************************************************\n'
-    reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previos preprocessing? ([y]/n)')
+    reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previous preprocessing? ([y]/n)')
 
     if reUseAll == 'n':
         print '\n********************************************************************'
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         existentFiles, srcSubFolder = getExistentFiles(videoPath, processesList)
         print 'List of processes finished, ', existentFiles
         print '\nSelecting files to load from previous session...'
-        loadPreviousDict = selectOptions(processesList, existentFiles, text='Already processed steps in this video \n (check to load from ' + srcSubFolder + ')')
+        loadPreviousDict = selectOptions(processesList, existentFiles, text='Steps already processed in this video \n (check to load from ' + srcSubFolder + ')')
 
         usePreviousROI = loadPreviousDict['ROI']
         usePreviousBkg = loadPreviousDict['bkg']
@@ -90,12 +90,12 @@ if __name__ == '__main__':
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         print '\n********************************************************************'
-        print 'The preprocessing paramemters will be loaded from last time they were computed.'
+        print 'The preprocessing parameters will be loaded from last time they were computed.'
         print '********************************************************************\n'
         loadPreviousDict = {'ROI': 1, 'bkg': 1, 'preprocparams': 1, 'segmentation': 1, 'fragments': 1, 'portraits': 1}
 
     else:
-        raise ValueError('The input introduced do not match the possible options')
+        raise ValueError('The input introduced does not match the possible options')
 
     print '\n********************************************************************'
     print 'Segmentation'

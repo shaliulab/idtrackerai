@@ -118,6 +118,12 @@ def checkROI(useROI, usePreviousROI, frame, videoPath):
         centers = []
     return mask, centers
 
+def adaptROI(mask):
+    """"Changes convention of mask here (255 invalid, 0 valid) to the
+    OpenCV convention used in segmentation (0 invalid, 255 valid)
+    """
+    return 255-mask
+
 def ROISelectorPreview(paths, useROI, usePreviousROI, numSegment=0):
     """
     loads a preview of the video for manual fine-tuning
@@ -132,7 +138,7 @@ def ROISelectorPreview(paths, useROI, usePreviousROI, numSegment=0):
     saveFile(paths[0], mask, 'ROI')
     saveFile(paths[0], centers, 'centers')
 
-    return width, height, mask, centers
+    return width, height, adaptROI(mask), centers
 
 ''' ****************************************************************************
 First preview numAnimals, inspect parameters for segmentation and portraying
@@ -155,15 +161,15 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, preprocParams,  
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
     def thresholder(minTh, maxTh):
-        toile = np.zeros_like(avFrame, dtype='uint8')
-        segmentedFrame = segmentVideo(origFrame, minTh, maxTh, bkg, mask, useBkg)
-        contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+        toile = np.zeros_like(frameGray, dtype='uint8')
+        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, bkg, mask, useBkg)
+        #contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')
-        bbs, miniFrames, _, _, _, goodContours, bkgSamples = blobExtractor(segmentedFrame, origFrame, minArea, maxArea, height, width)
+        bbs, miniFrames, _, _, _, goodContours, bkgSamples = blobExtractor(segmentedFrame, frameGray, minArea, maxArea, height, width)
 
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
-        shower = cv2.addWeighted(origFrame,1,toile,.5,0)
+        shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()
         resUp = cv2.getTrackbarPos('ResUp', 'Bars')
         resDown = cv2.getTrackbarPos('ResDown', 'Bars')
@@ -201,13 +207,12 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, preprocParams,  
         cv2.moveWindow('IdPlayer', 200, 10 )
 
     def scroll(trackbarValue):
-        global frame, avFrame, frameGray, origFrame, avFrameCopy
+        global frame, avFrame, frameGray
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         ret, frame = cap.read()
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        origFrame = frameGray.copy()
-        avFrame = np.divide(frameGray,np.mean(frameGray))
-        avFrameCopy = avFrame.copy()
+        avIntensity = np.float32(np.mean(frameGray))
+        avFrame = np.divide(frameGray,avIntensity)
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
@@ -280,10 +285,10 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, preprocParams,  
     resizeImageDown(defRes)
     cv2.setTrackbarPos('ResDown', 'Bars', defRes)
 
-    start = cv2.getTrackbarPos('start','Bars')
-    minThresholdStart = cv2.getTrackbarPos('minTh', 'Bars')
-    minAreaStart = cv2.getTrackbarPos('minArea', 'Bars')
-    maxAreaStart = cv2.getTrackbarPos('maxArea', 'Bars')
+    #start = cv2.getTrackbarPos('start','Bars')
+    #minThresholdStart = cv2.getTrackbarPos('minTh', 'Bars')
+    #minAreaStart = cv2.getTrackbarPos('minArea', 'Bars')
+    #maxAreaStart = cv2.getTrackbarPos('maxArea', 'Bars')
 
     cv2.waitKey(0)
 
