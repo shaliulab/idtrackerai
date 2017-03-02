@@ -166,7 +166,7 @@ def computeP1(IdProbs):
         # print 'P1Frag, ', P1Frag
         if np.any(P1Frag == 0.):
             P1Frag[P1Frag == 0.] = minFloat
-            
+
         if np.any(P1Frag == 0.):
             raise ValueError('P1Frag cannot be 0')
         # P1Frag[P1Frag == 1.] = 1. - np.sum(P1Frag[P1Frag!=1.])
@@ -284,10 +284,10 @@ def idUpdater(ids,indivFragments,numFrames,maxNumBlobs):
 def probsUptader(vectorPerFrame,indivFragments,numFrames,maxNumBlobs,numAnimals):
     ProbsArray = np.zeros((numFrames,maxNumBlobs,numAnimals))
 
-    for (vectorPerFrame,indivFragment) in zip(vectorPerFrame,indivFragments):
+    for (vectorPerFram,indivFragment) in zip(vectorPerFrame,indivFragments):
         frames = np.asarray(indivFragment)[:,0]
         columns = np.asarray(indivFragment)[:,1]
-        ProbsArray[frames,columns,:] = vectorPerFrame[0]
+        ProbsArray[frames,columns,:] = vectorPerFram
 
     return ProbsArray
 

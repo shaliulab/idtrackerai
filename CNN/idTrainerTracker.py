@@ -12,7 +12,7 @@ import tensorflow as tf
 import argparse
 import h5py
 import numpy as np
-from checkCheck import *
+# from checkCheck import *
 from pprint import *
 import warnings
 
