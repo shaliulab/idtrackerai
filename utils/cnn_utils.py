@@ -249,6 +249,10 @@ def restoreFromFolder(pathToCkpt, saver, session):
     for a particular (TF) session
     '''
     ckpt = tf.train.get_checkpoint_state(pathToCkpt)
+    print "************************************************************"
+    print pathToCkpt
+    print ckpt
+    print "************************************************************"
     if ckpt and ckpt.model_checkpoint_path:
         print "restoring from " + ckpt.model_checkpoint_path
         saver.restore(session, ckpt.model_checkpoint_path) # restore model variables

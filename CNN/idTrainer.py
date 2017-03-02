@@ -131,6 +131,11 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
             # Load weights from a pretrained model if there is not any model saved
             # in the ckpt folder of the test
             ckpt = tf.train.get_checkpoint_state(ckpt_dir_model)
+            print "************************************************************"
+            print ckpt_dir_model
+            print ckpt
+            print loadCkpt_folder
+            print "************************************************************"
             if not (ckpt and ckpt.model_checkpoint_path):
                 if loadCkpt_folder:
                     print '********************************************************'
@@ -187,7 +192,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
                 epochTime = lossAccDict['epochTime']
 
             # print "Start from:", start
-            opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu, W1,W3,W5, softVar[0]]
+            opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu, W1,W3,W5, softVar[0],logits]
             opListVal = [cross_entropy, accuracy, indivAcc, relu]
 
             stored_exception = None
@@ -258,7 +263,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
                     ''' TRAINING '''
                     for iter_i in range(Titer_per_epoch):
 
-                        _, batchLoss, batchAcc, indivBatchAcc, batchFeat, WConv1, WConv3, WConv5, softW, feed_dict = run_batch(
+                        _, batchLoss, batchAcc, indivBatchAcc, batchFeat, WConv1, WConv3, WConv5, softW,logitsS, feed_dict = run_batch(
                             sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
                             images_pl, labels_pl, keep_prob_pl,
                             X_t, Y_t, keep_prob = keep_prob)
@@ -267,6 +272,9 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
                         accEpoch.append(batchAcc)
                         indivAccEpoch.append(indivBatchAcc)
 
+                        # print '************************************************'
+                        # print 'logits, ', logitsS
+                        # print '************************************************'
                         # print 'Mean change of WConv1', np.mean(WConv1 - WConv1old)
                         # print 'Mean change of WConv3', np.mean(WConv3 - WConv3old)
                         # print 'Mean change of WConv5', np.mean(WConv5 - WConv5old)
