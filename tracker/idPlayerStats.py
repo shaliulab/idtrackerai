@@ -31,7 +31,8 @@ numSegment = 0
 # '/media/chaos/New Volume/motherfucker2/Caffeine5fish_20140206T122428_1.avi'
 # paths = scanFolder('../Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('IdTrackerDeep/videos/larvae1/trial_1_1.avi')
-paths = scanFolder('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/flies8/testflies_7_1.avi')
+paths = scanFolder('IdTrackerDeep/videos/cafeina5peces_segm2/Caffeine5fish_20140206T122428_2.avi')
+# paths = scanFolder('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/flies8/testflies_7_1.avi')
 # paths = scanFolder('../videos/nofragsError/_1.avi')
 # paths = scanFolder('../videos/cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
 # paths = scanFolder('IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi')
@@ -95,6 +96,7 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
     P1 = statistics[5]
     logP2 = statistics[0]
     P2 = statistics[6]
+    softmaxProb = statistics[2]
     statIdentity = False # if stat are the identities' indices we will sum 1, because it is nicer
     if stat.dtype == 'int64':
         statIdentity = True
@@ -183,11 +185,15 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
                 P2List = ["%.8f" % float(s) for s in P2[globalFrame,i,:]]
                 P2Text = str.join(", ",P2List)
                 P2Text = '[ ' + P2Text + ' ]'
+                softmaxProbList = ["%.8f" % float(s) for s in softmaxProb[globalFrame,i,:]]
+                softmaxProbText = str.join(", ",softmaxProbList)
+                softmaxProbText = '[ ' + softmaxProbText + ' ]'
                 print '--------- Id, ', cur_id+1
                 # print 'Frequencies', freqText
                 print 'normFrequencies', normFreqText
                 # print 'P1, ', P1Text
                 print 'P2, ', P2Text
+                print 'softmaxProb, ', softmaxProbText
                 # print 'logP2, ', logP2Text
                 # if not sum(stat[globalFrame,i,:]):
                 #     cur_id = -1

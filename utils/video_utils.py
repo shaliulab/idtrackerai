@@ -67,7 +67,7 @@ def splitVideo(videoPath):
     cap.release()
 
 
-# splitVideo('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/flies8/testflies_7.avi' )
+# splitVideo('/media/lab/idZebLib_TU31012017/Group_1/video_1.avi' )
 """
 Get general information from video
 """

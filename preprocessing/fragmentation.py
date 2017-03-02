@@ -290,6 +290,7 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
                         indivFragmentInterval = ()
             else:
                 currentArea = areasFrag[frame][portraitInd]
+                currentCentroid = centroidsFrag[frame][portraitInd]
                 if currentArea < meanIndivArea + nStd*stdIndivArea: # if the area is accepted by the model area
                     indivFragment.append((frame, portraitInd))
                     indivCentroidsInterval.append(currentCentroid)
