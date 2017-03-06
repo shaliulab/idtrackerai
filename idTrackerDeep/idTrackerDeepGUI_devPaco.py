@@ -40,6 +40,16 @@ if __name__ == '__main__':
     print 'The video selected is, ', videoPath
     videoPaths = scanFolder(videoPath) ### FIXME if the video selected does not finish with '_1' the scanFolder function won't select all of them. This can be improved
     print 'The list of videos is ', videoPaths
+    def getSegmPaths(videoPaths,framesPerSegment=500):
+        if len(videoPaths) == 1: # The video is in a single filename
+            numFrames = getNumFrame(videoPaths[0])
+            segmentsTOC = [range(0,framesPerSegment) for i in range(int(numFrames/framesPerSegment))]
+            segmentsTOC.append(range(0,[range(0,framesPerSegment) for i in range(int(numFrames/framesPerSegment))]))
+            framesTOC = flatten(framesTOC)
+            frameIndices =  pd.DataFrame({'segment':segmentsTOC, 'frame': framesTOC})
+            saveFile(videoPaths[0], frameIndices, 'frameIndices')
+
+    frameIndices, segmPaths = getSegmPaths(videoPaths)
 
     print '\n********************************************************************'
     print 'Asking user whether to reuse preprocessing steps...'

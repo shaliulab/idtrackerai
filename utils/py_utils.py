@@ -138,7 +138,7 @@ def get_spaced_colors_util(n,norm=False):
     rgbcolorslist.insert(0, black)
     return rgbcolorslist
 
-def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = ''):
+def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = '', nSegment = None):
     import cPickle as pickle
     """
     All the input are strings!!!
@@ -155,7 +155,8 @@ def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = ''):
 
     if name == 'segment' or name == 'segmentation':
         subfolder = '/preprocessing/segmentation/'
-        nSegment = filename.split('_')[-1]# and before the number of the segment
+        if nSegment == None:
+            nSegment = filename.split('_')[-1]# and before the number of the segment
         if hdfpkl == 'hdf':
             filename = 'segm_' + nSegment + '.hdf5'
             pathToSave = folder + subfolder + filename

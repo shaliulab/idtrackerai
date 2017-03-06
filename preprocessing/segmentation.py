@@ -1,5 +1,3 @@
-from __future__ import division
-
 # Import standard libraries
 import os
 import sys
@@ -15,8 +13,8 @@ import gc
 # Import application/library specifics
 sys.path.append('IdTrackerDeep/utils')
 
-from py_utils import flatten
-from video_utils import saveFile, collectAndSaveVideoInfo, generateVideoTOC, segmentVideo, getVideoInfo, blobExtractor
+from py_utils import *
+from video_utils import *
 
 def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea):
     # locally called
@@ -34,13 +32,13 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
         ret, frame = cap.read()
         #Color to gray scale
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        #origFrame = frameGray.copy()
+        origFrame = frameGray.copy()
         # print avIntensity
-        avIntensity = np.float32(np.mean(frameGray))
-        segmentedFrame = segmentVideo(frameGray/avIntensity, minThreshold, maxThreshold, bkg, mask, useBkg)
-        # segmentedFrameCopy = segmentedFrame.copy()
+        avIntensity = np.mean(origFrame)
+        segmentedFrame = segmentVideo(origFrame, minThreshold, maxThreshold, bkg, mask, useBkg)
+        segmentedFrameCopy = segmentedFrame.copy()
         # Find contours in the segmented image
-        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, frameGray, minArea, maxArea, height, width)
+        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blobExtractor(segmentedFrame, origFrame, minArea, maxArea, height, width)
         if len(centroids) > maxNumBlobs:
             maxNumBlobs = len(centroids)
         ### UNCOMMENT TO PLOT ##################################################
@@ -72,11 +70,10 @@ def segment(paths,preprocParams, mask, centers, useBkg, bkg, EQ):
 
     width, height = getVideoInfo(paths)
     ''' splitting paths list into sublists '''
-    num_cores = multiprocessing.cpu_count()
-    pathsSubLists = [paths[i:i+num_cores] for i in range(0,len(paths),num_cores)]
+    pathsSubLists = [paths[i:i+4] for i in range(0,len(paths),4)]
     ''' Entering loop for segmentation of the video '''
-
-    #num_cores = 1
+    num_cores = multiprocessing.cpu_count()
+    # num_cores = 1
     print 'Entering to the parallel loop...\n'
     allSegments = []
     numBlobs = []
