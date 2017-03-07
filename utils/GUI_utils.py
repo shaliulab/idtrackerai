@@ -17,7 +17,7 @@ import pyautogui
 sys.path.append('IdTrackerDeep/utils')
 sys.path.append('IdTrackerDeep/preprocessing')
 
-from segmentation_noSplitted import *
+from segmentation import *
 from fragmentation import *
 from get_portraits import *
 from video_utils import *

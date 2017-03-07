@@ -15,7 +15,7 @@ sys.path.append('IdTrackerDeep/utils')
 sys.path.append('IdTrackerDeep/preprocessing')
 sys.path.append('IdTrackerDeep/tracker')
 
-from segmentation_noSplitted import *
+from segmentation import *
 from fragmentation import *
 from get_portraits import *
 from video_utils import *
@@ -39,7 +39,9 @@ if __name__ == '__main__':
     videoPath = selectFile() ### NOTE The video to be tracked need to be splited in to small segments of video with a suffix '_(numSegment)'. The video selected has to be the one with extension suffix '_1'
     print 'The video selected is, ', videoPath
     videoPaths = scanFolder(videoPath) ### FIXME if the video selected does not finish with '_1' the scanFolder function won't select all of them. This can be improved
-    print 'The list of videos is ', videoPaths
+    print 'The list of videos is ', videoPath
+    createFolder(videoPath)
+    frameIndices, segmPaths = getSegmPaths(videoPaths)
 
     print '\n********************************************************************'
     print 'Asking user whether to reuse preprocessing steps...'
@@ -60,7 +62,7 @@ if __name__ == '__main__':
         print '\nLooking for finished steps in previous session...'
         processesList = ['ROI', 'bkg', 'preprocparams', 'segmentation','fragments','portraits']
 
-        existentFiles, srcSubFolder = getExistentFiles(videoPath, processesList)
+        existentFiles, srcSubFolder = getExistentFiles(videoPath, processesList, segmPaths)
         print 'List of processes finished, ', existentFiles
         print '\nSelecting files to load from previous session...'
         loadPreviousDict = selectOptions(processesList, existentFiles, text='Steps already processed in this video \n (check to load from ' + srcSubFolder + ')')
@@ -118,9 +120,9 @@ if __name__ == '__main__':
     print 'Fragmentation'
     print '********************************************************************\n'
     if not loadPreviousDict['fragments']:
-        dfGlobal, fragmentsDict = fragment(videoPaths,videoInfo=None)
+        dfGlobal, fragmentsDict = fragment(videoPaths, segmPaths, videoInfo=None)
 
-        playFragmentation(videoPaths,dfGlobal,visualize=True)
+        playFragmentation(videoPaths,dfGlobal,visualize=False)
 
         cv2.waitKey(1)
         cv2.destroyAllWindows()
@@ -133,7 +135,7 @@ if __name__ == '__main__':
     print 'Portraying'
     print '********************************************************************\n'
     if not loadPreviousDict['portraits']:
-        portraits = portrait(videoPaths,dfGlobal)
+        portraits = portrait(segmPaths,dfGlobal)
     else:
         portraits = loadFile(videoPaths[0], 'portraits')
 
