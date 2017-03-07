@@ -44,7 +44,6 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     newFragForTrain = accumDict['newFragForTrain']
     print '------------NEWFRAGS------------))))))))))))_______________'
     print newFragForTrain
-    print len(newFragForTrain)
     print '------------------------))))))))))))_______________'
 
 
@@ -128,8 +127,13 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
         print '*************************************************'
         print 'we are under the threshold:', overallRefs, ' <= ', maximalRefPerAnimal
         print '*************************************************'
-        for iD in refDictTemp.keys():
-            print 'refDictTemp ', iD, len(refDictTemp[iD])
+        if accumDict['counter'] == 0:
+            iDList = refDictTemp.keys()
+        else:
+            iDList = refDict.keys()
+
+        for iD in iDList:
+            # print 'refDictTemp ', iD, len(refDictTemp[iD])
             if accumDict['counter'] == 0:
                 print '*************************************************'
                 print 'it is the first accumulation'
@@ -145,11 +149,13 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
                 print 'it is not the first accum'
                 print '*************************************************'
                 print iD
-                print 'refDict ', iD, len(refDict[iD])
-                print 'refDictTemp ', iD, len(refDictTemp[iD])
+                # print 'refDict ', iD, len(refDict[iD])
+                # print 'refDictTemp ', iD, len(refDictTemp[iD])
 
                 # refDict[iD].append(refDictTemp[iD])
-                refDict[iD] = np.vstack((refDict[iD],refDictTemp[iD]))
+                if iD in refDictTemp.keys():
+                    refDict[iD] = np.vstack((refDict[iD],refDictTemp[iD]))
+
                 print 'refDict ', iD, len(refDict[iD])
 
                 print len(refDict[iD])
@@ -163,33 +169,45 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     elif overallRefs > maximalRefPerAnimal:
         #sample from old dict:
         # compute the number of samples to be taken from the old dict
-        ratioOld = .5
-        ratioNew = .5
-        numSamplesOld = maximalRefPerAnimal * ratioOld
-        numSamplesNew = maximalRefPerAnimal * ratioNew
-        print 'old references to be retained: ', numSamplesOld
-        print 'old references to be added: ', numSamplesNew
 
-        for iD in refDictTemp.keys():
+        for iD in refDict.keys():
+
+            ratioOld = .6
+            ratioNew = .4
+
+            if iD in refDictTemp.keys():
+                numSamplesNew = maximalRefPerAnimal * ratioNew
+
+                sampledImagesListNew = np.asarray(refDictTemp[iD])
+                samplesIndexesNew = np.linspace(0,len(sampledImagesListNew)-1,numSamplesNew).astype('int')
+                sampledImagesListNew = sampledImagesListNew[samplesIndexesNew]
+            elif iD not in refDictTemp.keys():
+                print iD
+                ratioOld = 1.
+
+            numSamplesOld = maximalRefPerAnimal * ratioOld
             sampledImagesListOld = np.asarray(refDict[iD])
             samplesIndexesOld = np.linspace(0,len(sampledImagesListOld)-1,numSamplesOld).astype('int')
             sampledImagesListOld = sampledImagesListOld[samplesIndexesOld]
 
-            sampledImagesListNew = np.asarray(refDictTemp[iD])
-            samplesIndexesNew = np.linspace(0,len(sampledImagesListNew)-1,numSamplesNew).astype('int')
-            sampledImagesListNew = sampledImagesListNew[samplesIndexesNew]
+            #update the refDict so that it always contains everything
+            if iD in refDictTemp.keys():
+                imagesList = np.vstack((sampledImagesListOld, sampledImagesListNew))
+                refDict[iD] = np.vstack((refDict[iD],refDictTemp[iD]))
+            elif iD not in refDictTemp.keys():
+                print iD
+                imagesList = sampledImagesListOld
 
-            imagesList = np.vstack((sampledImagesListOld, sampledImagesListNew))
             images.append(imagesList)
             labels.append(np.ones(maximalRefPerAnimal)*iD)
-            print 'images and labels should have the same length:'
-            print 'length labels ', len(labels)
-            print 'length images ', len(images)
-            print 'max num of references: ', maximalRefPerAnimal
-            print '-------------------------------------------------'
-            #update the refDict so that it always contains everything
-            refDict[iD] = np.vstack((refDict[iD],refDictTemp[iD]))
 
+        print 'old references to be retained: ', numSamplesOld
+        print 'old references to be added: ', numSamplesNew
+    print 'images and labels should have the same length:'
+    print 'length labels ', [len(lab) for lab in labels]
+    print 'length images ', [len(im) for im in images]
+    print 'max num of references: ', maximalRefPerAnimal
+    print '-------------------------------------------------'
     images = np.vstack(images)
     images = np.expand_dims(images,axis=1)
     print 'shape of the images ', images.shape

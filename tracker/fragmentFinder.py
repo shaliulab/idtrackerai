@@ -133,7 +133,24 @@ def checkVelFragments(nextPossibleFragments,fragmentsDict,accumDict):
             realNextPossibleFragments.append(frag)
     return realNextPossibleFragments, accumDict
 
-def getNextPossibleFragments(fragmentsDict, accumDict, fragIndexesSorted, notUnique, distsTrav):
+def checkNoveltyNewFrags(intervals, nextPossibleFragments, usedIndivIntervals, accumDict):
+    countNewIntervals = 0
+    realNextPossibleFragments = []
+
+    for frag in nextPossibleFragments: # for each complete fragment that has to be used for the training
+        intervalsIndivFrags = intervals[frag] # I take the list of individual fragments in terms of intervals
+
+        for intervalsIndivFrag in intervalsIndivFrags:
+            if not intervalsIndivFrag in usedIndivIntervals: # I only use individual fragments that have not been used before
+                countNewIntervals += 1
+        if countNewIntervals > 0:
+            realNextPossibleFragments.append(frag)
+        else:
+            accumDict['badFragments'].append(frag)
+
+    return realNextPossibleFragments, accumDict
+
+def getNextPossibleFragments(fragmentsDict, accumDict, trainDict, fragIndexesSorted, notUnique, distsTrav):
 
     print 'Removing short fragments...'
     print 'Current minimum distance travelled, ', accumDict['minDist']
@@ -147,6 +164,10 @@ def getNextPossibleFragments(fragmentsDict, accumDict, fragIndexesSorted, notUni
 
     # Check whether the animals are moving enough so that the images are going to be different enough
     nextPossibleFragments, accumDict = checkVelFragments(nextPossibleFragments,fragmentsDict,accumDict)
+    # Check if at least one individual fragment is new to the network
+    intervals = fragmentsDict['intervalsDist']
+    usedIndivIntervals = trainDict['usedIndivIntervals']
+    nextPossibleFragments, accumDict = checkNoveltyNewFrags(intervals, nextPossibleFragments, usedIndivIntervals, accumDict)
 
     return nextPossibleFragments, accumDict
 
@@ -188,7 +209,7 @@ def getAcceptableFragments(accumDict, nextPossibleFragments, distsTrav, distI):
 
     return accumDict
 
-def bestFragmentFinder(accumDict, statistics, fragmentsDict, numAnimals):
+def bestFragmentFinder(accumDict, trainDict, statistics, fragmentsDict, numAnimals):
 
     print '\n--- Entering the bestFragmentFinder ---'
 
@@ -219,7 +240,7 @@ def bestFragmentFinder(accumDict, statistics, fragmentsDict, numAnimals):
         fragIndexesSorted = np.argsort(score).tolist()
 
         # Get next possible fragments
-        nextPossibleFragments, accumDict = getNextPossibleFragments(fragmentsDict, accumDict, fragIndexesSorted, notUnique, distsTrav)
+        nextPossibleFragments, accumDict = getNextPossibleFragments(fragmentsDict, accumDict, trainDict, fragIndexesSorted, notUnique, distsTrav)
 
         while len(nextPossibleFragments)==0 and accumDict['minDist'] >= 0:
             print '\nThe list of possible fragments is the same as the list of fragments used previously for finetuning'
@@ -230,7 +251,7 @@ def bestFragmentFinder(accumDict, statistics, fragmentsDict, numAnimals):
                 step = 10
             accumDict['minDist'] -= step
 
-            nextPossibleFragments, accumDict = getNextPossibleFragments(fragmentsDict, accumDict, fragIndexesSorted, notUnique, distsTrav)
+            nextPossibleFragments, accumDict = getNextPossibleFragments(fragmentsDict, accumDict, trainDict, fragIndexesSorted, notUnique, distsTrav)
 
         nextPossibleFragments = np.asarray(nextPossibleFragments)
         print '\nNext possible fragments for train', nextPossibleFragments

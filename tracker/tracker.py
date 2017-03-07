@@ -97,7 +97,7 @@ def tracker(videoPath, fragmentsDict, portraits, accumDict, trainDict, handlesDi
           print '\n*** Accumulation ', accumDict['counter'], ' ***'
 
           ''' Best fragment search '''
-          accumDict = bestFragmentFinder(accumDict, statistics, fragmentsDict, numAnimals)
+          accumDict = bestFragmentFinder(accumDict, trainDict, statistics, fragmentsDict, numAnimals)
 
           pprint(accumDict)
           print '---------------\n'
