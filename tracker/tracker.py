@@ -89,7 +89,7 @@ def restoreTracker():
             trainDict = pickle.load( open( restoreFromAccPointPath + "/trainDict.pkl", "rb" ) )
 
     handlesDict = {'restoring': True}
-    return accumDict, trainDict, handlesDict, statistic
+    return accumDict, trainDict, handlesDict, statistics
 
 def tracker(videoPath, fragmentsDict, portraits, accumDict, trainDict, handlesDict, statistics, numAnimals):
       while accumDict['continueFlag']:

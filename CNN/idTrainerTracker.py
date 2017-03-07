@@ -32,6 +32,13 @@ def optimize(loss,lr):
     train_op = optimizer.minimize(loss)
     return train_op, global_step
 
+def optimizeSoftmax(loss,lr,softVariables):
+    optimizer = tf.train.GradientDescentOptimizer(lr)
+    # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
+    global_step = tf.Variable(0, name='global_step', trainable=False)
+    train_op = optimizer.minimize(loss,var_list = softVariables)
+    return train_op, global_step
+
 def evaluation(y,y_logits,classes):
     accuracy, indivAcc = individualAccuracy(y,y_logits,classes)
     return accuracy, indivAcc
@@ -74,7 +81,7 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
 
     return outList
 
-def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, trainDict, accumDict, fragmentsDict, handlesDict, portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch, plotFlag = True, printFlag = True):
+def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, trainDict, accumDict, fragmentsDict, handlesDict, portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch, plotFlag = True, printFlag = True, onlySoftmax=False):
 
     # get data from trainDict
     loadCkpt_folder = trainDict['loadCkpt_folder']
@@ -106,7 +113,23 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
 
         cross_entropy = loss(labels_pl,logits)
 
-        train_op, global_step =  optimize(cross_entropy,lr)
+        with tf.variable_scope("softmax1", reuse=True) as scope:
+            softW = tf.get_variable("weights")
+            softB = tf.get_variable("biases")
+        # print softW
+        # print softB
+        softVar = [softW,softB]
+        if onlySoftmax:
+            print '********************************************************'
+            print 'We will only train the softmax...'
+            print '********************************************************'
+            train_op, global_step = optimizeSoftmax(cross_entropy,lr,softVar)
+        else:
+            print '********************************************************'
+            print 'We will only train the whole network...'
+            print '********************************************************'
+
+            train_op, global_step =  optimize(cross_entropy,lr)
 
         accuracy, indivAcc = evaluation(labels_pl,logits,classes)
 
@@ -421,77 +444,77 @@ python -i cnn_model_summaries.py
 --dataset_train 25dpf_60indiv_26142ImPerInd_curvaturePortrait
 """
 
-if __name__ == '__main__':
-    # prep for args
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_train', default='36dpf_60indiv_29754ImPerInd_curvaturePortrait', type = str)
-    # parser.add_argument('--dataset_train', default='36dpf_60indiv_22000ImPerInd_rotateAndCrop', type = str)
-    parser.add_argument('--dataset_test', default=None, type = str)
-    parser.add_argument('--train', default=1, type=int)
-    parser.add_argument('--ckpt_folder', default = "./ckpt_dir", type= str)
-    parser.add_argument('--load_ckpt_folder', default = "", type = str)
-    parser.add_argument('--num_indiv', default = 60, type = int)
-    parser.add_argument('--num_train', default = 25000, type = int)
-    parser.add_argument('--num_test', default = 0, type = int)
-    parser.add_argument('--num_ref', default = 0, type = int)
-    parser.add_argument('--num_epochs', default = 500, type = int)
-    parser.add_argument('--batch_size', default = 250, type = int)
-    parser.add_argument('--learning_rate', default = 0.001, type= float)
-    args = parser.parse_args()
-
-    pathTrain = args.dataset_train
-    pathTest = args.dataset_test
-    num_indiv = args.num_indiv
-    num_train = args.num_train
-    num_test = args.num_test
-    num_ref = args.num_ref
-    ckpt_dir = args.ckpt_folder
-    loadCkpt_folder = args.load_ckpt_folder
-    batch_size = args.batch_size
-    num_epochs = args.num_epochs
-    lr = args.learning_rate
-
-
-    print "\n****** Loading database ******\n"
-    numIndiv, imsize, \
-    X_train, Y_train, \
-    X_val, Y_val, \
-    X_test, Y_test, \
-    X_ref, Y_ref = loadDataBase(pathTrain, num_indiv, num_train, num_test, num_ref, ckpt_dir,pathTest)
-
-    print '\n train size:    images  labels'
-    print X_train.shape, Y_train.shape
-    print 'val size:    images  labels'
-    print X_val.shape, Y_val.shape
-    print 'test size:    images  labels'
-    print X_test.shape, Y_test.shape
-    print 'ref size:    images  labels'
-    print X_ref.shape, Y_ref.shape
-
-    channels, width, height = imsize
-    resolution = np.prod(imsize)
-    classes = numIndiv
-
-    '''
-    ************************************************************************
-    *******************************Training*********************************
-    ************************************************************************
-    '''
-    if args.train == 1:
-        numImagesT = Y_train.shape[0]
-        numImagesV = Y_val.shape[0]
-        Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
-        Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
-
-        run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, accumCounter, batch_size, num_epochs, Tindices, Titer_per_epoch,
-        Vindices, Viter_per_epoch,1.,lr)
-
-    if args.train == 0:
-        numImagesT = Y_ref.shape[0]
-        numImagesV = Y_test.shape[0]
-        Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
-        Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
-
-
-        run_training(X_ref, Y_ref, X_test, Y_test, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
-        Vindices, Viter_per_epoch, 0.5,lr)
+# if __name__ == '__main__':
+#     # prep for args
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument('--dataset_train', default='36dpf_60indiv_29754ImPerInd_curvaturePortrait', type = str)
+#     # parser.add_argument('--dataset_train', default='36dpf_60indiv_22000ImPerInd_rotateAndCrop', type = str)
+#     parser.add_argument('--dataset_test', default=None, type = str)
+#     parser.add_argument('--train', default=1, type=int)
+#     parser.add_argument('--ckpt_folder', default = "./ckpt_dir", type= str)
+#     parser.add_argument('--load_ckpt_folder', default = "", type = str)
+#     parser.add_argument('--num_indiv', default = 60, type = int)
+#     parser.add_argument('--num_train', default = 25000, type = int)
+#     parser.add_argument('--num_test', default = 0, type = int)
+#     parser.add_argument('--num_ref', default = 0, type = int)
+#     parser.add_argument('--num_epochs', default = 500, type = int)
+#     parser.add_argument('--batch_size', default = 250, type = int)
+#     parser.add_argument('--learning_rate', default = 0.001, type= float)
+#     args = parser.parse_args()
+#
+#     pathTrain = args.dataset_train
+#     pathTest = args.dataset_test
+#     num_indiv = args.num_indiv
+#     num_train = args.num_train
+#     num_test = args.num_test
+#     num_ref = args.num_ref
+#     ckpt_dir = args.ckpt_folder
+#     loadCkpt_folder = args.load_ckpt_folder
+#     batch_size = args.batch_size
+#     num_epochs = args.num_epochs
+#     lr = args.learning_rate
+#
+#
+#     print "\n****** Loading database ******\n"
+#     numIndiv, imsize, \
+#     X_train, Y_train, \
+#     X_val, Y_val, \
+#     X_test, Y_test, \
+#     X_ref, Y_ref = loadDataBase(pathTrain, num_indiv, num_train, num_test, num_ref, ckpt_dir,pathTest)
+#
+#     print '\n train size:    images  labels'
+#     print X_train.shape, Y_train.shape
+#     print 'val size:    images  labels'
+#     print X_val.shape, Y_val.shape
+#     print 'test size:    images  labels'
+#     print X_test.shape, Y_test.shape
+#     print 'ref size:    images  labels'
+#     print X_ref.shape, Y_ref.shape
+#
+#     channels, width, height = imsize
+#     resolution = np.prod(imsize)
+#     classes = numIndiv
+#
+#     '''
+#     ************************************************************************
+#     *******************************Training*********************************
+#     ************************************************************************
+#     '''
+#     if args.train == 1:
+#         numImagesT = Y_train.shape[0]
+#         numImagesV = Y_val.shape[0]
+#         Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
+#         Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
+#
+#         run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, accumCounter, batch_size, num_epochs, Tindices, Titer_per_epoch,
+#         Vindices, Viter_per_epoch,1.,lr)
+#
+#     if args.train == 0:
+#         numImagesT = Y_ref.shape[0]
+#         numImagesV = Y_test.shape[0]
+#         Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
+#         Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
+#
+#
+#         run_training(X_ref, Y_ref, X_test, Y_test, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
+#         Vindices, Viter_per_epoch, 0.5,lr)

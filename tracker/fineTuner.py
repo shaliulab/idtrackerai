@@ -28,9 +28,11 @@ import collections
 import datetime
 
 def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, numAnimals, printFlag = True):
-
+    ### Fix maximal number of images:
+    maximalRefPerAnimal = 3000
     # get fragments data
     fragments = np.asarray(fragmentsDict['fragments'])
+
     framesAndBlobColumns = fragmentsDict['framesAndBlobColumnsDist']
     minLenIndivCompleteFragments = fragmentsDict['minLenIndivCompleteFragments']
     intervals = fragmentsDict['intervalsDist']
@@ -40,17 +42,31 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
 
     # get accumulation data
     newFragForTrain = accumDict['newFragForTrain']
+    print '------------NEWFRAGS------------))))))))))))_______________'
+    print newFragForTrain
+    print len(newFragForTrain)
+    print '------------------------))))))))))))_______________'
+
 
     # get training data
     refDict = trainDict['refDict']
     framesColumnsRefDict = trainDict['framesColumnsRefDict']
     usedIndivIntervals = trainDict['usedIndivIntervals']
     idUsedIntervals = trainDict['idUsedIntervals']
+    refDictTemp = {}
 
     ''' First I save all the images of each identified individual in a dictionary '''
     if printFlag:
         print '\n**** Creating dictionary of references ****'
 
+    # create temporary refDict with same keys as refDict and empty values
+    #
+    # # take length of dict before updating
+    # numRefBeforeUpdate =
+    # # how long?
+    # numSamplesPerAnimal = maximalRefPerAnimal - minNumRef
+    # # if longer than max --> sample
+    minAccRefs = []
     for j, frag in enumerate(newFragForTrain): # for each complete fragment that has to be used for the training
         if printFlag:
             print '\nGetting references from global fragment ', frag
@@ -67,33 +83,37 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
                 columns = framesColumnsIndivFrag[:,1]
                 identity = identities[frames[0]][columns[0]]
 
-                if not identity in refDict.keys(): # if the identity has not been added to the dictionary, I initialize the list
-                    refDict[identity] = []
+                if not identity in refDictTemp.keys(): # if the identity has not been added to the dictionary, I initialize the list
+                    # refDict[identity] = []
                     framesColumnsRefDict[identity] = []
+                    refDictTemp[identity] = []
 
                 for frame,column in zip(frames,columns): # I loop in all the frames of the individual fragment to add them to the dictionary of references
-                    refDict[identity].append(portraits.loc[frame,'images'][column])
+                    # refDict[identity].append(portraits.loc[frame,'images'][column])
                     framesColumnsRefDict[identity].append((frame,column))
+                    refDictTemp[identity].append(portraits.loc[frame,'images'][column])
 
                 idUsedIntervals.append(identity)
                 usedIndivIntervals.append(intervalsIndivFrag)
 
     if accumDict['counter'] == 0:
-        refDict = {i: refDict[key] for i, key in enumerate(refDict.keys())}
+        refDictTemp = {i: refDictTemp[key] for i, key in enumerate(refDictTemp.keys())} # this is done to order the ids in the refDict
+
         if printFlag:
-            print '\n The keys of the refDict are ', refDict.keys()
+            print '\n The keys of the refDict are ', refDictTemp.keys()
 
-    # if len(refDict.keys()) != numAnimals:
-    #     raise ValueError('The number of identities should be the same as the number of animals. This means that a global fragment does not have as many individual fragments as number of animals ')
 
-    ''' Update dictionary of references '''
-    trainDict['refDict'] = refDict
-    trainDict['framesColumnsRefDict'] = framesColumnsRefDict
-    trainDict['usedIndivIntervals'] = usedIndivIntervals
-    trainDict['idUsedIntervals'] = idUsedIntervals
 
-    ''' I compute the minimum number of references I can take '''
-    minNumRef = np.min([len(refDict[iD]) for iD in refDict.keys()])
+    ''' I compute the minimum number of references I can take  given the new fragments added during the accumulation'''
+    minNumRefTemp = np.min([len(refDictTemp[iD]) for iD in refDictTemp.keys()]) # minimal number of references from new fragments
+    if len(refDict) != 0:
+        minNumRef = np.min([len(refDict[iD]) for iD in refDict.keys()]) # minimal number of references from old dictionary of references
+    else:
+        minNumRef = 0
+
+    print 'number of new references gained while accumulating: ', minNumRefTemp
+    print 'number of old references: ', minNumRef
+    overallRefs = minNumRef + minNumRefTemp
 
     if printFlag:
         print '\nMinimum number of references per identities: ', minNumRef
@@ -104,16 +124,81 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
 
     images = []
     labels = []
-    for iD in refDict.keys():
-        imagesList = np.asarray(refDict[iD])
-        indexes = np.linspace(0,len(imagesList)-1,minNumRef).astype('int')
-        images.append(imagesList[indexes])
-        labels.append(np.ones(minNumRef)*iD)
+    if overallRefs <= maximalRefPerAnimal:
+        print '*************************************************'
+        print 'we are under the threshold:', overallRefs, ' <= ', maximalRefPerAnimal
+        print '*************************************************'
+        for iD in refDictTemp.keys():
+            print 'refDictTemp ', iD, len(refDictTemp[iD])
+            if accumDict['counter'] == 0:
+                print '*************************************************'
+                print 'it is the first accumulation'
+                print '*************************************************'
+                imagesList = np.asarray(refDictTemp[iD])# this should be equivalent to what we were doing before
+                indexes = np.linspace(0,len(imagesList)-1,minNumRefTemp).astype('int')
+                images.append(imagesList[indexes])
+                labels.append(np.ones(minNumRefTemp)*iD)
+                refDict[iD] = refDictTemp[iD]
+                print len(refDict[iD])
+            else:
+                print '*************************************************'
+                print 'it is not the first accum'
+                print '*************************************************'
+                print iD
+                print 'refDict ', iD, len(refDict[iD])
+                print 'refDictTemp ', iD, len(refDictTemp[iD])
+
+                # refDict[iD].append(refDictTemp[iD])
+                refDict[iD] = np.vstack((refDict[iD],refDictTemp[iD]))
+                print 'refDict ', iD, len(refDict[iD])
+
+                print len(refDict[iD])
+
+                imagesList = np.asarray(refDict[iD])
+
+                indexes = np.linspace(0,len(imagesList)-1,overallRefs).astype('int')
+                images.append(imagesList[indexes])
+                labels.append(np.ones(overallRefs)*iD)
+
+    elif overallRefs > maximalRefPerAnimal:
+        #sample from old dict:
+        # compute the number of samples to be taken from the old dict
+        ratioOld = .5
+        ratioNew = .5
+        numSamplesOld = maximalRefPerAnimal * ratioOld
+        numSamplesNew = maximalRefPerAnimal * ratioNew
+        print 'old references to be retained: ', numSamplesOld
+        print 'old references to be added: ', numSamplesNew
+
+        for iD in refDictTemp.keys():
+            sampledImagesListOld = np.asarray(refDict[iD])
+            samplesIndexesOld = np.linspace(0,len(sampledImagesListOld)-1,numSamplesOld).astype('int')
+            sampledImagesListOld = sampledImagesListOld[samplesIndexesOld]
+
+            sampledImagesListNew = np.asarray(refDictTemp[iD])
+            samplesIndexesNew = np.linspace(0,len(sampledImagesListNew)-1,numSamplesNew).astype('int')
+            sampledImagesListNew = sampledImagesListNew[samplesIndexesNew]
+
+            imagesList = np.vstack((sampledImagesListOld, sampledImagesListNew))
+            images.append(imagesList)
+            labels.append(np.ones(maximalRefPerAnimal)*iD)
+            print 'images and labels should have the same length:'
+            print 'length labels ', len(labels)
+            print 'length images ', len(images)
+            print 'max num of references: ', maximalRefPerAnimal
+            print '-------------------------------------------------'
+            #update the refDict so that it always contains everything
+            refDict[iD] = np.vstack((refDict[iD],refDictTemp[iD]))
+
     images = np.vstack(images)
     images = np.expand_dims(images,axis=1)
+    print 'shape of the images ', images.shape
+    print 'length of labels', len(labels)
     imagesDims = images.shape
     imsize = (imagesDims[1],imagesDims[2], imagesDims[3])
     labels = flatten(labels)
+    print 'size labels after flatten', len(labels)
+    print 'label sample', labels[0:10]
     labels = map(int,labels)
     labels = dense_to_one_hot(labels, numAnimals)
     numImages = len(labels)
@@ -136,6 +221,12 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     resolution = np.prod(imsize)
     X_train = np.reshape(X_train, [numTrain, resolution])
     X_val = np.reshape(X_val, [numImages - numTrain, resolution])
+
+    ''' Update dictionary of references '''
+    trainDict['refDict'] = refDict
+    trainDict['framesColumnsRefDict'] = framesColumnsRefDict
+    trainDict['usedIndivIntervals'] = usedIndivIntervals
+    trainDict['idUsedIntervals'] = idUsedIntervals
 
     return imsize, X_train, Y_train, X_val, Y_val, trainDict
 
@@ -230,6 +321,7 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portr
                     width, height, channels, classes, resolution,
                     trainDict, accumDict, fragmentsDict, handlesDict, portraits,
                     Tindices, Titer_per_epoch,
-                    Vindices, Viter_per_epoch)
+                    Vindices, Viter_per_epoch,
+                    onlySoftmax=True) #NOTE:hard-coded flag for testing purpose
     trainDict['loadCkpt_folder'] = ckpt_dir
     return trainDict, handlesDict
