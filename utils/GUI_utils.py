@@ -122,20 +122,19 @@ def checkROI(useROI, usePreviousROI, frame, videoPath):
         centers = []
     return mask, centers
 
-def ROISelectorPreview(paths, useROI, usePreviousROI, numSegment=0):
+def ROISelectorPreview(videoPaths, useROI, usePreviousROI, numSegment=0):
     """
     loads a preview of the video for manual fine-tuning
     """
-    cap2 = cv2.VideoCapture(paths[0])
+    cap2 = cv2.VideoCapture(videoPaths[0])
     flag, frame = cap2.read()
     cap2.release()
     height = frame.shape[0]
     width = frame.shape[1]
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    mask, centers = checkROI(useROI, usePreviousROI, frameGray, paths[0])
-    saveFile(paths[0], mask, 'ROI')
-    saveFile(paths[0], centers, 'centers')
-
+    mask, centers = checkROI(useROI, usePreviousROI, frameGray, videoPaths[0])
+    saveFile(videoPaths[0], mask, 'ROI')
+    saveFile(videoPaths[0], centers, 'centers')
     return width, height, mask, centers
 
 ''' ****************************************************************************
@@ -351,20 +350,20 @@ def selectPreprocParams(videoPaths, usePreviousPrecParams, width, height, bkg, m
 ''' ****************************************************************************
 Fragmentation inspector
 *****************************************************************************'''
-def playFragmentation(paths,dfGlobal,visualize = False):
+def playFragmentation(videoPaths,dfGlobal,visualize = False):
     from fragmentation import computeFrameIntersection ### FIXME For some reason it does not import well in the top and I have to import it here
     """
     IdInspector
     """
     if visualize:
-        info = loadFile(paths[0], 'videoInfo', hdfpkl = 'pkl')
+        info = loadFile(videoPaths[0], 'videoInfo', hdfpkl = 'pkl')
         width = info['width']
         height = info['height']
         numAnimals = info['numAnimals']
         maxNumBlobs = info['maxNumBlobs']
         numSegment = 0
-        frameIndices = loadFile(paths[0], 'frameIndices')
-        path = paths[numSegment]
+        frameIndices = loadFile(videoPaths[0], 'frameIndices')
+        path = videoPaths[numSegment]
 
         def IdPlayerFragmentation(path,numAnimals, width, height):
             df,sNumber = loadFile(path, 'segmentation')
@@ -421,7 +420,7 @@ def playFragmentation(paths,dfGlobal,visualize = False):
         finish = False
         while not finish:
             # print 'I am here', numSegment
-            numSegment = IdPlayerFragmentation(paths[int(numSegment)],numAnimals, width, height)
+            numSegment = IdPlayerFragmentation(videoPaths[int(numSegment)],numAnimals, width, height)
             if numSegment == 'q':
                 finish = True
             cv2.waitKey(1)

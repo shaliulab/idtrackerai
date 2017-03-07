@@ -94,8 +94,8 @@ def newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames):
 
     for j, path in enumerate(videoPaths):
         print '-----------------------------------'
-        print 'Fragmenting video %s' % path
         df, numSegment = loadFile(path, 'segmentation')
+        print 'Fragmenting video %s, numSegment %s' %(path,numSegment)
         numFramesSegment = len(df)
         # print 'Num frames in segment, ', numFramesSegment
         columnNumBlobs = df.loc[:,'numberOfBlobs']
@@ -438,7 +438,7 @@ def getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFrag
 
     return fragments, framesAndBlobColumnsLen, intervalsFragmentsLen , minLenIndivCompleteFragments.tolist(), minDistIndivCompleteFragments.tolist(), framesAndBlobColumnsDist, intervalsFragmentsDist
 
-def fragment(videoPaths,videoInfo = None):
+def fragment(videoPaths, segmPaths, videoInfo = None):
     # only func called from idTrackerDeepGUI
     ''' Load videoInfo if needed '''
     if videoInfo == None:
@@ -448,7 +448,7 @@ def fragment(videoPaths,videoInfo = None):
         maxNumBlobs = videoInfo['maxNumBlobs']
 
     ''' Compute permutations and global fragments '''
-    fragments, dfGlobal = newFragmentator(videoPaths,numAnimals,maxNumBlobs, numFrames)
+    fragments, dfGlobal = newFragmentator(segmPaths,numAnimals,maxNumBlobs, numFrames)
     saveFile(videoPaths[0],dfGlobal,'dfGlobal')
     playFragmentation(videoPaths,dfGlobal,False)
 
@@ -461,10 +461,17 @@ def fragment(videoPaths,videoInfo = None):
     saveFile(videoPaths[0],videoInfo,'videoInfo', hdfpkl = 'pkl')
 
     ''' Get individual fragments '''
-    oneIndivFragIntervals, oneIndivFragFrames, oneIndivFragLens, oneIndivFragSumLens, oneIndivFragVels, oneIndivFragDists, dfGlobal, fragments = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
+    oneIndivFragIntervals, oneIndivFragFrames, \
+    oneIndivFragLens, oneIndivFragSumLens, \
+    oneIndivFragVels, oneIndivFragDists, \
+    dfGlobal, fragments = getIndivAllFragments(dfGlobal,meanIndivArea,stdIndivArea,maxNumBlobs,numAnimals)
 
     ''' Get coexistence of individual fragments in global fragments '''
-    fragments, framesAndBlobColumns, intervalsFragments, minLenIndivCompleteFragments, minDistIndivCompleteFragments, framesAndBlobColumnsDist, intervalsFragmentsDist = getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragVels,oneIndivFragFrames,oneIndivFragDists,numAnimals)
+    fragments, framesAndBlobColumns, \
+    intervalsFragments, minLenIndivCompleteFragments, \
+    minDistIndivCompleteFragments, framesAndBlobColumnsDist, \
+    intervalsFragmentsDist = getCoexistence(fragments,oneIndivFragIntervals,oneIndivFragLens,oneIndivFragVels,oneIndivFragFrames,oneIndivFragDists,numAnimals)
+
     fragmentsDict = {
         'fragments': fragments, #global fragments
         'minLenIndivCompleteFragments': minLenIndivCompleteFragments,

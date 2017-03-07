@@ -146,8 +146,8 @@ def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = '', nSegme
     name: string to add to the name of the video (wihtout timestamps)
     folder: path to the folder in which the file has to be stored
     """
-    if os.path.exists(path)==False:
-        raise ValueError("the video %s does not exist!" %path)
+    # if os.path.exists(path)==False:
+    #     raise ValueError("the video %s does not exist!" %path)
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)
     folder = os.path.dirname(path)
@@ -223,7 +223,7 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
 
     print 'You just loaded ', folder + subfolder + filename
 
-def getExistentFiles(path, listNames):
+def getExistentFiles(path, listNames, segmPaths):
     """
     get processes already computed in a previous session
     """
@@ -231,10 +231,10 @@ def getExistentFiles(path, listNames):
     video = os.path.basename(path)
     folder = os.path.dirname(path)
 
-    createFolder(path)
+    # createFolder(path)
 
     #count how many videos we have
-    numVideos = len(glob.glob1(folder,"*.avi"))
+    numSegments = len(segmPaths)
 
     filename, extension = os.path.splitext(video)
     subFolders = glob.glob(folder +"/*/")
@@ -247,7 +247,7 @@ def getExistentFiles(path, listNames):
                 print 'Segmentation folder exists'
                 numSegmentedVideos = len(glob.glob1(segDirname,"*.hdf5"))
                 print
-                if numSegmentedVideos == numVideos:
+                if numSegmentedVideos == numSegments:
                     print 'The number of segments and videos is the same'
                     existentFile[name] = '1'
         else:

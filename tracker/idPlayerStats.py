@@ -3,6 +3,7 @@ import sys
 sys.path.append('IdTrackerDeep/utils')
 
 from py_utils import *
+from video_utils import *
 
 import time
 import numpy as np
@@ -20,32 +21,11 @@ import multiprocessing
 import itertools
 import cPickle as pickle
 
-numSegment = 0
-# path = selectFile()
-# paths = scanFolder(path)
-# paths = scanFolder('/media/chaos/EMPTY/adult2darkness/adult1darkness_1.avi')
-# paths = scanFolder('../videos/Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('../videos/motherfucker2/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('/media/chaos/New Volume/cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('/media/chaos/New Volume/motherfucker2/Caffeine5fish_20140206T122428_1.avi')
-# '/media/chaos/New Volume/motherfucker2/Caffeine5fish_20140206T122428_1.avi'
-# paths = scanFolder('../Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('IdTrackerDeep/videos/larvae1/trial_1_1.avi')
-paths = scanFolder('IdTrackerDeep/videos/cafeina5peces_segm2/Caffeine5fish_20140206T122428_2.avi')
-# paths = scanFolder('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/flies8/testflies_7_1.avi')
-# paths = scanFolder('../videos/nofragsError/_1.avi')
-# paths = scanFolder('../videos/cafeina5peces/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('../videos/Conflicto8/conflict3and4_20120316T155032_1.avi')
-# paths = scanFolder('../Medaka/20fish_20130909T191651_1.avi')
-# paths = scanFolder('../Cafeina5pecesSmall/Caffeine5fish_20140206T122428_1.avi')
-# paths = scanFolder('../videos/38fish_adult_splitted/adult1darkenes_1.avi')
-# paths = scanFolder('/home/lab/Desktop/aggr/video_4/4.avi')
-# print paths
-videoPath = paths[0]
-frameIndices = loadFile(videoPath, 'frameIndices')
+videoPaths = scanFolder('IdTrackerDeep/videos/fish4-INDP2016/fullVideo/fish4.avi')
+frameIndices, segmPaths = getSegmPaths(videoPaths)
+videoPath = videoPaths[0]
 videoInfo = loadFile(videoPath, 'videoInfo', hdfpkl='pkl')
-# stats = loadFile(paths[0], 'statistics',hdfpkl='pkl')
+
 def getLastSession(subFolders):
     if len(subFolders) == 0:
         lastIndex = 0
@@ -64,15 +44,7 @@ sessionPath = subFolder + '/Session_' + str(lastIndex)
 print sessionPath
 
 stats = pickle.load( open( sessionPath + "/statistics.pkl", "rb" ) )
-# stats = loadFile(paths[0], 'statistics', time=0)
-# stats = stats.to_dict()[0]
-dfGlobal = loadFile(paths[0], 'portraits')
-# IdsStatistics = {'blobIds':idSoftMaxAllVideo,
-#     'probBlobIds':PSoftMaxAllVIdeo,
-#     'fragmentIds':idLogP2FragAllVideo,
-#     'probFragmentIds':logP2FragAllVideo,
-#     'FreqFrag': freqFragAllVideo,
-#     'P1Frag': P1FragAllVideo}
+dfGlobal = loadFile(videoPaths[0], 'portraits')
 
 numAnimals = videoInfo['numAnimals']
 width = videoInfo['width']
@@ -90,7 +62,8 @@ P2Frag = stats['P2FragAllVideo']
 
 statistics = [allFragProbIds, allIds, allProbIds, FreqFrag, normFreqFrag, P1Frag,P2Frag]
 
-def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,statistics,dfGlobal):
+def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width, height, stat,statistics,dfGlobal):
+    # Load statistics
     freq = statistics[3]
     normFreq = statistics[4]
     P1 = statistics[5]
@@ -101,102 +74,144 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
     if stat.dtype == 'int64':
         statIdentity = True
 
-    df, sNumber = loadFile(path, 'segmentation')
-    sNumber = int(sNumber)
-    cap = cv2.VideoCapture(path)
-    numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+    # Load first segment
+    global segmDf, cap, currentSegment
+    segmDf, sNumber = loadFile(segmPaths[0], 'segmentation')
+    currentSegment = int(sNumber)
+    cap = cv2.VideoCapture(videoPaths[0])
+    numFrames = len(frameIndices)
     colors = get_spaced_colors_util(numAnimals)
-    # print 'colors, ',colors
+
     def onChange(trackbarValue):
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-        index = frameIndices[(frameIndices.segment == int(sNumber)) & (frameIndices.frame == trackbarValue)].index[0]
-        noses = dfGlobal.loc[index,'noses']
-        centroids = df.loc[trackbarValue,'centroids']
-        pixels = df.loc[trackbarValue,'pixels']
-        permutation = df.loc[trackbarValue,'permutation']
+        global segmDf, cap, currentSegment
+
+        # Select segment dataframe and change cap if needed
+        sNumber = frameIndices.loc[trackbarValue,'segment']
+        sFrame = frameIndices.loc[trackbarValue,'frame']
+
+        if sNumber != currentSegment: # we are changing segment
+            print 'Changing segment...'
+            prevSegmDf, _ = loadFile(segmPaths[sNumber-2], 'segmentation')
+            segmDf, _ = loadFile(segmPaths[sNumber-1], 'segmentation')
+            currentSegment = sNumber
+
+            if len(videoPaths) > 1:
+                cap = cv2.VideoCapture(videoPaths[sNumber-1])
+
+
+
 
         #Get frame from video file
+        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         ret, frame = cap.read()
         font = cv2.FONT_HERSHEY_SIMPLEX
         frameCopy = frame.copy()
 
-        # Plot segmentated blobs
+        print '**********************************'
+        print 'sNumber, ', sNumber
+        print 'sFrame, ', sFrame
+        print 'trackbarValue, ', trackbarValue
+        print '----------------------------------'
 
-        # plot numbers if not crossing
-        globalFrame = frameIndices[frameIndices['frame']== trackbarValue][frameIndices['segment']==sNumber].index[0]
-        # print 'permutation, ', permutation
+        noses = dfGlobal.loc[trackbarValue,'noses']
+        centroids = dfGlobal.loc[trackbarValue,'centroids']
+        pixels = segmDf.loc[sFrame,'pixels']
+        permutation = segmDf.loc[sFrame,'permutation']
+
+        # Plot segmentated blobs
         if not isinstance(permutation,float):
-            # print 'pass'
             # shadows
             if trackbarValue == 0:
                 print 'Previous frame set 0 because we are in the first frame'
-                previousFrame = 0
+                previousSegFrame = 0
+                previousGlobFrame = 0
             else:
-                previousFrame = trackbarValue -1
+                previousSegFrame = sFrame - 1
+                previousGlobFrame = trackbarValue - 1
+
+                if previousSegFrame < 0:
+                    previousSegFrame = len(prevSegmDf)+previousSegFrame
+
+            print '----------------------------------'
+            print 'sNumber, ', sNumber
+            print 'sFrame, ', sFrame
+            print 'previousSegFrame, ', previousSegFrame
+            print 'globFrame, ', trackbarValue
+            print 'previousGlobFrame, ', previousGlobFrame
+
+
             shadowsCounter = 1
             # frameShadows = np.zeros_like(frame)
-            while not isinstance(df.loc[previousFrame,'permutation'],float):
+            print '----------------------------------'
+            print 'Drawing sadows...'
+            while not isinstance(segmDf.loc[previousSegFrame,'permutation'],float):
                 # framePreviousShadows = np.zeros_like(frame)
-                previousPixels = df.loc[previousFrame,'pixels']
-                globalPreviousFrame = frameIndices[frameIndices['frame']== previousFrame][frameIndices['segment']==sNumber].index[0]
-                # print 'globalPreviousFrame, ', globalPreviousFrame
+                if previousSegFrame > sFrame:
+                    previousPixels = prevSegmDf.loc[previousSegFrame,'pixels']
+                else:
+                    previousPixels = segmDf.loc[previousSegFrame,'pixels']
+
                 for i, pixel in enumerate(previousPixels):
-                    cur_id = allIdentities[globalPreviousFrame,i]
+                    cur_id = allIdentities[previousGlobFrame,i]
                     px = np.unravel_index(pixel,(height,width))
                     frame[px[0],px[1],:] = np.multiply(colors[cur_id+1],.3).astype('uint8')+np.multiply(frame[px[0],px[1],:],.7).astype('uint8')
-                if previousFrame > 0 and shadowsCounter <= 11:
-                    previousFrame = previousFrame-1
+                if previousSegFrame > 0 and shadowsCounter <= 11:
+                    previousSegFrame = previousSegFrame - 1
+                    previousGlobFrame = previousGlobFrame - 1
+                    print '----------------------------------'
+                    print 'previousSegFrame, ', previousSegFrame
+                    print 'previousGlobFrame, ', previousGlobFrame
                     shadowsCounter += 1
                 else:
+                    print 'I finish drawing all the shadows'
                     break
 
-            print '\n *************** global frame, ', globalFrame
+            print '**********************************'
+
             for i, (centroid,nose) in enumerate(zip(centroids,noses)):
                 # print centroid
-                cur_id = allIdentities[globalFrame,i]
+                cur_id = allIdentities[trackbarValue,i]
                 if statIdentity:
-                    cur_stat = stat[globalFrame,i]
+                    cur_stat = stat[trackbarValue,i]
                     fontSize = .5
                     text = str(cur_stat)
                     color = [0,0,0]
                     thickness = 1
                 else:
                     # text = '{:.2f}'.format(np.round(stat[globalFrame,i,:],decimals=2))
-                    textList = ["%.2f" % float(np.round(s,decimals=2)) for s in stat[globalFrame,i,:]]
+                    textList = ["%.2f" % float(np.round(s,decimals=2)) for s in stat[trackbarValue,i,:]]
                     text = str.join(", ",textList)
                     text = '[ ' + text + ' ]'
                     fontSize = .5
                     thickness = 1
                     color = [0,0,0]
-                freqList = ["%0.f" % float(s) for s in freq[globalFrame,i,:]]
+                freqList = ["%0.f" % float(s) for s in freq[trackbarValue,i,:]]
                 freqText = str.join(", ",freqList)
                 freqText = '[ ' + freqText + ' ]'
-                normFreqList = ["%0.2f" % float(s) for s in normFreq[globalFrame,i,:]]
+                normFreqList = ["%0.2f" % float(s) for s in normFreq[trackbarValue,i,:]]
                 normFreqText = str.join(", ",normFreqList)
                 normFreqText = '[ ' + normFreqText + ' ]'
-                P1List = ["%.4f" % float(s) for s in P1[globalFrame,i,:]]
+                P1List = ["%.4f" % float(s) for s in P1[trackbarValue,i,:]]
                 P1Text = str.join(", ",P1List)
                 P1Text = '[ ' + P1Text + ' ]'
-                logP2List = ["%.4f" % float(s) for s in logP2[globalFrame,i,:]]
+                logP2List = ["%.4f" % float(s) for s in logP2[trackbarValue,i,:]]
                 logP2Text = str.join(", ",logP2List)
                 logP2Text = '[ ' + logP2Text + ' ]'
-                P2List = ["%.8f" % float(s) for s in P2[globalFrame,i,:]]
+                P2List = ["%.8f" % float(s) for s in P2[trackbarValue,i,:]]
                 P2Text = str.join(", ",P2List)
                 P2Text = '[ ' + P2Text + ' ]'
-                softmaxProbList = ["%.8f" % float(s) for s in softmaxProb[globalFrame,i,:]]
+                softmaxProbList = ["%.8f" % float(s) for s in softmaxProb[trackbarValue,i,:]]
                 softmaxProbText = str.join(", ",softmaxProbList)
                 softmaxProbText = '[ ' + softmaxProbText + ' ]'
-                print '--------- Id, ', cur_id+1
-                # print 'Frequencies', freqText
-                print 'normFrequencies', normFreqText
-                # print 'P1, ', P1Text
-                print 'P2, ', P2Text
-                print 'softmaxProb, ', softmaxProbText
-                # print 'logP2, ', logP2Text
-                # if not sum(stat[globalFrame,i,:]):
-                #     cur_id = -1
+                # print '--------- Id, ', cur_id+1
+                # # print 'Frequencies', freqText
+                # print 'normFrequencies', normFreqText
+                # # print 'P1, ', P1Text
+                # print 'P2, ', P2Text
+                # print 'softmaxProb, ', softmaxProbText
+                # # print 'logP2, ', logP2Text
+                # # if not sum(stat[globalFrame,i,:]):
+                # #     cur_id = -1
 
 
                 px = np.unravel_index(pixels[i],(height,width))
@@ -207,39 +222,22 @@ def IdPlayer(path,allIdentities,frameIndices, numAnimals, width, height, stat,st
                 cv2.circle(frame, nose,2, colors[cur_id+1],2)
 
 
-
-                    # frame[px[0],px[1],:] = colors[cur_id]
-
-
         # blendFrame = cv2.addWeighted(frame,.5,frameShadows,.5,0)
         # print 'shape blend Frame, ', blendFrame.shape
-        cv2.putText(frame,str(globalFrame),(50,50), font, 3,(255,0,0))
+        cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
         frame = cv2.resize(frame,None, fx = np.true_divide(1,1), fy = np.true_divide(1,1))
         # Visualization of the process
         cv2.imshow('IdPlayer',frame)
         pass
 
     cv2.namedWindow('IdPlayer')
-    print '*************************************************'
-    cv2.createTrackbar( 'start', 'IdPlayer', 0, numFrame-1, onChange )
-    # cv2.createTrackbar( 'end'  , 'IdPlayer', numFrame-1, numFrame, onChange )
+    cv2.createTrackbar( 'start', 'IdPlayer', 0, numFrames-1, onChange )
 
-    onChange(1)
+    onChange(0)
     cv2.waitKey()
 
-    start = cv2.getTrackbarPos('start','IdPlayer')
-
-    # numSegment =  raw_input('Which segment do you want to inspect?')
-    numSegment = getInput('Segment number','Type the segment to be visualized')
-    # statNum = raw_input('Which statistics do you wanna visualize (allFragProbIds, allIds, allProbIds)?')
-    statNum = getInput('Stats','Which statistics do you wanna visualize (0-allFragProbIds, 1-allIds, 2-allProbIds, 3-FreqFrag)?')
-    return numSegment, statNum
+    return
     # return raw_input('Which statistics do you wanna visualize (0,1,2,3)?')
 
-finish = False
 statNum = 4
-while not finish:
-    print 'I am here', numSegment
-    numSegment, statNum = IdPlayer(paths[int(numSegment)],allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics,dfGlobal)
-    if numSegment == 'q':
-        finish = True
+IdPlayer(videoPaths,segmPaths,allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics,dfGlobal)
