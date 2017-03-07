@@ -89,7 +89,7 @@ def restoreTracker():
             trainDict = pickle.load( open( restoreFromAccPointPath + "/trainDict.pkl", "rb" ) )
 
     handlesDict = {'restoring': True}
-    return accumDict, trainDict, handlesDict, statistic
+    return accumDict, trainDict, handlesDict, statistics
 
 def tracker(videoPath, fragmentsDict, portraits, accumDict, trainDict, handlesDict, statistics, numAnimals):
       while accumDict['continueFlag']:
@@ -97,7 +97,7 @@ def tracker(videoPath, fragmentsDict, portraits, accumDict, trainDict, handlesDi
           print '\n*** Accumulation ', accumDict['counter'], ' ***'
 
           ''' Best fragment search '''
-          accumDict = bestFragmentFinder(accumDict, statistics, fragmentsDict, numAnimals)
+          accumDict = bestFragmentFinder(accumDict, trainDict, statistics, fragmentsDict, numAnimals)
 
           pprint(accumDict)
           print '---------------\n'

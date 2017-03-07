@@ -24,6 +24,7 @@ import cPickle as pickle
 videoPaths = scanFolder('IdTrackerDeep/videos/fish4-INDP2016/fullVideo/fish4.avi')
 frameIndices, segmPaths = getSegmPaths(videoPaths)
 videoPath = videoPaths[0]
+
 videoInfo = loadFile(videoPath, 'videoInfo', hdfpkl='pkl')
 
 def getLastSession(subFolders):

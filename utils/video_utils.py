@@ -26,10 +26,10 @@ def splitVideo(videoPath):
     fps = cv2.cv.CV_CAP_PROP_FPS
     print 'fps ',fps
     fourcc = cv2.cv.CV_CAP_PROP_FOURCC
-    # print fourcc
-    # fourcc = cv2.cv.CV_FOURCC(*'MP4A')
+    print fourcc
+    fourcc = cv2.cv.CV_FOURCC(*'MP4A')
     # fourcc = cv2.cv.CV_FOURCC(*'X264')
-    fourcc = cv2.cv.CV_FOURCC(*'XVID')
+    # fourcc = cv2.cv.CV_FOURCC(*'XVID')
     width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
@@ -67,7 +67,7 @@ def splitVideo(videoPath):
     cap.release()
 
 
-# splitVideo('/media/lab/idZebLib_TU31012017/Group_1/video_1.avi' )
+# splitVideo('/media/lab/idZebLib_TU31012017/Group_1_2/full video/video_02174359.avi' )
 """
 Get general information from video
 """
