@@ -21,7 +21,7 @@ import multiprocessing
 import itertools
 import cPickle as pickle
 
-videoPaths = scanFolder('IdTrackerDeep/videos/fish4-INDP2016/fullVideo/fish4.avi')
+videoPaths = scanFolder('IdTrackerDeep/videos/Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
 frameIndices, segmPaths = getSegmPaths(videoPaths)
 videoPath = videoPaths[0]
 
@@ -76,20 +76,23 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
         statIdentity = True
 
     # Load first segment
-    global segmDf, cap, currentSegment
+    global segmDf, cap, currentSegment, numFrameCurSegment
     segmDf, sNumber = loadFile(segmPaths[0], 'segmentation')
     currentSegment = int(sNumber)
     cap = cv2.VideoCapture(videoPaths[0])
     numFrames = len(frameIndices)
+    numFrameCurSegment = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+
     colors = get_spaced_colors_util(numAnimals)
 
     def onChange(trackbarValue):
-        global segmDf, cap, currentSegment
+        global segmDf, cap, currentSegment, numFrameCurSegment
 
         # Select segment dataframe and change cap if needed
         sNumber = frameIndices.loc[trackbarValue,'segment']
         sFrame = frameIndices.loc[trackbarValue,'frame']
-
+        # print len(videoPaths)
+        # print sNumber
         if sNumber != currentSegment: # we are changing segment
             print 'Changing segment...'
             prevSegmDf, _ = loadFile(segmPaths[sNumber-2], 'segmentation')
@@ -98,13 +101,16 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
 
             if len(videoPaths) > 1:
                 cap = cv2.VideoCapture(videoPaths[sNumber-1])
-
-
-
+                numFrameCurSegment = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
         #Get frame from video file
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+        if len(videoPaths) == 1:
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+        elif len(videoPaths) > 1:
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue % numFrameCurSegment)
+
         ret, frame = cap.read()
+        print ret
         font = cv2.FONT_HERSHEY_SIMPLEX
         frameCopy = frame.copy()
 

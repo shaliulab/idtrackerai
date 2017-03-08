@@ -29,7 +29,7 @@ import datetime
 
 def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, numAnimals, printFlag = True):
     ### Fix maximal number of images:
-    maximalRefPerAnimal = 3000
+    maximalRefPerAnimal = 600
     # get fragments data
     fragments = np.asarray(fragmentsDict['fragments'])
 
@@ -123,7 +123,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
 
     images = []
     labels = []
-    if overallRefs <= maximalRefPerAnimal:
+    if overallRefs <= maximalRefPerAnimal or accumDict['counter'] == 0:
         print '*************************************************'
         print 'we are under the threshold:', overallRefs, ' <= ', maximalRefPerAnimal
         print '*************************************************'
@@ -340,6 +340,6 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portr
                     trainDict, accumDict, fragmentsDict, handlesDict, portraits,
                     Tindices, Titer_per_epoch,
                     Vindices, Viter_per_epoch,
-                    onlySoftmax=True) #NOTE:hard-coded flag for testing purpose
+                    onlySoftmax=False) #NOTE:hard-coded flag for testing purpose
     trainDict['loadCkpt_folder'] = ckpt_dir
     return trainDict, handlesDict
