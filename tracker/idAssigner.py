@@ -511,6 +511,7 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
         'probFragmentIds':logP2FragAllVideo,
         'P2FragAllVideo':P2FragAllVideo,
         'normFreqFragsAll':normFreqFragsAll,
+        'P2FragsAll': P2FragsAll,
         'overallP2': overallP2}
 
     # portraits['identities'] = idLogP2FragAllVideo.tolist()

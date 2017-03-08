@@ -70,6 +70,8 @@ def computeDistToIdAndUniqueness(fragmentsDict, numAnimals, statistics):
         # misId --> discard
         if ids != list(rawsArgMax):
             unique = False
+        else:
+            print fragMat
         return unique
 
     mat = []
@@ -80,7 +82,7 @@ def computeDistToIdAndUniqueness(fragmentsDict, numAnimals, statistics):
         for j, indivFrag in enumerate(globalFrag): # loop in individual fragments of the complete set of fragments
             blobIndex = indivFrag[0]
             fragNum = indivFrag[1]
-            mat.append(statistics['normFreqFragsAll'][blobIndex][fragNum])
+            mat.append(statistics['P2FragsAll'][blobIndex][fragNum])
         matFragment = np.vstack(mat)
         mat = []
         perm = np.argmax(matFragment,axis=1)
