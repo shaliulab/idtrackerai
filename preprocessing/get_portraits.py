@@ -82,6 +82,29 @@ def fillSquareFrame(square_frame,bkgSamps):
     square_frame[square_frame == 0] = bkgSamps[indicesSamples]
     return square_frame
 
+def cropPortrait(image,portraitSize,shift=(0,0)):
+    """ Given a portait it crops it in a shape (portraitSize,portraitSize) with
+    a shift in the rows and columns given by the variable shifts. The size of
+    the portait must be bigger than
+
+    :param portrait: portrait to be cropped, usually of shape (36x36)
+    :param portraitSize: size of the new portrait, usually 32, since the network accepts images of 32x32  pixels
+    :param shift: (x,y) displacement when cropping, it can only go from -maxShift to +maxShift
+    :return
+    """
+    currentSize = image.shape[0]
+    if currentSize < portraitSize:
+        raise ValueError('The size of the input portrait must be bigger than portraitSize')
+    elif currentSize == portraitSize:
+        return image
+    elif currentSize > portraitSize:
+        maxShift = np.divide(currentSize - portraitSize,2)
+        if np.max(shift) > maxShift:
+            raise ValueError('The shift when cropping the portrait cannot be bigger than (currentSize - portraitSize)/2')
+        croppedPortrait = image[maxShift+shift[1]:currentSize-maxShift+shift[1],maxShift+shift[0]:currentSize-maxShift+shift[0]]
+        print 'Portrait cropped'
+        return croppedPortrait
+
 def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None,px_nose_above_center = 9):
     """Given a miniframe (i.e. a minimal rectangular image containing an animal)
     it returns a 32x32 image centered on the head.
@@ -96,7 +119,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None,px_nose_above_center = 9
     """
 
     # Extra parameters
-    half_side_sq = 16 # Because we said that the final portrait is 32x32
+    half_side_sq = 18 # Because we said that the final portrait is 32x32
     overhead = 30 # Extra pixels when performing rotation, around sqrt(half_side_sq**2 + (half_side_sq+px_nose_above_center)**2)
 
     # Calculating nose coordinates in the full frame reference
@@ -198,10 +221,11 @@ def portrait(videoPaths, dfGlobal):
 
     if list(allPortraits.index) != list(dfGlobal.index):
         raise ValueError('The list of indexes in allPortraits and dfGlobal should be the same')
+    # dfGlobal1 = pd.DataFrame(index = range(len(dfGlobal)), columns=['images'])
     dfGlobal['images'] = allPortraits
     dfGlobal['identities'] = dfGlobal['permutations']
     dfGlobal['noses'] = allNoses
     dfGlobal['centroids'] = allCentroids
 
-    saveFile(videoPaths[0], dfGlobal, 'portraits')
+    saveFile(videoPaths[0], dfGlobal, 'portraits',hdfpkl='pkl')
     return dfGlobal

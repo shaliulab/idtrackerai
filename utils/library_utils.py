@@ -1,7 +1,7 @@
 import cv2
 import sys
-sys.path.append('../utils')
-sys.path.append('../preprocessing')
+sys.path.append('IdTrackerDeep/utils')
+sys.path.append('IdTrackerDeep/preprocessing')
 
 from fragmentation import *
 from get_portraits import *
@@ -27,72 +27,149 @@ from natsort import natsorted, ns
 from os.path import isdir, isfile
 import scipy.spatial.distance as scisd
 
-def orderCenters(centers,camera): ### TODO check if this function does what you were thinking about Paco, I go back to the f****** bug...
+# def orderCenters(centers,video, transform):
+#     """
+#     orders points counterclockwise
+#     Assuming that (0,0) is in the top-left corner because the centers come from the image
+#     """
+#     #select the circle with minimal x (at most the arena can be 44deg rotated wrt its center)
+#     cents = np.asarray(centers)
+#     #centroid of the four points
+#     centroid = np.divide(np.sum(cents, axis=0), cents.shape[0])
+#     #put the centroid in the origin
+#     trCenters = np.subtract(centers, centroid)
+#     #take the signum
+#     signum = np.sign(trCenters)
+#     #compute the arctan to order
+#     arctans = [np.arctan2(s[0],s[1]) for s in signum]
+#     # just to check
+#     #signum = signum[np.argsort(arctans)]
+#     cents = cents[np.argsort(arctans)]
+#     cents = list(tuple(map(tuple,cents)))
+#     def shift(seq, n):
+#         n = n % len(seq)
+#         return seq[n:] + seq[:n]
+#     # print 'ordered centers, ', cents
+#     if video == 2: ### NOTE We assume only 4 arenas in a square so that a rotation of 180 degrees is shifting 2 positions the centers
+#         cents = shift(cents, 2)
+#     # print 'ordered centers after rotation, ', cents
+#     return cents
+
+def orderCenters(centers, video, transform):
     """
-    orders points counterclockwise
+    orders points according to the video number and the transformation ('rotation', 'translation' or 'none')
+    this is supposed to work for the following libraries in the following way:
+    TU20160413 and TU20160428:
+        transform = 'rotation' (180 degrees)
+        video1:             video2:
+            0 3                 2 1
+            1 2                 3 0
+    TU20160920
+        video1:
+            1 0
+            2 3
+    TU20170131, TU20170201 and TU20170202:
+        video1:             video2:
+            1 0     7 6         7 6     1 0
+            2 3     4 5         4 5     2 3
     Assuming that (0,0) is in the top-left corner because the centers come from the image
     """
     #select the circle with minimal x (at most the arena can be 44deg rotated wrt its center)
     cents = np.asarray(centers)
-    #centroid of the four points
-    centroid = np.divide(np.sum(cents, axis=0), cents.shape[0])
+    print 'cents, ', cents
+    #centroid of the centers
+    centroid = np.true_divide(np.sum(cents, axis=0), cents.shape[0])
+    print 'centroid, ', centroid
     #put the centroid in the origin
     trCenters = np.subtract(centers, centroid)
+    print 'trCenters, ', trCenters
     #take the signum
-    signum = np.sign(trCenters)
+    # signum = np.sign(trCenters)
+    # print 'signum, ', signum
     #compute the arctan to order
-    arctans = [np.arctan2(s[0],s[1]) for s in signum]
-    # just to check
-    #signum = signum[np.argsort(arctans)]
+    arctans = [np.arctan2(s[0],s[1]) for s in trCenters]
+    print 'arctans, ', arctans
     cents = cents[np.argsort(arctans)]
     cents = list(tuple(map(tuple,cents)))
+    print 'cents'
     def shift(seq, n):
         n = n % len(seq)
         return seq[n:] + seq[:n]
-    # print 'ordered centers, ', cents
-    if camera == 2: ### NOTE We assume only 4 arenas in a square so that a rotation of 180 degrees is shifting 2 positions the centers
+    def rearrange(cents):
+        newCents = []
+        newCents.append(cents[6])
+        newCents.append(cents[7])
+        newCents.append(cents[4])
+        newCents.append(cents[5])
+        newCents.append(cents[2])
+        newCents.append(cents[3])
+        newCents.append(cents[0])
+        newCents.append(cents[1])
+        return np.asarray(newCents)
+
+    if video == 2 and transform == 'rotation':
         cents = shift(cents, 2)
-    # print 'ordered centers after rotation, ', cents
+    if video == 2 and transform == 'translation':
+        cents = rearrange(cents)
+
     return cents
 
-# centers = [(-1,-1),(1,1),(1,-1),(-1,1)]
-# print 'centers, ', centers
-# centers = orderCenters(centers,2)
-
-def assignCenterFrame(centers,centroids,camera = 1):
+def assignCenterFrame(centers,centroids,video, transform):
     """
     centers: centers of the arenas
     centroids: centroids of the fish for a frame
     """
-    centers = orderCenters(centers,camera) # Order the centers counterclockwise
+    centers = orderCenters(centers,video,transform) # Order the centers counterclockwise
     # print 'centers ordered,', centers
     d = scisd.cdist(centers,centroids) # Compute the distance of each fish to each centroid
     identities = np.argmin(d,axis=0) # Assign identity by the centroid to which they are closer
 
-    return identities
+    return identities, centers
 
-## Unit test
-# centers = [(1,1),(-1,1),(-1,-1),(1,-1)]
+# Unit test
+# centers = [(1,1),(2,2),(2,1),(1,2)] # centers of the petri dishes
 # print 'centers, ', centers
-# centroids = [(-1,1),(1,1),(-1,-1),(1,-1)]
+# centroids = [(1,1),(2,1),(1,2),(2,2)] # centroids of the animals in the frame
 # print 'centroids, ', centroids
-# identities = assignCenterFrame(centers,centroids,2)
+# identities, orderedCenters = assignCenterFrame(centers,centroids,video = 2, transform = 'rotation')
 # print identities
+#
+# centers = [(1,1),(2,2),(2,1),(1,2),(4,1),(4,2),(5,1),(5,2)] # centers of the petri dishes
+# print 'centers, ', centers
+# centroids = [(1,1),(2,1),(1,2),(2,2),(4,1),(4,2),(5,2),(5,1)] # centroids of the animals in the frame
+# print 'centroids, ', centroids
+# identities, orderedCenters = assignCenterFrame(centers,centroids,video = 2, transform = 'translation')
+# print identities
+#
+# plt.figure()
+# ax = plt.subplot(111)
+# ax.axis('equal')
+# for i, (x,y) in enumerate(centers):
+#     petridish = plt.Circle((x, y), 0.4, color='k', fill=False)
+#     ax.add_patch(petridish)
+#     ax.text(x-0.1,y-0.1,'c' + str(i), fontsize = 14, fontweight = 'bold', ha = 'center' , va = 'center')
+#     ax.text(orderedCenters[i][0]+0.1,orderedCenters[i][1]-0.1,'p' + str(i),fontsize = 14, fontweight = 'bold', color = 'r', ha = 'center' , va = 'center')
+#     ax.text(centroids[i][0]-0.1,centroids[i][1]+0.1,'b' + str(i),fontsize = 14, fontweight = 'bold', color = 'b', ha = 'center' , va = 'center')
+#     ax.text(centroids[i][0]+0.1,centroids[i][1]+0.1,'i' + str(identities[i]),fontsize = 14, fontweight = 'bold', color = 'g', ha = 'center' , va = 'center')
+# ax.set_xlim((0,6))
+# ax.set_ylim((0,3))
+# ax.invert_yaxis()
+# plt.show()
 
 
-def assignCenterAndSave(path,centers, camera):
+def assignCenterAndSave(path,centers, video, transform):
     df, _ = loadFile(path, 'segmentation', time=0)
     dfPermutations = pd.DataFrame(index=df.index,columns={'permutation'})
     for centroids, index in zip(df.centroids,df.index):
-        dfPermutations.loc[index,'permutation'] = assignCenterFrame(centers,centroids,camera)
+        dfPermutations.loc[index,'permutation'] = assignCenterFrame(centers,centroids,video,transform)
 
     df['permutation'] = dfPermutations
     saveFile(path, df, 'segment', time = 0)
 
-def assignCenters(paths,centers,camera = 1):
+def assignCenters(paths,centers,video = 1,transform = 'none'):
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    Parallel(n_jobs=num_cores)(delayed(assignCenterAndSave)(path, centers, camera) for path in paths)
+    Parallel(n_jobs=num_cores)(delayed(assignCenterAndSave)(path, centers, video, transform) for path in paths)
 
 def portraitsToIMDB(portraits, numAnimalsInGroup, groupNum):
     images = np.asarray(flatten([port for port in portraits.loc[:,'images'] if len(port) == numAnimalsInGroup]))
@@ -125,7 +202,7 @@ def retrieveInfoLib(libPath, preprocessing = "curvature_portrait"):
 
     # get the list of subfolders
     subDirs = [d for d in os.listdir(libPath) if isdir(libPath +'/'+ d)]
-    subDirs = [subDir for subDir in subDirs if 'group' in subDir]
+    subDirs = [subDir for subDir in subDirs if 'group' in subDir or 'Group' in subDir and 'prep' not in subDir]
     subDirs = natsorted(subDirs, alg=ns.IGNORECASE)
 
     return ageInDpf, preprocessing, subDirs

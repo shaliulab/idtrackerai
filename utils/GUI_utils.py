@@ -52,7 +52,7 @@ def getMask(im):
             c = coordinates[-1]
             p = patches.Rectangle((c[0], c[1]), c[2]-c[0], c[3]-c[1],alpha=0.4)
             p1 = patches.Rectangle((c[0], c[1]), c[2]-c[0], c[3]-c[1],facecolor="white")
-            mask_ax.add_patch(p1)
+            # mask_ax.add_patch(p1)
             current_ax.add_patch(p)
             plt.draw()
             coord = np.asarray(c).astype('int')
@@ -67,7 +67,7 @@ def getMask(im):
             p = patches.Ellipse((c[0]+w/2, c[1]+h/2), w, h, angle=0.0, alpha=0.4)
             p1 = patches.Ellipse((c[0]+w/2, c[1]+h/2), w, h, angle=0.0,facecolor="white")
             current_ax.add_patch(p)
-            mask_ax.add_patch(p1)
+            # mask_ax.add_patch(p1)
             plt.draw()
             coord = np.asarray(c).astype('int')
             center = ((coord[2]+coord[0])/2,(coord[3]+coord[1])/2)
@@ -80,17 +80,26 @@ def getMask(im):
     centers = []
     w, h = pyautogui.size()
 
-    fig, ax_arr = plt.subplots(1,2, figsize=(w/96,h/96))
+    fig, ax_arr = plt.subplots(1,1, figsize=(w/96,h/96))
     fig.suptitle('Select mask')
-    current_ax = ax_arr[0]
-    mask_ax = ax_arr[1]
+    current_ax = ax_arr
     current_ax.set_title('Drag on the image, adjust,\n press r, or c to get a rectangular or a circular ROI')
-    mask_ax.set_title('Visualise the mask')
     sns.despine(fig=fig, top=True, right=True, left=True, bottom=True)
     current_ax.imshow(im, cmap = 'gray')
     mask = np.zeros_like(im)
     maskout = np.zeros_like(im,dtype='uint8')
-    mask_ax.imshow(mask, cmap = 'gray')
+
+    # fig, ax_arr = plt.subplots(1,2, figsize=(w/96,h/96))
+    # fig.suptitle('Select mask')
+    # current_ax = ax_arr[0]
+    # mask_ax = ax_arr[1]
+    # current_ax.set_title('Drag on the image, adjust,\n press r, or c to get a rectangular or a circular ROI')
+    # mask_ax.set_title('Visualise the mask')
+    # sns.despine(fig=fig, top=True, right=True, left=True, bottom=True)
+    # current_ax.imshow(im, cmap = 'gray')
+    # mask = np.zeros_like(im)
+    # maskout = np.zeros_like(im,dtype='uint8')
+    # mask_ax.imshow(mask, cmap = 'gray')
 
     toggle_selector.RS = RectangleSelector(current_ax, line_select_callback,
                                            drawtype='box', useblit=True,
@@ -180,15 +189,16 @@ def SegmentationPreview(path, width, height, bkg, mask, useBkg, preprocParams,  
         numPortraits = numGoodContours + numBlackPortraits
 
         j = 0
-        sizePortrait = 32
+        portraitSize = 32
         portraitsMat = []
         rowPortrait = []
         while j < numPortraits:
             if j < numGoodContours:
                 portrait,_ = getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j])
+                portrait = cropPortrait(portrait,portraitSize,shift = (0,0))
                 portrait = np.squeeze(portrait)
             else:
-                portrait = np.zeros((sizePortrait,sizePortrait),dtype='uint8')
+                portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
             rowPortrait.append(portrait)
             if (j+1) % numColumns == 0:
                 portraitsMat.append(np.hstack(rowPortrait))

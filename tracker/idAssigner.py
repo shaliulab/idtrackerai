@@ -5,6 +5,7 @@ sys.path.append('IdTrackerDeep/CNN')
 from py_utils import *
 from video_utils import *
 from idTrainerTracker import *
+from cnn_utils import *
 
 import time
 import numpy as np
@@ -29,8 +30,8 @@ import datetime
 
 def DataIdAssignation(portraits, indivFragments):
     portraitsFrag = np.asarray(portraits.loc[:,'images'].tolist())
-    height = 32
-    width = 32
+    height = 36
+    width = 36
     imsize = (1, height, width)
     portsFragments = []
     # print 'indivFragments', indivFragments
@@ -41,9 +42,15 @@ def DataIdAssignation(portraits, indivFragments):
         for (frame, column) in indivFragment:
             portsFragment.append(portraitsFrag[frame][column])
 
-        portsFragments.append(np.reshape(np.asarray(portsFragment), [len(indivFragment),height*width]))
+        portsFragments.append(np.asarray(portsFragment))
     # print portsFragments
-    return imsize, np.vstack(portsFragments)
+    images = np.vstack(portsFragments)
+    images = np.expand_dims(images,axis=1)
+    images = cropImages(images,32)
+    imsize = (1,32,32)
+    resolution = np.prod(imsize)
+    X_assignation = np.reshape(images, [len(images), resolution])
+    return imsize, X_assignation
 
 
 def get_batch(batchNum, iter_per_epoch, indices, images_pl, keep_prob_pl, images, keep_prob):

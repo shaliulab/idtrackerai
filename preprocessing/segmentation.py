@@ -82,6 +82,8 @@ def segment(videoPaths,preprocParams, mask, centers, useBkg, bkg, EQ):
 
 
     print 'videoPaths here, ', videoPaths
+    # num_cores = multiprocessing.cpu_count()
+    num_cores = 4
     if len(videoPaths) == 1:
         print '**************************************'
         print 'There is only one path, segmenting by frame indices'
@@ -94,8 +96,7 @@ def segment(videoPaths,preprocParams, mask, centers, useBkg, bkg, EQ):
         endingFrames = [frameIndices[frameIndices['segment']==seg].index[-1] for seg in segments]
         segmFramesIndices = zip(startingFrames,endingFrames)
         ''' Spliting frames list into sublists '''
-        num_cores = multiprocessing.cpu_count()
-        # num_cores = 1
+
         segmFramesIndicesSubLists = [segmFramesIndices[i:i+num_cores] for i in range(0,len(segmFramesIndices),num_cores)]
         print 'Entering to the parallel loop...\n'
         allSegments = []
@@ -109,8 +110,6 @@ def segment(videoPaths,preprocParams, mask, centers, useBkg, bkg, EQ):
 
     else:
         ''' splitting videoPaths list into sublists '''
-        num_cores = multiprocessing.cpu_count()
-        #num_cores = 1
         pathsSubLists = [videoPaths[i:i+num_cores] for i in range(0,len(videoPaths),num_cores)]
         ''' Entering loop for segmentation of the video '''
         print 'Entering to the parallel loop...\n'
