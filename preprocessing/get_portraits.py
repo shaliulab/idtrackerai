@@ -101,7 +101,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None,px_nose_above_center = 9
 
     # Calculating nose coordinates in the full frame reference
     contour_cnt = FishContour.fromcv2contour(cnt)
-    noseFull, rot_ang, _ = contour_cnt.find_nose_and_orientation()
+    noseFull, rot_ang, head_centroid_full = contour_cnt.find_nose_and_orientation()
 
     # Calculating nose coordinates in miniframe reference
     nose = full2miniframe(noseFull,bb) #Float
@@ -124,7 +124,7 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None,px_nose_above_center = 9
     #    print portrait.shape
     #    raise ValueError('This portrait do not have 32x32 pixels. Changes in light during the video could deteriorate the blobs: try and rais the threshold in the preprocessing parametersm, and run segmentation and fragmentation again.')
 
-    return portrait, tuple(noseFull.astype('int'))
+    return portrait, tuple(noseFull.astype('int')), tuple(head_centroid_full.astype('int'))
 
 def reaper(videoPath, frameIndices):
     # only function called from idTrackerDeepGUI
@@ -146,11 +146,13 @@ def reaper(videoPath, frameIndices):
     AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images'])
     AllNoses = pd.DataFrame(index = segmentIndices, columns= ['noses'])
     AllCentroids= pd.DataFrame(index = segmentIndices, columns= ['centroids'])
+    AllHeadCentroids = pd.DataFrame(index = segmentIndices, columns= ['head_centroids'])
 
     counter = 0
     while counter < len(miniframes):
         portraits = []
         noses = []
+        head_centroids = []
         bbs = boundingboxes[counter]
         minif = miniframes[counter]
         cnts = contours[counter]
@@ -160,11 +162,12 @@ def reaper(videoPath, frameIndices):
             ### Uncomment to plot
             # cv2.imshow('frame', miniframe)
             # cv2.waitKey()
-            portrait, nose_pixels = getPortrait(miniframe,cnts[j],bbs[j],bkgSamps[j],j)
+            portrait, nose_pixels, head_centroid_pixels = getPortrait(miniframe,cnts[j],bbs[j],bkgSamps[j],j)
 
             # get all the heads in a single list
             portraits.append(portrait)
             noses.append(nose_pixels)
+            head_centroids.append(head_centroid_pixels)
         ### UNCOMMENT TO PLOT ##################################################
         #    cv2.imshow(str(j),portrait)
         #
@@ -175,10 +178,11 @@ def reaper(videoPath, frameIndices):
 
         AllPortraits.set_value(segmentIndices[counter], 'images', portraits)
         AllNoses.set_value(segmentIndices[counter], 'noses', noses)
+        AllHeadCentroids.set_value(segmentIndices[counter], 'head_centroids', head_centroids)
         AllCentroids.set_value(segmentIndices[counter], 'centroids', centroids)
         counter += 1
     print 'you just reaped', videoPath
-    return AllPortraits, AllNoses, AllCentroids
+    return AllPortraits, AllNoses, AllCentroids, AllHeadCentroids
 
 def portrait(videoPaths, dfGlobal):
     frameIndices = loadFile(videoPaths[0], 'frameIndices')
@@ -188,10 +192,13 @@ def portrait(videoPaths, dfGlobal):
     allPortraits = [t[0] for t in allPortraitsAndNoses]
     allNoses = [t[1] for t in allPortraitsAndNoses]
     allCentroids = [t[2] for t in allPortraitsAndNoses]
+    allHeadCentroids = [t[3] for t in allPortraitsAndNoses]
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)
     allNoses = pd.concat(allNoses)
     allNoses = allNoses.sort_index(axis=0, ascending=True)
+    allHeadCentroids = pd.concat(allHeadCentroids)
+    allHeadCentroids = allHeadCentroids.sort_index(axis=0, ascending=True)
     allCentroids = pd.concat(allCentroids)
     allCentroids = allCentroids.sort_index(axis=0, ascending=True)
 
@@ -201,6 +208,7 @@ def portrait(videoPaths, dfGlobal):
     dfGlobal['images'] = allPortraits
     dfGlobal['identities'] = dfGlobal['permutations']
     dfGlobal['noses'] = allNoses
+    dfGlobal['head_centroids'] = allHeadCentroids
     dfGlobal['centroids'] = allCentroids
 
     saveFile(videoPaths[0], dfGlobal, 'portraits')
