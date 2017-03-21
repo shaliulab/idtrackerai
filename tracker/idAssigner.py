@@ -523,7 +523,7 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
     # portraits['identities'] = idLogP2FragAllVideo.tolist()
     # saveFile(videoPath,portraits,'portraits')
 
-    pickle.dump( IdsStatistics , open( ckpt_dir + "/statistics.pkl", "wb" ) )
+    # pickle.dump( IdsStatistics , open( ckpt_dir + "/statistics.pkl", "wb" ) )
     pickle.dump( IdsStatistics , open( sessionPath + "/statistics.pkl", "wb" ) )
 
     return IdsStatistics #, portraits

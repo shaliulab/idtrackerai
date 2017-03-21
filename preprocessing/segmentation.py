@@ -45,6 +45,8 @@ def segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, max
         # origFrame = frameGray.copy()
         # print avIntensity
         avIntensity = np.float32(np.mean(frameGray))
+        # print avIntensity
+        # print frameGray.shape
         segmentedFrame = segmentVideo(frameGray/avIntensity, minThreshold, maxThreshold, bkg, mask, useBkg)
         # segmentedFrameCopy = segmentedFrame.copy()
         # Find contours in the segmented image

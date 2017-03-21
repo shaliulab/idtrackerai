@@ -76,22 +76,22 @@ def orderCenters(centers, video, transform):
     """
     #select the circle with minimal x (at most the arena can be 44deg rotated wrt its center)
     cents = np.asarray(centers)
-    print 'cents, ', cents
+    # print 'cents, ', cents
     #centroid of the centers
     centroid = np.true_divide(np.sum(cents, axis=0), cents.shape[0])
-    print 'centroid, ', centroid
+    # print 'centroid, ', centroid
     #put the centroid in the origin
-    trCenters = np.subtract(centers, centroid)
-    print 'trCenters, ', trCenters
+    trCenters = np.subtract(cents, centroid)
+    # print 'trCenters, ', trCenters
     #take the signum
     # signum = np.sign(trCenters)
     # print 'signum, ', signum
     #compute the arctan to order
     arctans = [np.arctan2(s[0],s[1]) for s in trCenters]
-    print 'arctans, ', arctans
+    # print 'arctans, ', arctans
     cents = cents[np.argsort(arctans)]
     cents = list(tuple(map(tuple,cents)))
-    print 'cents'
+    # print 'cents'
     def shift(seq, n):
         n = n % len(seq)
         return seq[n:] + seq[:n]
@@ -108,8 +108,12 @@ def orderCenters(centers, video, transform):
         return np.asarray(newCents)
 
     if video == 2 and transform == 'rotation':
+        # print 'video, ', video
+        # print 'applying ', transform
         cents = shift(cents, 2)
     if video == 2 and transform == 'translation':
+        # print 'video, ', video
+        # print 'applying ', transform
         cents = rearrange(cents)
 
     return cents
@@ -124,7 +128,7 @@ def assignCenterFrame(centers,centroids,video, transform):
     d = scisd.cdist(centers,centroids) # Compute the distance of each fish to each centroid
     identities = np.argmin(d,axis=0) # Assign identity by the centroid to which they are closer
 
-    return identities, centers
+    return identities #, centers
 
 # Unit test
 # centers = [(1,1),(2,2),(2,1),(1,2)] # centers of the petri dishes
@@ -158,18 +162,32 @@ def assignCenterFrame(centers,centroids,video, transform):
 
 
 def assignCenterAndSave(path,centers, video, transform):
-    df, _ = loadFile(path, 'segmentation', time=0)
-    dfPermutations = pd.DataFrame(index=df.index,columns={'permutation'})
-    for centroids, index in zip(df.centroids,df.index):
-        dfPermutations.loc[index,'permutation'] = assignCenterFrame(centers,centroids,video,transform)
+    df, numSegment = loadFile(path, 'segmentation')
+    dfPermutations = pd.DataFrame(index=df.index,columns={'permutations'})
+    frameIndices = loadFile(path, 'frameIndices')
+    segmentIndices = frameIndices.loc[frameIndices.loc[:,'segment']==int(numSegment)]
+    segmentIndices = segmentIndices.index.tolist()
+    dfGlobal = pd.DataFrame(index = segmentIndices,columns={'identities','permutations','centroids','areas'})
+    for i, (centroids, index) in enumerate(zip(df.centroids,df.index)):
+        dfPermutations.loc[index,'permutations'] = assignCenterFrame(centers,centroids,video,transform)
+        dfGlobal.loc[segmentIndices[i],'identities'] = dfPermutations.loc[index,'permutations']
+        dfGlobal.loc[segmentIndices[i],'permutations'] = dfPermutations.loc[index,'permutations']
+        dfGlobal.loc[segmentIndices[i],'centroids'] = centroids
+        dfGlobal.loc[segmentIndices[i],'areas'] = df.loc[index,'areas']
 
-    df['permutation'] = dfPermutations
-    saveFile(path, df, 'segment', time = 0)
+    df['permutations'] = dfPermutations['permutations']
+    saveFile(path, df, 'segment')
+    return dfGlobal
 
 def assignCenters(paths,centers,video = 1,transform = 'none'):
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    Parallel(n_jobs=num_cores)(delayed(assignCenterAndSave)(path, centers, video, transform) for path in paths)
+
+    outDf = Parallel(n_jobs=num_cores)(delayed(assignCenterAndSave)(path, centers, video, transform) for path in paths)
+
+    dfGlobal = pd.concat(outDf)
+    dfGlobal = dfGlobal.sort_index(axis=0,ascending=True)
+    return dfGlobal
 
 def portraitsToIMDB(portraits, numAnimalsInGroup, groupNum):
     images = np.asarray(flatten([port for port in portraits.loc[:,'images'] if len(port) == numAnimalsInGroup]))
@@ -199,10 +217,11 @@ def newMiniframesToIMDB(newMiniframes):
 def retrieveInfoLib(libPath, preprocessing = "curvature_portrait"):
     #the folder's name is the age of the individuals
     ageInDpf = os.path.split(libPath)[-1]
+    strain = libPath.split('/')[-2]
 
     # get the list of subfolders
     subDirs = [d for d in os.listdir(libPath) if isdir(libPath +'/'+ d)]
     subDirs = [subDir for subDir in subDirs if 'group' in subDir or 'Group' in subDir and 'prep' not in subDir]
     subDirs = natsorted(subDirs, alg=ns.IGNORECASE)
 
-    return ageInDpf, preprocessing, subDirs
+    return ageInDpf, preprocessing, subDirs, strain

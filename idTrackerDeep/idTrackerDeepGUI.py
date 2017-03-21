@@ -80,7 +80,7 @@ if __name__ == '__main__':
         bkg = checkBkg(videoPaths, useBkg, usePreviousBkg, 0, width, height)
 
         ''' Selection/loading preprocessing parameters '''
-        preprocParams = selectPreprocParams(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg)
+        preprocParams = selectPreprocParams(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg,frameIndices)
         print 'The video will be preprocessed according to the following parameters: ', preprocParams
 
         ''' Loading preprocessing image '''

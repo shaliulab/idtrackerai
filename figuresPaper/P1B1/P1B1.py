@@ -22,12 +22,6 @@ class P1B1(object):
 
     def __init__(self, job = 1, IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5', repList = '1', groupSizesCNN = '0'):
 
-        def getIMDBNameFromPath(IMDBPath):
-            filename, extension = os.path.splitext(IMDBPath)
-            IMDBName = '_'.join(filename.split('/')[-1].split('_')[:-1])
-
-            return IMDBName
-
         def initializeDicts(self):
             # Main loop
             self.IndivIndices = {}
@@ -181,7 +175,7 @@ class P1B1(object):
             self.valAccs[n,g,gCNN,r] = lossAccDict['valAcc'][-1]
 
         # Load IMDB
-        _, images, labels, self.imSize, self.numIndivImdb, self.numImagesPerIndiv = loadIMDB(self.IMDBName)
+        _, images, labels, self.imSize, self.numIndivImdb, self.numImagesPerIndiv = loadIMDB(self.IMDBPath)
 
         # Training parameters
         self.channels, self.width, self.height = self.imSize
