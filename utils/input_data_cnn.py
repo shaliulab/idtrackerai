@@ -78,11 +78,13 @@ def matToH5(pathToDatabase):
 # [matToH5('../matlabexports/' + m) for m in matlabImdb]
 
 ''' loadDataBase '''
-def loadIMDB(IMDBname):
+def loadIMDB(IMDBPath):
     # check if the train database exists, and load it!
+    IMDBname = getIMDBNameFromPath(IMDBPath)
+    IMDBdir = os.path.dirname(IMDBPath)
     print '\nloading %s...' %IMDBname
-    checkDatabase(IMDBname)
-    with h5py.File("IdTrackerDeep/data/" + IMDBname + '_%i.hdf5', 'r', driver='family') as databaseTrain:
+    # checkDatabase(IMDBname)
+    with h5py.File(IMDBdir + "/" + IMDBname + '_%i.hdf5', 'r', driver='family') as databaseTrain:
         [databaseTrainInfo, imagesTrain, labelsTrain] = getVarAttrFromHdf5(databaseTrain)
         # Normalizations of images
         imagesTrain = imagesTrain/255.
@@ -473,3 +475,17 @@ def dataHelper0(path, num_train, num_test, num_valid, ckpt_folder):
     Y_test = dense_to_one_hot(y_test, n_classes=numIndiv)
 
     return numIndiv, imsize, X_train, X_valid, X_test, Y_train, Y_valid, Y_test
+
+def getIMDBNameFromPath(IMDBPath):
+    filename, extension = os.path.splitext(IMDBPath)
+    IMDBName = '_'.join(filename.split('/')[-1].split('_')[:-1])
+
+    return IMDBName
+
+def getIMDBInfoFromName(IMDBName):
+
+    strain = IMDBName.split('_')[0]
+    age = IMDBName.split('_')[1]
+    numIndiv = int(IMDBName.split('_')[2][:-5])
+    numImPerIndiv = int(IMDBName.split('_')[3][:-8])
+    return strain, age, numIndiv, numImPerIndiv

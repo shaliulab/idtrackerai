@@ -158,9 +158,9 @@ def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = '', nSegme
         if nSegment == None:
             nSegment = filename.split('_')[-1]# and before the number of the segment
         if hdfpkl == 'hdf':
-            filename = 'segm_' + nSegment + '.hdf5'
+            filename = 'segm_' + nSegment + '.pkl'
             pathToSave = folder + subfolder + filename
-            variabletoSave.to_hdf(pathToSave,name)
+            variabletoSave.to_pickle(pathToSave)
         elif hdfpkl == 'pkl':
             filename = 'segm_' + nSegment + '.pkl'
             pathToSave = folder + subfolder+ filename
@@ -172,13 +172,13 @@ def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = '', nSegme
     else:
         subfolder = '/preprocessing/'
         if hdfpkl == 'hdf':
-            filename = name + '.hdf5'
+            filename = name + '.pkl'
             if isinstance(variabletoSave, dict):
                 variabletoSave = pd.DataFrame.from_dict(variabletoSave,orient='index')
             elif not isinstance(variabletoSave, pd.DataFrame):
                 variabletoSave = pd.DataFrame(variabletoSave)
             pathToSave = folder + subfolder + filename
-            variabletoSave.to_hdf(pathToSave,name)
+            variabletoSave.to_pickle(pathToSave)
         elif hdfpkl == 'pkl':
             filename = name + '.pkl'
             # filename = os.path.relpath(filename)
@@ -201,8 +201,8 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
         subfolder = '/preprocessing/segmentation/'
         nSegment = filename.split('_')[-1]
         if hdfpkl == 'hdf':
-            filename = 'segm_' + nSegment + '.hdf5'
-            return pd.read_hdf(folder + subfolder + filename ), nSegment
+            filename = 'segm_' + nSegment + '.pkl'
+            return pd.read_pickle(folder + subfolder + filename ), nSegment
         elif hdfpkl == 'pkl':
             filename = 'segm_' + nSegment + '.pkl'
             return pickle.load(open(folder + subfolder + filename) ,'rb'), nSegmen
@@ -215,8 +215,8 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
     else:
         subfolder = '/preprocessing/'
         if hdfpkl == 'hdf':
-            filename = name + '.hdf5'
-            return pd.read_hdf(folder + subfolder + filename )
+            filename = name + '.pkl'
+            return pd.read_pickle(folder + subfolder + filename )
         elif hdfpkl == 'pkl':
             filename = name + '.pkl'
             return pickle.load(open(folder + subfolder + filename,'rb') )
@@ -245,7 +245,7 @@ def getExistentFiles(path, listNames, segmPaths):
             segDirname = srcSubFolder + name
             if os.path.isdir(segDirname):
                 print 'Segmentation folder exists'
-                numSegmentedVideos = len(glob.glob1(segDirname,"*.hdf5"))
+                numSegmentedVideos = len(glob.glob1(segDirname,"*.pkl"))
                 print
                 if numSegmentedVideos == numSegments:
                     print 'The number of segments and videos is the same'

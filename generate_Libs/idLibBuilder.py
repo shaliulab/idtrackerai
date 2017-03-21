@@ -1,7 +1,19 @@
-import cv2
+# Import standard libraries
+import os
+from os.path import isdir, isfile
 import sys
-sys.path.append('../utils')
-sys.path.append('../preprocessing')
+import glob
+import numpy as np
+import cPickle as pickle
+
+# Import third party libraries
+import cv2
+from pprint import pprint
+import h5py
+
+# Import application/library specifics
+sys.path.append('IdTrackerDeep/utils')
+sys.path.append('IdTrackerDeep/preprocessing')
 
 from segmentation import *
 from fragmentation import *
@@ -11,28 +23,6 @@ from py_utils import *
 from GUI_utils import *
 from library_utils import *
 
-import time
-import h5py
-import numpy as np
-from matplotlib import pyplot as plt
-from Tkinter import *
-import tkMessageBox
-import argparse
-import os
-import glob
-import pandas as pd
-import time
-import re
-from joblib import Parallel, delayed
-import multiprocessing
-import itertools
-import cPickle as pickle
-import math
-from natsort import natsorted, ns
-from os.path import isdir, isfile
-import scipy.spatial.distance as scisd
-from pprint import pprint
-
 if __name__ == '__main__':
     cv2.namedWindow('Bars') #FIXME If we do not create the "Bars" window here we have the "Bad window error"...
 
@@ -41,8 +31,10 @@ if __name__ == '__main__':
     ************************************************************************ '''
     initialDir = '/media/lab/idZebLib_TU20160413_34_36dpf/idZebLib/TU20160413/36dpf'
     libPath = selectDir(initialDir)
-    # libPath = '/home/lab/Desktop/TF_models/IdTracker/data/library/25dpf'
-    ageInDpf, preprocessing, subDirs = retrieveInfoLib(libPath, preprocessing = "curvaturePortrait")
+
+    ageInDpf, preprocessing, subDirs, strain = retrieveInfoLib(libPath, preprocessing = "curvaturePortrait")
+    print 'ageInDpf, ', ageInDpf
+    print 'strain, ', strain
     group = 0
     imagesIMDB = []
     labelsIMDB = []
@@ -52,6 +44,7 @@ if __name__ == '__main__':
     setParams = getInput('Set preprocessing parameters','Do you want to set the parameters for the preprocessing of each video? ([y]/n)')
     runPreproc = getInput('Run preprocessing','Do you want to run the preprocessing? ([y]/n)')
     buildLib = getInput('Build library','Do you want to build the library? ([y]/n)')
+    print subDirs
     for i, subDir in enumerate(subDirs):
         print '-----------------------'
         print 'preprocessing ', subDir
@@ -59,135 +52,121 @@ if __name__ == '__main__':
         ''' Path to video/s '''
         path = libPath + '/' + subDir
         extensions = ['.avi', '.mp4']
-        # videoPath = natural_sort([v for v in os.listdir(path) if isfile(path +'/'+ v) if '.avi' in v])[0]
         videoPath = natural_sort([v for v in os.listdir(path) if isfile(path +'/'+ v) if any( ext in v for ext in extensions)])[0]
         videoPath = path + '/' + videoPath
         videoPaths = scanFolder(videoPath)
+        createFolder(videoPath)
+        frameIndices, segmPaths = getSegmPaths(videoPaths)
 
         ''' ************************************************************************
         Set preprocessing parameters
         ************************************************************************ '''
         if setParams == 'y' or setParams == '':
-            skipSubDir = getInput('Skip subdirectory','Do you want to set parameters for this subDir ('+ subDir +')? (Y/n)')
-            if skipSubDir == 'n':
+            setThisPrepParams = getInput('Set preprocessing parameters','Do you want to set parameters for this subDir ('+ subDir +')? ([y]/n)')
+            print 'setThisPrepParams', setThisPrepParams
+            if setThisPrepParams == 'n':
                 continue
-            elif skipSubDir == 'y' or skipSubDir == '':
+            elif setThisPrepParams == 'y' or setThisPrepParams == '':
                 ''' ************************************************************************
                 GUI to select the preprocessing parameters
                 *************************************************************************'''
                 prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to do BKG or select a ROI?  ')
                 useBkg = prepOpts['bkg']
                 useROI =  prepOpts['ROI']
-                useBkg = 0
 
                 #Check for preexistent files generated during a previous session. If they
                 #exist and one wants to keep them they will be loaded
-                processesList = ['ROI', 'bkg', 'preprocparams', 'segmentation','fragmentation','portraits']
-                processesDict, srcSubFolder = copyExistentFiles(videoPath, processesList, time=1)
-                print processesDict
-                loadPreviousDict = selectOptions(processesList, processesDict, text='Already processed steps in this video \n (check to load from ' + srcSubFolder + ')')
-                print loadPreviousDict
+                processesList = ['ROI', 'bkg', 'preprocparams', 'segmentation','fragments','portraits']
+                existentFiles, srcSubFolder = getExistentFiles(videoPath, processesList, segmPaths)
+                print 'List of processes finished, ', existentFiles
+                print '\nSelecting files to load from previous session...'
+                loadPreviousDict = selectOptions(processesList, existentFiles, text='Steps already processed in this video \n (check to load from ' + srcSubFolder + ')')
 
-                usePreviousBkg = loadPreviousDict['bkg']
                 usePreviousROI = loadPreviousDict['ROI']
+                usePreviousBkg = loadPreviousDict['bkg']
+                usePreviousPrecParams = loadPreviousDict['preprocparams']
+                print 'usePreviousROI set to ', usePreviousROI
+                print 'usePreviousBkg set to ', usePreviousBkg
+                print 'usePreviousPrecParams set to ', usePreviousPrecParams
 
-                ''' ROI selection and bkg loading'''
-                if i != 0 and not loadPreviousDict['preprocparams']:
-                    cv2.namedWindow('Bars')
-                videoPaths = scanFolder(videoPath)
-                numSegment = 0
-                width, height, bkg, mask, centers = ROISelectorPreview(videoPaths, useBkg, usePreviousBkg, useROI, usePreviousROI)
+                ''' ROI selection/loading '''
+                width, height, mask, centers = ROISelectorPreview(videoPaths, useROI, usePreviousROI, numSegment=0)
+                ''' BKG computation/loading '''
+                bkg = checkBkg(videoPaths, useBkg, usePreviousBkg, 0, width, height)
 
-                ''' Segmentation inspection '''
-                if not loadPreviousDict['preprocparams']:
-                    print 'Entering segmentation preview'
-                    SegmentationPreview(videoPath, width, height, bkg, mask, useBkg)
+                ''' Selection/loading preprocessing parameters '''
+                preprocParams = selectPreprocParams(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg, frameIndices)
+                print 'The video will be preprocessed according to the following parameters: ', preprocParams
 
-                    cv2.waitKey(1)
-                    cv2.destroyAllWindows()
-                    cv2.waitKey(1)
-                    numSegment = getInput('Segment number','Type the segment to be visualized')
-
-                    end = False
-                    while not end:
-                        numSegment = getInput('Segment number','Type the segment to be visualized')
-                        if numSegment == 'q' or numSegment == 'quit' or numSegment == 'exit':
-                            end = True
-                        else:
-                            end = False
-                            path = videoPaths[int(numSegment)]
-                            preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
-                            preprocParams = preprocParams.to_dict()[0]
-                            numAnimalsInGroup = preprocParams['numAnimals']
-                            minThreshold = preprocParams['minThreshold']
-                            maxThreshold = preprocParams['maxThreshold']
-                            minArea = preprocParams['minArea']
-                            maxArea = preprocParams['maxArea']
-                            mask = loadFile(videoPaths[0], 'ROI',0)
-                            mask = np.asarray(mask)
-                            centers= loadFile(videoPaths[0], 'centers',0)
-                            centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
-                            EQ = 0
-                            bkg = checkBkg(useBkg, usePreviousBkg, videoPaths, EQ, width, height)
-                            cv2.namedWindow('Bars')
-                            SegmentationPreview(path, width, height, bkg, mask, useBkg, minArea, maxArea, minThreshold, maxThreshold)
-                        cv2.waitKey(1)
-                        cv2.destroyAllWindows()
-                        cv2.waitKey(1)
-                else:
-                    preprocParams = loadFile(videoPaths[0], 'preprocparams',0)
-                    preprocParams = preprocParams.to_dict()[0]
-                    numAnimalsInGroup = preprocParams['numAnimals']
-                    minThreshold = preprocParams['minThreshold']
-                    maxThreshold = preprocParams['maxThreshold']
-                    minArea = preprocParams['minArea']
-                    maxArea = preprocParams['maxArea']
+                cv2.namedWindow('Bars')
 
         ''' ************************************************************************
         Preprocessing
         ************************************************************************ '''
         if runPreproc == 'y' or runPreproc == '':
+            processesList = ['ROI', 'bkg', 'preprocparams', 'segmentation','fragmentation','portraits']
+            loadPreviousDict, srcSubFolder = getExistentFiles(videoPath, processesList, segmPaths)
+            useBkg = int(loadPreviousDict['bkg'])
+            useROI = loadPreviousDict['ROI']
+            preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl='pkl')
+            numAnimalsInGroup = preprocParams['numAnimals']
+
             ''' ************************************************************************
             Segmentation
             ************************************************************************ '''
             cv2.waitKey(1)
             cv2.destroyAllWindows()
             cv2.waitKey(1)
-            if not loadPreviousDict['segmentation']:
-                preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
-                preprocParams = preprocParams.to_dict()[0]
-                numAnimalsInGroup = preprocParams['numAnimals']
-                minThreshold = preprocParams['minThreshold']
-                maxThreshold = preprocParams['maxThreshold']
-                minArea = preprocParams['minArea']
-                maxArea = preprocParams['maxArea']
+            centers = loadFile(videoPaths[0], 'centers')
+            mask = np.asarray(loadFile(videoPaths[0], 'ROI'))
+            if useBkg:
+                bkg = loadFile(videoPaths[0], 'bkg', hdfpkl='pkl')
+            else:
+                bkg = None
+            preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
+            if not int(loadPreviousDict['segmentation']):
                 EQ = 0
-                print preprocParams
-                segment(videoPaths, numAnimalsInGroup,
-                            mask, centers, useBkg, bkg, EQ,
-                            minThreshold, maxThreshold,
-                            minArea, maxArea)
+                print 'The preprocessing parameters dictionary loaded is ', preprocParams
+                segment(videoPaths, preprocParams, mask, centers, useBkg, bkg, EQ)
 
             ''' ************************************************************************
             Fragmentation
             *************************************************************************'''
             ''' Group and number of individuals '''
             # We assign the group number in a iterative way so that if one group is missing the labels of the IMDB are still iterative
-            if 'camera' in subDir: ###NOTE this only works if the subDirs list alternates between camera 1 and 2 every time
-                camera = int(subDir.split('_')[-1])
-                if camera == 1 and i != 0:
+            nameElements = subDir.split('_')
+            if 'camera' in nameElements: ###NOTE this only works if the subDirs list alternates between camera 1 and 2 every time
+                transform = 'rotation'
+                video = int(nameElements[3])
+                if video == 1 and i != 0:
                     group += 1
-                if camera == 2:
+                if video == 2:
                     numIndivIMDB += numAnimalsInGroup
-            else:
-                camera = 1
+            elif len(nameElements) == 3:
+                transform = 'translation'
+                video = int(nameElements[2])
+                if video == 1 and i != 0:
+                    group += 1
+                if video == 2:
+                    numIndivIMDB += numAnimalsInGroup
+            elif len(nameElements) == 2:
+                transform = 'none'
+                video = 1
                 group += 1
                 numIndivIMDB += numAnimalsInGroup
-            print 'Camera ', camera
 
-            if not loadPreviousDict['fragmentation']:
-                assignCenters(videoPaths,centers,camera)
-                playFragmentation(videoPaths,False) # last parameter is to visualize or not
+            print '************************************************************'
+            print 'Video ', video
+            print 'Transform, ', transform
+            print 'Group, ', group
+            print 'numAnimalsInGroup, ', numAnimalsInGroup
+            print 'numIndivIMDB, ', numIndivIMDB
+            print '************************************************************'
+
+            if not int(loadPreviousDict['fragmentation']):
+                dfGlobal = assignCenters(segmPaths,centers,video,transform = transform)
+                print dfGlobal.columns
+                playFragmentation(videoPaths,segmPaths,dfGlobal,visualize=False)
                 cv2.waitKey(1)
                 cv2.destroyAllWindows()
                 cv2.waitKey(1)
@@ -195,31 +174,46 @@ if __name__ == '__main__':
             ''' ************************************************************************
             Portraying
             ************************************************************************ '''
-            if not loadPreviousDict['portraits']:
-                portrait(videoPaths)
+            if not int(loadPreviousDict['portraits']):
+                portrait(segmPaths, dfGlobal)
             # portraits = loadFile(videoPaths[0], 'portraits', time=0)
 
         if buildLib == 'y' or buildLib == '':
             ''' ************************************************************************
             Build images and labels array
             ************************************************************************ '''
-            preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
-            preprocParams = preprocParams.to_dict()[0]
+            preprocParams= loadFile(videoPaths[0], 'preprocparams')
+            # preprocParams = preprocParams.to_dict()[0]
             numAnimalsInGroup = preprocParams['numAnimals']
+            print 'numAnimalsInGroup, ', numAnimalsInGroup
             ''' Group and number of individuals '''
             # We assign the group number in a iterative way so that if one group is missing the labels of the IMDB are still iterative
-            if 'camera' in subDir: ###NOTE this only works if the subDirs list alternates between camera 1 and 2 every time
-                camera = int(subDir.split('_')[-1])
-                if camera == 1 and i != 0:
+            nameElements = subDir.split('_')
+            if 'camera' in nameElements: ###NOTE this only works if the subDirs list alternates between camera 1 and 2 every time
+                transform = 'rotation'
+                video = int(nameElements[3])
+                if video == 1 and i != 0:
                     group += 1
-                if camera == 2:
+                if video == 2:
                     numIndivIMDB += numAnimalsInGroup
-            else:
-                camera = 1
+            elif len(nameElements) == 3:
+                transform = 'translation'
+                video = int(nameElements[2])
+                if video == 1 and i != 0:
+                    group += 1
+                if video == 2:
+                    numIndivIMDB += numAnimalsInGroup
+            elif len(nameElements) == 2:
+                transform = 'none'
+                video = 1
                 group += 1
                 numIndivIMDB += numAnimalsInGroup
-            print 'Camera ', camera
-            portraits = loadFile(videoPaths[0], 'portraits', time=0)
+            print 'Video, ', video
+            print 'transform, ', transform
+            print 'numIndivIMDB, ', numIndivIMDB
+            print 'group, ', group
+
+            portraits = loadFile(videoPaths[0], 'portraits')
             groupNum = i
             imsize, images, labels = portraitsToIMDB(portraits, numAnimalsInGroup, group)
             print 'images, shape, ', images.shape
@@ -230,23 +224,26 @@ if __name__ == '__main__':
             totalNumImages += labels.shape[0]
 
             numImagesList.append(labels.shape[0])
+
             print numImagesList
 
     ''' ************************************************************************
     Save IMDB to hdf5
     ************************************************************************ '''
     if buildLib == 'y' or buildLib == '':
-        preprocParams= loadFile(videoPaths[0], 'preprocparams',0)
-        preprocParams = preprocParams.to_dict()[0]
+        preprocParams= loadFile(videoPaths[0], 'preprocparams')
+        # preprocParams = preprocParams.to_dict()[0]
         numAnimalsInGroup = preprocParams['numAnimals']
-
         averageNumImagesPerIndiv = int(np.divide(totalNumImages,numIndivIMDB))
         minimalNumImagesPerIndiv = int(np.divide(np.min(numImagesList),numAnimalsInGroup))*2
+        print 'numIndivIMDB, ', numIndivIMDB
+        print 'totalNumImages, ', totalNumImages
+        print 'avNumImages, ', averageNumImagesPerIndiv
+        print 'minNumImages, ', minimalNumImagesPerIndiv
         imagesIMDB = np.vstack(imagesIMDB)
         labelsIMDB = np.vstack(labelsIMDB)
 
-        ### TODO the dataset name should include the strain of the animals used
-        nameDatabase =  ageInDpf + '_' + str(numIndivIMDB) + 'indiv_' + str(int(minimalNumImagesPerIndiv)) + 'ImPerInd_' + preprocessing
+        nameDatabase =  strain + '_' + ageInDpf + '_' + str(numIndivIMDB) + 'indiv_' + str(int(minimalNumImagesPerIndiv)) + 'ImPerInd_' + preprocessing
         if not os.path.exists(libPath + '/IMDBs'): # Checkpoint folder does not exist
             os.makedirs(libPath + '/IMDBs') # we create a checkpoint folder
         else:
@@ -275,6 +272,7 @@ if __name__ == '__main__':
         grp.attrs['originalMatPath'] = libPath
         grp.attrs['numIndiv'] = numIndivIMDB
         grp.attrs['imageSize'] = imsize
+        grp.attrs['strain'] = strain
         # grp.attrs['averageNumImagesPerIndiv'] = averageNumImagesPerIndiv
         grp.attrs['numImagesPerIndiv'] = minimalNumImagesPerIndiv
         grp.attrs['ageInDpf'] = ageInDpf

@@ -218,6 +218,7 @@ def computeBkg(videoPaths, width, height):
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
     if len(videoPaths) == 1: # one single video
+        print 'one single video, computing bkg in parallel from single video'
         videoPath = videoPaths[0]
         frameIndices = loadFile(videoPaths[0], 'frameIndices')
         framesPerSegment = len(np.where(frameIndices.loc[:,'segment'] == 1)[0])
@@ -269,7 +270,6 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, ROI, useBkg):
     if useBkg:
         frame = cv2.absdiff(bkg,frame) #only step where frame normalization is important, because the background is normalised
 
-
     frameSegmented = cv2.inRange(frame * (255.0/frame.max()), minThreshold, maxThreshold) #output: 255 in range, else 0
     frameSegmentedMasked = cv2.bitwise_and(frameSegmented,frameSegmented, mask=ROI) #Applying the mask
     return frameSegmentedMasked
@@ -307,7 +307,7 @@ def cntBB2Full(cnt,boundingBox):
 
 def getBoundigBox(cnt, width, height):
     x,y,w,h = cv2.boundingRect(cnt)
-    n = 10
+    n = 25
     if x - n > 0: # We only expand the
         x = x - n
     else:
