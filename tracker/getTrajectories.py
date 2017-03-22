@@ -27,34 +27,42 @@ def idTrajectories(videoPath, sessionPath, allFragIds, dfGlobal, numAnimals):
 
     centroidTrajectories = []
     nosesTrajectories = []
+    headCentroidTrajectories = []
 
     centroids = dfGlobal['centroids'].tolist()
     noses = dfGlobal['noses'].tolist()
+    head_centroids = dfGlobal['head_centroids'].tolist()
 
     for j, IDs in enumerate(allFragIds):
         curCentroids = centroids[j]
         curNoses = noses[j]
+        curHeadCentroids = head_centroids[j]
 
         ordCentroids = [(np.nan, np.nan) for k in range(numAnimals)]
         ordNoses = [(np.nan, np.nan) for k in range(numAnimals)]
-
+        ordHeadCentroids = [(np.nan, np.nan) for k in range(numAnimals)]
+        
         for l,ID in enumerate(IDs):
             if ID != -1:
                 print ID,l
                 print curCentroids
                 print curNoses
+                print curHeadCentroids
                 ordCentroids[ID] = curCentroids[l]
                 ordNoses[ID] = curNoses[l]
-
+                ordHeadCentroids[ID] = curHeadCentroids[l]
+        
         centroidTrajectories.append(ordCentroids)
         nosesTrajectories.append(ordNoses)
+        headCentroidTrajectories.append(ordHeadCentroids)
 
-    trajDict = {'centroids': centroidTrajectories, 'noses': nosesTrajectories}
+    trajDict = {'centroids': centroidTrajectories, 'noses': nosesTrajectories, 'head_centroids': headCentroidTrajectories}
     saveFile(videoPath, trajDict, 'trajectories',hdfpkl = 'pkl',sessionPath = sessionPath)
 
     return trajDict
 
 def plotTrajectories(trajDict, numAnimals,framesToPlot=[], plotBoth=False):
+    # Still not updated to plot head centroids    
     sns.set_style("darkgrid")
     fig = plt.figure(figsize =(10,10))
     ax1 = plt.subplot2grid((1, 3), (0, 0), colspan=1, rowspan=1, projection='3d')
