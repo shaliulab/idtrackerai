@@ -36,8 +36,8 @@ def evaluation(y,y_logits,classes):
     accuracy, indivAcc = individualAccuracy(y,y_logits,classes)
     return accuracy, indivAcc
 
-def placeholder_inputs(batch_size, resolution, classes):
-    images_placeholder = tf.placeholder(tf.float32, [None, resolution], name = 'images')
+def placeholder_inputs(batch_size, width, height, channels, classes):
+    images_placeholder = tf.placeholder(tf.float32, [None, width, height, channels], name = 'images')
     labels_placeholder = tf.placeholder(tf.float32, [None, classes], name = 'labels')
 
     return images_placeholder, labels_placeholder
@@ -78,7 +78,7 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
 Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True):
 
     with tf.Graph().as_default():
-        images_pl, labels_pl = placeholder_inputs(batch_size, resolution, classes)
+        images_pl, labels_pl = placeholder_inputs(batch_size, width, height, channels, classes)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
         logits, relu, (W1,W3,W5) = inference1(images_pl, width, height, channels, classes, keep_prob_pl)

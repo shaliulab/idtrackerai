@@ -724,6 +724,12 @@ def individualAccuracy(labels,logits,classes):
 ''' ****************************************************************************
 Data Augmentation and image processing
 *****************************************************************************'''
+def standarizeImages(images):
+    images = images/255.
+    meanIm = np.mean(images, axis=0)
+    stdIm = np.std(images,axis=0)
+    images = (images-meanIm)/stdIm
+    return images
 
 def cropImages(images,imageSize,shift=(0,0)):
     """ Given batch of images it crops thme in a shape (imageSize,imageSize)
@@ -744,11 +750,10 @@ def cropImages(images,imageSize,shift=(0,0)):
         maxShift = np.divide(currentSize - imageSize,2)
         if np.max(shift) > maxShift:
             raise ValueError('The shift when cropping the portrait cannot be bigger than (currentSize - imageSize)/2')
-        croppedImages = images[:,:,maxShift+shift[1]:currentSize-maxShift+shift[1],maxShift+shift[0]:currentSize-maxShift+shift[0]]
+        croppedImages = images[:,maxShift+shift[1]:currentSize-maxShift+shift[1],maxShift+shift[0]:currentSize-maxShift+shift[0],:]
         print 'Portrait cropped'
         return croppedImages
 
 def dataAugment(images,labels,numReplicas):
     possibleShifts = np.asarray(list(itertools.combinations_with_replacement(range(5),2)))-2
     numShifts = len(possibleShifts)
-    

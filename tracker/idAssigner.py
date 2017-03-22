@@ -30,9 +30,6 @@ import datetime
 
 def DataIdAssignation(portraits, indivFragments):
     portraitsFrag = np.asarray(portraits.loc[:,'images'].tolist())
-    height = 36
-    width = 36
-    imsize = (1, height, width)
     portsFragments = []
     # print 'indivFragments', indivFragments
     for indivFragment in indivFragments:
@@ -45,12 +42,11 @@ def DataIdAssignation(portraits, indivFragments):
         portsFragments.append(np.asarray(portsFragment))
     # print portsFragments
     images = np.vstack(portsFragments)
-    images = np.expand_dims(images,axis=1)
+    images = np.expand_dims(images,axis=3)
     images = cropImages(images,32)
-    imsize = (1,32,32)
-    resolution = np.prod(imsize)
-    X_assignation = np.reshape(images, [len(images), resolution])
-    return imsize, X_assignation
+    imsize = (32,32,1)
+    images = standarizeImages(images)
+    return imsize, images
 
 
 def get_batch(batchNum, iter_per_epoch, indices, images_pl, keep_prob_pl, images, keep_prob):
@@ -73,10 +69,10 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl, keep_
 
     return outList
 
-def fragmentProbId(X_t, width, height, channels, classes, resolution, loadCkpt_folder, batchSize, Tindices, Titer_per_epoch , keep_prob = 1.0, printFlag = True):
+def fragmentProbId(X_t, width, height, channels, classes, loadCkpt_folder, batchSize, Tindices, Titer_per_epoch , keep_prob = 1.0, printFlag = True):
     with tf.Graph().as_default():
 
-        images_pl = tf.placeholder(tf.float32, [None, resolution], name = 'images')
+        images_pl = tf.placeholder(tf.float32, [None, width, height, channels], name = 'images')
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
         logits, relu, (W1,W3,W5) = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
@@ -389,23 +385,15 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
         if len(indivFragments) != 0:
             imsize, portsFragments =  DataIdAssignation(portraits, indivFragments)
 
-            images_max = np.max(portsFragments)
-            if images_max > 1:
-                if printFlag:
-                    print 'I am normalizing the images since their maximum is ', images_max
-
-                portsFragments = portsFragments/255.
-
             if printFlag:
                 print '\n values of the images during identity assigation: max min'
                 print np.max(portsFragments), np.min(portsFragments)
 
             # Set variables for the forward pass
             loadCkpt_folder = ckpt_dir
-            channels, width, height = imsize
-            resolution = np.prod(imsize)
+            width, height, channels = imsize
             classes = numAnimals
-            numImagesT = len(portsFragments) #FIXME
+            numImagesT = len(portsFragments)
             # Get batch indices
             Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batchSize)
 
@@ -415,7 +403,7 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
 
             # Run forward pass,
             softMaxProbs, softMaxId = fragmentProbId(portsFragments, width, height, channels,
-                classes, resolution, loadCkpt_folder, batchSize, Tindices, Titer_per_epoch)
+                classes, loadCkpt_folder, batchSize, Tindices, Titer_per_epoch)
 
             # list of softmax probabilities for each one-individual fragment
             softMaxProbs = np.split(softMaxProbs,sumFragIndices)

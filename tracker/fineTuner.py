@@ -5,6 +5,7 @@ sys.path.append('IdTrackerDeep/CNN')
 from py_utils import *
 from video_utils import *
 from idTrainerTracker import *
+from cnn_utils import standarizeImages
 
 import time
 import numpy as np
@@ -204,7 +205,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     print 'max num of references: ', maximalRefPerAnimal
     print '-------------------------------------------------'
     images = np.vstack(images)
-    images = np.expand_dims(images,axis=1)
+    images = np.expand_dims(images,axis=3)
     images = cropImages(images,32)
     print 'shape of the images ', images.shape
     print 'length of labels', len(labels)
@@ -222,19 +223,14 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     images = images[perm]
     labels = labels[perm]
 
-    images_max = np.max(images)
-    if images_max > 1:
-        images = images/255.
+    # Standarization of images
+    images = standarizeImages(images)
 
     numTrain = np.ceil(np.true_divide(numImages,10)*9).astype('int')
     X_train = images[:numTrain]
     Y_train = labels[:numTrain]
     X_val = images[numTrain:]
     Y_val = labels[numTrain:]
-
-    resolution = np.prod(imsize)
-    X_train = np.reshape(X_train, [numTrain, resolution])
-    X_val = np.reshape(X_val, [numImages - numTrain, resolution])
 
     ''' Update dictionary of references '''
     trainDict['refDict'] = refDict
@@ -318,8 +314,7 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portr
         print 'validation fine tune size:    images  labels'
         print X_val.shape, Y_val.shape
 
-    channels, width, height = imsize
-    resolution = np.prod(imsize)
+    width, height, channels = imsize
     classes = numAnimals
 
     numImagesT = Y_train.shape[0]
@@ -332,7 +327,7 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portr
         print 'The models will be loaded from (loadCkpt_folder)', loadCkpt_folder
         print '\nEntering training\n'
     trainDict, handlesDict = run_training(X_train, Y_train, X_val, Y_val,
-                    width, height, channels, classes, resolution,
+                    width, height, channels, classes,
                     trainDict, accumDict, fragmentsDict, handlesDict, portraits,
                     Tindices, Titer_per_epoch,
                     Vindices, Viter_per_epoch,

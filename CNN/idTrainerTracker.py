@@ -43,8 +43,8 @@ def evaluation(y,y_logits,classes):
     accuracy, indivAcc = individualAccuracy(y,y_logits,classes)
     return accuracy, indivAcc
 
-def placeholder_inputs(batch_size, resolution, classes):
-    images_placeholder = tf.placeholder(tf.float32, [None, resolution], name = 'images')
+def placeholder_inputs(batch_size, width, height, channels, classes):
+    images_placeholder = tf.placeholder(tf.float32, [None, width, height, channels], name = 'images')
     labels_placeholder = tf.placeholder(tf.float32, [None, classes], name = 'labels')
 
     return images_placeholder, labels_placeholder
@@ -81,7 +81,7 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
 
     return outList
 
-def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, trainDict, accumDict, fragmentsDict, handlesDict, portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch, plotFlag = True, printFlag = True, onlySoftmax=False):
+def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, trainDict, accumDict, fragmentsDict, handlesDict, portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch, plotFlag = True, printFlag = True, onlySoftmax=False):
 
     # get data from trainDict
     loadCkpt_folder = trainDict['loadCkpt_folder']
@@ -106,7 +106,7 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolutio
     accumCounter = accumDict['counter']
 
     with tf.Graph().as_default():
-        images_pl, labels_pl = placeholder_inputs(batch_size, resolution, classes)
+        images_pl, labels_pl = placeholder_inputs(batch_size, width, height, channels, classes)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
         logits, relu,(W1,W3,W5) = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
