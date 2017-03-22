@@ -72,7 +72,7 @@ class FishContour():
         head_centroid = FishContour(self.c[np.where(distance < head_size*head_size)]).centroid()
         orvec = nose - head_centroid
         angle = np.degrees(np.arctan2(orvec[1],orvec[0]))
-        return nose,angle+90,head_centroid
+        return nose,angle+90,np.array(head_centroid)
 
     def ascvcontour(self):
         """Returns a contour in opencv style, i.e. (x,0,y).
