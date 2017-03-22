@@ -20,7 +20,7 @@ from py_utils import *
 
 class P1B1(object):
 
-    def __init__(self, job = 1, IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5', repList = '1', groupSizesCNN = '0', condition = 'S'):
+    def __init__(self, job = 1, IMDBPath = 'IdTrackerDeep/data/TU20170201_31pdf_72indiv_38494ImPerInd_curvaturePortrait_0.hdf5', repList = '1', groupSizesCNN = '0', condition = 'S'):
 
         def getIMDBNameFromPath(IMDBPath):
             filename, extension = os.path.splitext(IMDBPath)
@@ -34,12 +34,14 @@ class P1B1(object):
         # Figure parameters
         self.groupSizesCNN = map(int,groupSizesCNN.split('_'))
         self.numGroupsCNN = len(self.groupSizesCNN)
-        self.groupSizes = [2, 5, 10, 25, 50]
+        # self.groupSizes = [2, 5, 10, 25, 50]
+        self.groupSizes = [40]
         # self.groupSizes = [10, 25, 50]
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        self.IMDBSizes = [20,50,100,250,500,750,1000,3000,23000] # Images for training
+        # self.IMDBSizes = [20,50,100,250,500,750,1000,3000,23000] # Images for training
+        self.IMDBSizes = [30000]
         # self.IMDBSizes = [20,50,100,250]
         self.numIMDBSizes = len(self.IMDBSizes)
 
@@ -74,9 +76,9 @@ class P1B1(object):
         # Dataset from which to load the images for training
     	if IMDBPath == 'd':
     	    if self.kt == False:
-                	IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5'
+                	IMDBPath = 'IdTrackerDeep/data/TU20170131_31dpf_40indiv_31902ImPerInd_curvaturePortrait_0.hdf5'
     	    elif self.kt == True:
-                	IMDBPath = 'IdTrackerDeep/data/25dpf_60indiv_26142imperind_curvatureportrait2_0.hdf5'
+                	IMDBPath = 'IdTrackerDeep/data/TU20170131_31dpf_40indiv_31902ImPerInd_curvaturePortrait_0.hdf5'
 
             print 'Using default library, ', IMDBPath
         self.IMDBPath = IMDBPath
@@ -182,6 +184,9 @@ class P1B1(object):
             # Select images needed
             imagesS = imagesS[:numImToUse * groupSize]
             labelsS = labelsS[:numImToUse * groupSize]
+            imagesS = np.expand_dims(imagesS,axis=3)
+            imagesS = cropImages(imagesS,32,shift=(0,0))
+            self.width, self.height, self.channels = imagesS.shape[1:]
 
             # # Data augmentation ### TODO code data augmentation
             # imagesSA, labelsSA = dataAugmenter(imagesS, labelsS)
@@ -192,20 +197,6 @@ class P1B1(object):
             print 'Y_val shape', Y_val.shape
             print 'X_train shape', X_train.shape
             print 'Y_train shape', Y_train.shape
-
-            # check train's dimensions
-            cardTrain = int(numImForTrain)*groupSize
-            dimTrainL = (cardTrain, groupSize)
-            dimTrainI = (cardTrain, images.shape[2]*images.shape[3])
-            dimensionChecker(X_train.shape, dimTrainI)
-            dimensionChecker(Y_train.shape, dimTrainL)
-
-            # check val's dimensions
-            cardVal = int(np.ceil(numImForTrain*.1))*groupSize
-            dimValL = (cardVal, groupSize)
-            dimValI = (cardVal, images.shape[2] * images.shape[3])
-            dimensionChecker(X_val.shape, dimValI)
-            dimensionChecker(Y_val.shape, dimValL)
 
             # Update ckpt_dir
             if not self.kt:
@@ -235,11 +226,19 @@ class P1B1(object):
             self.trainAccs[n,g,gCNN,r] = lossAccDict['acc'][-1]
             self.valAccs[n,g,gCNN,r] = lossAccDict['valAcc'][-1]
 
-        # Load IMDB
-        _, images, labels, self.imSize, self.numIndivImdb, self.numImagesPerIndiv = loadIMDB(self.IMDBName)
+        # Prepare
+        _, images, labels, self.imSize, self.numIndivImdb, self.numImagesPerIndiv = loadIMDB(self.IMDBPath)
+
+        # Standarization of images
+        images = images/255.
+        meanIm = np.mean(images, axis=0)
+        stdIm = np.std(images,axis=0)
+        images = (images-meanIm)/stdIm
 
         # Training parameters
-        self.channels, self.width, self.height = self.imSize
+        self.channels = 1
+        self.width = 32
+        self.height = 32
         self.resolution = np.prod(self.imSize)
 
         # Main loop
@@ -249,8 +248,7 @@ class P1B1(object):
             elif self.kt:
                 # By default we will use the first repetition and the model train with the whole library 25000 images.
                 # FIXME be aware that the 25000 is hardcoded and can give errors if we train for another number of images for training...
-                # loadCkpt_folder = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsS/numIndiv_%i/numImages_%i/rep_%i' %(self.groupSizesCNN[gCNN], 25000, 1)
-                loadCkpt_folder = 'IdTrackerDeep/videos/cafeina5peces/CNN_models/Session_2/AccumulationStep_131'
+                loadCkpt_folder = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsS/numIndiv_%i/numImages_%i/rep_%i' %(self.groupSizesCNN[gCNN], 25000, 1)
 
 
             for g in range(self.numGroups): # Group size for the current training
