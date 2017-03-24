@@ -1,10 +1,11 @@
 # Import standard libraries
 import os
-import numpy as np
-import numpy.matlib as npm
 
 # Import third party libraries
+import numpy as np
+import numpy.matlib as npm
 import tensorflow as tf
+import itertools
 
 # Import application/library specifics
 from tf_utils import *
@@ -372,6 +373,79 @@ def individualAccuracy(labels,logits,classes):
 ''' ****************************************************************************
 Data Augmentation and image processing
 *****************************************************************************'''
+def getCorrelatedImages(images,labels,numImages, minNumImages):
+    '''
+    This functions assumes that images and labels have not been permuted
+    and they are temporarly ordered for each animals
+    :images: all images of a particular list of individuals ordered by individuals
+    :labels: all labels of a particular list of individuals ordered by individuals
+    :numImages: number of images for training for each individual
+    '''
+    imagesTrain = []
+    labelsTrain = []
+    imagesVal = []
+    labelsVal = []
+    imagesTest = []
+    labelsTest = []
+
+    numImagesVal = int(numImages * 0.1)
+    # Select randomly the frame where the fragment of correlated images starts
+    print 'minNumImages, ', minNumImages
+    framePos = np.random.randint(0,minNumImages - (numImages + numImagesVal))
+    print 'the fragment will start at frame, ', framePos
+    for i in np.unique(labels):
+        print 'individual, ', i
+        # Get images of this individual
+        thisIndivImages = images[labels==i]
+        thisIndivLabels = labels[labels==i]
+        print 'num images of this individual, ', thisIndivImages.shape[0]
+
+        # Get train and validation images and labels
+        # first we select a set of correlated images
+        imTrainVal = thisIndivImages[framePos:framePos+numImages+numImagesVal]
+        labTrainVal = thisIndivLabels[framePos:framePos+numImages+numImagesVal]
+        print 'num images for train and val for this indiv, ', imTrainVal.shape[0]
+        # we permute the iamges
+        imTrainVal = imTrainVal[np.random.permutation(len(imTrainVal))]
+        # we select images for training and validation from the permuted images
+        imagesTrain.append(imTrainVal[:numImages])
+        labelsTrain.append(labTrainVal[:numImages])
+        imagesVal.append(imTrainVal[numImages:])
+        labelsVal.append(labTrainVal[numImages:])
+        print 'num images for train, ', imagesTrain[i].shape[0]
+        print 'num images for val, ', imagesVal[i].shape[0]
+
+        # Get test images and labels
+        # all the rest of images are the test images
+        imTest  = flatten([thisIndivImages[:framePos], thisIndivImages[framePos+numImages+numImagesVal:]])
+        imTest = np.asarray(imTest)
+        labTest = flatten([thisIndivLabels[:framePos], thisIndivLabels[framePos+numImages+numImagesVal:]])
+        labTest = np.asarray(labTest)
+        imagesTest.append(imTest) #before the fragment
+        labelsTest.append(labTest)
+        print 'num images for test, ', imagesTest[i].shape[0]
+
+    # we flatten the arrays
+    imagesTrain = flatten(imagesTrain)
+    imagesTrain = np.asarray(imagesTrain)
+    labelsTrain = flatten(labelsTrain)
+    labelsTrain = np.asarray(labelsTrain)
+    perm = np.random.permutation(len(labelsTrain))
+    imagesTrain = imagesTrain[perm]
+    labelsTrain = labelsTrain[perm]
+
+    imagesVal = flatten(imagesVal)
+    imagesVal = np.asarray(imagesVal)
+    labelsVal = flatten(labelsVal)
+    labelsVal = np.asarray(labelsVal)
+
+    imagesTest = flatten(imagesTest)
+    imagesTest = np.asarray(imagesTest)
+    labelsTest = flatten(labelsTest)
+    labelsTest = np.asarray(labelsTest)
+
+    return imagesTrain, labelsTrain, imagesVal, labelsVal, imagesTest, labelsTest, framePos
+
 def cropImages(images,imageSize,shift=(0,0)):
     """ Given batch of images it crops thme in a shape (imageSize,imageSize)
     with a shift in the rows and columns given by the variable shifts. The
@@ -385,14 +459,40 @@ def cropImages(images,imageSize,shift=(0,0)):
     if currentSize < imageSize:
         raise ValueError('The size of the input portrait must be bigger than imageSize')
     elif currentSize == imageSize:
-        return image
+        return images
     elif currentSize > imageSize:
         maxShift = np.divide(currentSize - imageSize,2)
         if np.max(shift) > maxShift:
             raise ValueError('The shift when cropping the portrait cannot be bigger than (currentSize - imageSize)/2')
         croppedImages = images[:,maxShift+shift[1]:currentSize-maxShift+shift[1],maxShift+shift[0]:currentSize-maxShift+shift[0],:]
-        print 'Portrait cropped'
+        # print 'Portrait cropped'
         return croppedImages
-# def dataAugment(images,labels,numReplicas):
-#     possibleShifts = np.asarray(list(itertools.combinations_with_replacement(range(5),2)))-2
-#     numShifts = len(possibleShifts)
+
+def dataAugment(images,labels,flag = False):
+
+    def getPossibleShifts():
+        possibleShifts = []
+        possibleShifts.append(list(itertools.combinations_with_replacement(range(-2,3),2)))
+        possibleShifts.append(list(itertools.permutations(range(-2,3),2)))
+        possibleShifts.append(list(itertools.combinations(range(-2,3),2)))
+        possibleShifts = [shift for l in possibleShifts for shift in l]
+        possibleShifts = set(possibleShifts)
+        return possibleShifts
+
+    if flag:
+        print 'Performing data augmentation...'
+        possibleShifts = getPossibleShifts() #(0,0) is included
+        augmentedImages = []
+        augmentedLabels = []
+        for shift in possibleShifts:
+            newImages = cropImages(images,32,shift=shift)
+            augmentedImages.append(newImages)
+            augmentedLabels.append(labels)
+        images = np.vstack(augmentedImages)
+        labels = flatten(augmentedLabels)
+    else:
+        print 'No data augmentation...'
+        print 'Cropping images to 32x32...'
+        images = cropImages(images,32,(0,0))
+
+    return images, np.asarray(labels)

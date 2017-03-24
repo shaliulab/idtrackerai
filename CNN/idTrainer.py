@@ -81,8 +81,14 @@ def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labe
 
     return outList
 
-def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder,batch_size, num_epochs,Tindices, Titer_per_epoch,
-Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearningFlag = False,onlySoftmax=False):
+def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
+    width, height, channels, classes,
+    ckpt_dir, loadCkpt_folder,batch_size, num_epochs,
+    Tindices, Titer_per_epoch,
+    Vindices, Viter_per_epoch,
+    TestIndices, TestIter_per_epoch,
+    keep_prob = 1.0,lr = 0.01,
+    printFlag=True, checkLearningFlag = False,onlySoftmax=False):
 
     with tf.Graph().as_default():
         images_pl, labels_pl = placeholder_inputs(batch_size, width, height, channels, classes)
@@ -315,7 +321,6 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
                     # saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
 
                     ''' VALIDATION '''
-
                     lossEpoch = []
                     accEpoch = []
                     indivAccEpoch = []
@@ -331,10 +336,10 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
                         indivAccEpoch.append(indivBatchAcc)
 
                         # Print per batch loss and accuracies
-                        if iter_i % round(np.true_divide(Viter_per_epoch,1)) == 0:
-                            print "Batch " + str(iter_i) + \
-                                ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
-                                ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+                        # if iter_i % round(np.true_divide(Viter_per_epoch,1)) == 0:
+                        #     print "Batch " + str(iter_i) + \
+                        #         ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                        #         ", Validation Accuracy= " + "{:.5f}".format(batchAcc)
 
                     valLoss = np.mean(lossEpoch)
                     valAcc = np.mean(accEpoch)
@@ -354,13 +359,46 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
                     epochTime.append(time.time()-t0)
                     print 'Epoch time in seconds, ', epochTime[-1]
 
+                    ''' TEST '''
+                    lossEpoch = []
+                    accEpoch = []
+                    indivAccEpoch = []
+                    for iter_i in range(TestIter_per_epoch):
+
+                        batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                            sess, opListVal, TestIndices, iter_i, TestIter_per_epoch,
+                            images_pl, labels_pl, keep_prob_pl,
+                            X_test, Y_test, keep_prob = keep_prob)
+
+                        lossEpoch.append(batchLoss)
+                        accEpoch.append(batchAcc)
+                        indivAccEpoch.append(indivBatchAcc)
+
+                        # # Print per batch loss and accuracies
+                        # if iter_i % round(np.true_divide(Viter_per_epoch,100)) == 0:
+                        #     print "Batch " + str(iter_i) + \
+                        #         ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                        #         ", Test Accuracy= " + "{:.5f}".format(batchAcc)
+
+                    testLoss = np.mean(lossEpoch)
+                    testAcc = np.mean(accEpoch)
+                    testIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
+
+                    # Batch finished
+
+                    print('Test (epoch %d): ' % epoch_counter + \
+                        " Loss=" + "{:.6f}".format(testLoss) + \
+                        ", Accuracy=" + "{:.5f}".format(testAcc) + \
+                        ", Individual Accuracy=")
+                    print(testIndivAcc)
+
                     '''
                     **************************************
                     saving dict with loss function and accuracy values
                     **************************************
                     '''
 
-                    # References
+                    # Train
                     trainLossPlot.append(trainLoss)
                     trainAccPlot.append(trainAcc)
                     trainIndivAccPlot.append(trainIndivAcc)
@@ -368,7 +406,7 @@ Vindices, Viter_per_epoch, keep_prob = 1.0,lr = 0.01,printFlag=True, checkLearni
                     trainAccSpeed, trainAccAccel = computeDerivatives(trainAccPlot)
                     trainFeatPlot = trainFeat
 
-                    # Test
+                    # Validations
                     valLossPlot.append(valLoss)
                     valAccPlot.append(valAcc)
                     valIndivAccPlot.append(valIndivAcc)

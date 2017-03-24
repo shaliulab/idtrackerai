@@ -124,15 +124,15 @@ def splitter(images, labels, numImages, numIndiv, imsize, numImForTrain = None):
         num_train = int(numImages - num_val)
     else:
         num_train = numImForTrain
-        num_val = numImages - num_train
+        num_val = int(numImForTrain*0.1)
     X_train = images[:num_train]
     Y_train = labels[:num_train]
     print '\nnumAnimals, ', np.max(Y_train) + 1
     X_val = images[num_train:num_train+num_val]
     Y_val = labels[num_train:num_train+num_val]
     # dense to one hot, i.e. [i]-->[0,0,...0,1 (ith position),0,..,0]
-    Y_train = dense_to_one_hot(Y_train, n_classes=numIndiv)
-    Y_val = dense_to_one_hot(Y_val, n_classes=numIndiv)
+    # Y_train = dense_to_one_hot(Y_train, n_classes=numIndiv)
+    # Y_val = dense_to_one_hot(Y_val, n_classes=numIndiv)
     return X_train, Y_train, X_val, Y_val
 def cropper(images, labels, numImages, numIndiv, imsize, numRef,loadRefPerm):
     # crop a permuted database according to the number of requested images

@@ -41,7 +41,7 @@ class P1B1(object):
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
         # self.IMDBSizes = [20,50,100,250,500,750,1000,3000,23000] # Images for training
-        self.IMDBSizes = [30000]
+        self.IMDBSizes = [30]
         # self.IMDBSizes = [20,50,100,250]
         self.numIMDBSizes = len(self.IMDBSizes)
 
@@ -80,7 +80,7 @@ class P1B1(object):
     	    elif self.kt == True:
                 	IMDBPath = 'IdTrackerDeep/data/TU20170131_31dpf_40indiv_31902ImPerInd_curvaturePortrait_0.hdf5'
 
-            print 'Using default library, ', IMDBPath
+            print '\nUsing default library, ', IMDBPath
         self.IMDBPath = IMDBPath
         self.IMDBName = getIMDBNameFromPath(self.IMDBPath)
 
@@ -110,31 +110,6 @@ class P1B1(object):
 
         def runRepetition(self, loadCkpt_folder, images, labels, gCNN, g, n, r):
 
-            def getCorrelatedImages(images,labels,numImages):
-                '''
-                This functions assumes that images and labels have not been permuted
-                and they are temporarly ordered for each animals
-                '''
-                correlatedImages = []
-                correlatedLabels = []
-                firstFrameIndices= []
-                if numImages*1.2 <= 25000:
-                    numImages = int(numImages*1.2)
-                for i in np.unique(labels):
-                    thisIndivImages = images[labels==i]
-                    thisIndivLabels = labels[labels==i]
-                    framePos = np.random.randint(0,len(thisIndivImages) - numImages)
-                    correlatedImages.append(thisIndivImages[framePos:framePos+numImages])
-                    correlatedLabels.append(thisIndivLabels[framePos:framePos+numImages])
-                    firstFrameIndices.append(framePos)
-
-                imagesS = flatten(correlatedImages)
-                imagesS = np.asarray(imagesS)
-                labelsS = flatten(correlatedLabels)
-                labelsS = np.asarray(labelsS)
-
-                return imagesS, labelsS, firstFrameIndices
-
             # Get values of variables from counters
             groupSizeCNN = self.groupSizesCNN[gCNN]
             groupSize = self.groupSizes[g]
@@ -152,51 +127,65 @@ class P1B1(object):
             if len(self.IndivIndices[groupSizeCNN][groupSize]) >= r + 1:
                 print 'Restoring individual indices for rep ', rep
                 indivIndices = self.IndivIndices[groupSizeCNN][groupSize][r]
+                print 'indivIndices, ', indivIndices
             else:
                 print 'Seeding the random generator...'
                 np.random.seed(rep)
                 permIndiv = permuter(self.numIndivImdb,'individualsTrain',[])
                 indivIndices = permIndiv[:groupSize]
                 self.IndivIndices[groupSizeCNN][groupSize].append(indivIndices)
+                print 'indivIndices, ', indivIndices
 
             # Get current individuals images
-            imagesS, labelsS = sliceDatabase(images, labels, indivIndices)
+            images, labels = sliceDatabase(images, labels, indivIndices)
+            print 'Num train images per id, ', [np.sum(labels==i) for i in np.unique(labels)]
+            images = np.expand_dims(images,axis=3)
 
-            # Get correlated images if needed
-            if 'C' in self.condition:
-                print 'Extracting correlated images...'
-                imagesS, labelsS, firstFrameIndices = getCorrelatedImages(imagesS,labelsS,numImToUse)
-
-            # Get images permutation of for this repetition
+            # Get permutations for images
             if len(self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain]) >= r + 1:
                 print 'Restoring images permutation for rep ', rep
                 permImages = self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain][r]
 
             else:
                 print 'Creating new permutation of images'
-                permImages = permuter(len(labelsS),'imagesTrain',[])
+                permImages = permuter(len(labels),'imagesTrain',[])
                 self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain].append(permImages)
 
-            # Permute images
-            imagesS = imagesS[permImages]
-            labelsS = labelsS[permImages]
+            # Separate images from training-validation and testing
+            if 'C' in self.condition:
+                # Get images that are correlated in time
+                print 'Extracting correlated images...'
+                X_train, Y_train, X_val, Y_val, X_test, Y_test, firstFrameIndices = getCorrelatedImages(images,labels,numImForTrain, self.numImagesPerIndiv)
 
-            # Select images needed
-            imagesS = imagesS[:numImToUse * groupSize]
-            labelsS = labelsS[:numImToUse * groupSize]
-            imagesS = np.expand_dims(imagesS,axis=3)
-            imagesS = cropImages(imagesS,32,shift=(0,0))
-            self.width, self.height, self.channels = imagesS.shape[1:]
+            else:
+                # Permute images to uncorrelated
+                imagesTrain = images[permImages[:numImToUse * groupSize]]
+                labelsTrain = labels[permImages[:numImToUse * groupSize]]
+                imagesTest= images[permImages[numImToUse * groupSize:]]
+                labelsTest = labels[permImages[numImToUse * groupSize:]]
 
-            # # Data augmentation ### TODO code data augmentation
-            # imagesSA, labelsSA = dataAugmenter(imagesS, labelsS)
+                # Split in train and validation
+                X_train, Y_train, X_val, Y_val = splitter(imagesTrain, labelsTrain, numImToUse, groupSize, self.imSize, numImForTrain*groupSize)
 
-            # Split in train and validation
-            X_train, Y_train, X_val, Y_val = splitter(imagesS, labelsS, numImToUse, groupSize, self.imSize, numImForTrain * groupSize)
-            print 'X_val shape', X_val.shape
-            print 'Y_val shape', Y_val.shape
+            # Data Augmentation only to train and validation data
+            X_train, Y_train = dataAugment(X_train,Y_train,flag = True)
+            X_val, Y_val = dataAugment(X_val,Y_val,flag = False)
+            X_test, Y_test = dataAugment(X_test,Y_test,flag = False)
+            self.width, self.height, self.channels = X_train.shape[1:]
+
+            # Pass labels from dense_to_one_hot
+            Y_train = dense_to_one_hot(Y_train, n_classes=groupSize)
+            Y_val = dense_to_one_hot(Y_val, n_classes=groupSize)
+            Y_test = dense_to_one_hot(Y_test, n_classes=groupSize)
             print 'X_train shape', X_train.shape
             print 'Y_train shape', Y_train.shape
+            print 'Num train images per id, ', np.sum(Y_train,axis=0)
+            print 'X_val shape', X_val.shape
+            print 'Y_val shape', Y_val.shape
+            print 'Num val images per id, ', np.sum(Y_val,axis=0)
+            print 'X_test shape', X_test.shape
+            print 'Y_test shape', Y_test.shape
+            print 'Num test images per id, ', np.sum(Y_test,axis=0)
 
             # Update ckpt_dir
             if not self.kt:
@@ -207,16 +196,19 @@ class P1B1(object):
             # Compute index batches
             numImagesT = Y_train.shape[0]
             numImagesV = Y_val.shape[0]
+            numImagesTest = Y_test.shape[0]
             Tindices, Titer_per_epoch = get_batch_indices(numImagesT,self.batchSize)
             Vindices, Viter_per_epoch = get_batch_indices(numImagesV,self.batchSize)
+            TestIndices, TestIter_per_epoch = get_batch_indices(numImagesTest,self.batchSize)
 
             # Run training
-            lossAccDict = run_training(X_train, Y_train, X_val, Y_val,
-                                        self.width, self.height, self.channels, groupSize, self.resolution,
+            lossAccDict = run_training(X_train, Y_train, X_val, Y_val, X_test, Y_test,
+                                        self.width, self.height, self.channels, groupSize,
                                         ckpt_dir, loadCkpt_folder,
                                         self.batchSize, self.numEpochs,
                                         Tindices, Titer_per_epoch,
                                         Vindices, Viter_per_epoch,
+                                        TestIndices, TestIter_per_epoch,
                                         self.keep_prob,self.lr,
                                         checkLearningFlag = self.checkLearningFlag,
                                         onlySoftmax=self.onlySoftmax)
@@ -236,10 +228,10 @@ class P1B1(object):
         images = (images-meanIm)/stdIm
 
         # Training parameters
-        self.channels = 1
-        self.width = 32
-        self.height = 32
-        self.resolution = np.prod(self.imSize)
+        # self.channels = 1
+        # self.width = 32
+        # self.height = 32
+        # self.resolution = np.prod(self.imSize)
 
         # Main loop
         for gCNN in range(self.numGroupsCNN): # Group size of the pre trained CNN model
