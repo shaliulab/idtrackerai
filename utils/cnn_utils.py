@@ -373,6 +373,55 @@ def individualAccuracy(labels,logits,classes):
 ''' ****************************************************************************
 Data Augmentation and image processing
 *****************************************************************************'''
+def getUncorrelatedImages(images,labels,numImages, minNumImages):
+    imagesTrain = []
+    labelsTrain = []
+    imagesVal = []
+    labelsVal = []
+    imagesTest = []
+    labelsTest = []
+
+    numImagesVal = int(numImages * 0.1)
+    for i in np.unique(labels):
+        print 'individual, ', i
+        # Get images of this individual
+        thisIndivImages = images[labels==i]
+        thisIndivLabels = labels[labels==i]
+        print 'num images of this individual, ', thisIndivImages.shape[0]
+
+        # Get train, validation and test, images and labels
+        imagesTrain.append(thisIndivImages[:numImages])
+        labelsTrain.append(thisIndivLabels[:numImages])
+        imagesVal.append(thisIndivImages[numImages:numImages+numImagesVal])
+        labelsVal.append(thisIndivLabels[numImages:numImages+numImagesVal])
+        imagesTest.append(thisIndivImages[numImages+numImagesVal:])
+        labelsTest.append(thisIndivLabels[numImages+numImagesVal:])
+        print 'num images for train, ', imagesTrain[i].shape[0]
+        print 'num images for val, ', imagesVal[i].shape[0]
+        print 'num images for test, ', imagesTest[i].shape[0]
+
+
+    # we flatten the arrays
+    imagesTrain = flatten(imagesTrain)
+    imagesTrain = np.asarray(imagesTrain)
+    labelsTrain = flatten(labelsTrain)
+    labelsTrain = np.asarray(labelsTrain)
+    perm = np.random.permutation(len(labelsTrain))
+    imagesTrain = imagesTrain[perm]
+    labelsTrain = labelsTrain[perm]
+
+    imagesVal = flatten(imagesVal)
+    imagesVal = np.asarray(imagesVal)
+    labelsVal = flatten(labelsVal)
+    labelsVal = np.asarray(labelsVal)
+
+    imagesTest = flatten(imagesTest)
+    imagesTest = np.asarray(imagesTest)
+    labelsTest = flatten(labelsTest)
+    labelsTest = np.asarray(labelsTest)
+
+    return imagesTrain, labelsTrain, imagesVal, labelsVal, imagesTest, labelsTest
+
 def getCorrelatedImages(images,labels,numImages, minNumImages):
     '''
     This functions assumes that images and labels have not been permuted

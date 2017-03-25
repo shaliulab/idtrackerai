@@ -53,32 +53,54 @@ class P1B1(object):
         self.batchSize = 250
         self.numEpochs = 5000
         self.lr = 0.01
-        self.keep_prob = 1.0
+        self.keep_prob = 0.7
 
         # Set flag to indicate knowledge transfer
+        self.kt = False
         if 'KT' in self.condition:
             self.kt = True
-        else:
-            self.kt = False
 
         # Set flag to stop the training when it is not learning much
+        self.checkLearningFlag = False
         if 'V' in self.condition:
             self.checkLearningFlag = True
-        else:
-            self.checkLearningFlag = False
 
         # Set flag to only train softmax
+        self.onlySoftmax = False
         if 'X' in self.condition:
-            self.onlySoftmax = True
-        else:
-            self.onlySoftmax = False
+            self.trainSoftmax = True
+
+        # Set flag to train the whole network
+        self.onlyFullyConnected = False
+        if 'F' in self.condition:
+            self.onlyFullyConnected = True
+
+        # Set flag to train the whole network
+        self.allNetwork = False
+        if 'N' in self.condition:
+            self.allNetwork = True
+
+        # Set flag for data Augmentation
+        self.dataAugmentation = False
+        if 'D' in self.condition:
+            self.dataAugmentation = True
+
+        # Set flag for correlated iamges
+        self.correlatedImages = False
+        if 'C' in self.condition:
+            self.correlatedImages = True
+
+        # Set flag for dropout
+        self.dropout = False
+        if 'P' in self.condition:
+            self.dropout = True
 
         # Dataset from which to load the images for training
     	if IMDBPath == 'd':
     	    if self.kt == False:
-                	IMDBPath = 'IdTrackerDeep/data/TU20170131_31dpf_40indiv_31902ImPerInd_curvaturePortrait_0.hdf5'
+                	IMDBPath = 'IdTrackerDeep/data/TU20170131_31dpf_40indiv_34770ImPerInd_curvaturePortrait_0.hdf5'
     	    elif self.kt == True:
-                	IMDBPath = 'IdTrackerDeep/data/TU20170131_31dpf_40indiv_31902ImPerInd_curvaturePortrait_0.hdf5'
+                	IMDBPath = 'IdTrackerDeep/data/TU20170131_31dpf_40indiv_34770ImPerInd_curvaturePortrait_0.hdf5'
 
             print '\nUsing default library, ', IMDBPath
         self.IMDBPath = IMDBPath
@@ -131,7 +153,7 @@ class P1B1(object):
             else:
                 print 'Seeding the random generator...'
                 np.random.seed(rep)
-                permIndiv = permuter(self.numIndivImdb,'individualsTrain',[])
+                permIndiv = np.random.permutation(self.numIndivImdb)
                 indivIndices = permIndiv[:groupSize]
                 self.IndivIndices[groupSizeCNN][groupSize].append(indivIndices)
                 print 'indivIndices, ', indivIndices
@@ -141,39 +163,41 @@ class P1B1(object):
             print 'Num train images per id, ', [np.sum(labels==i) for i in np.unique(labels)]
             images = np.expand_dims(images,axis=3)
 
-            # Get permutations for images
-            if len(self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain]) >= r + 1:
-                print 'Restoring images permutation for rep ', rep
-                permImages = self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain][r]
+            # Separate images from training, validation and testing
+            if self.correlatedImages:
 
-            else:
-                print 'Creating new permutation of images'
-                permImages = permuter(len(labels),'imagesTrain',[])
-                self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain].append(permImages)
-
-            # Separate images from training-validation and testing
-            if 'C' in self.condition:
                 # Get images that are correlated in time
-                print 'Extracting correlated images...'
-                X_train, Y_train, X_val, Y_val, X_test, Y_test, firstFrameIndices = getCorrelatedImages(images,labels,numImForTrain, self.numImagesPerIndiv)
-
+                X_train, Y_train, X_val, Y_val, X_test, Y_test, firstFrameIndex = getCorrelatedImages(images, labels, numImForTrain, self.minNumImagesPerIndiv)
+                self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain].append(firstFrameIndex)
             else:
-                # Permute images to uncorrelated
-                imagesTrain = images[permImages[:numImToUse * groupSize]]
-                labelsTrain = labels[permImages[:numImToUse * groupSize]]
-                imagesTest= images[permImages[numImToUse * groupSize:]]
-                labelsTest = labels[permImages[numImToUse * groupSize:]]
 
-                # Split in train and validation
-                X_train, Y_train, X_val, Y_val = splitter(imagesTrain, labelsTrain, numImToUse, groupSize, self.imSize, numImForTrain*groupSize)
+                # Get images that are uncorrelated in time
+                print 'Extracting uncorrelated images...'
+                # Get permutations for images
+                if len(self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain]) >= r + 1:
+                    print 'Restoring images permutation for rep ', rep
+                    permImages = self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain][r]
+
+                else:
+                    print 'Creating new permutation of images'
+                    permImages = np.random.permutation(len(labels))
+                    self.ImagesIndices[groupSizeCNN][groupSize][numImForTrain].append(permImages)
+
+                images = images[permImages]
+                labels = labels[permImages]
+                X_train, Y_train, X_val, Y_val, X_test, Y_test = getUncorrelatedImages(images, labels, numImForTrain, self.minNumImagesPerIndiv)
 
             # Data Augmentation only to train and validation data
-            X_train, Y_train = dataAugment(X_train,Y_train,flag = True)
+            print 'X_train shape', X_train.shape
+            print 'X_val shape', X_val.shape
+            print 'X_test shape', X_test.shape
+            X_train, Y_train = dataAugment(X_train,Y_train,flag = self.dataAugmentation)
             X_val, Y_val = dataAugment(X_val,Y_val,flag = False)
             X_test, Y_test = dataAugment(X_test,Y_test,flag = False)
             self.width, self.height, self.channels = X_train.shape[1:]
 
             # Pass labels from dense_to_one_hot
+
             Y_train = dense_to_one_hot(Y_train, n_classes=groupSize)
             Y_val = dense_to_one_hot(Y_val, n_classes=groupSize)
             Y_test = dense_to_one_hot(Y_test, n_classes=groupSize)
@@ -219,7 +243,7 @@ class P1B1(object):
             self.valAccs[n,g,gCNN,r] = lossAccDict['valAcc'][-1]
 
         # Prepare
-        _, images, labels, self.imSize, self.numIndivImdb, self.numImagesPerIndiv = loadIMDB(self.IMDBPath)
+        _, images, labels, self.imSize, self.numIndivImdb, self.minNumImagesPerIndiv = loadIMDB(self.IMDBPath)
 
         # Standarization of images
         images = images/255.
