@@ -98,12 +98,18 @@ class P1B1(object):
         # Get list of IMDBPaths form IMDBCode
         print '\nReading IMDBCode and idsCode...'
         IMDBsDict = {
-                    'A':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160413_36dpf_16indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
-                    'B':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160428_36dpf_16indiv_28818ImPerInd_curvaturePortrait_0.hdf5',
-                    'C':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160920_36dpf_16indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
-                    'D':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170131_31dpf_16indiv_38989ImPerInd_curvaturePortrait_0.hdf5',
-                    'E':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170201_31pdf_16indiv_38997ImPerInd_curvaturePortrait_0.hdf5',
-                    'F':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170202_31pdf_16indiv_38998ImPerInd_curvaturePortrait_0.hdf5'
+		    'A':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160413_36dpf_60indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
+                    'B':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160428_36dpf_60indiv_28010ImPerInd_curvaturePortrait_0.hdf5',
+                    'C':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160920_36dpf_64indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
+                    'D':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170131_31dpf_40indiv_34770ImPerInd_curvaturePortrait_0.hdf5',
+                    'E':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170201_31pdf_72indiv_38739ImPerInd_curvaturePortrait_0.hdf5',
+                    'F':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170202_31pdf_72indiv_38913ImPerInd_curvaturePortrait_0.hdf5'
+                    'a':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160413_36dpf_16indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
+                    'b':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160428_36dpf_16indiv_28818ImPerInd_curvaturePortrait_0.hdf5',
+                    'c':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160920_36dpf_16indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
+                    'd':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170131_31dpf_16indiv_38989ImPerInd_curvaturePortrait_0.hdf5',
+                    'e':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170201_31pdf_16indiv_38997ImPerInd_curvaturePortrait_0.hdf5',
+                    'f':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170202_31pdf_16indiv_38998ImPerInd_curvaturePortrait_0.hdf5'
                     }
         self.IMDBPaths = []
         self.idsInIMDBs = []
