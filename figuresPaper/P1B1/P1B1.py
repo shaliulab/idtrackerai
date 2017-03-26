@@ -34,14 +34,14 @@ class P1B1(object):
         # Figure parameters
         self.groupSizesCNN = map(int,groupSizesCNN.split('_'))
         self.numGroupsCNN = len(self.groupSizesCNN)
-        # self.groupSizes = [2, 5, 10, 25, 50]
-        self.groupSizes = [40]
+        self.groupSizes = [2, 5, 10, 25, 50, 75, 100, 150, 200, 250, 300]
+        # self.groupSizes = [40]
         # self.groupSizes = [10, 25, 50]
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        # self.IMDBSizes = [20,50,100,250,500,750,1000,3000,23000] # Images for training
-        self.IMDBSizes = [3000]
+        self.IMDBSizes = [20,50,100,250,500,750,1000,3000,28000] # Images for training
+        # self.IMDBSizes = [3000]
         # self.IMDBSizes = [20,50,100,250]
         self.numIMDBSizes = len(self.IMDBSizes)
 
@@ -53,7 +53,11 @@ class P1B1(object):
         self.batchSize = 250
         self.numEpochs = 5000
         self.lr = 0.01
-        self.keep_prob = 0.7
+
+	# Set keep probability for dropout
+	self.keep_prop = 1.0
+	if 'P' in self.condition:
+       	    self.keep_prob = 0.7
 
         # Set flag to indicate knowledge transfer
         self.kt = False
@@ -89,11 +93,6 @@ class P1B1(object):
         self.correlatedImages = False
         if 'C' in self.condition:
             self.correlatedImages = True
-
-        # Set flag for dropout
-        self.dropout = False
-        if 'P' in self.condition:
-            self.dropout = True
 
         # Get list of IMDBPaths form IMDBCode
         print '\nReading IMDBCode and idsCode...'
