@@ -20,7 +20,7 @@ from py_utils import *
 
 class P1B1(object):
 
-    def __init__(self, job = 1, IMDBPath = 'IdTrackerDeep/data/TU20170201_31pdf_72indiv_38494ImPerInd_curvaturePortrait_0.hdf5', repList = '1', groupSizesCNN = '0', condition = 'S'):
+    def __init__(self, job = 1, IMDBCode = 'A', idsCode = 'a', repList = '1', groupSizesCNN = '0', condition = 'S'):
 
         def getIMDBNameFromPath(IMDBPath):
             filename, extension = os.path.splitext(IMDBPath)
@@ -41,7 +41,7 @@ class P1B1(object):
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
         # self.IMDBSizes = [20,50,100,250,500,750,1000,3000,23000] # Images for training
-        self.IMDBSizes = [30]
+        self.IMDBSizes = [3000]
         # self.IMDBSizes = [20,50,100,250]
         self.numIMDBSizes = len(self.IMDBSizes)
 
@@ -95,16 +95,36 @@ class P1B1(object):
         if 'P' in self.condition:
             self.dropout = True
 
-        # Dataset from which to load the images for training
-    	if IMDBPath == 'd':
-    	    if self.kt == False:
-                	IMDBPath = 'IdTrackerDeep/data/TU20170131_31dpf_40indiv_34770ImPerInd_curvaturePortrait_0.hdf5'
-    	    elif self.kt == True:
-                	IMDBPath = 'IdTrackerDeep/data/TU20170131_31dpf_40indiv_34770ImPerInd_curvaturePortrait_0.hdf5'
-
-            print '\nUsing default library, ', IMDBPath
-        self.IMDBPath = IMDBPath
-        self.IMDBName = getIMDBNameFromPath(self.IMDBPath)
+        # Get list of IMDBPaths form IMDBCode
+        print '\nReading IMDBCode and idsCode...'
+        IMDBsDict = {
+                    'A':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160413_36dpf_16indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
+                    'B':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160428_36dpf_16indiv_28818ImPerInd_curvaturePortrait_0.hdf5',
+                    'C':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160920_36dpf_16indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
+                    'D':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170131_31dpf_16indiv_38989ImPerInd_curvaturePortrait_0.hdf5',
+                    'E':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170201_31pdf_16indiv_38997ImPerInd_curvaturePortrait_0.hdf5',
+                    'F':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170202_31pdf_16indiv_38998ImPerInd_curvaturePortrait_0.hdf5'
+                    }
+        self.IMDBPaths = []
+        self.idsInIMDBs = []
+        for (letter1,letter2) in zip(IMDBCode,idsCode):
+            print '\nletter1, ', letter1
+            self.IMDBPaths.append(IMDBsDict[letter1])
+            IMDBName = getIMDBNameFromPath(IMDBsDict[letter1])
+            print 'IMDBName, ', IMDBName
+            strain, age, numIndivIMDB, numImPerIndiv = getIMDBInfoFromName(IMDBName)
+            print 'numIndivIMDB', numIndivIMDB
+            print 'letter2, ', letter2
+            if letter2 == 'a': # all ids
+                ids = range(numIndivIMDB)
+            elif letter2 == 'f': # first half idsInIMDBs
+                ids = range(numIndivIMDB/2)
+            elif letter2 == 's': # first half idsInIMDBs
+                ids = range(numIndivIMDB/2,numIndivIMDB)
+            print 'ids selected, ', ids
+            self.idsInIMDBs.append(ids)
+        print 'IMDBPaths, ', self.IMDBPaths
+        print 'idsInIMDBs, ', self.idsInIMDBs
 
         # Initialize dictionaries where the data is going to be stored
         self.initializeDicts()
@@ -242,8 +262,70 @@ class P1B1(object):
             self.trainAccs[n,g,gCNN,r] = lossAccDict['acc'][-1]
             self.valAccs[n,g,gCNN,r] = lossAccDict['valAcc'][-1]
 
-        # Prepare
-        _, images, labels, self.imSize, self.numIndivImdb, self.minNumImagesPerIndiv = loadIMDB(self.IMDBPath)
+        # Load data from IMDBs
+        def loadIMDBs(self):
+            # Initialize variables
+            images = []
+            labels = []
+            self.numIndivImdb = 0
+            self.strains = []
+            self.ages = []
+            for (IMDBPath,idsInIMDB) in zip(self.IMDBPaths,self.idsInIMDBs):
+                IMDBName = getIMDBNameFromPath(IMDBPath)
+                strain, age, numIndivIMDB, numImPerIndiv = getIMDBInfoFromName(IMDBName)
+                print '\nExtracting imagaes from ', IMDBName
+                print 'The individuals selected from this IMDB are ',  idsInIMDB
+                print 'strain, ', strain
+                print 'age, ', age
+                print 'numIndivIMDB, ', numIndivIMDB
+                self.strains.append(strain)
+                self.ages.append(age)
+
+                # Check whether there are enough individuals in the IMDB
+                if numIndivIMDB < len(idsInIMDB):
+                    raise ValueError('The number of indiv requested is bigger than the number of indiv in the IMDB')
+
+                # Load IMDB
+                _, imagesIMDB, labelsIMDB, self.imsize, _, _ = loadIMDB(IMDBPath)
+
+                # If the number of individuals requested is smaller I need to slice the IMDB
+                if numIndivIMDB > len(idsInIMDB):
+                    imagesIMDB, labelsIMDB = sliceDatabase(imagesIMDB, labelsIMDB, idsInIMDB)
+
+                ### FIXME there is some problem in the construction of the IMDBs because some of them have he channels dimension and other do not
+                if len(labelsIMDB.shape) == 1:
+                    imagesIMDB = np.expand_dims(imagesIMDB,axis=1)
+                    labelsIMDB = np.expand_dims(labelsIMDB,axis=1)
+
+                # Update labels values according to the number of individuals already loaded
+                labelsIMDB = labelsIMDB+self.numIndivImdb
+
+                # Append labels and images to the list
+                print 'images shape ', imagesIMDB.shape
+                print 'labels shape ', labelsIMDB.shape
+                images.append(imagesIMDB)
+                labels.append(labelsIMDB)
+                print 'The labels added are, ', np.unique(labelsIMDB)
+
+                # Update number of individuals loaded
+                self.numIndivImdb += len(idsInIMDB)
+
+                # To clear memory
+                imagesIMDB = None
+                labelsIMDB = None
+
+            # Stack all images and labes
+            images = np.vstack(images)
+            labels = np.vstack(labels)
+            print 'images shape ', images.shape
+            print 'labels shape ', labels.shape
+            print 'labels ', np.unique(labels)
+            self.minNumImagesPerIndiv = [np.sum(labels == i) for i in np.unique(labels)]
+            print 'num images per label, ', self.minNumImagesPerIndiv
+
+            return images, labels
+
+        images, labels = loadIMDBs(self)
 
         # Standarization of images
         images = images/255.
@@ -327,13 +409,14 @@ class P1B1(object):
 if __name__ == '__main__':
     '''
     argv[1]: job number
-    argv[2]: dataBase if 'd' is default
-    argv[3]: repetitions
-    argv[4]: groupSizeCNN
-    argv[5]: condition: 'S'-scratch, 'KT'-knowledgeT, 'KTC'-knowledgeTCorrelated
-    P1B1.py 1 d 1_2 2_5 S (job1,default library,repetitions[1 2],groupSizesCNN[2 5],from scratch)
+    argv[2]: IMDBs (A, B, C, D, E, F)
+    argv[3]: idsInIMDBs: a - all, f - first half, s - second half
+    argv[4]: repetitions
+    argv[5]: groupSizeCNN
+    argv[6]: condition: 'S'-scratch, 'KT'-knowledgeT, 'KTC'-knowledgeTCorrelated
+    P1B1.py 1 AB af 1_2 2_5 S (job1,library A and B, all individuals in library A and first half obf B, repetitions[1 2],groupSizesCNN[2 5],from scratch)
     '''
 
-    p = P1B1(job = int(sys.argv[1]), IMDBPath = sys.argv[2], repList = sys.argv[3], groupSizesCNN = sys.argv[4], condition = sys.argv[5])
+    p = P1B1(job = int(sys.argv[1]), IMDBCode = sys.argv[2], idsCode = sys.argv[3], repList = sys.argv[4], groupSizesCNN = sys.argv[5], condition = sys.argv[6])
     p.compute()
     p.computeTimes(accTh = 0.8)
