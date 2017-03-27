@@ -35,8 +35,8 @@ class P1B1(object):
         # Figure parameters
         self.groupSizesCNN = map(int,groupSizesCNN.split('_'))
         self.numGroupsCNN = len(self.groupSizesCNN)
-        self.groupSizes = [2, 5, 10, 25, 50, 75, 100, 150, 200, 250, 300]
-        # self.groupSizes = [2, 5, 10, 25, 40, 80]
+        #self.groupSizes = [2, 5, 10, 25, 50, 75, 100, 150, 200, 250, 300]
+        self.groupSizes = [2, 5, 10, 25, 50, 75, 100, 140]
         # self.groupSizes = [10, 25, 50]
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
@@ -96,7 +96,7 @@ class P1B1(object):
         # Get list of IMDBPaths form IMDBCode
         print '\nReading IMDBCode and idsCode...'
         if not self.cluster:
-            datafolder = '/home/chaos/Desktop/IdTrackerDeep/
+            datafolder = '/home/chaos/Desktop/IdTrackerDeep/' 
         elif self.cluster:
             datafolder = '/admin/'
         IMDBsDict = {
