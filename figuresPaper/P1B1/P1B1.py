@@ -34,8 +34,8 @@ class P1B1(object):
         # Figure parameters
         self.groupSizesCNN = map(int,groupSizesCNN.split('_'))
         self.numGroupsCNN = len(self.groupSizesCNN)
-        self.groupSizes = [2, 5, 10, 25, 50, 75, 100, 150, 200, 250, 300]
-        # self.groupSizes = [40]
+        # self.groupSizes = [2, 5, 10, 25, 50, 75, 100, 150, 200, 250, 300]
+        self.groupSizes = [2, 5, 10, 25, 40, 80]
         # self.groupSizes = [10, 25, 50]
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
@@ -48,15 +48,16 @@ class P1B1(object):
         # Initialize figure arrays
         self.trainAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
         self.valAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
+        self.testAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
 
         # Set CNN training parameters
         self.batchSize = 250
         self.numEpochs = 5000
         self.lr = 0.01
 
-	# Set keep probability for dropout
-	self.keep_prop = 1.0
-	if 'P' in self.condition:
+    	# Set keep probability for dropout
+    	self.keep_prob = 1.0
+    	if 'P' in self.condition:
        	    self.keep_prob = 0.7
 
         # Set flag to indicate knowledge transfer
@@ -102,7 +103,7 @@ class P1B1(object):
                     'C':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160920_36dpf_64indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
                     'D':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170131_31dpf_40indiv_34770ImPerInd_curvaturePortrait_0.hdf5',
                     'E':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170201_31pdf_72indiv_38739ImPerInd_curvaturePortrait_0.hdf5',
-                    'F':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170202_31pdf_72indiv_38913ImPerInd_curvaturePortrait_0.hdf5'
+                    'F':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170202_31pdf_72indiv_38913ImPerInd_curvaturePortrait_0.hdf5',
                     'a':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160413_36dpf_16indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
                     'b':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160428_36dpf_16indiv_28818ImPerInd_curvaturePortrait_0.hdf5',
                     'c':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160920_36dpf_16indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
@@ -266,6 +267,7 @@ class P1B1(object):
             self.LossAccDicts[groupSizeCNN][groupSize][numImForTrain].append(lossAccDict)
             self.trainAccs[n,g,gCNN,r] = lossAccDict['acc'][-1]
             self.valAccs[n,g,gCNN,r] = lossAccDict['valAcc'][-1]
+            self.testAccs[n,g,gCNN,r] = lossAccDict['testAcc'][-1]
 
         # Load data from IMDBs
         def loadIMDBs(self):

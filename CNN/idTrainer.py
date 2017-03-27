@@ -172,28 +172,36 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
             summary_writerV = tf.summary.FileWriter(ckpt_dir + '/val',sess.graph)
 
             if start == 0 or not os.path.exists(ckpt_dir_model + "/lossAcc.pkl"):
-                # ref lists for plotting
+                # train lists for plotting
                 trainLossPlot = []
                 trainAccPlot = []
                 trainIndivAccPlot = []
-                # test lists for ploting
+                # val lists for ploting
                 valLossPlot = []
                 valAccPlot = []
                 valIndivAccPlot = []
+                # test lists for ploting
+                testLossPlot = []
+                testAccPlot = []
+                testIndivAccPlot = []
                 # time for each epoch
                 epochTime = []
             else:
                 ''' load from pickle '''
                 lossAccDict = pickle.load( open( ckpt_dir_model + "/lossAcc.pkl", "rb" ) )
-                # ref lists for plotting
+                # train lists for plotting
                 trainLossPlot = lossAccDict['loss']
                 trainAccPlot = lossAccDict['acc']
                 trainIndivAccPlot = lossAccDict['indivAcc']
-                # test lists for plotting
+                # val lists for plotting
                 valLossPlot = lossAccDict['valLoss']
                 valAccPlot = lossAccDict['valAcc']
                 valIndivAccPlot = lossAccDict['indivValAcc']
                 valIndivAcc = valIndivAccPlot
+                # test lists for plotting
+                testLossPlot = lossAccDict['testLoss']
+                testAccPlot = lossAccDict['testAcc']
+                testIndivAccPlot = lossAccDict['indivTestAcc']
 
                 epochTime = lossAccDict['epochTime']
 
@@ -402,42 +410,42 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
                     trainLossPlot.append(trainLoss)
                     trainAccPlot.append(trainAcc)
                     trainIndivAccPlot.append(trainIndivAcc)
-                    trainLossSpeed, trainLossAccel = computeDerivatives(trainLossPlot)
-                    trainAccSpeed, trainAccAccel = computeDerivatives(trainAccPlot)
-                    trainFeatPlot = trainFeat
+                    # trainLossSpeed, trainLossAccel = computeDerivatives(trainLossPlot)
+                    # trainAccSpeed, trainAccAccel = computeDerivatives(trainAccPlot)
+                    # trainFeatPlot = trainFeat
 
                     # Validations
                     valLossPlot.append(valLoss)
                     valAccPlot.append(valAcc)
                     valIndivAccPlot.append(valIndivAcc)
-                    valLossSpeed, valLossAccel = computeDerivatives(valLossPlot)
-                    valAccSpeed, valAccAccel = computeDerivatives(valAccPlot)
+                    # valLossSpeed, valLossAccel = computeDerivatives(valLossPlot)
+                    # valAccSpeed, valAccAccel = computeDerivatives(valAccPlot)
+
+                    # Test
+                    testLossPlot.append(testLoss)
+                    testAccPlot.append(testAcc)
+                    testIndivAccPlot.append(testIndivAcc)
+                    # testLossSpeed, testLossAccel = computeDerivatives(testLossPlot)
+                    # testAccSpeed, testAccAccel = computeDerivatives(testAccPlot)
 
                     lossAccDict = {
                         'loss': trainLossPlot,
                         'valLoss': valLossPlot,
-                        'lossSpeed': trainLossSpeed,
-                        'valLossSpeed': valLossSpeed,
-                        'lossAccel': trainLossAccel,
-                        'valLossAccel': valLossAccel,
+                        'testLoss': testLossPlot,
                         'acc': trainAccPlot,
                         'valAcc': valAccPlot,
-                        'accSpeed': trainAccSpeed,
-                        'valAccSpeed': valAccSpeed,
-                        'accAccel': trainAccSpeed,
-                        'valAccAccel': valAccSpeed,
+                        'testAcc': testAccPlot,
                         'indivAcc': trainIndivAccPlot,
                         'indivValAcc': valIndivAccPlot,
-                        'features': trainFeatPlot,
-                        'labels': one_hot_to_dense(trainFeatLabels), # labels of the last batch of the references to plot some features
+                        'indivTestAcc': testIndivAccPlot,
                         'epochTime': epochTime
                         }
 
-                    weightsDict = {
-                        'W1': WConv1,
-                        'W3': WConv3,
-                        'W5': WConv5
-                        }
+                    # weightsDict = {
+                    #     'W1': WConv1,
+                    #     'W3': WConv3,
+                    #     'W5': WConv5
+                    #     }
 
                     # # update global step and save model
                     # global_step.assign(global_step + 1).eval() # set and update(eval) global_step with index, i
