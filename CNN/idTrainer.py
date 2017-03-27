@@ -15,6 +15,7 @@ from tf_utils import *
 from input_data_cnn import *
 from cnn_utils import *
 from cnn_architectures import *
+from py_utils import *
 
 def _add_loss_summary(loss):
     tf.summary.scalar(loss.op.name, loss)
@@ -25,19 +26,22 @@ def loss(y,y_logits):
     _add_loss_summary(cross_entropy)
     return cross_entropy
 
-def optimize(loss,lr):
+def optimize(loss,lr,varToTrain=[]):
     optimizer = tf.train.GradientDescentOptimizer(lr)
     # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
     global_step = tf.Variable(0, name='global_step', trainable=False)
-    train_op = optimizer.minimize(loss=loss)
+    if not varToTrain:
+        train_op = optimizer.minimize(loss=loss)
+    else:
+        train_op = optimizer.minimize(loss,var_list = varToTrain)
     return train_op, global_step
 
-def optimizeSoftmax(loss,lr,softVariables):
-    optimizer = tf.train.GradientDescentOptimizer(lr)
-    # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
-    global_step = tf.Variable(0, name='global_step', trainable=False)
-    train_op = optimizer.minimize(loss,var_list = softVariables)
-    return train_op, global_step
+# def optimizeSoftmax(loss,lr,softVariables):
+#     optimizer = tf.train.GradientDescentOptimizer(lr)
+#     # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
+#     global_step = tf.Variable(0, name='global_step', trainable=False)
+#     train_op = optimizer.minimize(loss,var_list = softVariables)
+#     return train_op, global_step
 
 def evaluation(y,y_logits,classes):
     accuracy, indivAcc = individualAccuracy(y,y_logits,classes)
@@ -97,26 +101,36 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
         logits, relu, (W1,W3,W5), softVar = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
 
         cross_entropy = loss(labels_pl,logits)
-        #
-        # softVar = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="softmax1")
-        with tf.variable_scope("softmax1", reuse=True) as scope:
-            softW = tf.get_variable("weights")
-            softB = tf.get_variable("biases")
-        print softW
-        print softB
-        softVar = [softW,softB]
 
-        if onlySoftmax:
+        varToTrain = []
+        if onlyFullyConnected:
+            print '********************************************************'
+            print 'We will only train the softmax and fully connected...'
+            print '********************************************************'
+            with tf.variable_scope("fully-connected1", reuse=True) as scope:
+                FcW = tf.get_variable("weights")
+                FcB = tf.get_variable("biases")
+            print 'Fc W variables, ', FcW
+            print 'Fc B variables, ', FcB
+            varToTrain.append([FcW, FcB])
+        elif onlySoftmax:
             print '********************************************************'
             print 'We will only train the softmax...'
             print '********************************************************'
-            train_op, global_step = optimizeSoftmax(cross_entropy,lr,softVar)
+            with tf.variable_scope("softmax1", reuse=True) as scope:
+                softW = tf.get_variable("weights")
+                softB = tf.get_variable("biases")
+            print 'softmax W variables, ', softW
+            print 'softmax B variables, ', softB
+            varToTrain.append([softW,softB])
         else:
             print '********************************************************'
             print 'We will only train the whole network...'
             print '********************************************************'
-            train_op, global_step =  optimize(cross_entropy,lr)
-        # train_op, global_step =  optimize(cross_entropy,lr)
+
+        varToTrain = flatten(varToTrain)
+
+        train_op, global_step = optimize(cross_entropy,lr,varToTrain)
 
         accuracy, indivAcc = evaluation(labels_pl,logits,classes)
 

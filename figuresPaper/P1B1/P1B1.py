@@ -20,7 +20,7 @@ from py_utils import *
 
 class P1B1(object):
 
-    def __init__(self, job = 1, IMDBCode = 'A', idsCode = 'a', repList = '1', groupSizesCNN = '0', condition = 'S'):
+    def __init__(self, cluster = 0, job = 1, IMDBCode = 'A', idsCode = 'a', repList = '1', groupSizesCNN = '0', condition = 'S'):
 
         def getIMDBNameFromPath(IMDBPath):
             filename, extension = os.path.splitext(IMDBPath)
@@ -29,18 +29,19 @@ class P1B1(object):
             return IMDBName
 
         # Job counter for condor
+        self.cluster = cluster
         self.job = job
         self.condition = condition
         # Figure parameters
         self.groupSizesCNN = map(int,groupSizesCNN.split('_'))
         self.numGroupsCNN = len(self.groupSizesCNN)
-        # self.groupSizes = [2, 5, 10, 25, 50, 75, 100, 150, 200, 250, 300]
-        self.groupSizes = [2, 5, 10, 25, 40, 80]
+        self.groupSizes = [2, 5, 10, 25, 50, 75, 100, 150, 200, 250, 300]
+        # self.groupSizes = [2, 5, 10, 25, 40, 80]
         # self.groupSizes = [10, 25, 50]
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        self.IMDBSizes = [20,50,100,250,500,750,1000,3000,28000] # Images for training
+        self.IMDBSizes = [20,50,100,250,500,1000,3000,28000] # Images for training
         # self.IMDBSizes = [3000]
         # self.IMDBSizes = [20,50,100,250]
         self.numIMDBSizes = len(self.IMDBSizes)
@@ -52,12 +53,12 @@ class P1B1(object):
 
         # Set CNN training parameters
         self.batchSize = 250
-        self.numEpochs = 5000
+        self.numEpochs = 2000
         self.lr = 0.01
 
     	# Set keep probability for dropout
     	self.keep_prob = 1.0
-    	if 'P' in self.condition:
+    	if 'D' in self.condition:
        	    self.keep_prob = 0.7
 
         # Set flag to indicate knowledge transfer
@@ -67,7 +68,7 @@ class P1B1(object):
 
         # Set flag to stop the training when it is not learning much
         self.checkLearningFlag = False
-        if 'V' in self.condition:
+        if 'V' in self.condition: # 'V' stands for video condition for early stopping
             self.checkLearningFlag = True
 
         # Set flag to only train softmax
@@ -75,20 +76,17 @@ class P1B1(object):
         if 'X' in self.condition:
             self.trainSoftmax = True
 
-        # Set flag to train the whole network
-        self.onlyFullyConnected = False
-        if 'F' in self.condition:
-            self.onlyFullyConnected = True
-
-        # Set flag to train the whole network
-        self.allNetwork = False
-        if 'N' in self.condition:
-            self.allNetwork = True
+        # Set flag to train fully connected and softmax
+        self.trainFullyConnected = False
+        if 'FX' in self.condition:
+            self.trainFullyConnected = True
+            self.trainSoftmax = True
 
         # Set flag for data Augmentation
         self.dataAugmentation = False
-        if 'D' in self.condition:
+        if 'A' in self.condition:
             self.dataAugmentation = True
+            self.IMDBSizes = [20,50,100,250,500]
 
         # Set flag for correlated iamges
         self.correlatedImages = False
@@ -97,19 +95,23 @@ class P1B1(object):
 
         # Get list of IMDBPaths form IMDBCode
         print '\nReading IMDBCode and idsCode...'
+        if not self.cluster:
+            datafolder = '/home/chaos/Desktop/IdTrackerDeep/
+        elif self.cluster:
+            datafolder = '/admin/'
         IMDBsDict = {
-		    'A':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160413_36dpf_60indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
-                    'B':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160428_36dpf_60indiv_28010ImPerInd_curvaturePortrait_0.hdf5',
-                    'C':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160920_36dpf_64indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
-                    'D':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170131_31dpf_40indiv_34770ImPerInd_curvaturePortrait_0.hdf5',
-                    'E':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170201_31pdf_72indiv_38739ImPerInd_curvaturePortrait_0.hdf5',
-                    'F':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170202_31pdf_72indiv_38913ImPerInd_curvaturePortrait_0.hdf5',
-                    'a':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160413_36dpf_16indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
-                    'b':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160428_36dpf_16indiv_28818ImPerInd_curvaturePortrait_0.hdf5',
-                    'c':'/home/chaos/Desktop/IdTrackerDeep/data/TU20160920_36dpf_16indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
-                    'd':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170131_31dpf_16indiv_38989ImPerInd_curvaturePortrait_0.hdf5',
-                    'e':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170201_31pdf_16indiv_38997ImPerInd_curvaturePortrait_0.hdf5',
-                    'f':'/home/chaos/Desktop/IdTrackerDeep/data/TU20170202_31pdf_16indiv_38998ImPerInd_curvaturePortrait_0.hdf5'
+                    'A': datafolder + 'data/TU20160413_36dpf_60indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
+                    'B': datafolder + 'data/TU20160428_36dpf_60indiv_28010ImPerInd_curvaturePortrait_0.hdf5',
+                    'C': datafolder + 'data/TU20160920_36dpf_64indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
+                    'D': datafolder + 'data/TU20170131_31dpf_40indiv_34770ImPerInd_curvaturePortrait_0.hdf5',
+                    'E': datafolder + 'data/TU20170201_31pdf_72indiv_38739ImPerInd_curvaturePortrait_0.hdf5',
+                    'F': datafolder + 'data/TU20170202_31pdf_72indiv_38913ImPerInd_curvaturePortrait_0.hdf5',
+                    'a': datafolder + 'data/TU20160413_36dpf_16indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
+                    'b': datafolder + 'data/TU20160428_36dpf_16indiv_28818ImPerInd_curvaturePortrait_0.hdf5',
+                    'c': datafolder + 'data/TU20160920_36dpf_16indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
+                    'd': datafolder + 'data/TU20170131_31dpf_16indiv_38989ImPerInd_curvaturePortrait_0.hdf5',
+                    'e': datafolder + 'data/TU20170201_31pdf_16indiv_38997ImPerInd_curvaturePortrait_0.hdf5',
+                    'f': datafolder + 'data/TU20170202_31pdf_16indiv_38998ImPerInd_curvaturePortrait_0.hdf5'
                     }
         self.IMDBPaths = []
         self.idsInIMDBs = []
@@ -217,9 +219,13 @@ class P1B1(object):
             print 'X_train shape', X_train.shape
             print 'X_val shape', X_val.shape
             print 'X_test shape', X_test.shape
-            X_train, Y_train = dataAugment(X_train,Y_train,flag = self.dataAugmentation)
-            X_val, Y_val = dataAugment(X_val,Y_val,flag = False)
-            X_test, Y_test = dataAugment(X_test,Y_test,flag = False)
+            if self.dataAugmentation:
+                X_train, Y_train = dataAugment(X_train,Y_train,dataAugment = True)
+            else:
+                X_train, Y_train = dataAugment(X_train,Y_train,dataAugment = False)
+
+            X_val, Y_val = dataAugment(X_val,Y_val,dataAugment = False)
+            X_test, Y_test = dataAugment(X_test,Y_test,dataAugment = False)
             self.width, self.height, self.channels = X_train.shape[1:]
 
             # Pass labels from dense_to_one_hot
@@ -261,7 +267,8 @@ class P1B1(object):
                                         TestIndices, TestIter_per_epoch,
                                         self.keep_prob,self.lr,
                                         checkLearningFlag = self.checkLearningFlag,
-                                        onlySoftmax=self.onlySoftmax)
+                                        onlySoftmax=self.onlySoftmax,
+                                        onlyFullyConnected = self.trainFullyConnected)
 
             print 'Time in seconds, ', np.sum(lossAccDict['epochTime'])
             self.LossAccDicts[groupSizeCNN][groupSize][numImForTrain].append(lossAccDict)
@@ -340,12 +347,6 @@ class P1B1(object):
         stdIm = np.std(images,axis=0)
         images = (images-meanIm)/stdIm
 
-        # Training parameters
-        # self.channels = 1
-        # self.width = 32
-        # self.height = 32
-        # self.resolution = np.prod(self.imSize)
-
         # Main loop
         for gCNN in range(self.numGroupsCNN): # Group size of the pre trained CNN model
             if not self.kt:
@@ -353,7 +354,7 @@ class P1B1(object):
             elif self.kt:
                 # By default we will use the first repetition and the model train with the whole library 25000 images.
                 # FIXME be aware that the 25000 is hardcoded and can give errors if we train for another number of images for training...
-                loadCkpt_folder = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsS/numIndiv_%i/numImages_%i/rep_%i' %(self.groupSizesCNN[gCNN], 25000, 1)
+                loadCkpt_folder = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsS/numIndiv_%i/numImages_%i/rep_%i' %(self.groupSizesCNN[gCNN], 28000, 1)
 
 
             for g in range(self.numGroups): # Group size for the current training
@@ -415,15 +416,16 @@ class P1B1(object):
 
 if __name__ == '__main__':
     '''
-    argv[1]: job number
-    argv[2]: IMDBs (A, B, C, D, E, F)
-    argv[3]: idsInIMDBs: a - all, f - first half, s - second half
-    argv[4]: repetitions
-    argv[5]: groupSizeCNN
-    argv[6]: condition: 'S'-scratch, 'KT'-knowledgeT, 'KTC'-knowledgeTCorrelated
-    P1B1.py 1 AB af 1_2 2_5 S (job1,library A and B, all individuals in library A and first half obf B, repetitions[1 2],groupSizesCNN[2 5],from scratch)
+    argv[1]: 1 = cluster, 0 = no cluster
+    argv[2]: job number
+    argv[3]: IMDBs (A, B, C, D, E, F)
+    argv[4]: idsInIMDBs: a - all, f - first half, s - second half
+    argv[5]: repetitions
+    argv[6]: groupSizeCNN
+    argv[7]: condition: 'S'-scratch, 'KT'-knowledgeT, 'KTC'-knowledgeTCorrelated
+    P1B1.py 1 1 AB af 1_2 20_50 S (running in the cluster, job1, library A and B, all individuals in library A and first half obf B, repetitions[1 2],groupSizesCNN[2 5],from scratch)
     '''
 
-    p = P1B1(job = int(sys.argv[1]), IMDBCode = sys.argv[2], idsCode = sys.argv[3], repList = sys.argv[4], groupSizesCNN = sys.argv[5], condition = sys.argv[6])
+    p = P1B1(cluster = sys.argv[1], job = int(sys.argv[2]), IMDBCode = sys.argv[3], idsCode = sys.argv[4], repList = sys.argv[5], groupSizesCNN = sys.argv[6], condition = sys.argv[7])
     p.compute()
     p.computeTimes(accTh = 0.8)

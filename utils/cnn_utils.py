@@ -517,7 +517,7 @@ def cropImages(images,imageSize,shift=(0,0)):
         # print 'Portrait cropped'
         return croppedImages
 
-def dataAugment(images,labels,flag = False):
+def dataAugment(images,labels,dataAugment = False):
 
     def getPossibleShifts():
         possibleShifts = []
@@ -528,7 +528,7 @@ def dataAugment(images,labels,flag = False):
         possibleShifts = set(possibleShifts)
         return possibleShifts
 
-    if flag:
+    if dataAugment:
         print 'Performing data augmentation...'
         possibleShifts = getPossibleShifts() #(0,0) is included
         augmentedImages = []
