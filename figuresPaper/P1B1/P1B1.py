@@ -17,6 +17,7 @@ sys.path.append('IdTrackerDeep/CNN')
 from idTrainer import *
 from input_data_cnn import *
 from py_utils import *
+import gc
 
 class P1B1(object):
 
@@ -340,7 +341,8 @@ class P1B1(object):
             return images, labels
 
         images, labels = loadIMDBs(self)
-
+        gc.collect()
+        
         # Standarization of images
         images = images/255.
         meanIm = np.mean(images, axis=0)
