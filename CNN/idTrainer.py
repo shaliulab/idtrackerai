@@ -92,7 +92,8 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
     Vindices, Viter_per_epoch,
     TestIndices, TestIter_per_epoch,
     keep_prob = 1.0,lr = 0.01,
-    printFlag=True, checkLearningFlag = False,onlySoftmax=False):
+    printFlag=True, checkLearningFlag = False,
+    onlySoftmax=False, onlyFullyConnected = False):
 
     with tf.Graph().as_default():
         images_pl, labels_pl = placeholder_inputs(batch_size, width, height, channels, classes)

@@ -88,6 +88,7 @@ class P1B1(object):
         if 'A' in self.condition:
             self.dataAugmentation = True
             self.IMDBSizes = [20,50,100,250,500]
+	    self.numIMDBSizes = len(self.IMDBSizes)
 
         # Set flag for correlated iamges
         self.correlatedImages = False
@@ -335,7 +336,7 @@ class P1B1(object):
             print 'images shape ', images.shape
             print 'labels shape ', labels.shape
             print 'labels ', np.unique(labels)
-            self.minNumImagesPerIndiv = [np.sum(labels == i) for i in np.unique(labels)]
+            self.minNumImagesPerIndiv = np.min([np.sum(labels == i) for i in np.unique(labels)])
             print 'num images per label, ', self.minNumImagesPerIndiv
 
             return images, labels
