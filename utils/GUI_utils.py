@@ -409,7 +409,7 @@ def SegmentationPreview(videoPaths, width, height, bkg, mask, useBkg, preprocPar
         rowPortrait = []
         while j < numPortraits:
             if j < numGoodContours:
-                portrait,_ = getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j])
+                portrait,_,_= getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j])
                 portrait = cropPortrait(portrait,portraitSize,shift = (0,0))
                 portrait = np.squeeze(portrait)
             else:
@@ -564,6 +564,8 @@ def selectPreprocParams(videoPaths, usePreviousPrecParams, width, height, bkg, m
         cv2.waitKey(1)
 
         saveFile(videoPaths[0], preprocParams, 'preprocparams',hdfpkl='pkl')
+    else:
+        preprocParams = loadFile(videoPaths[0], 'preprocparams',hdfpkl='pkl')
     return preprocParams
 
 ''' ****************************************************************************
