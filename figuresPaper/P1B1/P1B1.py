@@ -37,7 +37,7 @@ class P1B1(object):
         self.groupSizesCNN = map(int,groupSizesCNN.split('_'))
         self.numGroupsCNN = len(self.groupSizesCNN)
         #self.groupSizes = [2, 5, 10, 25, 50, 75, 100, 150, 200, 250, 300]
-        self.groupSizes = [2, 5, 10, 25, 50, 75, 100, 140]
+        self.groupSizes = [2, 5, 10, 25, 50, 75, 90]
         # self.groupSizes = [10, 25, 50]
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
