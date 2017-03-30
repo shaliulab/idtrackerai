@@ -98,7 +98,7 @@ class P1B1(object):
         # Get list of IMDBPaths form IMDBCode
         print '\nReading IMDBCode and idsCode...'
         if not self.cluster:
-            datafolder = '/home/chaos/Desktop/IdTrackerDeep/' 
+            datafolder = '/home/chaos/Desktop/IdTrackerDeep/'
         elif self.cluster:
             datafolder = '/admin/'
         IMDBsDict = {
@@ -343,7 +343,7 @@ class P1B1(object):
 
         images, labels = loadIMDBs(self)
         gc.collect()
-        
+
         # Standarization of images
         images = images/255.
         meanIm = np.mean(images, axis=0)

@@ -212,7 +212,7 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
                 valLossPlot = lossAccDict['valLoss']
                 valAccPlot = lossAccDict['valAcc']
                 valIndivAccPlot = lossAccDict['indivValAcc']
-                valIndivAcc = valIndivAccPlot
+                valIndivAcc = valIndivAccPlot[-1]
                 # test lists for plotting
                 testLossPlot = lossAccDict['testLoss']
                 testAccPlot = lossAccDict['testAcc']
@@ -277,7 +277,7 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
                             if printFlag:
                                 print '\nFinished, the network it is not learning more, we stop training'
                             break
-                        if list(valIndivAcc) == list(np.ones(classes)):
+                        if list(valIndivAcc[-1]) == list(np.ones(classes)):
                             if printFlag:
                                 print '\nIndividual validations accuracy is 1 for all the animals'
                             break

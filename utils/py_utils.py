@@ -129,6 +129,8 @@ def scanFolder(path):
     # maybe write check on video extension supported by opencv2
     if filename[-2:] == '_1':
         paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
+    else:
+        paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
     return paths
 
 def get_spaced_colors_util(n,norm=False):
