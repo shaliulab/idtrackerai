@@ -9,6 +9,7 @@ import cPickle as pickle
 # Import application/library specifics
 from tf_utils import weight_variable, bias_variable, dense_to_one_hot, one_hot_to_dense
 from py_utils import *
+
 def matToH5(pathToDatabase):
     def retrieveInfo(pathToDatabase):
         nameFile = os.path.split(pathToDatabase)[-1]
@@ -392,6 +393,7 @@ def getIMDBNameFromPath(IMDBPath):
     filename, extension = os.path.splitext(IMDBPath)
     IMDBName = '_'.join(filename.split('/')[-1].split('_')[:-1])
     return IMDBName
+    
 def getIMDBInfoFromName(IMDBName):
     strain = IMDBName.split('_')[0]
     age = IMDBName.split('_')[1]

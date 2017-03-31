@@ -21,24 +21,6 @@ from py_utils import *
 
 class P1B1plotter(object):
 
-    def initializeDicts(self):
-        # Main loop
-        self.LossAccDicts = {}
-        for gCNN in self.groupSizesCNN:
-            self.LossAccDicts[gCNN] = {}
-
-            for g in self.groupSizes:
-                self.LossAccDicts[gCNN][g] = {}
-
-                for n in self.IMDBSizes:
-                    self.LossAccDicts[gCNN][g][n] = []
-
-        # Initialize figure arrays
-        self.trainAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
-        self.valAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
-        self.testAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
-
-
     def getListsFromPath(self):
 
         # get folder
@@ -66,6 +48,23 @@ class P1B1plotter(object):
         self.repList = sorted([int(a.split('/')[-2].split('_')[-1]) for a in glob.glob(glob.glob(glob.glob(glob.glob(CNN_modelsPath + "/*/")[0]+"*/")[0]+"*/")[0]+"*/")])
         self.numRepetitions = len(self.repList)
         print 'Repetitions, ', self.repList
+
+    def initializeDicts(self):
+        # Main loop
+        self.LossAccDicts = {}
+        for gCNN in self.groupSizesCNN:
+            self.LossAccDicts[gCNN] = {}
+
+            for g in self.groupSizes:
+                self.LossAccDicts[gCNN][g] = {}
+
+                for n in self.IMDBSizes:
+                    self.LossAccDicts[gCNN][g][n] = []
+
+        # Initialize figure arrays
+        self.trainAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
+        self.valAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
+        self.testAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
 
     def rebuildDictFromFolders(self):
 
@@ -173,44 +172,30 @@ class P1B1plotter(object):
     #                         print 'Group size CNN %i Group size %i IMDB size %i REp %i' %(gCNN,g,n,r)
     #                         ImagesIndices[gCNN][g][n].append(imagesIndices)
     #                         LossAccDicts[gCNN][g][n].append(lossAccDict)
-        #
-        # # Update object
-        # self.repList = flatten(repList)
-        # self.numRepetitions = len(self.repList)
-        # print 'repList, ', self.repList
-        # print 'trainAccs shape, ',trainAccs[0].shape
-        # print 'valAccs shape, ', valAccs[0].shape
-        # print 'trainAccs shape, ',trainAccs[1].shape
-        # print 'valAccs shape, ', valAccs[1].shape
-        # self.trainAccs = np.concatenate(trainAccs,axis=3)
-        # self.valAccs = np.concatenate(valAccs,axis=3)
-        #
-        # print 'trainAccs, ', self.trainAccs
-        # print 'valAccs, ', self.valAccs
-        # self.IndivIndices = IndivIndices
-        # self.ImagesIndices = ImagesIndices
-        # self.LossAccDicts = LossAccDicts
-        # print 'Num of lossAccDicts', len(IndivIndices[gCNN][g]), len(ImagesIndices[gCNN][g][n]), len(LossAccDicts[gCNN][g][n])
-        #
-        # # Save dictionary
-        # print '\nSaving dictionary...'
-        # pickle.dump(self.__dict__,open('IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict.pkl' %self.condition,'wb'))
+    #
+    #     # Update object
+    #     self.repList = flatten(repList)
+    #     self.numRepetitions = len(self.repList)
+    #     print 'repList, ', self.repList
+    #     print 'trainAccs shape, ',trainAccs[0].shape
+    #     print 'valAccs shape, ', valAccs[0].shape
+    #     print 'trainAccs shape, ',trainAccs[1].shape
+    #     print 'valAccs shape, ', valAccs[1].shape
+    #     self.trainAccs = np.concatenate(trainAccs,axis=3)
+    #     self.valAccs = np.concatenate(valAccs,axis=3)
+    #
+    #     print 'trainAccs, ', self.trainAccs
+    #     print 'valAccs, ', self.valAccs
+    #     self.IndivIndices = IndivIndices
+    #     self.ImagesIndices = ImagesIndices
+    #     self.LossAccDicts = LossAccDicts
+    #     print 'Num of lossAccDicts', len(IndivIndices[gCNN][g]), len(ImagesIndices[gCNN][g][n]), len(LossAccDicts[gCNN][g][n])
+    #
+    #     # Save dictionary
+    #     print '\nSaving dictionary...'
+    #     pickle.dump(self.__dict__,open('IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict.pkl' %self.condition,'wb'))
 
-    def plotArray(self,arrayName,ax,title):
-        import seaborn as sns
-        sns.set(style="white")
-        array = getattr(self, arrayName)
-        arrayMedian = np.nanmedian(array,axis = 3)
-
-        sns.heatmap(arrayMedian[:,:,0], annot=True, ax=ax, cbar=False, fmt='.2f')
-        ax.set_xlabel('Group size')
-        ax.set_ylabel('Num im/indiv')
-        ax.set_xticklabels(self.groupSizes)
-        ax.set_yticklabels(self.IMDBSizes[::-1])
-        ax.invert_yaxis()
-        ax.set_title(title)
-
-    def plotArray2(self,arrayName,ax,ylim = (),ylabel='',title='',lineStyle='-'):
+    def plotArray(self,arrayName,ax,ylim = (),ylabel='',title='',lineStyle='-'):
         import seaborn as sns
         from matplotlib import pyplot as plt
         from cycler import cycler
@@ -219,7 +204,7 @@ class P1B1plotter(object):
         ax.set_prop_cycle(cycler('color',colors))
         sns.set(style="white")
         array = getattr(self, arrayName)
-        arrayMedian = np.nanmedian(array,axis = 3)
+        arrayMedian = np.nanmean(array,axis = 3)
 
         ax.plot(self.groupSizes, np.squeeze(arrayMedian).T,lineStyle)
         if arrayName == 'valAccs':
@@ -237,43 +222,7 @@ class P1B1plotter(object):
         if title:
             ax.set_title(title)
 
-
     def plotResults(self):
-        import seaborn as sns
-        from matplotlib import pyplot as plt
-        sns.set(style="white")
-
-        fig, axarr = plt.subplots(2,3,sharex=True,sharey=True, figsize=(20, 10), dpi=300)
-        if self.condition == 'S':
-            fig.suptitle('Scratch')
-        elif self.condition == 'SC':
-            fig.suptitle('Scratch with correlated images')
-        elif self.condition == 'SCV':
-            fig.suptitle('Scratch with correlated images stopping like tracker')
-        elif self.condition == 'KT':
-            fig.suptitle('Knowledge transfer (from CNN of 50 indiv 25000 images)')
-        elif self.condition == 'KTC':
-            fig.suptitle('Knowledge transfer with correlated images')
-        elif self.condition == 'KTV':
-            fig.suptitle('Knowledge transfer stopping like the tracker')
-        elif self.condition == 'KTCV':
-            fig.suptitle('Knowledge transfer with correlated images stopping like the tracker')
-        elif self.condition == 'KTCXV':
-            fig.suptitle('Knowledge transfer with correlated images stopping like the tracker only SoftMax')
-        # fig.suptitle('Training from strach (group size vs number of images per individual)')
-        self.plotArray('valAccs',axarr[0,0],'Accuracy in validation')
-        self.plotArray('epochsToAcc',axarr[0,1],'Number of epochs to accuracy threshold %.2f' %self.accTh)
-        self.plotArray('timeToAcc',axarr[0,2],'Time to accuracy threshold  %.2f (sec)' %self.accTh)
-        self.plotArray('totalTime',axarr[1,1],'Total time in (sec)')
-        self.plotArray('epochTime',axarr[1,2],'Single epoch time in (sec)')
-        self.plotArray('totalEpochs',axarr[1,0],'Total number of epochs')
-
-        figname = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1_results%s.pdf' %(self.condition, self.condition)
-        print 'Saving figure'
-        fig.savefig(figname)
-        print 'Figure saved'
-
-    def plotResults2(self):
         import seaborn as sns
         from matplotlib import pyplot as plt
         sns.set(style="white")
@@ -281,24 +230,22 @@ class P1B1plotter(object):
         fig, axarr = plt.subplots(1,3,sharex=True, figsize=(20, 10), dpi=300)
         if self.condition == 'S':
             fig.suptitle('Training from strach with uncorrelated images')
+        if self.condition == 'SD':
+            fig.suptitle('Training from strach with uncorrelated images with dropout of .7')
         elif self.condition == 'SCA':
             fig.suptitle('Training from scratch with correlated images and data augmentation')
         elif self.condition == 'SC':
             fig.suptitle('Training from scratch with correlated images')
-        elif self.condition == 'KT':
-            fig.suptitle('Knowledge transfer from CNN of 50 indiv 25000 images')
-        elif self.condition == 'KTC':
-            fig.suptitle('Knowledge transfer from CNN of 50 indiv 25000 images (correlated images)')
         # fig.suptitle('Training from strach (group size vs number of images per individual)')
-        self.plotArray2('valAccs',axarr[0],ylim=(0.,1.),ylabel='Accuracy',title = 'Accuracy in validation')
-        self.plotArray2('testAccs',axarr[0],lineStyle=':')
+        self.plotArray('valAccs',axarr[0],ylim=(0.,1.),ylabel='Accuracy',title = 'Accuracy in validation')
+        self.plotArray('testAccs',axarr[0],lineStyle=':')
         # self.plotArray2('epochsToAcc',axarr[0,1],ylim=(0,400),ylabel='Number of pochs',title = 'Number of epochs to accuracy threshold %.2f' %self.accTh)
-        self.plotArray2('timeToAcc',axarr[1],ylabel='Time (sec)',title = 'Time to accuracy threshold  %.2f (sec)' %self.accTh)
-        self.plotArray2('totalTime',axarr[2],ylabel='Time (sec)',title = 'Total time in (sec)')
+        self.plotArray('timeToAcc',axarr[1],ylabel='Time (sec)',title = 'Time to accuracy threshold  %.2f (sec)' %self.accTh)
+        self.plotArray('totalTime',axarr[2],ylabel='Time (sec)',title = 'Total time in (sec)')
         # self.plotArray2('epochTime',axarr[1,2],ylim=(0,2.5),ylabel='Time (sec)',title = 'Single epoch time in (sec)')
         # self.plotArray2('totalEpochs',axarr[1,0],ylim=(0,800),ylabel='Number of epochs',title = 'Total number of epochs')
 
-        figname = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1_results2%s.pdf' %(self.condition, self.condition)
+        figname = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1_results%s.pdf' %(self.condition, self.condition)
         print 'Saving figure'
         fig.savefig(figname)
         print 'Figure saved'
@@ -317,4 +264,4 @@ if __name__ == '__main__':
     p.dictPath = P1B1DictPath
     p.rebuildDictFromFolders()
     p.computeTimes()
-    p.plotResults2()
+    p.plotResults()

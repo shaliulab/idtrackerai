@@ -373,6 +373,13 @@ def individualAccuracy(labels,logits,classes):
 ''' ****************************************************************************
 Data Augmentation and image processing
 *****************************************************************************'''
+def standarizeImages(images):
+    images = images/255.
+    meanIm = np.mean(images, axis=0)
+    stdIm = np.std(images,axis=0)
+    images = (images-meanIm)/stdIm
+    return images
+    
 def getUncorrelatedImages(images,labels,numImages, minNumImages):
     imagesTrain = []
     labelsTrain = []
@@ -422,7 +429,7 @@ def getUncorrelatedImages(images,labels,numImages, minNumImages):
 
     return imagesTrain, labelsTrain, imagesVal, labelsVal, imagesTest, labelsTest
 
-def getCorrelatedImages(images,labels,numImages, minNumImages):
+def getCorrelatedImages(images,labels,numImages, minNumImages,rep):
     '''
     This functions assumes that images and labels have not been permuted
     and they are temporarly ordered for each animals
@@ -440,8 +447,8 @@ def getCorrelatedImages(images,labels,numImages, minNumImages):
     numImagesVal = int(numImages * 0.1)
     # Select randomly the frame where the fragment of correlated images starts
     print 'minNumImages, ', minNumImages
+    np.random.seed(rep)
     framePos = np.random.randint(0,minNumImages - (numImages + numImagesVal))
-    print 'the fragment will start at frame, ', framePos
     for i in np.unique(labels):
         print 'individual, ', i
         # Get images of this individual

@@ -93,7 +93,8 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
     TestIndices, TestIter_per_epoch,
     keep_prob = 1.0,lr = 0.01,
     printFlag=True, checkLearningFlag = False,
-    onlySoftmax=False, onlyFullyConnected = False):
+    onlySoftmax=False, onlyFullyConnected = False,
+    saveFlag = True):
 
     with tf.Graph().as_default():
         images_pl, labels_pl = placeholder_inputs(batch_size, width, height, channels, classes)
@@ -277,8 +278,8 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
                             if printFlag:
                                 print '\nFinished, the network it is not learning more, we stop training'
                             break
-                            
-                        if list(valIndivAcc[-1]) == list(np.ones(classes)):
+
+                        if list(valIndivAcc) == list(np.ones(classes)):
                             if printFlag:
                                 print '\nIndividual validations accuracy is 1 for all the animals'
                             break
@@ -383,38 +384,38 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
                     epochTime.append(time.time()-t0)
                     print 'Epoch time in seconds, ', epochTime[-1]
 
-                    ''' TEST '''
-                    lossEpoch = []
-                    accEpoch = []
-                    indivAccEpoch = []
-                    for iter_i in range(TestIter_per_epoch):
-
-                        batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
-                            sess, opListVal, TestIndices, iter_i, TestIter_per_epoch,
-                            images_pl, labels_pl, keep_prob_pl,
-                            X_test, Y_test, keep_prob = keep_prob)
-
-                        lossEpoch.append(batchLoss)
-                        accEpoch.append(batchAcc)
-                        indivAccEpoch.append(indivBatchAcc)
-
-                        # # Print per batch loss and accuracies
-                        # if iter_i % round(np.true_divide(Viter_per_epoch,100)) == 0:
-                        #     print "Batch " + str(iter_i) + \
-                        #         ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
-                        #         ", Test Accuracy= " + "{:.5f}".format(batchAcc)
-
-                    testLoss = np.mean(lossEpoch)
-                    testAcc = np.mean(accEpoch)
-                    testIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
+                    # ''' TEST '''
+                    # lossEpoch = []
+                    # accEpoch = []
+                    # indivAccEpoch = []
+                    # for iter_i in range(TestIter_per_epoch):
+                    #
+                    #     batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                    #         sess, opListVal, TestIndices, iter_i, TestIter_per_epoch,
+                    #         images_pl, labels_pl, keep_prob_pl,
+                    #         X_test, Y_test, keep_prob = keep_prob)
+                    #
+                    #     lossEpoch.append(batchLoss)
+                    #     accEpoch.append(batchAcc)
+                    #     indivAccEpoch.append(indivBatchAcc)
+                    #
+                    #     # # Print per batch loss and accuracies
+                    #     # if iter_i % round(np.true_divide(Viter_per_epoch,100)) == 0:
+                    #     #     print "Batch " + str(iter_i) + \
+                    #     #         ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                    #     #         ", Test Accuracy= " + "{:.5f}".format(batchAcc)
+                    #
+                    # testLoss = np.mean(lossEpoch)
+                    # testAcc = np.mean(accEpoch)
+                    # testIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
 
                     # Batch finished
 
-                    print('Test (epoch %d): ' % epoch_counter + \
-                        " Loss=" + "{:.6f}".format(testLoss) + \
-                        ", Accuracy=" + "{:.5f}".format(testAcc) + \
-                        ", Individual Accuracy=")
-                    print(testIndivAcc)
+                    # print('Test (epoch %d): ' % epoch_counter + \
+                    #     " Loss=" + "{:.6f}".format(testLoss) + \
+                    #     ", Accuracy=" + "{:.5f}".format(testAcc) + \
+                    #     ", Individual Accuracy=")
+                    # print(testIndivAcc)
 
                     '''
                     **************************************
@@ -438,22 +439,22 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
                     # valAccSpeed, valAccAccel = computeDerivatives(valAccPlot)
 
                     # Test
-                    testLossPlot.append(testLoss)
-                    testAccPlot.append(testAcc)
-                    testIndivAccPlot.append(testIndivAcc)
+                    # testLossPlot.append(testLoss)
+                    # testAccPlot.append(testAcc)
+                    # testIndivAccPlot.append(testIndivAcc)
                     # testLossSpeed, testLossAccel = computeDerivatives(testLossPlot)
                     # testAccSpeed, testAccAccel = computeDerivatives(testAccPlot)
 
                     lossAccDict = {
                         'loss': trainLossPlot,
                         'valLoss': valLossPlot,
-                        'testLoss': testLossPlot,
+                        # 'testLoss': testLossPlot,
                         'acc': trainAccPlot,
                         'valAcc': valAccPlot,
-                        'testAcc': testAccPlot,
+                        # 'testAcc': testAccPlot,
                         'indivAcc': trainIndivAccPlot,
                         'indivValAcc': valIndivAccPlot,
-                        'indivTestAcc': testIndivAccPlot,
+                        # 'indivTestAcc': testIndivAccPlot,
                         'epochTime': epochTime
                         }
 
@@ -494,12 +495,58 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
             if stored_exception:
                 raise stored_exception[0], stored_exception[1], stored_exception[2]
 
+            ''' TEST '''
+            lossEpoch = []
+            accEpoch = []
+            indivAccEpoch = []
+            for iter_i in range(TestIter_per_epoch):
+
+                batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                    sess, opListVal, TestIndices, iter_i, TestIter_per_epoch,
+                    images_pl, labels_pl, keep_prob_pl,
+                    X_test, Y_test, keep_prob = keep_prob)
+
+                lossEpoch.append(batchLoss)
+                accEpoch.append(batchAcc)
+                indivAccEpoch.append(indivBatchAcc)
+
+                # # Print per batch loss and accuracies
+                # if iter_i % round(np.true_divide(Viter_per_epoch,100)) == 0:
+                #     print "Batch " + str(iter_i) + \
+                #         ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                #         ", Test Accuracy= " + "{:.5f}".format(batchAcc)
+
+            testLoss = np.mean(lossEpoch)
+            testAcc = np.mean(accEpoch)
+            testIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
+
+            print('Test (epoch %d): ' % epoch_counter + \
+                " Loss=" + "{:.6f}".format(testLoss) + \
+                ", Accuracy=" + "{:.5f}".format(testAcc) + \
+                ", Individual Accuracy=")
+            print(testIndivAcc)
+
+            # Test
+            testLossPlot.append(testLoss)
+            testAccPlot.append(testAcc)
+            testIndivAccPlot.append(testIndivAcc)
+
+
+            lossAccDict['testLoss'] = testLossPlot
+            lossAccDict['testAcc'] = testAccPlot
+            lossAccDict['indivTestAcc'] = testIndivAccPlot
+
+
             # update global step and save model
             saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
             saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
-            pickle.dump( lossAccDict, open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
 
-    return lossAccDict
+    if saveFlag:
+        print 'Saving lossAccDict...'
+        pickle.dump( lossAccDict, open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
+        print 'lossAccDictSaved...'
+    else:
+        return lossAccDict, ckpt_dir_model
 
 """
 Sample calls:
