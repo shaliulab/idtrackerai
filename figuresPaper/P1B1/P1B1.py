@@ -33,18 +33,18 @@ class P1B1(object):
         # Figure parameters
         self.groupSizesCNN = map(int,groupSizesCNN.split('_'))
         self.numGroupsCNN = len(self.groupSizesCNN)
-        self.groupSizes = [2,3,5]
+        self.groupSizes = [2,5,10,25,50,75,90]
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        # self.IMDBSizes = [20,50,100,250,500,1000,3000,28000] # Images for training
-        self.IMDBSizes = [20,50,100] # Images for training
+        self.IMDBSizes = [20,50,100,250,500,1000,3000,28000] # Images for training
+        # self.IMDBSizes = [20,50,100] # Images for training
         self.numIMDBSizes = len(self.IMDBSizes)
 
         # Set CNN training parameters
         self.batchSize = 250
         self.numEpochs = 2000
-        self.lr = 0.01
+        self.lr = 0.005
 
     	# Set keep probability for dropout
     	self.keep_prob = 1.0
@@ -225,7 +225,7 @@ class P1B1(object):
         if self.correlatedImages:
 
             # Get images that are correlated in time
-            X_train, Y_train, X_val, Y_val, X_test, Y_test, firstFrameIndex = getCorrelatedImages(images, labels, self.numImForTrain, self.minNumImagesPerIndiv,rep)
+            X_train, Y_train, X_val, Y_val, X_test, Y_test, firstFrameIndex = getCorrelatedImages(images, labels, self.numImForTrain, self.minNumImagesPerIndiv,self.rep)
             imagesPermutation = None
         else:
 

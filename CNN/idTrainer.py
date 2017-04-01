@@ -252,6 +252,10 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
                             if printFlag:
                                 print '\nThe validation loss is infinite, we stop the training'
                             break
+			# if np.isnan(prevLoss):
+                        #     if printFlag:
+                        #         print '\nThe validation loss is infinite, we stop the training'
+                        #     break
                         magCurr = int(np.log10(currLoss))-1
                         magPrev = int(np.log10(prevLoss))-1
                         epsilon = -.1*10**(magCurr)
