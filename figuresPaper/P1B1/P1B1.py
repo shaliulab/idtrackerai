@@ -86,25 +86,29 @@ class P1B1(object):
 	    self.IMDBSizes = [20,50,100,250,500]
 	    self.numIMDBSizes = len(self.IMDBSizes)
 
+        # Set flag for accuracy by fragments
+        if 'F' in self.condition:
+            self.acc_by_fragments = True
+
         # Get list of IMDBPaths form IMDBCode
         print '\nReading IMDBCode and idsCode...'
         if not int(self.cluster):
-            datafolder = 'IdTrackerDeep/'
+            self.datafolder = 'IdTrackerDeep/'
         elif int(self.cluster):
-            datafolder = '/admin/'
+            self.datafolder = '/admin/'
         self.IMDBsDict = {
-                    'A': datafolder + 'data/TU20160413_36dpf_60indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
-                    'B': datafolder + 'data/TU20160428_36dpf_60indiv_28010ImPerInd_curvaturePortrait_0.hdf5',
-                    'C': datafolder + 'data/TU20160920_36dpf_64indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
-                    'D': datafolder + 'data/TU20170131_31dpf_40indiv_34770ImPerInd_curvaturePortrait_0.hdf5',
-                    'E': datafolder + 'data/TU20170201_31pdf_72indiv_38739ImPerInd_curvaturePortrait_0.hdf5',
-                    'F': datafolder + 'data/TU20170202_31pdf_72indiv_38913ImPerInd_curvaturePortrait_0.hdf5',
-                    'a': datafolder + 'data/TU20160413_36dpf_16indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
-                    'b': datafolder + 'data/TU20160428_36dpf_16indiv_28818ImPerInd_curvaturePortrait_0.hdf5',
-                    'c': datafolder + 'data/TU20160920_36dpf_16indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
-                    'd': datafolder + 'data/TU20170131_31dpf_16indiv_38989ImPerInd_curvaturePortrait_0.hdf5',
-                    'e': datafolder + 'data/TU20170201_31pdf_16indiv_38997ImPerInd_curvaturePortrait_0.hdf5',
-                    'f': datafolder + 'data/TU20170202_31pdf_16indiv_38998ImPerInd_curvaturePortrait_0.hdf5'
+                    'A': self.datafolder + 'data/TU20160413_36dpf_60indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
+                    'B': self.datafolder + 'data/TU20160428_36dpf_60indiv_28010ImPerInd_curvaturePortrait_0.hdf5',
+                    'C': self.datafolder + 'data/TU20160920_36dpf_64indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
+                    'D': self.datafolder + 'data/TU20170131_31dpf_40indiv_34770ImPerInd_curvaturePortrait_0.hdf5',
+                    'E': self.datafolder + 'data/TU20170201_31pdf_72indiv_38739ImPerInd_curvaturePortrait_0.hdf5',
+                    'F': self.datafolder + 'data/TU20170202_31pdf_72indiv_38913ImPerInd_curvaturePortrait_0.hdf5',
+                    'a': self.datafolder + 'data/TU20160413_36dpf_16indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
+                    'b': self.datafolder + 'data/TU20160428_36dpf_16indiv_28818ImPerInd_curvaturePortrait_0.hdf5',
+                    'd': self.datafolder + 'data/TU20170131_31dpf_16indiv_38989ImPerInd_curvaturePortrait_0.hdf5',
+                    'c': self.datafolder + 'data/TU20160920_36dpf_16indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
+                    'e': self.datafolder + 'data/TU20170201_31pdf_16indiv_38997ImPerInd_curvaturePortrait_0.hdf5',
+                    'f': self.datafolder + 'data/TU20170202_31pdf_16indiv_38998ImPerInd_curvaturePortrait_0.hdf5'
                     }
         self.IMDBPaths = []
         self.idsInIMDBs = []
@@ -331,7 +335,7 @@ class P1B1(object):
 
                 # By default we will use the first repetition and the model train with the whole library 25000 images.
                 # FIXME be aware that the 25000 is hardcoded and can give errors if we train for another number of images for training...
-                self.loadCkpt_folder = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsS/numIndiv_%i/numImages_%i/rep_%i' %(self.groupSizeCNN, 28000, 1)
+                self.loadCkpt_folder = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsS/CNN_0/numIndiv_%i/numImages_%i/rep_%i' %(self.groupSizeCNN, 28000, 1)
 
 
             for g, self.groupSize in enumerate(self.groupSizes): # Group size for the current training
