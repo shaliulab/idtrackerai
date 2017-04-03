@@ -37,14 +37,14 @@ class P1B1(object):
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        # self.IMDBSizes = [20,50,100,250,500,1000,3000,28000] # Images for training
-        self.IMDBSizes = [20,50,100] # Images for training
+        self.IMDBSizes = [20,50,100,250,500,1000,3000,28000] # Images for training
+        # self.IMDBSizes = [28000] # Images for training
         self.numIMDBSizes = len(self.IMDBSizes)
 
         # Set CNN training parameters
         self.batchSize = 250
         self.numEpochs = 2000
-        self.lr = 0.01
+        self.lr = 0.005
 
     	# Set keep probability for dropout
     	self.keep_prob = 1.0
@@ -62,7 +62,7 @@ class P1B1(object):
             self.checkLearningFlag = True
 
         # Set flag to only train softmax
-        self.onlySoftmax = False
+        self.trainSoftmax = False
         if 'X' in self.condition:
             self.trainSoftmax = True
 
@@ -89,6 +89,11 @@ class P1B1(object):
         # Set flag for accuracy by fragments
         if 'F' in self.condition:
             self.acc_by_fragments = True
+
+        self.use_adam = False
+        # Set flag to train with Adam
+        if 'M' in self.condition:
+            self.use_adam = True
 
         # Get list of IMDBPaths form IMDBCode
         print '\nReading IMDBCode and idsCode...'
@@ -299,9 +304,10 @@ class P1B1(object):
                                     TestIndices, TestIter_per_epoch,
                                     self.keep_prob,self.lr,
                                     checkLearningFlag = self.checkLearningFlag,
-                                    onlySoftmax=self.onlySoftmax,
+                                    onlySoftmax=self.trainSoftmax,
                                     onlyFullyConnected = self.trainFullyConnected,
-                                    saveFlag = False)
+                                    saveFlag = False,
+                                    use_adam = self.use_adam)
 
         lossAccDict['repDict'] = {
                                 'groupSizeCNN': self.groupSizeCNN,
