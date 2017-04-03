@@ -379,7 +379,7 @@ def standarizeImages(images):
     stdIm = np.std(images,axis=0)
     images = (images-meanIm)/stdIm
     return images
-    
+
 def getUncorrelatedImages(images,labels,numImages, minNumImages):
     imagesTrain = []
     labelsTrain = []
@@ -477,7 +477,7 @@ def getCorrelatedImages(images,labels,numImages, minNumImages,rep):
         imTest = np.asarray(imTest)
         labTest = flatten([thisIndivLabels[:framePos], thisIndivLabels[framePos+numImages+numImagesVal:]])
         labTest = np.asarray(labTest)
-        imagesTest.append(imTest) #before the fragment
+        imagesTest.append(imTest)
         labelsTest.append(labTest)
         print 'num images for test, ', imagesTest[i].shape[0]
 
