@@ -22,7 +22,7 @@ import itertools
 import cPickle as pickle
 
 
-videoPaths = scanFolder('IdTrackerDeep/videos/Cafeina5pecesLarge/Caffeine5fish_20140206T122428_1.avi')
+videoPaths = scanFolder('IdTrackerDeep/videos/59indiv/video_03-23-17_11-36-23.000.avi')
 
 frameIndices, segmPaths = getSegmPaths(videoPaths)
 videoPath = videoPaths[0]
@@ -121,7 +121,7 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
 
             if len(videoPaths) > 1:
                 cap = cv2.VideoCapture(videoPaths[sNumber-1])
-                
+
         #Get frame from video file
         if len(videoPaths) > 1:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame)

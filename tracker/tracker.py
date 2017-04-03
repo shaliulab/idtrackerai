@@ -56,7 +56,7 @@ def initializeTracker(videoPath,numAnimals,portraits, preprocParams):
             'batchSize': batchSize,
             'numEpochs': numEpochs,
             'lr': lr,
-            'keep_prob': 1.,
+            'keep_prob': 1.0,
             'train':train,
             'lossAccDict':{},
             'refDict':{},

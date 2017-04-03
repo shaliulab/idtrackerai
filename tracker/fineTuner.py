@@ -31,7 +31,7 @@ import datetime
 def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, numAnimals, printFlag = True):
     ### Fix maximal number of images:
 
-    maximalRefPerAnimal = 1000
+    maximalRefPerAnimal = 3000
     # get fragments data
     fragments = np.asarray(fragmentsDict['fragments'])
 
@@ -76,13 +76,30 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
         framesColumnsIndivFrags = framesAndBlobColumns[frag] # I take the list of individual fragments in frames and columns
         intervalsIndivFrags = intervals[frag] # I take the list of individual fragments in terms of intervals
 
+        ids_checked_for_ref = []
+        ids_checked_for_ref1 = []
         for i, (framesColumnsIndivFrag,intervalsIndivFrag) in enumerate(zip(framesColumnsIndivFrags,intervalsIndivFrags)):
-            framesColumnsIndivFrag = np.asarray(framesColumnsIndivFrag)
+            if accumDict['counter'] != 0:
+                blobIndex = intervalsIndivFrag[0]
+                fragNum = intervalsIndivFrag[1]
+                id1 = statistics['idFragsAll'][blobIndex][fragNum]
+                ids_checked_for_ref1.append(id1)
 
+            framesColumnsIndivFrag = np.asarray(framesColumnsIndivFrag)
+            frames = framesColumnsIndivFrag[:,0]
+            columns = framesColumnsIndivFrag[:,1]
+            identity = identities[frames[0]][columns[0]]
+            ids_checked_for_ref.append(identity)
             if not intervalsIndivFrag in usedIndivIntervals: # I only use individual fragments that have not been used before
-                frames = framesColumnsIndivFrag[:,0]
-                columns = framesColumnsIndivFrag[:,1]
-                identity = identities[frames[0]][columns[0]]
+                print 'Adding references from individual interval'
+                print intervalsIndivFrag
+                print 'first frame and column', frames[0], columns[0]
+                if accumDict['counter'] == 0:
+                    print 'The identity of this individual interval is ', identity+1
+                else:
+                    print 'The identity of this individual interval is ', identity+1, id1
+
+
 
                 if not identity in refDictTemp.keys(): # if the identity has not been added to the dictionary, I initialize the list
                     # refDict[identity] = []
@@ -97,13 +114,31 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
                 idUsedIntervals.append(identity)
                 usedIndivIntervals.append(intervalsIndivFrag)
 
+        all_identities = range(1,numAnimals+1)
+        if len(set(ids_checked_for_ref)) < numAnimals:
+            print 'The identities that we tried to add for references are'
+            print 'ids, ', ids_checked_for_ref
+            repeated_ids = set([x for x in ids_checked_for_ref if ids_checked_for_ref.count(x) > 1])
+            print 'The identities ', list(repeated_ids), ' are repeated'
+            missing_ids = set(all_identities).difference(set(ids_checked_for_ref))
+            print 'The identities ', list(missing_ids), 'are missing'
+
+            if accumDict['counter'] != 0 and len(set(ids_checked_for_ref1)) < numAnimals:
+                print '\nThe identities that we tried to add for references are'
+                print 'ids, ', ids_checked_for_ref1
+                repeated_ids = set([x for x in ids_checked_for_ref1 if ids_checked_for_ref1.count(x) > 1])
+                print 'The identities ', list(repeated_ids), ' are repeated'
+                missing_ids = set(all_identities).difference(set(ids_checked_for_ref))
+                print 'The identities ', list(missing_ids), 'are missing'
+                raise ValueError('We are adding bad references')
+
+            raise ValueError('We are adding bad references')
+
     if accumDict['counter'] == 0:
         refDictTemp = {i: refDictTemp[key] for i, key in enumerate(refDictTemp.keys())} # this is done to order the ids in the refDict
 
         if printFlag:
             print '\n The keys of the refDict are ', refDictTemp.keys()
-
-
 
     ''' I compute the minimum number of references I can take  given the new fragments added during the accumulation'''
     minNumRefTemp = np.min([len(refDictTemp[iD]) for iD in refDictTemp.keys()]) # minimal number of references from new fragments
@@ -125,14 +160,8 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     for iD in iDList:
         # print 'refDictTemp ', iD, len(refDictTemp[iD])
         if accumDict['counter'] == 0:
-            print '*************************************************'
-            print 'it is the first accumulation'
-            print '*************************************************'
             refDict[iD] = refDictTemp[iD]
         else:
-            print '*************************************************'
-            print 'it is not the first accum'
-            print '*************************************************'
             if iD in refDictTemp.keys():
                 refDict[iD] = np.vstack((refDict[iD],refDictTemp[iD]))
 
@@ -213,17 +242,18 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     imsize = (imagesDims[1],imagesDims[2], imagesDims[3])
     labels = flatten(labels)
     print 'size labels after flatten', len(labels)
-    print 'label sample', labels[0:10]
+    # print 'label sample', labels[0:10]
     labels = map(int,labels)
     labels = dense_to_one_hot(labels, numAnimals)
     numImages = len(labels)
 
-    np.random.seed(0)
+    # np.random.seed(0)
     perm = np.random.permutation(numImages)
     images = images[perm]
     labels = labels[perm]
 
     # Standarization of images
+    print 'Standarizing images...'
     images = standarizeImages(images)
 
     numTrain = np.ceil(np.true_divide(numImages,10)*9).astype('int')
@@ -231,6 +261,14 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     Y_train = labels[:numTrain]
     X_val = images[numTrain:]
     Y_val = labels[numTrain:]
+
+    # Data augmentation
+    # if len(X_train) < 500*numAnimals:
+    #     print 'Performing data augmentation...'
+    #     X_train, Y_train = dataAugment(X_train,Y_train,dataAugment = True)
+
+    print 'X_train shape, ', X_train.shape
+    print 'X_val shape, ', X_val.shape
 
     ''' Update dictionary of references '''
     trainDict['refDict'] = refDict

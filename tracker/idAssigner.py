@@ -226,6 +226,7 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
     logP2FragIdForMat = []
     P2FragsForMat = []
     P2Frags = []
+    idFrags = []
 
     for j, (P1Frag,indivFragmentInterval) in enumerate(zip(P1Frags,indivFragmentsIntervals)):
         # print '\nIndividual fragment, ', j, ' ----------------'
@@ -248,16 +249,18 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
         P2Frag = computeP2(P1Frag,P1CoexistingFrags)
         logP2Frag = computeLogP2(P1Frag,P1CoexistingFrags)
 
-        # print 'logP2Frag', logP2Frag
+        # print '\nlogP2Frag ', logP2Frag
+        # print 'P2Frag ',  P2Frag
         idFrag = np.argmax(logP2Frag)+1
-        # print idFrag
+        # print 'idFrag ',idFrag
         fragLen = lenFragments[j]
         logP2FragsForMat.append(np.matlib.repmat(logP2Frag,fragLen,1))
         P2FragsForMat.append(np.matlib.repmat(P2Frag,fragLen,1))
         logP2FragIdForMat.append(np.multiply(np.ones(fragLen),idFrag).astype('int'))
         P2Frags.append(P2Frag)
+        idFrags.append(idFrag)
 
-    return logP2FragsForMat, logP2FragIdForMat, P2FragsForMat, P2Frags
+    return logP2FragsForMat, logP2FragIdForMat, P2FragsForMat, P2Frags, idFrags
 
 def computeOverallP2(P2FragsAll,oneIndivFragLens):
     numFrames = 0
@@ -327,7 +330,7 @@ def getCkptvideoPath(videoPath, accumCounter, train=0):
 
     return ckptvideoPath
 
-def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits = [], videoInfo = [], plotFlag = True, printFlag = True):
+def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits = [], videoInfo = {}, plotFlag = True, printFlag = True):
     '''
     videoPath: path to the video to which we want ot assign identities
     '''
@@ -451,15 +454,14 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
     logP2FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # logP2 for each individual fragment
     P2FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals))
     P2FragsAll = []
+    idFragsAll = []
 
     if printFlag:
         print '******************************************************'
-
     for i in range(numGoodLists):
         # print '******************************************************'
         if printFlag:
-            print 'Computing logP2 for list of fragments, ', i
-
+            print 'Computing logP2 for list of individual fragments with blob index , ', i
         indivFragmentsIntervals = oneIndivFragIntervals[i]
         P1Frags = P1FragsAll[i]
         indivFragments = oneIndivFragFrames[i]
@@ -467,27 +469,58 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
         freqFrags = freqFragsAll[i]
         softMaxProbs = softMaxProbsAll[i]
         softMaxId = softMaxIdAll[i]
-
         logP2FragsForMat = []
         P1FragsForMat = []
         logP2FragIdForMat = []
-
         blobsIndices = list(range(numGoodLists))
         blobsIndices.pop(i)
-
-        logP2FragsForMat, logP2FragIdForMat, P2FragsForMat, P2Frags = computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices)
+        logP2FragsForMat, logP2FragIdForMat, P2FragsForMat, P2Frags, idFrags = computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices)
         P2FragsAll.append(P2Frags)
+        idFragsAll.append(idFrags)
         # logP2
         LogProbsFragUpdated = probsUptader(logP2FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
         logP2FragAllVideo += LogProbsFragUpdated
-
         # P2
         ProbsFragUpdated = probsUptader(P2FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
         P2FragAllVideo += ProbsFragUpdated
-
         # identities from logP2
         IdsFragUpdated = idUpdater(logP2FragIdForMat,indivFragments,numFrames,maxNumBlobs)
         idLogP2FragAllVideo += IdsFragUpdated
+
+
+
+    # num_cores = multiprocessing.cpu_count()
+    # num_cores = 1
+    #
+    # ''' splitting range(numGoodLists) list into sublists '''
+    # listOfGoodLists = range(numGoodLists)
+    # GoodSubLists = [listOfGoodLists[i:i+num_cores] for i in range(0,numGoodLists,num_cores)]
+    # ''' Entering loop for segmentation of the video '''
+    # print 'Entering to the parallel loop...\n'
+    # P2FragsAll = []
+    # LogProbsFragUpdated = []
+    # ProbsFragUpdated = []
+    # IdsFragUpdated = []
+    # for GoodSubList in GoodSubLists:
+    #     print 'GoodSubList, ', GoodSubList
+    #     out = Parallel(n_jobs=num_cores)(delayed(computeP2assigner)(oneIndivFragIntervals,
+    #                                                                 P1FragsAll,
+    #                                                                 oneIndivFragFrames,
+    #                                                                 oneIndivFragLens,
+    #                                                                 numGoodLists,numFrames, maxNumBlobs, numAnimals,i) for i in GoodSubList)
+    #     P2FragsAll.append([t[0] for t in out])
+    #     LogProbsFragUpdated.append([t[1] for t in out])
+    #     ProbsFragUpdated.append([t[2] for t in out])
+    #     IdsFragUpdated.append([t[3] for t in out])
+    #
+    #
+    # P2FragsAll = flatten(P2FragsAll)
+    # LogProbsFragUpdated = flatten(LogProbsFragUpdated)
+    # ProbsFragUpdated = flatten(ProbsFragUpdated)
+    # IdsFragUpdated = flatten(IdsFragUpdated)
+    # logP2FragAllVideo += np.sum(LogProbsFragUpdated, axis = 0)
+    # P2FragAllVideo += np.sum(ProbsFragUpdated, axis = 0)
+    # idLogP2FragAllVideo += np.sum(IdsFragUpdated, axis = 0)
 
     sessionPath = '/'.join(ckpt_dir.split('/')[:-1])
     overallP2 = computeOverallP2(P2FragsAll,oneIndivFragLens)
@@ -507,6 +540,7 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
         'P2FragAllVideo':P2FragAllVideo,
         'normFreqFragsAll':normFreqFragsAll,
         'P2FragsAll': P2FragsAll,
+        'idFragsAll': idFragsAll,
         'overallP2': overallP2}
 
     # portraits['identities'] = idLogP2FragAllVideo.tolist()
@@ -516,3 +550,34 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = [],portraits 
     pickle.dump( IdsStatistics , open( sessionPath + "/statistics.pkl", "wb" ) )
 
     return IdsStatistics #, portraits
+
+
+# def computeP2assigner(oneIndivFragIntervals, P1FragsAll, oneIndivFragFrames, oneIndivFragLens, numGoodLists, numFrames, maxNumBlobs, numAnimals, i):
+#
+#
+#     print 'Computing logP2 for list of fragments, ', i
+#
+#     indivFragmentsIntervals = oneIndivFragIntervals[i]
+#     P1Frags = P1FragsAll[i]
+#     indivFragments = oneIndivFragFrames[i]
+#     lenFragments = oneIndivFragLens[i]
+#
+#     logP2FragsForMat = []
+#     P1FragsForMat = []
+#     logP2FragIdForMat = []
+#
+#     blobsIndices = list(range(numGoodLists))
+#     blobsIndices.pop(i)
+#
+#     logP2FragsForMat, logP2FragIdForMat, P2FragsForMat, P2Frags = computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices)
+#
+#     # logP2
+#     LogProbsFragUpdated = probsUptader(logP2FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
+#
+#     # P2
+#     ProbsFragUpdated = probsUptader(P2FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
+#
+#     # identities from logP2
+#     IdsFragUpdated = idUpdater(logP2FragIdForMat,indivFragments,numFrames,maxNumBlobs)
+#
+#     return  P2Frags, LogProbsFragUpdated, ProbsFragUpdated, IdsFragUpdated

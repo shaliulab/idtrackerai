@@ -98,6 +98,8 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, trainDict
     idUsedIndivIntervals = zip(usedIndivIntervals,idUsedIntervals)
     print '********************************************************************'
     print '********************************************************************'
+    print 'These are the individual intervals with which we are going to train'
+    print '(blob index, global fragment, video interval, length of the interval, avVelocity in interval, distance travelled), idAssigned)   '
     pprint(idUsedIndivIntervals)
     print '********************************************************************'
     print '********************************************************************'

@@ -16,6 +16,7 @@ from pprint import *
 from tensorflow.python.platform import gfile
 import cPickle as pickle
 import re
+import itertools
 # import pyautogui
 '''
 ****************************************************************************
@@ -735,7 +736,6 @@ def cropImages(images,imageSize,shift=(0,0)):
     """ Given batch of images it crops thme in a shape (imageSize,imageSize)
     with a shift in the rows and columns given by the variable shifts. The
     size of the portait must be bigger than
-
     :param images: batch of images of the shape (numImages, channels, width, height)
     :param imageSize: size of the new portrait, usually 32, since the network accepts images of 32x32  pixels
     :param shift: (x,y) displacement when cropping, it can only go from -maxShift to +maxShift
@@ -745,15 +745,37 @@ def cropImages(images,imageSize,shift=(0,0)):
     if currentSize < imageSize:
         raise ValueError('The size of the input portrait must be bigger than imageSize')
     elif currentSize == imageSize:
-        return image
+        return images
     elif currentSize > imageSize:
         maxShift = np.divide(currentSize - imageSize,2)
         if np.max(shift) > maxShift:
             raise ValueError('The shift when cropping the portrait cannot be bigger than (currentSize - imageSize)/2')
         croppedImages = images[:,maxShift+shift[1]:currentSize-maxShift+shift[1],maxShift+shift[0]:currentSize-maxShift+shift[0],:]
-        print 'Portrait cropped'
+        # print 'Portrait cropped'
         return croppedImages
 
-def dataAugment(images,labels,numReplicas):
-    possibleShifts = np.asarray(list(itertools.combinations_with_replacement(range(5),2)))-2
-    numShifts = len(possibleShifts)
+def dataAugment(images,labels,dataAugment = False):
+    def getPossibleShifts():
+        possibleShifts = []
+        possibleShifts.append(list(itertools.combinations_with_replacement(range(-2,3),2)))
+        possibleShifts.append(list(itertools.permutations(range(-2,3),2)))
+        possibleShifts.append(list(itertools.combinations(range(-2,3),2)))
+        possibleShifts = [shift for l in possibleShifts for shift in l]
+        possibleShifts = set(possibleShifts)
+        return possibleShifts
+    if dataAugment:
+        print 'Performing data augmentation...'
+        possibleShifts = getPossibleShifts() #(0,0) is included
+        augmentedImages = []
+        augmentedLabels = []
+        for shift in possibleShifts:
+            newImages = cropImages(images,32,shift=shift)
+            augmentedImages.append(newImages)
+            augmentedLabels.append(labels)
+        images = np.vstack(augmentedImages)
+        labels = flatten(augmentedLabels)
+    else:
+        print 'No data augmentation...'
+        print 'Cropping images to 32x32...'
+        images = cropImages(images,32,(0,0))
+    return images, np.asarray(labels)

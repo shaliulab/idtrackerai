@@ -1,3 +1,4 @@
+from __future__ import division
 # Import standard libraries
 import sys
 import numpy as np
@@ -70,35 +71,54 @@ def computeDistToIdAndUniqueness(fragmentsDict, numAnimals, statistics):
         # misId --> discard
         if ids != list(rawsArgMax):
             unique = False
-        else:
-            print fragMat
+        # else:
+        #     print fragMat
         return unique
 
     mat = []
+    ids = []
     distI = []
     notUnique = []
+    unique = []
     identity = np.identity(numAnimals)
-    for i, globalFrag in enumerate(fragmentsDict['intervals']): # loop in complete set of fragments
+    identities = range(1,numAnimals+1)
+    for i, globalFrag in enumerate(fragmentsDict['intervalsDist']): # loop in complete set of fragments
+        print '\ngloalFrag, ', i
         for j, indivFrag in enumerate(globalFrag): # loop in individual fragments of the complete set of fragments
             blobIndex = indivFrag[0]
             fragNum = indivFrag[1]
+            ids.append(statistics['idFragsAll'][blobIndex][fragNum])
             mat.append(statistics['P2FragsAll'][blobIndex][fragNum])
+
+
+        if set(identities).difference(set(ids)):
+            print 'ids, ', ids
+            repeated_ids = set([x for x in ids if ids.count(x) > 1])
+            print 'The identities ', list(repeated_ids), ' are repeated'
+            missing_ids = set(identities).difference(set(ids))
+            print 'The identities ', list(missing_ids), 'are missing'
+        else:
+            print 'All identities are in this fragment'
+            print 'ids, ', ids
         matFragment = np.vstack(mat)
         mat = []
+        ids = []
         perm = np.argmax(matFragment,axis=1)
 
         matFragment = matFragment[:,perm]
         uniqueness = computeUniqueness(matFragment, numAnimals)
         if not uniqueness:
             notUnique.append(i)
-            print '------------------------------'
-            print str(i) + ' is not unique'
-            print '------------------------------'
+            print 'Global fragment ' + str(i) + ' is not unique'
+        elif uniqueness:
+            unique.append(i)
+            print 'Global fragment ' + str(i) + ' is unique'
+
 
         distI.append(numpy.linalg.norm(matFragment - identity)) #TODO when optimizing the code one should compute the matrix distance only for fragments above 100 length
     distI = np.asarray(distI)
 
-    return distI, notUnique
+    return distI, notUnique, unique
 
 def computeScore(accumDict,distI,distsTrav):
 
@@ -142,8 +162,8 @@ def checkNoveltyNewFrags(intervals, nextPossibleFragments, usedIndivIntervals, a
     for frag in nextPossibleFragments: # for each complete fragment that has to be used for the training
         intervalsIndivFrags = intervals[frag] # I take the list of individual fragments in terms of intervals
 
-        for intervalsIndivFrag in intervalsIndivFrags:
-            if not intervalsIndivFrag in usedIndivIntervals: # I only use individual fragments that have not been used before
+        for intervalIndivFrag in intervalsIndivFrags:
+            if not intervalIndivFrag in usedIndivIntervals: # I only use individual fragments that have not been used before
                 countNewIntervals += 1
         if countNewIntervals > 0:
             realNextPossibleFragments.append(frag)
@@ -163,9 +183,12 @@ def getNextPossibleFragments(fragmentsDict, accumDict, trainDict, fragIndexesSor
     print '\nCurrent fragsForTrain, ', accumDict['fragsForTrain']
     print 'Current bad fragments, ', accumDict['badFragments']
     nextPossibleFragments = [frag for frag in fragIndexesSortedLong if frag not in accumDict['fragsForTrain'] and frag not in accumDict['badFragments'] and frag not in notUnique]
-
+    print 'Next possible fragments after remobing current ones, bad Fragments and the not unique, ', nextPossibleFragments
+    # if not nextPossibleFragments:
+    #     raise ValueError('There are not more fragments that are good for training')
     # Check whether the animals are moving enough so that the images are going to be different enough
     nextPossibleFragments, accumDict = checkVelFragments(nextPossibleFragments,fragmentsDict,accumDict)
+
     # Check if at least one individual fragment is new to the network
     intervals = fragmentsDict['intervalsDist']
     usedIndivIntervals = trainDict['usedIndivIntervals']
@@ -232,8 +255,12 @@ def bestFragmentFinder(accumDict, trainDict, statistics, fragmentsDict, numAnima
         # Load data needed and pass it to arrays
         distsTrav = np.asarray(fragmentsDict['minDistIndivCompleteFragments'])
 
-        # Compute distances to the identity matrix for each complete set of individual fragments
-        distI, notUnique = computeDistToIdAndUniqueness(fragmentsDict, numAnimals, statistics)
+        # Compute distances to the identity matrix for each complete set of individual fragments (for each global fragment)
+        distI, notUnique, unique = computeDistToIdAndUniqueness(fragmentsDict, numAnimals, statistics)
+        print len(notUnique)/len(distI), ' proportion of non unique'
+        print len(unique)/len(distI), ' proportion of unique'
+        print 'unique fragments, ', unique
+        print 'non unique fragments, ', notUnique
 
         # Compute score from distances to identity and distance travelled
         score = computeScore(accumDict,distI,distsTrav)
@@ -246,11 +273,13 @@ def bestFragmentFinder(accumDict, trainDict, statistics, fragmentsDict, numAnima
 
         while len(nextPossibleFragments)==0 and accumDict['minDist'] >= 0:
             print '\nThe list of possible fragments is the same as the list of fragments used previously for finetuning'
-            print 'We reduce the minLen in 50 units'
+
             if accumDict['minDist'] > 50:
                 step = 50
+                print 'We reduce the minLen in %i units' %step
             else:
                 step = 10
+                print 'We reduce the minLen in %i units' %step
             accumDict['minDist'] -= step
 
             nextPossibleFragments, accumDict = getNextPossibleFragments(fragmentsDict, accumDict, trainDict, fragIndexesSorted, notUnique, distsTrav)
