@@ -123,78 +123,6 @@ class P1B1plotter(object):
                             self.epochsToAcc[n,g,gCNN,r] = np.where(np.asarray(lossAccDict['valAcc'])>=accTh)[0][0]+1
                             self.timeToAcc[n,g,gCNN,r] = np.sum(lossAccDict['epochTime'][:int(self.epochsToAcc[n,g,gCNN,r])])
 
-    # def joinDicts(self,P1B1Dict='IdTrackerDeep/figuresPaper/P1B1/CNN_modelsS/P1B1Dict_job_1.pkl'):
-    #     P1B1DictsPaths = scanFolder(P1B1Dict)
-    #     print 'P1B1DictsPaths, '
-    #     pprint(P1B1DictsPaths)
-    #
-    #     # Update dictionary
-    #     repList = []
-    #     trainAccs = []
-    #     valAccs = []
-    #     IndivIndices = {}
-    #     ImagesIndices = {}
-    #     LossAccDicts = {}
-    #     print '\nUpdating repetitions...'
-    #     for P1B1DictPath in P1B1DictsPaths:
-    #         print P1B1DictPath
-    #         P1B1Dict = pickle.load(open(P1B1DictPath,'rb'))
-    #
-    #         print 'Appeding repList, trainAccs and valAccs'
-    #         repList.append(P1B1Dict['repList'])
-    #         trainAccs.append(P1B1Dict['trainAccs'])
-    #         valAccs.append(P1B1Dict['valAccs'])
-    #
-    #         print 'Updating IndivIndices, ImagesIndices and LossAccDicts'
-    #         for gCNN in self.groupSizesCNN:
-    #             if gCNN not in IndivIndices.keys():
-    #                 IndivIndices[gCNN] = {}
-    #                 ImagesIndices[gCNN] = {}
-    #                 LossAccDicts[gCNN] = {}
-    #
-    #             for g in self.groupSizes:
-    #                 if g not in IndivIndices[gCNN].keys():
-    #                     IndivIndices[gCNN][g] = []
-    #                     ImagesIndices[gCNN][g] = {}
-    #                     LossAccDicts[gCNN][g] = {}
-    #
-    #                 for indivIndices in P1B1Dict['IndivIndices'][gCNN][g]:
-    #                     IndivIndices[gCNN][g].append(indivIndices)
-    #
-    #                 for n in self.IMDBSizes:
-    #                     print 'Group size CNN %i Group size %i IMDB size %i' %(gCNN,g,n)
-    #                     if n not in ImagesIndices[gCNN][g].keys():
-    #                         print 'Initializing lists ImagesIndices, LossAccDicts for the new IMDBSize', n
-    #                         ImagesIndices[gCNN][g][n] = []
-    #                         LossAccDicts[gCNN][g][n] = []
-    #
-    #                     for r, (imagesIndices, lossAccDict) in enumerate(zip(P1B1Dict['ImagesIndices'][gCNN][g][n],P1B1Dict['LossAccDicts'][gCNN][g][n])):
-    #                         print 'Group size CNN %i Group size %i IMDB size %i REp %i' %(gCNN,g,n,r)
-    #                         ImagesIndices[gCNN][g][n].append(imagesIndices)
-    #                         LossAccDicts[gCNN][g][n].append(lossAccDict)
-    #
-    #     # Update object
-    #     self.repList = flatten(repList)
-    #     self.numRepetitions = len(self.repList)
-    #     print 'repList, ', self.repList
-    #     print 'trainAccs shape, ',trainAccs[0].shape
-    #     print 'valAccs shape, ', valAccs[0].shape
-    #     print 'trainAccs shape, ',trainAccs[1].shape
-    #     print 'valAccs shape, ', valAccs[1].shape
-    #     self.trainAccs = np.concatenate(trainAccs,axis=3)
-    #     self.valAccs = np.concatenate(valAccs,axis=3)
-    #
-    #     print 'trainAccs, ', self.trainAccs
-    #     print 'valAccs, ', self.valAccs
-    #     self.IndivIndices = IndivIndices
-    #     self.ImagesIndices = ImagesIndices
-    #     self.LossAccDicts = LossAccDicts
-    #     print 'Num of lossAccDicts', len(IndivIndices[gCNN][g]), len(ImagesIndices[gCNN][g][n]), len(LossAccDicts[gCNN][g][n])
-    #
-    #     # Save dictionary
-    #     print '\nSaving dictionary...'
-    #     pickle.dump(self.__dict__,open('IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict.pkl' %self.condition,'wb'))
-
     def plotArray(self,arrayName,ax,ylim = (),ylabel='',title='',lineStyle='-'):
         import seaborn as sns
         from matplotlib import pyplot as plt
@@ -227,22 +155,34 @@ class P1B1plotter(object):
         from matplotlib import pyplot as plt
         sns.set(style="white")
 
-        fig, axarr = plt.subplots(1,3,sharex=True, figsize=(20, 10), dpi=300)
+        fig, axarr = plt.subplots(2,2,sharex=True, figsize=(20, 10), dpi=300)
         if self.condition == 'S':
             fig.suptitle('Training from strach with uncorrelated images')
         if self.condition == 'SD':
             fig.suptitle('Training from strach with uncorrelated images with dropout of .7')
-        elif self.condition == 'SCA':
-            fig.suptitle('Training from scratch with correlated images and data augmentation')
         elif self.condition == 'SC':
             fig.suptitle('Training from scratch with correlated images')
+        elif self.condition == 'SCV':
+            fig.suptitle('Training from scratch with correlated images stopping like the video')
+        elif self.condition == 'SCA':
+            fig.suptitle('Training from scratch with correlated images and data augmentation')
+        elif self.condition == 'SCAV':
+            fig.suptitle('Training from scratch with correlated images and data augmentation stopping like the video')
+        elif self.condition == 'KTCV':
+            fig.suptitle('Training with knowledge transfer with correlated images stopping like the video')
+        elif self.condition == 'KTCVA':
+            fig.suptitle('Training with knowledge transfer with correlated images stopping like the video')
+        elif self.condition == 'KTCVX':
+            fig.suptitle('Training with knowledge transfer with correlated images stopping like the video only the softmax')
+        elif self.condition == 'KTCVFX':
+            fig.suptitle('Training with knowledge transfer with correlated images stopping like the video softmax and fully connected')
         # fig.suptitle('Training from strach (group size vs number of images per individual)')
-        self.plotArray('valAccs',axarr[0],ylim=(0.,1.),ylabel='Accuracy',title = 'Accuracy in validation')
-        self.plotArray('testAccs',axarr[0],lineStyle=':')
+        self.plotArray('valAccs',axarr[0,0],ylim=(0.,1.),ylabel='Accuracy',title = 'Accuracy in validation')
+        self.plotArray('testAccs',axarr[0,0],lineStyle=':')
         # self.plotArray2('epochsToAcc',axarr[0,1],ylim=(0,400),ylabel='Number of pochs',title = 'Number of epochs to accuracy threshold %.2f' %self.accTh)
-        self.plotArray('timeToAcc',axarr[1],ylabel='Time (sec)',title = 'Time to accuracy threshold  %.2f (sec)' %self.accTh)
-        self.plotArray('totalTime',axarr[2],ylabel='Time (sec)',title = 'Total time in (sec)')
-        # self.plotArray2('epochTime',axarr[1,2],ylim=(0,2.5),ylabel='Time (sec)',title = 'Single epoch time in (sec)')
+        self.plotArray('timeToAcc',axarr[1,0],ylabel='Time (sec)',title = 'Time to accuracy threshold  %.2f (sec)' %self.accTh)
+        self.plotArray('totalTime',axarr[1,1],ylabel='Time (sec)',title = 'Total time in (sec)')
+        self.plotArray('epochTime',axarr[0,1],ylabel='Time (sec)',title = 'Single epoch time in (sec)')
         # self.plotArray2('totalEpochs',axarr[1,0],ylim=(0,800),ylabel='Number of epochs',title = 'Total number of epochs')
 
         figname = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1_results%s.pdf' %(self.condition, self.condition)
@@ -259,9 +199,13 @@ if __name__ == '__main__':
     '''
     condition = sys.argv[1]
     p = P1B1plotter()
-    P1B1DictPath = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict_job_1.pkl' %sys.argv[1]
-    print 'P1B1DictPath, ', P1B1DictPath
-    p.dictPath = P1B1DictPath
+    P1B1InfoPath = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/info.pkl' %sys.argv[1]
+    P1B1DictPath = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict.pkl' %sys.argv[1]
+    print 'P1B1InfoPath, ', P1B1InfoPath
+    p.dictPath = P1B1InfoPath
+    if os.path.isfile(P1B1DictPath):
+        print 'P1B1Dict.pkl already exist'
+        rebuildDict = raw_input('Do you wanna rebuild P1B1Dict?')
     p.rebuildDictFromFolders()
     p.computeTimes()
     p.plotResults()
