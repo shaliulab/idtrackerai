@@ -33,12 +33,11 @@ class P1B1(object):
         # Figure parameters
         self.groupSizesCNN = map(int,groupSizesCNN.split('_'))
         self.numGroupsCNN = len(self.groupSizesCNN)
-        self.groupSizes = [2,5,10,25]
+        self.groupSizes = [2,5,10,25,50,75,90]
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
         self.IMDBSizes = [20,50,100,250,500,1000,3000,28000] # Images for training
-        # self.IMDBSizes = [28000] # Images for training
         self.numIMDBSizes = len(self.IMDBSizes)
 
         # Set CNN training parameters
