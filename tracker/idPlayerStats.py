@@ -22,7 +22,7 @@ import itertools
 import cPickle as pickle
 
 
-videoPaths = scanFolder('IdTrackerDeep/videos/59indiv/video_03-23-17_11-36-23.000.avi')
+videoPaths = scanFolder('IdTrackerDeep/videos/8zebrafish_conflicto/conflict3and4_20120316T155032_1.avi')
 
 frameIndices, segmPaths = getSegmPaths(videoPaths)
 videoPath = videoPaths[0]
@@ -92,7 +92,7 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
 
     if not show:
         fourcc = cv2.cv.CV_FOURCC(*'XVID')
-        name = folder +'/'+ filename.split('_')[0]  + '_tracked'+ '.avi'
+        name = sessionPath +'/'+ filename.split('_')[0]  + '_tracked'+ '.avi'
         out = cv2.VideoWriter(name, fourcc, 15.0, (width, height))
 
     # Load first segment
@@ -255,7 +255,8 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
         cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
 
         if show == True:
-            frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
+            frame = cv2.resize(frame,None, fx = np.true_divide(1,1), fy = np.true_divide(1,1))
+            # frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
             # Visualization of the process
             cv2.imshow('IdPlayer',frame)
             pass
@@ -278,4 +279,4 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
     # return raw_input('Which statistics do you wanna visualize (0,1,2,3)?')
 
 statNum = 4
-IdPlayer(videoPaths,segmPaths,allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics,dfGlobal,show=False)
+IdPlayer(videoPaths,segmPaths,allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics,dfGlobal,show=True)

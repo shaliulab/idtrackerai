@@ -177,7 +177,7 @@ def getNextPossibleFragments(fragmentsDict, accumDict, trainDict, fragIndexesSor
     print 'Removing short fragments...'
     print 'Current minimum distance travelled, ', accumDict['minDist']
     fragIndexesSortedLong = [x for x in fragIndexesSorted if distsTrav[x] > accumDict['minDist']]
-    print '(fragIndexesSorted, distTrav) after eliminating the short ones, ', zip(fragIndexesSortedLong,distsTrav[fragIndexesSortedLong])
+    print 'Number of fragments after eliminating the short ones, ', len(zip(fragIndexesSortedLong,distsTrav[fragIndexesSortedLong]))
 
     # We only consider fragments that have not been already picked for fine-tuning
     print '\nCurrent fragsForTrain, ', accumDict['fragsForTrain']

@@ -1,3 +1,4 @@
+from __future__ import division
 import os
 import sys
 sys.path.append('IdTrackerDeep/utils')
@@ -25,6 +26,12 @@ def loss(y,y_logits):
     _add_loss_summary(cross_entropy)
     return cross_entropy
 
+def weighted_loss(y,y_logits,loss_weights):
+    cross_entropy = tf.reduce_mean(
+        tf.contrib.losses.softmax_cross_entropy(y_logits,y, loss_weights), name = 'CrossEntropyMean')
+    _add_loss_summary(cross_entropy)
+    return cross_entropy
+
 def optimize(loss,lr):
     optimizer = tf.train.GradientDescentOptimizer(lr)
     # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
@@ -45,7 +52,7 @@ def evaluation(y,y_logits,classes):
 
 def placeholder_inputs(batch_size, width, height, channels, classes):
     images_placeholder = tf.placeholder(tf.float32, [None, width, height, channels], name = 'images')
-    labels_placeholder = tf.placeholder(tf.float32, [None, classes], name = 'labels')
+    labels_placeholder = tf.placeholder(tf.int32, [None, classes], name = 'labels')
 
     return images_placeholder, labels_placeholder
 
@@ -58,7 +65,7 @@ def get_batch_indices(numImages,batch_size):
 
     return indices, iter_per_epoch
 
-def get_batch(batchNum, iter_per_epoch, indices, images_pl, labels_pl, keep_prob_pl, images, labels, keep_prob):
+def get_batch(batchNum, iter_per_epoch, indices, images_pl, labels_pl, keep_prob_pl, loss_weights_pl, images, labels, keep_prob,weighted_flag):
     if iter_per_epoch > 1:
         images_feed = images[indices[batchNum]:indices[batchNum+1]]
         labels_feed = labels[indices[batchNum]:indices[batchNum+1]]
@@ -66,22 +73,40 @@ def get_batch(batchNum, iter_per_epoch, indices, images_pl, labels_pl, keep_prob
         images_feed = images
         labels_feed = labels
 
+    if weighted_flag:
+        weights = 1. - np.sum(labels,axis=0) / len(labels)
+        # print 'The weights are ', weights
+        weights_feed = np.sum(weights*labels_feed,axis=1)
+        # print 'weights_feed shape, ', weights_feed.shape
+        # print 'labels_feed shape, ', labels_feed.shape
+    elif not weighted_flag:
+        weights_feed = np.ones(len(labels_feed))
+        # print 'Balanced dataset, the weights are, ', weights_feed
+
     feed_dict = {
       images_pl: images_feed,
       labels_pl: labels_feed,
+      loss_weights_pl: weights_feed,
       keep_prob_pl: keep_prob
     }
     return feed_dict
 
-def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labels_pl, keep_prob_pl, images, labels, keep_prob):
-    feed_dict = get_batch(batchNum, iter_per_epoch, indices, images_pl, labels_pl, keep_prob_pl, images, labels, keep_prob)
+def run_batch(sess, opsList, indices, batchNum, iter_per_epoch, images_pl,  labels_pl, keep_prob_pl, loss_weights_pl, images, labels, keep_prob, weighted_flag):
+    feed_dict = get_batch(batchNum, iter_per_epoch, indices, images_pl, labels_pl, keep_prob_pl, loss_weights_pl, images, labels, keep_prob,weighted_flag)
     # Run forward step to compute loss, accuracy...
     outList = sess.run(opsList, feed_dict=feed_dict)
     outList.append(feed_dict)
 
     return outList
 
-def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, trainDict, accumDict, fragmentsDict, handlesDict, portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch, plotFlag = True, printFlag = True, onlySoftmax=False):
+def run_training(X_t, Y_t, X_v, Y_v,
+                width, height, channels, classes,
+                trainDict, accumDict, fragmentsDict, handlesDict,
+                portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch,
+                plotFlag = True,
+                printFlag = True,
+                onlySoftmax=False,
+                weighted_flag = True):
 
     # get data from trainDict
     loadCkpt_folder = trainDict['loadCkpt_folder']
@@ -113,7 +138,15 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, trainDict
 
         logits, relu,(W1,W3,W5) = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
 
-        cross_entropy = loss(labels_pl,logits)
+        # cross_entropy = loss(labels_pl,logits)
+        # loss_weights_pl = tf.placeholder(tf.float32,[1],name = 'loss_weights')
+        # if weighted_flag:
+        #     print 'We are training with an unbalanced dataset and a weighted loss'
+        loss_weights_pl = tf.placeholder(tf.float32, [None], name = 'loss_weights')
+        # else:
+        #     print 'We are training with a balanced dataset'
+
+        cross_entropy = weighted_loss(labels_pl,logits,loss_weights_pl)
 
         with tf.variable_scope("softmax1", reuse=True) as scope:
             softW = tf.get_variable("weights")
@@ -277,8 +310,8 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, trainDict
 
                         _, batchLoss, batchAcc, indivBatchAcc, batchFeat, WConv1, WConv3, WConv5, feed_dict = run_batch(
                             sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
-                            images_pl, labels_pl, keep_prob_pl,
-                            X_t, Y_t, keep_prob = keep_prob)
+                            images_pl, labels_pl, keep_prob_pl, loss_weights_pl,
+                            X_t, Y_t, keep_prob, weighted_flag)
 
                         lossEpoch.append(batchLoss)
                         accEpoch.append(batchAcc)
@@ -324,8 +357,8 @@ def run_training(X_t, Y_t, X_v, Y_v, width, height, channels, classes, trainDict
 
                         batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
                             sess, opListVal, Vindices, iter_i, Viter_per_epoch,
-                            images_pl, labels_pl, keep_prob_pl,
-                            X_v, Y_v, keep_prob = keep_prob)
+                            images_pl, labels_pl, keep_prob_pl, loss_weights_pl,
+                            X_v, Y_v, keep_prob, weighted_flag)
 
                         lossEpoch.append(batchLoss)
                         accEpoch.append(batchAcc)

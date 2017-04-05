@@ -28,7 +28,7 @@ from collections import Counter
 import collections
 import datetime
 
-def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, numAnimals, printFlag = True):
+def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, numAnimals, weighted_flag, printFlag = True):
     ### Fix maximal number of images:
 
     maximalRefPerAnimal = 3000
@@ -67,7 +67,6 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     # # how long?
     # numSamplesPerAnimal = maximalRefPerAnimal - minNumRef
     # # if longer than max --> sample
-    minAccRefs = []
     for j, frag in enumerate(newFragForTrain): # for each complete fragment that has to be used for the training
         if printFlag:
             print '\nGetting references from global fragment ', frag
@@ -140,15 +139,15 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
         if printFlag:
             print '\n The keys of the refDict are ', refDictTemp.keys()
 
-    ''' I compute the minimum number of references I can take  given the new fragments added during the accumulation'''
-    minNumRefTemp = np.min([len(refDictTemp[iD]) for iD in refDictTemp.keys()]) # minimal number of references from new fragments
-    if len(refDict) != 0:
-        minNumRef = np.min([len(refDict[iD]) for iD in refDict.keys()]) # minimal number of references from old dictionary of references
-    else:
-        minNumRef = 0
-
-    print 'number of new references gained while accumulating: ', minNumRefTemp
-    print 'number of old references: ', minNumRef
+    # ''' I compute the minimum number of references I can take  given the new fragments added during the accumulation'''
+    # minNumRefTemp = np.min([len(refDictTemp[iD]) for iD in refDictTemp.keys()]) # minimal number of references from new fragments
+    # if len(refDict) != 0:
+    #     minNumRef = np.min([len(refDict[iD]) for iD in refDict.keys()]) # minimal number of references from old dictionary of references
+    # else:
+    #     minNumRef = 0
+    #
+    # print 'number of new references gained while accumulating: ', minNumRefTemp
+    # print 'number of old references: ', minNumRef
 
     ''' Updating refDict '''
     if accumDict['counter'] == 0:
@@ -156,7 +155,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     else:
         iDList = refDict.keys()
 
-    overallRefs = 1000000
+    min_num_ref_available = 1000000 # We initialize to a high value so that it fullfilles the if conditions inside the loop
     for iD in iDList:
         # print 'refDictTemp ', iD, len(refDictTemp[iD])
         if accumDict['counter'] == 0:
@@ -166,11 +165,11 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
                 refDict[iD] = np.vstack((refDict[iD],refDictTemp[iD]))
 
         print 'refDict ', iD, len(refDict[iD])
-        if len(refDict[iD]) < overallRefs:
-            overallRefs = len(refDict[iD])
+        if len(refDict[iD]) < min_num_ref_available:
+            min_num_ref_available = len(refDict[iD])
 
     if printFlag:
-        print '\nMinimum number of references per identities: ', overallRefs
+        print '\nMinimum number of references per identities: ', min_num_ref_available
 
     ''' I build the images and labels to feed the network '''
     if printFlag:
@@ -178,55 +177,95 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
 
     images = []
     labels = []
-    if overallRefs <= maximalRefPerAnimal or accumDict['counter'] == 0:
-        print '*************************************************'
-        print 'we are under the threshold:', overallRefs, ' <= ', maximalRefPerAnimal
-        print '*************************************************'
 
-        for iD in iDList:
-            imagesList = np.asarray(refDict[iD])
+    for iD in iDList:
 
-            indexes = np.linspace(0,len(imagesList)-1,overallRefs).astype('int')
-            images.append(imagesList[indexes])
-            labels.append(np.ones(overallRefs)*iD)
+        if weighted_flag:
+            print 'We are using an unbalanced dataset with weighted loss'
+            if len(refDict[iD]) <= maximalRefPerAnimal or accumDict['counter'] == 0:
+                print 'The number of references for id ', iD, ' is ', len(refDict[iD]), ', smaller than ', maximalRefPerAnimal
+                print 'We take them all'
+                imagesList = np.asarray(refDict[iD])
+                images.append(imagesList)
+                labels.append(np.ones(len(refDict[iD]))*iD)
 
-    elif overallRefs > maximalRefPerAnimal:
-        #sample from old dict:
-        # compute the number of samples to be taken from the old dict
+            elif len(refDict[iD]) > maximalRefPerAnimal:
+                print 'The number of references for id ', iD, ' is ', len(refDict[iD]), ', bigger than ', maximalRefPerAnimal
+                print 'We sample ', maximalRefPerAnimal, ', .6 from the old ones and .4 from the new ones.'
 
-        for iD in refDict.keys():
+                ratioOld = .6
+                ratioNew = .4
 
-            ratioOld = .6
-            ratioNew = .4
+                if iD in refDictTemp.keys():
+                    numSamplesNew = maximalRefPerAnimal * ratioNew
 
-            if iD in refDictTemp.keys():
-                numSamplesNew = maximalRefPerAnimal * ratioNew
+                    sampledImagesListNew = np.asarray(refDictTemp[iD])
+                    samplesIndexesNew = np.linspace(0,len(sampledImagesListNew)-1,numSamplesNew).astype('int')
+                    sampledImagesListNew = sampledImagesListNew[samplesIndexesNew]
+                elif iD not in refDictTemp.keys():
+                    print iD
+                    ratioOld = 1.
 
-                sampledImagesListNew = np.asarray(refDictTemp[iD])
-                samplesIndexesNew = np.linspace(0,len(sampledImagesListNew)-1,numSamplesNew).astype('int')
-                sampledImagesListNew = sampledImagesListNew[samplesIndexesNew]
-            elif iD not in refDictTemp.keys():
-                print iD
-                ratioOld = 1.
+                numSamplesOld = maximalRefPerAnimal * ratioOld
+                sampledImagesListOld = np.asarray(refDict[iD])
+                samplesIndexesOld = np.linspace(0,len(sampledImagesListOld)-1,numSamplesOld).astype('int')
+                sampledImagesListOld = sampledImagesListOld[samplesIndexesOld]
 
-            numSamplesOld = maximalRefPerAnimal * ratioOld
-            sampledImagesListOld = np.asarray(refDict[iD])
-            samplesIndexesOld = np.linspace(0,len(sampledImagesListOld)-1,numSamplesOld).astype('int')
-            sampledImagesListOld = sampledImagesListOld[samplesIndexesOld]
+                #update the refDict so that it always contains everything
+                if iD in refDictTemp.keys():
+                    imagesList = np.vstack((sampledImagesListOld, sampledImagesListNew))
+                    refDict[iD] = np.vstack((refDict[iD],refDictTemp[iD]))
+                elif iD not in refDictTemp.keys():
+                    print iD
+                    imagesList = sampledImagesListOld
 
-            #update the refDict so that it always contains everything
-            if iD in refDictTemp.keys():
-                imagesList = np.vstack((sampledImagesListOld, sampledImagesListNew))
-                refDict[iD] = np.vstack((refDict[iD],refDictTemp[iD]))
-            elif iD not in refDictTemp.keys():
-                print iD
-                imagesList = sampledImagesListOld
+                images.append(imagesList)
+                labels.append(np.ones(maximalRefPerAnimal)*iD)
 
-            images.append(imagesList)
-            labels.append(np.ones(maximalRefPerAnimal)*iD)
+        elif not weighted_flag:
+            print 'We are using a balanced dataset '
+            if min_num_ref_available <= maximalRefPerAnimal or accumDict['counter'] == 0:
+                print 'The minimum number of references is ', min_num_ref_available, ', smaller than ', maximalRefPerAnimal
+                print 'We sample the references of this iD to take ', min_num_ref_available
 
-        print 'old references to be retained: ', numSamplesOld
-        print 'old references to be added: ', numSamplesNew
+                imagesList = np.asarray(refDict[iD])
+
+                indexes = np.linspace(0,len(imagesList)-1,min_num_ref_available).astype('int')
+                images.append(imagesList[indexes])
+                labels.append(np.ones(min_num_ref_available)*iD)
+
+            elif min_num_ref_available > maximalRefPerAnimal:
+                print 'The minimum number of references is ', min_num_ref_available, ', bigger than ', maximalRefPerAnimal
+                print 'We sample ', maximalRefPerAnimal, ', .6 from the old ones and .4 from the new ones.'
+
+                ratioOld = .6
+                ratioNew = .4
+
+                if iD in refDictTemp.keys():
+                    numSamplesNew = maximalRefPerAnimal * ratioNew
+
+                    sampledImagesListNew = np.asarray(refDictTemp[iD])
+                    samplesIndexesNew = np.linspace(0,len(sampledImagesListNew)-1,numSamplesNew).astype('int')
+                    sampledImagesListNew = sampledImagesListNew[samplesIndexesNew]
+                elif iD not in refDictTemp.keys():
+                    print iD
+                    ratioOld = 1.
+
+                numSamplesOld = maximalRefPerAnimal * ratioOld
+                sampledImagesListOld = np.asarray(refDict[iD])
+                samplesIndexesOld = np.linspace(0,len(sampledImagesListOld)-1,numSamplesOld).astype('int')
+                sampledImagesListOld = sampledImagesListOld[samplesIndexesOld]
+
+                #update the refDict so that it always contains everything
+                if iD in refDictTemp.keys():
+                    imagesList = np.vstack((sampledImagesListOld, sampledImagesListNew))
+                    refDict[iD] = np.vstack((refDict[iD],refDictTemp[iD]))
+                elif iD not in refDictTemp.keys():
+                    print iD
+                    imagesList = sampledImagesListOld
+
+                images.append(imagesList)
+                labels.append(np.ones(maximalRefPerAnimal)*iD)
 
     print 'images and labels should have the same length:'
     print 'length labels ', [len(lab) for lab in labels]
@@ -311,7 +350,14 @@ def getCkptvideoPath(videoPath, accumCounter, train=0):
 
     return ckptvideoPath
 
-def fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portraits, statistics, videoInfo = [], plotFlag = True, printFlag = True):
+def fineTuner(videoPath,
+            accumDict, trainDict, fragmentsDict, handlesDict,
+            portraits, statistics, videoInfo = [],
+            plotFlag = True,
+            printFlag = True,
+            onlySoftmax = False,
+            weighted_flag = False):
+
     if printFlag:
         print '\n--- Entering the fineTuner ---'
 
@@ -344,7 +390,7 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portr
     imsize,\
     X_train, Y_train,\
     X_val, Y_val,\
-    trainDict = DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, numAnimals)
+    trainDict = DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, numAnimals, weighted_flag)
 
     if printFlag:
         print '\n fine tune train size:    images  labels'
@@ -369,6 +415,7 @@ def fineTuner(videoPath, accumDict, trainDict, fragmentsDict, handlesDict, portr
                     trainDict, accumDict, fragmentsDict, handlesDict, portraits,
                     Tindices, Titer_per_epoch,
                     Vindices, Viter_per_epoch,
-                    onlySoftmax=False) #NOTE:hard-coded flag for testing purpose
+                    onlySoftmax = onlySoftmax,
+                    weighted_flag = weighted_flag) #NOTE:hard-coded flag for testing purpose
     trainDict['loadCkpt_folder'] = ckpt_dir
     return trainDict, handlesDict
