@@ -37,7 +37,7 @@ def findFirstGlobalFragment(fragmentsDict,accumDict):
         avVels = []
         print '\nChecking whether the fragmentNumber ', indexFragment, ' is good for training'
 
-        for indivFragment in fragmentsDict['intervals'][indexFragment]:
+        for indivFragment in fragmentsDict['intervalsDist'][indexFragment]:
             avVels.append(indivFragment[4])
 
         print 'The average velocities for each blob are (pixels/frame), '

@@ -141,7 +141,7 @@ def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filte
             tf.summary.image(scopeName + '/output', convbToPlot, max_outputs=10)
 
 
-    return convb,w,h,grid
+    return convb, w, h
 
 
 def maxpool2d(name,inputWidth, inputHeight, inputPool, pool=2 , stride=[1,2,2,1] ,pad='VALID'):
@@ -227,6 +227,44 @@ def createSaver(varName, include, name):
         raise ValueError('The second argument has to be a boolean')
 
     return saver
+
+def getCkptvideoPath(videoPath, accumCounter, train=0):
+    """
+    train = 0 (id assignation)
+    train = 1 (first fine-tuning)
+    train = 2 (further tuning from previons checkpoint with more references)
+    """
+
+    def getLastSession(subFolders):
+        if len(subFolders) == 0:
+            lastIndex = 0
+        else:
+            subFolders = natural_sort(subFolders)[::-1]
+            lastIndex = int(subFolders[0].split('_')[-1])
+        return lastIndex
+
+    video = os.path.basename(videoPath)
+    folder = os.path.dirname(videoPath)
+    filename, extension = os.path.splitext(video)
+    subFolder = folder + '/CNN_models'
+    subSubFolders = glob.glob(subFolder +"/*")
+    lastIndex = getLastSession(subSubFolders)
+    sessionPath = subFolder + '/Session_' + str(lastIndex)
+
+    if accumCounter >= 0:
+        ckptvideoPath = sessionPath + '/AccumulationStep_' + str(accumCounter)
+        if train == 0:
+            print 'you will assign identities from the last checkpoint in ', ckptvideoPath
+        elif train == 2:
+            print 'you will keep training from the last checkpoint in ', ckptvideoPath
+        elif train == 1:
+            print 'model checkpoints will be saved in ', ckptvideoPath
+
+    elif accumCounter < 0:
+        ckptvideoPath = sessionPath + '/pre_training'
+        print 'The pre-trainig model will be saved in ', ckptvideoPath
+
+    return ckptvideoPath
 
 
 def createCkptFolder(folderName, subfoldersNameList):

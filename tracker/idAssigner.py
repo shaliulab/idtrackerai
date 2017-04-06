@@ -1,10 +1,11 @@
 import sys
 sys.path.append('IdTrackerDeep/utils')
 sys.path.append('IdTrackerDeep/CNN')
-
+sys.path.append('IdTrackerDeep/tracker')
 from py_utils import *
 from video_utils import *
 from idTrainerTracker import *
+from cnn_utils import getCkptvideoPath
 from cnn_utils import *
 
 import time
@@ -75,7 +76,7 @@ def fragmentProbId(X_t, width, height, channels, classes, loadCkpt_folder, batch
         images_pl = tf.placeholder(tf.float32, [None, width, height, channels], name = 'images')
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
-        logits, relu, (W1,W3,W5) = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
+        logits = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
         predictions = tf.cast(tf.add(tf.argmax(logits,1),1),tf.float32)
 
         saver_model = createSaver('soft', False, 'saver_model')
@@ -101,14 +102,14 @@ def fragmentProbId(X_t, width, height, channels, classes, loadCkpt_folder, batch
                 warnings.warn('It is not possible to perform knowledge transfer, give a folder containing a trained model')
 
             # print "Start from:", start
-            opListProb = [predictions, logits, relu]
+            opListProb = [predictions, logits]
 
             ''' Getting idProb fragment '''
             softMaxId = []
             softMaxProbs = []
             for iter_i in range(Titer_per_epoch):
 
-                predictions, logits, relu, feed_dict = run_batch(
+                predictions, logits, feed_dict = run_batch(
                     sess, opListProb, Tindices, iter_i, Titer_per_epoch,
                     images_pl, keep_prob_pl,
                     X_t, keep_prob = keep_prob)
@@ -295,38 +296,38 @@ def probsUptader(vectorPerFrame,indivFragments,numFrames,maxNumBlobs,numAnimals)
 
     return ProbsArray
 
-def getCkptvideoPath(videoPath, accumCounter, train=0):
-    """
-    train = 0 (id assignation)
-    train = 1 (first fine-tuning)
-    train = 2 (further tuning from previons checkpoint with more references)
-    """
-
-    def getLastSession(subFolders):
-        if len(subFolders) == 0:
-            lastIndex = 0
-        else:
-            subFolders = natural_sort(subFolders)[::-1]
-            lastIndex = int(subFolders[0].split('_')[-1])
-        return lastIndex
-
-    video = os.path.basename(videoPath)
-    folder = os.path.dirname(videoPath)
-    filename, extension = os.path.splitext(video)
-    subFolder = folder + '/CNN_models'
-    subSubFolders = glob.glob(subFolder +"/*")
-    lastIndex = getLastSession(subSubFolders)
-
-    sessionPath = subFolder + '/Session_' + str(lastIndex)
-    ckptvideoPath = sessionPath + '/AccumulationStep_' + str(accumCounter)
-    if train == 0:
-        print 'you will assign identities from the last checkpoint in ', ckptvideoPath
-    elif train == 2:
-        print 'you will keep training from the last checkpoint in ', ckptvideoPath
-    elif train == 1:
-        print 'model checkpoints will be saved in ', ckptvideoPath
-
-    return ckptvideoPath
+# def getCkptvideoPath(videoPath, accumCounter, train=0):
+#     """
+#     train = 0 (id assignation)
+#     train = 1 (first fine-tuning)
+#     train = 2 (further tuning from previons checkpoint with more references)
+#     """
+#
+#     def getLastSession(subFolders):
+#         if len(subFolders) == 0:
+#             lastIndex = 0
+#         else:
+#             subFolders = natural_sort(subFolders)[::-1]
+#             lastIndex = int(subFolders[0].split('_')[-1])
+#         return lastIndex
+#
+#     video = os.path.basename(videoPath)
+#     folder = os.path.dirname(videoPath)
+#     filename, extension = os.path.splitext(video)
+#     subFolder = folder + '/CNN_models'
+#     subSubFolders = glob.glob(subFolder +"/*")
+#     lastIndex = getLastSession(subSubFolders)
+#
+#     sessionPath = subFolder + '/Session_' + str(lastIndex)
+#     ckptvideoPath = sessionPath + '/AccumulationStep_' + str(accumCounter)
+#     if train == 0:
+#         print 'you will assign identities from the last checkpoint in ', ckptvideoPath
+#     elif train == 2:
+#         print 'you will keep training from the last checkpoint in ', ckptvideoPath
+#     elif train == 1:
+#         print 'model checkpoints will be saved in ', ckptvideoPath
+#
+#     return ckptvideoPath
 
 def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits = [], videoInfo = {}, plotFlag = True, printFlag = True):
     '''

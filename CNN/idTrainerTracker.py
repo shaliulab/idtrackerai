@@ -105,11 +105,11 @@ def run_training(X_t, Y_t, X_v, Y_v,
                 portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch,
                 plotFlag = True,
                 printFlag = True,
-                onlySoftmax=False,
+                onlySoftmax=True,
                 weighted_flag = True):
 
     # get data from trainDict
-    loadCkpt_folder = trainDict['loadCkpt_folder']
+    loadCkpt_folder = trainDict['load_ckpt_folder']
     ckpt_dir = trainDict['ckpt_dir']
     fig_dir = trainDict['fig_dir']
     sessionPath = trainDict['sess_dir']
@@ -124,7 +124,7 @@ def run_training(X_t, Y_t, X_v, Y_v,
     print '********************************************************************'
     print '********************************************************************'
     print 'These are the individual intervals with which we are going to train'
-    print '(blob index, global fragment, video interval, length of the interval, avVelocity in interval, distance travelled), idAssigned)   '
+    print '(blob index, fragment number, video interval, length of the interval, avVelocity in interval, distance travelled), idAssigned)   '
     pprint(idUsedIndivIntervals)
     print '********************************************************************'
     print '********************************************************************'
@@ -136,7 +136,7 @@ def run_training(X_t, Y_t, X_v, Y_v,
         images_pl, labels_pl = placeholder_inputs(batch_size, width, height, channels, classes)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
-        logits, relu,(W1,W3,W5) = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
+        logits = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
 
         # cross_entropy = loss(labels_pl,logits)
         # loss_weights_pl = tf.placeholder(tf.float32,[1],name = 'loss_weights')
@@ -251,8 +251,8 @@ def run_training(X_t, Y_t, X_v, Y_v,
 
             # print "Start from:", start
             # opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu]
-            opListTrain = [train_op, cross_entropy, accuracy, indivAcc, relu, W1,W3,W5]
-            opListVal = [cross_entropy, accuracy, indivAcc, relu]
+            opListTrain = [train_op, cross_entropy, accuracy, indivAcc]
+            opListVal = [cross_entropy, accuracy, indivAcc]
 
             stored_exception = None
             epoch_i = 0
@@ -273,7 +273,7 @@ def run_training(X_t, Y_t, X_v, Y_v,
                             print 'epsilon (overfitting), ', epsilon
                             print 'epsilon2 (if it is not changing much), ', epsilon2
 
-                        if np.mean(valIndivAcc) > .8: ###NOTE: decreased to .8 for large groups (38 animals)
+                        if np.nanmean(valIndivAcc) > .8: ###NOTE: decreased to .8 for large groups (38 animals)
                             if magCurr > magPrev:
                                 if printFlag:
                                     print '\nOverfitting, passing to new set of images'
@@ -308,7 +308,7 @@ def run_training(X_t, Y_t, X_v, Y_v,
                     ''' TRAINING '''
                     for iter_i in range(Titer_per_epoch):
 
-                        _, batchLoss, batchAcc, indivBatchAcc, batchFeat, WConv1, WConv3, WConv5, feed_dict = run_batch(
+                        _, batchLoss, batchAcc, indivBatchAcc, feed_dict = run_batch(
                             sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
                             images_pl, labels_pl, keep_prob_pl, loss_weights_pl,
                             X_t, Y_t, keep_prob, weighted_flag)
@@ -324,7 +324,6 @@ def run_training(X_t, Y_t, X_v, Y_v,
                                     ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
                                     ", Training Accuracy= " + "{:.5f}".format(batchAcc)
 
-                    trainFeat = batchFeat
                     trainFeatLabels = Y_t[Tindices[iter_i]:Tindices[iter_i+1]]
 
                     trainLoss = np.mean(lossEpoch)
@@ -355,7 +354,7 @@ def run_training(X_t, Y_t, X_v, Y_v,
                     indivAccEpoch = []
                     for iter_i in range(Viter_per_epoch):
 
-                        batchLoss, batchAcc, indivBatchAcc, batchFeat, feed_dict = run_batch(
+                        batchLoss, batchAcc, indivBatchAcc, feed_dict = run_batch(
                             sess, opListVal, Vindices, iter_i, Viter_per_epoch,
                             images_pl, labels_pl, keep_prob_pl, loss_weights_pl,
                             X_v, Y_v, keep_prob, weighted_flag)
@@ -395,41 +394,19 @@ def run_training(X_t, Y_t, X_v, Y_v,
                     trainLossPlot.append(trainLoss)
                     trainAccPlot.append(trainAcc)
                     trainIndivAccPlot.append(trainIndivAcc)
-                    trainLossSpeed, trainLossAccel = computeDerivatives(trainLossPlot)
-                    trainAccSpeed, trainAccAccel = computeDerivatives(trainAccPlot)
-                    trainFeatPlot = trainFeat
 
                     # Test
                     valLossPlot.append(valLoss)
                     valAccPlot.append(valAcc)
                     valIndivAccPlot.append(valIndivAcc)
-                    valLossSpeed, valLossAccel = computeDerivatives(valLossPlot)
-                    valAccSpeed, valAccAccel = computeDerivatives(valAccPlot)
 
                     lossAccDict = {
                         'loss': trainLossPlot,
                         'valLoss': valLossPlot,
-                        'lossSpeed': trainLossSpeed,
-                        'valLossSpeed': valLossSpeed,
-                        'lossAccel': trainLossAccel,
-                        'valLossAccel': valLossAccel,
                         'acc': trainAccPlot,
                         'valAcc': valAccPlot,
-                        'accSpeed': trainAccSpeed,
-                        'valAccSpeed': valAccSpeed,
-                        'accAccel': trainAccSpeed,
-                        'valAccAccel': valAccSpeed,
                         'indivAcc': trainIndivAccPlot,
-                        'indivValAcc': valIndivAccPlot,
-                        # 'indivValAccRef': indivAccRef,
-                        'features': trainFeatPlot,
-                        'labels': one_hot_to_dense(trainFeatLabels) # labels of the last batch of the references to plot some features
-                        }
-
-                    weightsDict = {
-                        'W1': WConv1,
-                        'W3': WConv3,
-                        'W5': WConv5
+                        'indivValAcc': valIndivAccPlot
                         }
 
                     pickle.dump( lossAccDict, open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
@@ -464,6 +441,284 @@ def run_training(X_t, Y_t, X_v, Y_v,
     print 'You just saved the lossAccDict'
     trainDict['lossAccDict'] = lossAccDict
     return trainDict, handlesDict
+
+
+def run_pre_training(X_t, Y_t, X_v, Y_v,
+                    width, height, channels, classes,
+                    trainDict,
+                    Tindices, Titer_per_epoch, Vindices, Viter_per_epoch,
+                    plotFlag = True,
+                    printFlag = True,
+                    onlySoftmax=False,
+                    weighted_flag = True):
+
+
+    print '-------------------TRAINDICT-----------------------------'
+    pprint(trainDict)
+    print '-------------------END TRAINDICT-------------------------'
+    # get data from trainDict
+    loadCkpt_folder = trainDict['load_ckpt_folder']
+    print '**************'
+    print 'loading model from ', loadCkpt_folder
+    print '**************'
+    pre_train_ckpt_dir = trainDict['pre_train_ckpt_dir']
+    sessionPath = trainDict['sess_dir']
+    n_epochs = trainDict['numEpochs']
+    batch_size = trainDict['batchSize']
+    lr = trainDict['lr']
+    keep_prob = trainDict['keep_prob']
+
+    with tf.Graph().as_default():
+        images_pl, labels_pl = placeholder_inputs(batch_size, width, height, channels, classes)
+        keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
+        logits = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
+        loss_weights_pl = tf.placeholder(tf.float32, [None], name = 'loss_weights')
+        cross_entropy = weighted_loss(labels_pl,logits,loss_weights_pl)
+        train_op, global_step =  optimize(cross_entropy,lr)
+        accuracy, indivAcc = evaluation(labels_pl,logits,classes)
+        summary_op = tf.summary.merge_all()
+
+        saver_model = createSaver('soft', False, 'saver_model')
+        saver_softmax = createSaver('soft', True, 'saver_softmax')
+        #bind to a maximal number of epochs
+        num_epochs = 10000
+
+        with tf.Session() as sess:
+            tf.global_variables_initializer().run()
+
+            if printFlag:
+                print "\n****** Starting pre-training session ******\n"
+                print "\n****** Checking Folders (save/restore) ******\n"
+
+            # Create folder for checkpoint if does not exist
+            [ckpt_dir_model,ckpt_dir_softmax] = createCkptFolder( pre_train_ckpt_dir, ['model', 'softmax'])
+
+            ckpt = tf.train.get_checkpoint_state(ckpt_dir_model)
+            print 'get checkpoints ', ckpt
+
+            if (not (ckpt and ckpt.model_checkpoint_path)):
+                if loadCkpt_folder:
+                    if printFlag:
+                        print '********************************************************'
+                        print 'We are only loading the model'
+                        print '********************************************************'
+                    loadCkpt_folder = loadCkpt_folder + '/model'
+
+                    if printFlag:
+                        print 'loading weigths from ' + loadCkpt_folder
+
+                    restoreFromFolder(loadCkpt_folder, saver_model, sess)
+                    global_step.assign(0).eval()
+
+                else:
+                    warnings.warn('It is not possible to perform knowledge transfer, give a folder containing a trained model')
+                    global_step.assign(0).eval()
+            else:
+
+                loadCkpt_folder_model = loadCkpt_folder + '/model'
+                print 'setting the path to the loadCkpt_folder: ', loadCkpt_folder_model
+                if printFlag:
+                    print "\n"
+                    print '********************************************************'
+                    print 'We are only loading conv layers and fully connected'
+                    print '********************************************************'
+                    print 'loading weigths from ' + loadCkpt_folder + '/model'
+
+                restoreFromFolder(loadCkpt_folder_model, saver_model, sess)
+
+
+            start = global_step.eval()
+            print 'we should be starting from ', start
+            n_epochs = num_epochs - start
+            summary_writerT = tf.summary.FileWriter(pre_train_ckpt_dir + '/train',sess.graph)
+            summary_writerV = tf.summary.FileWriter(pre_train_ckpt_dir + '/val',sess.graph)
+
+
+            # ref lists for plotting
+            trainLossPlot = []
+            trainAccPlot = []
+            trainIndivAccPlot = []
+            # test lists for plotting
+            valLossPlot = []
+            valAccPlot = []
+            valIndivAccPlot = []
+
+            opListTrain = [train_op, cross_entropy, accuracy, indivAcc]
+            opListVal = [cross_entropy, accuracy, indivAcc]
+
+            stored_exception = None
+            epoch_i = 0
+            valIndivAcc = np.zeros(classes)
+            while epoch_i <= n_epochs:
+                minNumEpochsCheckLoss = 10
+                if start + epoch_i > 1:
+                    if len(valLossPlot) > minNumEpochsCheckLoss: #and start > 100:
+                        currLoss = valLossPlot[-1]
+                        prevLoss = valLossPlot[-minNumEpochsCheckLoss]
+                        magCurr = int(np.log10(currLoss))-1
+                        magPrev = int(np.log10(prevLoss))-1
+                        epsilon = -.1*10**(magCurr)
+                        epsilon2 = .01*10**(magCurr)
+
+                        if printFlag:
+                            print 'Losses difference (prev - curr) ', prevLoss-currLoss
+                            print 'epsilon (overfitting), ', epsilon
+                            print 'epsilon2 (if it is not changing much), ', epsilon2
+
+                        if np.nanmean(valIndivAcc) > .8: ###NOTE: decreased to .8 for large groups (38 animals)
+                            if magCurr > magPrev:
+                                if printFlag:
+                                    print '\nOverfitting, passing to new set of images'
+
+                                break
+                            elif magCurr == magPrev:
+                                if (prevLoss - currLoss) < epsilon:
+                                    if printFlag:
+                                        print '\nOverfitting, passing to new set of images'
+
+                                    break
+                            if (prevLoss - currLoss) < epsilon2:
+                                if printFlag:
+                                    print '\nFinished, passing to new set of images'
+
+                                break
+                            if list(valIndivAcc) == list(np.ones(classes)):
+                                if printFlag:
+                                    print '\nIndividual validations accuracy is 1 for all the animals'
+                                break
+
+                try:
+                    epoch_counter = start + epoch_i
+
+                    if printFlag:
+                        print '\n**** Epoch %i ****' % epoch_counter
+
+                    lossEpoch = []
+                    accEpoch = []
+                    indivAccEpoch = []
+
+                    ''' TRAINING '''
+                    for iter_i in range(Titer_per_epoch):
+
+                        _, batchLoss, batchAcc, indivBatchAcc, feed_dict = run_batch(
+                            sess, opListTrain, Tindices, iter_i, Titer_per_epoch,
+                            images_pl, labels_pl, keep_prob_pl, loss_weights_pl,
+                            X_t, Y_t, keep_prob, weighted_flag)
+
+                        lossEpoch.append(batchLoss)
+                        accEpoch.append(batchAcc)
+                        indivAccEpoch.append(indivBatchAcc)
+
+                        # Print per batch loss and accuracies
+                        if printFlag:
+                            if (Titer_per_epoch < 4 or iter_i % round(np.true_divide(Titer_per_epoch,4)) == 0):
+                                print "Batch " + str(iter_i) + \
+                                    ", Minibatch Loss= " + "{:.6f}".format(batchLoss) + \
+                                    ", Training Accuracy= " + "{:.5f}".format(batchAcc)
+
+                    trainLoss = np.mean(lossEpoch)
+                    trainAcc = np.mean(accEpoch)
+                    trainIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
+
+                    # Batch finished
+                    if printFlag:
+                        print('Train (epoch %d): ' % epoch_counter + \
+                            " Loss=" + "{:.6f}".format(trainLoss) + \
+                            ", Accuracy=" + "{:.5f}".format(trainAcc) + \
+                            ", Individual Accuracy=")
+                        print(trainIndivAcc)
+
+                    # Summary writer
+                    summary_str = sess.run(summary_op, feed_dict=feed_dict)
+                    summary_writerT.add_summary(summary_str, epoch_counter)
+
+                    # update global step and save model
+                    global_step.assign(global_step + 1).eval() # set and update(eval) global_step with index, i
+                    saver_model.save(sess, ckpt_dir_model + "/model.ckpt", global_step = global_step)
+                    # saver_softmax.save(sess, ckpt_dir_softmax + "/softmax.ckpt",global_step = global_step)
+
+                    ''' VALIDATION '''
+
+                    lossEpoch = []
+                    accEpoch = []
+                    indivAccEpoch = []
+                    for iter_i in range(Viter_per_epoch):
+
+                        batchLoss, batchAcc, indivBatchAcc, feed_dict = run_batch(
+                            sess, opListVal, Vindices, iter_i, Viter_per_epoch,
+                            images_pl, labels_pl, keep_prob_pl, loss_weights_pl,
+                            X_v, Y_v, keep_prob, weighted_flag)
+
+                        lossEpoch.append(batchLoss)
+                        accEpoch.append(batchAcc)
+                        indivAccEpoch.append(indivBatchAcc)
+
+                    valLoss = np.mean(lossEpoch)
+                    valAcc = np.mean(accEpoch)
+                    valIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
+
+                    # Batch finished
+                    if printFlag:
+                        print('Validation (epoch %d): ' % epoch_counter + \
+                            " Loss=" + "{:.6f}".format(valLoss) + \
+                            ", Accuracy=" + "{:.5f}".format(valAcc) + \
+                            ", Individual Accuracy=")
+                        print(valIndivAcc)
+
+                    summary_str = sess.run(summary_op, feed_dict=feed_dict)
+                    summary_writerV.add_summary(summary_str, epoch_counter)
+
+                    '''
+                    **************************************
+                    saving dict with loss function and accuracy values
+                    **************************************
+                    '''
+
+                    # Training
+                    trainLossPlot.append(trainLoss)
+                    trainAccPlot.append(trainAcc)
+                    trainIndivAccPlot.append(trainIndivAcc)
+
+                    # Validation
+                    valLossPlot.append(valLoss)
+                    valAccPlot.append(valAcc)
+                    valIndivAccPlot.append(valIndivAcc)
+
+
+                    lossAccDict = {
+                        'loss': trainLossPlot,
+                        'valLoss': valLossPlot,
+                        'acc': trainAccPlot,
+                        'valAcc': valAccPlot,
+                        'indivAcc': trainIndivAccPlot,
+                        'indivValAcc': valIndivAccPlot
+                        }
+
+                    # weightsDict = {
+                    #     'W1': WConv1,
+                    #     'W3': WConv3,
+                    #     'W5': WConv5,
+                    #     'W_fc': Wfc,
+                    #     'W_softmax': WSoftmax
+                    #     }
+                    #plot weights
+                    # cnn_weights_plotter(weightsDict, epoch_i)
+
+                    if stored_exception:
+                        break
+                    epoch_i += 1
+                except KeyboardInterrupt:
+                    stored_exception = sys.exc_info()
+
+            if stored_exception:
+                raise stored_exception[0], stored_exception[1], stored_exception[2]
+
+    pickle.dump( lossAccDict , open( sessionPath + "/lossAcc.pkl", "wb" ) )
+    trainDict['load_ckpt_folder'] = trainDict['pre_train_ckpt_dir']
+    print 'folder where we should load ', trainDict['pre_train_ckpt_dir']
+    print 'is it true? ', trainDict['load_ckpt_folder']
+    print '-----------------------------------------------------------------'
+    return trainDict
 
 """
 Sample calls:

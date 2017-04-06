@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import Colormap
 from matplotlib import colors
 from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.gridspec as gridspec
 import matplotlib.patches as patches
 import cPickle as pickle
 import pyautogui
@@ -415,7 +416,7 @@ def CNNplotterFast22(epoch_counter, epoch_i, handlesDict,lossAccDict, idUsedIndi
         # print numAnimals
         # print colors
         for (frag,ID) in idUsedIndivIntervals:
-            # print identity
+            # print ID
             blobIndex = frag[0]
             start = frag[2][0]
             end = frag[2][1]
@@ -459,3 +460,61 @@ def CNNplotterFast22(epoch_counter, epoch_i, handlesDict,lossAccDict, idUsedIndi
     plt.pause(0.00000001)
 
     return handlesDict
+
+def cnn_weights_plotter(weightsDict, epoch_counter):
+
+    # get variables
+    W1, W3, W5, W_fc, W_softmax = getVarFromDict(weightsDict,['W1', 'W3','W5', 'W_fc', 'W_softmax'])
+
+    w, h = pyautogui.size()
+    # plt.clf()
+    if epoch_counter == 0:
+        fig = plt.figure(figsize = (w/(96),h/96))
+        ax1 = plt.subplot2grid((2,4),(0,0))
+        ax2 = plt.subplot2grid((2,4),(0,1))
+        ax3 = plt.subplot2grid((2,4),(0,2))
+        ax4 = plt.subplot2grid((2,4),(0,3))
+        ax5 = plt.subplot2grid((2,4),(1,0),colspan = 4)
+        axarr = [ax1,ax2,ax3,ax4,ax5]
+    else:
+        fig = plt.gcf()
+        axarr = fig.axes
+
+    # W1
+    ax4 = axarr[0]
+    ax4.imshow(np.squeeze(W1),interpolation='none',cmap='gray',vmin=0, vmax=1)
+    ax4.set_title('Conv1 filters')
+    ax4.xaxis.set_ticklabels([])
+    ax4.yaxis.set_ticklabels([])
+
+    # W3
+    ax5 = axarr[1]
+    ax5.imshow(np.squeeze(W3),interpolation='none',cmap='gray',vmin=0, vmax=1)
+    ax5.set_title('Conv2 filters')
+    ax5.xaxis.set_ticklabels([])
+    ax5.yaxis.set_ticklabels([])
+
+    # W5
+    ax6 = axarr[2]
+    ax6.imshow(np.squeeze(W5),interpolation='none',cmap='gray',vmin=0, vmax=1)
+    ax6.set_title('Conv3 filters')
+    ax6.xaxis.set_ticklabels([])
+    ax6.yaxis.set_ticklabels([])
+
+    # W_fc
+    ax6 = axarr[3]
+    ax6.imshow(np.reshape(W_fc,[80,80]),interpolation='none',cmap='gray',vmin=0, vmax=1)
+    ax6.set_title('Fc weights')
+    ax6.xaxis.set_ticklabels([])
+    ax6.yaxis.set_ticklabels([])
+
+    # W_fc
+    ax6 = axarr[4]
+    ax6.imshow(W_softmax.T,interpolation='none',cmap='gray',vmin=0, vmax=1)
+    ax6.set_title('Softmax weights')
+    ax6.xaxis.set_ticklabels([])
+    ax6.yaxis.set_ticklabels([])
+
+    plt.draw()
+
+    plt.pause(0.00000001)

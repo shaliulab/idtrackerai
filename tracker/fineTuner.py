@@ -1,11 +1,13 @@
 import sys
 sys.path.append('IdTrackerDeep/utils')
 sys.path.append('IdTrackerDeep/CNN')
+sys.path.append('IdTrackerDeep/tracker')
 
 from py_utils import *
 from video_utils import *
 from idTrainerTracker import *
 from cnn_utils import standarizeImages
+from cnn_utils import getCkptvideoPath
 
 import time
 import numpy as np
@@ -71,7 +73,6 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
         if printFlag:
             print '\nGetting references from global fragment ', frag
 
-        fragment = fragments[frag] # I take the fragment
         framesColumnsIndivFrags = framesAndBlobColumns[frag] # I take the list of individual fragments in frames and columns
         intervalsIndivFrags = intervals[frag] # I take the list of individual fragments in terms of intervals
 
@@ -108,7 +109,8 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
                     framesColumnsRefDict[identity].append((frame,column))
                     refDictTemp[identity].append(portraits.loc[frame,'images'][column])
 
-                idUsedIntervals.append(identity)
+                if accumDict['counter'] != 0:
+                    idUsedIntervals.append(identity)
                 usedIndivIntervals.append(intervalsIndivFrag)
 
         all_identities = range(1,numAnimals+1)
@@ -133,7 +135,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
 
     if accumDict['counter'] == 0:
         refDictTemp = {i: refDictTemp[key] for i, key in enumerate(refDictTemp.keys())} # this is done to order the ids in the refDict
-
+        idUsedIntervals = refDictTemp.keys()
         if printFlag:
             print '\n The keys of the refDict are ', refDictTemp.keys()
 
@@ -304,38 +306,38 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
 
     return imsize, X_train, Y_train, X_val, Y_val, trainDict
 
-def getCkptvideoPath(videoPath, accumCounter, train=0):
-    """
-    train = 0 (id assignation)
-    train = 1 (first fine-tuning)
-    train = 2 (further tuning from previons checkpoint with more references)
-    """
-
-    def getLastSession(subFolders):
-        if len(subFolders) == 0:
-            lastIndex = 0
-        else:
-            subFolders = natural_sort(subFolders)[::-1]
-            lastIndex = int(subFolders[0].split('_')[-1])
-        return lastIndex
-
-    video = os.path.basename(videoPath)
-    folder = os.path.dirname(videoPath)
-    filename, extension = os.path.splitext(video)
-    subFolder = folder + '/CNN_models'
-    subSubFolders = glob.glob(subFolder +"/*")
-    lastIndex = getLastSession(subSubFolders)
-
-    sessionPath = subFolder + '/Session_' + str(lastIndex)
-    ckptvideoPath = sessionPath + '/AccumulationStep_' + str(accumCounter)
-    if train == 0:
-        print 'you will assign identities from the last checkpoint in ', ckptvideoPath
-    elif train == 2:
-        print 'you will keep training from the last checkpoint in ', ckptvideoPath
-    elif train == 1:
-        print 'model checkpoints will be saved in ', ckptvideoPath
-
-    return ckptvideoPath
+# def getCkptvideoPath(videoPath, accumCounter, train=0):
+#     """
+#     train = 0 (id assignation)
+#     train = 1 (first fine-tuning)
+#     train = 2 (further tuning from previons checkpoint with more references)
+#     """
+#
+#     def getLastSession(subFolders):
+#         if len(subFolders) == 0:
+#             lastIndex = 0
+#         else:
+#             subFolders = natural_sort(subFolders)[::-1]
+#             lastIndex = int(subFolders[0].split('_')[-1])
+#         return lastIndex
+#
+#     video = os.path.basename(videoPath)
+#     folder = os.path.dirname(videoPath)
+#     filename, extension = os.path.splitext(video)
+#     subFolder = folder + '/CNN_models'
+#     subSubFolders = glob.glob(subFolder +"/*")
+#     lastIndex = getLastSession(subSubFolders)
+#
+#     sessionPath = subFolder + '/Session_' + str(lastIndex)
+#     ckptvideoPath = sessionPath + '/AccumulationStep_' + str(accumCounter)
+#     if train == 0:
+#         print 'you will assign identities from the last checkpoint in ', ckptvideoPath
+#     elif train == 2:
+#         print 'you will keep training from the last checkpoint in ', ckptvideoPath
+#     elif train == 1:
+#         print 'model checkpoints will be saved in ', ckptvideoPath
+#
+#     return ckptvideoPath
 
 def fineTuner(videoPath,
             accumDict, trainDict, fragmentsDict, handlesDict,
@@ -343,7 +345,7 @@ def fineTuner(videoPath,
             plotFlag = True,
             printFlag = True,
             onlySoftmax = False,
-            weighted_flag = False):
+            weighted_flag = True):
 
     if printFlag:
         print '\n--- Entering the fineTuner ---'
@@ -358,7 +360,7 @@ def fineTuner(videoPath,
     maxNumBlobs = videoInfo['maxNumBlobs']
 
     # get information from trainDict
-    loadCkpt_folder = trainDict['loadCkpt_folder']
+    loadCkpt_folder = trainDict['load_ckpt_folder']
     batchSize = trainDict['batchSize']
     numEpochs =  trainDict['numEpochs']
     lr = trainDict['lr']
@@ -404,5 +406,5 @@ def fineTuner(videoPath,
                     Vindices, Viter_per_epoch,
                     onlySoftmax = onlySoftmax,
                     weighted_flag = weighted_flag) #NOTE:hard-coded flag for testing purpose
-    trainDict['loadCkpt_folder'] = ckpt_dir
+    trainDict['load_ckpt_folder'] = ckpt_dir
     return trainDict, handlesDict
