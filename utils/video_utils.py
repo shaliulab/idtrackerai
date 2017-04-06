@@ -302,6 +302,9 @@ def cntROI2OriginalFrame(contours,ROI):
 def cnt2BoundingBox(cnt,boundingBox):
     return cnt - np.asarray([boundingBox[0][0],boundingBox[0][1]])
 
+def full2BoundingBox(point, boundingBox):
+    return point - np.asarray([boundingBox[0][0],boundingBox[0][1]])
+
 def cntBB2Full(cnt,boundingBox):
     return cnt + np.asarray([boundingBox[0][0],boundingBox[0][1]])
 

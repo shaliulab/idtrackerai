@@ -40,7 +40,7 @@ def initializeTracker(videoPath,numAnimals,portraits, preprocParams):
 
     accumDict = {
             'counter': 0,
-            'thVels': 0.5,
+            'thVels': 0., #FIXME: the vel threshold should be deduced from the distribution of velocity in the video...
             'minDist': 0,
             'fragsForTrain': [], # to be saved
             'newFragForTrain': [],

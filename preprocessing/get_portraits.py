@@ -1,4 +1,5 @@
 # Import standard libraries
+from __future__ import division
 import sys
 import numpy as np
 import multiprocessing
@@ -13,7 +14,7 @@ from joblib import Parallel, delayed
 # Import application/library specifics
 sys.path.append('IdTrackerDeep/utils')
 from py_utils import loadFile, saveFile
-from video_utils import cntBB2Full
+from video_utils import cntBB2Full, full2BoundingBox
 
 from fishcontour import FishContour
 
@@ -105,9 +106,11 @@ def cropPortrait(image,portraitSize,shift=(0,0)):
         print 'Portrait cropped'
         return croppedPortrait
 
-def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None,px_nose_above_center = 9):
-    """Given a miniframe (i.e. a minimal rectangular image containing an animal)
-    it returns a 32x32 image centered on the head.
+def getPortrait(miniframe, cnt, bb, bkgSamp, counter = None, px_nose_above_center = 9):
+    """Acquiring portraits from miniframe (for fish)
+
+    Given a miniframe (i.e. a minimal rectangular image containing an animal)
+    it returns a 36x36 image centered on the head.
 
     :param miniframe: A numpy 2-dimensional array
     :param cnt: A cv2-style contour, i.e. (x,:,y)
@@ -140,16 +143,48 @@ def getPortrait(miniframe,cnt,bb,bkgSamp,counter = None,px_nose_above_center = 9
 
     # Crop the image in 32x32 frame around the nose
     x_range = xrange(nose_pixels[0]-half_side_sq,nose_pixels[0]+half_side_sq)
-    y_range = xrange(nose_pixels[1]-half_side_sq+px_nose_above_center,nose_pixels[1]+half_side_sq+px_nose_above_center) #7,25
+    y_range = xrange(nose_pixels[1]-half_side_sq+px_nose_above_center,nose_pixels[1]+half_side_sq+px_nose_above_center)
     portrait = minif_rot.take(y_range,mode='wrap',axis=0).take(x_range,mode='wrap',axis=1)
-
-    #if portrait.shape[0] != 32 or portrait.shape[1] != 32: #This is redundant now by my use of take
-    #    print portrait.shape
-    #    raise ValueError('This portrait do not have 32x32 pixels. Changes in light during the video could deteriorate the blobs: try and rais the threshold in the preprocessing parametersm, and run segmentation and fragmentation again.')
 
     return portrait, tuple(noseFull.astype('int')), tuple(head_centroid_full.astype('int'))
 
-def reaper(videoPath, frameIndices):
+def get_portrait_fly(miniframe, cnt, bb, size = 36):
+    """Acquiring portraits from miniframe (for flies)
+    :param miniframe: A numpy 2-dimensional array
+    :param cnt: A cv2-style contour, i.e. (x,:,y)
+    :param bb: Coordinates of the left-top corner of miniframe in the big frame
+    """
+    ellipse = cv2.fitEllipse(cnt)
+    center = ellipse[0]
+    center = full2miniframe(center, bb)
+    center = np.array([int(center[0]), int(center[1])])
+    axes = ellipse[1]
+    rot_ang = ellipse[2]
+    #rotate
+    ax_length = max(axes)
+    diag = np.sqrt(np.sum(np.asarray(miniframe.shape)**2)).astype(int)
+    diag = (diag, diag)
+    M = cv2.getRotationMatrix2D(tuple(center), rot_ang,1)
+    minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_WRAP, flags = cv2.INTER_NEAREST)
+
+    semi_size = int(size / 2)
+    crop_distance =  int(ax_length)
+    crop_distance = 35
+    x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
+    y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
+    portrait = minif_rot.take(y_range,mode='wrap',axis=0).take(x_range,mode='wrap',axis=1)
+    height, width = portrait.shape
+    # portrait_up_av_int = np.mean(portrait[:int(height / 2), : int(width / 2)])
+    # portrait_down_av_int = np.mean(portrait[:int(height / 2), : int(width / 2)])
+
+    portrait = cv2.resize(portrait, (size, size))
+    rot_ang_rad = rot_ang * np.pi / 180
+    h_or_t_1 = np.array([np.cos(rot_ang_rad), np.sin(rot_ang_rad)]) * rot_ang_rad
+    h_or_t_2 = - h_or_t_1
+
+    return portrait, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int'))
+
+def reaper(videoPath, frameIndices, animal_type):
     # only function called from idTrackerDeepGUI
     print 'reaping', videoPath
     df, numSegment = loadFile(videoPath, 'segmentation')
@@ -185,12 +220,22 @@ def reaper(videoPath, frameIndices):
             ### Uncomment to plot
             # cv2.imshow('frame', miniframe)
             # cv2.waitKey()
-            portrait, nose_pixels, head_centroid_pixels = getPortrait(miniframe,cnts[j],bbs[j],bkgSamps[j],j)
+            if animal_type == 'fish':
+                portrait, nose_pixels, head_centroid_pixels = getPortrait(miniframe,cnts[j],bbs[j],bkgSamps[j],j)
 
-            # get all the heads in a single list
-            portraits.append(portrait)
-            noses.append(nose_pixels)
-            head_centroids.append(head_centroid_pixels)
+                # get all the heads in a single list
+                portraits.append(portrait)
+                noses.append(nose_pixels)
+                head_centroids.append(head_centroid_pixels)
+
+            elif animal_type == 'fly':
+                portrait, nose_pixels, head_centroid_pixels = get_portrait_fly(miniframe,cnts[j],bbs[j])
+
+                # get all the heads in a single list
+                portraits.append(portrait)
+                noses.append(nose_pixels)
+                head_centroids.append(head_centroid_pixels)
+
         ### UNCOMMENT TO PLOT ##################################################
         #    cv2.imshow(str(j),portrait)
         #
@@ -207,11 +252,11 @@ def reaper(videoPath, frameIndices):
     print 'you just reaped', videoPath
     return AllPortraits, AllNoses, AllCentroids, AllHeadCentroids
 
-def portrait(videoPaths, dfGlobal):
+def portrait(videoPaths, dfGlobal, animal_type):
     frameIndices = loadFile(videoPaths[0], 'frameIndices')
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    allPortraitsAndNoses = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath,frameIndices) for videoPath in videoPaths)
+    allPortraitsAndNoses = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath,frameIndices, animal_type) for videoPath in videoPaths)
     allPortraits = [t[0] for t in allPortraitsAndNoses]
     allNoses = [t[1] for t in allPortraitsAndNoses]
     allCentroids = [t[2] for t in allPortraitsAndNoses]

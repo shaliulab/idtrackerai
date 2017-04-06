@@ -135,7 +135,9 @@ if __name__ == '__main__':
     print 'Portraying'
     print '********************************************************************\n'
     if not loadPreviousDict['portraits']:
-        portraits = portrait(segmPaths,dfGlobal)
+        animal_type = preprocParams['animal_type']
+        print 'you are going to track ', animal_type
+        portraits = portrait(segmPaths,dfGlobal, animal_type)
     else:
         portraits = loadFile(videoPaths[0], 'portraits')
 

@@ -22,7 +22,7 @@ import itertools
 import cPickle as pickle
 
 
-videoPaths = scanFolder('IdTrackerDeep/videos/8zebrafish_conflicto/conflict3and4_20120316T155032_1.avi')
+videoPaths = scanFolder('/media/lab/2966067c-1f2b-40d7-960c-828d7116e5e4/Video8hormigas/V8h_20121018T130426_1.avi')
 
 frameIndices, segmPaths = getSegmPaths(videoPaths)
 videoPath = videoPaths[0]

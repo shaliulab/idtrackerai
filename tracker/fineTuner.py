@@ -98,8 +98,6 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
                 else:
                     print 'The identity of this individual interval is ', identity+1, id1
 
-
-
                 if not identity in refDictTemp.keys(): # if the identity has not been added to the dictionary, I initialize the list
                     # refDict[identity] = []
                     framesColumnsRefDict[identity] = []
@@ -139,16 +137,6 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
         if printFlag:
             print '\n The keys of the refDict are ', refDictTemp.keys()
 
-    # ''' I compute the minimum number of references I can take  given the new fragments added during the accumulation'''
-    # minNumRefTemp = np.min([len(refDictTemp[iD]) for iD in refDictTemp.keys()]) # minimal number of references from new fragments
-    # if len(refDict) != 0:
-    #     minNumRef = np.min([len(refDict[iD]) for iD in refDict.keys()]) # minimal number of references from old dictionary of references
-    # else:
-    #     minNumRef = 0
-    #
-    # print 'number of new references gained while accumulating: ', minNumRefTemp
-    # print 'number of old references: ', minNumRef
-
     ''' Updating refDict '''
     if accumDict['counter'] == 0:
         iDList = refDictTemp.keys()
@@ -179,7 +167,6 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     labels = []
 
     for iD in iDList:
-
         if weighted_flag:
             print 'We are using an unbalanced dataset with weighted loss'
             if len(refDict[iD]) <= maximalRefPerAnimal or accumDict['counter'] == 0:

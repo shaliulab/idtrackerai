@@ -371,9 +371,18 @@ def SegmentationPreview(videoPaths, width, height, bkg, mask, useBkg, preprocPar
     minThreshold = preprocParams['minThreshold']
     maxThreshold = preprocParams['maxThreshold']
     numAnimals = preprocParams['numAnimals']
+    animal_type = preprocParams['animal_type']
+
     if numAnimals == None:
         numAnimals = getInput('Number of animals','Type the number of animals')
         numAnimals = int(numAnimals)
+
+    if animal_type is None:
+        animal_type = getInput('Animal type','What animal are you tracking? Fish or fly?')
+
+    if animal_type != 'fish' and animal_type != 'fly':
+        print len(animal_type)
+        raise ValueError('The animal you selected is not trackable yet :)')
 
     global cap, currentSegment
     currentSegment = 0
@@ -409,7 +418,11 @@ def SegmentationPreview(videoPaths, width, height, bkg, mask, useBkg, preprocPar
         rowPortrait = []
         while j < numPortraits:
             if j < numGoodContours:
-                portrait,_,_= getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j])
+                if animal_type == 'fish':
+                    portrait,_,_= getPortrait(miniFrames[j],goodContours[j],bbs[j],bkgSamples[j])
+                elif animal_type == 'fly':
+                    portrait,_,_= get_portrait_fly(miniFrames[j],goodContours[j],bbs[j])
+
                 portrait = cropPortrait(portrait,portraitSize,shift = (0,0))
                 portrait = np.squeeze(portrait)
             else:
@@ -536,7 +549,8 @@ def SegmentationPreview(videoPaths, width, height, bkg, mask, useBkg, preprocPar
                 'maxThreshold': cv2.getTrackbarPos('maxTh', 'Bars'),
                 'minArea': cv2.getTrackbarPos('minArea', 'Bars'),
                 'maxArea': cv2.getTrackbarPos('maxArea', 'Bars'),
-                'numAnimals': numAnimals}
+                'numAnimals': numAnimals,
+                'animal_type':animal_type}
 
     cap.release()
     cv2.destroyAllWindows()
@@ -555,7 +569,8 @@ def selectPreprocParams(videoPaths, usePreviousPrecParams, width, height, bkg, m
                     'maxThreshold': 155,
                     'minArea': 150,
                     'maxArea': 60000,
-                    'numAnimals': None
+                    'numAnimals': None,
+                    'animal_type': None
                     }
         preprocParams = SegmentationPreview(videoPaths, width, height, bkg, mask, useBkg, preprocParams, frameIndices)
 

@@ -114,7 +114,7 @@ def fragmentProbId(X_t, width, height, channels, classes, loadCkpt_folder, batch
                     X_t, keep_prob = keep_prob)
 
                 exp = np.exp(logits)
-                sumsExps = np.sum(exp,axis=1)
+                sumsExps = np.sum(exp, axis = 1)
                 probs = []
                 for i, sumExps in enumerate(sumsExps):
                     probs.append(np.true_divide(exp[i,:],sumExps))
@@ -204,9 +204,7 @@ def computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsInterv
         return overlap
 
     def computeP2(P1Frag,P1CoexistingFrags):
-        numerator = P1Frag * np.prod(1.-P1CoexistingFrags,axis=0)
-        # if numerator == 0.:
-        #     raise ValueError('numerator of P2 is 0')
+        numerator = P1Frag * np.prod(1. - P1CoexistingFrags, axis = 0)
         denominator = np.sum(numerator)
         if denominator == 0:
             raise ValueError('denominator of P2 is 0')
