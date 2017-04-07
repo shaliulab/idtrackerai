@@ -20,9 +20,9 @@ from joblib import Parallel, delayed
 import multiprocessing
 import itertools
 import cPickle as pickle
+from tqdm import tqdm
 
-
-videoPaths = scanFolder('/media/lab/2966067c-1f2b-40d7-960c-828d7116e5e4/Video8hormigas/V8h_20121018T130426_1.avi')
+videoPaths = scanFolder('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi')
 
 frameIndices, segmPaths = getSegmPaths(videoPaths)
 videoPath = videoPaths[0]
@@ -270,13 +270,18 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
         onChange(0)
         cv2.waitKey()
     else:
-        for i in range(numFrames):
-            print 'numFrames, ', numFrames
-            print 'currentFrame, ', i
+        for i in tqdm(range(numFrames)):
+            # print 'numFrames, ', numFrames
+            # print 'currentFrame, ', i
             onChange(i)
 
-    return
-    # return raw_input('Which statistics do you wanna visualize (0,1,2,3)?')
+    save_video = getInput('Saver' , 'Do you want to save a copy of the tracked video? [y]/n')
+    if not save_video or save_video == 'y':
+        statNum = 4
+        IdPlayer(videoPaths,segmPaths,allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics,dfGlobal,show=False)
+    else:
+        return
+
 
 statNum = 4
 IdPlayer(videoPaths,segmPaths,allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics,dfGlobal,show=True)
