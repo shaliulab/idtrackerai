@@ -49,7 +49,6 @@ def DataIdAssignation(portraits, indivFragments):
     images = standarizeImages(images)
     return imsize, images
 
-
 def get_batch(batchNum, iter_per_epoch, indices, images_pl, keep_prob_pl, images, keep_prob):
     if iter_per_epoch > 1:
         images_feed = images[indices[batchNum]:indices[batchNum+1]]
@@ -84,7 +83,6 @@ def fragmentProbId(X_t, width, height, channels, classes, loadCkpt_folder, batch
         with tf.Session() as sess:
             # you need to initialize all variables
             tf.initialize_all_variables().run()
-
             # Load weights from a pretrained model if there is not any model saved
             # in the ckpt folder of the test
             if loadCkpt_folder:
@@ -273,7 +271,6 @@ def computeOverallP2(P2FragsAll,oneIndivFragLens):
         numFrames += np.sum(oneIndivLens)
 
     overallP2 = np.true_divide(np.sum(np.asarray(flatten(weightedP2))),numFrames)
-
     return overallP2
 
 def idUpdater(ids,indivFragments,numFrames,maxNumBlobs):
@@ -296,38 +293,18 @@ def probsUptader(vectorPerFrame,indivFragments,numFrames,maxNumBlobs,numAnimals)
 
     return ProbsArray
 
-# def getCkptvideoPath(videoPath, accumCounter, train=0):
-#     """
-#     train = 0 (id assignation)
-#     train = 1 (first fine-tuning)
-#     train = 2 (further tuning from previons checkpoint with more references)
-#     """
-#
-#     def getLastSession(subFolders):
-#         if len(subFolders) == 0:
-#             lastIndex = 0
-#         else:
-#             subFolders = natural_sort(subFolders)[::-1]
-#             lastIndex = int(subFolders[0].split('_')[-1])
-#         return lastIndex
-#
-#     video = os.path.basename(videoPath)
-#     folder = os.path.dirname(videoPath)
-#     filename, extension = os.path.splitext(video)
-#     subFolder = folder + '/CNN_models'
-#     subSubFolders = glob.glob(subFolder +"/*")
-#     lastIndex = getLastSession(subSubFolders)
-#
-#     sessionPath = subFolder + '/Session_' + str(lastIndex)
-#     ckptvideoPath = sessionPath + '/AccumulationStep_' + str(accumCounter)
-#     if train == 0:
-#         print 'you will assign identities from the last checkpoint in ', ckptvideoPath
-#     elif train == 2:
-#         print 'you will keep training from the last checkpoint in ', ckptvideoPath
-#     elif train == 1:
-#         print 'model checkpoints will be saved in ', ckptvideoPath
-#
-#     return ckptvideoPath
+def idAssigner_ref(accumCounter, numFrames, numAnimals, maxNumBlobs):
+    """Assign here the identities of the fragments used as references. Pass the matrices
+    to idAssigner to assign the rest of the individual fragments."""
+
+    if accumCounter == 0:
+        #The first time we pass here we initialise the matrices that will host the identities.
+        idSoftMaxAllVideo = -np.ones((numFrames,maxNumBlobs)) # softMax predicted ids per frame
+        PSoftMaxAllVIdeo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # softMax probabilities per frame
+        freqFragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # frequencies for each individual fragment
+        normFreqFragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals))
+        idFreqFragAllVideo= -np.ones((numFrames,maxNumBlobs))
+        P1FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # P1 for each individual fragment
 
 def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits = [], videoInfo = {}, plotFlag = True, printFlag = True):
     '''
@@ -340,13 +317,12 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits 
         videoInfo = loadFile(videoPath, 'videoInfo', hdfpkl='pkl')
 
     if printFlag:
+        print 'Video info:'
         print videoInfo
 
     numFrames =  len(portraits)
     numAnimals = videoInfo['numAnimals']
     maxNumBlobs = videoInfo['maxNumBlobs']
-    meanIndivArea = videoInfo['meanIndivArea']
-    stdIndivArea = videoInfo['stdIndivArea']
 
     if len(fragmentsDict) == 0:
         fragmentsDict = loadFile(videoPath, 'fragments', hdfpkl='pkl')
@@ -362,22 +338,22 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits 
     batchSize = 1000
     ckpt_dir = getCkptvideoPath(videoPath,accumCounter,train=0)
 
-
     '''
-    Loop to IndivFragments, Ids in frames of IndivFragments, P1 given the Ids
+    Loop through IndivFragments, Ids in frames of IndivFragments, P1 given the Ids
     '''
     softMaxProbsAll = []
     softMaxIdAll = []
     P1FragsAll = []
     freqFragsAll = []
     normFreqFragsAll = []
-
+    #init matrices containing the ids in the video according to:
     idSoftMaxAllVideo = -np.ones((numFrames,maxNumBlobs)) # softMax predicted ids per frame
     PSoftMaxAllVIdeo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # softMax probabilities per frame
     freqFragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # frequencies for each individual fragment
     normFreqFragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals))
     idFreqFragAllVideo= -np.ones((numFrames,maxNumBlobs))
     P1FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # P1 for each individual fragment
+
 
     for i, (indivFragments, sumFragIndices) in enumerate(zip(oneIndivFragFrames,oneIndivFragSumLens)):
         if printFlag:
@@ -438,7 +414,7 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits 
             idFreqFragAllVideo += IdsFragUpdated
 
             # P1 probabilities
-            P1FragUpdated =probsUptader(P1FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
+            P1FragUpdated = probsUptader(P1FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
             P1FragAllVideo += P1FragUpdated
 
     idFreqFragAllVideo = idFreqFragAllVideo.astype('int')
@@ -486,41 +462,6 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits 
         IdsFragUpdated = idUpdater(logP2FragIdForMat,indivFragments,numFrames,maxNumBlobs)
         idLogP2FragAllVideo += IdsFragUpdated
 
-
-
-    # num_cores = multiprocessing.cpu_count()
-    # num_cores = 1
-    #
-    # ''' splitting range(numGoodLists) list into sublists '''
-    # listOfGoodLists = range(numGoodLists)
-    # GoodSubLists = [listOfGoodLists[i:i+num_cores] for i in range(0,numGoodLists,num_cores)]
-    # ''' Entering loop for segmentation of the video '''
-    # print 'Entering to the parallel loop...\n'
-    # P2FragsAll = []
-    # LogProbsFragUpdated = []
-    # ProbsFragUpdated = []
-    # IdsFragUpdated = []
-    # for GoodSubList in GoodSubLists:
-    #     print 'GoodSubList, ', GoodSubList
-    #     out = Parallel(n_jobs=num_cores)(delayed(computeP2assigner)(oneIndivFragIntervals,
-    #                                                                 P1FragsAll,
-    #                                                                 oneIndivFragFrames,
-    #                                                                 oneIndivFragLens,
-    #                                                                 numGoodLists,numFrames, maxNumBlobs, numAnimals,i) for i in GoodSubList)
-    #     P2FragsAll.append([t[0] for t in out])
-    #     LogProbsFragUpdated.append([t[1] for t in out])
-    #     ProbsFragUpdated.append([t[2] for t in out])
-    #     IdsFragUpdated.append([t[3] for t in out])
-    #
-    #
-    # P2FragsAll = flatten(P2FragsAll)
-    # LogProbsFragUpdated = flatten(LogProbsFragUpdated)
-    # ProbsFragUpdated = flatten(ProbsFragUpdated)
-    # IdsFragUpdated = flatten(IdsFragUpdated)
-    # logP2FragAllVideo += np.sum(LogProbsFragUpdated, axis = 0)
-    # P2FragAllVideo += np.sum(ProbsFragUpdated, axis = 0)
-    # idLogP2FragAllVideo += np.sum(IdsFragUpdated, axis = 0)
-
     sessionPath = '/'.join(ckpt_dir.split('/')[:-1])
     overallP2 = computeOverallP2(P2FragsAll,oneIndivFragLens)
 
@@ -549,34 +490,3 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits 
     pickle.dump( IdsStatistics , open( sessionPath + "/statistics.pkl", "wb" ) )
 
     return IdsStatistics #, portraits
-
-
-# def computeP2assigner(oneIndivFragIntervals, P1FragsAll, oneIndivFragFrames, oneIndivFragLens, numGoodLists, numFrames, maxNumBlobs, numAnimals, i):
-#
-#
-#     print 'Computing logP2 for list of fragments, ', i
-#
-#     indivFragmentsIntervals = oneIndivFragIntervals[i]
-#     P1Frags = P1FragsAll[i]
-#     indivFragments = oneIndivFragFrames[i]
-#     lenFragments = oneIndivFragLens[i]
-#
-#     logP2FragsForMat = []
-#     P1FragsForMat = []
-#     logP2FragIdForMat = []
-#
-#     blobsIndices = list(range(numGoodLists))
-#     blobsIndices.pop(i)
-#
-#     logP2FragsForMat, logP2FragIdForMat, P2FragsForMat, P2Frags = computeLogP2Complete(oneIndivFragIntervals, P1FragsAll, indivFragmentsIntervals, P1Frags, lenFragments, blobsIndices)
-#
-#     # logP2
-#     LogProbsFragUpdated = probsUptader(logP2FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
-#
-#     # P2
-#     ProbsFragUpdated = probsUptader(P2FragsForMat,indivFragments,numFrames,maxNumBlobs,numAnimals)
-#
-#     # identities from logP2
-#     IdsFragUpdated = idUpdater(logP2FragIdForMat,indivFragments,numFrames,maxNumBlobs)
-#
-#     return  P2Frags, LogProbsFragUpdated, ProbsFragUpdated, IdsFragUpdated

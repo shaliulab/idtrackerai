@@ -26,24 +26,38 @@ def loss(y,y_logits):
     _add_loss_summary(cross_entropy)
     return cross_entropy
 
-def weighted_loss(y,y_logits,loss_weights):
+def weighted_loss(y, y_logits, loss_weights):
     cross_entropy = tf.reduce_mean(
         tf.contrib.losses.softmax_cross_entropy(y_logits,y, loss_weights), name = 'CrossEntropyMean')
     _add_loss_summary(cross_entropy)
     return cross_entropy
 
-def optimize(loss,lr):
-    optimizer = tf.train.GradientDescentOptimizer(lr)
-    # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
-    global_step = tf.Variable(0, name='global_step', trainable=False)
-    train_op = optimizer.minimize(loss)
-    return train_op, global_step
+#
+# def optimize(loss,lr):
+#     optimizer = tf.train.GradientDescentOptimizer(lr)
+#     # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
+#     global_step = tf.Variable(0, name='global_step', trainable=False)
+#     train_op = optimizer.minimize(loss)
+#     return train_op, global_step
 
-def optimizeSoftmax(loss,lr,softVariables):
-    optimizer = tf.train.GradientDescentOptimizer(lr)
-    # optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
+def optimize(loss, lr, layer_to_optimise = [], use_adam = False):
+    """Choose the optimiser to be used and the layers to be optimised
+    :param loss: the function to be minimised
+    :param lr: learning rate
+    :param layer_to_optimise: layers to be trained (in tf representation)
+    :param use_adam: if True uses AdamOptimizer else SGD
+    """
+    if not use_adam:
+        print 'Training with SGD'
+        optimizer = tf.train.GradientDescentOptimizer(lr)
+    elif use_adam:
+        print 'Training with ADAM'
+        optimizer = tf.train.AdamOptimizer(learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
     global_step = tf.Variable(0, name='global_step', trainable=False)
-    train_op = optimizer.minimize(loss,var_list = softVariables)
+    if not layer_to_optimise:
+        train_op = optimizer.minimize(loss=loss)
+    else:
+        train_op = optimizer.minimize(loss, var_list = layer_to_optimise)
     return train_op, global_step
 
 def evaluation(y,y_logits,classes):
@@ -105,8 +119,10 @@ def run_training(X_t, Y_t, X_v, Y_v,
                 portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch,
                 plotFlag = True,
                 printFlag = True,
+                onlyFullyConnected = True,
                 onlySoftmax=True,
-                weighted_flag = True):
+                weighted_flag = True,
+                use_adam = False):
 
     # get data from trainDict
     loadCkpt_folder = trainDict['load_ckpt_folder']
@@ -137,36 +153,44 @@ def run_training(X_t, Y_t, X_v, Y_v,
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
 
         logits = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
-
-        # cross_entropy = loss(labels_pl,logits)
-        # loss_weights_pl = tf.placeholder(tf.float32,[1],name = 'loss_weights')
-        # if weighted_flag:
-        #     print 'We are training with an unbalanced dataset and a weighted loss'
         loss_weights_pl = tf.placeholder(tf.float32, [None], name = 'loss_weights')
-        # else:
-        #     print 'We are training with a balanced dataset'
-
         cross_entropy = weighted_loss(labels_pl,logits,loss_weights_pl)
 
-        with tf.variable_scope("softmax1", reuse=True) as scope:
-            softW = tf.get_variable("weights")
-            softB = tf.get_variable("biases")
-        # print softW
-        # print softB
-        softVar = [softW,softB]
-        if onlySoftmax:
+        varToTrain = []
+        if onlyFullyConnected:
+            print '********************************************************'
+            print 'We will only train the softmax and fully connected...'
+            print '********************************************************'
+            with tf.variable_scope("fully-connected1", reuse=True) as scope:
+                FcW = tf.get_variable("weights")
+                FcB = tf.get_variable("biases")
+            print 'Fc W variables, ', FcW
+            print 'Fc B variables, ', FcB
+            varToTrain.append([FcW, FcB])
+            with tf.variable_scope("softmax1", reuse=True) as scope:
+                softW = tf.get_variable("weights")
+                softB = tf.get_variable("biases")
+            print 'softmax W variables, ', softW
+            print 'softmax B variables, ', softB
+            varToTrain.append([softW,softB])
+        elif onlySoftmax:
             print '********************************************************'
             print 'We will only train the softmax...'
             print '********************************************************'
-            train_op, global_step = optimizeSoftmax(cross_entropy,lr,softVar)
+            with tf.variable_scope("softmax1", reuse=True) as scope:
+                softW = tf.get_variable("weights")
+                softB = tf.get_variable("biases")
+            print 'softmax W variables, ', softW
+            print 'softmax B variables, ', softB
+            varToTrain.append([softW,softB])
         else:
             print '********************************************************'
-            print 'We will only train the whole network...'
+            print 'We will train the whole network...'
             print '********************************************************'
 
-            train_op, global_step =  optimize(cross_entropy,lr)
-
-        accuracy, indivAcc = evaluation(labels_pl,logits,classes)
+        varToTrain = flatten(varToTrain)
+        train_op, global_step = optimize(cross_entropy, lr, varToTrain, use_adam)
+        accuracy, indivAcc = evaluation(labels_pl, logits, classes)
 
         summary_op = tf.summary.merge_all()
 

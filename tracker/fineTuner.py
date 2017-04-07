@@ -62,13 +62,6 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     if printFlag:
         print '\n**** Creating dictionary of references ****'
 
-    # create temporary refDict with same keys as refDict and empty values
-    #
-    # # take length of dict before updating
-    # numRefBeforeUpdate =
-    # # how long?
-    # numSamplesPerAnimal = maximalRefPerAnimal - minNumRef
-    # # if longer than max --> sample
     for j, frag in enumerate(newFragForTrain): # for each complete fragment that has to be used for the training
         if printFlag:
             print '\nGetting references from global fragment ', frag
@@ -100,12 +93,10 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
                     print 'The identity of this individual interval is ', identity+1, id1
 
                 if not identity in refDictTemp.keys(): # if the identity has not been added to the dictionary, I initialize the list
-                    # refDict[identity] = []
                     framesColumnsRefDict[identity] = []
                     refDictTemp[identity] = []
 
                 for frame,column in zip(frames,columns): # I loop in all the frames of the individual fragment to add them to the dictionary of references
-                    # refDict[identity].append(portraits.loc[frame,'images'][column])
                     framesColumnsRefDict[identity].append((frame,column))
                     refDictTemp[identity].append(portraits.loc[frame,'images'][column])
 
@@ -147,7 +138,6 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
 
     min_num_ref_available = 1000000 # We initialize to a high value so that it fullfilles the if conditions inside the loop
     for iD in iDList:
-        # print 'refDictTemp ', iD, len(refDictTemp[iD])
         if accumDict['counter'] == 0:
             refDict[iD] = refDictTemp[iD]
         else:
@@ -344,11 +334,18 @@ def fineTuner(videoPath,
             portraits, statistics, videoInfo = [],
             plotFlag = True,
             printFlag = True,
-            onlySoftmax = False,
+            onlyFullyConnected = True,
+            onlySoftmax = True,
             weighted_flag = True):
 
     if printFlag:
         print '\n--- Entering the fineTuner ---'
+        if onlyFullyConnected:
+            print 'you will train only fully-connected and softmax'
+        elif onlySoftmax:
+            print 'you will train only the softmax'
+        else:
+            print 'you will train the entire network'
 
     # Load data if needed
     if videoInfo == []:
@@ -404,7 +401,9 @@ def fineTuner(videoPath,
                     trainDict, accumDict, fragmentsDict, handlesDict, portraits,
                     Tindices, Titer_per_epoch,
                     Vindices, Viter_per_epoch,
+                    onlyFullyConnected = onlyFullyConnected,
                     onlySoftmax = onlySoftmax,
-                    weighted_flag = weighted_flag) #NOTE:hard-coded flag for testing purpose
+                    weighted_flag = weighted_flag)
+
     trainDict['load_ckpt_folder'] = ckpt_dir
     return trainDict, handlesDict

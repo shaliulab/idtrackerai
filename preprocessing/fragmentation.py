@@ -270,7 +270,7 @@ def getIndivFragments(dfGlobal, animalInd,meanIndivArea,stdIndivArea):
                     else: # if the area is too big, I close the individual fragment and I add the indices to the list of potentialCrossings
                         potentialCrossings.append((frame,portraitInd)) # save to list of potential crossings
                         newIdentitiesFrame = dfGlobal.loc[frame,'permutations']
-                        newIdentitiesFrame[portraitInd] = -1 ### TODO this should be change in the permutation columns of the segments.
+                        newIdentitiesFrame[portraitInd] = -1 ### TODO this should be changed in the permutation columns of the segments.
                         newdfGlobal.set_value(frame, 'permutations', newIdentitiesFrame)
 
                     if len(indivFragment) != 0:
