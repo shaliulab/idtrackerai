@@ -56,29 +56,23 @@ def put_kernels_on_grid(kernel, (grid_Y, grid_X), pad=1):
     '''
     # pad X and Y
     x1 = tf.pad(kernel, tf.constant( [[pad,pad],[pad,pad],[0,0],[0,0]] ))
-
     # X and Y dimensions, w.r.t. padding
     Y = kernel.get_shape()[0] + 2*pad
     X = kernel.get_shape()[1] + 2*pad
     NumChannels = kernel.get_shape()[2]
-
     # put NumKernels to the 1st dimension
     x2 = tf.transpose(x1, (3, 0, 1, 2))
     # organize grid on Y axis
     x3 = tf.reshape(x2, tf.stack([grid_X, Y * grid_Y, X, NumChannels]))
-
     # switch X and Y axes
     x4 = tf.transpose(x3, (0, 2, 1, 3))
     # organize grid on X axis
     x5 = tf.reshape(x4, tf.stack([1, X * grid_X, Y * grid_Y, NumChannels]))
-
     # back to normal order (not combining with the next step for clarity)
     x6 = tf.transpose(x5, (2, 1, 3, 0))
-
     # to tf.summary.image order [batch_size, height, width, channels],
     #   where in this case batch_size == 1
     x7 = tf.transpose(x6, (3, 0, 1, 2))
-
     # scale to [0, 1]
     x_min = tf.reduce_min(x7)
     x_max = tf.reduce_max(x7)
@@ -211,18 +205,28 @@ Manage checkpoit folders, saving and restore
 *****************************************************************************
 '''
 
-def createSaver(varName, include, name):
-    '''
-    varName: string (name of part of the name of the variable)
-    include: boolean (save or discard)
+# def createSaver(varName, include, name):
+#     '''
+#     varName: string (name of part of the name of the variable)
+#     include: boolean (save or discard)
+#
+#     Scans all the variables and save the ones that have 'varName' as part of their
+#     name, if include is True or the contrary if include is False
+#     '''
+#     if include:
+#         saver = tf.train.Saver([v for v in tf.global_variables() if varName in v.name], name = name)
+#     elif not include:
+#         saver = tf.train.Saver([v for v in tf.global_variables() if varName not in v.name], name = name)
+#     else:
+#         raise ValueError('The second argument has to be a boolean')
+#
+#     return saver
 
-    Scans all the variables and save the ones that has 'varName' as part of their
-    name, if include is True or the contrary if include is False
-    '''
+def createSaver(varName, include, name):
     if include:
-        saver = tf.train.Saver([v for v in tf.global_variables() if varName in v.name], name = name)
+        saver = tf.train.Saver([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name], name = name)
     elif not include:
-        saver = tf.train.Saver([v for v in tf.global_variables() if varName not in v.name], name = name)
+        saver = tf.train.Saver([v for v in tf.global_variables() if 'soft' not in v.name or 'full' not in v.name], name = name)
     else:
         raise ValueError('The second argument has to be a boolean')
 

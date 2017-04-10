@@ -119,8 +119,8 @@ def run_training(X_t, Y_t, X_v, Y_v,
                 portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch,
                 plotFlag = True,
                 printFlag = True,
-                onlyFullyConnected = True,
-                onlySoftmax=True,
+                onlyFullyConnected = False,
+                onlySoftmax=False,
                 weighted_flag = True,
                 use_adam = False):
 
@@ -199,7 +199,7 @@ def run_training(X_t, Y_t, X_v, Y_v,
 
         with tf.Session() as sess:
             # you need to initialize all variables
-            # tf.initialize_all_variables().run() #NOTE deprecated
+
             tf.global_variables_initializer().run()
 
             if printFlag:
@@ -474,7 +474,8 @@ def run_pre_training(X_t, Y_t, X_v, Y_v,
                     plotFlag = True,
                     printFlag = True,
                     onlySoftmax=False,
-                    weighted_flag = True):
+                    weighted_flag = True,
+                    use_adam = False):
 
 
     print '-------------------TRAINDICT-----------------------------'
@@ -498,7 +499,7 @@ def run_pre_training(X_t, Y_t, X_v, Y_v,
         logits = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
         loss_weights_pl = tf.placeholder(tf.float32, [None], name = 'loss_weights')
         cross_entropy = weighted_loss(labels_pl,logits,loss_weights_pl)
-        train_op, global_step =  optimize(cross_entropy,lr)
+        train_op, global_step =  optimize(cross_entropy,lr, use_adam=use_adam)
         accuracy, indivAcc = evaluation(labels_pl,logits,classes)
         summary_op = tf.summary.merge_all()
 
@@ -544,12 +545,11 @@ def run_pre_training(X_t, Y_t, X_v, Y_v,
                 if printFlag:
                     print "\n"
                     print '********************************************************'
-                    print 'We are only loading conv layers and fully connected'
+                    print 'We are only loading conv layers'
                     print '********************************************************'
                     print 'loading weigths from ' + loadCkpt_folder + '/model'
 
                 restoreFromFolder(loadCkpt_folder_model, saver_model, sess)
-
 
             start = global_step.eval()
             print 'we should be starting from ', start

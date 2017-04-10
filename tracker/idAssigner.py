@@ -30,10 +30,12 @@ import collections
 import datetime
 
 def DataIdAssignation(portraits, indivFragments):
+    print 'I am in DataIdAssignation'
     portraitsFrag = np.asarray(portraits.loc[:,'images'].tolist())
     portsFragments = []
     # print 'indivFragments', indivFragments
     for indivFragment in indivFragments:
+        print 'current indivFragment ', indivFragment
         # print 'indiv fragment, ', indivFragment
         portsFragment = []
         # print 'portsFragment, ', portsFragment
@@ -297,14 +299,21 @@ def idAssigner_ref(accumCounter, numFrames, numAnimals, maxNumBlobs):
     """Assign here the identities of the fragments used as references. Pass the matrices
     to idAssigner to assign the rest of the individual fragments."""
 
+    softMaxProbsAll = []
+    softMaxIdAll = []
+    P1FragsAll = []
+    freqFragsAll = []
+    normFreqFragsAll = []
+
     if accumCounter == 0:
         #The first time we pass here we initialise the matrices that will host the identities.
         idSoftMaxAllVideo = -np.ones((numFrames,maxNumBlobs)) # softMax predicted ids per frame
         PSoftMaxAllVIdeo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # softMax probabilities per frame
         freqFragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # frequencies for each individual fragment
-        normFreqFragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals))
-        idFreqFragAllVideo= -np.ones((numFrames,maxNumBlobs))
+        normFreqFragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals))# normalised frequencies for each individual fragment
+        idFreqFragAllVideo= -np.ones((numFrames,maxNumBlobs)) # id with norm freqs for each individual fragment
         P1FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # P1 for each individual fragment
+    
 
 def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits = [], videoInfo = {}, plotFlag = True, printFlag = True):
     '''
@@ -346,7 +355,7 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits 
     P1FragsAll = []
     freqFragsAll = []
     normFreqFragsAll = []
-    #init matrices containing the ids in the video according to:
+    # init matrices containing the ids in the video according to:
     idSoftMaxAllVideo = -np.ones((numFrames,maxNumBlobs)) # softMax predicted ids per frame
     PSoftMaxAllVIdeo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # softMax probabilities per frame
     freqFragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # frequencies for each individual fragment
