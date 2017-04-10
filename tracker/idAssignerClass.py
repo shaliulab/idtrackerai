@@ -29,6 +29,8 @@ from collections import Counter
 import collections
 import datetime
 
+IMSIZE = (32,32,1)
+
 class IdAssigner(object):
     def __init__(self, video_path, portraits, video_fragmentation_data, ind_frags_to_identify, reference_ind_frags):
         self.video_path = video_path
@@ -36,7 +38,7 @@ class IdAssigner(object):
         self.fragments_data = video_fragmentation_data
         self.test_fragments_indices = ind_frags_to_identify
         self.ref_fragments_indices = reference_ind_frags
-        self.imsize = (32,32,1)
+        self.imsize = IMSIZE
 
     def get_data(self, blob_index):
         portraitsFrag = np.asarray(portraits.loc[:,'images'].tolist())
