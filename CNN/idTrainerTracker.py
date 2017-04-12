@@ -119,8 +119,8 @@ def run_training(X_t, Y_t, X_v, Y_v,
                 portraits, Tindices, Titer_per_epoch, Vindices, Viter_per_epoch,
                 plotFlag = True,
                 printFlag = True,
-                onlyFullyConnected = False,
-                onlySoftmax=False,
+                onlyFullyConnected = True,
+                onlySoftmax=True,
                 weighted_flag = True,
                 use_adam = False):
 
@@ -330,6 +330,10 @@ def run_training(X_t, Y_t, X_v, Y_v,
                     indivAccEpoch = []
 
                     ''' TRAINING '''
+                    # if epoch_i != 0:
+                    #     print('permuting images and labels in training for epoch ' + str(start + epoch_i))
+                    #     X_t, Y_t = shuffle_images_and_labels(X_t, Y_t)
+
                     for iter_i in range(Titer_per_epoch):
 
                         _, batchLoss, batchAcc, indivBatchAcc, feed_dict = run_batch(
@@ -574,6 +578,7 @@ def run_pre_training(X_t, Y_t, X_v, Y_v,
             epoch_i = 0
             valIndivAcc = np.zeros(classes)
             while epoch_i <= n_epochs:
+
                 minNumEpochsCheckLoss = 10
                 if start + epoch_i > 1:
                     if len(valLossPlot) > minNumEpochsCheckLoss: #and start > 100:
@@ -622,6 +627,10 @@ def run_pre_training(X_t, Y_t, X_v, Y_v,
                     indivAccEpoch = []
 
                     ''' TRAINING '''
+                    # if epoch_i != 0:
+                    #     print('permuting images and labels in training for epoch ' + str(start + epoch_i))
+                    #     X_t, Y_t = shuffle_images_and_labels(X_t, Y_t)
+
                     for iter_i in range(Titer_per_epoch):
 
                         _, batchLoss, batchAcc, indivBatchAcc, feed_dict = run_batch(

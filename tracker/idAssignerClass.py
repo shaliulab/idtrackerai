@@ -59,3 +59,11 @@ class IdAssigner(object):
         images = cropImages(images,32)
         self.images = standarizeImages(images)
         return self.images
+
+video_path
+portraits
+video_fragmentation_data
+ind_frags_to_identify
+reference_ind_frags
+
+a = IdAssigner()

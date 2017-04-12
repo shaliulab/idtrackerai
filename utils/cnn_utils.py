@@ -767,6 +767,15 @@ def individualAccuracy(labels,logits,classes):
 ''' ****************************************************************************
 Data Augmentation and image processing
 *****************************************************************************'''
+def shuffle_images_and_labels(images, labels):
+    """Shuffles images and labels with a random
+    permutation, according to the number of examples"""
+    perm = np.arange(len(labels))
+    np.random.shuffle(perm)
+    images = images[perm]
+    labels = labels[perm]
+    return images, labels
+
 def standarizeImages(images):
     images = images/255.
     meanIm = np.mean(images, axis=0)

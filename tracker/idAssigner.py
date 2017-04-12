@@ -35,7 +35,7 @@ def DataIdAssignation(portraits, indivFragments):
     portsFragments = []
     # print 'indivFragments', indivFragments
     for indivFragment in indivFragments:
-        print 'current indivFragment ', indivFragment
+        # print 'current indivFragment ', indivFragment
         # print 'indiv fragment, ', indivFragment
         portsFragment = []
         # print 'portsFragment, ', portsFragment
@@ -313,7 +313,7 @@ def idAssigner_ref(accumCounter, numFrames, numAnimals, maxNumBlobs):
         normFreqFragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals))# normalised frequencies for each individual fragment
         idFreqFragAllVideo= -np.ones((numFrames,maxNumBlobs)) # id with norm freqs for each individual fragment
         P1FragAllVideo = np.zeros((numFrames,maxNumBlobs,numAnimals)) # P1 for each individual fragment
-    
+
 
 def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits = [], videoInfo = {}, plotFlag = True, printFlag = True):
     '''
