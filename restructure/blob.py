@@ -36,7 +36,7 @@ class Blob(object):
 
     @property
     def is_in_a_fragment(self):
-        return len(self.previous) == 1
+        return len(self.previous) == len(self.next) == 1
 
     @property
     def is_a_fish_in_a_fragment(self):
@@ -77,22 +77,38 @@ def check_potential_global_fragments(blob_list, num_animals):
     """
     return [len(frame)==num_animals for frame in blob_list]
 
+def distance_travelled_in_segment(blob):
+    distance = 0
+    current = blob
+    if blob.is_in_a_fragment:
+        while current.next[0].is_in_a_fragment:
+            distance += np.linalg.norm(current.centroid - current.next[0].centroid)
+            current = current.next[0] 
+        current = blob
+        while current.previous[0].is_in_a_fragment:
+            distance += np.linalg.norm(current.centroid - current.previous[0].centroid)
+            current = current.previous[0]
+    return distance 
+
 if __name__ == "__main__":
     contoura = np.array([ [[0,0]], [[1,1]], [[2,2]] ])
     contourb = np.array([ [[0,1]], [[1,1]], [[2,3]] ])
     contourc = np.array([ [[1,1]] ])
+    contourd = np.array([ [[0,1]], [[1,1]], [[2,3]] ])
+
     print(contoura.shape)
-    a = Blob(None, contoura, 0, None, None, None)
-    b = Blob(None, contourb, 0, None, None, None)
-    c = Blob(None, contourc, 0, None, None, None)
+    a = Blob(np.array([0,0]), contoura, 0, None, None, None)
+    b = Blob(np.array([1,1]), contourb, 0, None, None, None)
+    c = Blob(np.array([2,2]), contourc, 0, None, None, None)
+    d = Blob(np.array([3,3]), contourd, 0, None, None, None)
     print(a.overlaps_with(b))
     print(b.overlaps_with(c))
-    list_of_blob = [[a],[b],[c]]
+    list_of_blob = [[a],[b],[c],[d]]
     
     connect_blob_list(list_of_blob) 
     
     print(check_global_fragments(list_of_blob, 1))
-
+    print(distance_travelled_in_segment(a))
 
 
 
