@@ -55,6 +55,34 @@ class Blob(object):
     def is_identified(self):
         return self._identity is not None
 
+    def distance_travelled_in_segment(self):
+        distance = 0
+        if self.is_in_a_fragment:
+            current = self
+            while current.next[0].is_in_a_fragment:
+                distance += np.linalg.norm(current.centroid - current.next[0].centroid)
+                current = current.next[0] 
+            current = self
+            while current.previous[0].is_in_a_fragment:
+                distance += np.linalg.norm(current.centroid - current.previous[0].centroid)
+                current = current.previous[0]
+        return distance 
+
+    def portraits_in_segment(self):
+        portraits = []
+        if self.is_in_a_fragment:
+            portraits.append(self.portrait)
+            current = self
+            while current.next[0].is_in_a_fragment:
+                current = current.next[0] 
+                portraits.append(current.portrait)
+            current = self
+            while current.previous[0].is_in_a_fragment:
+                current = current.previous[0]
+                portraits.append(current.portrait)
+        return portraits 
+
+
 def connect_blob_list(blob_list):
     for frame_i in range(1,len(blob_list)):
         for (blob_0, blob_1) in itertools.product(blob_list[frame_i-1], blob_list[frame_i]):
@@ -76,19 +104,6 @@ def check_potential_global_fragments(blob_list, num_animals):
     * number of blobs equals num_animals
     """
     return [len(frame)==num_animals for frame in blob_list]
-
-def distance_travelled_in_segment(blob):
-    distance = 0
-    current = blob
-    if blob.is_in_a_fragment:
-        while current.next[0].is_in_a_fragment:
-            distance += np.linalg.norm(current.centroid - current.next[0].centroid)
-            current = current.next[0] 
-        current = blob
-        while current.previous[0].is_in_a_fragment:
-            distance += np.linalg.norm(current.centroid - current.previous[0].centroid)
-            current = current.previous[0]
-    return distance 
 
 if __name__ == "__main__":
     contoura = np.array([ [[0,0]], [[1,1]], [[2,2]] ])
