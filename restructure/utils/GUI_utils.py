@@ -93,23 +93,22 @@ def getMask(im):
 
     return maskout, centers
 
-def checkROI(video, usePreviousROI, frame):
+def checkROI(video, old_video, usePreviousROI, frame):
     ''' Select ROI '''
     if video.apply_ROI:
-        if usePreviousROI:
-            old_video = Video()
-            old_video._name = video._name
-            old_video.load()
+        if usePreviousROI and old_video.ROI is not None:
             mask = old_video.ROI
         else:
             print '\n Selecting ROI ...'
             mask, _ = getMask(frame)
+            if np.count_nonzero(mask) == 0:
+                np.ones_like(frame, dtype = np.uint8)*255
     else:
         print '\n No ROI selected ...'
         mask = np.ones_like(frame, dtype = np.uint8)*255
     return mask
 
-def ROISelectorPreview(video, usePreviousROI):
+def ROISelectorPreview(video, old_video, usePreviousROI):
     """
     loads a preview of the video for ROI selection
     """
@@ -117,7 +116,7 @@ def ROISelectorPreview(video, usePreviousROI):
     ret, frame = cap.read()
     cap.release()
     frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    mask = checkROI(video, usePreviousROI, frameGray)
+    mask = checkROI(video, old_video, usePreviousROI, frameGray)
     return mask
 
 ''' ****************************************************************************
@@ -199,18 +198,24 @@ def SegmentationPreview(video):
 
         # Select segment dataframe and change cap if needed
         sNumber = video.in_which_episode(trackbarValue)
+        print 'seg number ', sNumber
+        print 'trackbarValue ', trackbarValue
         sFrame = trackbarValue
 
         if sNumber != currentSegment: # we are changing segment
             print 'Changing segment...'
             currentSegment = sNumber
-
             if video._paths_to_video_segments:
-                cap = cv2.VideoCapture(videoPaths[sNumber-1])
+                cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
 
         #Get frame from video file
         if video._paths_to_video_segments:
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame % video._episodes[sNumber])
+            start = video._episodes_start_end[sNumber][0]
+            # end = video._episodes_start_end[sNumber][1]
+            # frames_in_episode = end - start
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
+            print sFrame, start
+            print sFrame - start
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         ret, frame = cap.read()
@@ -304,7 +309,7 @@ def SegmentationPreview(video):
     video._min_area = cv2.getTrackbarPos('minArea', 'Bars')
     video._max_area = cv2.getTrackbarPos('maxArea', 'Bars')
     video._resize =  - cv2.getTrackbarPos('ResDown', 'Bars') + cv2.getTrackbarPos('ResUp', 'Bars')
-    video.has_preprocessing_parameters = True
+    video._has_preprocessing_parameters = True
     cap.release()
     cv2.destroyAllWindows()
     cv2.waitKey(1)
@@ -312,7 +317,7 @@ def SegmentationPreview(video):
     cv2.waitKey(1)
 
 
-def selectPreprocParams(video, usePreviousPrecParams):
+def selectPreprocParams(video, old_video, usePreviousPrecParams):
     if not usePreviousPrecParams:
         video._min_threshold = 0
         video._max_threshold = 155
@@ -324,7 +329,12 @@ def selectPreprocParams(video, usePreviousPrecParams):
         cv2.destroyAllWindows()
         cv2.waitKey(1)
     else:
-        video.load()
+        video.__dict__ = old_video.__dict__
+        # video._max_threshold = old_video._max_threshold
+        # video._min_area = old_video._min_area
+        # video._max_area = old_video._max_area
+        # video._resize = old_video._resize
+        # video._has_preprocessing_parameters = old_video._has_preprocessing_parameters
 
 
 ''' ****************************************************************************

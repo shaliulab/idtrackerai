@@ -231,21 +231,31 @@ def getExistentFiles(video, listNames):
     get processes already computed in a previous session
     """
     existentFile = {name:'0' for name in listNames}
-    old_video = Video()
+    old_video = None
+    print video._name
     if os.path.isfile(video._name):
         print("loading old video object from get existent files")
-        old_video._name = video._name
-        old_video.load()
+        old_video = np.load(video._name).item()
+        print("old video dict")
+        print(old_video.__dict__)
+        print('old_video bkg ', old_video.bkg)
         if old_video.bkg is not None:
             print('has bkg')
             existentFile['bkg'] = '1'
+        print('old_video ROI', old_video.ROI)
         if old_video.ROI is not None:
             print('has roi')
             existentFile['ROI'] = '1'
-        if old_video.has_preprocessing_parameters:
+
+        if old_video._has_preprocessing_parameters == True:
             print('has preprocessing params')
             existentFile['preprocparams'] = '1'
-    return existentFile
+
+        print('it should be true ', old_video._has_been_segmented)
+        if old_video._has_been_segmented == True:
+            print('has segmentation')
+            existentFile['segmentation'] = '1'
+    return existentFile, old_video
 
 
 def createFolder(path, name = '', timestamp = False):

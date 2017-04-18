@@ -11,8 +11,8 @@ import cv2
 from pprint import pprint
 
 # Import application/library specifics
-sys.path.append('../utils')
-sys.path.append('../preprocessing')
+sys.path.append('./utils')
+sys.path.append('./preprocessing')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         print '\nLooking for finished steps in previous session...'
         processes_list = ['bkg', 'ROI', 'preprocparams', 'segmentation','fragments','portraits']
         #get existent files and paths to load them
-        existentFiles = getExistentFiles(video, processes_list)
+        existentFiles, old_video = getExistentFiles(video, processes_list)
         print('existent files ', existentFiles)
         #selecting files to load from previous session...'
         loadPreviousDict = selectOptions(processes_list, existentFiles, text='Steps already processed in this video \n (loaded from ' + video._video_folder + ')')
@@ -64,14 +64,14 @@ if __name__ == '__main__':
         usePreviousBkg = loadPreviousDict['bkg']
         usePreviousPrecParams = loadPreviousDict['preprocparams']
         #ROI selection/loading
-        video.ROI = ROISelectorPreview(video, usePreviousROI)
+        video.ROI = ROISelectorPreview(video, old_video, usePreviousROI)
         #BKG computation/loading
-        video.bkg = checkBkg(video, usePreviousBkg)
+        video.bkg = checkBkg(video, old_video, usePreviousBkg)
         #Selection/loading preprocessing parameters
-        selectPreprocParams(video, usePreviousPrecParams)
+        selectPreprocParams(video, old_video, usePreviousPrecParams)
         video.save()
         print('The video will be preprocessed according to the following parameters: ')
-        pprint(video.__dict__)
+        pprint({name : getattr(video, name) for name in video.__dict__.keys() if 'threshold'  in name or 'area'})
         #Loading logo during preprocessing
         img = cv2.imread('../utils/loadingIdDeep.png')
         cv2.imshow('Bars',img)
@@ -81,9 +81,10 @@ if __name__ == '__main__':
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         # the preprocessing parameters will be loaded from last time they were computed
-        loadPreviousDict = {'bkg': 1, 'ROI': 1, 'preprocparams': 1,'segmentation': 1, 'fragments': 1, 'portraits': 1}
-        video.Video()
-        video.load()
+        processes_list = ['bkg', 'ROI', 'preprocparams', 'segmentation','fragments','portraits']
+        existentFiles, old_video = getExistentFiles(video, processes_list)
+        old_video = Video()
+        video = np.load(old_video._name).item()
     else:
         raise ValueError('The input introduced does not match the possible options')
 
@@ -97,8 +98,13 @@ if __name__ == '__main__':
 
     if not loadPreviousDict['segmentation']:
         print 'The parameters used to preprocess the video are '
-        pprint(video.__dict__)
-        segment(video)
+        # pprint(video.__dict__)
+        blobs = segment(video)
+        print('idTrackerDeepGUI line 102, has been segmented ', video._has_been_segmented)
+        video.save()
+    else:
+        blobs = np.load(video.get_blobs_path())
+        video.load()
     #destroy windows to prevent openCV errors
     cv2.waitKey(1)
     cv2.destroyAllWindows()

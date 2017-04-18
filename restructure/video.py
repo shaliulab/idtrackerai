@@ -21,13 +21,14 @@ class Video(object):
         self._video_path = video_path
         self._animal_type = animal_type
         self._num_animals = num_animals
-        self._episodes = None
+        self._episodes_start_end = None
         self.bkg = bkg
         self.subtract_bkg = subtract_bkg
         self.ROI = ROI
         self.apply_ROI = apply_ROI
-        self.has_preprocessing_parameters = False
-
+        self._has_preprocessing_parameters = False
+        self._max_number_of_blobs = None
+        self._has_been_segmented = None
 
     @property
     def video_path(self):
@@ -46,7 +47,7 @@ class Video(object):
             #create a folder in which preprocessing data will be saved
             self.create_preprocessing_folder()
             #give a unique name (wrt the video)
-            self._name = os.path.join(self._preprocessing_folder, 'video_object.pkl')
+            self._name = os.path.join(self._preprocessing_folder, 'video_object.npy')
         else:
             raise ValueError("Supported video extensions are ", AVAILABLE_VIDEO_EXTENSION)
 
@@ -81,7 +82,7 @@ class Video(object):
             self.get_episodes()
         else:
             chunks_lengths = [int(cv2.VideoCapture(chunk).get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) for chunk in self._paths_to_video_segments]
-            self._episodes = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])-1) for i in range(1,len(chunks_lengths)+1)]
+            self._episodes_start_end = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])-1) for i in range(1,len(chunks_lengths)+1)]
             self._num_frames = np.sum(chunks_lengths)
             self._num_episodes = len(self._paths_to_video_segments)
         cap.release()
@@ -99,17 +100,16 @@ class Video(object):
         for parallelisation"""
         starting_frames = np.arange(0, self._num_frames, FRAMES_PER_EPISODE)
         ending_frames = np.hstack((starting_frames[1:] - 1, self._num_frames - 1))
-        self._episodes =zip(starting_frames, ending_frames)
+        self._episodes_start_end =zip(starting_frames, ending_frames)
         self._num_episodes = len(starting_frames)
 
     def in_which_episode(self, frame_index):
         """Check to which episode a frame index belongs in time"""
-        episode_number = [i for i, episode in enumerate(self._episodes) if episode[0] <= frame_index and episode[1] >= frame_index]
+        episode_number = [i for i, episode_start_end in enumerate(self._episodes_start_end) if episode_start_end[0] <= frame_index and episode_start_end[1] >= frame_index]
         if episode_number:
             return episode_number[0]
         else:
             return None
-
 
     @property
     def min_threshold(self):
@@ -131,15 +131,21 @@ class Video(object):
     def resize(self):
         return self._resize
 
+    def get_blobs_path(self):
+        """get the path to save the blob collection after segmentation.
+        It checks that the segmentation has been succesfully performed"""
+        self._blobs_path = None
+
+        if self._has_been_segmented:
+            self._blobs_path = os.path.join(self._preprocessing_folder, 'blobs_collection.npy')
+
+        return self._blobs_path
+
     def save(self):
         """save class"""
         print("saving video object")
-        pickle.dump(self.__dict__, open(self._name, 'wb'))
-
-    def load(self):
-        """load class"""
-        print("loading video object")
-        self.__dict__ = pickle.load(open(self._name, 'rb'))
+        np.save(self._name, self)
+        # pickle.dump(self.__dict__, open(self._name, 'wb'))
 
 def get_num_frame(path):
     cap = cv2.VideoCapture(path)

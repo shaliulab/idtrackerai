@@ -2,10 +2,10 @@ from __future__ import absolute_import, division, print_function
 import itertools
 import numpy as np
 
-class Blob(object):
+class Blob(object):#NOTE: think better to overlap with pixels instead of contour (go for safe option)
     def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, portrait = None):
         self.centroid = centroid
-        self.contour = contour         
+        self.contour = contour
         self.area = area
         self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates
         self.bounding_box_image = bounding_box_image
@@ -15,7 +15,7 @@ class Blob(object):
         self.previous = []
 
         self._identity = None
-    
+
     @property
     def is_a_fish(self):
         return self.portrait is not None
@@ -24,7 +24,7 @@ class Blob(object):
         """Checks if contours are disjoint
         """
         overlaps = False
-        for ([[x,y]],[[x1,y1]]) in itertools.product(self.contour, other.contour): 
+        for ([[x,y]],[[x1,y1]]) in itertools.product(self.contour, other.contour):
             if x == x1 and y == y1:
                 overlaps = True
                 break
@@ -40,7 +40,7 @@ class Blob(object):
 
     @property
     def is_a_fish_in_a_fragment(self):
-        self.is_a_fish and self.is_in_a_fragment 
+        return self.is_a_fish and self.is_in_a_fragment
 
     @property
     def identity(self):
@@ -50,37 +50,37 @@ class Blob(object):
     def identity(self, new_identifier):
         assert self.is_a_fish
         self._identity = new_identifier
-    
+
     @property
     def is_identified(self):
         return self._identity is not None
 
-    def distance_travelled_in_segment(self):
+    def distance_travelled_in_fragment(self):
         distance = 0
         if self.is_in_a_fragment:
             current = self
             while current.next[0].is_in_a_fragment:
                 distance += np.linalg.norm(current.centroid - current.next[0].centroid)
-                current = current.next[0] 
+                current = current.next[0]
             current = self
             while current.previous[0].is_in_a_fragment:
                 distance += np.linalg.norm(current.centroid - current.previous[0].centroid)
                 current = current.previous[0]
-        return distance 
+        return distance
 
-    def portraits_in_segment(self):
+    def portraits_in_fragment(self):
         portraits = []
         if self.is_in_a_fragment:
             portraits.append(self.portrait)
             current = self
             while current.next[0].is_in_a_fragment:
-                current = current.next[0] 
+                current = current.next[0]
                 portraits.append(current.portrait)
             current = self
             while current.previous[0].is_in_a_fragment:
                 current = current.previous[0]
                 portraits.append(current.portrait)
-        return portraits 
+        return portraits
 
 
 def connect_blob_list(blob_list):
@@ -93,14 +93,14 @@ def all_blobs_in_a_fragment(frame):
     return all([blob.is_in_a_fragment for blob in frame])
 
 def check_global_fragments(blob_list, num_animals):
-    """Returns an array with True iff: 
+    """Returns an array with True iff:
     * each blob has a unique blob intersecting in the past
     * number of blobs equals num_animals
     """
     return [all_blobs_in_a_fragment(frame) and len(frame)==num_animals for frame in blob_list]
 
 def check_potential_global_fragments(blob_list, num_animals):
-    """Returns an array with True iff: 
+    """Returns an array with True iff:
     * number of blobs equals num_animals
     """
     return [len(frame)==num_animals for frame in blob_list]
@@ -119,13 +119,8 @@ if __name__ == "__main__":
     print(a.overlaps_with(b))
     print(b.overlaps_with(c))
     list_of_blob = [[a],[b],[c],[d]]
-    
-    connect_blob_list(list_of_blob) 
-    
+
+    connect_blob_list(list_of_blob)
+
     print(check_global_fragments(list_of_blob, 1))
-    print(distance_travelled_in_segment(a))
-
-
-
-
-
+    print(distance_travelled_in_fragment(a))

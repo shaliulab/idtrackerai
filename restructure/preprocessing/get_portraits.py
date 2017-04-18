@@ -103,7 +103,7 @@ def cropPortrait(image,portraitSize,shift=(0,0)):
         if np.max(shift) > maxShift:
             raise ValueError('The shift when cropping the portrait cannot be bigger than (currentSize - portraitSize)/2')
         croppedPortrait = image[maxShift+shift[1]:currentSize-maxShift+shift[1],maxShift+shift[0]:currentSize-maxShift+shift[0]]
-        print 'Portrait cropped'
+        # print 'Portrait cropped'
         return croppedPortrait
 
 def getPortrait(miniframe, cnt, bb, counter = None, px_nose_above_center = 9):

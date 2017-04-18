@@ -62,9 +62,9 @@ def computeBkg(video):
     # num_cores = 1
     if video._paths_to_video_segments is None: # one single video
         print 'one single video, computing bkg in parallel from single video'
-        output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSingleVideo)(starting_frame, ending_frame, video.video_path, bkg) for (starting_frame, ending_frame) in video._episodes)
+        output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSingleVideo)(starting_frame, ending_frame, video.video_path, bkg) for (starting_frame, ending_frame) in video._episodes_start_end)
     else: # multiple segments video
-        output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSegmVideo)(videoPath,bkg) for videoPath in videoPaths)
+        output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSegmVideo)(videoPath,bkg) for videoPath in video._paths_to_video_segments)
 
     partialBkg = [bkg for (bkg,_) in output]
     totNumFrame = np.sum([numFrame for (_,numFrame) in output])
@@ -72,14 +72,11 @@ def computeBkg(video):
     bkg = np.true_divide(bkg, totNumFrame)
     return bkg.astype('float32')
 
-def checkBkg(video, usePreviousBkg):
+def checkBkg(video, old_video, usePreviousBkg):
     bkg = None
 
     if video.subtract_bkg:
-        if usePreviousBkg:
-            old_video = Video()
-            old_video._name = video._name
-            old_video.load()
+        if usePreviousBkg and old_video.bkg is not None:
             bkg = old_video.bkg
         else:
             bkg = computeBkg(video)
