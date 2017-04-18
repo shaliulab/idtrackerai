@@ -17,7 +17,7 @@ SUPPORTED_ANIMAL_TYPES = ['fish', 'fly', 'ant']
 FRAMES_PER_EPISODE = 500 #long videos are divided into chunks. This is the number of frame per chunk
 
 class Video(object):
-    def __init__(self, video_path = None, animal_type = None, num_animals = 0, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
+    def __init__(self, video_path = None, animal_type = None, num_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
         self._video_path = video_path
         self._animal_type = animal_type
         self._num_animals = num_animals

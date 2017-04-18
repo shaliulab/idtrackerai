@@ -330,12 +330,6 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         cv2.waitKey(1)
     else:
         video.__dict__ = old_video.__dict__
-        # video._max_threshold = old_video._max_threshold
-        # video._min_area = old_video._min_area
-        # video._max_area = old_video._max_area
-        # video._resize = old_video._resize
-        # video._has_preprocessing_parameters = old_video._has_preprocessing_parameters
-
 
 ''' ****************************************************************************
 Fragmentation inspector
