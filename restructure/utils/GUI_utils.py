@@ -226,44 +226,37 @@ def SegmentationPreview(video):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        pass
 
 
     def changeMinTh(minTh):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        pass
 
     def changeMaxTh(maxTh):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        pass
 
     def changeMinArea(x):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        pass
 
     def changeMaxArea(maxArea):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        pass
 
     def resizeImageUp(res):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        pass
 
     def resizeImageDown(res):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-        pass
 
     cv2.createTrackbar('start', 'Bars', 0, numFrames-1, scroll )
     cv2.createTrackbar('minTh', 'Bars', 0, 255, changeMinTh)
@@ -331,9 +324,76 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
     else:
         video.__dict__ = old_video.__dict__
 
+
+
 ''' ****************************************************************************
 Fragmentation inspector
 *****************************************************************************'''
+def fragmentation_inspector(video, blobs_in_video):
+    counter = 1
+    for frame in blobs_in_video:
+        for blob in frame:
+            if not blob.is_a_fish_in_a_fragment:
+                blob.identity_in_fragment = -1
+            elif blob.identity_in_fragment is None:
+                blob.identity_in_fragment = counter
+                while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
+                    blob = blob.next[0]
+                    blob.identity_in_fragment = counter
+                counter += 1
+
+
+    cap = cv2.VideoCapture(video.video_path)
+    numFrames = video._num_frames
+    bkg = video.bkg
+    mask = video.ROI
+    subtract_bkg = video.subtract_bkg
+    height = video._height
+    width = video._width
+    global currentSegment, cap
+    currentSegment = 0
+    cv2.namedWindow('fragmentInspection')
+    defFrame = 1
+
+    def scroll(trackbarValue):
+        global frame, currentSegment, cap
+
+        # Select segment dataframe and change cap if needed
+        sNumber = video.in_which_episode(trackbarValue)
+        print 'seg number ', sNumber
+        print 'trackbarValue ', trackbarValue
+        sFrame = trackbarValue
+
+        if sNumber != currentSegment: # we are changing segment
+            print 'Changing segment...'
+            currentSegment = sNumber
+            if video._paths_to_video_segments:
+                cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
+
+        #Get frame from video file
+        if video._paths_to_video_segments:
+            start = video._episodes_start_end[sNumber][0]
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
+        else:
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+        ret, frame = cap.read()
+
+        blobs_in_frame = blobs_in_video[trackbarValue]
+        for blob in blobs_in_frame:
+            #draw the centroid
+            cv2.circle(frame, tuple(blob.centroid), 2, (255,0,0),1)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(frame, str(blob.identity_in_fragment),tuple(blob.centroid), font, 1,255, 5)
+
+
+        cv2.imshow('fragmentInspection', frame)
+
+    cv2.createTrackbar('start', 'fragmentInspection', 0, numFrames-1, scroll )
+
+    scroll(1)
+    cv2.setTrackbarPos('start', 'fragmentInspection', defFrame)
+    cv2.waitKey(0)
+
 def playFragmentation(videoPaths,segmPaths,dfGlobal,visualize = False):
     from fragmentation import computeFrameIntersection ### FIXME For some reason it does not import well in the top and I have to import it here
     """

@@ -55,6 +55,10 @@ class Video(object):
     def animal_type(self):
         return self._animal_type
 
+    @property
+    def num_animals(self):
+        return self._num_animals
+
     @animal_type.setter
     def animal_type(self, value):
         trackable_animal = [animal for animal in SUPPORTED_ANIMAL_TYPES if value == animal]
@@ -145,7 +149,6 @@ class Video(object):
         """save class"""
         print("saving video object")
         np.save(self._name, self)
-        # pickle.dump(self.__dict__, open(self._name, 'wb'))
 
 def get_num_frame(path):
     cap = cv2.VideoCapture(path)
@@ -167,5 +170,3 @@ if __name__ == "__main__":
 
     video = Video()
     video.video_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi'
-    # video.video_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/test/chunk_1.avi'
-    # segmentAndSave(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea, segmFrameInd = None,framesPerSegment=None)

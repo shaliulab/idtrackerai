@@ -16,10 +16,12 @@ sys.path.append('./preprocessing')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
+from blob import connect_blob_list, apply_model_area_to_video
+from globalfragment import compute_model_area, give_me_list_of_global_fragments
 from segmentation import *
 # from fragmentation import *
 # from get_portraits import *
-from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams
+from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector
 from py_utils import getExistentFiles
 from video_utils import checkBkg
 
@@ -40,6 +42,11 @@ if __name__ == '__main__':
     video.video_path = video_path
     #############################################################
     ####################   Preprocessing   ######################
+    #### video preprocessing through a simple GUI that       ####
+    #### allows to set parameters as max/min area of the     ####
+    #### blobs, max/min threshold and ROIs. All these        ####
+    #### parameters are then saved, the GUI gives the        ####
+    #### possibility to load them.                           ####
     #############################################################
     #Asking user whether to reuse preprocessing steps...'
     reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previous preprocessing? ([y]/n)')
@@ -90,6 +97,8 @@ if __name__ == '__main__':
 
     #############################################################
     ####################   Segmentation   #######################
+    #### detect blobs in the video according to parameters   ####
+    #### specified by the user, and save them for future use ####
     #############################################################
     #destroy windows to prevent openCV errors
     cv2.waitKey(1)
@@ -104,27 +113,48 @@ if __name__ == '__main__':
         video.save()
     else:
         blobs = np.load(video.get_blobs_path())
-        video.load()
+        old_video = Video()
+        old_video.video_path = video_path
+        video = np.load(old_video._name).item()
     #destroy windows to prevent openCV errors
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
+
+    #############################################################
+    ####################   Fragmentation   ######################
+    #### 1. create a list of potential global fragments      ####
+    #### in which all animals are visible.                   ####
+    #### 2. compute a model of the area of the animals       ####
+    #### (mean and variance)                                 ####
+    #### 3. identify global and individual fragments         ####
+    #### 4. create a list of objects GlobalFragment() that   ####
+    #### will be used to train the network                   ####
+    #############################################################
+    if not loadPreviousDict['fragments']:
+        print('number of animals ', video.num_animals)
+        # potential_global_fragments = give_me_list_of_potential_global_fragments(blobs, video._num_animals)
+        model_area = compute_model_area(blobs, video.num_animals)
+        apply_model_area_to_video(blobs, model_area)
+        connect_blob_list(blobs)
+
+        fragmentation_inspector(video, blobs)
+
+
+        global_fragments = give_me_list_of_global_fragments(blobs, video.num_animals)
+        #dfGlobal, fragmentsDict = fragment(videoPaths, segmPaths, videoInfo=None)
+        # playFragmentation(videoPaths,segmPaths,dfGlobal,visualize=False)
+        #
+        # cv2.waitKey(1)
+        # cv2.destroyAllWindows()
+        # cv2.waitKey(1)
+    else:
+        dfGlobal = loadFile(videoPaths[0],'portraits')
+        fragmentsDict = loadFile(videoPaths[0],'fragments',hdfpkl='pkl')
+    #
+
 #----------------------------------------------------------------------------->8
-    # print '\n********************************************************************'
-    # print 'Fragmentation'
-    # print '********************************************************************\n'
-    # if not loadPreviousDict['fragments']:
-    #     dfGlobal, fragmentsDict = fragment(videoPaths, segmPaths, videoInfo=None)
-    #
-    #     playFragmentation(videoPaths,segmPaths,dfGlobal,visualize=False)
-    #
-    #     cv2.waitKey(1)
-    #     cv2.destroyAllWindows()
-    #     cv2.waitKey(1)
-    # else:
-    #     dfGlobal = loadFile(videoPaths[0],'portraits')
-    #     fragmentsDict = loadFile(videoPaths[0],'fragments',hdfpkl='pkl')
-    #
+
     # print '\n********************************************************************'
     # print 'Portraying'
     # print '********************************************************************\n'

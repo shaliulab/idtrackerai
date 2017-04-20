@@ -59,7 +59,8 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
                         contours[i],
                         areas[i],
                         bounding_box,
-                        bounding_box_image = miniframes[i])
+                        bounding_box_image = miniframes[i],
+                        pixels = pixels[i])
             blobs_in_frame.append(blob)
 
         if len(centroids) > maxNumBlobs:
@@ -110,8 +111,9 @@ def segment(video):
 
     video._has_been_segmented = True
     video._max_number_of_blobs = max(flatten(number_of_blobs))
-    #blobs_in_video is flattened to obtain a list of blobs per episode
-    blobs_in_video = flatten(blobs_in_video)
+    #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
+    blobs_in_video = flatten(flatten(blobs_in_video))
+
     print('path to save blobs ', video.get_blobs_path())
     np.save(video.get_blobs_path(), blobs_in_video, allow_pickle = True)
     return blobs_in_video

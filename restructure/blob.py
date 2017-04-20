@@ -1,19 +1,25 @@
 from __future__ import absolute_import, division, print_function
+import sys
+sys.path.append('./preprocessing')
+from get_portraits import getPortrait
 import itertools
 import numpy as np
+from tqdm import tqdm
+from joblib import Parallel, delayed
 
 class Blob(object):#NOTE: think better to overlap with pixels instead of contour (go for safe option)
-    def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, portrait = None):
-        self.centroid = centroid
+    def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, portrait = None, pixels = None):
+        self.centroid = np.array(centroid)
         self.contour = contour
         self.area = area
         self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates
         self.bounding_box_image = bounding_box_image
         self.portrait = portrait
+        self.pixels = pixels
 
         self.next = []
         self.previous = []
-
+        self._identity_in_fragment = None
         self._identity = None
 
     @property
@@ -24,10 +30,10 @@ class Blob(object):#NOTE: think better to overlap with pixels instead of contour
         """Checks if contours are disjoint
         """
         overlaps = False
-        for ([[x,y]],[[x1,y1]]) in itertools.product(self.contour, other.contour):
-            if x == x1 and y == y1:
-                overlaps = True
-                break
+        intersection = np.intersect1d(self.pixels, other.pixels)
+        if len(intersection) > 0:
+            overlaps = True
+
         return overlaps
 
     def now_points_to(self, other):
@@ -41,6 +47,16 @@ class Blob(object):#NOTE: think better to overlap with pixels instead of contour
     @property
     def is_a_fish_in_a_fragment(self):
         return self.is_a_fish and self.is_in_a_fragment
+
+
+    @property
+    def identity_in_fragment(self):
+        return self._identity_in_fragment
+
+    @identity_in_fragment.setter
+    def identity_in_fragment(self, fragment_identifier):
+        if self.is_a_fish_in_a_fragment:
+            self._identity_in_fragment = fragment_identifier
 
     @property
     def identity(self):
@@ -84,13 +100,19 @@ class Blob(object):#NOTE: think better to overlap with pixels instead of contour
 
 
 def connect_blob_list(blob_list):
-    for frame_i in range(1,len(blob_list)):
+    for frame_i in tqdm(xrange(1,len(blob_list))):
         for (blob_0, blob_1) in itertools.product(blob_list[frame_i-1], blob_list[frame_i]):
-            if blob_0.overlaps_with(blob_1):
+            if blob_0.is_a_fish and blob_1.is_a_fish and blob_0.overlaps_with(blob_1):
                 blob_0.now_points_to(blob_1)
 
 def all_blobs_in_a_fragment(frame):
     return all([blob.is_in_a_fragment for blob in frame])
+
+def is_a_global_fragment(blobs_in_frame, num_animals):
+    """Returns True iff:
+    * number of blobs equals num_animals
+    """
+    return len(blobs_in_frame)==num_animals
 
 def check_global_fragments(blob_list, num_animals):
     """Returns an array with True iff:
@@ -99,11 +121,20 @@ def check_global_fragments(blob_list, num_animals):
     """
     return [all_blobs_in_a_fragment(frame) and len(frame)==num_animals for frame in blob_list]
 
-def check_potential_global_fragments(blob_list, num_animals):
-    """Returns an array with True iff:
-    * number of blobs equals num_animals
-    """
-    return [len(frame)==num_animals for frame in blob_list]
+
+def apply_model_area(blob, model_area):
+    if model_area(blob.area): #Checks if area is compatible with the model area we built
+        blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates)
+
+def apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area):
+    for blob in blobs_in_frame:
+        apply_model_area(blob, model_area)
+
+def apply_model_area_to_video(blob_list, model_area):
+    Parallel(n_jobs=1, verbose = 5)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in blob_list)
+
+    #(delayed(segmentAndSave)(video, None, segmFrameInd) for segmFrameInd in segmFramesIndicesSubList)
+
 
 if __name__ == "__main__":
     contoura = np.array([ [[0,0]], [[1,1]], [[2,2]] ])
