@@ -1,11 +1,14 @@
 from __future__ import absolute_import, division, print_function
 import sys
+sys.path.append('./utils')
 sys.path.append('./preprocessing')
 from get_portraits import getPortrait
 import itertools
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
+
+STD_TOLERANCE = 4
 
 class Blob(object):#NOTE: think better to overlap with pixels instead of contour (go for safe option)
     def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, portrait = None, pixels = None):
@@ -100,7 +103,7 @@ class Blob(object):#NOTE: think better to overlap with pixels instead of contour
 
 
 def connect_blob_list(blob_list):
-    for frame_i in tqdm(xrange(1,len(blob_list))):
+    for frame_i in tqdm(xrange(1,len(blob_list)), desc = 'Connecting blobs progress'):
         for (blob_0, blob_1) in itertools.product(blob_list[frame_i-1], blob_list[frame_i]):
             if blob_0.is_a_fish and blob_1.is_a_fish and blob_0.overlaps_with(blob_1):
                 blob_0.now_points_to(blob_1)
@@ -131,9 +134,9 @@ def apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area):
         apply_model_area(blob, model_area)
 
 def apply_model_area_to_video(blob_list, model_area):
-    Parallel(n_jobs=1, verbose = 5)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in blob_list)
-
-    #(delayed(segmentAndSave)(video, None, segmFrameInd) for segmFrameInd in segmFramesIndicesSubList)
+    # Parallel(n_jobs=1, verbose = 5)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in blob_list)
+    for frame in tqdm(blob_list, desc = 'Fragmentation progress'):
+        apply_model_area_to_blobs_in_frame(frame, model_area)
 
 
 if __name__ == "__main__":

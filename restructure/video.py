@@ -18,17 +18,20 @@ FRAMES_PER_EPISODE = 500 #long videos are divided into chunks. This is the numbe
 
 class Video(object):
     def __init__(self, video_path = None, animal_type = None, num_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
-        self._video_path = video_path
-        self._animal_type = animal_type
-        self._num_animals = num_animals
-        self._episodes_start_end = None
-        self.bkg = bkg
-        self.subtract_bkg = subtract_bkg
-        self.ROI = ROI
-        self.apply_ROI = apply_ROI
-        self._has_preprocessing_parameters = False
-        self._max_number_of_blobs = None
-        self._has_been_segmented = None
+        self._video_path = video_path #string: path to the video
+        self._animal_type = animal_type #string: type of animals to be tracked in the video
+        self._num_animals = num_animals #int: number of animals in the video
+        self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split to parallel computation]
+        self.bkg = bkg #matrix [shape = shape of a frame] background used to do bkg subtraction
+        self.subtract_bkg = subtract_bkg #boolean: True if the user specifies to subtract the background
+        self.ROI = ROI #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
+        self.apply_ROI = apply_ROI #boolean: True if the user applies a ROI to the video
+        self._has_preprocessing_parameters = False #boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved
+        self._max_number_of_blobs = None #int: the maximum number of blobs detected in the video
+        self._has_been_segmented = None #boolean: True if a video has been segmented in a past session
+        self._blobs_path = None #path to the saved list of blob objects
+        self._has_been_fragmented = None #boolean: True if a video has been fragmented in a past session
+        self._global_fragments_path = None #path to saved list of global fragments
 
     @property
     def video_path(self):
@@ -135,15 +138,21 @@ class Video(object):
     def resize(self):
         return self._resize
 
-    def get_blobs_path(self):
+    @property
+    def blobs_path(self):
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
-        self._blobs_path = None
-
         if self._has_been_segmented:
             self._blobs_path = os.path.join(self._preprocessing_folder, 'blobs_collection.npy')
-
         return self._blobs_path
+
+    @property
+    def global_fragments_path(self):
+        """get the path to save the list of global fragments after
+        fragmentation"""
+        if self._has_been_fragmented:
+            self._global_fragments_path = os.path.join(self._preprocessing_folder, 'global_fragments.npy')
+        return self._global_fragments_path
 
     def save(self):
         """save class"""

@@ -198,12 +198,9 @@ def SegmentationPreview(video):
 
         # Select segment dataframe and change cap if needed
         sNumber = video.in_which_episode(trackbarValue)
-        print 'seg number ', sNumber
-        print 'trackbarValue ', trackbarValue
         sFrame = trackbarValue
 
         if sNumber != currentSegment: # we are changing segment
-            print 'Changing segment...'
             currentSegment = sNumber
             if video._paths_to_video_segments:
                 cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
@@ -214,8 +211,6 @@ def SegmentationPreview(video):
             # end = video._episodes_start_end[sNumber][1]
             # frames_in_episode = end - start
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
-            print sFrame, start
-            print sFrame - start
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         ret, frame = cap.read()
@@ -226,7 +221,6 @@ def SegmentationPreview(video):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
-
 
     def changeMinTh(minTh):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
@@ -308,7 +302,6 @@ def SegmentationPreview(video):
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
-
 
 def selectPreprocParams(video, old_video, usePreviousPrecParams):
     if not usePreviousPrecParams:
@@ -393,96 +386,6 @@ def fragmentation_inspector(video, blobs_in_video):
     scroll(1)
     cv2.setTrackbarPos('start', 'fragmentInspection', defFrame)
     cv2.waitKey(0)
-
-def playFragmentation(videoPaths,segmPaths,dfGlobal,visualize = False):
-    from fragmentation import computeFrameIntersection ### FIXME For some reason it does not import well in the top and I have to import it here
-    """
-    IdInspector
-    """
-    if visualize:
-        info = loadFile(videoPaths[0], 'videoInfo', hdfpkl = 'pkl')
-        width = info['width']
-        height = info['height']
-        numAnimals = info['numAnimals']
-        maxNumBlobs = info['maxNumBlobs']
-        numSegment = 0
-        frameIndices = loadFile(videoPaths[0], 'frameIndices')
-        path = videoPaths[numSegment]
-
-        def IdPlayerFragmentation(videoPaths,segmPaths,numAnimals, width, height,frameIndices):
-
-            global segmDf, cap, currentSegment
-            segmDf,sNumber = loadFile(segmPaths[0], 'segmentation')
-            currentSegment = int(sNumber)
-            print 'Visualizing video %s' % path
-            cap = cv2.VideoCapture(videoPaths[0])
-            numFrames = len(frameIndices)
-            # numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-
-            def onChange(trackbarValue):
-                global segmDf, cap, currentSegment
-
-                # Select segment dataframe and change cap if needed
-                sNumber = frameIndices.loc[trackbarValue,'segment']
-                sFrame = frameIndices.loc[trackbarValue,'frame']
-
-                if sNumber != currentSegment: # we are changing segment
-                    print 'Changing segment...'
-                    prevSegmDf, _ = loadFile(segmPaths[sNumber-2], 'segmentation')
-                    segmDf, _ = loadFile(segmPaths[sNumber-1], 'segmentation')
-                    currentSegment = sNumber
-
-                    if len(videoPaths) > 1:
-                        cap = cv2.VideoCapture(videoPaths[sNumber-1])
-
-                #Get frame from video file
-                if len(videoPaths) > 1:
-                    cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame)
-                else:
-                    cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-                ret, frame = cap.read()
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                frameCopy = frame.copy()
-
-                print '**********************************'
-                print 'sNumber, ', sNumber
-                print 'sFrame, ', sFrame
-                print 'trackbarValue, ', trackbarValue
-
-                permutation = dfGlobal.loc[trackbarValue,'permutations']
-                centroids = dfGlobal.loc[trackbarValue,'centroids']
-                pixelsA = segmDf.loc[sFrame-1,'pixels']
-                pixelsB = segmDf.loc[sFrame,'pixels']
-                print '------------------------------------------------------------'
-                print 'previous frame, ', str(trackbarValue-1), ', permutation, ', dfGlobal.loc[trackbarValue-1,'permutations']
-                print 'current frame, ', str(trackbarValue), ', permutation, ', permutation
-                trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
-                print 'overlapMat, '
-                print overlapMat
-                print 'permutation, ', s
-
-                #Color to gray scale
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                font = cv2.FONT_HERSHEY_SIMPLEX
-
-                # Plot segmentated blobs
-                for i, pixel in enumerate(pixelsB):
-                    px = np.unravel_index(pixel,(height,width))
-                    frame[px[0],px[1]] = 255
-
-                for i, centroid in enumerate(centroids):
-                    cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
-
-                cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
-
-                # Visualization of the process
-                cv2.imshow('IdPlayerFragmentation',frame)
-                pass
-
-            cv2.namedWindow('IdPlayerFragmentation')
-            cv2.createTrackbar( 'start', 'IdPlayerFragmentation', 0, numFrames-1, onChange )
-
-            onChange(1)
-            cv2.waitKey()
-
-        IdPlayerFragmentation(videoPaths,segmPaths,numAnimals, width, height,frameIndices)
+    cv2.waitKey(1)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)

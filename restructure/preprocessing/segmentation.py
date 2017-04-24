@@ -11,6 +11,7 @@ import cv2
 import cPickle as pickle
 from joblib import Parallel, delayed
 import gc
+from tqdm import tqdm
 
 # Import application/library specifics
 sys.path.append('../utils')
@@ -94,8 +95,8 @@ def segment(video):
         #Spliting frames list into sublists
         segmFramesIndicesSubLists = [segmFramesIndices[i:i+num_cores] for i in range(0,len(segmFramesIndices),num_cores)]
 
-        for segmFramesIndicesSubList in segmFramesIndicesSubLists:
-            OupPutParallel = Parallel(n_jobs=num_cores, verbose = 5)(delayed(segmentAndSave)(video, None, segmFrameInd) for segmFrameInd in segmFramesIndicesSubList)
+        for segmFramesIndicesSubList in tqdm(segmFramesIndicesSubLists, desc = 'Segmentation progress'):
+            OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(video, None, segmFrameInd) for segmFrameInd in segmFramesIndicesSubList)
             blobs_in_episode = [out[0] for out in OupPutParallel]
             number_of_blobs.append([out[1] for out in OupPutParallel])
             blobs_in_video.append(blobs_in_episode)
@@ -103,8 +104,8 @@ def segment(video):
         #splitting videoPaths list into sublists
         pathsSubLists = [videoPaths[i:i+num_cores] for i in range(0,len(videoPaths),num_cores)]
 
-        for pathsSubList in pathsSubLists:
-            OupPutParallel = Parallel(n_jobs=num_cores, verbose = 5)(delayed(segmentAndSave)(video, path, None) for path in pathsSubList)
+        for pathsSubList in tqdm(pathsSubLists, desc = 'Segmentation progress'):
+            OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(video, path, None) for path in pathsSubList)
             blobs_in_episode = [out[0] for out in OupPutParallel]
             number_of_blobs.append([out[1] for out in OupPutParallel])
             blobs_in_video.append(blobs_in_episode)
@@ -113,7 +114,5 @@ def segment(video):
     video._max_number_of_blobs = max(flatten(number_of_blobs))
     #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
     blobs_in_video = flatten(flatten(blobs_in_video))
-
-    print('path to save blobs ', video.get_blobs_path())
-    np.save(video.get_blobs_path(), blobs_in_video, allow_pickle = True)
+    np.save(video.blobs_path, blobs_in_video, allow_pickle = True)
     return blobs_in_video
