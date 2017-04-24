@@ -30,7 +30,7 @@ class GlobalFragment(object):
             for blob in list_of_blobs[index_beginning_of_fragment] ])
         self.portraits = [blob.portraits_in_fragment()
             for blob in list_of_blobs[index_beginning_of_fragment] ]
-        # self.accuracy = None
+        self.accuracy = None
 
 def give_me_list_of_global_fragments(list_of_blobs, num_animals):
     global_fragments_boolean_array = check_global_fragments(list_of_blobs, num_animals)
