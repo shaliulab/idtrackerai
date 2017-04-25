@@ -565,7 +565,7 @@ def run_pre_training(X_t, Y_t, X_v, Y_v,
                             print 'epsilon (overfitting), ', epsilon
                             print 'epsilon2 (if it is not changing much), ', epsilon2
 
-                        if np.nanmean(valIndivAcc) > .8: ###NOTE: decreased to .8 for large groups (38 animals)
+                        if np.nanmean(valIndivAcc) > 0.: ###NOTE: decreased to .8 for large groups (38 animals)
                             if magCurr > magPrev:
                                 if printFlag:
                                     print '\nOverfitting, passing to new set of images'

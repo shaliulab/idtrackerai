@@ -22,7 +22,7 @@ import itertools
 import cPickle as pickle
 
 
-videoPaths = scanFolder('/media/lab/2966067c-1f2b-40d7-960c-828d7116e5e4/Video8hormigas/V8h_20121018T130426_1.avi')
+videoPaths = scanFolder('/home/chronos/Desktop/IdTrackerDeep/videos/idTrackerDeep_LargeGroups_1/numIndivs_100/Second/video_04-07-17_12-39-27.000.avi')
 
 frameIndices, segmPaths = getSegmPaths(videoPaths)
 videoPath = videoPaths[0]
@@ -255,8 +255,8 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
         cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
 
         if show == True:
-            frame = cv2.resize(frame,None, fx = np.true_divide(1,1), fy = np.true_divide(1,1))
-            # frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
+            # frame = cv2.resize(frame,None, fx = np.true_divide(1,1), fy = np.true_divide(1,1))
+            frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
             # Visualization of the process
             cv2.imshow('IdPlayer',frame)
             pass

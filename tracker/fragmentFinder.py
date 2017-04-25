@@ -81,7 +81,7 @@ def computeDistToIdAndUniqueness(fragmentsDict, numAnimals, statistics):
     notUnique = []
     unique = []
     identity = np.identity(numAnimals)
-    identities = range(1,numAnimals+1)
+    identities = range(numAnimals)
     for i, globalFrag in enumerate(fragmentsDict['intervalsDist']): # loop in complete set of fragments
         print '\ngloalFrag, ', i
         for j, indivFrag in enumerate(globalFrag): # loop in individual fragments of the complete set of fragments
@@ -92,6 +92,7 @@ def computeDistToIdAndUniqueness(fragmentsDict, numAnimals, statistics):
 
 
         if set(identities).difference(set(ids)):
+            print 'identities, ', identities
             print 'ids, ', ids
             repeated_ids = set([x for x in ids if ids.count(x) > 1])
             print 'The identities ', list(repeated_ids), ' are repeated'

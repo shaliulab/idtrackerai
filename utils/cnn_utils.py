@@ -1,3 +1,4 @@
+from __future__ import division
 import os
 import sys
 if 'linux' in sys.platform:
@@ -763,10 +764,28 @@ def individualAccuracy(labels,logits,classes):
 ''' ****************************************************************************
 Data Augmentation and image processing
 *****************************************************************************'''
+# def standarizeImages123(images, meanIm = None, stdIm = None):
+#     images = images/255.
+#     if meanIm is None:
+#         print 'recomputing meanIm'
+#         meanIm = np.mean(images, axis=0)
+#     else:
+#         print 'using already computed meanIm'
+#     if stdIm is None:
+#         print 'recomputing stdIm'
+#         stdIm = np.std(images,axis=0)
+#     else:
+#         print 'using already computed stdIm'
+#     images = (images-meanIm)/stdIm
+#     return images, stdIm, meanIm
+
 def standarizeImages(images):
     images = images/255.
-    meanIm = np.mean(images, axis=0)
-    stdIm = np.std(images,axis=0)
+    meanIm = np.mean(images, axis=(1,2))
+    meanIm = np.expand_dims(np.expand_dims(meanIm,axis=1),axis=2)
+    stdIm = np.std(images,axis=(1,2))
+    stdIm = np.expand_dims(np.expand_dims(stdIm,axis=1),axis=2)
+
     images = (images-meanIm)/stdIm
     return images
 
