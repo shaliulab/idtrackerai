@@ -97,7 +97,10 @@ def give_me_list_of_global_fragments(list_of_blobs, num_animals):
     return [GlobalFragment(list_of_blobs,i,num_animals) for i in indices_beginning_of_fragment]
 
 def order_global_fragments_by_distance_travelled(global_fragments):
-    global_fragments.sort(key = lambda x: x.distance_travelled_in_fragment, reverse = True)
+    global_fragments = sorted(global_fragments, key = lambda x: x.min_distance_travelled, reverse = True)
 
-def get_evenly_spaced_global_fragments(global_fragments, number_of_fragments):
-    pass
+def give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = 10):
+    step = int(np.floor(len(global_fragments) / number_of_global_fragments))
+    split_global_fragments = [global_fragments[i:i + step] for i in range(0, len(global_fragments), step)]
+    ordered_split_global_fragments = [order_global_fragments_by_distance_travelled(global_fragments_in_split)[0]
+                                    for global_fragments_in_split in split_global_fragments]
