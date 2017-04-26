@@ -102,6 +102,23 @@ class Video(object):
             os.makedirs(self._preprocessing_folder)
             print("the folder " + self._preprocessing_folder + " has been created")
 
+    def create_training_and_session_folder(self):
+        """Creates a folder named trainin in video_folder and a folder session_num
+        where num is the session number and it is created everytime one starts
+        training a network for a certain video_path
+        """
+        self._training_path = os.path.join(self._video_folder, 'training')
+        if not os.path.isdir(self._training_path):
+            self._session_path = os.path.join(self._training_path, 'session_1')
+        else:
+            self._sessions_paths = glob.glob(self._training_path +"/session*")
+            last_session_index = get_last_training_session_index(self._sessions_paths)
+            new_session_index = str(last_session_index + 1)
+            self._session_path = os.path.join(self._training_path + "session_" + new_session_index)
+
+        os.makedirs(self._session_path)
+        print("the folder " + self._training_path + " has been created")
+
     def get_episodes(self):
         """Split video in episodes (chunks) of 500 frames
         for parallelisation"""
@@ -173,6 +190,16 @@ def scanFolder(path):
     filename = filename.split("_")[:-1][0]
     paths = natsorted([path for path in paths if filename in path])
     return paths
+
+def get_last_training_session_index(subFolders):
+    """gets path to the last training session
+    """
+    if len(subFolders) == 0:
+        lastIndex = 0
+    else:
+        subFolders = natural_sort(subFolders)[::-1]
+        lastIndex = int(subFolders[0].split('_')[-1])
+    return lastIndex
 
 
 if __name__ == "__main__":
