@@ -127,7 +127,6 @@ if __name__ == '__main__':
         #all the animals are visible)
         model_area = compute_model_area(blobs, video.num_animals)
         #discard blobs that do not respect such model
-        # model_area = ModelArea(mean_area, std_area)
         apply_model_area_to_video(blobs, model_area)
         #connect blobs that overlap in consecutive frames
         connect_blob_list(blobs)
@@ -137,7 +136,6 @@ if __name__ == '__main__':
         #save connected blobs in video (organized frame-wise) and list of global fragments
         video._has_been_fragmented = True
         np.save(video.global_fragments_path, global_fragments)
-        # np.save(video.blobs_path, blobs)
         video.save()
         #take a look to the resulting fragmentation
         fragmentation_inspector(video, blobs)
@@ -148,18 +146,12 @@ if __name__ == '__main__':
         blobs = np.load(video.blobs_path)
         global_fragments = np.load(video.global_fragments_path)
 
-
-
     #############################################################
     ####################      Tracker      ######################
-    #### 1. create a list of potential global fragments      ####
-    #### in which all animals are visible.                   ####
-    #### 2. compute a model of the area of the animals       ####
-    #### (mean and variance)                                 ####
-    #### 3. identify global and individual fragments         ####
-    #### 4. create a list of objects GlobalFragment() that   ####
-    #### will be used to train the network                   ####
+    ####
     #############################################################
+
+
 
 #----------------------------------------------------------------------------->8
     # preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')

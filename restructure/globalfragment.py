@@ -24,13 +24,72 @@ class ModelArea():
     return (area - self.mean) < std_tolerance * self.std
 
 class GlobalFragment(object):
-    def __init__(self, list_of_blobs, index_beginning_of_fragment):
+    def __init__(self, list_of_blobs, index_beginning_of_fragment, number_of_animals):
         self.index_beginning_of_fragment = index_beginning_of_fragment
-        self.average_distance_travelled = np.mean([blob.distance_travelled_in_fragment()
+        self.min_distance_travelled = np.min([blob.distance_travelled_in_fragment()
             for blob in list_of_blobs[index_beginning_of_fragment] ])
+
         self.portraits = [blob.portraits_in_fragment()
             for blob in list_of_blobs[index_beginning_of_fragment] ]
-        self.accuracy = None
+        self.number_of_animals = number_of_animals
+        self._used_for_training = False
+        self._ids_assigned = [None] * self.number_of_animals
+        self._score = None
+        self._is_unique = False
+        self._uniqueness_score = None
+        self._repeated_ids = []
+        self._missing_ids = []
+
+
+    @property
+    def uniqueness_score(self):
+        return self._uniqueness_score
+
+    @uniqueness_score.setter
+    def uniqueness_score(self):
+        """ Computes the distance of the assignation probabilities (P2) per
+        individual fragment in the global fragment to the identity matrix of
+        dimension number of animals.
+        uniqueness_score = 0.0 means that every individual is assigned with
+        certainty 1.0 one and only once in the global fragment
+        """
+        if self.is_unique and not self._used_for_training:
+            identity = np.identity(self.number_of_animals)
+            P2_mat = np.vstack(self.P2_list) # stack P2 of each individual fragment in the global fragment into a matrix
+            perm = np.argmax(P2_mat,axis=1) # get permutation that orders the matrix to match the identity matrix
+            P2_mat = P2_mat[:,perm] # apply permutation
+            self._uniqueness_score = np.linalg.norm(matFragment - identity)
+
+    @property
+    def score(self):
+        return self._score
+
+    @score.setter
+    def score(self, best_uniqueness_score, max_distance_travelled):
+        if not self._used_for_training:
+            self._score = (best_uniqueness_score - self.uniqueness_score)**2 + ((max_distance_travelled - self.min_distance_travelled))**2
+
+    @property
+    def is_unique(self):
+        return self._is_unique
+
+    @is_unique.setter
+    def is_unique(self):
+        if not self._used_for_training:
+            all_identities = range(self.number_of_animals)
+            if set(all_identities).difference(set(self._ids_assigned)):
+                self._is_unique = False
+                self.compute_repeated_and_missing_ids()
+            else:
+                self._is_unique = True
+
+    def compute_repeated_and_missing_ids(self):
+        self._repeated_ids = set([x for x in self._ids_assigned if self._ids_assigned.count(x) > 1])
+        self._missing_ids = set(all_identities).difference(set(self._ids_assigned))
+
+def give_me_identities_of_global_fragment(global_fragment,list_of_blobs):
+    global_fragment._ids_assigned = [blob.identity
+        for blob in list_of_blobs[global_fragment.index_beginning_of_fragment] ]
 
 def give_me_list_of_global_fragments(list_of_blobs, num_animals):
     global_fragments_boolean_array = check_global_fragments(list_of_blobs, num_animals)

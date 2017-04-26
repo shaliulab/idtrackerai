@@ -124,7 +124,6 @@ def check_global_fragments(blob_list, num_animals):
     """
     return [all_blobs_in_a_fragment(frame) and len(frame)==num_animals for frame in blob_list]
 
-
 def apply_model_area(blob, model_area):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
         blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates)
@@ -134,7 +133,7 @@ def apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area):
         apply_model_area(blob, model_area)
 
 def apply_model_area_to_video(blob_list, model_area):
-    # Parallel(n_jobs=1, verbose = 5)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in blob_list)
+    # Parallel(n_jobs=-1)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in tqdm(blob_list, desc = 'Fragmentation progress'))
     for frame in tqdm(blob_list, desc = 'Fragmentation progress'):
         apply_model_area_to_blobs_in_frame(frame, model_area)
 
