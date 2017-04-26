@@ -1,18 +1,35 @@
 import tensorflow as tf
 import os
+from cnn_architectures import cnn_model_1
 
 IMAGE_SIZE = (32,32,1)
 class ConvNetwork():
-    def __init__(self, number_of_animals, learning_rate, keep_prob, from_checkpoint_path = None, image_size = IMAGE_SIZE, use_adam_optimiser = False, scopes_layers_to_optimize = None ):
+    def __init__(self,
+                image_size = IMAGE_SIZE,
+                number_of_animals = None,
+                learning_rate = None,
+                keep_prob = None,
+                restore_folder = None,
+                save_folder = None,
+                knowledge_transfer_folder = None,
+                use_adam_optimiser = False,
+                scopes_layers_to_optimize = None ):
+        # Set main attibutes of the class
         self.image_width = IMAGE_SIZE[0]
         self.image_height = IMAGE_SIZE[1]
         self.image_channels = IMAGE_SIZE[2]
         self.number_of_animals = number_of_animals
         self.learning_rate = learning_rate
         self.keep_prob = keep_prob
+        self.restore_folder = restore_folder # folder where we are going to restore the state of the network from a previous check point
+        self.save_folder = save_folder # folder where we are going to save the checkpoints of the current training
+        self.kt_folder = knowledge_transfer_folder # folder where we are going to load the network to perform knowledge transfer
         self.use_adam_optimiser = use_adam_optimiser
         self.scopes_layers_to_optimize = scopes_layers_to_optimize
+        # Initialize layers to optimize to be empty. This means tha we will
+        # optimize all the layers of our network
         self._layers_to_optimise = []
+        # Build graph with the network, loss, optimizer and accuracies
         self.x_pl, \
         self.y_target_pl,\
         self.y_logits, \
@@ -22,71 +39,49 @@ class ConvNetwork():
         optimisation_step, \
         accuracy, \
         individual_accuracy = self._build_graph()
+        # Create savers for the convolutions and the fully conected and softmax separately
+        self.saver_conv = createSaver('saver_conv', False)
+        self.saver_fc_softmax = createSaver('saver_fc_softmax', True)
+        # Create list of operations to run during training and validation
         self.train_ops_list = [optimisation_step, loss, accuracy, individual_accuracy]
         self.val_ops_list = [loss, accuracy, individual_accuracy]
-
-        [ckpt_dir_model,ckpt_dir_softmax] = createCkptFolder( from_checkpoint_path, ['model', 'softmax'])
+        # Create subfolders where we will save the checkpoints of the trainig
+        [self.save_folder_conv,self.save_folder_fc_softmax] = create_checkpoint_subfolders( self.save_folder, ['conv', 'softmax'])
 
         self.session = tf.Session()
+        self.session.run(tf.global_variables_initializer())
+        if self.is_restoring:
+            # Get subfolders from where we will load the network from previous checkpoints
+            [self.restore_folder_conv,self.restore_folder_fc_softmax] = get_checkpoint_subfolders( self.restore_folder, ['conv', 'softmax'])
+        elif self.is_knowledge_transfer:
+            # Get subfolders from where we will load the convolutional filters to perform knowledge transfer
+            [self.restore_folder_conv] = get_checkpoint_subfolders(self.kt_folder,['conv'])
+            self.global_step.assign(0).eval()
+        self.restore()
 
-        if from_checkpoint_path == None:
-            self.session.run(tf.global_variables_initializer())
-        else:
-            self.restore(from_checkpoint_path)
+        self.summary_op = tf.summary.merge_all()
+        self.summary_writer_training = tf.summary.FileWriter(self.save_folder + '/train',self.session.graph)
+        self.summary_writer_validation = tf.summary.FileWriter(self.save_folder + '/val',self.session.graph)
+
+    @property
+    def is_knowledge_transfer():
+        if self.kt_folder is not None:
+            self.restore_folder_fc_softmax = None
+        return self.kt_folder is not None
+
+    @property
+    def is_restoring():
+        return self.restore_folder is not None
 
     def _build_graph(self):
         x_pl = tf.placeholder(tf.float32, [None, self.image_width, self.image_height, self.image_channels], name = 'images')
         y_target_pl = tf.placeholder(tf.int32, [None, self.number_of_animals], name = 'labels')
         loss_weights_pl = tf.placeholder(tf.float32, [None], name = 'loss_weights')
 
-        conv1 = tf.contrib.layers.conv2d(
-            x_pl, 16, 5, 1,
-            activation_fn=tf.nn.relu,
-            padding='SAME',
-            weights_initializer = tf.contrib.layers.xavier_initializer_conv2d(seed=0),
-            biases_initializer = tf.constant_initializer(0.0),
-            scope="conv1")
-        maxpool1 = tf.contrib.layers.max_pool2d(
-            conv1,
-            kernel_size = 2,
-            stride = 2,
-            padding = 'SAME',
-            scope = "maxpool1")
-        conv2 = tf.contrib.layers.conv2d(
-            X, 64, 5, 1,
-            activation_fn=tf.nn.relu,
-            padding='SAME',
-            weights_initializer = tf.contrib.layers.xavier_initializer_conv2d(seed=0),
-            biases_initializer = tf.constant_initializer(0.0),
-            scope="conv2")
-        maxpool2 = tf.contrib.layers.max_pool2d(
-            conv1,
-            kernel_size = 2,
-            stride = 2,
-            padding = 'SAME',
-            scope = "maxpool2")
-        conv3 = tf.contrib.layers.conv2d(
-            X, 100, 5, 1,
-            activation_fn=tf.nn.relu,
-            padding='SAME',
-            weights_initializer = tf.contrib.layers.xavier_initializer_conv2d(seed=0),
-            biases_initializer = tf.constant_initializer(0.0),
-            scope="conv3")
-        conv3_flat = tf.reshape(conv3, [-1, np.prod(conv3.shape[1:])], name = 'conv5_reshape')
-        fc1 = tf.contrib.layers.fully_connected(
-            conv3_flat, 100,
-            activation_fn = tf.nn.relu,
-            weights_initializer = tf.contrib.layers.xavier_initializer_conv2d(seed=0),
-            biases_initializer = tf.constant_initializer(0.0),
-            scope="fully-connected1")
-        y_logits = tf.contrib.layers.fully_connected(
-            fc1, self.number_of_animals,
-            weights_initializer = tf.contrib.layers.xavier_initializer_conv2d(seed=0),
-            biases_initializer = tf.constant_initializer(0.0),
-            scope = "logits")
+        y_logits = cnn_model_1(x_pl)
 
         loss = self.weighted_loss(y_target_pl, y_logits, loss_weights_pl)
-        optimisation_step, global_step = self.optimize(loss, self.learning_rate)
+        optimisation_step, global_step = self.set_optimizer(loss, self.learning_rate)
         accuracy, individual_accuracy = evaluation(y_target_pl, y_logits, self.number_of_animals)
 
         return x_pl, y_target_pl, y_logits, loss_weights_pl, loss, optimisation_step, global_step, accuracy, individual_accuracy
@@ -106,13 +101,10 @@ class ConvNetwork():
         _add_loss_summary(cross_entropy)
         return cross_entropy
 
-    def optimize(self, loss):
-        """Choose the optimiser to be used and the layers to be optimised
-        :param loss: the function to be minimised
-        :param lr: learning rate
-        :param layer_to_optimise: layers to be trained (in tf representation)
-        :param use_adam: if True uses AdamOptimizer else SGD
-        """
+    def compute_loss_weights(self, training_labels):
+        self.weights = 1. - np.sum(labels,axis=0) / len(labels)
+
+    def set_optimizer(self, loss):
         if not self.use_adam_optimiser:
             print 'Training with SGD'
             optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
@@ -128,11 +120,22 @@ class ConvNetwork():
         return train_op, global_step
 
     def evaluation(y,y_logits):
-        accuracy, individual_accuracy = compute_individual_accuracy(y,y_logits, self.number_of_animals)
+        individual_accuracy = compute_individual_accuracy(y,y_logits, self.number_of_animals)
+        accuracy = compute_accuracy(y,y_logits)
         return accuracy, indivAcc
 
-    def compute_loss_weights(self, training_labels):
-        self.weights = 1. - np.sum(labels,axis=0) / len(labels)
+    def restore(self):
+        conv_ckpt = tf.train.get_checkpoint_state(self.restore_folder_conv)
+        try:
+            self.saver_conv.restore(self.session, ckpt.conv_checkpoint_path) # restore convolutional variables
+        except:
+            print('Warning: no checkpoints found for the convolutional part')
+        fc_softmax_ckpt = tf.train.get_checkpoint_state(self.restore_folder_fc_softmax)
+        if self.is_restoring:
+            try:
+                self.saver_fc_softmax.restore(self.session, ckpt.model_checkpoint_path) # restore fully-conected and softmax variables
+            except:
+                print('Warning: no checkpoints found for the fully-connected and softmax parts')
 
     def compute_batch_weights(self, batch_labels):
         if self.weighted_flag:
@@ -142,7 +145,7 @@ class ConvNetwork():
 
         return batch_weights
 
-    def train(self,batch):
+    def train(self,batch,epoch_i):
         (batch_images, batch_labels) = batch
         batch_weights = compute_batch_weights(self, batch_labels)
         feed_dict = {
@@ -168,50 +171,15 @@ class ConvNetwork():
 
         return outList
 
-    def save(self, global_step):
-        self.saver_model.save(self.session, os.path.join(self.ckpt_dir_model, "model.ckpt"), global_step = global_step)
-        self.saver_softmax.save(self.session, os.path.join(self.ckpt_dir_softmax, "softmax.ckpt"), global_step = global_step)
+    def write_summaries(self,epoch_i,feed_dict_train, feed_dict_val):
+        summary_str_training = self.sess.run(summary_op, feed_dict=feed_dict_train)
+        summary_str_validation = self.sess.run(summary_op, feed_dict=feed_dict_val)
+        self.summary_writer_training.add_summary(summary_str_training, epoch_i)
+        self.summary_writer_validation.add_summary(summary_str_validation, epoch_i)
 
-    def knowledge_transfer(self, model_checkpoint_path):
-        restore_from_folder(model_checkpoint_path, self.model_saver, self.session)
-
-    def restore(self, from_chekcpoint_path):
-        self.session.run(tf.global_variables_initializer())
-        # Load weights from a pretrained model if there is not any model saved
-        # in the ckpt folder of the test
-        ckpt = tf.train.get_checkpoint_state(ckpt_dir_model)
-        if (not (ckpt and ckpt.model_checkpoint_path)) and accumCounter == 0:
-            if loadCkpt_folder:
-                if printFlag:
-                    print '********************************************************'
-                    print 'We are only loading the model'
-                    print '********************************************************'
-                loadCkpt_folder = loadCkpt_folder + '/model'
-
-                if printFlag:
-                    print 'loading weigths from ' + loadCkpt_folder
-
-                restoreFromFolder(loadCkpt_folder, saver_model, sess)
-                global_step.assign(0).eval()
-
-            else:
-                warnings.warn('It is not possible to perform knowledge transfer, give a folder containing a trained model')
-        else:
-            loadCkpt_folder_model = loadCkpt_folder + '/model'
-            loadCkpt_folder_softmax = loadCkpt_folder + '/softmax'
-
-            if printFlag:
-                print "\n"
-                print '********************************************************'
-                print 'We are also loading the softmax'
-                print '********************************************************'
-                print 'loading weigths from ' + loadCkpt_folder + '/model'
-                print 'loading softmax from ' + loadCkpt_folder + '/softmax'
-            restoreFromFolder(loadCkpt_folder_model, saver_model, sess)
-            restoreFromFolder(loadCkpt_folder_softmax, saver_softmax, sess)
-
-
-
+    def save(self):
+        self.saver_conv.save(self.session, os.path.join(self.save_folder_conv, "conv.ckpt"), global_step = self.global_step)
+        self.saver_fc_softmax.save(self.session, os.path.join(self.save_folder_fc_softmax, "softmax.ckpt"), global_step = self.global_step)
 
 def compute_individual_accuracy(labels,logits,classes):
     # We add 1 to the labels and predictions to avoid having a 0 label
@@ -231,46 +199,22 @@ def compute_individual_accuracy(labels,logits,classes):
 
     indivAcc = tf.div(countCorrect,numImagesPerIndiv)
 
+    return indivAcc
+
+def compute_accuracy(labels, logits):
+    # We add 1 to the labels and predictions to avoid having a 0 label
+    labels = tf.cast(tf.add(tf.where(tf.equal(labels,1))[:,1],1),tf.float32)
+    predictions = tf.cast(tf.add(tf.argmax(logits,1),1),tf.float)
     correct_prediction = tf.equal(predictions, labels, name='correctPrediction')
     acc = tf.reduce_mean(tf.cast(correct_prediction, 'float'), name='overallAccuracy')
-    # acc = tf.reduce_mean(indivAcc)
+    return acc
 
-    return acc,indivAcc
 
-def getCkptvideoPath(videoPath, accumCounter, train=0):
-    def getLastSession(subFolders):
-        if len(subFolders) == 0:
-            lastIndex = 0
-        else:
-            subFolders = natural_sort(subFolders)[::-1]
-            lastIndex = int(subFolders[0].split('_')[-1])
-        return lastIndex
-
-    video = os.path.basename(videoPath)
-    folder = os.path.dirname(videoPath)
-    filename, extension = os.path.splitext(video)
-    subFolder = folder + '/CNN_models'
-    subSubFolders = glob.glob(subFolder +"/*")
-    lastIndex = getLastSession(subSubFolders)
-    sessionPath = subFolder + '/Session_' + str(lastIndex)
-
-    if accumCounter >= 0:
-        ckptvideoPath = sessionPath + '/AccumulationStep_' + str(accumCounter)
-    elif accumCounter < 0:
-        ckptvideoPath = sessionPath + '/pre_training'
-    return ckptvideoPath
-
-def createCkptFolder(folderName, subfoldersNameList):
+def get_checkpoint_subfolders(folderName, subfoldersNameList):
     '''
     create if it does not exist the folder folderName in CNN and
     the same for the subfolders in the subfoldersNameList
     '''
-    if not os.path.exists(folderName): # folder does not exist
-        os.makedirs(folderName) # create a folder
-        print folderName + ' has been created'
-    else:
-        print folderName + ' already exists'
-
     subPaths = []
     for name in subfoldersNameList:
         subPath = folderName + '/' + name
@@ -282,12 +226,28 @@ def createCkptFolder(folderName, subfoldersNameList):
         subPaths.append(subPath)
     return subPaths
 
-def restore_from_folder(path_to_ckpt, saver, session):
+def create_checkpoint_subfolders(folderName, subfoldersNameList):
     '''
-    Restores variables stored in path_to_ckpt with a certain saver,
-    for a particular (TF) session
+    create if it does not exist the folder folderName in CNN and
+    the same for the subfolders in the subfoldersNameList
     '''
-    ckpt = tf.train.get_checkpoint_state(path_to_ckpt)
-    if ckpt and ckpt.model_checkpoint_path:
-        print "restoring from " + ckpt.model_checkpoint_path
-        saver.restore(session, ckpt.model_checkpoint_path) # restore model variables
+    subPaths = []
+    for name in subfoldersNameList:
+        subPath = folderName + '/' + name
+        if not os.path.exists(subPath):
+            os.makedirs(subPath)
+            print subPath + ' has been created'
+        else:
+            print subPath + ' already exists'
+        subPaths.append(subPath)
+    return subPaths
+
+def createSaver(name, exclude_fc_and_softmax):
+    if include:
+        saver = tf.train.Saver([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name], name = name)
+    elif not include:
+        saver = tf.train.Saver([v for v in tf.global_variables() if 'soft' not in v.name or 'full' not in v.name], name = name)
+    else:
+        raise ValueError('The second argument has to be a boolean')
+
+    return saver
