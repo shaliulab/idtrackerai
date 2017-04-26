@@ -95,3 +95,9 @@ def give_me_list_of_global_fragments(list_of_blobs, num_animals):
     global_fragments_boolean_array = check_global_fragments(list_of_blobs, num_animals)
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
     return [GlobalFragment(list_of_blobs,i) for i in indices_beginning_of_fragment]
+
+def order_global_fragments_by_distance_travelled(global_fragments):
+    global_fragments.sort(key = lambda x: x.distance_travelled_in_fragment, reverse = True)
+
+def get_evenly_spaced_global_fragments(global_fragments, number_of_fragments):
+    pass

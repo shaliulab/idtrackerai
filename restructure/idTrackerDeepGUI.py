@@ -150,7 +150,10 @@ if __name__ == '__main__':
     ####################      Tracker      ######################
     ####
     #############################################################
-
+    #create the folder training in which all the CNN-related process will be
+    #store. The structure is /training/session_num, where num is an natural number.
+    # num increases each time a training is launched on the video.
+    video.create_training_and_session_folder()
 
 
 #----------------------------------------------------------------------------->8
