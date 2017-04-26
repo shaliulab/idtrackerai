@@ -8,7 +8,7 @@ STD_TOLERANCE = 4
 def detect_beginnings(boolean_array):
     return [i for i in range(0,len(boolean_array)) if (boolean_array[i] and not boolean_array[i-1])]
 
-def compute_model_area(blobs_in_video, number_of_animals, std_tolerance = 4):
+def compute_model_area(blobs_in_video, number_of_animals, std_tolerance = STD_TOLERANCE):
     blobs_in_core_global_fragments = [blobs_in_frame for blobs_in_frame in blobs_in_video if is_a_global_fragment(blobs_in_frame, number_of_animals)]
     areas = [blob.area for blob in blobs_in_frame for blobs_in_frame in blobs_in_core_global_fragments]
     mean_area = np.mean(areas)
@@ -94,7 +94,7 @@ def give_me_identities_of_global_fragment(global_fragment,list_of_blobs):
 def give_me_list_of_global_fragments(list_of_blobs, num_animals):
     global_fragments_boolean_array = check_global_fragments(list_of_blobs, num_animals)
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
-    return [GlobalFragment(list_of_blobs,i) for i in indices_beginning_of_fragment]
+    return [GlobalFragment(list_of_blobs,i,num_animals) for i in indices_beginning_of_fragment]
 
 def order_global_fragments_by_distance_travelled(global_fragments):
     global_fragments.sort(key = lambda x: x.distance_travelled_in_fragment, reverse = True)

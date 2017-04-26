@@ -232,10 +232,10 @@ def getExistentFiles(video, listNames):
     """
     existentFile = {name:'0' for name in listNames}
     old_video = None
-    print video._name
-    if os.path.isfile(video._name):
+    print video._path_to_video_object
+    if os.path.isfile(video._path_to_video_object):
         print("loading old video object from get existent files")
-        old_video = np.load(video._name).item()
+        old_video = np.load(video._path_to_video_object).item()
 
         if old_video.bkg is not None:
             print('has bkg')

@@ -8,7 +8,6 @@ from video import Video
 class Network_Params(object):
     def __init__(video,
                 learning_rate, keep_prob,
-                training_batch_size, validation_batch_size,
                 use_adam_optimiser, scopes_layers_to_optimize,
                 restore_folder = None, save_folder = None, knowledge_transfer_folder = None):
 
@@ -20,8 +19,6 @@ class Network_Params(object):
         self._knowledge_transfer_folder = knowledge_transfer_folder
         self.use_adam_optimiser = use_adam_optimiser
         self.scopes_layers_to_optimize = scopes_layers_to_optimize
-        self.training_batch_size = training_batch_size
-        self.validation_batch_size = validation_batch_size
 
     @property
     def restore_folder(self):
@@ -60,5 +57,5 @@ def pre_train(global_fragments, network_params):
     #a high distance travelled corresponds to higher variability in the images
     #and longer global fragments, so:
     order_global_fragments_by_distance_travelled(global_fragments)
-    
+
     net = ConvNetwork(network_params)

@@ -327,12 +327,12 @@ def fragmentation_inspector(video, blobs_in_video):
     for frame in blobs_in_video:
         for blob in frame:
             if not blob.is_a_fish_in_a_fragment:
-                blob.identity_in_fragment = -1
-            elif blob.identity_in_fragment is None:
-                blob.identity_in_fragment = counter
+                blob.fragment_identifier = -1
+            elif blob.fragment_identifier is None:
+                blob.fragment_identifier = counter
                 while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
                     blob = blob.next[0]
-                    blob.identity_in_fragment = counter
+                    blob.fragment_identifier = counter
                 counter += 1
 
 
@@ -376,7 +376,7 @@ def fragmentation_inspector(video, blobs_in_video):
             #draw the centroid
             cv2.circle(frame, tuple(blob.centroid), 2, (255,0,0),1)
             font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(frame, str(blob.identity_in_fragment),tuple(blob.centroid), font, 1,255, 5)
+            cv2.putText(frame, str(blob.fragment_identifier),tuple(blob.centroid), font, 1,255, 5)
 
 
         cv2.imshow('fragmentInspection', frame)

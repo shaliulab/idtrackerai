@@ -2,6 +2,7 @@
 import os
 from os.path import isdir, isfile
 import sys
+sys.setrecursionlimit(10000)
 import glob
 import numpy as np
 import cPickle as pickle
@@ -85,7 +86,7 @@ if __name__ == '__main__':
         processes_list = ['bkg', 'ROI', 'preprocparams', 'segmentation','fragmentation']
         existentFiles, old_video = getExistentFiles(video, processes_list)
         old_video = Video()
-        video = np.load(old_video._name).item()
+        video = np.load(old_video._path_to_video_object).item()
     else:
         raise ValueError('The input introduced does not match the possible options')
 
@@ -105,7 +106,7 @@ if __name__ == '__main__':
     else:
         old_video = Video()
         old_video.video_path = video_path
-        video = np.load(old_video._name).item()
+        video = np.load(old_video._path_to_video_object).item()
         blobs = np.load(video.blobs_path)
     #destroy windows to prevent openCV errors
     cv2.waitKey(1)
@@ -136,13 +137,14 @@ if __name__ == '__main__':
         #save connected blobs in video (organized frame-wise) and list of global fragments
         video._has_been_fragmented = True
         np.save(video.global_fragments_path, global_fragments)
+        np.save(video.blobs_path,blobs)
         video.save()
         #take a look to the resulting fragmentation
         fragmentation_inspector(video, blobs)
     else:
         old_video = Video()
         old_video.video_path = video_path
-        video = np.load(old_video._name).item()
+        video = np.load(old_video._path_to_video_object).item()
         blobs = np.load(video.blobs_path)
         global_fragments = np.load(video.global_fragments_path)
 

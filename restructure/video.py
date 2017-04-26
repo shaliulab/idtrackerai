@@ -21,7 +21,7 @@ class Video(object):
         self._video_path = video_path #string: path to the video
         self._animal_type = animal_type #string: type of animals to be tracked in the video
         self._num_animals = num_animals #int: number of animals in the video
-        self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split to parallel computation]
+        self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split for parallel computation]
         self.bkg = bkg #matrix [shape = shape of a frame] background used to do bkg subtraction
         self.subtract_bkg = subtract_bkg #boolean: True if the user specifies to subtract the background
         self.ROI = ROI #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
@@ -29,9 +29,9 @@ class Video(object):
         self._has_preprocessing_parameters = False #boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved
         self._max_number_of_blobs = None #int: the maximum number of blobs detected in the video
         self._has_been_segmented = None #boolean: True if a video has been segmented in a past session
-        self._blobs_path = None #path to the saved list of blob objects
+        self._blobs_path = None #string: path to the saved list of blob objects
         self._has_been_fragmented = None #boolean: True if a video has been fragmented in a past session
-        self._global_fragments_path = None #path to saved list of global fragments
+        self._global_fragments_path = None #string: path to saved list of global fragments
 
     @property
     def video_path(self):
@@ -40,8 +40,7 @@ class Video(object):
     @video_path.setter
     def video_path(self, value):
         video_name, video_extension = os.path.splitext(value)
-        right_extension = [True for ext in AVAILABLE_VIDEO_EXTENSION if video_extension in ext]
-        if right_extension:
+        if video_extension in AVAILABLE_VIDEO_EXTENSION:
             self._video_path = value
             #get video folder
             self._video_folder = os.path.dirname(self._video_path)
@@ -50,7 +49,7 @@ class Video(object):
             #create a folder in which preprocessing data will be saved
             self.create_preprocessing_folder()
             #give a unique name (wrt the video)
-            self._name = os.path.join(self._preprocessing_folder, 'video_object.npy')
+            self._path_to_video_object = os.path.join(self._preprocessing_folder, 'video_object.npy')
         else:
             raise ValueError("Supported video extensions are ", AVAILABLE_VIDEO_EXTENSION)
 
@@ -64,9 +63,8 @@ class Video(object):
 
     @animal_type.setter
     def animal_type(self, value):
-        trackable_animal = [animal for animal in SUPPORTED_ANIMAL_TYPES if value == animal]
-        if trackable_animal:
-            self._animal_type = trackable_animal[0]
+        if value in SUPPORTED_ANIMAL_TYPES:
+            self._animal_type = value
         else:
             raise ValueError("The supported animal types are " , SUPPORTED_ANIMAL_TYPES)
 
@@ -174,7 +172,7 @@ class Video(object):
     def save(self):
         """save class"""
         print("saving video object")
-        np.save(self._name, self)
+        np.save(self._path_to_video_object, self)
 
 def get_num_frame(path):
     cap = cv2.VideoCapture(path)

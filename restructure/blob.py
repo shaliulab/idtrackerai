@@ -8,22 +8,21 @@ import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
-STD_TOLERANCE = 4
+STD_TOLERANCE = 4 # tolerance to select a blob as being a single fish according to the area model
 
-class Blob(object):#NOTE: think better to overlap with pixels instead of contour (go for safe option)
+class Blob(object):
     def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, portrait = None, pixels = None):
-        self.centroid = np.array(centroid)
-        self.contour = contour
-        self.area = area
-        self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates
-        self.bounding_box_image = bounding_box_image
-        self.portrait = portrait
-        self.pixels = pixels
-
-        self.next = []
-        self.previous = []
-        self._identity_in_fragment = None
-        self._identity = None
+        self.centroid = np.array(centroid) # numpy array (int64): coordinates of the centroid of the blob in pixels
+        self.contour = contour # openCV contour [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]]
+        self.area = area # int: number of pixels in the blob
+        self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates #tuple of tuples: ((x1,y1),(x2,y2)) (top-left corner, bottom-right corner) in pixels
+        self.bounding_box_image = bounding_box_image # numpy array (uint8): image of the fish cropped from the video according to the bounding_box_in_frame_coordinates
+        self.portrait = portrait # (numpy array (uint8),tuple(int,int),tuple(int,int)): (36x36 image of the animal,nose coordinates, head coordinates)
+        self.pixels = pixels # list of int's: linearized pixels of the blob
+        self.next = [] # next blob object overlapping in pixels with current blob object
+        self.previous = [] # previous blob object overlapping in pixels with the current blob object
+        self._fragment_identifier = None # identity in individual fragment after fragmentation
+        self._identity = None # identity assigned by the algorithm
 
     @property
     def is_a_fish(self):
@@ -51,15 +50,14 @@ class Blob(object):#NOTE: think better to overlap with pixels instead of contour
     def is_a_fish_in_a_fragment(self):
         return self.is_a_fish and self.is_in_a_fragment
 
-
     @property
-    def identity_in_fragment(self):
-        return self._identity_in_fragment
+    def fragment_identifier(self):
+        return self._fragment_identifier
 
-    @identity_in_fragment.setter
-    def identity_in_fragment(self, fragment_identifier):
+    @fragment_identifier.setter
+    def fragment_identifier(self, new_fragment_identifier):
         if self.is_a_fish_in_a_fragment:
-            self._identity_in_fragment = fragment_identifier
+            self._fragment_identifier = new_fragment_identifier
 
     @property
     def identity(self):

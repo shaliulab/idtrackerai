@@ -3,6 +3,7 @@ import os
 from cnn_architectures import cnn_model_1
 
 IMAGE_SIZE = (32,32,1)
+
 class ConvNetwork():
     def __init__(self,
                 image_size = IMAGE_SIZE,
