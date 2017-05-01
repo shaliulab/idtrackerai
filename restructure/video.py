@@ -118,11 +118,11 @@ class Video(object):
         os.makedirs(self._session_path)
         print("the folder " + self._training_path + " has been created")
 
-    def create_pretraining_folder(self):
+    def create_pretraining_folder(self, number_of_global_fragments_used_to_pretrain):
         """Creates a folder named pretraining in video_folder where the model
         trained during the pretraining is stored
         """
-        self._pretraining_path = os.path.join(self._session_path, 'pretraining')
+        self._pretraining_path = os.path.join(self._video_folder, 'pretraining' + str(number_of_global_fragments_used_to_pretrain))
         if not os.path.isdir(self._pretraining_path):
             os.makedirs(self._pretraining_path)
 

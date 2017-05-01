@@ -3,8 +3,8 @@ import os
 
 class Network_Params(object):
     def __init__(self,video,
-                learning_rate, keep_prob,
-                use_adam_optimiser, scopes_layers_to_optimize,
+                learning_rate = None, keep_prob = None,
+                use_adam_optimiser = False, scopes_layers_to_optimize = [],
                 restore_folder = None, save_folder = None, knowledge_transfer_folder = None):
 
         self.number_of_animals = video.num_animals

@@ -11,9 +11,9 @@ from id_CNN import ConvNetwork
 from globalfragment import get_images_and_labels_from_global_fragment, give_me_pre_training_global_fragments
 from train_id_CNN import TrainIdCNN
 
-def pre_train(global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag):
+def pre_train(global_fragments, number_of_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag):
     # get global equispaced global fragments along the video to pretrain the network
-    pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments)
+    pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments)
 
     global_epoch = 0
     net = ConvNetwork(params)

@@ -143,32 +143,32 @@ if __name__ == '__main__':
     ####
     #############################################################
     #create the folder training in which all the CNN-related process will be
-    #store. The structure is /training/session_num, where num is an natural number.
+    #stored. The structure is /training/session_num, where num is an natural number.
     # num increases each time a training is launched on the video.
-    video.create_training_and_session_folder()
-
     if not loadPreviousDict['pretraining']:
+        video.create_training_and_session_folder()
         pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [Y/n]')
         if pretrain_flag == 'y' or pretrain_flag == '':
-            video.create_pretraining_folder()
             #set pretraining parameters
-            learning_rate_pre_training = 0.005
-            keep_prob_pre_training = 1.0
-            use_adam_optimiser_pre_training = False
-            scopes_layers_to_optimize_pre_training = None
-            restore_folder_pre_training = None
-            save_folder_pre_training = video._pretraining_path
-            knowledge_transfer_folder_pre_training = video._pretraining_path
+            number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
+            try:
+                number_of_global_fragments = int(number_of_global_fragments)
+            except:
+                number_of_global_fragments = 10
+            print("pretraining with %i" %number_of_global_fragments, ' global fragments')
+            video.create_pretraining_folder(number_of_global_fragments)
+            #pretraining network parameters
             pretrain_network_params = Network_Params(video,
-                                                    learning_rate_pre_training,
-                                                    keep_prob_pre_training,
-                                                    use_adam_optimiser_pre_training,
-                                                    scopes_layers_to_optimize_pre_training,
-                                                    restore_folder_pre_training,
-                                                    save_folder_pre_training,
-                                                    knowledge_transfer_folder_pre_training)
+                                                    learning_rate = 0.005,
+                                                    keep_prob = 1.0,
+                                                    use_adam_optimiser = False,
+                                                    scopes_layers_to_optimize = [],
+                                                    restore_folder = None,
+                                                    save_folder = video._pretraining_path,
+                                                    knowledge_transfer_folder = video._pretraining_path)
             #start pretraining
             pre_train(global_fragments,
+                    number_of_global_fragments,
                     pretrain_network_params,
                     store_accuracy_and_error = False,
                     check_for_loss_plateau = True,
@@ -183,6 +183,7 @@ if __name__ == '__main__':
         video = np.load(old_video._path_to_video_object).item()
         blobs = np.load(video.blobs_path)
         global_fragments = np.load(video.global_fragments_path)
+        
 
 
 
