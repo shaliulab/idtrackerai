@@ -249,14 +249,14 @@ def getExistentFiles(video, listNames):
             print('has preprocessing params')
             existentFile['preprocparams'] = '1'
 
-        if old_video._has_been_segmented == True:
-            print('has segmentation')
-            existentFile['segmentation'] = '1'
+        if old_video._has_been_preprocessed == True:
+            print('has been preprocessed')
+            existentFile['preprocessing'] = '1'
 
-        if old_video._has_been_fragmented == True:
-            print('has fragmentation')
-            existentFile['fragmentation'] = '1'
-            
+        if old_video._has_been_pretrained == True:
+            print('has pretrain')
+            existentFile['pretraining'] = '1'
+
     return existentFile, old_video
 
 

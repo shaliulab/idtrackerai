@@ -23,6 +23,8 @@ from segmentation import segment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector
 from py_utils import getExistentFiles
 from video_utils import checkBkg
+from pre_trainer import pre_train
+from cnn_config import Network_Params
 
 # from idAssigner import *
 # from fragmentFinder import *
@@ -49,16 +51,16 @@ if __name__ == '__main__':
     #############################################################
     #Asking user whether to reuse preprocessing steps...'
     reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previous preprocessing? ([y]/n)')
-
+    processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing','pretraining']
+    #get existent files and paths to load them
+    existentFiles, old_video = getExistentFiles(video, processes_list)
     if reUseAll == 'n':
         #Selecting preprocessing parameters
         prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to do BKG or select a ROI?  ')
         video.subtract_bkg = bool(prepOpts['bkg'])
         video.apply_ROI =  bool(prepOpts['ROI'])
         print '\nLooking for finished steps in previous session...'
-        processes_list = ['bkg', 'ROI', 'preprocparams', 'segmentation','fragmentation']
-        #get existent files and paths to load them
-        existentFiles, old_video = getExistentFiles(video, processes_list)
+
         #selecting files to load from previous session...'
         loadPreviousDict = selectOptions(processes_list, existentFiles, text='Steps already processed in this video \n (loaded from ' + video._video_folder + ')')
         #use previous values and parameters (bkg, roi, preprocessing parameters)?
@@ -82,48 +84,32 @@ if __name__ == '__main__':
         cv2.waitKey(1)
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
-        # the preprocessing parameters will be loaded from last time they were computed
-        processes_list = ['bkg', 'ROI', 'preprocparams', 'segmentation','fragmentation']
-        existentFiles, old_video = getExistentFiles(video, processes_list)
         old_video = Video()
         video = np.load(old_video._path_to_video_object).item()
     else:
         raise ValueError('The input introduced does not match the possible options')
 
     #############################################################
-    ####################   Segmentation   #######################
-    #### detect blobs in the video according to parameters   ####
-    #### specified by the user, and save them for future use ####
-    #############################################################
-    #destroy windows to prevent openCV errors
-    cv2.waitKey(1)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-
-    if not loadPreviousDict['segmentation']:
-        blobs = segment(video)
-        video.save()
-    else:
-        old_video = Video()
-        old_video.video_path = video_path
-        video = np.load(old_video._path_to_video_object).item()
-        blobs = np.load(video.blobs_path)
-    #destroy windows to prevent openCV errors
-    cv2.waitKey(1)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-
-    #############################################################
-    ####################   Fragmentation   ######################
-    #### 1. create a list of potential global fragments      ####
+    ####################  Preprocessing   #######################
+    #### 1. detect blobs in the video according to parameters####
+    #### specified by the user                               ####
+    #### 2. create a list of potential global fragments      ####
     #### in which all animals are visible.                   ####
-    #### 2. compute a model of the area of the animals       ####
+    #### 3. compute a model of the area of the animals       ####
     #### (mean and variance)                                 ####
-    #### 3. identify global and individual fragments         ####
-    #### 4. create a list of objects GlobalFragment() that   ####
-    #### will be used to train the network                   ####
+    #### 4. identify global fragments                        ####
+    #### 5. create a list of objects GlobalFragment() that   ####
+    #### will be used to (pre)train the network              ####
+    #### save them for future use                            ####
     #############################################################
-    if not loadPreviousDict['fragmentation']:
+    #destroy windows to prevent openCV errors
+    cv2.waitKey(1)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
+
+    if not loadPreviousDict['preprocessing']:
+        blobs = segment(video)
+        np.save(video.blobs_path,blobs)
         #compute a model of the area of the animals (considering frames in which
         #all the animals are visible)
         model_area = compute_model_area(blobs, video.num_animals)
@@ -135,7 +121,7 @@ if __name__ == '__main__':
         #with a single blob in the consecutive frame + the blobs respect the area model)
         global_fragments = give_me_list_of_global_fragments(blobs, video.num_animals)
         #save connected blobs in video (organized frame-wise) and list of global fragments
-        video._has_been_fragmented = True
+        video._has_been_preprocessed = True
         np.save(video.global_fragments_path, global_fragments)
         np.save(video.blobs_path,blobs)
         video.save()
@@ -147,6 +133,10 @@ if __name__ == '__main__':
         video = np.load(old_video._path_to_video_object).item()
         blobs = np.load(video.blobs_path)
         global_fragments = np.load(video.global_fragments_path)
+    #destroy windows to prevent openCV errors
+    cv2.waitKey(1)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
 
     #############################################################
     ####################      Tracker      ######################
@@ -156,6 +146,44 @@ if __name__ == '__main__':
     #store. The structure is /training/session_num, where num is an natural number.
     # num increases each time a training is launched on the video.
     video.create_training_and_session_folder()
+
+    if not loadPreviousDict['pretraining']:
+        pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [Y/n]')
+        if pretrain_flag == 'y' or pretrain_flag == '':
+            video.create_pretraining_folder()
+            #set pretraining parameters
+            learning_rate_pre_training = 0.005
+            keep_prob_pre_training = 1.0
+            use_adam_optimiser_pre_training = False
+            scopes_layers_to_optimize_pre_training = None
+            restore_folder_pre_training = None
+            save_folder_pre_training = video._pretraining_path
+            knowledge_transfer_folder_pre_training = video._pretraining_path
+            pretrain_network_params = Network_Params(video,
+                                                    learning_rate_pre_training,
+                                                    keep_prob_pre_training,
+                                                    use_adam_optimiser_pre_training,
+                                                    scopes_layers_to_optimize_pre_training,
+                                                    restore_folder_pre_training,
+                                                    save_folder_pre_training,
+                                                    knowledge_transfer_folder_pre_training)
+            #start pretraining
+            pre_train(global_fragments,
+                    pretrain_network_params,
+                    store_accuracy_and_error = False,
+                    check_for_loss_plateau = True,
+                    save_summaries = False,
+                    print_flag = False)
+            #save changes
+            video._has_been_pretrained = True
+            video.save()
+    else:
+        old_video = Video()
+        old_video.video_path = video_path
+        video = np.load(old_video._path_to_video_object).item()
+        blobs = np.load(video.blobs_path)
+        global_fragments = np.load(video.global_fragments_path)
+
 
 
 #----------------------------------------------------------------------------->8

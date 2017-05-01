@@ -28,10 +28,11 @@ class Video(object):
         self.apply_ROI = apply_ROI #boolean: True if the user applies a ROI to the video
         self._has_preprocessing_parameters = False #boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved
         self._max_number_of_blobs = None #int: the maximum number of blobs detected in the video
-        self._has_been_segmented = None #boolean: True if a video has been segmented in a past session
         self._blobs_path = None #string: path to the saved list of blob objects
-        self._has_been_fragmented = None #boolean: True if a video has been fragmented in a past session
+        self._has_been_preprocessed = None #boolean: True if a video has been fragmented in a past session
         self._global_fragments_path = None #string: path to saved list of global fragments
+        self._has_been_pretrained = None
+        self._pretraining_path = None
 
     @property
     def video_path(self):
@@ -101,7 +102,7 @@ class Video(object):
             print("the folder " + self._preprocessing_folder + " has been created")
 
     def create_training_and_session_folder(self):
-        """Creates a folder named trainin in video_folder and a folder session_num
+        """Creates a folder named training in video_folder and a folder session_num
         where num is the session number and it is created everytime one starts
         training a network for a certain video_path
         """
@@ -116,6 +117,15 @@ class Video(object):
 
         os.makedirs(self._session_path)
         print("the folder " + self._training_path + " has been created")
+
+    def create_pretraining_folder(self):
+        """Creates a folder named pretraining in video_folder where the model
+        trained during the pretraining is stored
+        """
+        self._pretraining_path = os.path.join(self._session_path, 'pretraining')
+        if not os.path.isdir(self._pretraining_path):
+            os.makedirs(self._pretraining_path)
+
 
     def get_episodes(self):
         """Split video in episodes (chunks) of 500 frames
@@ -165,7 +175,7 @@ class Video(object):
     def global_fragments_path(self):
         """get the path to save the list of global fragments after
         fragmentation"""
-        if self._has_been_fragmented:
+        if self._has_been_preprocessed:
             self._global_fragments_path = os.path.join(self._preprocessing_folder, 'global_fragments.npy')
         return self._global_fragments_path
 

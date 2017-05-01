@@ -9,12 +9,12 @@ from cnn_architectures import cnn_model
 IMAGE_SIZE = (32,32,1)
 
 class ConvNetwork():
-    def __init__(self, network_params):
+    def __init__(self, params):
         # Set main attibutes of the class
         self.image_width = IMAGE_SIZE[0]
         self.image_height = IMAGE_SIZE[1]
         self.image_channels = IMAGE_SIZE[2]
-        self.network_params = network_params
+        self.params = params
         # Initialize layers to optimize to be empty. This means tha we will
         # optimize all the layers of our network
         self._layers_to_optimise = []
@@ -26,49 +26,49 @@ class ConvNetwork():
         # Create list of operations to run during training and validation
         self.ops_list = [self.loss, self.accuracy, self.individual_accuracy]
         # Create subfolders where we will save the checkpoints of the trainig
-        [self.save_folder_conv,self.save_folder_fc_softmax] = create_checkpoint_subfolders( self.network_params._save_folder, ['conv', 'softmax'])
+        [self.save_folder_conv,self.save_folder_fc_softmax] = create_checkpoint_subfolders( self.params._save_folder, ['conv', 'softmax'])
 
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
         if self.is_restoring:
             # Get subfolders from where we will load the network from previous checkpoints
-            [self.restore_folder_conv,self.restore_folder_fc_softmax] = get_checkpoint_subfolders( self.network_params._restore_folder, ['conv', 'softmax'])
+            [self.restore_folder_conv,self.restore_folder_fc_softmax] = get_checkpoint_subfolders( self.params._restore_folder, ['conv', 'softmax'])
         elif self.is_knowledge_transfer:
             # Get subfolders from where we will load the convolutional filters to perform knowledge transfer
-            print('Performing knowledge transfer...')
-            [self.restore_folder_conv] = get_checkpoint_subfolders(self.network_params._knowledge_transfer_folder,['conv'])
+            print('\nPerforming knowledge transfer...')
+            [self.restore_folder_conv] = get_checkpoint_subfolders(self.params._knowledge_transfer_folder,['conv'])
             self.session.run(self.global_step.assign(0))
         self.restore()
 
         self.summary_op = tf.summary.merge_all()
-        self.summary_writer_training = tf.summary.FileWriter(self.network_params._save_folder + '/train',self.session.graph)
-        self.summary_writer_validation = tf.summary.FileWriter(self.network_params._save_folder + '/val',self.session.graph)
+        self.summary_writer_training = tf.summary.FileWriter(self.params._save_folder + '/train',self.session.graph)
+        self.summary_writer_validation = tf.summary.FileWriter(self.params._save_folder + '/val',self.session.graph)
 
     @property
     def is_knowledge_transfer(self):
-        if self.network_params._knowledge_transfer_folder is not None:
+        if self.params._knowledge_transfer_folder is not None:
             self.restore_folder_fc_softmax = None
-        return self.network_params._knowledge_transfer_folder is not None
+        return self.params._knowledge_transfer_folder is not None
 
     @property
     def is_restoring(self):
-        return self.network_params._restore_folder is not None
+        return self.params._restore_folder is not None
 
     def _build_graph(self):
         self.x_pl = tf.placeholder(tf.float32, [None, self.image_width, self.image_height, self.image_channels], name = 'images')
-        self.y_target_pl = tf.placeholder(tf.float32, [None, self.network_params.number_of_animals], name = 'labels')
+        self.y_target_pl = tf.placeholder(tf.float32, [None, self.params.number_of_animals], name = 'labels')
         self.keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
         self.loss_weights_pl = tf.placeholder(tf.float32, [None], name = 'loss_weights')
 
-        self.y_logits = cnn_model(self.x_pl,self.network_params.number_of_animals)
+        self.y_logits = cnn_model(self.x_pl,self.params.number_of_animals)
 
         self.loss = self.weighted_loss(self.y_target_pl, self.y_logits, self.loss_weights_pl)
         self.optimisation_step, self.global_step = self.set_optimizer(self.loss)
         self.accuracy, self.individual_accuracy = self.evaluation(self.y_target_pl, self.y_logits)
 
     def get_layers_to_optimize(self):
-        if self.network_params.scopes_layers_to_optimize is not None:
-            for scope_layer in self.network_params.scopes_layers_to_optimize:
+        if self.params.scopes_layers_to_optimize is not None:
+            for scope_layer in self.params.scopes_layers_to_optimize:
                 with tf.variable_scope(scope_layer, reuse=True) as scope:
                     W = tf.get_variable("weights")
                     B = tf.get_variable("biases")
@@ -87,24 +87,24 @@ class ConvNetwork():
         self.weights = 1. - np.sum(training_labels,axis=0) / len(training_labels)
 
     def set_optimizer(self, loss):
-        if not self.network_params.use_adam_optimiser:
-            print('Training with SGD')
-            optimizer = tf.train.GradientDescentOptimizer(self.network_params.learning_rate)
-        elif self.network_params.use_adam_optimiser:
-            print('Training with ADAM')
-            optimizer = tf.train.AdamOptimizer(learning_rate = self.network_params.learning_rate, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
+        if not self.params.use_adam_optimiser:
+            print('\nTraining with SGD')
+            optimizer = tf.train.GradientDescentOptimizer(self.params.learning_rate)
+        elif self.params.use_adam_optimiser:
+            print('\nTraining with ADAM')
+            optimizer = tf.train.AdamOptimizer(learning_rate = self.params.learning_rate, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
         global_step = tf.Variable(0, name='global_step', trainable=False)
-        if self.network_params.scopes_layers_to_optimize is not None:
-            print('Optimizing ', self.network_params.scopes_layers_to_optimize)
+        if self.params.scopes_layers_to_optimize is not None:
+            print('\nOptimizing ', self.params.scopes_layers_to_optimize)
             self.get_layers_to_optimize()
             train_op = optimizer.minimize(loss, var_list = self.layers_to_optimise)
         else:
-            print('Optimizing the whole network')
+            print('\nOptimizing the whole network')
             train_op = optimizer.minimize(loss=loss)
         return train_op, global_step
 
     def evaluation(self,y,y_logits):
-        individual_accuracy = compute_individual_accuracy(y,y_logits, self.network_params.number_of_animals)
+        individual_accuracy = compute_individual_accuracy(y,y_logits, self.params.number_of_animals)
         accuracy = compute_accuracy(y,y_logits)
         return accuracy, individual_accuracy
 
@@ -113,16 +113,16 @@ class ConvNetwork():
         try:
             ckpt = tf.train.get_checkpoint_state(self.restore_folder_conv)
             self.saver_conv.restore(self.session, ckpt.model_checkpoint_path) # restore convolutional variables
-            print('Restoring convolutional part from ', ckpt.model_checkpoint_path)
+            print('\nRestoring convolutional part from ', ckpt.model_checkpoint_path)
         except:
-            print('Warning: no checkpoints found for the convolutional part')
+            print('\nWarning: no checkpoints found for the convolutional part')
         if self.is_restoring:
             try:
                 ckpt = tf.train.get_checkpoint_state(self.restore_folder_fc_softmax)
                 self.saver_fc_softmax.restore(self.session, ckpt.model_checkpoint_path) # restore fully-conected and softmax variables
-                print('Restoring fully-connected and softmax part from ', ckpt.model_checkpoint_path)
+                print('\nRestoring fully-connected and softmax part from ', ckpt.model_checkpoint_path)
             except:
-                print('Warning: no checkpoints found for the fully-connected and softmax parts')
+                print('\nWarning: no checkpoints found for the fully-connected and softmax parts')
 
     def compute_batch_weights(self, batch_labels):
         # if self.weighted_flag:
@@ -138,7 +138,7 @@ class ConvNetwork():
         return  { self.x_pl: batch_images,
                   self.y_target_pl: batch_labels,
                   self.loss_weights_pl: batch_weights,
-                  self.keep_prob_pl: self.network_params.keep_prob}
+                  self.keep_prob_pl: self.params.keep_prob}
 
     def train(self,batch):
         feed_dict = self.get_feed_dict(batch)

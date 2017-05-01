@@ -3,6 +3,7 @@ import sys
 sys.path.append('./network')
 
 import itertools
+from tqdm import tqdm
 
 from cnn_config import Network_Params
 from get_data import Get_Data
@@ -10,14 +11,13 @@ from id_CNN import ConvNetwork
 from globalfragment import get_images_and_labels_from_global_fragment, give_me_pre_training_global_fragments
 from train_id_CNN import TrainIdCNN
 
-def pre_train(global_fragments, network_params):
+def pre_train(global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag):
     # get global equispaced global fragments along the video to pretrain the network
     pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments)
 
     global_epoch = 0
-    net = ConvNetwork(network_params)
-    for i, pretraining_global_fragment in enumerate(pretraining_global_fragments):
-        print('******** Fragment %i ********' %i)
+    net = ConvNetwork(params)
+    for i, pretraining_global_fragment in enumerate(tqdm(pretraining_global_fragments, desc = 'Pretraining network')):
         # Get images and labels from the current global fragment
         images, labels = get_images_and_labels_from_global_fragment(pretraining_global_fragment)
         # Instantiate data_set
@@ -33,13 +33,19 @@ def pre_train(global_fragments, network_params):
         # Restore network
         net.restore()
         # Train network
-        trainer = TrainIdCNN(net,data_set,global_epoch)
+        trainer = TrainIdCNN(net,
+                            data_set,
+                            starting_epoch = global_epoch,
+                            save_summaries = save_summaries,
+                            store_accuracy_and_error = store_accuracy_and_error,
+                            check_for_loss_plateau = check_for_loss_plateau,
+                            print_flag = print_flag)
+        # We start the training
+        trainer.train_model()
         # Update global_epoch counter
         global_epoch += trainer._epoches_completed
         # Save network model
         net.save()
-        # Save training (loss, accuracy, individual accuracy...)
-        trainer.save()
         # Plot training
         # trainer.plot()
 
@@ -55,5 +61,5 @@ if __name__ == "__main__":
     restore_folder = None
     save_folder = './pretraining'
     knowledge_transfer_folder = './pretraining'
-    network_params = Network_Params(video,learning_rate, keep_prob,use_adam_optimiser, scopes_layers_to_optimize,restore_folder , save_folder , knowledge_transfer_folder)
-    pre_train(global_fragments, network_params)
+    params = Network_Params(video,learning_rate, keep_prob,use_adam_optimiser, scopes_layers_to_optimize,restore_folder , save_folder , knowledge_transfer_folder)
+    pre_train(global_fragments, params)
