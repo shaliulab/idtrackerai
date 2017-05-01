@@ -88,15 +88,15 @@ class Blob(object):
     def portraits_in_fragment(self):
         portraits = []
         if self.is_in_a_fragment:
-            portraits.append(self.portrait)
+            portraits.append(self.portrait[0])
             current = self
             while current.next[0].is_in_a_fragment:
                 current = current.next[0]
-                portraits.append(current.portrait)
+                portraits.append(current.portrait[0])
             current = self
             while current.previous[0].is_in_a_fragment:
                 current = current.previous[0]
-                portraits.append(current.portrait)
+                portraits.append(current.portrait[0])
         return portraits
 
 

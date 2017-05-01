@@ -18,7 +18,7 @@ sys.path.append('./preprocessing')
 
 from video import Video
 from blob import connect_blob_list, apply_model_area_to_video
-from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea
+from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, order_global_fragments_by_distance_travelled, give_me_pre_training_global_fragments
 from segmentation import segment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector
 from py_utils import getExistentFiles

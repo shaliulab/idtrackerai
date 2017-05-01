@@ -33,7 +33,8 @@ class GlobalFragment(object):
             for blob in list_of_blobs[index_beginning_of_fragment] ]
         self.number_of_animals = number_of_animals
         self._used_for_training = False
-        self._ids_assigned = [None] * self.number_of_animals
+        # self._ids_assigned = [None] * self.number_of_animals
+        self._ids_assigned = range(self.number_of_animals) # I initialize the _ids_assigned like this so that I can use the same function to extract images in pretraining and training
         self._score = None
         self._is_unique = False
         self._uniqueness_score = None
@@ -98,9 +99,18 @@ def give_me_list_of_global_fragments(list_of_blobs, num_animals):
 
 def order_global_fragments_by_distance_travelled(global_fragments):
     global_fragments = sorted(global_fragments, key = lambda x: x.min_distance_travelled, reverse = True)
+    return global_fragments
 
 def give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = 10):
     step = int(np.floor(len(global_fragments) / number_of_global_fragments))
-    split_global_fragments = [global_fragments[i:i + step] for i in range(0, len(global_fragments), step)]
+    split_global_fragments = [global_fragments[i:i + step] for i in range(0, len(global_fragments)-1, step)]
     ordered_split_global_fragments = [order_global_fragments_by_distance_travelled(global_fragments_in_split)[0]
                                     for global_fragments_in_split in split_global_fragments]
+    return ordered_split_global_fragments
+
+def get_images_and_labels_from_global_fragment(global_fragment):
+    images = [global_fragment.portraits[i] for i in range(len(global_fragment.portraits))]
+    labels = [[id]*len(images[i]) for i, id in enumerate(global_fragment._ids_assigned)]
+    images = [im for ims in images for im in ims]
+    labels = [lab for labs in labels for lab in labs]
+    return images, labels

@@ -1,61 +1,59 @@
-import os
+from __future__ import absolute_import, division, print_function
 import sys
 sys.path.append('./network')
 
+import itertools
+
+from cnn_config import Network_Params
+from get_data import Get_Data
 from id_CNN import ConvNetwork
-from video import Video
-
-class Network_Params(object):
-    def __init__(video,
-                learning_rate, keep_prob,
-                use_adam_optimiser, scopes_layers_to_optimize,
-                restore_folder = None, save_folder = None, knowledge_transfer_folder = None):
-
-        self.number_of_animals = video.number_of_animals
-        self.learning_rate = learning_rate
-        self.keep_prob = keep_prob
-        self._restore_folder = restore_folder
-        self._save_folder = save_folder
-        self._knowledge_transfer_folder = knowledge_transfer_folder
-        self.use_adam_optimiser = use_adam_optimiser
-        self.scopes_layers_to_optimize = scopes_layers_to_optimize
-
-    @property
-    def restore_folder(self):
-        return self._restore_folder
-
-    @restore_folder.setter
-    def restore_folder(self, path):
-        assert os.path.isdir(path)
-        self._restore_folder = path
-
-    @property
-    def save_folder(self):
-        return self._save_folder
-
-    @save_folder.setter
-    def save_folder(self, path):
-        if not os.path.isdir(path):
-            os.path.makedirs(path)
-        self._save_folder = path
-
-    @property
-    def knowledge_transfer_folder(self):
-        return self._knowledge_transfer_folder
-
-    @knowledge_transfer_folder.setter
-    def knowledge_transfer_folder(self, path):
-        assert os.path.isdir(path)
-        self._knowledge_transfer_folder = path
-
-class Get_Data(object):
-    def __init__(self):
-        pass
-
+from globalfragment import get_images_and_labels_from_global_fragment, give_me_pre_training_global_fragments
+from train_id_CNN import TrainIdCNN
 
 def pre_train(global_fragments, network_params):
-    #a high distance travelled corresponds to higher variability in the images
-    #and longer global fragments, so:
-    order_global_fragments_by_distance_travelled(global_fragments)
+    # get global equispaced global fragments along the video to pretrain the network
+    pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments)
 
+    global_epoch = 0
     net = ConvNetwork(network_params)
+    for i, pretraining_global_fragment in enumerate(pretraining_global_fragments):
+        print('******** Fragment %i ********' %i)
+        # Get images and labels from the current global fragment
+        images, labels = get_images_and_labels_from_global_fragment(pretraining_global_fragment)
+        # Instantiate data_set
+        data_set = Get_Data(images,labels, augment_data = False)
+        # Standarize images
+        data_set.standarize_images()
+        # Split data_set in _train_images, _train_labels, _train_labels, _validation_labels
+        data_set.split_train_and_validation()
+        # Crop images from 36x36 to 32x32 without performing data augmentation
+        data_set.crop_images_and_augment_data()
+        # Convert labels to one hot vectors
+        data_set.convert_labels_to_one_hot()
+        # Restore network
+        net.restore()
+        # Train network
+        trainer = TrainIdCNN(net,data_set,global_epoch)
+        # Update global_epoch counter
+        global_epoch += trainer._epoches_completed
+        # Save network model
+        net.save()
+        # Save training (loss, accuracy, individual accuracy...)
+        trainer.save()
+        # Plot training
+        # trainer.plot()
+
+if __name__ == "__main__":
+    import numpy as np
+    global_fragments = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/preprocessing/global_fragments.npy')
+    #network parameters
+    video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/preprocessing/video_object.npy').item()
+    learning_rate = 0.01
+    keep_prob = 1.0
+    use_adam_optimiser = False
+    scopes_layers_to_optimize = None
+    restore_folder = None
+    save_folder = './pretraining'
+    knowledge_transfer_folder = './pretraining'
+    network_params = Network_Params(video,learning_rate, keep_prob,use_adam_optimiser, scopes_layers_to_optimize,restore_folder , save_folder , knowledge_transfer_folder)
+    pre_train(global_fragments, network_params)
