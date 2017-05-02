@@ -1,7 +1,22 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 
-class Get_Data(object):
+class DataSet(object):
+    def __init__(self, images, labels):
+        """Create dataset of images and labels.
+        param: images shaped as [num_of_images, height, width, channels]
+        param: labels shaped as [num_of_labels, num_of_classes]
+        """
+        self.images = images
+        self.labels = labels
+        #check the number of images and labels are the same. If it true set the num_images
+        self.consistency_check()
+
+    def consistency_check(self):
+        assert len(self.images) == len(self.labels)
+        self._num_images = len(self.images)
+
+class GetData(object):
     def __init__(self, images, labels, validation_proportion = .1, augment_data = False):
         self.images = np.expand_dims(np.asarray(images),axis=3)
         self.labels = np.expand_dims(np.asarray(labels),axis=1)

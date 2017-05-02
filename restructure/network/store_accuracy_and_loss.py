@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function
 import os
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sb
 
 class Store_Accuracy_and_Loss(object):
     """Store the loss, accuracy and individual accuracy values computed during
@@ -19,6 +21,16 @@ class Store_Accuracy_and_Loss(object):
         self.loss.append(loss_value)
         self.accuracy.append(accuracy_value)
         self.individual_accuracy.append(individual_accuracy_value)
+
+    def plot(self, axes_handles = None):
+        ax1 = axes_handles[0]
+        ax2 = axes_handles[1]
+        ax1.plot(self.loss)
+        ax2.plot(self.accuracy)
+        plt.draw()
+        plt.pause(1e-8)
+
+
 
     def save(self):
         np.save(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy'), self.__dict__)

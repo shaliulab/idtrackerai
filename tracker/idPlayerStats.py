@@ -1,6 +1,6 @@
 import cv2
 import sys
-sys.path.append('IdTrackerDeep/utils')
+sys.path.append('../utils')
 
 from py_utils import *
 from video_utils import *
@@ -22,7 +22,7 @@ import itertools
 import cPickle as pickle
 from tqdm import tqdm
 
-videoPaths = scanFolder('/home/chronos/Desktop/IdTrackerDeep/videos/idTrackerDeep_LargeGroups_1/numIndivs_100/Second/video_04-07-17_12-39-27.000.avi')
+videoPaths = scanFolder('/media/lab/2966067c-1f2b-40d7-960c-828d7116e5e4/Video8hormigas/V8h_20121018T130426_1.avi')
 
 
 frameIndices, segmPaths = getSegmPaths(videoPaths)

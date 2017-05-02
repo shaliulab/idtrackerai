@@ -162,7 +162,7 @@ if __name__ == '__main__':
                                                     learning_rate = 0.005,
                                                     keep_prob = 1.0,
                                                     use_adam_optimiser = False,
-                                                    scopes_layers_to_optimize = [],
+                                                    scopes_layers_to_optimize = None,
                                                     restore_folder = None,
                                                     save_folder = video._pretraining_path,
                                                     knowledge_transfer_folder = video._pretraining_path)
@@ -183,7 +183,7 @@ if __name__ == '__main__':
         video = np.load(old_video._path_to_video_object).item()
         blobs = np.load(video.blobs_path)
         global_fragments = np.load(video.global_fragments_path)
-        
+
 
 
 
