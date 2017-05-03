@@ -173,7 +173,8 @@ if __name__ == '__main__':
                     store_accuracy_and_error = False,
                     check_for_loss_plateau = True,
                     save_summaries = False,
-                    print_flag = False)
+                    print_flag = False
+                    plot_flag = True)
             #save changes
             video._has_been_pretrained = True
             video.save()

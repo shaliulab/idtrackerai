@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+import os
 import sys
 sys.path.append('./network')
 
@@ -13,12 +14,23 @@ from train_id_CNN import TrainIdCNN
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
-def pre_train(global_fragments, number_of_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag):
+def pre_train(global_fragments, number_of_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
     # get global equispaced global fragments along the video to pretrain the network
     pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments)
 
     global_epoch = 0
     net = ConvNetwork(params)
+    # Save accuracy and error during training and validation
+    # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
+    training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
+    validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation')
+    if plot_flag:
+        # Initialize pre-trainer plot
+        plt.ion()
+        fig, ax_arr = plt.subplots(3)
+        fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
+        epoch_index_to_plot = 0
+    # Start loop for pre training in the global fragments
     for i, pretraining_global_fragment in enumerate(tqdm(pretraining_global_fragments, desc = 'Pretraining network')):
         # Get images and labels from the current global fragment
         images, labels = get_images_and_labels_from_global_fragment(pretraining_global_fragment)
@@ -40,13 +52,11 @@ def pre_train(global_fragments, number_of_global_fragments, params, store_accura
         # Train network
         #compute weights to be fed to the loss function (weighted cross entropy)
         net.compute_loss_weights(data._train_labels)
-
         trainer = TrainIdCNN(net,
                             training_dataset,
                             starting_epoch = global_epoch,
                             check_for_loss_plateau = check_for_loss_plateau,
                             print_flag = print_flag)
-
         validator = TrainIdCNN(net,
                             validation_dataset,
                             starting_epoch = global_epoch,
@@ -56,12 +66,8 @@ def pre_train(global_fragments, number_of_global_fragments, params, store_accura
         stop_training = Stop_Training(trainer.num_epochs,
                                     net.params.number_of_animals,
                                     check_for_loss_plateau = trainer.check_for_loss_plateau)
-        # Save accuracy and error during training and validation
-        # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
-        training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
-        validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation')
-        plt.ion()
-        fig, ax_arr = plt.subplots(2, sharex=True)
+
+
         while not stop_training(training_accuracy_and_loss_data,
                                 validation_accuracy_and_loss_data,
                                 trainer._epochs_completed):
@@ -71,21 +77,21 @@ def pre_train(global_fragments, number_of_global_fragments, params, store_accura
             # --- Validation
             feed_dict_val = validator.run_epoch('Validation', validation_accuracy_and_loss_data, net.validate)
             # update global step
-            net.session.run(net.global_step.assign(trainer.starting_epoch + trainer._epochs_completed)) # set and update(eval) global_step with index, i
-            # take times (for library)
-
-
+            net.session.run(net.global_step.assign(trainer.starting_epoch + trainer._epochs_completed))
             # write summaries if asked
             if save_summaries:
                 net.write_summaries(trainer.starting_epoch + trainer._epochs_completed,feed_dict_train, feed_dict_val)
             # Update counter
             trainer._epochs_completed += 1
 
+
         # plot if asked
-        training_accuracy_and_loss_data.plot(ax_arr)
-        validation_accuracy_and_loss_data.plot(ax_arr)
-
-
+        if plot_flag:
+            ax_arr[2].cla() # clear bars
+            training_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'r')
+            validation_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'b')
+            epoch_index_to_plot += trainer._epochs_completed
+        # store training and validation losses and accuracies
         if store_accuracy_and_error:
             training_accuracy_and_loss_data.save()
             validation_accuracy_and_loss_data.save()
@@ -93,8 +99,9 @@ def pre_train(global_fragments, number_of_global_fragments, params, store_accura
         global_epoch += trainer._epochs_completed
         # Save network model
         net.save()
-        # Plot training
-        # trainer.plot()
+    if plot_flag:
+        fig.savefig(os.path.join(net.params.save_folder,'pretraining.pdf'))
+
 
 
 
