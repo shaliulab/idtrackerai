@@ -139,7 +139,7 @@ if __name__ == '__main__':
     cv2.waitKey(1)
 
     #############################################################
-    ####################      Tracker      ######################
+    ##################      Pre-trainer      ####################
     ####
     #############################################################
     #create the folder training in which all the CNN-related process will be
@@ -153,8 +153,11 @@ if __name__ == '__main__':
             number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
             try:
                 number_of_global_fragments = int(number_of_global_fragments)
+                pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments)
             except:
-                number_of_global_fragments = 10
+                number_of_global_fragments = len(global_fragments)
+                pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
+
             print("pretraining with %i" %number_of_global_fragments, ' global fragments')
             video.create_pretraining_folder(number_of_global_fragments)
             #pretraining network parameters
@@ -167,13 +170,13 @@ if __name__ == '__main__':
                                                     save_folder = video._pretraining_path,
                                                     knowledge_transfer_folder = video._pretraining_path)
             #start pretraining
-            pre_train(global_fragments,
+            pre_train(pretraining_global_fragments,
                     number_of_global_fragments,
                     pretrain_network_params,
                     store_accuracy_and_error = False,
                     check_for_loss_plateau = True,
                     save_summaries = False,
-                    print_flag = False
+                    print_flag = False,
                     plot_flag = True)
             #save changes
             video._has_been_pretrained = True
@@ -184,6 +187,14 @@ if __name__ == '__main__':
         video = np.load(old_video._path_to_video_object).item()
         blobs = np.load(video.blobs_path)
         global_fragments = np.load(video.global_fragments_path)
+
+    #############################################################
+    ##################      Pre-trainer      ####################
+    ####
+    #############################################################
+    #create the folder training in which all the CNN-related process will be
+    #stored. The structure is /training/session_num, where num is an natural number.
+    # num increases each time a training is launched on the video.
 
 
 

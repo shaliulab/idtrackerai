@@ -14,10 +14,7 @@ from train_id_CNN import TrainIdCNN
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
-def pre_train(global_fragments, number_of_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
-    # get global equispaced global fragments along the video to pretrain the network
-    pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments)
-
+def pre_train(pretraining_global_fragments, number_of_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
     global_epoch = 0
     net = ConvNetwork(params)
     # Save accuracy and error during training and validation
