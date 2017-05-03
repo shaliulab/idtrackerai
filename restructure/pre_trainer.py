@@ -6,7 +6,7 @@ sys.path.append('./network')
 import itertools
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from cnn_config import Network_Params
+from network_params import NetworkParams
 from get_data import GetData, DataSet
 from id_CNN import ConvNetwork
 from globalfragment import get_images_and_labels_from_global_fragment, give_me_pre_training_global_fragments
@@ -117,5 +117,5 @@ if __name__ == "__main__":
     restore_folder = None
     save_folder = './pretraining'
     knowledge_transfer_folder = './pretraining'
-    params = Network_Params(video,learning_rate, keep_prob,use_adam_optimiser, scopes_layers_to_optimize,restore_folder , save_folder , knowledge_transfer_folder)
+    params = NetworkParams(video,learning_rate, keep_prob,use_adam_optimiser, scopes_layers_to_optimize,restore_folder , save_folder , knowledge_transfer_folder)
     pre_train(global_fragments, params)

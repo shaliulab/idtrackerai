@@ -33,7 +33,6 @@ class TrainIdCNN(object):
         # Network
         self.net = network
 
-
     def next_batch(self, batch_size):
         """Return the next `batch_size` examples from this data set."""
         start = self._index_in_epoch
@@ -60,41 +59,3 @@ class TrainIdCNN(object):
         self._index_in_epoch_train = 0
         store_loss_and_accuracy.append_data(loss_epoch, accuracy_epoch, individual_accuracy_epoch)
         return feed_dict
-
-    # def train_epoch(self):
-    #     train_loss_epoch = []
-    #     train_accuracy_epoch = []
-    #     train_individual_accuracy_epoch = []
-    #     while self._index_in_epoch_train < self.data_set._num_train_images:
-    #         loss_acc_batch, feed_dict = self.net.train(self.next_batch(BATCH_SIZE))
-    #         train_loss_epoch.append(loss_acc_batch[0])
-    #         train_accuracy_epoch.append(loss_acc_batch[1])
-    #         train_individual_accuracy_epoch.append(loss_acc_batch[2])
-    #     train_loss_epoch = np.mean(np.vstack(train_loss_epoch))
-    #     train_accuracy_epoch = np.mean(np.vstack(train_accuracy_epoch))
-    #     train_individual_accuracy_epoch = np.nanmean(np.vstack(train_individual_accuracy_epoch),axis=0)
-    #     if self.print_flag:
-    #         print('\nTraining (epoch %i)' %(self.starting_epoch + self._epochs_completed), ': loss, ', train_loss_epoch, ', accuracy, ', train_accuracy_epoch, ', individual accuray, ')
-    #         print(train_individual_accuracy_epoch)
-    #     self._index_in_epoch_train = 0
-    #     self.training_accuracy_and_loss_data.append_data(train_loss_epoch, train_accuracy_epoch, train_individual_accuracy_epoch)
-    #     return feed_dict
-    #
-    # def validation_epoch(self):
-    #     val_loss_epoch = []
-    #     val_accuracy_epoch = []
-    #     val_individual_accuracy_epoch = []
-    #     while self._index_in_epoch_val < self.data_set._num_validation_images:
-    #         loss_acc_batch, feed_dict = self.net.validate(self.next_batch(BATCH_SIZE))
-    #         val_loss_epoch.append(loss_acc_batch[0])
-    #         val_accuracy_epoch.append(loss_acc_batch[1])
-    #         val_individual_accuracy_epoch.append(loss_acc_batch[2])
-    #     val_loss_epoch = np.nanmean(np.vstack(val_loss_epoch))
-    #     val_accuracy_epoch = np.nanmean(np.vstack(val_accuracy_epoch))
-    #     val_individual_accuracy_epoch = np.nanmean(np.vstack(val_individual_accuracy_epoch),axis=0)
-    #     if self.print_flag:
-    #         print('Validation (epoch %i)' %(self.starting_epoch + self._epochs_completed), ': loss, ', val_loss_epoch, ', accuracy, ', val_accuracy_epoch, ', individual accuray, ')
-    #         print(val_individual_accuracy_epoch)
-    #     self._index_in_epoch_val = 0
-    #     self.validation_accuracy_and_loss_data.append_data(val_loss_epoch, val_accuracy_epoch, val_individual_accuracy_epoch)
-    #     return feed_dict

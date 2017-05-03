@@ -24,7 +24,7 @@ from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, s
 from py_utils import getExistentFiles
 from video_utils import checkBkg
 from pre_trainer import pre_train
-from cnn_config import Network_Params
+from network_params import NetworkParams
 
 # from idAssigner import *
 # from fragmentFinder import *
@@ -158,7 +158,7 @@ if __name__ == '__main__':
             print("pretraining with %i" %number_of_global_fragments, ' global fragments')
             video.create_pretraining_folder(number_of_global_fragments)
             #pretraining network parameters
-            pretrain_network_params = Network_Params(video,
+            pretrain_network_params = NetworkParams(video,
                                                     learning_rate = 0.005,
                                                     keep_prob = 1.0,
                                                     use_adam_optimiser = False,

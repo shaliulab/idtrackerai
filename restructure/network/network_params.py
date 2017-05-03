@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import os
 
-class Network_Params(object):
+class NetworkParams(object):
     def __init__(self,video,
                 learning_rate = None, keep_prob = None,
                 use_adam_optimiser = False, scopes_layers_to_optimize = [],
