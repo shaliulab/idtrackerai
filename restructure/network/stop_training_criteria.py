@@ -5,13 +5,14 @@ import numpy as np
 MAX_FLOAT = sys.float_info[0]
 LEARNING_PERCENTAGE_DIFFERENCE = .01
 OVERFITTING_COUNTER_THRESHOLD = 5
+MAXIMUM_NUMBER_OF_EPOCHS = 10000
 
 class Stop_Training():
     """Stops the training of the network according to the conditions specified
     in __call__
     """
-    def __init__(self, num_epochs, number_of_animals, epochs_before_checking_stopping_conditions = 10, check_for_loss_plateau = True):
-        self.num_epochs = num_epochs #maximal num of epochs
+    def __init__(self, number_of_animals, epochs_before_checking_stopping_conditions = 10, check_for_loss_plateau = True):
+        self.num_epochs = MAXIMUM_NUMBER_OF_EPOCHS #maximal num of epochs
         self.number_of_animals = number_of_animals
         self.epochs_before_checking_stopping_conditions = epochs_before_checking_stopping_conditions
         self.overfitting_counter = 0 #number of epochs in which the network is overfitting before stopping the training

@@ -100,14 +100,14 @@ class Blob(object):
         return portraits
 
 
-def connect_blob_list(blob_list):
-    for frame_i in tqdm(xrange(1,len(blob_list)), desc = 'Connecting blobs progress'):
-        for (blob_0, blob_1) in itertools.product(blob_list[frame_i-1], blob_list[frame_i]):
+def connect_blob_list(blobs_in_video):
+    for frame_i in tqdm(xrange(1,len(blobs_in_video)), desc = 'Connecting blobs progress'):
+        for (blob_0, blob_1) in itertools.product(blobs_in_video[frame_i-1], blobs_in_video[frame_i]):
             if blob_0.is_a_fish and blob_1.is_a_fish and blob_0.overlaps_with(blob_1):
                 blob_0.now_points_to(blob_1)
 
-def all_blobs_in_a_fragment(frame):
-    return all([blob.is_in_a_fragment for blob in frame])
+def all_blobs_in_a_fragment(blobs_in_frame):
+    return all([blob.is_in_a_fragment for blob in blobs_in_frame])
 
 def is_a_global_fragment(blobs_in_frame, num_animals):
     """Returns True iff:
@@ -115,12 +115,12 @@ def is_a_global_fragment(blobs_in_frame, num_animals):
     """
     return len(blobs_in_frame)==num_animals
 
-def check_global_fragments(blob_list, num_animals):
+def check_global_fragments(blobs_in_video, num_animals):
     """Returns an array with True iff:
     * each blob has a unique blob intersecting in the past
     * number of blobs equals num_animals
     """
-    return [all_blobs_in_a_fragment(frame) and len(frame)==num_animals for frame in blob_list]
+    return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame)==num_animals for blobs_in_frame in blobs_in_video]
 
 def apply_model_area(blob, model_area):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
@@ -130,28 +130,34 @@ def apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area):
     for blob in blobs_in_frame:
         apply_model_area(blob, model_area)
 
-def apply_model_area_to_video(blob_list, model_area):
-    # Parallel(n_jobs=-1)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in tqdm(blob_list, desc = 'Fragmentation progress'))
-    for frame in tqdm(blob_list, desc = 'Fragmentation progress'):
-        apply_model_area_to_blobs_in_frame(frame, model_area)
+def apply_model_area_to_video(blobs_in_video, model_area):
+    # Parallel(n_jobs=-1)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'))
+    for blobs_in_frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'):
+        apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area)
 
+def get_images_from_blobs_in_frame(blobs_in_frame):
+    return [blob.portrait for blob in blobs_in_frame if blob.is_a_fish_in_a_fragment]
 
-if __name__ == "__main__":
-    contoura = np.array([ [[0,0]], [[1,1]], [[2,2]] ])
-    contourb = np.array([ [[0,1]], [[1,1]], [[2,3]] ])
-    contourc = np.array([ [[1,1]] ])
-    contourd = np.array([ [[0,1]], [[1,1]], [[2,3]] ])
+def get_images_from_blobs_in_video(blobs_in_video):
+    portraits_in_video = Parallel(n_jobs=-1)(delayed(get_images_from_blobs_in_frame)(blobs_in_frame) for blobs_in_frame in tqdm(blobs_in_video, desc = 'Getting portraits'))
+    return [portrait for portraits_in_frame in portraits_in_video for portrait in portraits_in_frame]
 
-    print(contoura.shape)
-    a = Blob(np.array([0,0]), contoura, 0, None, None, None)
-    b = Blob(np.array([1,1]), contourb, 0, None, None, None)
-    c = Blob(np.array([2,2]), contourc, 0, None, None, None)
-    d = Blob(np.array([3,3]), contourd, 0, None, None, None)
-    print(a.overlaps_with(b))
-    print(b.overlaps_with(c))
-    list_of_blob = [[a],[b],[c],[d]]
-
-    connect_blob_list(list_of_blob)
-
-    print(check_global_fragments(list_of_blob, 1))
-    print(distance_travelled_in_fragment(a))
+# if __name__ == "__main__":
+#     contoura = np.array([ [[0,0]], [[1,1]], [[2,2]] ])
+#     contourb = np.array([ [[0,1]], [[1,1]], [[2,3]] ])
+#     contourc = np.array([ [[1,1]] ])
+#     contourd = np.array([ [[0,1]], [[1,1]], [[2,3]] ])
+#
+#     print(contoura.shape)
+#     a = Blob(np.array([0,0]), contoura, 0, None, None, None)
+#     b = Blob(np.array([1,1]), contourb, 0, None, None, None)
+#     c = Blob(np.array([2,2]), contourc, 0, None, None, None)
+#     d = Blob(np.array([3,3]), contourd, 0, None, None, None)
+#     print(a.overlaps_with(b))
+#     print(b.overlaps_with(c))
+#     list_of_blob = [[a],[b],[c],[d]]
+#
+#     connect_blob_list(list_of_blob)
+#
+#     print(check_global_fragments(list_of_blob, 1))
+#     print(distance_travelled_in_fragment(a))

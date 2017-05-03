@@ -17,7 +17,7 @@ class ConvNetwork():
         self.params = params
         # Initialize layers to optimize to be empty. This means tha we will
         # optimize all the layers of our network
-        self._layers_to_optimise = []
+        self.layers_to_optimise = []
         # Build graph with the network, loss, optimizer and accuracies
         self._build_graph()
         # Create savers for the convolutions and the fully conected and softmax separately
@@ -66,6 +66,9 @@ class ConvNetwork():
         self.optimisation_step, self.global_step = self.set_optimizer(self.loss)
         self.accuracy, self.individual_accuracy = self.evaluation(self.y_target_pl, self.y_logits)
 
+        self.softmax_probs = tf.nn.softmax(self.y_logits)
+        self.predictions = tf.cast(tf.add(tf.argmax(self.softmax_probs,1),1),tf.float32)
+
     def get_layers_to_optimize(self):
         if self.params.scopes_layers_to_optimize is not None:
             for scope_layer in self.params.scopes_layers_to_optimize:
@@ -73,7 +76,7 @@ class ConvNetwork():
                     W = tf.get_variable("weights")
                     B = tf.get_variable("biases")
                 self.layers_to_optimise.append([W, B])
-        self.layers_to_optimise = [layer for layer in layers for layers in self.layers_to_optimise]
+        self.layers_to_optimise = [layer for layers in self.layers_to_optimise for layer in layers]
 
     def weighted_loss(self,y, y_logits, loss_weights):
         cross_entropy = tf.reduce_mean(
@@ -150,6 +153,11 @@ class ConvNetwork():
         feed_dict = self.get_feed_dict(batch)
         outList = self.session.run(self.ops_list, feed_dict = feed_dict)
         return outList, feed_dict
+
+    def predict(self,batch):
+        feed_dict = {self.x_pl: batch}
+        outList = self.session.run([self.softmax_probs,self.predictions], feed_dict = feed_dict)
+        return outList
 
     def write_summaries(self,epoch_i,feed_dict_train, feed_dict_val):
         summary_str_training = self.session.run(self.summary_op, feed_dict=feed_dict_train)

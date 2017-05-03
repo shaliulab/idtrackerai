@@ -7,10 +7,10 @@ import itertools
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from network_params import NetworkParams
-from get_data import GetData, DataSet
+from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
 from globalfragment import get_images_and_labels_from_global_fragment, give_me_pre_training_global_fragments
-from train_id_CNN import TrainIdCNN
+from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
@@ -19,8 +19,8 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
     net = ConvNetwork(params)
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
-    training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
-    validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation')
+    store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
+    store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation')
     if plot_flag:
         # Initialize pre-trainer plot
         plt.ion()
@@ -32,47 +32,39 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
         # Get images and labels from the current global fragment
         images, labels = get_images_and_labels_from_global_fragment(pretraining_global_fragment)
         # Instantiate data_set
-        data = GetData(images,labels, augment_data = False)
+        training_dataset, validation_dataset = split_data_train_and_validation(images,labels)
         # Standarize images
-        data.standarize_images()
-        # Split data_set in _train_images, _train_labels, _train_labels, _validation_labels
-        data.split_train_and_validation()
+        training_dataset.standarize_images()
+        validation_dataset.standarize_images()
         # Crop images from 36x36 to 32x32 without performing data augmentation
-        data.crop_images_and_augment_data()
+        training_dataset.crop_images(image_size = 32)
+        validation_dataset.crop_images(image_size = 32)
         # Convert labels to one hot vectors
-        data.convert_labels_to_one_hot()
-        #create the training and validation dataset
-        training_dataset = DataSet(data._train_images, data._train_labels)
-        validation_dataset = DataSet(data._validation_images, data._validation_labels)
+        training_dataset.convert_labels_to_one_hot()
+        validation_dataset.convert_labels_to_one_hot()
         # Restore network
         net.restore()
         # Train network
         #compute weights to be fed to the loss function (weighted cross entropy)
         net.compute_loss_weights(data._train_labels)
-        trainer = TrainIdCNN(net,
-                            training_dataset,
+        trainer = EpochRunner(training_dataset,
                             starting_epoch = global_epoch,
-                            check_for_loss_plateau = check_for_loss_plateau,
                             print_flag = print_flag)
-        validator = TrainIdCNN(net,
-                            validation_dataset,
+        validator = EpochRunner(validation_dataset,
                             starting_epoch = global_epoch,
-                            check_for_loss_plateau = check_for_loss_plateau,
                             print_flag = print_flag)
         #set criteria to stop the training
-        stop_training = Stop_Training(trainer.num_epochs,
-                                    net.params.number_of_animals,
-                                    check_for_loss_plateau = trainer.check_for_loss_plateau)
+        stop_training = Stop_Training(params.number_of_animals,
+                                    check_for_loss_plateau = check_for_loss_plateau)
 
-
-        while not stop_training(training_accuracy_and_loss_data,
-                                validation_accuracy_and_loss_data,
+        while not stop_training(store_training_accuracy_and_loss_data,
+                                store_validation_accuracy_and_loss_data,
                                 trainer._epochs_completed):
             # --- Training
-            feed_dict_train = trainer.run_epoch('Training', training_accuracy_and_loss_data, net.train)
+            feed_dict_train = trainer.run_epoch('Training', store_training_accuracy_and_loss_data, net.train)
             ### NOTE here we can shuffle the training data if we think it is necessary.
             # --- Validation
-            feed_dict_val = validator.run_epoch('Validation', validation_accuracy_and_loss_data, net.validate)
+            feed_dict_val = validator.run_epoch('Validation', store_validation_accuracy_and_loss_data, net.validate)
             # update global step
             net.session.run(net.global_step.assign(trainer.starting_epoch + trainer._epochs_completed))
             # write summaries if asked
@@ -85,13 +77,13 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
         # plot if asked
         if plot_flag:
             ax_arr[2].cla() # clear bars
-            training_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'r')
-            validation_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'b')
+            store_training_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'r')
+            store_validation_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'b')
             epoch_index_to_plot += trainer._epochs_completed
         # store training and validation losses and accuracies
         if store_accuracy_and_error:
-            training_accuracy_and_loss_data.save()
-            validation_accuracy_and_loss_data.save()
+            store_training_accuracy_and_loss_data.save()
+            store_validation_accuracy_and_loss_data.save()
         # Update global_epoch counter
         global_epoch += trainer._epochs_completed
         # Save network model

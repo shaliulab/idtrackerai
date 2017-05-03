@@ -25,6 +25,8 @@ from py_utils import getExistentFiles
 from video_utils import checkBkg
 from pre_trainer import pre_train
 from network_params import NetworkParams
+from trainer import train
+from assigner import assign
 
 # from idAssigner import *
 # from fragmentFinder import *
@@ -189,12 +191,33 @@ if __name__ == '__main__':
         global_fragments = np.load(video.global_fragments_path)
 
     #############################################################
-    ##################      Pre-trainer      ####################
+    ###################      Assigner      ######################
     ####
     #############################################################
     #create the folder training in which all the CNN-related process will be
     #stored. The structure is /training/session_num, where num is an natural number.
     # num increases each time a training is launched on the video.
+    train_network_params = NetworkParams(video,
+                                            learning_rate = 0.005,
+                                            keep_prob = 1.0,
+                                            use_adam_optimiser = False,
+                                            scopes_layers_to_optimize = ['fully-connected1','softmax1'],
+                                            restore_folder = None,
+                                            save_folder = video._session_path,
+                                            knowledge_transfer_folder = video._pretraining_path)
+    #start pretraining
+    training_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0]
+    train(training_global_fragment,
+            train_network_params,
+            store_accuracy_and_error = False,
+            check_for_loss_plateau = True,
+            save_summaries = True,
+            print_flag = True,
+            plot_flag = True)
+
+
+    assign_network_params = NetworkParams(video,restore_folder = video._session_path)
+    assign(blobs, params, print_flag)
 
 
 
