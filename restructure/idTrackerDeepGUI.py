@@ -53,7 +53,7 @@ if __name__ == '__main__':
     #############################################################
     #Asking user whether to reuse preprocessing steps...'
     reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previous preprocessing? ([y]/n)')
-    processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing','pretraining']
+    processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'training']
     #get existent files and paths to load them
     existentFiles, old_video = getExistentFiles(video, processes_list)
     if reUseAll == 'n':
@@ -191,13 +191,14 @@ if __name__ == '__main__':
         global_fragments = np.load(video.global_fragments_path)
 
     #############################################################
-    ###################      Assigner      ######################
+    ###################      Trainer      ######################
     ####
     #############################################################
     #create the folder training in which all the CNN-related process will be
     #stored. The structure is /training/session_num, where num is an natural number.
     # num increases each time a training is launched on the video.
-    train_network_params = NetworkParams(video,
+    if not loadPreviousDict['training']:
+        train_network_params = NetworkParams(video,
                                             learning_rate = 0.005,
                                             keep_prob = 1.0,
                                             use_adam_optimiser = False,
@@ -205,9 +206,9 @@ if __name__ == '__main__':
                                             restore_folder = None,
                                             save_folder = video._session_path,
                                             knowledge_transfer_folder = video._pretraining_path)
-    #start pretraining
-    training_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0]
-    train(training_global_fragment,
+        #start pretraining
+        training_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0]
+        train(training_global_fragment,
             train_network_params,
             store_accuracy_and_error = False,
             check_for_loss_plateau = True,
@@ -215,9 +216,19 @@ if __name__ == '__main__':
             print_flag = True,
             plot_flag = True)
 
+        video.has_been_trained = True
+        video.save()
 
-    assign_network_params = NetworkParams(video,restore_folder = video._session_path)
-    assign(blobs, params, print_flag)
+    #############################################################
+    ###################     Assigner      ######################
+    ####
+    #############################################################
+
+    assign_network_params = NetworkParams(video,
+                                        scopes_layers_to_optimize = None,
+                                        restore_folder = video._session_path)
+    print('session path ', video._session_path)
+    assign(blobs, assign_network_params, print_flag = True)
 
 
 

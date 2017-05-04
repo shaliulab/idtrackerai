@@ -4,7 +4,7 @@ import sys
 sys.path.append('./network')
 
 import matplotlib.pyplot as plt
-
+import tensorflow as tf
 from network_params import NetworkParams
 from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
@@ -69,6 +69,8 @@ def train(global_fragment, params, store_accuracy_and_error, check_for_loss_plat
             net.write_summaries(trainer.starting_epoch + trainer._epochs_completed,feed_dict_train, feed_dict_val)
         # Update counter
         trainer._epochs_completed += 1
+        validator._epochs_completed += 1
+
 
 
     # plot if asked
@@ -83,7 +85,7 @@ def train(global_fragment, params, store_accuracy_and_error, check_for_loss_plat
     net.save()
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'training.pdf'))
-
+    tf.reset_default_graph()
 
 
 if __name__ == '__main__':

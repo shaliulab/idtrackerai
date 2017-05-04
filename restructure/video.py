@@ -33,6 +33,7 @@ class Video(object):
         self._global_fragments_path = None #string: path to saved list of global fragments
         self._has_been_pretrained = None
         self._pretraining_path = None
+        self.has_been_trained = None
 
     @property
     def video_path(self):

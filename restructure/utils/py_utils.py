@@ -257,6 +257,10 @@ def getExistentFiles(video, listNames):
             print('has pretrain')
             existentFile['pretraining'] = '1'
 
+        if old_video.has_been_trained == True:
+            print('training done')
+            existentFile['training'] = '1'
+
     return existentFile, old_video
 
 

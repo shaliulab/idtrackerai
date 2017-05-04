@@ -6,6 +6,8 @@ sys.path.append('./network')
 import itertools
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import tensorflow as tf
+
 from network_params import NetworkParams
 from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
@@ -32,7 +34,7 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
         # Get images and labels from the current global fragment
         images, labels = get_images_and_labels_from_global_fragment(pretraining_global_fragment)
         # Instantiate data_set
-        training_dataset, validation_dataset = split_data_train_and_validation(images,labels)
+        training_dataset, validation_dataset = split_data_train_and_validation(params.number_of_animals,images,labels)
         # Standarize images
         training_dataset.standarize_images()
         validation_dataset.standarize_images()
@@ -46,7 +48,7 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
         net.restore()
         # Train network
         #compute weights to be fed to the loss function (weighted cross entropy)
-        net.compute_loss_weights(data._train_labels)
+        net.compute_loss_weights(training_dataset.labels)
         trainer = EpochRunner(training_dataset,
                             starting_epoch = global_epoch,
                             print_flag = print_flag)
@@ -72,6 +74,7 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
                 net.write_summaries(trainer.starting_epoch + trainer._epochs_completed,feed_dict_train, feed_dict_val)
             # Update counter
             trainer._epochs_completed += 1
+            validator._epochs_completed += 1
 
 
         # plot if asked
@@ -90,6 +93,7 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
         net.save()
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'pretraining.pdf'))
+    tf.reset_default_graph()
 
 
 

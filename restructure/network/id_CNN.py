@@ -63,6 +63,7 @@ class ConvNetwork():
         self.y_logits = cnn_model(self.x_pl,self.params.number_of_animals)
 
         self.loss = self.weighted_loss(self.y_target_pl, self.y_logits, self.loss_weights_pl)
+
         self.optimisation_step, self.global_step = self.set_optimizer(self.loss)
         self.accuracy, self.individual_accuracy = self.evaluation(self.y_target_pl, self.y_logits)
 
