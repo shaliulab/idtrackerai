@@ -20,7 +20,7 @@ from video import Video
 from blob import connect_blob_list, apply_model_area_to_video
 from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, order_global_fragments_by_distance_travelled, give_me_pre_training_global_fragments
 from segmentation import segment
-from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector
+from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector, frame_by_frame_identity_inspector
 from py_utils import getExistentFiles
 from video_utils import checkBkg
 from pre_trainer import pre_train
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     video = Video()
     #set path
     video.video_path = video_path
+    print(video._path_to_video_object)
     #############################################################
     ####################   Preprocessing   ######################
     #### video preprocessing through a simple GUI that       ####
@@ -53,7 +54,7 @@ if __name__ == '__main__':
     #############################################################
     #Asking user whether to reuse preprocessing steps...'
     reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previous preprocessing? ([y]/n)')
-    processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'training']
+    processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'training', 'assignment']
     #get existent files and paths to load them
     existentFiles, old_video = getExistentFiles(video, processes_list)
     if reUseAll == 'n':
@@ -84,151 +85,161 @@ if __name__ == '__main__':
         cv2.waitKey(1000)
         cv2.destroyAllWindows()
         cv2.waitKey(1)
+        #############################################################
+        ####################  Preprocessing   #######################
+        #### 1. detect blobs in the video according to parameters####
+        #### specified by the user                               ####
+        #### 2. create a list of potential global fragments      ####
+        #### in which all animals are visible.                   ####
+        #### 3. compute a model of the area of the animals       ####
+        #### (mean and variance)                                 ####
+        #### 4. identify global fragments                        ####
+        #### 5. create a list of objects GlobalFragment() that   ####
+        #### will be used to (pre)train the network              ####
+        #### save them for future use                            ####
+        #############################################################
+        #destroy windows to prevent openCV errors
+        cv2.waitKey(1)
+        cv2.destroyAllWindows()
+        cv2.waitKey(1)
+
+        if not loadPreviousDict['preprocessing']:
+            blobs = segment(video)
+            np.save(video.blobs_path,blobs)
+            #compute a model of the area of the animals (considering frames in which
+            #all the animals are visible)
+            model_area = compute_model_area(blobs, video.number_of_animals)
+            #discard blobs that do not respect such model
+            apply_model_area_to_video(blobs, model_area)
+            #connect blobs that overlap in consecutive frames
+            connect_blob_list(blobs)
+            #compute the global fragments (all animals are visible + each animals overlaps
+            #with a single blob in the consecutive frame + the blobs respect the area model)
+            global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
+            #save connected blobs in video (organized frame-wise) and list of global fragments
+            video._has_been_preprocessed = True
+            np.save(video.global_fragments_path, global_fragments)
+            np.save(video.blobs_path,blobs)
+            video.save()
+            #take a look to the resulting fragmentation
+            fragmentation_inspector(video, blobs)
+        else:
+            old_video = Video()
+            old_video.video_path = video_path
+            video = np.load(old_video._path_to_video_object).item()
+            blobs = np.load(video.blobs_path)
+            global_fragments = np.load(video.global_fragments_path)
+        #destroy windows to prevent openCV errors
+        cv2.waitKey(1)
+        cv2.destroyAllWindows()
+        cv2.waitKey(1)
+        #############################################################
+        ##################      Pre-trainer      ####################
+        ####
+        #############################################################
+        #create the folder training in which all the CNN-related process will be
+        #stored. The structure is /training/session_num, where num is an natural number.
+        # num increases each time a training is launched on the video.
+        if not loadPreviousDict['pretraining']:
+            video.create_training_and_session_folder()
+            pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [Y/n]')
+            if pretrain_flag == 'y' or pretrain_flag == '':
+                #set pretraining parameters
+                number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
+                try:
+                    number_of_global_fragments = int(number_of_global_fragments)
+                    pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments)
+                except:
+                    number_of_global_fragments = len(global_fragments)
+                    pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
+
+                print("pretraining with %i" %number_of_global_fragments, ' global fragments')
+                video.create_pretraining_folder(number_of_global_fragments)
+                #pretraining network parameters
+                pretrain_network_params = NetworkParams(video,
+                                                        learning_rate = 0.005,
+                                                        keep_prob = 1.0,
+                                                        use_adam_optimiser = False,
+                                                        scopes_layers_to_optimize = None,
+                                                        restore_folder = None,
+                                                        save_folder = video._pretraining_path,
+                                                        knowledge_transfer_folder = video._pretraining_path)
+                #start pretraining
+                pre_train(pretraining_global_fragments,
+                        number_of_global_fragments,
+                        pretrain_network_params,
+                        store_accuracy_and_error = False,
+                        check_for_loss_plateau = True,
+                        save_summaries = False,
+                        print_flag = False,
+                        plot_flag = True)
+                #save changes
+                video._has_been_pretrained = True
+                video.save()
+        else:
+            old_video = Video()
+            old_video.video_path = video_path
+            video = np.load(old_video._path_to_video_object).item()
+            blobs = np.load(video.blobs_path)
+            global_fragments = np.load(video.global_fragments_path)
+        #############################################################
+        ###################      Trainer      ######################
+        ####
+        #############################################################
+        #create the folder training in which all the CNN-related process will be
+        #stored. The structure is /training/session_num, where num is an natural number.
+        # num increases each time a training is launched on the video.
+        if not loadPreviousDict['training']:
+            train_network_params = NetworkParams(video,
+                                                learning_rate = 0.005,
+                                                keep_prob = 1.0,
+                                                use_adam_optimiser = False,
+                                                scopes_layers_to_optimize = ['fully-connected1','softmax1'],
+                                                restore_folder = None,
+                                                save_folder = video._session_path,
+                                                knowledge_transfer_folder = video._pretraining_path)
+            #start pretraining
+            training_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0]
+            train(training_global_fragment,
+                train_network_params,
+                store_accuracy_and_error = False,
+                check_for_loss_plateau = True,
+                save_summaries = True,
+                print_flag = True,
+                plot_flag = True)
+
+            video.has_been_trained = True
+            video.save()
+        #############################################################
+        ###################     Assigner      ######################
+        ####
+        #############################################################
+        if not loadPreviousDict['assignment']:
+            assign_network_params = NetworkParams(video,restore_folder = video._session_path)
+            print(assign_network_params)
+            print('session path ', video._session_path)
+            assign(video, blobs, assign_network_params, video._episodes_start_end, print_flag = True)
+            #visualise frame by frame identification (uses argmax from softmax)
+            # frame_by_frame_identity_inspector(video, blobs)
+            video.has_been_assigned = True
+            np.save(video.blobs_path,blobs)
+            video.save()
+        else:
+            old_video = Video()
+            old_video.video_path = video_path
+            video = np.load(old_video._path_to_video_object).item()
+            blobs = np.load(video.blobs_path)
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         old_video = Video()
+        old_video.video_path = video_path
         video = np.load(old_video._path_to_video_object).item()
+        blobs = np.load(video.blobs_path)
+        global_fragments = np.load(video.global_fragments_path)
+        frame_by_frame_identity_inspector(video, blobs)
     else:
         raise ValueError('The input introduced does not match the possible options')
 
-    #############################################################
-    ####################  Preprocessing   #######################
-    #### 1. detect blobs in the video according to parameters####
-    #### specified by the user                               ####
-    #### 2. create a list of potential global fragments      ####
-    #### in which all animals are visible.                   ####
-    #### 3. compute a model of the area of the animals       ####
-    #### (mean and variance)                                 ####
-    #### 4. identify global fragments                        ####
-    #### 5. create a list of objects GlobalFragment() that   ####
-    #### will be used to (pre)train the network              ####
-    #### save them for future use                            ####
-    #############################################################
-    #destroy windows to prevent openCV errors
-    cv2.waitKey(1)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-
-    if not loadPreviousDict['preprocessing']:
-        blobs = segment(video)
-        np.save(video.blobs_path,blobs)
-        #compute a model of the area of the animals (considering frames in which
-        #all the animals are visible)
-        model_area = compute_model_area(blobs, video.num_animals)
-        #discard blobs that do not respect such model
-        apply_model_area_to_video(blobs, model_area)
-        #connect blobs that overlap in consecutive frames
-        connect_blob_list(blobs)
-        #compute the global fragments (all animals are visible + each animals overlaps
-        #with a single blob in the consecutive frame + the blobs respect the area model)
-        global_fragments = give_me_list_of_global_fragments(blobs, video.num_animals)
-        #save connected blobs in video (organized frame-wise) and list of global fragments
-        video._has_been_preprocessed = True
-        np.save(video.global_fragments_path, global_fragments)
-        np.save(video.blobs_path,blobs)
-        video.save()
-        #take a look to the resulting fragmentation
-        fragmentation_inspector(video, blobs)
-    else:
-        old_video = Video()
-        old_video.video_path = video_path
-        video = np.load(old_video._path_to_video_object).item()
-        blobs = np.load(video.blobs_path)
-        global_fragments = np.load(video.global_fragments_path)
-    #destroy windows to prevent openCV errors
-    cv2.waitKey(1)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-
-    #############################################################
-    ##################      Pre-trainer      ####################
-    ####
-    #############################################################
-    #create the folder training in which all the CNN-related process will be
-    #stored. The structure is /training/session_num, where num is an natural number.
-    # num increases each time a training is launched on the video.
-    if not loadPreviousDict['pretraining']:
-        video.create_training_and_session_folder()
-        pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [Y/n]')
-        if pretrain_flag == 'y' or pretrain_flag == '':
-            #set pretraining parameters
-            number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
-            try:
-                number_of_global_fragments = int(number_of_global_fragments)
-                pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments)
-            except:
-                number_of_global_fragments = len(global_fragments)
-                pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
-
-            print("pretraining with %i" %number_of_global_fragments, ' global fragments')
-            video.create_pretraining_folder(number_of_global_fragments)
-            #pretraining network parameters
-            pretrain_network_params = NetworkParams(video,
-                                                    learning_rate = 0.005,
-                                                    keep_prob = 1.0,
-                                                    use_adam_optimiser = False,
-                                                    scopes_layers_to_optimize = None,
-                                                    restore_folder = None,
-                                                    save_folder = video._pretraining_path,
-                                                    knowledge_transfer_folder = video._pretraining_path)
-            #start pretraining
-            pre_train(pretraining_global_fragments,
-                    number_of_global_fragments,
-                    pretrain_network_params,
-                    store_accuracy_and_error = False,
-                    check_for_loss_plateau = True,
-                    save_summaries = False,
-                    print_flag = False,
-                    plot_flag = True)
-            #save changes
-            video._has_been_pretrained = True
-            video.save()
-    else:
-        old_video = Video()
-        old_video.video_path = video_path
-        video = np.load(old_video._path_to_video_object).item()
-        blobs = np.load(video.blobs_path)
-        global_fragments = np.load(video.global_fragments_path)
-
-    #############################################################
-    ###################      Trainer      ######################
-    ####
-    #############################################################
-    #create the folder training in which all the CNN-related process will be
-    #stored. The structure is /training/session_num, where num is an natural number.
-    # num increases each time a training is launched on the video.
-    if not loadPreviousDict['training']:
-        train_network_params = NetworkParams(video,
-                                            learning_rate = 0.005,
-                                            keep_prob = 1.0,
-                                            use_adam_optimiser = False,
-                                            scopes_layers_to_optimize = ['fully-connected1','softmax1'],
-                                            restore_folder = None,
-                                            save_folder = video._session_path,
-                                            knowledge_transfer_folder = video._pretraining_path)
-        #start pretraining
-        training_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0]
-        train(training_global_fragment,
-            train_network_params,
-            store_accuracy_and_error = False,
-            check_for_loss_plateau = True,
-            save_summaries = True,
-            print_flag = True,
-            plot_flag = True)
-
-        video.has_been_trained = True
-        video.save()
-
-    #############################################################
-    ###################     Assigner      ######################
-    ####
-    #############################################################
-
-    assign_network_params = NetworkParams(video,
-                                        scopes_layers_to_optimize = None,
-                                        restore_folder = video._session_path)
-    print('session path ', video._session_path)
-    assign(blobs, assign_network_params, print_flag = True)
 
 
 

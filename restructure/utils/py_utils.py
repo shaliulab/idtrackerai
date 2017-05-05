@@ -6,8 +6,6 @@ import re
 import datetime
 import pandas as pd
 import numpy as np
-import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
-from Tkinter import *
 import shutil
 import cPickle as pickle
 import sys
@@ -250,16 +248,20 @@ def getExistentFiles(video, listNames):
             existentFile['preprocparams'] = '1'
 
         if old_video._has_been_preprocessed == True:
-            print('has been preprocessed')
+            print('preprocessing done')
             existentFile['preprocessing'] = '1'
 
         if old_video._has_been_pretrained == True:
-            print('has pretrain')
+            print('pretraining done')
             existentFile['pretraining'] = '1'
 
         if old_video.has_been_trained == True:
             print('training done')
             existentFile['training'] = '1'
+
+        if old_video.has_been_assigned == True:
+            print('assignment done')
+            existentFile['assignment'] = '1'
 
     return existentFile, old_video
 
@@ -310,133 +312,3 @@ def createSessionFolder(videoPath):
     print 'You just created ', figurePath
 
     return sessionPath, figurePath
-
-"""
-Display messages and errors
-"""
-# def selectOptions(optionsList):
-#     opt = []
-#     def chkbox_checked():
-#         for ix, item in enumerate(cb):
-#             if cb_v[ix].get() is '0':
-#                 opt[ix]=('0')
-#             else:
-#                 opt[ix]=('1')
-#         print opt
-#     root = Tk()
-#     cb = []
-#     cb_v = []
-#     for ix, text in enumerate(optionsList):
-#         cb_v.append(StringVar())
-#         off_value=0  #whatever you want it to be when the checkbutton is off
-#         cb.append(Checkbutton(root, text=text, onvalue=text,offvalue=off_value,
-#                                  variable=cb_v[ix],
-#                                  command=chkbox_checked))
-#         cb[ix].grid(row=ix, column=0, sticky='w')
-#         opt.append(off_value)
-#         cb[-1].deselect() #uncheck the boxes initially.
-#     label = Label(root, width=20)
-#     label.grid(row=ix+1, column=0, sticky='w')
-#     b1 = Button(root,text = 'Quit', command= root.quit)
-#     root.mainloop()
-#     return opt
-
-def selectOptions(optionsList, optionsDict=None, text="Select preprocessing options:  "):
-    master = Tk()
-    if optionsDict==None:
-        optionsDict = {el:'1' for el in optionsList}
-    def createCheckBox(name,i):
-        var = IntVar()
-        Checkbutton(master, text=name, variable=var).grid(row=i+1, sticky=W)
-        return var
-
-    Label(master, text=text).grid(row=0, sticky=W)
-    variables = []
-    for i, opt in enumerate(optionsList):
-        if optionsDict[opt] == '1':
-            var = createCheckBox(opt,i)
-            variables.append(var)
-            var.set(optionsDict[opt])
-        else:
-            Label(master, text= '     ' + opt).grid(row=i+1, sticky=W)
-            var = IntVar()
-            var.set(0)
-            variables.append(var)
-
-    Button(master, text='Ok', command=master.quit).grid(row=i+2, sticky=W, pady=4)
-    mainloop()
-    varValues = []
-    for var in variables:
-        varValues.append(var.get())
-    optionsDict = dict((key, value) for (key, value) in zip(optionsList, varValues))
-    master.destroy()
-    return optionsDict
-
-def selectFile():
-    root = Tkinter.Tk()
-    root.withdraw()
-    filename = tkFileDialog.askopenfilename()
-    root.destroy()
-    return filename
-
-def selectDir(initialDir):
-    root = Tkinter.Tk()
-    root.withdraw()
-    dirName = tkFileDialog.askdirectory(initialdir = initialDir)
-    root.destroy()
-    return dirName
-
-def getInput(name,text):
-    root = Tkinter.Tk() # dialog needs a root window, or will create an "ugly" one for you
-    root.withdraw() # hide the root window
-    inputString = tkSimpleDialog.askstring(name, text, parent=root)
-    root.destroy() # clean up after yourself!
-    return inputString.lower()
-
-def displayMessage(title,message):
-    window = Tk()
-    window.wm_withdraw()
-
-    #centre screen message
-    window.geometry("1x1+"+str(window.winfo_screenwidth()/2)+"+"+str(window.winfo_screenheight()/2))
-    tkMessageBox.showinfo(title=title, message=message)
-
-def displayError(title, message):
-    #message at x:200,y:200
-    window = Tk()
-    window.wm_withdraw()
-
-    window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
-    tkMessageBox.showerror(title=title,message=message,parent=window)
-
-def getMultipleInputs(winTitle, inputTexts):
-    #Gui Things
-    def retrieve_inputs():
-        global inputs
-        inputs = [var.get() for var in variables]
-        window.destroy()
-        return inputs
-    window = Tk()
-    window.title(winTitle)
-    variables = []
-
-
-    for inputText in inputTexts:
-        text = Label(window, text =inputText)
-        guess = Entry(window)
-        variables.append(guess)
-        text.pack()
-        guess.pack()
-    finished = Button(text="ok", command=retrieve_inputs)
-    finished.pack()
-    window.mainloop()
-
-    return inputs
-
-# inputs = getMultipleInputs('ciccio',['p','ccio', 'pagliaccio'])
-# print inputs
-
-# a = 1
-# createFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi', 'test')
-# saveFile('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi', a, 'test', 'test', addSegNum = False)
-# b = loadFile('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi', 'test')

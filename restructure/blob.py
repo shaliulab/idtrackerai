@@ -99,6 +99,32 @@ class Blob(object):
                 portraits.append(current.portrait[0])
         return portraits
 
+    def identities_in_fragment(self):
+        identities = []
+        if self.is_in_a_fragment:
+            identities.append(self._identity)
+            current = self
+            while current.next[0].is_in_a_fragment:
+                current = current.next[0]
+                identities.append(current._identity)
+            while current.previous[0].is_in_a_fragment:
+                current = current.previous[0]
+                identities.append(current._identity)
+        return identities
+
+    def update_identity_in_fragment(self, identity_in_fragment):
+        if self.is_in_a_fragment:
+            self._identity = identity_in_fragment
+            current = self
+            while current.next[0].is_in_a_fragment:
+                current = current.next[0]
+                current._identity = identity_in_fragment
+            while current.previous[0].is_in_a_fragment:
+                current = current.previous[0]
+                current._identity = identity_in_fragment
+
+
+
 
 def connect_blob_list(blobs_in_video):
     for frame_i in tqdm(xrange(1,len(blobs_in_video)), desc = 'Connecting blobs progress'):
@@ -135,29 +161,16 @@ def apply_model_area_to_video(blobs_in_video, model_area):
     for blobs_in_frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'):
         apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area)
 
+def get_images_from_blobs_in_video(blobs_in_video, video_episodes_start_end):
+    portraits_in_video = Parallel(n_jobs=1)(delayed(get_blobs_in_frame_from_episode)(blobs_in_video[start:end]) for (start,end) in tqdm(video_episodes_start_end, desc = 'Getting portraits'))
+    return np.concatenate(portraits_in_video, axis = 0)
+
+def get_blobs_in_frame_from_episode(blobs_in_episode):
+    print(len(blobs_in_episode))
+    return np.concatenate([get_images_from_blobs_in_frame(blobs_in_frame) for blobs_in_frame in blobs_in_episode if len(get_images_from_blobs_in_frame(blobs_in_frame)) > 0], axis = 0)
+
 def get_images_from_blobs_in_frame(blobs_in_frame):
-    return [blob.portrait for blob in blobs_in_frame if blob.is_a_fish_in_a_fragment]
-
-def get_images_from_blobs_in_video(blobs_in_video):
-    portraits_in_video = Parallel(n_jobs=-1)(delayed(get_images_from_blobs_in_frame)(blobs_in_frame) for blobs_in_frame in tqdm(blobs_in_video, desc = 'Getting portraits'))
-    return [portrait for portraits_in_frame in portraits_in_video for portrait in portraits_in_frame]
-
-# if __name__ == "__main__":
-#     contoura = np.array([ [[0,0]], [[1,1]], [[2,2]] ])
-#     contourb = np.array([ [[0,1]], [[1,1]], [[2,3]] ])
-#     contourc = np.array([ [[1,1]] ])
-#     contourd = np.array([ [[0,1]], [[1,1]], [[2,3]] ])
-#
-#     print(contoura.shape)
-#     a = Blob(np.array([0,0]), contoura, 0, None, None, None)
-#     b = Blob(np.array([1,1]), contourb, 0, None, None, None)
-#     c = Blob(np.array([2,2]), contourc, 0, None, None, None)
-#     d = Blob(np.array([3,3]), contourd, 0, None, None, None)
-#     print(a.overlaps_with(b))
-#     print(b.overlaps_with(c))
-#     list_of_blob = [[a],[b],[c],[d]]
-#
-#     connect_blob_list(list_of_blob)
-#
-#     print(check_global_fragments(list_of_blob, 1))
-#     print(distance_travelled_in_fragment(a))
+    try:
+        return np.array([blob.portrait[0] for blob in blobs_in_frame if blob.is_a_fish_in_a_fragment])
+    except:
+        print('The frame is empty')

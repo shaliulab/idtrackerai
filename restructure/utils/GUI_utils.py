@@ -1,6 +1,8 @@
 # Import standard libraries
 import os
 import sys
+# Import application/library specifics
+sys.path.append('../preprocessing')
 import numpy as np
 
 # Import third party libraries
@@ -12,16 +14,107 @@ import matplotlib.patches as patches
 import seaborn as sns
 sns.set(style="white", context="talk")
 import pyautogui
+import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
+from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
+from segmentation import segmentVideo, blobExtractor
+from get_portraits import getPortrait, cropPortrait
+# from video_utils import *
+from py_utils import get_spaced_colors_util
 
-# Import application/library specifics
-sys.path.append('IdTrackerDeep/utils')
-sys.path.append('IdTrackerDeep/preprocessing')
+"""
+Display messages and errors
+"""
+def selectOptions(optionsList, optionsDict=None, text="Select preprocessing options:  "):
+    master = Tk()
+    if optionsDict==None:
+        optionsDict = {el:'1' for el in optionsList}
+    def createCheckBox(name,i):
+        var = IntVar()
+        Checkbutton(master, text=name, variable=var).grid(row=i+1, sticky=W)
+        return var
 
-from segmentation import *
-from fragmentation import *
-from get_portraits import *
-from video_utils import *
-from py_utils import *
+    Label(master, text=text).grid(row=0, sticky=W)
+    variables = []
+    for i, opt in enumerate(optionsList):
+        if optionsDict[opt] == '1':
+            var = createCheckBox(opt,i)
+            variables.append(var)
+            var.set(optionsDict[opt])
+        else:
+            Label(master, text= '     ' + opt).grid(row=i+1, sticky=W)
+            var = IntVar()
+            var.set(0)
+            variables.append(var)
+
+    Button(master, text='Ok', command=master.quit).grid(row=i+2, sticky=W, pady=4)
+    mainloop()
+    varValues = []
+    for var in variables:
+        varValues.append(var.get())
+    optionsDict = dict((key, value) for (key, value) in zip(optionsList, varValues))
+    master.destroy()
+    return optionsDict
+
+def selectFile():
+    root = Tk()
+    root.withdraw()
+    filename = tkFileDialog.askopenfilename()
+    root.destroy()
+    return filename
+
+def selectDir(initialDir):
+    root = Tk()
+    root.withdraw()
+    dirName = tkFileDialog.askdirectory(initialdir = initialDir)
+    root.destroy()
+    return dirName
+
+def getInput(name,text):
+    root = Tk() # dialog needs a root window, or will create an "ugly" one for you
+    root.withdraw() # hide the root window
+    inputString = tkSimpleDialog.askstring(name, text, parent=root)
+    root.destroy() # clean up after yourself!
+    return inputString.lower()
+
+def displayMessage(title,message):
+    window = Tk()
+    window.wm_withdraw()
+
+    #centre screen message
+    window.geometry("1x1+"+str(window.winfo_screenwidth()/2)+"+"+str(window.winfo_screenheight()/2))
+    tkMessageBox.showinfo(title=title, message=message)
+
+def displayError(title, message):
+    #message at x:200,y:200
+    window = Tk()
+    window.wm_withdraw()
+
+    window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
+    tkMessageBox.showerror(title=title,message=message,parent=window)
+
+def getMultipleInputs(winTitle, inputTexts):
+    #Gui Things
+    def retrieve_inputs():
+        global inputs
+        inputs = [var.get() for var in variables]
+        window.destroy()
+        return inputs
+    window = Tk()
+    window.title(winTitle)
+    variables = []
+
+
+    for inputText in inputTexts:
+        text = Label(window, text =inputText)
+        guess = Entry(window)
+        variables.append(guess)
+        text.pack()
+        guess.pack()
+    finished = Button(text="ok", command=retrieve_inputs)
+    finished.pack()
+    window.mainloop()
+
+    return inputs
 
 ''' ****************************************************************************
 ROI selector GUI
@@ -123,8 +216,8 @@ def ROISelectorPreview(video, old_video, usePreviousROI):
 First preview numAnimals, inspect parameters for segmentation and portraying
 **************************************************************************** '''
 def SegmentationPreview(video):
-    if video._num_animals == None:
-        video._num_animals = int(getInput('Number of animals','Type the number of animals'))
+    if video.number_of_animals == None:
+        video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
 
 
     if not video.animal_type:
@@ -335,6 +428,8 @@ def fragmentation_inspector(video, blobs_in_video):
                     blob.fragment_identifier = counter
                 counter += 1
 
+    np.save(video.blobs_path,blobs_in_video)
+
 
     cap = cv2.VideoCapture(video.video_path)
     numFrames = video._num_frames
@@ -385,6 +480,87 @@ def fragmentation_inspector(video, blobs_in_video):
 
     scroll(1)
     cv2.setTrackbarPos('start', 'fragmentInspection', defFrame)
+    cv2.waitKey(0)
+    cv2.waitKey(1)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
+
+''' ****************************************************************************
+Frame by frame identification inspector
+*****************************************************************************'''
+def get_n_previous_blobs_attribute(blob,attribute_name,number_of_previous):
+    blobs_attrs = []
+    current_blob = blob
+    for i in range(number_of_previous):
+        if current_blob.is_a_fish_in_a_fragment:
+            blobs_attrs.append(getattr(current_blob,attribute_name))
+            current_blob = current_blob.previous[0]
+        else:
+            break
+    return blobs_attrs
+
+def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous = 10):
+    cap = cv2.VideoCapture(video.video_path)
+    numFrames = video._num_frames
+    bkg = video.bkg
+    mask = video.ROI
+    subtract_bkg = video.subtract_bkg
+    height = video._height
+    width = video._width
+    global currentSegment, cap
+    currentSegment = 0
+    cv2.namedWindow('frame_by_frame_identity_inspector')
+    defFrame = 0
+    colors = get_spaced_colors_util(video.number_of_animals)
+
+    def scroll(trackbarValue):
+        global frame, currentSegment, cap
+
+        # Select segment dataframe and change cap if needed
+        sNumber = video.in_which_episode(trackbarValue)
+        print 'seg number ', sNumber
+        print 'trackbarValue ', trackbarValue
+        sFrame = trackbarValue
+
+        if sNumber != currentSegment: # we are changing segment
+            print 'Changing segment...'
+            currentSegment = sNumber
+            if video._paths_to_video_segments:
+                cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
+
+        #Get frame from video file
+        if video._paths_to_video_segments:
+            start = video._episodes_start_end[sNumber][0]
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
+        else:
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+        ret, frame = cap.read()
+        frameCopy = frame.copy()
+
+        blobs_in_frame = blobs_in_video[trackbarValue]
+        for blob in blobs_in_frame:
+
+            blobs_pixels = get_n_previous_blobs_attribute(blob,'pixels',number_of_previous)[::-1]
+            blobs_identities = get_n_previous_blobs_attribute(blob,'_identity',number_of_previous)[::-1]
+            for i, (blob_pixels, blob_identity) in enumerate(zip(blobs_pixels,blobs_identities)):
+                pxs = np.unravel_index(blob_pixels,(video._height,video._width))
+                if i < number_of_previous-1:
+                    frame[pxs[0],pxs[1],:] = np.multiply(colors[blob_identity],.3).astype('uint8')+np.multiply(frame[pxs[0],pxs[1],:],.7).astype('uint8')
+                else:
+                    frame[pxs[0],pxs[1],:] = frameCopy[pxs[0],pxs[1],:]
+
+            #draw the centroid
+            cv2.circle(frame, tuple(blob.centroid), 2, colors[blob._identity], 1)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, 1,colors[blob._identity], 5)
+
+
+        cv2.imshow('frame_by_frame_identity_inspector', frame)
+
+    cv2.createTrackbar('start', 'frame_by_frame_identity_inspector', 0, numFrames-1, scroll )
+
+    scroll(1)
+    cv2.setTrackbarPos('start', 'frame_by_frame_identity_inspector', defFrame)
     cv2.waitKey(0)
     cv2.waitKey(1)
     cv2.destroyAllWindows()

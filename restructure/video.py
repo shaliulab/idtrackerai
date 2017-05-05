@@ -17,10 +17,10 @@ SUPPORTED_ANIMAL_TYPES = ['fish', 'fly', 'ant']
 FRAMES_PER_EPISODE = 500 #long videos are divided into chunks. This is the number of frame per chunk
 
 class Video(object):
-    def __init__(self, video_path = None, animal_type = None, num_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
+    def __init__(self, video_path = None, animal_type = None, number_of_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
         self._video_path = video_path #string: path to the video
         self._animal_type = animal_type #string: type of animals to be tracked in the video
-        self._num_animals = num_animals #int: number of animals in the video
+        self._number_of_animals = number_of_animals #int: number of animals in the video
         self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split for parallel computation]
         self.bkg = bkg #matrix [shape = shape of a frame] background used to do bkg subtraction
         self.subtract_bkg = subtract_bkg #boolean: True if the user specifies to subtract the background
@@ -34,6 +34,7 @@ class Video(object):
         self._has_been_pretrained = None
         self._pretraining_path = None
         self.has_been_trained = None
+        self.has_been_assigned = None
 
     @property
     def video_path(self):
@@ -60,8 +61,8 @@ class Video(object):
         return self._animal_type
 
     @property
-    def num_animals(self):
-        return self._num_animals
+    def number_of_animals(self):
+        return self._number_of_animals
 
     @animal_type.setter
     def animal_type(self, value):
@@ -89,7 +90,7 @@ class Video(object):
             self.get_episodes()
         else:
             chunks_lengths = [int(cv2.VideoCapture(chunk).get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) for chunk in self._paths_to_video_segments]
-            self._episodes_start_end = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])-1) for i in range(1,len(chunks_lengths)+1)]
+            self._episodes_start_end = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])) for i in range(1,len(chunks_lengths)+1)]
             self._num_frames = np.sum(chunks_lengths)
             self._num_episodes = len(self._paths_to_video_segments)
         cap.release()
@@ -132,7 +133,7 @@ class Video(object):
         """Split video in episodes (chunks) of 500 frames
         for parallelisation"""
         starting_frames = np.arange(0, self._num_frames, FRAMES_PER_EPISODE)
-        ending_frames = np.hstack((starting_frames[1:] - 1, self._num_frames - 1))
+        ending_frames = np.hstack((starting_frames[1:], self._num_frames))
         self._episodes_start_end =zip(starting_frames, ending_frames)
         self._num_episodes = len(starting_frames)
 

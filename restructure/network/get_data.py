@@ -8,6 +8,7 @@ class DataSet(object):
         param: labels shaped as [num_of_labels, num_of_classes]
         """
         self.images = images
+        self._num_images = len(self.images)
         self.labels = labels
         self.number_of_animals = number_of_animals
         #check the number of images and labels are the same. If it true set the num_images
@@ -16,7 +17,6 @@ class DataSet(object):
     def consistency_check(self):
         if self.labels is not None:
             assert len(self.images) == len(self.labels)
-            self._num_images = len(self.images)
 
     def standarize_images(self):
         self.images = self.images/255.

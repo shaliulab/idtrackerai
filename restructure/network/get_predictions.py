@@ -24,9 +24,11 @@ class GetPrediction(object):
         end = self._index_in_epoch
         return self.data_set.images[start:end]
 
-    def get_predictions(self, name, store_loss_and_accuracy, batch_operation):
+    def get_predictions(self, batch_operation):
         self._index_in_epoch = 0
         while self._index_in_epoch < self.data_set._num_images:
             softmax_probs_batch, predictions_batch = batch_operation(self.next_batch(BATCH_SIZE))
             self._softmax_probs.append(softmax_probs_batch)
             self._predictions.append(predictions_batch)
+        self._softmax_probs = np.concatenate(self._softmax_probs, axis = 0)
+        self._predictions = np.concatenate(self._predictions, axis = 0)
