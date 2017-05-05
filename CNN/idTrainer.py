@@ -195,11 +195,18 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
             print "\nStart from:", start
             # We'll now fine tune in minibatches and report accuracy, loss:
             n_epochs = num_epochs - start
+            print 'number of epochs to train, ', n_epochs
 
             summary_writerT = tf.summary.FileWriter(ckpt_dir + '/train',sess.graph)
             summary_writerV = tf.summary.FileWriter(ckpt_dir + '/val',sess.graph)
 
+            print os.path.exists(ckpt_dir_model + "/lossAcc.pkl")
+            print start
             if start == 0 or not os.path.exists(ckpt_dir_model + "/lossAcc.pkl"):
+                print 'Initiallizing lists to save loss, acc and indivAcc'
+                start = 0
+                print "\nStart from:", start
+                n_epochs = num_epochs - start
                 # train lists for plotting
                 trainLossPlot = []
                 trainAccPlot = []
@@ -208,6 +215,7 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
                 valLossPlot = []
                 valAccPlot = []
                 valIndivAccPlot = []
+
                 # test lists for ploting
                 testLossPlot = []
                 testAccPlot = []
@@ -216,6 +224,7 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
                 epochTime = []
             else:
                 ''' load from pickle '''
+                print 'Loading lists to save loss, acc and indivAcc'
                 lossAccDict = pickle.load( open( ckpt_dir_model + "/lossAcc.pkl", "rb" ) )
                 # train lists for plotting
                 trainLossPlot = lossAccDict['loss']
@@ -252,6 +261,7 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
                     if start + epoch_i > minNumEpochsCheckLoss: #and start > 100:
                         float_info = sys.float_info
                         minFloat = float_info[3]
+                        # print 'valLossPlot, ', valLossPlot
                         currLoss = valLossPlot[-1]
                         prevLoss = valLossPlot[-minNumEpochsCheckLoss]
                         if currLoss == 0.:
@@ -264,10 +274,10 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
                             if printFlag:
                                 print '\nThe validation loss is infinite, we stop the training'
                             break
-			# if np.isnan(prevLoss):
-                        #     if printFlag:
-                        #         print '\nThe validation loss is infinite, we stop the training'
-                        #     break
+                        if np.isnan(prevLoss):
+                            if printFlag:
+                                print '\nThe validation loss is infinite, we stop the training'
+                            break
                         magCurr = int(np.log10(currLoss))-1
                         magPrev = int(np.log10(prevLoss))-1
                         epsilon = -.1*10**(magCurr)
@@ -536,11 +546,13 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
             testAcc = np.mean(accEpoch)
             testIndivAcc = np.nanmean(indivAccEpoch, axis=0) # nanmean because in minibatches some individuals could not appear...
 
-            print('Test (epoch %d): ' % epoch_counter + \
+            print('Test: ' + \
                 " Loss=" + "{:.6f}".format(testLoss) + \
                 ", Accuracy=" + "{:.5f}".format(testAcc) + \
                 ", Individual Accuracy=")
             print(testIndivAcc)
+            print 'number of fragments evaluated, ', len(accEpoch)
+            print 'max accuracy, ', np.max(accEpoch), ', min accuracy, ', np.min(accEpoch)
 
             # Test
             testLossPlot.append(testLoss)
@@ -549,7 +561,7 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
 
 
             lossAccDict['testLoss'] = testLossPlot
-            lossAccDict['testAcc'] = testAccPlot
+            lossAccDict['testAcc'] = accEpoch #
             lossAccDict['indivTestAcc'] = testIndivAccPlot
 
 
@@ -563,94 +575,3 @@ def run_training(X_t, Y_t, X_v, Y_v, X_test, Y_test,
         print 'lossAccDictSaved...'
     else:
         return lossAccDict, ckpt_dir_model
-
-"""
-Sample calls:
-Training:
-python -i cnn_model_summaries.py
---ckpt_folder ckpt_Train_60indiv_36dpf_22000_transfer
---dataset_train 25dpf_60indiv_22000ImPerInd_rotateAndCrop
-
-Trasnfer:
-python -i cnn_model_summaries.py
---ckpt_folder ckpt_Train_60indiv_36dpf_22000_transfer
---load_ckpt_folder ckpt_Train_60indiv_36dpf_22000_2
---dataset_train 25dpf_60indiv_22000ImPerInd_rotateAndCrop
-"""
-
-if __name__ == '__main__':
-    # prep for args
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_train', default='25dpf_60indiv_26142imperind_curvatureportrait2', type = str)
-    parser.add_argument('--dataset_test', default=None, type = str)
-    parser.add_argument('--train', default=1, type=int)
-    parser.add_argument('--ckpt_folder', default = "./test", type= str)
-    parser.add_argument('--load_ckpt_folder', default = "", type = str)
-    parser.add_argument('--num_indiv', default = 60, type = int)
-    parser.add_argument('--num_train', default = 25000, type = int)
-    parser.add_argument('--num_test', default = 0, type = int)
-    parser.add_argument('--num_ref', default = 0, type = int)
-    parser.add_argument('--num_epochs', default = 300, type = int)
-    parser.add_argument('--batch_size', default = 250, type = int)
-    parser.add_argument('--learning_rate', default = 0.01, type= float)
-    args = parser.parse_args()
-
-    pathTrain = args.dataset_train
-    pathTest = args.dataset_test
-    num_indiv = args.num_indiv
-    num_train = args.num_train
-    num_test = args.num_test
-    num_ref = args.num_ref
-    ckpt_dir = args.ckpt_folder
-    loadCkpt_folder = args.load_ckpt_folder
-    batch_size = args.batch_size
-    num_epochs = args.num_epochs
-    lr = args.learning_rate
-
-
-    print "\n****** Loading database ******\n"
-    numIndiv, imsize, \
-    X_train, Y_train, \
-    X_val, Y_val, \
-    X_test, Y_test, \
-    X_ref, Y_ref = loadDataBase(pathTrain, num_indiv, num_train, num_test, num_ref, ckpt_dir,pathTest)
-
-    print '\n values of the images: max min'
-    print np.max(X_train), np.min(X_train)
-
-    print '\n train size:    images  labels'
-    print X_train.shape, Y_train.shape
-    print 'val size:    images  labels'
-    print X_val.shape, Y_val.shape
-    print 'test size:    images  labels'
-    print X_test.shape, Y_test.shape
-    print 'ref size:    images  labels'
-    print X_ref.shape, Y_ref.shape
-
-    channels, width, height = imsize
-    resolution = np.prod(imsize)
-    classes = numIndiv
-
-    '''
-    ************************************************************************
-    *******************************Training*********************************
-    ************************************************************************
-    '''
-    if args.train == 1:
-        numImagesT = Y_train.shape[0]
-        numImagesV = Y_val.shape[0]
-        Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
-        Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
-        print Y_train
-
-        run_training(X_train, Y_train, X_val, Y_val, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
-        Vindices, Viter_per_epoch,1.,lr)
-
-    if args.train == 0:
-        numImagesT = Y_ref.shape[0]
-        numImagesV = Y_test.shape[0]
-        Tindices, Titer_per_epoch = get_batch_indices(numImagesT,batch_size)
-        Vindices, Viter_per_epoch = get_batch_indices(numImagesV,batch_size)
-
-        run_training(X_ref, Y_ref, X_test, Y_test, width, height, channels, classes, resolution, ckpt_dir, loadCkpt_folder, batch_size, num_epochs, Tindices, Titer_per_epoch,
-        Vindices, Viter_per_epoch, 1.,lr)

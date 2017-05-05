@@ -8,6 +8,9 @@ import cPickle as pickle
 
 # Import third party libraries
 from pprint import pprint
+import seaborn as sns
+from matplotlib import pyplot as plt
+from cycler import cycler
 
 # sns.set(style="darkgrid")
 
@@ -64,7 +67,9 @@ class P1B1plotter(object):
         # Initialize figure arrays
         self.trainAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
         self.valAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
-        self.testAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
+        self.testAccsMean = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
+        self.testAccsMin = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
+        self.testAccsMax = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
 
     def rebuildDictFromFolders(self):
 
@@ -92,7 +97,9 @@ class P1B1plotter(object):
                         self.LossAccDicts[groupSizeCNN][groupSize][numImForTrain].append(lossAccDict)
                         self.trainAccs[n,g,gCNN,r] = lossAccDict['acc'][-1]
                         self.valAccs[n,g,gCNN,r] = lossAccDict['valAcc'][-1]
-                        self.testAccs[n,g,gCNN,r] = lossAccDict['testAcc'][-1]
+                        self.testAccsMean[n,g,gCNN,r] = np.mean(lossAccDict['testAcc'])
+                        self.testAccsMin[n,g,gCNN,r] = np.min(lossAccDict['testAcc'])
+                        self.testAccsMax[n,g,gCNN,r] = np.max(lossAccDict['testAcc'])
 
                         print '\nSaving dictionary...'
                         pickle.dump(self.__dict__,open('IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict.pkl' %self.condition,'wb'))
@@ -124,9 +131,7 @@ class P1B1plotter(object):
                             self.timeToAcc[n,g,gCNN,r] = np.sum(lossAccDict['epochTime'][:int(self.epochsToAcc[n,g,gCNN,r])])
 
     def plotArray(self,arrayName,ax,ylim = (),ylabel='',title='',lineStyle='-'):
-        import seaborn as sns
-        from matplotlib import pyplot as plt
-        from cycler import cycler
+
         colormap = plt.cm.jet
         colors = [colormap(i) for i in np.linspace(0, 0.9, 8)]
         ax.set_prop_cycle(cycler('color',colors))
@@ -168,6 +173,8 @@ class P1B1plotter(object):
             fig.suptitle('Training from scratch with correlated images and data augmentation')
         elif self.condition == 'SCAV':
             fig.suptitle('Training from scratch with correlated images and data augmentation stopping like the video')
+        elif self.condition == 'KTV':
+            fig.suptitle('Training with knowledge transfer with uncorrelated images stopping like the video')
         elif self.condition == 'KTCV':
             fig.suptitle('Training with knowledge transfer with correlated images stopping like the video')
         elif self.condition == 'KTCVA':
@@ -178,7 +185,9 @@ class P1B1plotter(object):
             fig.suptitle('Training with knowledge transfer with correlated images stopping like the video softmax and fully connected')
         # fig.suptitle('Training from strach (group size vs number of images per individual)')
         self.plotArray('valAccs',axarr[0,0],ylim=(0.,1.),ylabel='Accuracy',title = 'Accuracy in validation')
-        self.plotArray('testAccs',axarr[0,0],lineStyle=':')
+        self.plotArray('testAccsMean',axarr[0,0],lineStyle='-.')
+        # self.plotArray('testAccsMin',axarr[0,0],lineStyle=':')
+        # self.plotArray('testAccsMax',axarr[0,0],lineStyle='--')
         # self.plotArray2('epochsToAcc',axarr[0,1],ylim=(0,400),ylabel='Number of pochs',title = 'Number of epochs to accuracy threshold %.2f' %self.accTh)
         self.plotArray('timeToAcc',axarr[1,0],ylabel='Time (sec)',title = 'Time to accuracy threshold  %.2f (sec)' %self.accTh)
         self.plotArray('totalTime',axarr[1,1],ylabel='Time (sec)',title = 'Total time in (sec)')
@@ -200,12 +209,17 @@ if __name__ == '__main__':
     condition = sys.argv[1]
     p = P1B1plotter()
     P1B1InfoPath = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/info.pkl' %sys.argv[1]
-    P1B1DictPath = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict.pkl' %sys.argv[1]
+    # P1B1DictPath = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/P1B1Dict.pkl' %sys.argv[1]
     print 'P1B1InfoPath, ', P1B1InfoPath
     p.dictPath = P1B1InfoPath
-    if os.path.isfile(P1B1DictPath):
-        print 'P1B1Dict.pkl already exist'
-        rebuildDict = raw_input('Do you wanna rebuild P1B1Dict?')
+    # if os.path.isfile(P1B1DictPath):
+    #     print 'P1B1Dict.pkl already exist'
+    #     rebuildDict = raw_input('Do you wanna rebuild P1B1Dict?')
+    #     if rebuildDict == 'y':
+    #         p.rebuildDictFromFolders()
+    #     elif rebuildDict == 'n' or rebuildDict == '':
+    #         p_dict = pickle.load(open(P1B1DictPath,'rb'))
+    #         p.__dict__.update(p_dict)
     p.rebuildDictFromFolders()
     p.computeTimes()
     p.plotResults()

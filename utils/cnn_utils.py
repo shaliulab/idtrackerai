@@ -381,6 +381,7 @@ def standarizeImages(images):
     return images
 
 def getUncorrelatedImages(images,labels,numImages, minNumImages):
+    print '\n *** Getting uncorrelated images'
     imagesTrain = []
     labelsTrain = []
     imagesVal = []
@@ -429,14 +430,18 @@ def getUncorrelatedImages(images,labels,numImages, minNumImages):
 
     return imagesTrain, labelsTrain, imagesVal, labelsVal, imagesTest, labelsTest
 
-def getCorrelatedImages(images,labels,numImages, minNumImages,rep):
+def getCorrelatedImages(images,labels,numImages, minNumImages,rep,numFragments=1):
     '''
     This functions assumes that images and labels have not been permuted
     and they are temporarly ordered for each animals
     :images: all images of a particular list of individuals ordered by individuals
     :labels: all labels of a particular list of individuals ordered by individuals
     :numImages: number of images for training for each individual
+    :minNumImages: minimum number of images available per individual
+    :numFragments: numFragments of size numImages
     '''
+    numAnimals = len(np.unique(labels))
+    print '\n **** Getting correlated images'
     imagesTrain = []
     labelsTrain = []
     imagesVal = []
@@ -445,62 +450,106 @@ def getCorrelatedImages(images,labels,numImages, minNumImages,rep):
     labelsTest = []
 
     numImagesVal = int(numImages * 0.1)
-    # Select randomly the frame where the fragment of correlated images starts
     print 'minNumImages, ', minNumImages
+    print 'numImages for training, ', numImages
+    print 'numImages for validation, ', numImagesVal
+
+    # Select fragments starting position
+    possibleStarts = np.arange(0,minNumImages,numImagesVal+numImages)[:-1]
     np.random.seed(rep)
-    framePos = np.random.randint(0,minNumImages - (numImages + numImagesVal))
+    fragmentsPos = possibleStarts[np.random.permutation(len(possibleStarts))]
+
+    # Choosing fragments for training and for testing
+    fragmentsPosTrain = fragmentsPos[:numFragments]
+    fragmentsPosTest = fragmentsPos[numFragments:]
+    print 'fragmentsPosTrain, ', fragmentsPosTrain
+    print 'fragmentsPosTest, ', fragmentsPosTest
+    print 'num fragments test, ', len(fragmentsPosTest)
+
+    # Initialize dictionary to save fragments for testing
+    fragmentsTestIm = {fragmentPos:[] for fragmentPos in fragmentsPosTest}
+    fragmentsTestLab = {fragmentPos:[] for fragmentPos in fragmentsPosTest}
+
+    print 'labels (shape), ', labels.shape
+    # Loop on the individuals
     for i in np.unique(labels):
-        print 'individual, ', i
+
         # Get images of this individual
         thisIndivImages = images[labels==i]
         thisIndivLabels = labels[labels==i]
+        print '\nindividual, ', i
         print 'num images of this individual, ', thisIndivImages.shape[0]
+        print 'this Indiv Labels (shape), ', thisIndivLabels.shape
 
         # Get train and validation images and labels
         # first we select a set of correlated images
-        imTrainVal = thisIndivImages[framePos:framePos+numImages+numImagesVal]
-        labTrainVal = thisIndivLabels[framePos:framePos+numImages+numImagesVal]
-        print 'num images for train and val for this indiv, ', imTrainVal.shape[0]
-        # we permute the iamges
+        imTrainVal = []
+        labTrainVal = []
+        print 'we are going to select images from ', numFragments, ' fragments of size ', numImages + numImagesVal
+        for fragmentPos in fragmentsPosTrain:
+            imTrainVal.append(thisIndivImages[fragmentPos:fragmentPos+numImages+numImagesVal])
+            labTrainVal.append(thisIndivLabels[fragmentPos:fragmentPos+numImages+numImagesVal])
+
+        print 'labTrainVal, ', labTrainVal[0].shape
+        imTrainVal = np.vstack(imTrainVal)
+        labTrainVal = np.hstack(labTrainVal)
+        print 'labTrainVal, ', labTrainVal.shape
+
+        # we permute the images
         imTrainVal = imTrainVal[np.random.permutation(len(imTrainVal))]
+
         # we select images for training and validation from the permuted images
-        imagesTrain.append(imTrainVal[:numImages])
-        labelsTrain.append(labTrainVal[:numImages])
-        imagesVal.append(imTrainVal[numImages:])
-        labelsVal.append(labTrainVal[numImages:])
-        print 'num images for train, ', imagesTrain[i].shape[0]
-        print 'num images for val, ', imagesVal[i].shape[0]
+        imagesTrain.append(imTrainVal[:numImages*numFragments])
+        labelsTrain.append(labTrainVal[:numImages*numFragments])
+        imagesVal.append(imTrainVal[numImages*numFragments:])
+        labelsVal.append(labTrainVal[numImages*numFragments:])
+        print 'images for train (shape), ', imagesTrain[i].shape
+        print 'labels for train (shape), ', labelsTrain[i].shape
+        print 'images for val (shape), ', imagesVal[i].shape
+        print 'labels for train (shape), ', labelsVal[i].shape
 
         # Get test images and labels
         # all the rest of images are the test images
-        imTest  = flatten([thisIndivImages[:framePos], thisIndivImages[framePos+numImages+numImagesVal:]])
-        imTest = np.asarray(imTest)
-        labTest = flatten([thisIndivLabels[:framePos], thisIndivLabels[framePos+numImages+numImagesVal:]])
-        labTest = np.asarray(labTest)
-        imagesTest.append(imTest)
-        labelsTest.append(labTest)
-        print 'num images for test, ', imagesTest[i].shape[0]
+        for fragmentPos in fragmentsPosTest:
+            fragmentsTestIm[fragmentPos].append(thisIndivImages[fragmentPos:fragmentPos+numImages+numImagesVal])
+            fragmentsTestLab[fragmentPos].append(thisIndivLabels[fragmentPos:fragmentPos+numImages+numImagesVal])
+        print 'images for testing (shape), ', fragmentsTestIm[fragmentPos][0].shape
+        print 'labels for testing (shape), ', fragmentsTestLab[fragmentPos][0].shape
 
     # we flatten the arrays
-    imagesTrain = flatten(imagesTrain)
-    imagesTrain = np.asarray(imagesTrain)
-    labelsTrain = flatten(labelsTrain)
-    labelsTrain = np.asarray(labelsTrain)
+    imagesTrain = np.vstack(imagesTrain)
+    labelsTrain = np.hstack(labelsTrain)
     perm = np.random.permutation(len(labelsTrain))
     imagesTrain = imagesTrain[perm]
     labelsTrain = labelsTrain[perm]
+    print '\nimages for train (shape), ', imagesTrain.shape
+    print 'labels for train (shape), ', labelsTrain.shape
 
-    imagesVal = flatten(imagesVal)
-    imagesVal = np.asarray(imagesVal)
-    labelsVal = flatten(labelsVal)
-    labelsVal = np.asarray(labelsVal)
+    imagesVal = np.vstack(imagesVal)
+    labelsVal = np.hstack(labelsVal)
+    print 'images for val (shape), ', imagesVal.shape
+    print 'labels for val (shape), ', labelsVal.shape
 
-    imagesTest = flatten(imagesTest)
-    imagesTest = np.asarray(imagesTest)
-    labelsTest = flatten(labelsTest)
-    labelsTest = np.asarray(labelsTest)
+    print '\nLoop to flaten the test images and labels '
+    fragmentsIndices = [0]
+    print 'number of fragments for testing, ', len(fragmentsTestIm)
+    for i, fragmentPos in enumerate(fragmentsPosTest):
+        # print 'number of images in first fragment for testing, ', fragmentsTestIm.keys()
+        imagesTest.append(np.vstack(fragmentsTestIm[fragmentPos]))
+        fragmentsTestIm[fragmentPos] = None # to empty RAM
+        labelsTest.append(np.hstack(fragmentsTestLab[fragmentPos]))
+        fragmentsTestLab[fragmentPos] = None # to empty RAM
+        fragmentsIndices.append((i+1)*numAnimals*(numImagesVal+numImages))
+    fragmentsIndices = fragmentsIndices[:-1]
 
-    return imagesTrain, labelsTrain, imagesVal, labelsVal, imagesTest, labelsTest, framePos
+    imagesTest = np.vstack(imagesTest)
+    labelsTest = np.hstack(labelsTest)
+    print 'images for test (shape) ', imagesTest.shape
+    print 'labels for test (shape) ', labelsTest.shape
+
+    # print 'fragments Indices for test, ', fragmentsIndices
+
+    return imagesTrain, labelsTrain, imagesVal, labelsVal, imagesTest, labelsTest, fragmentsPosTrain, fragmentsPosTest, fragmentsIndices
 
 def cropImages(images,imageSize,shift=(0,0)):
     """ Given batch of images it crops thme in a shape (imageSize,imageSize)

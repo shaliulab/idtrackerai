@@ -7,6 +7,7 @@ import cPickle as pickle
 
 # Import third party libraries
 from pprint import pprint
+from matplotlib import pyplot as plt
 
 # sns.set(style="darkgrid")
 
@@ -33,15 +34,15 @@ class P1B1(object):
         # Figure parameters
         self.groupSizesCNN = map(int,groupSizesCNN.split('_'))
         self.numGroupsCNN = len(self.groupSizesCNN)
-        self.groupSizes = [2,5,10,25,50,75,90]
+        self.groupSizes = [30]
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        self.IMDBSizes = [20,50,100,250,500,1000,3000,28000] # Images for training
+        self.IMDBSizes = [1600] # Images for training
         self.numIMDBSizes = len(self.IMDBSizes)
 
         # Set CNN training parameters
-        self.batchSize = 250
+        self.batchSize = 50
         self.numEpochs = 2000
         self.lr = 0.005
 
@@ -75,15 +76,15 @@ class P1B1(object):
         self.dataAugmentation = False
         if 'A' in self.condition:
             self.dataAugmentation = True
-            self.IMDBSizes = [20,50,100,250,500]
+            self.IMDBSizes = [25,50,100,200]
 	    self.numIMDBSizes = len(self.IMDBSizes)
 
         # Set flag for correlated iamges
         self.correlatedImages = False
         if 'C' in self.condition:
             self.correlatedImages = True
-	    self.IMDBSizes = [20,50,100,250,500]
-	    self.numIMDBSizes = len(self.IMDBSizes)
+    	    self.IMDBSizes = [25,50,100,200,400,800,1600,3200]
+    	    self.numIMDBSizes = len(self.IMDBSizes)
 
         # Set flag for accuracy by fragments
         if 'F' in self.condition:
@@ -233,7 +234,13 @@ class P1B1(object):
         if self.correlatedImages:
 
             # Get images that are correlated in time
-            X_train, Y_train, X_val, Y_val, X_test, Y_test, firstFrameIndex = getCorrelatedImages(images, labels, self.numImForTrain, self.minNumImagesPerIndiv,self.rep)
+            X_train, Y_train, \
+            X_val, Y_val, \
+            X_test, Y_test, \
+            fragmentsPosTrain, fragmentsPosTest,\
+            fragmentsIndices = getCorrelatedImages(images, labels,
+                                                   self.numImForTrain, self.minNumImagesPerIndiv,
+                                                   self.rep,self.numFragmentsTrain)
             imagesPermutation = None
         else:
 
@@ -244,7 +251,8 @@ class P1B1(object):
 
             print 'len labels, ', len(labels)
             imagesPermutation = np.random.permutation(len(labels))
-            firstFrameIndex = None
+            fragmentsPosTrain = None
+            fragmentsPosTest = None
 
             print 'len permutation, ', len(imagesPermutation)
             images = images[imagesPermutation]
@@ -274,16 +282,17 @@ class P1B1(object):
         Y_test = dense_to_one_hot(Y_test, n_classes=self.groupSize)
         print 'X_train shape', X_train.shape
         print 'Y_train shape', Y_train.shape
-        print 'Num train images per id, ', np.sum(Y_train,axis=0)
+        print 'Num train images per id, ', np.sum(Y_train,axis=0).astype('int')
         print 'X_val shape', X_val.shape
         print 'Y_val shape', Y_val.shape
-        print 'Num val images per id, ', np.sum(Y_val,axis=0)
+        print 'Num val images per id, ', np.sum(Y_val,axis=0).astype('int')
         print 'X_test shape', X_test.shape
         print 'Y_test shape', Y_test.shape
-        print 'Num test images per id, ', np.sum(Y_test,axis=0)
+        print 'Num test images per id, ', np.sum(Y_test,axis=0).astype('int')
 
         # Update ckpt_dir
-        ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/CNN_%i/numIndiv_%i/numImages_%i/rep_%i' %(self.condition, self.groupSizeCNN, self.groupSize, self.numImForTrain, self.rep)
+        ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/CNN_%i/numIndiv_%i/numImages_%i/rep_%i/numFrag_%i' \
+                    %(self.condition, self.groupSizeCNN, self.groupSize, self.numImForTrain, self.rep, self.numFragmentsTrain)
 
         # Compute index batches
         numImagesT = Y_train.shape[0]
@@ -291,7 +300,11 @@ class P1B1(object):
         numImagesTest = Y_test.shape[0]
         Tindices, Titer_per_epoch = get_batch_indices(numImagesT,self.batchSize)
         Vindices, Viter_per_epoch = get_batch_indices(numImagesV,self.batchSize)
-        TestIndices, TestIter_per_epoch = get_batch_indices(numImagesTest,self.batchSize)
+        if self.correlatedImages:
+            self.imagesInFragment = fragmentsIndices[1]
+            TestIndices, TestIter_per_epoch = get_batch_indices(numImagesTest,self.imagesInFragment)
+        elif not self.correlatedImages:
+            TestIndices, TestIter_per_epoch = get_batch_indices(numImagesTest,self.batchSize)
 
         # Run training
         lossAccDict, ckpt_dir_model = run_training(X_train, Y_train, X_val, Y_val, X_test, Y_test,
@@ -308,6 +321,19 @@ class P1B1(object):
                                     saveFlag = False,
                                     use_adam = self.use_adam)
 
+        if self.acc_by_fragments:
+            plt.figure()
+            plt.plot(fragmentsPosTest,lossAccDict['testAcc'],'o',alpha=0.5)
+            for fragmentForTrain in fragmentsPosTrain:
+                plt.axvline(fragmentForTrain,c='r')
+            plt.xlabel('fragment start position')
+            plt.ylabel('accuracy')
+            plt.ylim((0,1))
+            plt.title(self.condition + ' numIndiv=' + str(self.groupSize) + ' fragLength= ' + str((numImagesT+numImagesV)/self.groupSize) + ' repetition = ' + str(self.rep))
+            print 'Saving figure...'
+            figname = ckpt_dir + '/spectrum.pdf'
+            plt.savefig(figname)
+
         lossAccDict['repDict'] = {
                                 'groupSizeCNN': self.groupSizeCNN,
                                 'groupSize': self.groupSize,
@@ -315,7 +341,8 @@ class P1B1(object):
                                 'repetition': self.rep,
                                 'indivIndices': indivIndices,
                                 'imagesPermutation': imagesPermutation,
-                                'firstFrameIndex': firstFrameIndex,
+                                'fragmentsPosTrain':fragmentsPosTrain,
+                                'fragmentsPosTest':fragmentsPosTest,
                                 'numImagesT': numImagesT,
                                 'numImagesV': numImagesV,
                                 'numImagesTest': numImagesTest,
@@ -347,21 +374,28 @@ class P1B1(object):
 
                 for n, self.numImForTrain in enumerate(self.IMDBSizes): # Number of images/individual for training
 
+                    if self.correlatedImages:
+                        self.numFragmentsTrain_List = [2**i for i in range(int(np.log2(max(self.IMDBSizes)/self.numImForTrain))+1)]
+                    else:
+                        self.numFragmentsTrain_List = [1]
+
                     for r, self.rep in enumerate(self.repList): # Repetitions
 
-                        print '\n***********************************************************'
-                        if not self.kt:
-                            print 'No knowledge transfer'
-                        elif self.kt:
-                            print 'Knowledge transfer from ', self.loadCkpt_folder
-                            print 'GroupSizeCNN, ',self.groupSizeCNN
-                        print 'Group size, ', self.groupSize
-                        print 'numImForTrain, ', self.numImForTrain
-                        print 'Repetition, ', self.rep
+                        for f, self.numFragmentsTrain in enumerate(self.numFragmentsTrain_List):
 
-                        self.runRepetition()
+                            print '\n***********************************************************'
+                            if not self.kt:
+                                print 'No knowledge transfer'
+                            elif self.kt:
+                                print 'Knowledge transfer from ', self.loadCkpt_folder
+                                print 'GroupSizeCNN, ',self.groupSizeCNN
+                            print 'Group size, ', self.groupSize
+                            print 'numImForTrain, ', self.numImForTrain
+                            print 'Repetition, ', self.rep
 
-                        print '*******************************************************************\n'
+                            self.runRepetition()
+
+                            print '*******************************************************************\n'
 
 if __name__ == '__main__':
     '''
