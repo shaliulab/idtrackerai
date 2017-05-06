@@ -9,9 +9,9 @@ def detect_beginnings(boolean_array):
     return [i for i in range(0,len(boolean_array)) if (boolean_array[i] and not boolean_array[i-1])]
 
 def compute_model_area(blobs_in_video, number_of_animals, std_tolerance = STD_TOLERANCE):
-    blobs_in_core_global_fragments = [blobs_in_frame for blobs_in_frame in blobs_in_video if is_a_global_fragment(blobs_in_frame, number_of_animals)]
-    areas = [blob.area for blob in blobs_in_frame for blobs_in_frame in blobs_in_core_global_fragments]
-    mean_area = np.mean(areas)
+    # blobs_in_core_global_fragments = [blobs_in_frame for blobs_in_frame in blobs_in_video if is_a_global_fragment(blobs_in_frame, number_of_animals)]=
+    areas = [blob.area for blobs_in_frame in blobs_in_video for blob in blobs_in_frame ]
+    mean_area = np.median(areas)
     std_area = np.std(areas)
     return ModelArea(mean_area, std_area)
 
@@ -40,7 +40,6 @@ class GlobalFragment(object):
         self._uniqueness_score = None
         self._repeated_ids = []
         self._missing_ids = []
-
 
     @property
     def uniqueness_score(self):
