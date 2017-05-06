@@ -64,4 +64,4 @@ def cnn_model(images, classes):
     relu = reLU('relu1', fc_drop)
     y_logits = buildSoftMax('softmax1', relu, n_fc, classes)
 
-    return y_logits
+    return y_logits, conv5_flat
