@@ -1,24 +1,16 @@
 from __future__ import division
 import os
-import sys
-if 'linux' in sys.platform:
-    import matplotlib
-    matplotlib.use('TkAgg')
 
+# Import third party libraries
+import numpy as np
+import numpy.matlib as npm
+import tensorflow as tf
+import itertools
+
+# Import application/library specifics
 from tf_utils import *
 from py_utils import *
 
-import matplotlib.pyplot as plt
-import warnings
-import tensorflow as tf
-import numpy as np
-import numpy.matlib as npm
-from pprint import *
-from tensorflow.python.platform import gfile
-import cPickle as pickle
-import re
-import itertools
-# import pyautogui
 '''
 ****************************************************************************
 Tensorboard
@@ -191,7 +183,7 @@ def buildSoftMax(scopeName, inputSoftMax, n_fc, classes):
             )
         logits = tf.add(tf.matmul(inputSoftMax, W), b, name = scope.name)
         _activation_summary(logits)
-    return logits
+    return logits, [W,b]
 
 # def buildSoftMaxWeights(inputSoftMax,n_fc,classes):
 #     # the same as build softmax, but outputs the weights for visualization
@@ -300,358 +292,13 @@ def restoreFromFolder(pathToCkpt, saver, session):
     for a particular (TF) session
     '''
     ckpt = tf.train.get_checkpoint_state(pathToCkpt)
+    print "************************************************************"
+    print pathToCkpt
+    print ckpt
+    print "************************************************************"
     if ckpt and ckpt.model_checkpoint_path:
         print "restoring from " + ckpt.model_checkpoint_path
         saver.restore(session, ckpt.model_checkpoint_path) # restore model variables
-
-'''
-****************************************************************************
-Plotting utilities
-*****************************************************************************
-'''
-
-def get_spaced_colors(n):
-    max_value = 16581375 #255**3
-    interval = int(max_value / n)
-    colors = [hex(I)[2:].zfill(6) for I in range(0, max_value, interval)]
-    rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
-    rgbcolorslist = np.true_divide(rgbcolorslist,255)
-    hexcolorslist = [matplotlib.colors.rgb2hex(c) for c in rgbcolorslist]
-    return hexcolorslist
-
-def get_legend_str(n):
-
-    return [str(i+1) for i in range(n)]
-
-
-
-
-def CNNplotterFast2(lossAccDict,weightsDict,show=False):
-
-    # get variables
-    lossPlot, valLossPlot, lossSpeed,valLossSpeed, lossAccel, valLossAccel, \
-    accPlot, valAccPlot, accSpeed,valAccSpeed, accAccel, valAccAccel, \
-    indivAcc,indivValAcc, \
-    features, labels = getVarFromDict(lossAccDict,[
-        'loss', 'valLoss', 'lossSpeed', 'valLossSpeed', 'lossAccel', 'valLossAccel',
-        'acc', 'valAcc', 'accSpeed', 'valAccSpeed', 'accAccel', 'valAccAccel',
-        'indivAcc', 'indivValAcc',
-        'features', 'labels'])
-
-    WConv1, WConv3, WConv5  = getVarFromDict(weightsDict,['W1','W3','W5'])
-
-    # 'Weights': [WConv1,WConv3,WConv5,WFc]
-
-    meanIndivAcc = indivAcc[-1]
-    meanValIndiviAcc = indivValAcc[-1]
-    numIndiv = len(meanIndivAcc)
-    features = features[:30]
-    features = np.reshape(features, [features.shape[0],int(np.sqrt(features.shape[1])),int(np.sqrt(features.shape[1]))])
-    labels = labels[:30]
-
-
-
-    # plt.switch_backend('TkAgg')
-    # mng = plt.get_current_fig_manager()
-    # mng.resize(*mng.window.maxsize())
-    w, h = pyautogui.size()
-    # print w,h
-    fig = plt.figure("fine-tuning", figsize=(w/(2*96),h/96))
-    plt.clf()
-
-    # loss
-    ax1 = fig.add_subplot(241)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-    ax1.set_axis_bgcolor('none')
-
-    ax1.plot(lossPlot,'r-', label='training')
-    ax1.plot(valLossPlot, 'b-', label='validation')
-    ax1.set_xlabel('Epoch')
-    ax1.set_ylabel('Loss function')
-    ax1.legend(fancybox=True, framealpha=0.05)
-    ax1.set_xlim((0,300))
-    ax1.set_ylim((0,2.))
-
-    # accuracy
-    ax2 = fig.add_subplot(242)
-    ax2.spines["top"].set_visible(False)
-    ax2.spines["right"].set_visible(False)
-    ax2.get_xaxis().tick_bottom()
-    ax2.get_yaxis().tick_left()
-    ax2.set_axis_bgcolor('none')
-
-    ax2.plot(accPlot, 'r-')
-    ax2.plot(valAccPlot, 'b-')
-    ax2.set_xlabel('Epoch')
-    ax2.set_ylabel('Accuray')
-    ax2.set_xlim((0,300))
-    ax2.set_ylim((0,1))
-
-
-    # Individual accuracies
-    ax3 = fig.add_subplot(2, 2, 2)
-    ax3.spines["top"].set_visible(False)
-    ax3.spines["right"].set_visible(False)
-    ax3.get_xaxis().tick_bottom()
-    ax3.get_yaxis().tick_left()
-    ax3.set_axis_bgcolor('none')
-
-    individuals = [str(j) for j in range(1,numIndiv+1)]
-    ind = np.arange(numIndiv)+1
-    # width = 0.25
-    width = 0.35
-    rects1 = ax3.bar(ind-width, meanIndivAcc, width, color='red', alpha=0.4,label='training')
-    rects2 = ax3.bar(ind, meanValIndiviAcc, width, color='blue', alpha=0.4,label='validation')
-    ax3.set_ylim((0,1))
-    ax3.set_xlim((0,numIndiv+1))
-    ax3.set_xlabel('individual')
-    ax3.set_ylabel('Individual accuracy')
-    # ax3.legend(fancybox=True, framealpha=0.05)
-
-    # W1
-    ax4 = fig.add_subplot(2,3,4)
-    ax4.imshow(np.squeeze(WConv1),interpolation='none',cmap='gray',vmin=0, vmax=1)
-    ax4.set_title('Conv1 filters')
-    ax4.xaxis.set_ticklabels([])
-    ax4.yaxis.set_ticklabels([])
-
-    # W3
-    ax5 = fig.add_subplot(2,3,5)
-    ax5.imshow(np.squeeze(WConv3),interpolation='none',cmap='gray',vmin=0, vmax=1)
-    ax5.set_title('Conv2 filters')
-    ax5.xaxis.set_ticklabels([])
-    ax5.yaxis.set_ticklabels([])
-
-    # W5
-    ax6 = fig.add_subplot(2,3,6)
-    ax6.imshow(np.squeeze(WConv5),interpolation='none',cmap='gray',vmin=0, vmax=1)
-    ax6.set_title('Conv3 filters')
-    ax6.xaxis.set_ticklabels([])
-    ax6.yaxis.set_ticklabels([])
-
-    # plt.subplots_adjust(bottom=0.1, right=.9, left=0.1, top=.9, wspace = 0.25, hspace=0.25)
-
-    plt.draw()
-    plt.pause(0.00000001)
-
-
-def CNNplotterFast(lossAccDict):
-
-    # get variables
-    lossPlot, valLossPlot, lossSpeed,valLossSpeed, lossAccel, valLossAccel, \
-    accPlot, valAccPlot, accSpeed,valAccSpeed, accAccel, valAccAccel, \
-    indivAcc,indivValAcc, \
-    features, labels, weights = getVarFromDict(lossAccDict,[
-        'loss', 'valLoss', 'lossSpeed', 'valLossSpeed', 'lossAccel', 'valLossAccel',
-        'acc', 'valAcc', 'accSpeed', 'valAccSpeed', 'accAccel', 'valAccAccel',
-        'indivAcc', 'indivValAcc',
-        'features', 'labels','Weights'])
-
-    # 'Weights': [WConv1,WConv3,WConv5,WFc]
-
-    meanIndivAcc = indivAcc[-1]
-    meanValIndiviAcc = indivValAcc[-1]
-    numIndiv = len(meanIndivAcc)
-    features = features[:30]
-    features = np.reshape(features, [features.shape[0],int(np.sqrt(features.shape[1])),int(np.sqrt(features.shape[1]))])
-    labels = labels[:30]
-
-
-    plt.close()
-    # fig, axes = plt.subplots(nrows=10, ncols=12)
-    # fig = plt.figure()
-    plt.switch_backend('TkAgg')
-    mng = plt.get_current_fig_manager()
-    mng.resize(*mng.window.maxsize())
-
-
-    # loss
-    ax1 = plt.subplot(261)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-    ax1.set_axis_bgcolor('none')
-
-    ax1.plot(lossPlot,'or-', label='training')
-    ax1.plot(valLossPlot, 'ob--', label='validation')
-    ax1.set_ylabel('Loss function')
-    ax1.legend(fancybox=True, framealpha=0.05)
-
-    ax2 = plt.subplot(262)
-    ax2.spines["top"].set_visible(False)
-    ax2.spines["right"].set_visible(False)
-    ax2.get_xaxis().tick_bottom()
-    ax2.get_yaxis().tick_left()
-    ax2.set_axis_bgcolor('none')
-
-    ax2.plot(lossSpeed,'ro-',label='training')
-    plt.plot(valLossSpeed,'bo--',label='validation')
-    ax2.set_ylabel('Loss function speed')
-
-    ax3 = plt.subplot(263)
-    ax3.spines["top"].set_visible(False)
-    ax3.spines["right"].set_visible(False)
-    ax3.get_xaxis().tick_bottom()
-    ax3.get_yaxis().tick_left()
-    ax3.set_axis_bgcolor('none')
-
-    ax3.plot(lossAccel,'ro-',label='training')
-    plt.plot(valLossAccel,'bo--',label='validation')
-    ax3.set_ylabel('Loss function accel.')
-
-
-    # accuracy
-    ax4 = plt.subplot(267)
-    ax4.spines["top"].set_visible(False)
-    ax4.spines["right"].set_visible(False)
-    ax4.get_xaxis().tick_bottom()
-    ax4.get_yaxis().tick_left()
-    ax4.set_axis_bgcolor('none')
-
-    ax4.plot(accPlot, 'or-')
-    ax4.plot(valAccPlot, 'ob--')
-    ax4.set_xlabel('Epoch')
-    ax4.set_ylabel('Accuray')
-
-    ax5 = plt.subplot(268)
-    ax5.spines["top"].set_visible(False)
-    ax5.spines["right"].set_visible(False)
-    ax5.get_xaxis().tick_bottom()
-    ax5.get_yaxis().tick_left()
-    ax5.set_axis_bgcolor('none')
-
-    ax5.plot(accSpeed,'ro-',label='training')
-    plt.plot(valAccSpeed,'bo--',label='validation')
-    ax5.set_ylabel('Accuray speed')
-
-    ax6 = plt.subplot(2,6,9)
-    ax6.spines["top"].set_visible(False)
-    ax6.spines["right"].set_visible(False)
-    ax6.get_xaxis().tick_bottom()
-    ax6.get_yaxis().tick_left()
-    ax6.set_axis_bgcolor('none')
-
-    ax6.plot(accAccel,'ro-',label='training')
-    plt.plot(valAccAccel,'bo--',label='validation')
-    ax6.set_ylabel('Accuray accel.')
-
-    # Individual accuracies
-    ax7 = plt.subplot(1, 4, 3)
-    ax7.spines["top"].set_visible(False)
-    ax7.spines["right"].set_visible(False)
-    ax7.get_xaxis().tick_bottom()
-    ax7.get_yaxis().tick_left()
-    ax7.set_axis_bgcolor('none')
-
-    individuals = [str(j) for j in range(1,numIndiv+1)]
-    ind = np.arange(numIndiv)+1
-    # width = 0.25
-    width = 0.35
-    rects1 = ax7.barh(ind, meanIndivAcc, width, color='red', alpha=0.4,label='training')
-    rects2 = ax7.barh(ind+width, meanValIndiviAcc, width, color='blue', alpha=0.4,label='validation')
-
-    # rects3 = ax7.barh(ind+width*2, indivAccRef, width, color='green', alpha=0.4,label='validation')
-
-    # ax7.set_yticks((ind+width), individuals)
-    ax7.set_xlim((0,1))
-    ax7.set_ylim((0,numIndiv+1))
-    ax7.set_ylabel('individual')
-    ax7.set_title('Individual accuracy')
-    ax7.legend(fancybox=True, framealpha=0.05)
-
-    # k=0
-    # ax_feats = []
-    # for i in range(30):
-    #     ax8 = plt.subplot(10,12,(i % 3)+10+12*k)
-    #     ax_feats.append(ax8)
-    #     if i % 3 == 2:
-    #         k+=1
-    #     ax8.imshow(features[i], interpolation='none', cmap='gray')
-    #     ax8.set_ylabel('Indiv' + str(labels[i]))
-    # print fig.get_children()
-    # plt.tight_layout()
-    plt.subplots_adjust(bottom=0.1, right=.9, left=0.1, top=.9, wspace = 0.5, hspace=0.5)
-    plt.draw()
-    plt.pause(1)
-
-def CNNplotterFastNoses(lossDict):
-    # get variables
-    lossPlot, valLossPlot, lossSpeed,valLossSpeed, lossAccel, valLossAccel, \
-    coord, coord_hat, miniframes = getVarFromDict(lossDict,[
-        'loss', 'valLoss', 'lossSpeed', 'valLossSpeed', 'lossAccel', 'valLossAccel',
-        'coordinate', 'coordinate_hat', 'miniframes'])
-    try:
-        fig = plt.gcf()
-    except:
-        fig = plt.figure()
-    fig.clear()
-
-    plt.switch_backend('TkAgg')
-    mng = plt.get_current_fig_manager()
-    mng.resize(*mng.window.maxsize())
-
-
-    # loss
-    ax1 = plt.subplot(231)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-    ax1.set_axis_bgcolor('none')
-
-    ax1.plot(lossPlot[1:],'or-', label='training')
-    ax1.plot(valLossPlot[1:], 'ob--', label='validation')
-    ax1.set_ylabel('Loss function')
-    ax1.legend(fancybox=True, framealpha=0.05)
-
-    ax2 = plt.subplot(234)
-    ax2.spines["top"].set_visible(False)
-    ax2.spines["right"].set_visible(False)
-    ax2.get_xaxis().tick_bottom()
-    ax2.get_yaxis().tick_left()
-    ax2.set_axis_bgcolor('none')
-
-    ax2.plot(lossSpeed[1:],'ro-',label='training')
-    plt.plot(valLossSpeed[1:],'bo--',label='validation')
-    ax2.set_ylabel('Loss function speed')
-
-    k=2
-    ax_feats = []
-    ax8 = plt.subplot(232)
-    ax8.imshow(miniframes[0], cmap='gray', interpolation='none')
-    ax8.scatter(coord[0,0],coord[0,1], c='r') # remark: the nose of the fish is red since we are writing this piece of
-    ax8.scatter(coord[0,2],coord[0,3], c='b') #code during christmas time!
-
-    ax8.scatter(coord_hat[0,0],coord_hat[0,1], c='r', marker='v')
-    ax8.scatter(coord_hat[0,2],coord_hat[0,3], c='b', marker='v')
-
-    # for i in range(1,2):
-    #     ax8 = plt.subplot(4,6,k+i)
-    #     ax_feats.append(ax8)
-    #     if (k + i) % 6 == 0:
-    #         k+= 2
-    #     minif = miniframes[i]
-    #     minif[minif == 0] = 255
-    #     ax8.imshow(minif, cmap='gray', interpolation='none')
-    #     ax8.scatter(coord[i,0],coord[i,1], c='r') # remark: the nose of the fish is red since we are writing this piece of
-    #     ax8.scatter(coord[i,2],coord[i,3], c='b') #code during christmas time!
-    #
-    #     ax8.scatter(coord_hat[i,0],coord_hat[i,1], c='r', marker='v')
-    #     ax8.scatter(coord_hat[i,2],coord_hat[i,3], c='b', marker='v')
-    #
-    #     # ax8.set_xlim((0,1))
-    #     # ax8.set_ylim((0,1))
-    print coord
-    print coord_hat
-
-    plt.subplots_adjust(bottom=0.1, right=.9, left=0.1, top=.9, wspace = 0.5, hspace=0.5)
-    plt.draw()
-    plt.pause(1)
-
 
 ''' ****************************************************************************
 CNN statistics and cluster analysis
@@ -768,7 +415,6 @@ def individualAccuracy(labels,logits,classes):
 ''' ****************************************************************************
 Data Augmentation and image processing
 *****************************************************************************'''
-
 def shuffle_images_and_labels(images, labels):
     """Shuffles images and labels with a random
     permutation, according to the number of examples"""
@@ -787,6 +433,177 @@ def standarizeImages(images):
 
     images = (images-meanIm)/stdIm
     return images
+
+def getUncorrelatedImages(images,labels,numImages, minNumImages):
+    print '\n *** Getting uncorrelated images'
+    imagesTrain = []
+    labelsTrain = []
+    imagesVal = []
+    labelsVal = []
+    imagesTest = []
+    labelsTest = []
+
+    numImagesVal = int(numImages * 0.1)
+    for i in np.unique(labels):
+        print 'individual, ', i
+        # Get images of this individual
+        thisIndivImages = images[labels==i]
+        thisIndivLabels = labels[labels==i]
+        print 'num images of this individual, ', thisIndivImages.shape[0]
+
+        # Get train, validation and test, images and labels
+        imagesTrain.append(thisIndivImages[:numImages])
+        labelsTrain.append(thisIndivLabels[:numImages])
+        imagesVal.append(thisIndivImages[numImages:numImages+numImagesVal])
+        labelsVal.append(thisIndivLabels[numImages:numImages+numImagesVal])
+        imagesTest.append(thisIndivImages[numImages+numImagesVal:])
+        labelsTest.append(thisIndivLabels[numImages+numImagesVal:])
+        print 'num images for train, ', imagesTrain[i].shape[0]
+        print 'num images for val, ', imagesVal[i].shape[0]
+        print 'num images for test, ', imagesTest[i].shape[0]
+
+
+    # we flatten the arrays
+    imagesTrain = flatten(imagesTrain)
+    imagesTrain = np.asarray(imagesTrain)
+    labelsTrain = flatten(labelsTrain)
+    labelsTrain = np.asarray(labelsTrain)
+    perm = np.random.permutation(len(labelsTrain))
+    imagesTrain = imagesTrain[perm]
+    labelsTrain = labelsTrain[perm]
+
+    imagesVal = flatten(imagesVal)
+    imagesVal = np.asarray(imagesVal)
+    labelsVal = flatten(labelsVal)
+    labelsVal = np.asarray(labelsVal)
+
+    imagesTest = flatten(imagesTest)
+    imagesTest = np.asarray(imagesTest)
+    labelsTest = flatten(labelsTest)
+    labelsTest = np.asarray(labelsTest)
+
+    return imagesTrain, labelsTrain, imagesVal, labelsVal, imagesTest, labelsTest
+
+def getCorrelatedImages(images,labels,numImages, minNumImages,rep,numFragments=1):
+    '''
+    This functions assumes that images and labels have not been permuted
+    and they are temporarly ordered for each animals
+    :images: all images of a particular list of individuals ordered by individuals
+    :labels: all labels of a particular list of individuals ordered by individuals
+    :numImages: number of images for training for each individual
+    :minNumImages: minimum number of images available per individual
+    :numFragments: numFragments of size numImages
+    '''
+    numAnimals = len(np.unique(labels))
+    print '\n **** Getting correlated images'
+    imagesTrain = []
+    labelsTrain = []
+    imagesVal = []
+    labelsVal = []
+    imagesTest = []
+    labelsTest = []
+
+    numImagesVal = int(numImages * 0.1)
+    print 'minNumImages, ', minNumImages
+    print 'numImages for training, ', numImages
+    print 'numImages for validation, ', numImagesVal
+
+    # Select fragments starting position
+    possibleStarts = np.arange(0,minNumImages,numImagesVal+numImages)[:-1]
+    np.random.seed(rep)
+    fragmentsPos = possibleStarts[np.random.permutation(len(possibleStarts))]
+
+    # Choosing fragments for training and for testing
+    fragmentsPosTrain = fragmentsPos[:numFragments]
+    fragmentsPosTest = fragmentsPos[numFragments:]
+    print 'fragmentsPosTrain, ', fragmentsPosTrain
+    print 'fragmentsPosTest, ', fragmentsPosTest
+    print 'num fragments test, ', len(fragmentsPosTest)
+
+    # Initialize dictionary to save fragments for testing
+    fragmentsTestIm = {fragmentPos:[] for fragmentPos in fragmentsPosTest}
+    fragmentsTestLab = {fragmentPos:[] for fragmentPos in fragmentsPosTest}
+
+    print 'labels (shape), ', labels.shape
+    # Loop on the individuals
+    for i in np.unique(labels):
+
+        # Get images of this individual
+        thisIndivImages = images[labels==i]
+        thisIndivLabels = labels[labels==i]
+        print '\nindividual, ', i
+        print 'num images of this individual, ', thisIndivImages.shape[0]
+        print 'this Indiv Labels (shape), ', thisIndivLabels.shape
+
+        # Get train and validation images and labels
+        # first we select a set of correlated images
+        imTrainVal = []
+        labTrainVal = []
+        print 'we are going to select images from ', numFragments, ' fragments of size ', numImages + numImagesVal
+        for fragmentPos in fragmentsPosTrain:
+            imTrainVal.append(thisIndivImages[fragmentPos:fragmentPos+numImages+numImagesVal])
+            labTrainVal.append(thisIndivLabels[fragmentPos:fragmentPos+numImages+numImagesVal])
+
+        print 'labTrainVal, ', labTrainVal[0].shape
+        imTrainVal = np.vstack(imTrainVal)
+        labTrainVal = np.hstack(labTrainVal)
+        print 'labTrainVal, ', labTrainVal.shape
+
+        # we permute the images
+        imTrainVal = imTrainVal[np.random.permutation(len(imTrainVal))]
+
+        # we select images for training and validation from the permuted images
+        imagesTrain.append(imTrainVal[:numImages*numFragments])
+        labelsTrain.append(labTrainVal[:numImages*numFragments])
+        imagesVal.append(imTrainVal[numImages*numFragments:])
+        labelsVal.append(labTrainVal[numImages*numFragments:])
+        print 'images for train (shape), ', imagesTrain[i].shape
+        print 'labels for train (shape), ', labelsTrain[i].shape
+        print 'images for val (shape), ', imagesVal[i].shape
+        print 'labels for train (shape), ', labelsVal[i].shape
+
+        # Get test images and labels
+        # all the rest of images are the test images
+        for fragmentPos in fragmentsPosTest:
+            fragmentsTestIm[fragmentPos].append(thisIndivImages[fragmentPos:fragmentPos+numImages+numImagesVal])
+            fragmentsTestLab[fragmentPos].append(thisIndivLabels[fragmentPos:fragmentPos+numImages+numImagesVal])
+        print 'images for testing (shape), ', fragmentsTestIm[fragmentPos][0].shape
+        print 'labels for testing (shape), ', fragmentsTestLab[fragmentPos][0].shape
+
+    # we flatten the arrays
+    imagesTrain = np.vstack(imagesTrain)
+    labelsTrain = np.hstack(labelsTrain)
+    perm = np.random.permutation(len(labelsTrain))
+    imagesTrain = imagesTrain[perm]
+    labelsTrain = labelsTrain[perm]
+    print '\nimages for train (shape), ', imagesTrain.shape
+    print 'labels for train (shape), ', labelsTrain.shape
+
+    imagesVal = np.vstack(imagesVal)
+    labelsVal = np.hstack(labelsVal)
+    print 'images for val (shape), ', imagesVal.shape
+    print 'labels for val (shape), ', labelsVal.shape
+
+    print '\nLoop to flaten the test images and labels '
+    fragmentsIndices = [0]
+    print 'number of fragments for testing, ', len(fragmentsTestIm)
+    for i, fragmentPos in enumerate(fragmentsPosTest):
+        # print 'number of images in first fragment for testing, ', fragmentsTestIm.keys()
+        imagesTest.append(np.vstack(fragmentsTestIm[fragmentPos]))
+        fragmentsTestIm[fragmentPos] = None # to empty RAM
+        labelsTest.append(np.hstack(fragmentsTestLab[fragmentPos]))
+        fragmentsTestLab[fragmentPos] = None # to empty RAM
+        fragmentsIndices.append((i+1)*numAnimals*(numImagesVal+numImages))
+    fragmentsIndices = fragmentsIndices[:-1]
+
+    imagesTest = np.vstack(imagesTest)
+    labelsTest = np.hstack(labelsTest)
+    print 'images for test (shape) ', imagesTest.shape
+    print 'labels for test (shape) ', labelsTest.shape
+
+    # print 'fragments Indices for test, ', fragmentsIndices
+
+    return imagesTrain, labelsTrain, imagesVal, labelsVal, imagesTest, labelsTest, fragmentsPosTrain, fragmentsPosTest, fragmentsIndices
 
 def cropImages(images,imageSize,shift=(0,0)):
     """ Given batch of images it crops thme in a shape (imageSize,imageSize)
@@ -811,6 +628,7 @@ def cropImages(images,imageSize,shift=(0,0)):
         return croppedImages
 
 def dataAugment(images,labels,dataAugment = False):
+
     def getPossibleShifts():
         possibleShifts = []
         possibleShifts.append(list(itertools.combinations_with_replacement(range(-2,3),2)))
@@ -819,6 +637,7 @@ def dataAugment(images,labels,dataAugment = False):
         possibleShifts = [shift for l in possibleShifts for shift in l]
         possibleShifts = set(possibleShifts)
         return possibleShifts
+
     if dataAugment:
         print 'Performing data augmentation...'
         possibleShifts = getPossibleShifts() #(0,0) is included
@@ -834,4 +653,5 @@ def dataAugment(images,labels,dataAugment = False):
         print 'No data augmentation...'
         print 'Cropping images to 32x32...'
         images = cropImages(images,32,(0,0))
+
     return images, np.asarray(labels)

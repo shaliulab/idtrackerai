@@ -1,15 +1,16 @@
 from __future__ import division
-from itertools import groupby
+# Import standard libraries
 import os
 import glob
 import re
 import datetime
-import pandas as pd
 import numpy as np
-import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
-from Tkinter import *
-import shutil
+
+# Import third party libraries
+from itertools import groupby
+import pandas as pd
 import cPickle as pickle
+
 
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):
@@ -124,6 +125,8 @@ def scanFolder(path):
     # maybe write check on video extension supported by opencv2
     if filename[-2:] == '_1':
         paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
+    else:
+        paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
     return paths
 
 def get_spaced_colors_util(n,norm=False):
@@ -195,7 +198,6 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
     video = os.path.basename(path)
     folder = os.path.dirname(path)
     filename, extension = os.path.splitext(video)
-    subfolder = ''
 
     if name  == 'segmentation':
         subfolder = '/preprocessing/segmentation/'
@@ -208,9 +210,6 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
             return pickle.load(open(folder + subfolder + filename) ,'rb'), nSegmen
     elif name == 'statistics':
         filename = 'statistics.pkl'
-        return pickle.load(open(sessionPath + '/' + filename,'rb') )
-    elif name == 'trajectories':
-        filename = 'trajectories.pkl'
         return pickle.load(open(sessionPath + '/' + filename,'rb') )
     else:
         subfolder = '/preprocessing/'

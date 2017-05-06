@@ -7,6 +7,7 @@ import cPickle as pickle
 
 # Import third party libraries
 from pprint import pprint
+from matplotlib import pyplot as plt
 
 # sns.set(style="darkgrid")
 
@@ -17,357 +18,397 @@ sys.path.append('IdTrackerDeep/CNN')
 from idTrainer import *
 from input_data_cnn import *
 from py_utils import *
+import gc
 
 class P1B1(object):
 
-    def __init__(self, job = 1, IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5', repList = '1', groupSizesCNN = '0'):
+    def __init__(self, cluster = 0, job = 1, IMDBCode = 'A', idsCode = 'a', repList = '1', groupSizesCNN = '0', condition = 'S'):
 
-        def initializeDicts(self):
-            # Main loop
-            self.IndivIndices = {}
-            self.ImagesIndices = {}
-            self.LossAccDicts = {}
-            for gCNN in self.groupSizesCNN:
-                self.IndivIndices[gCNN] = {}
-                self.ImagesIndices[gCNN] = {}
-                self.LossAccDicts[gCNN] = {}
-
-                for g in self.groupSizes:
-                    self.IndivIndices[gCNN][g] = []
-                    self.ImagesIndices[gCNN][g] = {}
-                    self.LossAccDicts[gCNN][g] = {}
-
-                    for n in self.IMDBSizes:
-                        self.ImagesIndices[gCNN][g][n] = []
-                        self.LossAccDicts[gCNN][g][n] = []
-
-        if IMDBPath == 'd':
-            IMDBPath = 'IdTrackerDeep/data/36dpf_60indiv_29754ImPerInd_curvaturePortrait_0.hdf5'
-            # IMDBPath = 'IdTrackerDeep/data/25dpf_60indiv_26142imperind_curvatureportrait2_0.hdf5'
-
-            print 'Using default library, ', IMDBPath
-
-        # Dataset from which to load the images for training
-        self.IMDBPath = IMDBPath
-        self.IMDBName = getIMDBNameFromPath(self.IMDBPath)
-
+        print '\n----------------------------------------------------------------'
         # Job counter for condor
+        self.cluster = cluster
         self.job = job
-
+        self.condition = condition
+        self.IMDBCode = IMDBCode
+        self.idsCode = idsCode
         # Figure parameters
         self.groupSizesCNN = map(int,groupSizesCNN.split('_'))
         self.numGroupsCNN = len(self.groupSizesCNN)
-        self.groupSizes = [2, 5, 10, 25, 50]
+        self.groupSizes = [30]
         self.numGroups = len(self.groupSizes)
         self.repList = map(int,repList.split('_'))
         self.numRepetitions = len(self.repList)
-        self.IMDBSizes = [20,50,100,250,500,750]
+        self.IMDBSizes = [1600] # Images for training
         self.numIMDBSizes = len(self.IMDBSizes)
 
-        # Initialize figure arrays
-        self.trainAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
-        self.valAccs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
+        # Set CNN training parameters
+        self.batchSize = 50
+        self.numEpochs = 2000
+        self.lr = 0.005
 
-        # CNN parameters
-        if self.groupSizesCNN == [0]:
-            self.kt = False
-        else:
+    	# Set keep probability for dropout
+    	self.keep_prob = 1.0
+    	if 'D' in self.condition:
+       	    self.keep_prob = 0.7
+
+        # Set flag to indicate knowledge transfer
+        self.kt = False
+        if 'KT' in self.condition:
             self.kt = True
-        self.batchSize = 250
-        self.numEpochs = 5000
-        self.lr = 0.01
-        self.keep_prob = 1.0
 
+        # Set flag to stop the training when it is not learning much
+        self.checkLearningFlag = False
+        if 'V' in self.condition: # 'V' stands for video condition for early stopping
+            self.checkLearningFlag = True
+
+        # Set flag to only train softmax
+        self.trainSoftmax = False
+        if 'X' in self.condition:
+            self.trainSoftmax = True
+
+        # Set flag to train fully connected and softmax
+        self.trainFullyConnected = False
+        if 'FX' in self.condition:
+            self.trainFullyConnected = True
+            self.trainSoftmax = True
+
+        # Set flag for data Augmentation
+        self.dataAugmentation = False
+        if 'A' in self.condition:
+            self.dataAugmentation = True
+            self.IMDBSizes = [25,50,100,200]
+	    self.numIMDBSizes = len(self.IMDBSizes)
+
+        # Set flag for correlated iamges
+        self.correlatedImages = False
+        if 'C' in self.condition:
+            self.correlatedImages = True
+    	    self.IMDBSizes = [25,50,100,200,400,800,1600,3200]
+    	    self.numIMDBSizes = len(self.IMDBSizes)
+
+        # Set flag for accuracy by fragments
+        if 'F' in self.condition:
+            self.acc_by_fragments = True
+
+        self.use_adam = False
+        # Set flag to train with Adam
+        if 'M' in self.condition:
+            self.use_adam = True
+
+        # Get list of IMDBPaths form IMDBCode
+        print '\nReading IMDBCode and idsCode...'
+        if not int(self.cluster):
+            self.datafolder = 'IdTrackerDeep/'
+        elif int(self.cluster):
+            self.datafolder = '/admin/'
+        self.IMDBsDict = {
+                    'A': self.datafolder + 'data/TU20160413_36dpf_60indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
+                    'B': self.datafolder + 'data/TU20160428_36dpf_60indiv_28010ImPerInd_curvaturePortrait_0.hdf5',
+                    'C': self.datafolder + 'data/TU20160920_36dpf_64indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
+                    'D': self.datafolder + 'data/TU20170131_31dpf_40indiv_34770ImPerInd_curvaturePortrait_0.hdf5',
+                    'E': self.datafolder + 'data/TU20170201_31pdf_72indiv_38739ImPerInd_curvaturePortrait_0.hdf5',
+                    'F': self.datafolder + 'data/TU20170202_31pdf_72indiv_38913ImPerInd_curvaturePortrait_0.hdf5',
+                    'a': self.datafolder + 'data/TU20160413_36dpf_16indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
+                    'b': self.datafolder + 'data/TU20160428_36dpf_16indiv_28818ImPerInd_curvaturePortrait_0.hdf5',
+                    'd': self.datafolder + 'data/TU20170131_31dpf_16indiv_38989ImPerInd_curvaturePortrait_0.hdf5',
+                    'c': self.datafolder + 'data/TU20160920_36dpf_16indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
+                    'e': self.datafolder + 'data/TU20170201_31pdf_16indiv_38997ImPerInd_curvaturePortrait_0.hdf5',
+                    'f': self.datafolder + 'data/TU20170202_31pdf_16indiv_38998ImPerInd_curvaturePortrait_0.hdf5'
+                    }
+        self.IMDBPaths = []
+        self.idsInIMDBs = []
+        for (letter1,letter2) in zip(self.IMDBCode,self.idsCode):
+            print '\nletter1, ', letter1
+            self.IMDBPaths.append(self.IMDBsDict[letter1])
+            IMDBName = getIMDBNameFromPath(self.IMDBsDict[letter1])
+            print 'IMDBName, ', IMDBName
+            strain, age, numIndivIMDB, numImPerIndiv = getIMDBInfoFromName(IMDBName)
+            print 'numIndivIMDB', numIndivIMDB
+            print 'letter2, ', letter2
+            if letter2 == 'a': # all ids
+                ids = range(numIndivIMDB)
+            elif letter2 == 'f': # first half idsInIMDBs
+                ids = range(numIndivIMDB/2)
+            elif letter2 == 's': # first half idsInIMDBs
+                ids = range(numIndivIMDB/2,numIndivIMDB)
+            print 'ids selected, ', ids
+            self.idsInIMDBs.append(ids)
+        print 'IMDBPaths, ', self.IMDBPaths
+        print 'idsInIMDBs, ', self.idsInIMDBs
+
+        print '\nSaving dictionary...'
+        self.CNN_modelsPath = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/' %self.condition
+        if not os.path.exists(self.CNN_modelsPath):
+            os.makedirs(self.CNN_modelsPath)
+        pickle.dump(self.__dict__,open(self.CNN_modelsPath + 'info.pkl' ,'wb'))
+        print 'Dictionary saved in ', self.CNN_modelsPath + 'info.pkl'
+        print '----------------------------------------------------------------\n'
+
+    def loadIMDBs(self):
+
+        print '\n----------------------------------------------------------------'
+        print 'Loading images and labels form the IMDB selected'
         # Initialize variables
-        initializeDicts(self)
-        # self.IndivIndices, self.ImageIndices, self.LossAccDicts = initializeDicts(self)
+        self.images = []
+        self.labels = []
+        self.numIndivImdb = 0
+        self.strains = []
+        self.ages = []
+        for (IMDBPath,idsInIMDB) in zip(self.IMDBPaths,self.idsInIMDBs):
+            IMDBName = getIMDBNameFromPath(IMDBPath)
+            strain, age, numIndivIMDB, numImPerIndiv = getIMDBInfoFromName(IMDBName)
+            print '\nExtracting imagaes from ', IMDBName
+            print 'The individuals selected from this IMDB are ',  idsInIMDB
+            print 'strain, ', strain
+            print 'age, ', age
+            print 'numIndivIMDB, ', numIndivIMDB
+            self.strains.append(strain)
+            self.ages.append(age)
+
+            # Check whether there are enough individuals in the IMDB
+            if numIndivIMDB < len(idsInIMDB):
+                raise ValueError('The number of indiv requested is bigger than the number of indiv in the IMDB')
+
+            # Load IMDB
+            _, imagesIMDB, labelsIMDB, self.imsize, _, _ = loadIMDB(IMDBPath)
+
+            # If the number of individuals requested is smaller I need to slice the IMDB
+            if numIndivIMDB > len(idsInIMDB):
+                imagesIMDB, labelsIMDB = sliceDatabase(imagesIMDB, labelsIMDB, idsInIMDB)
+
+            ### FIXME there is some problem in the construction of the IMDBs because some of them have he channels dimension and other do not
+            if len(labelsIMDB.shape) == 1:
+                imagesIMDB = np.expand_dims(imagesIMDB,axis=1)
+                labelsIMDB = np.expand_dims(labelsIMDB,axis=1)
+
+            # Update labels values according to the number of individuals already loaded
+            labelsIMDB = labelsIMDB+self.numIndivImdb
+
+            # Append labels and images to the list
+            print 'images shape ', imagesIMDB.shape
+            print 'labels shape ', labelsIMDB.shape
+            self.images.append(imagesIMDB)
+            self.labels.append(labelsIMDB)
+            print 'The labels added are, ', np.unique(labelsIMDB)
+
+            # Update number of individuals loaded
+            self.numIndivImdb += len(idsInIMDB)
+
+            # To clear memory
+            imagesIMDB = None
+            labelsIMDB = None
+
+        # Stack all images and labes
+        self.images = np.vstack(self.images)
+        self.labels = np.vstack(self.labels)
+        print 'images shape ', self.images.shape
+        print 'labels shape ', self.labels.shape
+        print 'labels ', np.unique(self.labels)
+        self.minNumImagesPerIndiv = np.min([np.sum(self.labels == i) for i in np.unique(self.labels)])
+        print 'num images per label, ', self.minNumImagesPerIndiv
+
+        # Standarization of images
+        self.images = standarizeImages(self.images)
+        print '----------------------------------------------------------------\n'
+
+    def runRepetition(self):
+
+        # Total number of images needed considering training and 10% more for validation
+        numImToUse = self.numImForTrain + int(self.numImForTrain*.1)
+        print 'Number of images for training, ', self.numImForTrain
+        print 'Total number of images per animal, ', numImToUse
+
+        # Get individuals indices for this repetition
+        print 'Seeding the random generator...'
+        np.random.seed(self.rep)
+        permIndiv = np.random.permutation(self.numIndivImdb)
+        indivIndices = permIndiv[:self.groupSize]
+        print 'indivIndices, ', indivIndices
+
+        # Get current individuals images
+        images, labels = sliceDatabase(self.images, self.labels, indivIndices)
+        print 'Num train images per id, ', [np.sum(labels==i) for i in np.unique(labels)]
+        images = np.expand_dims(images,axis=3)
+
+        # Separate images from training, validation and testing
+        if self.correlatedImages:
+
+            # Get images that are correlated in time
+            X_train, Y_train, \
+            X_val, Y_val, \
+            X_test, Y_test, \
+            fragmentsPosTrain, fragmentsPosTest,\
+            fragmentsIndices = getCorrelatedImages(images, labels,
+                                                   self.numImForTrain, self.minNumImagesPerIndiv,
+                                                   self.rep,self.numFragmentsTrain)
+            imagesPermutation = None
+        else:
+
+            # Get images that are uncorrelated in time
+            print 'Extracting uncorrelated images...'
+            print 'Creating new permutation of images'
+            np.random.seed(self.rep)
+
+            print 'len labels, ', len(labels)
+            imagesPermutation = np.random.permutation(len(labels))
+            fragmentsPosTrain = None
+            fragmentsPosTest = None
+
+            print 'len permutation, ', len(imagesPermutation)
+            images = images[imagesPermutation]
+            labels = labels[imagesPermutation]
+            print 'Images shape', images.shape
+            X_train, Y_train, X_val, Y_val, X_test, Y_test = getUncorrelatedImages(images, labels, self.numImForTrain, self.minNumImagesPerIndiv)
+
+        images = None
+        labels = None
+        # Data Augmentation only to train and validation data
+        print 'X_train shape', X_train.shape
+        print 'X_val shape', X_val.shape
+        print 'X_test shape', X_test.shape
+        if self.dataAugmentation:
+            X_train, Y_train = dataAugment(X_train,Y_train,dataAugment = True)
+        else:
+            X_train, Y_train = dataAugment(X_train,Y_train,dataAugment = False)
+
+        X_val, Y_val = dataAugment(X_val,Y_val,dataAugment = False)
+        X_test, Y_test = dataAugment(X_test,Y_test,dataAugment = False)
+        self.width, self.height, self.channels = X_train.shape[1:]
+
+        # Pass labels from dense_to_one_hot
+
+        Y_train = dense_to_one_hot(Y_train, n_classes=self.groupSize)
+        Y_val = dense_to_one_hot(Y_val, n_classes=self.groupSize)
+        Y_test = dense_to_one_hot(Y_test, n_classes=self.groupSize)
+        print 'X_train shape', X_train.shape
+        print 'Y_train shape', Y_train.shape
+        print 'Num train images per id, ', np.sum(Y_train,axis=0).astype('int')
+        print 'X_val shape', X_val.shape
+        print 'Y_val shape', Y_val.shape
+        print 'Num val images per id, ', np.sum(Y_val,axis=0).astype('int')
+        print 'X_test shape', X_test.shape
+        print 'Y_test shape', Y_test.shape
+        print 'Num test images per id, ', np.sum(Y_test,axis=0).astype('int')
+
+        # Update ckpt_dir
+        ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models%s/CNN_%i/numIndiv_%i/numImages_%i/rep_%i/numFrag_%i' \
+                    %(self.condition, self.groupSizeCNN, self.groupSize, self.numImForTrain, self.rep, self.numFragmentsTrain)
+
+        # Compute index batches
+        numImagesT = Y_train.shape[0]
+        numImagesV = Y_val.shape[0]
+        numImagesTest = Y_test.shape[0]
+        Tindices, Titer_per_epoch = get_batch_indices(numImagesT,self.batchSize)
+        Vindices, Viter_per_epoch = get_batch_indices(numImagesV,self.batchSize)
+        if self.correlatedImages:
+            self.imagesInFragment = fragmentsIndices[1]
+            TestIndices, TestIter_per_epoch = get_batch_indices(numImagesTest,self.imagesInFragment)
+        elif not self.correlatedImages:
+            TestIndices, TestIter_per_epoch = get_batch_indices(numImagesTest,self.batchSize)
+
+        # Run training
+        lossAccDict, ckpt_dir_model = run_training(X_train, Y_train, X_val, Y_val, X_test, Y_test,
+                                    self.width, self.height, self.channels, self.groupSize,
+                                    ckpt_dir, self.loadCkpt_folder,
+                                    self.batchSize, self.numEpochs,
+                                    Tindices, Titer_per_epoch,
+                                    Vindices, Viter_per_epoch,
+                                    TestIndices, TestIter_per_epoch,
+                                    self.keep_prob,self.lr,
+                                    checkLearningFlag = self.checkLearningFlag,
+                                    onlySoftmax=self.trainSoftmax,
+                                    onlyFullyConnected = self.trainFullyConnected,
+                                    saveFlag = False,
+                                    use_adam = self.use_adam)
+
+        if self.acc_by_fragments:
+            plt.figure()
+            plt.plot(fragmentsPosTest,lossAccDict['testAcc'],'o',alpha=0.5)
+            for fragmentForTrain in fragmentsPosTrain:
+                plt.axvline(fragmentForTrain,c='r')
+            plt.xlabel('fragment start position')
+            plt.ylabel('accuracy')
+            plt.ylim((0,1))
+            plt.title(self.condition + ' numIndiv=' + str(self.groupSize) + ' fragLength= ' + str((numImagesT+numImagesV)/self.groupSize) + ' repetition = ' + str(self.rep))
+            print 'Saving figure...'
+            figname = ckpt_dir + '/spectrum.pdf'
+            plt.savefig(figname)
+
+        lossAccDict['repDict'] = {
+                                'groupSizeCNN': self.groupSizeCNN,
+                                'groupSize': self.groupSize,
+                                'IMBDSize': self.numImForTrain,
+                                'repetition': self.rep,
+                                'indivIndices': indivIndices,
+                                'imagesPermutation': imagesPermutation,
+                                'fragmentsPosTrain':fragmentsPosTrain,
+                                'fragmentsPosTest':fragmentsPosTest,
+                                'numImagesT': numImagesT,
+                                'numImagesV': numImagesV,
+                                'numImagesTest': numImagesTest,
+                                }
+
+        info = pickle.load(open(self.CNN_modelsPath + 'info.pkl','rb'))
+        lossAccDict['info'] = info
+        print 'Saving lossAccDict...'
+        pickle.dump( lossAccDict, open( ckpt_dir_model + "/lossAcc.pkl", "wb" ) )
+        print 'lossAccDict saved'
 
     def compute(self):
 
-        def runRepetition(self, loadCkpt_folder, images, labels, gCNN, g, n, r):
-            groupSizeCNN = self.groupSizesCNN[gCNN]
-            groupSize = self.groupSizes[g]
-            numImagesToUse = self.IMDBSizes[n]
-            rep = self.repList[r]
-
-            # Get individuals for this repetition
-            print 'Individual indices per group size', self.IndivIndices
-            print 'Number of repetitions already computed', len(self.IndivIndices[groupSizeCNN][groupSize])
-            if len(self.IndivIndices[groupSizeCNN][groupSize]) >= r + 1:
-                print 'Restoring individual indices for rep ', rep
-                indivIndices = self.IndivIndices[groupSizeCNN][groupSize][r]
-
-            else:
-                print 'Seeding the random generator...'
-                np.random.seed(rep)
-
-                permIndiv = permuter(self.numIndivImdb,'individualsTrain',[])
-                indivIndices = permIndiv[:groupSize]
-                self.IndivIndices[groupSizeCNN][groupSize].append(indivIndices)
-
-
-            # Get images of the current individuals
-            imagesS, labelsS = sliceDatabase(images, labels, indivIndices)
-
-            # Get permutation of for this repetition
-            if len(self.ImagesIndices[groupSizeCNN][groupSize][numImagesToUse]) >= r + 1:
-                print 'Restoring images permutation for rep ', rep
-                permImages = self.ImagesIndices[groupSizeCNN][groupSize][numImagesToUse][r]
-
-            else:
-                permImages = permuter(len(labelsS),'imagesTrain',[])
-                self.ImagesIndices[groupSizeCNN][groupSize][numImagesToUse].append(permImages)
-
-            # Permute images
-            imagesS = imagesS[permImages]
-            labelsS = labelsS[permImages]
-
-            # Select images needed
-            imagesS = imagesS[:numImagesToUse * groupSize]
-            labelsS = labelsS[:numImagesToUse * groupSize]
-
-            # # Data augmentation ### TODO code data augmentation
-            # imagesSA, labelsSA = dataAugmenter(imagesS, labelsS)
-
-
-            # Split in train and validation
-            X_train, Y_train, X_val, Y_val = splitter(imagesS, labelsS, numImagesToUse, groupSize, self.imSize)
-            print 'len Y_train + Y_val, ', len(Y_train) + len(Y_val)
-
-            # check train's dimensions
-            cardTrain = int(np.ceil(np.true_divide(np.multiply(numImagesToUse,9),10)))*groupSize
-            dimTrainL = (cardTrain, groupSize)
-            dimTrainI = (cardTrain, images.shape[2]*images.shape[3])
-            dimensionChecker(X_train.shape, dimTrainI)
-            dimensionChecker(Y_train.shape, dimTrainL)
-
-            # check val's dimensions
-            cardVal = int(np.ceil(np.true_divide(numImagesToUse,10)))*groupSize
-            dimValL = (cardVal, groupSize)
-            dimValI = (cardVal, images.shape[2] * images.shape[3])
-            dimensionChecker(X_val.shape, dimValI)
-            dimensionChecker(Y_val.shape, dimValL)
-
-            # Update ckpt_dir
-            if not self.kt:
-                ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models/numIndiv_%i/numImages_%i/rep_%i' %(groupSize, numImagesToUse, rep)
-            elif self.kt:
-                ckpt_dir = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsKT/CNN_%i/numIndiv_%i/numImages_%i/rep_%i' %(groupSizeCNN, groupSize, numImagesToUse, rep)
-
-            # Compute index batches
-            numImagesT = Y_train.shape[0]
-            numImagesV = Y_val.shape[0]
-            Tindices, Titer_per_epoch = get_batch_indices(numImagesT,self.batchSize)
-            Vindices, Viter_per_epoch = get_batch_indices(numImagesV,self.batchSize)
-
-            # Run training
-            lossAccDict = run_training(X_train, Y_train, X_val, Y_val,
-                                        self.width, self.height, self.channels, groupSize, self.resolution,
-                                        ckpt_dir, loadCkpt_folder,
-                                        self.batchSize, self.numEpochs,
-                                        Tindices, Titer_per_epoch,
-                                        Vindices, Viter_per_epoch,
-                                        self.keep_prob,self.lr)
-
-            print 'Time in seconds, ', np.sum(lossAccDict['epochTime'])
-            self.LossAccDicts[groupSizeCNN][groupSize][numImagesToUse].append(lossAccDict)
-            self.trainAccs[n,g,gCNN,r] = lossAccDict['acc'][-1]
-            self.valAccs[n,g,gCNN,r] = lossAccDict['valAcc'][-1]
-
-        # Load IMDB
-        _, images, labels, self.imSize, self.numIndivImdb, self.numImagesPerIndiv = loadIMDB(self.IMDBPath)
-
-        # Training parameters
-        self.channels, self.width, self.height = self.imSize
-        self.resolution = np.prod(self.imSize)
-
         # Main loop
-        for gCNN in range(self.numGroupsCNN):
+        for gCNN, self.groupSizeCNN in enumerate(self.groupSizesCNN): # Group size of the pre trained CNN model
+
             if not self.kt:
-                print 'No knowledge transfer'
-                loadCkpt_folder = ''
+
+                self.loadCkpt_folder = ''
+
             elif self.kt:
+
                 # By default we will use the first repetition and the model train with the whole library 25000 images.
-                loadCkpt_folder = 'IdTrackerDeep/figuresPaper/P1B1/CNN_models/numIndiv_%i/numImages_%i/rep_%i' %(self.groupSizesCNN[gCNN], 25000, 1)
-                print 'Knowledge transfer from ', loadCkpt_folder
+                # FIXME be aware that the 25000 is hardcoded and can give errors if we train for another number of images for training...
+                self.loadCkpt_folder = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsS/CNN_0/numIndiv_%i/numImages_%i/rep_%i' %(self.groupSizeCNN, 28000, 1)
 
-            for g in range(self.numGroups):
 
-                for n in range(self.numIMDBSizes):
+            for g, self.groupSize in enumerate(self.groupSizes): # Group size for the current training
 
-                    for r in range(self.numRepetitions):
-                        print '\n******************************************************************************************************************************'
-                        print '******************************************************************************************************************************'
-                        if not self.kt:
-                            print 'No knowledge transfer'
-                        elif self.kt:
-                            print 'Knowledge transfer from ', loadCkpt_folder
-                            print 'GroupSizeCNN, ',self.groupSizesCNN[gCNN]
-                        print 'Group size, ', self.groupSizes[g]
-                        print 'numImagesToUse, ', self.IMDBSizes[n]
-                        print 'Repetition, ', self.repList[r]
+                for n, self.numImForTrain in enumerate(self.IMDBSizes): # Number of images/individual for training
 
-                        runRepetition(self, loadCkpt_folder, images, labels, gCNN, g, n, r)
+                    if self.correlatedImages:
+                        self.numFragmentsTrain_List = [2**i for i in range(int(np.log2(max(self.IMDBSizes)/self.numImForTrain))+1)]
+                    else:
+                        self.numFragmentsTrain_List = [1]
 
-                        print '\nSaving dictionary...'
-                        if not self.kt:
-                            pickle.dump(self.__dict__,open('IdTrackerDeep/figuresPaper/P1B1/CNN_models/P1B1Dict_job_%i.pkl' %self.job,'wb'))
-                        elif self.kt:
-                            pickle.dump(self.__dict__,open('IdTrackerDeep/figuresPaper/P1B1/CNN_modelsKT/P1B1Dict_job_%i.pkl' %self.job,'wb'))
-                        print '******************************************************************************************************************************'
-                        print '******************************************************************************************************************************\n'
+                    for r, self.rep in enumerate(self.repList): # Repetitions
 
-    def joinDicts(self,P1B1Dict='IdTrackerDeep/figuresPaper/P1B1/CNN_models/P1B1Dict_job_1.pkl'):
-        P1B1DictsPaths = scanFolder(P1B1Dict)
-        print 'P1B1DictsPaths, '
-        pprint(P1B1DictsPaths)
+                        for f, self.numFragmentsTrain in enumerate(self.numFragmentsTrain_List):
 
-        # Update dictionary
-        repList = []
-        trainAccs = []
-        valAccs = []
-        IndivIndices = {}
-        ImagesIndices = {}
-        LossAccDicts = {}
-        print '\nUpdating repetitions...'
-        for P1B1DictPath in P1B1DictsPaths:
-            print P1B1DictPath
-            P1B1Dict = pickle.load(open(P1B1DictPath,'rb'))
+                            print '\n***********************************************************'
+                            if not self.kt:
+                                print 'No knowledge transfer'
+                            elif self.kt:
+                                print 'Knowledge transfer from ', self.loadCkpt_folder
+                                print 'GroupSizeCNN, ',self.groupSizeCNN
+                            print 'Group size, ', self.groupSize
+                            print 'numImForTrain, ', self.numImForTrain
+                            print 'Repetition, ', self.rep
 
-            print 'Appeding repList, trainAccs and valAccs'
-            repList.append(P1B1Dict['repList'])
-            trainAccs.append(P1B1Dict['trainAccs'])
-            valAccs.append(P1B1Dict['valAccs'])
+                            self.runRepetition()
 
-            print 'Updating IndivIndices, ImagesIndices and LossAccDicts'
-            for gCNN in self.groupSizesCNN:
-                if gCNN not in IndivIndices.keys():
-                    IndivIndices[gCNN] = {}
-                    ImagesIndices[gCNN] = {}
-                    LossAccDicts[gCNN] = {}
-
-                for g in self.groupSizes:
-                    if g not in IndivIndices[gCNN].keys():
-                        IndivIndices[gCNN][g] = []
-                        ImagesIndices[gCNN][g] = {}
-                        LossAccDicts[gCNN][g] = {}
-
-                    for indivIndices in P1B1Dict['IndivIndices'][gCNN][g]:
-                        IndivIndices[gCNN][g].append(indivIndices)
-
-                    for n in self.IMDBSizes:
-                        print 'Group size CNN %i Group size %i IMDB size %i' %(gCNN,g,n)
-                        if n not in ImagesIndices[gCNN][g].keys():
-                            print 'Initializing lists ImagesIndices, LossAccDicts for the new IMDBSize', n
-                            ImagesIndices[gCNN][g][n] = []
-                            LossAccDicts[gCNN][g][n] = []
-
-                        for r, (imagesIndices, lossAccDict) in enumerate(zip(P1B1Dict['ImagesIndices'][gCNN][g][n],P1B1Dict['LossAccDicts'][gCNN][g][n])):
-                            print 'Group size CNN %i Group size %i IMDB size %i REp %i' %(gCNN,g,n,r)
-                            ImagesIndices[gCNN][g][n].append(imagesIndices)
-                            LossAccDicts[gCNN][g][n].append(lossAccDict)
-
-        # Update object
-        self.repList = flatten(repList)
-        self.numRepetitions = len(self.repList)
-        print 'repList, ', self.repList
-        self.trainAccs = np.concatenate(trainAccs,axis=3)
-        self.valAccs = np.concatenate(valAccs,axis=3)
-        print 'trainAccs, ', self.trainAccs
-        print 'valAccs, ', self.valAccs
-        self.IndivIndices = IndivIndices
-        self.ImagesIndices = ImagesIndices
-        self.LossAccDicts = LossAccDicts
-        print 'Num of lossAccDicts', len(IndivIndices[gCNN][g]), len(ImagesIndices[gCNN][g][n]), len(LossAccDicts[gCNN][g][n])
-
-        # Save dictionary
-        print '\nSaving dictionary...'
-        pickle.dump(self.__dict__,open('IdTrackerDeep/figuresPaper/P1B1/CNN_models/P1B1Dict.pkl','wb'))
-
-    def computeTimes(self,accTh = 0.8):
-        self.accTh = accTh
-        self.totalTime = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
-        self.epochTime = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
-        self.totalEpochs = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
-        self.timeToAcc = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
-        self.epochsToAcc = np.ones((self.numIMDBSizes, self.numGroups, self.numGroupsCNN, self.numRepetitions)) * np.nan
-
-        for gCNN, groupSizeCNN in enumerate(self.groupSizesCNN):
-            for g,groupSize in enumerate(self.groupSizes):
-                for n,IMDBSize in enumerate(self.IMDBSizes):
-                    print 'Group size CNN %i Group size %i IMDB size %i' %(groupSizeCNN,groupSize,IMDBSize)
-                    for r, lossAccDict in enumerate(self.LossAccDicts[groupSizeCNN][groupSize][IMDBSize]):
-                        self.totalTime[n,g,gCNN,r] = np.sum(lossAccDict['epochTime'])
-                        self.epochTime[n,g,gCNN,r] = np.mean(lossAccDict['epochTime'])
-                        self.totalEpochs[n,g,gCNN,r] = len(lossAccDict['epochTime'])
-                        if np.where(np.asarray(lossAccDict['valAcc'])>=accTh)[0].any():
-
-                            self.epochsToAcc[n,g,gCNN,r] = np.where(np.asarray(lossAccDict['valAcc'])>=accTh)[0][0]
-                            self.timeToAcc[n,g,gCNN,r] = np.sum(lossAccDict['epochTime'][:int(self.epochsToAcc[n,g,gCNN,r])])
-
-    def plotArray(self,arrayName,ax,title):
-        import seaborn as sns
-        sns.set(style="white")
-        arrayMedian = np.nanmedian(getattr(self, arrayName),axis = 3)
-
-        sns.heatmap(arrayMedian[:,:,0], annot=True, ax=ax, cbar=False, fmt='.2f')
-        ax.set_xlabel('Group size')
-        ax.set_ylabel('Num im/indiv')
-        ax.set_xticklabels(p.groupSizes)
-        ax.set_yticklabels(p.IMDBSizes[::-1])
-        ax.invert_yaxis()
-        ax.set_title(title)
-
-    def plotResults(self):
-        import seaborn as sns
-        sns.set(style="white")
-
-        fig, axarr = plt.subplots(2,3,sharex=True,sharey=True, figsize=(20, 10), dpi=300)
-        fig.suptitle('Knowlede transfer from CNN of 50 indiv 25000 images (group size vs number of images per individual)')
-        # fig.suptitle('Training from strach (group size vs number of images per individual)')
-        self.plotArray('valAccs',axarr[0,0],'Accuracy in validation')
-        self.plotArray('epochsToAcc',axarr[0,1],'Number of epochs to accuracy threshold %.2f' %self.accTh)
-        self.plotArray('timeToAcc',axarr[0,2],'Time to accuracy threshold  %.2f (sec)' %self.accTh)
-        self.plotArray('totalTime',axarr[1,1],'Total time in (sec)')
-        self.plotArray('epochTime',axarr[1,2],'Single epoch time in (sec)')
-        self.plotArray('totalEpochs',axarr[1,0],'Total number of epochs')
-
-        figname = 'IdTrackerDeep/figuresPaper/P1B1/CNN_modelsKT/P1B1_resultsKT.pdf'
-
-        print 'Saving figure'
-        fig.savefig(figname)
-        print 'Figure saved'
+                            print '*******************************************************************\n'
 
 if __name__ == '__main__':
     '''
-    argv[1]: useCondor (bool flag)
+    argv[1]: 1 = cluster, 0 = no cluster
     argv[2]: job number
-    argv[3]: dataBase if 'd' is default
-    argv[4]: repetitions
-    argv[5]: groupSizeCNN
-    P1B1.py 1 1 d 1_2 2_5 (useCondor,job1,default library,repetitions[1 2],groupSizesCNN[2 5])
+    argv[3]: IMDBs (A, B, C, D, E, F)
+    argv[4]: idsInIMDBs: a - all, f - first half, s - second half
+    argv[5]: repetitions
+    argv[6]: groupSizeCNN
+    argv[7]: condition: 'S'-scratch, 'KT'-knowledgeT, 'KTC'-knowledgeTCorrelated
+    P1B1.py 1 1 AB af 1_2 20_50 S (running in the cluster, job1, library A and B, all individuals in library A and first half obf B, repetitions[1 2],groupSizesCNN[2 5],from scratch)
     '''
 
-    plotFlag = int(sys.argv[1])
-    if not plotFlag:
-        p = P1B1()
-        P1B1DictPath = selectFile()
-        P1B1DictsPaths = scanFolder(P1B1DictPath)
-        manyDicts = False
-        if len(P1B1DictsPaths) > 1:
-            manyDicts = True
-        print 'Loading dictionary to update p object...'
-        P1B1Dict = pickle.load(open(P1B1DictPath,'rb'))
-        p.__dict__.update(P1B1Dict)
-        print 'The group sizes are, ', p.groupSizes
-        print 'The IMDB sizes are, ', p.IMDBSizes
-        if manyDicts:
-            p.joinDicts(P1B1Dict=P1B1DictPath)
-        p.computeTimes(accTh = 0.8)
-        p.plotResults()
-
-    elif plotFlag:
-        p = P1B1(job = int(sys.argv[2]), IMDBPath = sys.argv[3], repList = sys.argv[4], groupSizesCNN = sys.argv[5])
-        p.compute()
-        # p.computeTimes(accTh = 0.7)
-        # p.plotResults()
+    p = P1B1(cluster = sys.argv[1], job = int(sys.argv[2]), IMDBCode = sys.argv[3], idsCode = sys.argv[4], repList = sys.argv[5], groupSizesCNN = sys.argv[6], condition = sys.argv[7])
+    p.loadIMDBs()
+    p.compute()
