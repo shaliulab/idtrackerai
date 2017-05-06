@@ -2,7 +2,6 @@
 import os
 from os.path import isdir, isfile
 import sys
-sys.setrecursionlimit(10000)
 import glob
 import numpy as np
 import cPickle as pickle
@@ -118,8 +117,17 @@ if __name__ == '__main__':
             global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
             #save connected blobs in video (organized frame-wise) and list of global fragments
             video._has_been_preprocessed = True
+            saved = False
+            recurssionlimint = sys.getrecursionlimit()
+            while not saved:
+                try:
+                    np.save(video.blobs_path,blobs)
+                    saved = True
+                except:
+                    print("Increasing recurssion limit")
+                    recurssionlimint += 10000
+                    sys.setrecursionlimit(recurssionlimint)
             np.save(video.global_fragments_path, global_fragments)
-            np.save(video.blobs_path,blobs)
             video.save()
             #take a look to the resulting fragmentation
             fragmentation_inspector(video, blobs)
