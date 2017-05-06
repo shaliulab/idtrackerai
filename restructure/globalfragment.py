@@ -11,9 +11,9 @@ def detect_beginnings(boolean_array):
 def compute_model_area(blobs_in_video, number_of_animals, std_tolerance = STD_TOLERANCE):
     # blobs_in_core_global_fragments = [blobs_in_frame for blobs_in_frame in blobs_in_video if is_a_global_fragment(blobs_in_frame, number_of_animals)]=
     areas = [blob.area for blobs_in_frame in blobs_in_video for blob in blobs_in_frame ]
-    mean_area = np.median(areas)
+    media_area = np.median(areas)
     std_area = np.std(areas)
-    return ModelArea(mean_area, std_area)
+    return ModelArea(media_area, std_area)
 
 class ModelArea():
   def __init__(self, mean, std):

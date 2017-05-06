@@ -46,14 +46,26 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
         blobs_in_frame = []
         #Get frame from video file
         ret, frame = cap.read()
-        #Color to gray scale
-        frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        avIntensity = np.float32(np.mean(frameGray))
-        segmentedFrame = segmentVideo(frameGray/avIntensity, video._min_threshold, video._max_threshold, video.bkg, video.ROI, video.subtract_bkg)
-        # Find contours in the segmented image
-        bounding_boxes, miniframes, centroids, areas, pixels, contours = blobExtractor(segmentedFrame, frameGray,
-                                                                                            video._min_area, video._max_area,
-                                                                                            video._height, video._width)
+        try:
+            #Color to gray scale
+            frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            avIntensity = np.float32(np.mean(frameGray))
+            segmentedFrame = segmentVideo(frameGray/avIntensity, video._min_threshold, video._max_threshold, video.bkg, video.ROI, video.subtract_bkg)
+            # Find contours in the segmented image
+            bounding_boxes, miniframes, centroids, areas, pixels, contours = blobExtractor(segmentedFrame, frameGray,
+                                                                                                video._min_area, video._max_area,
+                                                                                                video._height, video._width)
+        except:
+            print("frame number, ", counter)
+            print("ret, ", ret)
+            print("frame, ", frame)
+            bounding_boxes = []
+            miniframes = []
+            centroids = []
+            areas = []
+            pixels = []
+            contours = []
+
 
         for i, bounding_box in enumerate(bounding_boxes):
             blob = Blob(centroids[i],
