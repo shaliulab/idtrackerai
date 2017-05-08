@@ -31,6 +31,8 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
         epoch_index_to_plot = 0
     # Start loop for pre training in the global fragments
     for i, pretraining_global_fragment in enumerate(tqdm(pretraining_global_fragments, desc = 'Pretraining network')):
+        print("min distance travelled, ", pretraining_global_fragment.min_distance_travelled)
+        print("images per animal, ", [len(pretraining_global_fragment.portraits[j]) for j in range(len(pretraining_global_fragment.portraits))])
         # Get images and labels from the current global fragment
         images, labels = get_images_and_labels_from_global_fragment(pretraining_global_fragment)
         # Instantiate data_set

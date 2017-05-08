@@ -157,6 +157,7 @@ if __name__ == '__main__':
                 number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
                 try:
                     number_of_global_fragments = int(number_of_global_fragments)
+                    print("Pretraining with ", number_of_global_fragments , " fragments")
                     pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments)
                 except:
                     number_of_global_fragments = len(global_fragments)
@@ -178,9 +179,9 @@ if __name__ == '__main__':
                         number_of_global_fragments,
                         pretrain_network_params,
                         store_accuracy_and_error = False,
-                        check_for_loss_plateau = True,
+                        check_for_loss_plateau = False,
                         save_summaries = True,
-                        print_flag = False,
+                        print_flag = True,
                         plot_flag = True)
                 #save changes
                 video._has_been_pretrained = True

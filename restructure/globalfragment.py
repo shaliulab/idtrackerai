@@ -3,7 +3,7 @@ import numpy as np
 
 from blob import is_a_global_fragment, check_global_fragments
 
-STD_TOLERANCE = 3
+STD_TOLERANCE = 1 ### NOTE set to 1 because we changed the model area to work with the median.
 
 def detect_beginnings(boolean_array):
     return [i for i in range(0,len(boolean_array)) if (boolean_array[i] and not boolean_array[i-1])]
@@ -16,12 +16,12 @@ def compute_model_area(blobs_in_video, number_of_animals, std_tolerance = STD_TO
     return ModelArea(media_area, std_area)
 
 class ModelArea():
-  def __init__(self, mean, std):
-    self.mean = mean
+  def __init__(self, median, std):
+    self.median = median
     self.std = std
 
   def __call__(self, area, std_tolerance = STD_TOLERANCE):
-    return (area - self.mean) < std_tolerance * self.std
+    return (area - self.median) < std_tolerance * self.std
 
 class GlobalFragment(object):
     def __init__(self, list_of_blobs, index_beginning_of_fragment, number_of_animals):
@@ -101,7 +101,7 @@ def order_global_fragments_by_distance_travelled(global_fragments):
     return global_fragments
 
 def give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = 10):
-    step = int(np.floor(len(global_fragments) / number_of_global_fragments))
+    step = len(global_fragments) // number_of_global_fragments
     split_global_fragments = [global_fragments[i:i + step] for i in range(0, len(global_fragments)-1, step)]
     ordered_split_global_fragments = [order_global_fragments_by_distance_travelled(global_fragments_in_split)[0]
                                     for global_fragments_in_split in split_global_fragments]
