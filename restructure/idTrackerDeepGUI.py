@@ -2,6 +2,7 @@
 import os
 from os.path import isdir, isfile
 import sys
+sys.setrecursionlimit(100000)
 import glob
 import numpy as np
 import cPickle as pickle
@@ -178,7 +179,7 @@ if __name__ == '__main__':
                         pretrain_network_params,
                         store_accuracy_and_error = False,
                         check_for_loss_plateau = True,
-                        save_summaries = False,
+                        save_summaries = True,
                         print_flag = False,
                         plot_flag = True)
                 #save changes

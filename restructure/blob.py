@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
-STD_TOLERANCE = 4 # tolerance to select a blob as being a single fish according to the area model
+STD_TOLERANCE = 3 # tolerance to select a blob as being a single fish according to the area model
 
 class Blob(object):
     def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, portrait = None, pixels = None):

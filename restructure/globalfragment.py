@@ -3,7 +3,7 @@ import numpy as np
 
 from blob import is_a_global_fragment, check_global_fragments
 
-STD_TOLERANCE = 4
+STD_TOLERANCE = 3
 
 def detect_beginnings(boolean_array):
     return [i for i in range(0,len(boolean_array)) if (boolean_array[i] and not boolean_array[i-1])]

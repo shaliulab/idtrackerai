@@ -32,13 +32,13 @@ def assign(video, blobs_in_video, params, video_episodes_start_end, print_flag):
     # Train network
     assigner = GetPrediction(data, print_flag = print_flag)
 
-    # assigner.get_predictions_softmax(net.predict)
+    assigner.get_predictions_softmax(net.predict)
 
-    assigner.get_predictions_conv_embedding(net.get_conv_vector, video.number_of_animals)
+    # assigner.get_predictions_conv_embedding(net.get_conv_vector, video.number_of_animals)
 
     assign_identity_to_blobs_in_video(blobs_in_video, assigner)
 
-    # assign_identity_to_blobs_in_fragment(video, blobs_in_video)
+    assign_identity_to_blobs_in_fragment(video, blobs_in_video)
 
 
 def assign_identity_to_blobs_in_video(blobs_in_video, assigner):
