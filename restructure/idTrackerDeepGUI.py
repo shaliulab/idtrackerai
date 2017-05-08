@@ -17,7 +17,7 @@ sys.path.append('./preprocessing')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
-from blob import connect_blob_list, apply_model_area_to_video
+from blob import connect_blob_list, apply_model_area_to_video, ListOfBlobs
 from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, order_global_fragments_by_distance_travelled, give_me_pre_training_global_fragments
 from segmentation import segment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector, frame_by_frame_identity_inspector
@@ -105,7 +105,6 @@ if __name__ == '__main__':
 
         if not loadPreviousDict['preprocessing']:
             blobs = segment(video)
-            np.save(video.blobs_path,blobs)
             #compute a model of the area of the animals (considering frames in which
             #all the animals are visible)
             model_area = compute_model_area(blobs, video.number_of_animals)
@@ -119,24 +118,40 @@ if __name__ == '__main__':
             #save connected blobs in video (organized frame-wise) and list of global fragments
             video._has_been_preprocessed = True
             saved = False
-            recurssionlimint = sys.getrecursionlimit()
-            while not saved:
-                try:
-                    np.save(video.blobs_path,blobs)
-                    saved = True
-                except:
-                    print("Increasing recurssion limit")
-                    recurssionlimint += 10000
-                    sys.setrecursionlimit(recurssionlimint)
+
+
+            # sys.setrecursionlimit(11000)
+            # recursionlimit = sys.getrecursionlimit()
+            # cut_blobs_in_n_chunks(blobs, 20)
+            # while True:
+            #     try:
+            #         np.save(video.blobs_path,blobs)
+            #         saved = True
+            #         print("Sucess with recursion limit", recursionlimit)
+            #         recursionlimit -= 1000
+            #         print("Decreasing recursion limit", recursionlimit)
+            #         if recursionlimit < 0:
+            #             print("Negative recursion limit, exiting")
+            #             break
+            #         sys.setrecursionlimit(recursionlimit)
+            #     except:
+            #         print("Failed recursion limit", recursionlimit)
+            #         break
             np.save(video.global_fragments_path, global_fragments)
             video.save()
+            blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+            blobs_list.generate_cut_points(10)
+            blobs_list.cut_in_chunks()
+            blobs_list.save()
             #take a look to the resulting fragmentation
             fragmentation_inspector(video, blobs)
         else:
-            old_video = Video()
+            # old_video = Video()
             old_video.video_path = video_path
             video = np.load(old_video._path_to_video_object).item()
-            blobs = np.load(video.blobs_path)
+            list_of_blobs = np.load(old_video.blobs_path).item()
+            list_of_blobs.reconnect()
+            blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
         #destroy windows to prevent openCV errors
         cv2.waitKey(1)

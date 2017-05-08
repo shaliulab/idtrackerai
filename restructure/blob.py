@@ -174,3 +174,43 @@ def get_images_from_blobs_in_frame(blobs_in_frame):
         return np.array([blob.portrait[0] for blob in blobs_in_frame if blob.is_a_fish_in_a_fragment])
     except:
         print('The frame is empty')
+
+
+
+class ListOfBlobs(object):
+    def __init__(self, blobs_in_video = None, path_to_save = None):
+        self.blobs_in_video = blobs_in_video
+        self.path_to_save = path_to_save
+
+    def generate_cut_points(self, num_chunks):
+        n = len(self.blobs_in_video)// num_chunks
+        self.cutting_points = np.arange(0,len(self.blobs_in_video),n)
+
+    def cut_in_chunks(self):
+        for frame in self.cutting_points:
+            self.cut_at_frame(frame)
+
+    def cut_at_frame(self, frame_number):
+        for blob in self.blobs_in_video[frame_number-1]:
+            blob.next = []
+        for blob in self.blobs_in_video[frame_number]:
+            blob.previous = []
+
+    def reconnect(self):
+        for frame_i in self.cutting_points:
+            for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
+                if blob_0.is_a_fish and blob_1.is_a_fish and blob_0.overlaps_with(blob_1):
+                    blob_0.now_points_to(blob_1)
+
+    def save(self):
+        """save class"""
+        print("saving blobs list at ", self.path_to_save)
+        np.save(self.path_to_save, self)
+
+    @classmethod
+    def load(cls, path_to_load_blob_list_file):
+        print("loading blobs list from ", path_to_load_blob_list_file)
+        print("path_to_blob_list_file", path_to_load_blob_list_file)
+        list_of_blobs = np.load(path_to_load_blob_list_file).item()
+        list_of_blobs.reconnect()
+        return list_of_blobs
