@@ -28,12 +28,7 @@ from network_params import NetworkParams
 from trainer import train
 from assigner import assign
 
-# from idAssigner import *
-# from fragmentFinder import *
-# from fineTuner import *
-# from tracker import *
-# from plotters import *
-
+NUM_CHUNKS_BLOB_SAVING = 10 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 
 if __name__ == '__main__':
     cv2.namedWindow('Bars') #FIXME If we do not create the "Bars" window here we have the "Bad window error"...
@@ -140,7 +135,7 @@ if __name__ == '__main__':
             np.save(video.global_fragments_path, global_fragments)
             video.save()
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
-            blobs_list.generate_cut_points(10)
+            blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
             blobs_list.save()
             #take a look to the resulting fragmentation
@@ -149,8 +144,7 @@ if __name__ == '__main__':
             # old_video = Video()
             old_video.video_path = video_path
             video = np.load(old_video._path_to_video_object).item()
-            list_of_blobs = np.load(old_video.blobs_path).item()
-            list_of_blobs.reconnect()
+            list_of_blobs = ListOfBlobs.load(video.blobs_path)
             blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
         #destroy windows to prevent openCV errors
@@ -159,11 +153,12 @@ if __name__ == '__main__':
         cv2.waitKey(1)
         #############################################################
         ##################      Pre-trainer      ####################
-        ####
+        #### create the folder training in which all the         ####
+        #### CNN-related process will be stored. The structure   ####
+        #### is /training/session_num, where num is an natural   ####
+        #### number. num increases each time a training is       ####
+        #### launched                                            ####
         #############################################################
-        #create the folder training in which all the CNN-related process will be
-        #stored. The structure is /training/session_num, where num is an natural number.
-        # num increases each time a training is launched on the video.
         if not loadPreviousDict['pretraining']:
             video.create_training_and_session_folder()
             pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [Y/n]')
@@ -172,7 +167,7 @@ if __name__ == '__main__':
                 number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
                 try:
                     number_of_global_fragments = int(number_of_global_fragments)
-                    pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments)
+                    pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments))
                 except:
                     number_of_global_fragments = len(global_fragments)
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
@@ -204,15 +199,14 @@ if __name__ == '__main__':
             old_video = Video()
             old_video.video_path = video_path
             video = np.load(old_video._path_to_video_object).item()
-            blobs = np.load(video.blobs_path)
+            list_of_blobs = ListOfBlobs.load(video.blobs_path)
+            blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
         #############################################################
-        ###################      Trainer      ######################
-        ####
+        ###################      Trainer      #######################
+        #### 1) Trains the network on the global fragment with   ####
+        #### maximal distance travelled                          ####
         #############################################################
-        #create the folder training in which all the CNN-related process will be
-        #stored. The structure is /training/session_num, where num is an natural number.
-        # num increases each time a training is launched on the video.
         if not loadPreviousDict['training']:
             train_network_params = NetworkParams(video,
                                                 learning_rate = 0.005,
@@ -246,19 +240,24 @@ if __name__ == '__main__':
             #visualise frame by frame identification (uses argmax from softmax)
             # frame_by_frame_identity_inspector(video, blobs)
             video.has_been_assigned = True
-            np.save(video.blobs_path,blobs)
+            blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+            blobs_list.generate_cut_points(10)
+            blobs_list.cut_in_chunks()
+            blobs_list.save()
             video.save()
         else:
             old_video = Video()
             old_video.video_path = video_path
             video = np.load(old_video._path_to_video_object).item()
-            blobs = np.load(video.blobs_path)
+            list_of_blobs = ListOfBlobs.load(video.blobs_path)
+            blobs = list_of_blobs.blobs_in_video
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         old_video = Video()
         old_video.video_path = video_path
         video = np.load(old_video._path_to_video_object).item()
-        blobs = np.load(video.blobs_path)
+        list_of_blobs = ListOfBlobs.load(video.blobs_path)
+        blobs = list_of_blobs.blobs_in_video
         global_fragments = np.load(video.global_fragments_path)
         frame_by_frame_identity_inspector(video, blobs)
     else:
