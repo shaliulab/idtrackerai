@@ -11,9 +11,42 @@ from get_data import DataSet
 from id_CNN import ConvNetwork
 from get_predictions import GetPrediction
 from blob import get_images_from_blobs_in_video
+from visualize_embeddings import EmbeddingVisualiser
+from globalfragment import get_images_and_labels_from_global_fragment
 
 MAX_FLOAT = sys.float_info[0]
 MIN_FLOAT = sys.float_info[3]
+
+def visualize_embeddings_global_fragments(video, global_fragments, params, print_flag):
+    net = ConvNetwork(params, training_flag = False)
+    # Get images from the blob collection
+    imagesT, labelsT = get_images_and_labels_from_global_fragment(global_fragments[0])
+    imagesV, labelsV = get_images_and_labels_from_global_fragment(global_fragments[1])
+    # build data object
+    imagesT = np.expand_dims(np.asarray(imagesT), axis = 3)
+    imagesV = np.expand_dims(np.asarray(imagesV), axis = 3)
+    dataT = DataSet(params.number_of_animals, imagesT)
+    dataV = DataSet(params.number_of_animals, imagesV)
+    # Instantiate data_set
+    dataT.standarize_images()
+    dataV.standarize_images()
+    # Crop images from 36x36 to 32x32 without performing data augmentation
+    dataT.crop_images(image_size = 32)
+    dataV.crop_images(image_size = 32)
+    # Restore network
+    net.restore()
+    # Train network
+    assignerT = GetPrediction(dataT, print_flag = print_flag)
+    assignerV = GetPrediction(dataV, print_flag = print_flag)
+    # Get fully connected vectors
+    assignerT.get_predictions_fully_connected_embedding(net.get_fully_connected_vectors, video.number_of_animals)
+    assignerV.get_predictions_fully_connected_embedding(net.get_fully_connected_vectors, video.number_of_animals)
+    # Visualize embeddings
+    video.create_embeddings_folder()
+    visualize_fully_connected_embedding = EmbeddingVisualiser(labels = [labelsT, labelsV],
+                                                            features = [assignerT._fc_vectors, assignerV._fc_vectors])
+    visualize_fully_connected_embedding.create_labels_file(video._embeddings_folder)
+    visualize_fully_connected_embedding.visualize(video._embeddings_folder)
 
 def assign(video, blobs_in_video, params, video_episodes_start_end, print_flag):
 
@@ -32,9 +65,15 @@ def assign(video, blobs_in_video, params, video_episodes_start_end, print_flag):
     # Train network
     assigner = GetPrediction(data, print_flag = print_flag)
 
-    assigner.get_predictions_softmax(net.predict)
+    # assigner.get_predictions_softmax(net.predict)
 
-    # assigner.get_predictions_conv_embedding(net.get_conv_vector, video.number_of_animals)
+    assigner.get_predictions_fully_connected_embedding(net.get_fully_connected_vectors, video.number_of_animals) ### NOTE do not delete, useful for the paper
+
+    # video.create_embeddings_folder()
+    # visualize_fully_connected_embedding = EmbeddingVisualiser(labels = assigner._predictions,
+    #                                                         features = assigner._fc_vectors)
+    # visualize_fully_connected_embedding.create_labels_file(video._embeddings_folder)
+    # visualize_fully_connected_embedding.visualize(video._embeddings_folder)
 
     assign_identity_to_blobs_in_video(blobs_in_video, assigner)
 

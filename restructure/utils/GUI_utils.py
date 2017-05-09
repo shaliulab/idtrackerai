@@ -427,10 +427,7 @@ def fragmentation_inspector(video, blobs_in_video):
                     blob = blob.next[0]
                     blob.fragment_identifier = counter
                 counter += 1
-
-    np.save(video.blobs_path,blobs_in_video)
-
-
+                
     cap = cv2.VideoCapture(video.video_path)
     numFrames = video._num_frames
     bkg = video.bkg

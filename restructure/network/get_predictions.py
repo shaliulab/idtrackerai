@@ -16,7 +16,7 @@ class GetPrediction(object):
         self.data_set = data_set
         self._softmax_probs = []
         self._predictions = []
-        self._conv_vectors = []
+        self._fc_vectors = []
 
     def next_batch(self, batch_size):
         """Return the next `batch_size` examples from this data set."""
@@ -34,14 +34,14 @@ class GetPrediction(object):
         self._softmax_probs = np.concatenate(self._softmax_probs, axis = 0)
         self._predictions = np.concatenate(self._predictions, axis = 0)
 
-    def get_predictions_conv_embedding(self, batch_operation, number_of_animals):
+    def get_predictions_fully_connected_embedding(self, batch_operation, number_of_animals):
         self._index_in_epoch = 0
         while self._index_in_epoch < self.data_set._num_images:
-            conv_vectors = batch_operation(self.next_batch(BATCH_SIZE))
-            print(conv_vectors.shape)
-            self._conv_vectors.append(conv_vectors)
-        self._conv_vectors = np.concatenate(self._conv_vectors, axis = 0)
-        _, self._predictions = kMeansCluster(self._conv_vectors, number_of_animals, 100)
+            fc_vectors = batch_operation(self.next_batch(BATCH_SIZE))
+            print(fc_vectors.shape)
+            self._fc_vectors.append(fc_vectors)
+        self._fc_vectors = np.concatenate(self._fc_vectors, axis = 0)
+        _, self._predictions = kMeansCluster(self._fc_vectors, number_of_animals, 100)
 
 
 def kMeansCluster(vector_values, num_clusters, max_num_steps, stop_coeficient = 0.0):

@@ -17,7 +17,7 @@ sys.path.append('./preprocessing')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
-from blob import connect_blob_list, apply_model_area_to_video
+from blob import connect_blob_list, apply_model_area_to_video, ListOfBlobs
 from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, order_global_fragments_by_distance_travelled, give_me_pre_training_global_fragments
 from segmentation import segment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector, frame_by_frame_identity_inspector
@@ -26,14 +26,9 @@ from video_utils import checkBkg
 from pre_trainer import pre_train
 from network_params import NetworkParams
 from trainer import train
-from assigner import assign
+from assigner import assign, visualize_embeddings_global_fragments
 
-# from idAssigner import *
-# from fragmentFinder import *
-# from fineTuner import *
-# from tracker import *
-# from plotters import *
-
+NUM_CHUNKS_BLOB_SAVING = 10 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 
 if __name__ == '__main__':
     cv2.namedWindow('Bars') #FIXME If we do not create the "Bars" window here we have the "Bad window error"...
@@ -105,7 +100,6 @@ if __name__ == '__main__':
 
         if not loadPreviousDict['preprocessing']:
             blobs = segment(video)
-            np.save(video.blobs_path,blobs)
             #compute a model of the area of the animals (considering frames in which
             #all the animals are visible)
             model_area = compute_model_area(blobs, video.number_of_animals)
@@ -119,24 +113,39 @@ if __name__ == '__main__':
             #save connected blobs in video (organized frame-wise) and list of global fragments
             video._has_been_preprocessed = True
             saved = False
-            recurssionlimint = sys.getrecursionlimit()
-            while not saved:
-                try:
-                    np.save(video.blobs_path,blobs)
-                    saved = True
-                except:
-                    print("Increasing recurssion limit")
-                    recurssionlimint += 10000
-                    sys.setrecursionlimit(recurssionlimint)
+
+
+            # sys.setrecursionlimit(11000)
+            # recursionlimit = sys.getrecursionlimit()
+            # cut_blobs_in_n_chunks(blobs, 20)
+            # while True:
+            #     try:
+            #         np.save(video.blobs_path,blobs)
+            #         saved = True
+            #         print("Sucess with recursion limit", recursionlimit)
+            #         recursionlimit -= 1000
+            #         print("Decreasing recursion limit", recursionlimit)
+            #         if recursionlimit < 0:
+            #             print("Negative recursion limit, exiting")
+            #             break
+            #         sys.setrecursionlimit(recursionlimit)
+            #     except:
+            #         print("Failed recursion limit", recursionlimit)
+            #         break
             np.save(video.global_fragments_path, global_fragments)
             video.save()
+            blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+            blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
+            blobs_list.cut_in_chunks()
+            blobs_list.save()
             #take a look to the resulting fragmentation
             fragmentation_inspector(video, blobs)
         else:
-            old_video = Video()
+            # old_video = Video()
             old_video.video_path = video_path
             video = np.load(old_video._path_to_video_object).item()
-            blobs = np.load(video.blobs_path)
+            list_of_blobs = ListOfBlobs.load(video.blobs_path)
+            blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
         #destroy windows to prevent openCV errors
         cv2.waitKey(1)
@@ -144,11 +153,12 @@ if __name__ == '__main__':
         cv2.waitKey(1)
         #############################################################
         ##################      Pre-trainer      ####################
-        ####
+        #### create the folder training in which all the         ####
+        #### CNN-related process will be stored. The structure   ####
+        #### is /training/session_num, where num is an natural   ####
+        #### number. num increases each time a training is       ####
+        #### launched                                            ####
         #############################################################
-        #create the folder training in which all the CNN-related process will be
-        #stored. The structure is /training/session_num, where num is an natural number.
-        # num increases each time a training is launched on the video.
         if not loadPreviousDict['pretraining']:
             video.create_training_and_session_folder()
             pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [Y/n]')
@@ -158,7 +168,8 @@ if __name__ == '__main__':
                 try:
                     number_of_global_fragments = int(number_of_global_fragments)
                     print("Pretraining with ", number_of_global_fragments , " fragments")
-                    pretraining_global_fragments = give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments)
+                    pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments))
+
                 except:
                     number_of_global_fragments = len(global_fragments)
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
@@ -190,15 +201,14 @@ if __name__ == '__main__':
             old_video = Video()
             old_video.video_path = video_path
             video = np.load(old_video._path_to_video_object).item()
-            blobs = np.load(video.blobs_path)
+            list_of_blobs = ListOfBlobs.load(video.blobs_path)
+            blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
         #############################################################
-        ###################      Trainer      ######################
-        ####
+        ###################      Trainer      #######################
+        #### 1) Trains the network on the global fragment with   ####
+        #### maximal distance travelled                          ####
         #############################################################
-        #create the folder training in which all the CNN-related process will be
-        #stored. The structure is /training/session_num, where num is an natural number.
-        # num increases each time a training is launched on the video.
         if not loadPreviousDict['training']:
             train_network_params = NetworkParams(video,
                                                 learning_rate = 0.005,
@@ -228,23 +238,29 @@ if __name__ == '__main__':
             assign_network_params = NetworkParams(video,restore_folder = video._session_path)
             print(assign_network_params)
             print('session path ', video._session_path)
+            visualize_embeddings_global_fragments(video, order_global_fragments_by_distance_travelled(global_fragments), assign_network_params, print_flag = True)
             assign(video, blobs, assign_network_params, video._episodes_start_end, print_flag = True)
             #visualise frame by frame identification (uses argmax from softmax)
             # frame_by_frame_identity_inspector(video, blobs)
             video.has_been_assigned = True
-            np.save(video.blobs_path,blobs)
+            blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+            blobs_list.generate_cut_points(10)
+            blobs_list.cut_in_chunks()
+            blobs_list.save()
             video.save()
         else:
             old_video = Video()
             old_video.video_path = video_path
             video = np.load(old_video._path_to_video_object).item()
-            blobs = np.load(video.blobs_path)
+            list_of_blobs = ListOfBlobs.load(video.blobs_path)
+            blobs = list_of_blobs.blobs_in_video
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         old_video = Video()
         old_video.video_path = video_path
         video = np.load(old_video._path_to_video_object).item()
-        blobs = np.load(video.blobs_path)
+        list_of_blobs = ListOfBlobs.load(video.blobs_path)
+        blobs = list_of_blobs.blobs_in_video
         global_fragments = np.load(video.global_fragments_path)
         frame_by_frame_identity_inspector(video, blobs)
     else:

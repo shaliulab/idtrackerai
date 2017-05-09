@@ -122,9 +122,8 @@ def segment(video):
             number_of_blobs.append([out[1] for out in OupPutParallel])
             blobs_in_video.append(blobs_in_episode)
 
-    video._has_been_segmented = True
     video._max_number_of_blobs = max(flatten(number_of_blobs))
     #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
     blobs_in_video = flatten(flatten(blobs_in_video))
-    np.save(video.blobs_path, blobs_in_video, allow_pickle = True)
+    # np.save(video.blobs_path, blobs_in_video, allow_pickle = True)
     return blobs_in_video

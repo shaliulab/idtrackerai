@@ -59,7 +59,7 @@ class ConvNetwork():
     def _build_graph(self):
         self.x_pl = tf.placeholder(tf.float32, [None, self.image_width, self.image_height, self.image_channels], name = 'images')
         # self.y_logits, self.conv_vector = cnn_model(self.x_pl,self.params.number_of_animals)
-        self.y_logits, self.conv_vector = cnn_model(self.x_pl,self.params.number_of_animals)
+        self.y_logits, self.fc_vector = cnn_model(self.x_pl,self.params.number_of_animals)
         self.softmax_probs = tf.nn.softmax(self.y_logits)
         self.predictions = tf.cast(tf.add(tf.argmax(self.softmax_probs,1),1),tf.float32)
 
@@ -164,9 +164,9 @@ class ConvNetwork():
         feed_dict = {self.x_pl: batch}
         return self.session.run([self.softmax_probs,self.predictions], feed_dict = feed_dict)
 
-    def get_conv_vector(self,batch):
+    def get_fully_connected_vectors(self,batch):
         feed_dict = {self.x_pl: batch}
-        return self.session.run(self.conv_vector, feed_dict = feed_dict)
+        return self.session.run(self.fc_vector, feed_dict = feed_dict)
 
     def write_summaries(self,epoch_i,feed_dict_train, feed_dict_val):
         summary_str_training = self.session.run(self.summary_op, feed_dict=feed_dict_train)
