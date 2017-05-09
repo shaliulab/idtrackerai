@@ -26,7 +26,7 @@ from video_utils import checkBkg
 from pre_trainer import pre_train
 from network_params import NetworkParams
 from trainer import train
-from assigner import assign
+from assigner import assign, visualize_embeddings_global_fragments
 
 NUM_CHUNKS_BLOB_SAVING = 10 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 
@@ -236,6 +236,7 @@ if __name__ == '__main__':
             assign_network_params = NetworkParams(video,restore_folder = video._session_path)
             print(assign_network_params)
             print('session path ', video._session_path)
+            visualize_embeddings_global_fragments(video, order_global_fragments_by_distance_travelled(global_fragments), assign_network_params, print_flag = True)
             assign(video, blobs, assign_network_params, video._episodes_start_end, print_flag = True)
             #visualise frame by frame identification (uses argmax from softmax)
             # frame_by_frame_identity_inspector(video, blobs)

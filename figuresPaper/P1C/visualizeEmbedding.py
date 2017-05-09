@@ -38,7 +38,6 @@ with tf.Session() as session:
     embedding.metadata_path =  PATH_TO_LABELS
     embedding2.metadata_path =  PATH_TO_LABELS
 
-
     embedding.sprite.image_path = PATH_TO_SPRITE_IMAGE
     embedding2.sprite.image_path = PATH_TO_SPRITE_IMAGE
     # Specify the width and height of a single thumbnail.
