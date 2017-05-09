@@ -35,6 +35,7 @@ class Video(object):
         self._pretraining_path = None
         self.has_been_trained = None
         self.has_been_assigned = None
+        self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
 
     @property
     def video_path(self):
@@ -102,6 +103,14 @@ class Video(object):
         if not os.path.isdir(self._preprocessing_folder):
             os.makedirs(self._preprocessing_folder)
             print("the folder " + self._preprocessing_folder + " has been created")
+
+    def create_embeddings_folder(self):
+        """If it does not exist creates a folder called embedding
+        in the video folder"""
+        self._embeddings_folder = os.path.join(self._video_folder, 'embeddings')
+        if not os.path.isdir(self._embeddings_folder):
+            os.makedirs(self._embeddings_folder)
+            print("the folder " + self._embeddings_folder + " has been created")
 
     def create_training_and_session_folder(self):
         """Creates a folder named training in video_folder and a folder session_num

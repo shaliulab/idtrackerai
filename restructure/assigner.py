@@ -11,6 +11,7 @@ from get_data import DataSet
 from id_CNN import ConvNetwork
 from get_predictions import GetPrediction
 from blob import get_images_from_blobs_in_video
+from visualize_embeddings import EmbeddingVisualiser
 
 MAX_FLOAT = sys.float_info[0]
 MIN_FLOAT = sys.float_info[3]
@@ -32,9 +33,15 @@ def assign(video, blobs_in_video, params, video_episodes_start_end, print_flag):
     # Train network
     assigner = GetPrediction(data, print_flag = print_flag)
 
-    assigner.get_predictions_softmax(net.predict)
+    # assigner.get_predictions_softmax(net.predict)
 
-    # assigner.get_predictions_conv_embedding(net.get_conv_vector, video.number_of_animals)
+    assigner.get_predictions_fully_connected_embedding(net.get_fully_connected_vectors, video.number_of_animals) ### NOTE do not delete, useful for the paper
+
+    video.create_embeddings_folder()
+    visualize_fully_connected_embedding = EmbeddingVisualiser(labels = assigner._predictions,
+                                                            features = assigner._fc_vectors)
+    visualize_fully_connected_embedding.create_labels_file(video._embeddings_folder)
+    visualize_fully_connected_embedding.visualize(video._embeddings_folder)
 
     assign_identity_to_blobs_in_video(blobs_in_video, assigner)
 
