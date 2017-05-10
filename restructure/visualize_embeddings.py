@@ -45,3 +45,34 @@ class EmbeddingVisualiser(object):
             projector.visualize_embeddings(summary_writer, config)
             step.assign(0).eval()
             saver.save(session, os.path.join(checkpoint_folder, "model.ckpt"), step)
+
+def visualize_embeddings_global_fragments(video, global_fragments, params, print_flag):
+    net = ConvNetwork(params, training_flag = False)
+    # Get images from the blob collection
+    imagesT, labelsT = get_images_and_labels_from_global_fragment(global_fragments[0])
+    imagesV, labelsV = get_images_and_labels_from_global_fragment(global_fragments[1])
+    # build data object
+    imagesT = np.expand_dims(np.asarray(imagesT), axis = 3)
+    imagesV = np.expand_dims(np.asarray(imagesV), axis = 3)
+    dataT = DataSet(params.number_of_animals, imagesT)
+    dataV = DataSet(params.number_of_animals, imagesV)
+    # Instantiate data_set
+    dataT.standarize_images()
+    dataV.standarize_images()
+    # Crop images from 36x36 to 32x32 without performing data augmentation
+    dataT.crop_images(image_size = 32)
+    dataV.crop_images(image_size = 32)
+    # Restore network
+    net.restore()
+    # Train network
+    assignerT = GetPrediction(dataT, print_flag = print_flag)
+    assignerV = GetPrediction(dataV, print_flag = print_flag)
+    # Get fully connected vectors
+    assignerT.get_predictions_fully_connected_embedding(net.get_fully_connected_vectors, video.number_of_animals)
+    assignerV.get_predictions_fully_connected_embedding(net.get_fully_connected_vectors, video.number_of_animals)
+    # Visualize embeddings
+    video.create_embeddings_folder()
+    visualize_fully_connected_embedding = EmbeddingVisualiser(labels = [labelsT, labelsV],
+                                                            features = [assignerT._fc_vectors, assignerV._fc_vectors])
+    visualize_fully_connected_embedding.create_labels_file(video._embeddings_folder)
+    visualize_fully_connected_embedding.visualize(video._embeddings_folder)
