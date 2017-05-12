@@ -54,10 +54,10 @@ class DataSet(object):
     #         raise ValueError('Something went wrong during data augmentation')
 
     def convert_labels_to_one_hot(self):
-        try:
-            self.labels = dense_to_one_hot(self.labels, n_classes=self.number_of_animals)
-        except:
-            raise ValueError('Could not convert labels to one hot')
+        # try:
+        self.labels = dense_to_one_hot(self.labels, n_classes=self.number_of_animals) # The -1 is because the labels of the classes start from one in idTrackerDeep
+        # except:
+        #     raise ValueError('Could not convert labels to one hot')
 
 def split_data_train_and_validation(number_of_animals, images, labels, validation_proportion = .1):
     # Init variables
@@ -128,7 +128,13 @@ def dense_to_one_hot(labels, n_classes=2):
     """Convert class labels from scalars to one-hot vectors."""
     labels = np.array(labels)
     n_labels = labels.shape[0]
+    print('----------------------------------------------------')
+    print('max_labels', max(labels))
+    print('min_labels', min(labels))
+    print('----------------------------------------------------')
     index_offset = np.arange(n_labels) * n_classes
     labels_one_hot = np.zeros((n_labels, n_classes), dtype=np.float32)
     labels_one_hot.flat[index_offset + labels.ravel()] = 1
+    print("********** labels shape ************")
+    print(labels_one_hot.shape)
     return labels_one_hot

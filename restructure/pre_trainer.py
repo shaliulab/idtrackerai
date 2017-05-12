@@ -44,6 +44,8 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
         training_dataset.crop_images(image_size = 32)
         validation_dataset.crop_images(image_size = 32)
         # Convert labels to one hot vectors
+        print("training_dataset", training_dataset.images.shape)
+        print("validation_dataset", validation_dataset.images.shape)
         training_dataset.convert_labels_to_one_hot()
         validation_dataset.convert_labels_to_one_hot()
         # Restore network
