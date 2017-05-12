@@ -190,6 +190,7 @@ def checkROI(video, old_video, usePreviousROI, frame):
     ''' Select ROI '''
     if video.apply_ROI:
         if usePreviousROI and old_video.ROI is not None:
+            print('\n Getting ROI from previous session')
             mask = old_video.ROI
         else:
             print '\n Selecting ROI ...'
@@ -408,7 +409,15 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         cv2.destroyAllWindows()
         cv2.waitKey(1)
     else:
-        video.__dict__ = old_video.__dict__
+        video._min_threshold = old_video._min_threshold
+        video._max_threshold = old_video._max_threshold
+        video._min_area = old_video._min_area
+        video._max_area = old_video._max_area
+        video._resize = old_video._resize
+        video.animal_type = old_video.animal_type
+        video._number_of_animals = old_video._number_of_animals
+        video._has_preprocessing_parameters = True
+
 
 
 
@@ -427,7 +436,7 @@ def fragmentation_inspector(video, blobs_in_video):
                     blob = blob.next[0]
                     blob.fragment_identifier = counter
                 counter += 1
-                
+
     cap = cv2.VideoCapture(video.video_path)
     numFrames = video._num_frames
     bkg = video.bkg

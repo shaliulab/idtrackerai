@@ -20,6 +20,7 @@ from video import Video
 from blob import connect_blob_list, apply_model_area_to_video, ListOfBlobs, get_images_from_blobs_in_video
 from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, order_global_fragments_by_distance_travelled, give_me_pre_training_global_fragments, assign_identity_to_global_fragment_used_for_training
 from globalfragment import get_images_and_labels_from_global_fragments, get_images_and_labels_from_global_fragment, get_images_from_test_global_fragments, assign_identities_and_check_eligibility_for_training_global_fragments, split_predictions_after_network_assignment
+from globalfragment import subsample_images_for_last_training
 from segmentation import segment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector, frame_by_frame_identity_inspector
 from py_utils import getExistentFiles
@@ -53,7 +54,10 @@ if __name__ == '__main__':
     #get existent files and paths to load them
     existentFiles, old_video = getExistentFiles(video, processes_list)
     if reUseAll == 'n':
-        #Selecting preprocessing parameters
+        #############################################################
+        ############ Select preprocessing parameters   ##############
+        ####                                                     ####
+        #############################################################
         prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to do BKG or select a ROI?  ')
         video.subtract_bkg = bool(prepOpts['bkg'])
         video.apply_ROI =  bool(prepOpts['ROI'])
@@ -65,12 +69,16 @@ if __name__ == '__main__':
         usePreviousROI = loadPreviousDict['ROI']
         usePreviousBkg = loadPreviousDict['bkg']
         usePreviousPrecParams = loadPreviousDict['preprocparams']
+        print("video session folder, ", video._session_folder)
         #ROI selection/loading
         video.ROI = ROISelectorPreview(video, old_video, usePreviousROI)
+        print("video session folder, ", video._session_folder)
         #BKG computation/loading
         video.bkg = checkBkg(video, old_video, usePreviousBkg)
+        print("video session folder, ", video._session_folder)
         #Selection/loading preprocessing parameters
         selectPreprocParams(video, old_video, usePreviousPrecParams)
+        print("video session folder, ", video._session_folder)
         video.save()
         print 'The parameters used to preprocess the video are '
         pprint({key: getattr(video, key) for key in video.__dict__ if 'ROI' in key or 'bkg' in key})
@@ -80,6 +88,7 @@ if __name__ == '__main__':
         cv2.waitKey(1000)
         cv2.destroyAllWindows()
         cv2.waitKey(1)
+
         #############################################################
         ####################  Preprocessing   #######################
         #### 1. detect blobs in the video according to parameters####
@@ -123,12 +132,19 @@ if __name__ == '__main__':
             #take a look to the resulting fragmentation
             fragmentation_inspector(video, blobs)
         else:
-            # old_video = Video()
-            old_video.video_path = video_path
-            video = np.load(old_video._path_to_video_object).item()
+            # Update folders and paths from previous video_object
+            video._preprocessing_folder = old_video._preprocessing_folder
+            video._blobs_path = old_video.blobs_path
+            video._global_fragments_path = old_video.global_fragments_path
+            # Set preprocessed flag to True
+            video._has_been_preprocessed = True
+            video.save()
+            # Load blobs and global fragments
             list_of_blobs = ListOfBlobs.load(video.blobs_path)
             blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
+
+
         #destroy windows to prevent openCV errors
         cv2.waitKey(1)
         cv2.destroyAllWindows()
@@ -179,12 +195,16 @@ if __name__ == '__main__':
                 video._has_been_pretrained = True
                 video.save()
         else:
-            old_video = Video()
-            old_video.video_path = video_path
-            video = np.load(old_video._path_to_video_object).item()
+            # Update folders and paths from previous video_object
+            video._pretraining_folder = old_video._pretraining_folder
+            # Set preprocessed flag to True
+            video._has_been_pretrained = True
+            video.save()
+            # Load blobs and global fragments
             list_of_blobs = ListOfBlobs.load(video.blobs_path)
             blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
+
         #############################################################
         ###################    Accumulation   #######################
         #### take references in 'good' global fragments          ####
@@ -255,7 +275,7 @@ if __name__ == '__main__':
                     global_fragment_for_training.acceptable_for_training = False
                     assign_identity_to_global_fragment_used_for_training(global_fragment_for_training, blobs)
 
-            video.accumulation_finished = True
+            video._accumulation_finished = True
             video.save()
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
@@ -263,9 +283,12 @@ if __name__ == '__main__':
             blobs_list.save()
             np.save(video.global_fragments_path, global_fragments)
         else:
-            old_video = Video()
-            old_video.video_path = video_path
-            video = np.load(old_video._path_to_video_object).item()
+            # Update folders and paths from previous video_object
+            video._accumulation_folder = old_video._accumulation_folder
+            # Set preprocessed flag to True
+            video._accumulation_finished = True
+            video.save()
+            # Load blobs and global fragments
             list_of_blobs = ListOfBlobs.load(video.blobs_path)
             blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
@@ -278,21 +301,21 @@ if __name__ == '__main__':
             video.create_training_folder()
             global_fragments_used_for_training = [global_fragment for global_fragment in global_fragments
                                                     if global_fragment._used_for_training == True]
-            minimum_number_of_portraits_per_individual_in_training = min(np.sum([global_fragment._number_of_portraits_per_individual_fragment[global_fragment._temporary_ids]
+            minimum_number_of_portraits_per_individual_in_training = min(np.sum([np.asarray(global_fragment._number_of_portraits_per_individual_fragment)[np.argsort(np.array(global_fragment._temporary_ids))]
                                                                 for global_fragment in global_fragments_used_for_training], axis = 0))
             images, labels = get_images_and_labels_from_global_fragments(global_fragments_used_for_training)
             number_of_samples = NUMBER_OF_SAMPLES
             if minimum_number_of_portraits_per_individual_in_training < number_of_samples:
                 number_of_samples = minimum_number_of_portraits_per_individual_in_training
-            subsampled_images, subsampled_labels = subsample_images_for_last_training(images, labels, number_of_animals, number_of_samples = number_of_samples)
+            subsampled_images, subsampled_labels = subsample_images_for_last_training(images, labels, video.number_of_animals, number_of_samples = number_of_samples)
             last_train_network_params = NetworkParams(video,
                                                 learning_rate = 0.005,
                                                 keep_prob = 1.0,
                                                 use_adam_optimiser = False,
                                                 scopes_layers_to_optimize = ['fully-connected1','softmax1'],
-                                                restore_folder = video._accumulation_folder,
+                                                restore_folder = None,
                                                 save_folder = video._final_training_folder,
-                                                knowledge_transfer_folder = None)
+                                                knowledge_transfer_folder = video._accumulation_folder)
             train(subsampled_images, subsampled_labels,
                 last_train_network_params,
                 store_accuracy_and_error = False,
@@ -300,15 +323,19 @@ if __name__ == '__main__':
                 save_summaries = True,
                 print_flag = True,
                 plot_flag = True)
-            video.training_finished = True
+            video._training_finished = True
             video.save()
         else:
-            old_video = Video()
-            old_video.video_path = video_path
-            video = np.load(old_video._path_to_video_object).item()
+            # Update folders and paths from previous video_object
+            video._final_training_folder = old_video._final_training_folder
+            # Set preprocessed flag to True
+            video._training_finished = True
+            video.save()
+            # Load blobs and global fragments
             list_of_blobs = ListOfBlobs.load(video.blobs_path)
             blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
+
         #############################################################
         ###################     Assigner      ######################
         ####
@@ -326,18 +353,22 @@ if __name__ == '__main__':
             # visualise proposed tracking
             frame_by_frame_identity_inspector(video, blobs)
             # finish and save
-            video.has_been_assigned = True
+            video._has_been_assigned = True
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(10)
             blobs_list.cut_in_chunks()
             blobs_list.save()
             video.save()
         else:
-            old_video = Video()
-            old_video.video_path = video_path
-            video = np.load(old_video._path_to_video_object).item()
+            # Set preprocessed flag to True
+            video._has_been_assigned = True
+            video.save()
+            # Load blobs and global fragments
             list_of_blobs = ListOfBlobs.load(video.blobs_path)
             blobs = list_of_blobs.blobs_in_video
+            global_fragments = np.load(video.global_fragments_path)
+            # visualise proposed tracking
+            frame_by_frame_identity_inspector(video, blobs)
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         old_video = Video()

@@ -230,9 +230,13 @@ def getExistentFiles(video, listNames):
     """
     existentFile = {name:'0' for name in listNames}
     old_video = None
-    if os.path.isfile(video._path_to_video_object):
+    if os.path.isdir(video._previous_session_folder):
         print("loading old video object from get existent files")
-        old_video = np.load(os.path.join(video._previous_session_folder, 'video_object.npy')).item()
+        if os.path.isfile(os.path.join(video._previous_session_folder, 'video_object.npy')):
+            old_video = np.load(os.path.join(video._previous_session_folder, 'video_object.npy')).item()
+        else:
+            raise ValueError("The folder %s is empty. The tracking cannot be restored." %video._previous_session_folder)
+
 
         if old_video.bkg is not None:
             print('has bkg')
@@ -254,15 +258,15 @@ def getExistentFiles(video, listNames):
             print('pretraining done')
             existentFile['pretraining'] = '1'
 
-        if old_video.accumulation_finished == True:
+        if old_video._accumulation_finished == True:
             print('accumulation done')
             existentFile['accumulation'] = '1'
 
-        if old_video.training_finished == True:
+        if old_video._training_finished == True:
             print('training done')
             existentFile['training'] = '1'
 
-        if old_video.has_been_assigned == True:
+        if old_video._has_been_assigned == True:
             print('assignment done')
             existentFile['assignment'] = '1'
 

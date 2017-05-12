@@ -33,9 +33,9 @@ class Video(object):
         self._global_fragments_path = None #string: path to saved list of global fragments
         self._has_been_pretrained = None
         self._pretraining_path = None
-        self.accumulation_finished = None
-        self.training_finished = None
-        self.has_been_assigned = None
+        self._accumulation_finished = None
+        self._training_finished = None
+        self._has_been_assigned = None
         self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
 
     @property
@@ -101,13 +101,18 @@ class Video(object):
         self._session_folder = os.path.join(self._video_folder, 'session_1')
         if not os.path.isdir(self._session_folder):
             os.makedirs(self._session_folder)
+            self._previous_session_folder = ''
         else:
             self._sessions_folders = glob.glob(self._video_folder +"/session*")
             last_session_index = get_last_training_session_index(self._sessions_folders)
             self._previous_session_folder = os.path.join(self._video_folder + "/session_" + str(last_session_index))
-            new_session_index = str(last_session_index + 1)
-            self._session_folder = os.path.join(self._video_folder + "/session_" + new_session_index)
-            os.makedirs(self._session_folder)
+            if len(os.listdir(self._previous_session_folder)) == 0:
+                self._session_folder = self._previous_session_folder
+                self._previous_session_folder = os.path.join(self._video_folder + "/session_" + str(last_session_index-1))
+            else:
+                new_session_index = str(last_session_index + 1)
+                self._session_folder = os.path.join(self._video_folder + "/session_" + new_session_index)
+                os.makedirs(self._session_folder)
         #give a unique name (wrt the video)
         self._path_to_video_object = os.path.join(self._session_folder, 'video_object.npy')
         print("the folder " + self._session_folder + " has been created")
@@ -204,7 +209,7 @@ class Video(object):
 
     def save(self):
         """save class"""
-        print("saving video object")
+        print("saving video object in %s" %self._path_to_video_object)
         np.save(self._path_to_video_object, self)
 
 def get_num_frame(path):

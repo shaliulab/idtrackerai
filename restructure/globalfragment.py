@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
+import random
 
 from blob import is_a_global_fragment, check_global_fragments
 from statistics_for_assignment import compute_identification_frequencies_individual_fragment, compute_P1_individual_fragment_from_blob
@@ -139,12 +140,13 @@ def subsample_images_for_last_training(images, labels, number_of_animals, number
     a last time with uncorrelated images from the training set of references. This function subsample the
     entire set of training images to get a 'number_of_samples' balanced set.
     """
-    images = []
-    labels = []
+    subsampled_images = []
+    subsampled_labels = []
+    print(np.unique(labels))
     for i in np.unique(labels):
-        images.append(np.shuffle(images[np.where(labels == i)[0]])[:number_of_samples])
-        labels.append([i] * number_of_samples)
-    return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0)
+        subsampled_images.append(random.sample(images[np.where(labels == i)[0]],number_of_samples))
+        subsampled_labels.append([i] * number_of_samples)
+    return np.concatenate(subsampled_images, axis = 0), np.concatenate(subsampled_labels, axis = 0)
 
 
 def assign_identity_to_global_fragment_used_for_training(global_fragment, blobs_in_video):
@@ -190,7 +192,6 @@ def split_predictions_after_network_assignment(global_fragments, predictions, so
             # break
             c += 1
 
-
 def check_certainty_individual_fragment(frequencies_individual_fragment,softmax_probs_median_individual_fragment):
     argsort_frequencies = np.argsort(frequencies_individual_fragment)
     sorted_frequencies = frequencies_individual_fragment[argsort_frequencies]
@@ -203,8 +204,6 @@ def check_certainty_individual_fragment(frequencies_individual_fragment,softmax_
     if certainty > CERTAINTY_THRESHOLD:
         acceptable_individual_fragment = True
     return acceptable_individual_fragment
-
-
 
 def assign_identities_to_test_global_fragment(global_fragment, number_of_animals):
     assert global_fragment.used_for_training == False
