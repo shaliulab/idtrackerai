@@ -22,7 +22,7 @@ import itertools
 import cPickle as pickle
 from tqdm import tqdm
 
-videoPaths = scanFolder('/media/lab/2966067c-1f2b-40d7-960c-828d7116e5e4/Video8hormigas/V8h_20121018T130426_1.avi')
+videoPaths = scanFolder('/media/chronos/Large_groups_tests_1/TU20170131/41dpf/video1/video_03-14-17_17-37-20.000.avi')
 
 
 frameIndices, segmPaths = getSegmPaths(videoPaths)
@@ -182,7 +182,7 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
                     cur_id = allIdentities[previousGlobFrame,i]
                     px = np.unravel_index(pixel,(height,width))
                     frame[px[0],px[1],:] = np.multiply(colors[cur_id+1],.3).astype('uint8')+np.multiply(frame[px[0],px[1],:],.7).astype('uint8')
-                if previousSegFrame > 0 and shadowsCounter <= 11:
+                if previousSegFrame > 0 and shadowsCounter <= 110:
                     previousSegFrame = previousSegFrame - 1
                     previousGlobFrame = previousGlobFrame - 1
                     # print '----------------------------------'
@@ -246,7 +246,7 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
                 px = np.unravel_index(pixels[i],(height,width))
                 frame[px[0],px[1],:] = frameCopy[px[0],px[1],:]
                 # cv2.putText(frame,text,centroid, font, fontSize,color,thickness)
-                cv2.putText(frame,str(cur_id+1),(centroid[0]-10,centroid[1]-10) , font, 3,colors[cur_id+1],3)
+                # cv2.putText(frame,str(cur_id+1),(centroid[0]-10,centroid[1]-10) , font, 3,colors[cur_id+1],3)
                 cv2.circle(frame, centroid,2, colors[cur_id+1],2)
                 cv2.circle(frame, nose,2, colors[cur_id+1],2)
 
@@ -256,8 +256,8 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
         cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
 
         if show == True:
-            # frame = cv2.resize(frame,None, fx = np.true_divide(1,1), fy = np.true_divide(1,1))
-            frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
+            frame = cv2.resize(frame,None, fx = np.true_divide(1,1), fy = np.true_divide(1,1))
+            # frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
             # Visualization of the process
             cv2.imshow('IdPlayer',frame)
             pass
@@ -285,4 +285,4 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
 
 
 statNum = 4
-IdPlayer(videoPaths,segmPaths,allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics,dfGlobal,show=True)
+IdPlayer(videoPaths,segmPaths,allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics,dfGlobal,show=False)
