@@ -230,10 +230,9 @@ def getExistentFiles(video, listNames):
     """
     existentFile = {name:'0' for name in listNames}
     old_video = None
-    print video._path_to_video_object
     if os.path.isfile(video._path_to_video_object):
         print("loading old video object from get existent files")
-        old_video = np.load(video._path_to_video_object).item()
+        old_video = np.load(os.path.join(video._previous_session_folder, 'video_object.npy')).item()
 
         if old_video.bkg is not None:
             print('has bkg')
@@ -255,7 +254,11 @@ def getExistentFiles(video, listNames):
             print('pretraining done')
             existentFile['pretraining'] = '1'
 
-        if old_video.has_been_trained == True:
+        if old_video.accumulation_finished == True:
+            print('accumulation done')
+            existentFile['accumulation'] = '1'
+
+        if old_video.training_finished == True:
             print('training done')
             existentFile['training'] = '1'
 

@@ -33,7 +33,8 @@ class Video(object):
         self._global_fragments_path = None #string: path to saved list of global fragments
         self._has_been_pretrained = None
         self._pretraining_path = None
-        self.has_been_trained = None
+        self.accumulation_finished = None
+        self.training_finished = None
         self.has_been_assigned = None
         self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
 
@@ -50,10 +51,6 @@ class Video(object):
             self._video_folder = os.path.dirname(self._video_path)
             #collect some info on the video (resolution, number of frames, ..)
             self.get_info()
-            #create a folder in which preprocessing data will be saved
-            self.create_preprocessing_folder()
-            #give a unique name (wrt the video)
-            self._path_to_video_object = os.path.join(self._preprocessing_folder, 'video_object.npy')
         else:
             raise ValueError("Supported video extensions are ", AVAILABLE_VIDEO_EXTENSION)
 
@@ -96,47 +93,62 @@ class Video(object):
             self._num_episodes = len(self._paths_to_video_segments)
         cap.release()
 
-    def create_preprocessing_folder(self):
-        """If it does not exist creates a folder called preprocessing
-        in the video folder"""
-        self._preprocessing_folder = os.path.join(self._video_folder, 'preprocessing')
-        if not os.path.isdir(self._preprocessing_folder):
-            os.makedirs(self._preprocessing_folder)
-            print("the folder " + self._preprocessing_folder + " has been created")
-
-    def create_embeddings_folder(self):
-        """If it does not exist creates a folder called embedding
-        in the video folder"""
-        self._embeddings_folder = os.path.join(self._video_folder, 'embeddings')
-        if not os.path.isdir(self._embeddings_folder):
-            os.makedirs(self._embeddings_folder)
-            print("the folder " + self._embeddings_folder + " has been created")
-
-    def create_training_and_session_folder(self):
+    def create_session_folder(self):
         """Creates a folder named training in video_folder and a folder session_num
         where num is the session number and it is created everytime one starts
         training a network for a certain video_path
         """
-        self._training_path = os.path.join(self._video_folder, 'training')
-        if not os.path.isdir(self._training_path):
-            self._session_path = os.path.join(self._training_path, 'session_1')
+        self._session_folder = os.path.join(self._video_folder, 'session_1')
+        if not os.path.isdir(self._session_folder):
+            os.makedirs(self._session_folder)
         else:
-            self._sessions_paths = glob.glob(self._training_path +"/session*")
-            last_session_index = get_last_training_session_index(self._sessions_paths)
+            self._sessions_folders = glob.glob(self._video_folder +"/session*")
+            last_session_index = get_last_training_session_index(self._sessions_folders)
+            self._previous_session_folder = os.path.join(self._video_folder + "/session_" + str(last_session_index))
             new_session_index = str(last_session_index + 1)
-            self._session_path = os.path.join(self._training_path + "/session_" + new_session_index)
+            self._session_folder = os.path.join(self._video_folder + "/session_" + new_session_index)
+            os.makedirs(self._session_folder)
+        #give a unique name (wrt the video)
+        self._path_to_video_object = os.path.join(self._session_folder, 'video_object.npy')
+        print("the folder " + self._session_folder + " has been created")
 
-        os.makedirs(self._session_path)
-        print("the folder " + self._training_path + " has been created")
+    def create_preprocessing_folder(self):
+        """If it does not exist creates a folder called preprocessing
+        in the video folder"""
+        self._preprocessing_folder = os.path.join(self._session_folder, 'preprocessing')
+        if not os.path.isdir(self._preprocessing_folder):
+            os.makedirs(self._preprocessing_folder)
+            print("the folder " + self._preprocessing_folder + " has been created")
 
     def create_pretraining_folder(self, number_of_global_fragments_used_to_pretrain):
         """Creates a folder named pretraining in video_folder where the model
         trained during the pretraining is stored
         """
-        self._pretraining_path = os.path.join(self._video_folder, 'pretraining' + str(number_of_global_fragments_used_to_pretrain))
-        if not os.path.isdir(self._pretraining_path):
-            os.makedirs(self._pretraining_path)
+        self._pretraining_folder = os.path.join(self._session_folder, 'pretraining' + str(number_of_global_fragments_used_to_pretrain))
+        if not os.path.isdir(self._pretraining_folder):
+            os.makedirs(self._pretraining_folder)
 
+    def create_accumulation_folder(self):
+        """Folder in which the model generated while accumulating is stored (after pretraining)
+        """
+        self._accumulation_folder = os.path.join(self._session_folder, 'accumulation')
+        if not os.path.isdir(self._accumulation_folder):
+            os.makedirs(self._accumulation_folder)
+
+    def create_training_folder(self):
+        """Folder in which the last model is stored (after accumulation)
+        """
+        self._final_training_folder = os.path.join(self._session_folder, 'training')
+        if not os.path.isdir(self._final_training_folder):
+            os.makedirs(self._final_training_folder)
+
+    def create_embeddings_folder(self):
+        """If it does not exist creates a folder called embedding
+        in the video folder"""
+        self._embeddings_folder = os.path.join(self._session_folder, 'embeddings')
+        if not os.path.isdir(self._embeddings_folder):
+            os.makedirs(self._embeddings_folder)
+            print("the folder " + self._embeddings_folder + " has been created")
 
     def get_episodes(self):
         """Split video in episodes (chunks) of 500 frames

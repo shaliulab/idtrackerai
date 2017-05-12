@@ -5,6 +5,7 @@ sys.path.append('./network')
 
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
 
 from network_params import NetworkParams
 from get_data import DataSet
@@ -13,7 +14,7 @@ from get_predictions import GetPrediction
 from blob import get_images_from_blobs_in_video
 from visualize_embeddings import EmbeddingVisualiser
 from globalfragment import get_images_and_labels_from_global_fragment
-from statistics_for_assignment import compute_P1_individual_fragment_from_blob
+from statistics_for_assignment import compute_P1_individual_fragment_from_blob, compute_identification_frequencies_individual_fragment
 
 def assign(video, images, params, print_flag):
     net = ConvNetwork(params, training_flag = False)
@@ -29,6 +30,7 @@ def assign(video, images, params, print_flag):
     # Train network
     assigner = GetPrediction(data, print_flag = print_flag)
     assigner.get_predictions_softmax(net.predict)
+    tf.reset_default_graph()
     # assigner.get_predictions_fully_connected_embedding(net.get_fully_connected_vectors, video.number_of_animals)
     # video.create_embeddings_folder()
     # visualize_fully_connected_embedding = EmbeddingVisualiser(labels = assigner._predictions,
