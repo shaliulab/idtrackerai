@@ -12,8 +12,7 @@ from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
-def train(images, labels, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag, global_step = 0):
-    net = ConvNetwork(params)
+def train(video, blobs_in_video, global_fragments, net, images, labels, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag, global_step = 0, first_accumulation_flag = False):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
@@ -21,11 +20,11 @@ def train(images, labels, params, store_accuracy_and_error, check_for_loss_plate
     if plot_flag:
         # Initialize pre-trainer plot
         plt.ion()
-        fig, ax_arr = plt.subplots(3)
+        fig, ax_arr = plt.subplots(4)
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 
     # Instantiate data_set
-    training_dataset, validation_dataset = split_data_train_and_validation(params.number_of_animals, images,labels)
+    training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images,labels)
     # Standarize images
     training_dataset.standarize_images()
     validation_dataset.standarize_images()
@@ -36,7 +35,10 @@ def train(images, labels, params, store_accuracy_and_error, check_for_loss_plate
     training_dataset.convert_labels_to_one_hot()
     validation_dataset.convert_labels_to_one_hot()
     # Restore network
-    net.restore()
+    # net.restore()
+    # Reinitialize softmax and fully connected
+    if first_accumulation_flag == True:
+        net.reinitialize_softmax_and_fully_connected()
     # Train network
     #compute weights to be fed to the loss function (weighted cross entropy)
     net.compute_loss_weights(training_dataset.labels)
@@ -47,7 +49,7 @@ def train(images, labels, params, store_accuracy_and_error, check_for_loss_plate
                         starting_epoch = global_step,
                         print_flag = print_flag)
     #set criteria to stop the training
-    stop_training = Stop_Training(params.number_of_animals,
+    stop_training = Stop_Training(net.params.number_of_animals,
                                 check_for_loss_plateau = check_for_loss_plateau)
 
     while not stop_training(store_training_accuracy_and_loss_data,
@@ -70,6 +72,9 @@ def train(images, labels, params, store_accuracy_and_error, check_for_loss_plate
     global_step += trainer.epochs_completed
     # plot if asked
     if plot_flag:
+        global_fragments_used_for_training = [global_fragment for global_fragment in global_fragments
+                                                if global_fragment._used_for_training == True]
+        store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, blobs_in_video, global_fragments_used_for_training)
         store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r')
         store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b')
     # store training and validation losses and accuracies
@@ -80,8 +85,7 @@ def train(images, labels, params, store_accuracy_and_error, check_for_loss_plate
     net.save()
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'training.pdf'))
-    tf.reset_default_graph()
-    return global_step
+    return global_step, net
 
 
 

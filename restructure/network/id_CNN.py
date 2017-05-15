@@ -20,15 +20,13 @@ class ConvNetwork():
         self.layers_to_optimise = None
         self.training = training_flag
         # Build graph with the network, loss, optimizer and accuracies
+        tf.reset_default_graph()
         self._build_graph()
-        # Create savers for the convolutions and the fully conected and softmax separately
-        self.saver_conv = createSaver('saver_conv', exclude_fc_and_softmax = True)
-        self.saver_fc_softmax = createSaver('saver_fc_softmax', exclude_fc_and_softmax = False)
+        self.set_savers()
+
         # Create list of operations to run during training and validation
         if self.training:
             self.ops_list = [self.loss, self.accuracy, self.individual_accuracy]
-            # Create subfolders where we will save the checkpoints of the trainig
-            [self.save_folder_conv,self.save_folder_fc_softmax] = create_checkpoint_subfolders( self.params._save_folder, ['conv', 'softmax'])
 
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
@@ -43,9 +41,7 @@ class ConvNetwork():
             self.session.run(self.global_step.assign(0))
         # self.restore()
         if self.training:
-            self.summary_op = tf.summary.merge_all()
-            self.summary_writer_training = tf.summary.FileWriter(self.params._save_folder + '/train',self.session.graph)
-            self.summary_writer_validation = tf.summary.FileWriter(self.params._save_folder + '/val',self.session.graph)
+            self.create_summaries_writers()
 
     @property
     def is_knowledge_transfer(self):
@@ -57,6 +53,18 @@ class ConvNetwork():
     @property
     def is_restoring(self):
         return self.params._restore_folder is not None
+
+    # Create savers for the convolutions and the fully conected and softmax separately
+    def set_savers(self):
+        self.saver_conv = createSaver('saver_conv', exclude_fc_and_softmax = True)
+        self.saver_fc_softmax = createSaver('saver_fc_softmax', exclude_fc_and_softmax = False)
+        # Create subfolders where we will save the checkpoints of the trainig
+        [self.save_folder_conv,self.save_folder_fc_softmax] = create_checkpoint_subfolders( self.params._save_folder, ['conv', 'softmax'])
+
+    def create_summaries_writers(self):
+        self.summary_op = tf.summary.merge_all()
+        self.summary_writer_training = tf.summary.FileWriter(self.params._save_folder + '/train',self.session.graph)
+        self.summary_writer_validation = tf.summary.FileWriter(self.params._save_folder + '/val',self.session.graph)
 
     def _build_graph(self):
         self.x_pl = tf.placeholder(tf.float32, [None, self.image_width, self.image_height, self.image_channels], name = 'images')
@@ -118,6 +126,10 @@ class ConvNetwork():
         individual_accuracy = compute_individual_accuracy(self.y_target_pl, self.y_logits, self.params.number_of_animals)
         accuracy = compute_accuracy(self.y_target_pl, self.y_logits)
         return accuracy, individual_accuracy
+
+    def reinitialize_softmax_and_fully_connected(self):
+        print('Reinitializing softmax and fully connected')
+        self.session.run(tf.variables_initializer([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name]))
 
     def restore(self):
         self.session.run(tf.global_variables_initializer())

@@ -16,21 +16,19 @@ from visualize_embeddings import EmbeddingVisualiser
 from globalfragment import get_images_and_labels_from_global_fragment
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob, compute_P1_individual_fragment_from_blob, compute_identification_frequencies_individual_fragment
 
-def assign(video, images, params, print_flag):
-    net = ConvNetwork(params, training_flag = False)
+def assign(net, video, images, print_flag):
     # build data object
     images = np.expand_dims(np.asarray(images), axis = 3)
-    data = DataSet(params.number_of_animals, images)
+    data = DataSet(net.params.number_of_animals, images)
     # Instantiate data_set
     data.standarize_images()
     # Crop images from 36x36 to 32x32 without performing data augmentation
     data.crop_images(image_size = 32)
     # Restore network
-    net.restore()
+    # net.restore()
     # Train network
     assigner = GetPrediction(data, print_flag = print_flag)
     assigner.get_predictions_softmax(net.predict)
-    tf.reset_default_graph()
     # assigner.get_predictions_fully_connected_embedding(net.get_fully_connected_vectors, video.number_of_animals)
     # video.create_embeddings_folder()
     # visualize_fully_connected_embedding = EmbeddingVisualiser(labels = assigner._predictions,
@@ -77,5 +75,6 @@ def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
                 # print("P2", blob._P2_vector)
                 # Assign identity to the fragment
                 identity_in_fragment = np.argmax(blob._P2_vector) + 1
+                # identity_in_fragment = np.argmax(blob._P1_vector) + 1
                 # Update identity of all blobs in fragment
                 blob.update_identity_in_fragment(identity_in_fragment)

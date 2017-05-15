@@ -16,7 +16,7 @@ from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
-def pre_train(pretraining_global_fragments, number_of_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
+def pre_train(video, blobs_in_video, pretraining_global_fragments, number_of_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
     global_epoch = 0
     net = ConvNetwork(params)
     # Save accuracy and error during training and validation
@@ -26,7 +26,7 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
     if plot_flag:
         # Initialize pre-trainer plot
         plt.ion()
-        fig, ax_arr = plt.subplots(3)
+        fig, ax_arr = plt.subplots(4)
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
         epoch_index_to_plot = 0
     # Start loop for pre training in the global fragments
@@ -48,8 +48,8 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
         print("validation_dataset", validation_dataset.images.shape)
         training_dataset.convert_labels_to_one_hot()
         validation_dataset.convert_labels_to_one_hot()
-        # Restore network
-        net.restore()
+        # Reinitialize softmax and fully connected
+        net.reinitialize_softmax_and_fully_connected()
         # Train network
         #compute weights to be fed to the loss function (weighted cross entropy)
         net.compute_loss_weights(training_dataset.labels)
@@ -83,6 +83,8 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
 
         # plot if asked
         if plot_flag:
+            pretrained_global_fragments = pretraining_global_fragments[:i + 1]
+            store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, blobs_in_video, pretrained_global_fragments)
             ax_arr[2].cla() # clear bars
             store_training_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'r')
             store_validation_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'b')
@@ -97,7 +99,8 @@ def pre_train(pretraining_global_fragments, number_of_global_fragments, params, 
         net.save()
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'pretraining.pdf'))
-    tf.reset_default_graph()
+    # tf.reset_default_graph()
+    return net
 
 
 

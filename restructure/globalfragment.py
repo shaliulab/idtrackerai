@@ -5,8 +5,8 @@ import random
 from blob import is_a_global_fragment, check_global_fragments
 from statistics_for_assignment import compute_identification_frequencies_individual_fragment, compute_P1_individual_fragment_from_blob
 
-STD_TOLERANCE = 1 ### NOTE set to 1 because we changed the model area to work with the median.
-CERTAINTY_THRESHOLD = 0.8 # threshold to select a individual fragment as eligible for training
+STD_TOLERANCE = 1.5 ### NOTE set to 1 because we changed the model area to work with the median.
+CERTAINTY_THRESHOLD = 0.1 # threshold to select a individual fragment as eligible for training
 
 def detect_beginnings(boolean_array):
     return [i for i in range(0,len(boolean_array)) if (boolean_array[i] and not boolean_array[i-1])]
@@ -36,8 +36,8 @@ class GlobalFragment(object):
             for blob in list_of_blobs[index_beginning_of_fragment] ]
         self.number_of_animals = number_of_animals
         self._used_for_training = False
-        self._ids_assigned = [None] * self.number_of_animals
-        self._temporary_ids = range(self.number_of_animals) # I initialize the _ids_assigned like this so that I can use the same function to extract images in pretraining and training
+        self._ids_assigned = np.nan * np.ones(self.number_of_animals)
+        self._temporary_ids = np.arange(self.number_of_animals) # I initialize the _ids_assigned like this so that I can use the same function to extract images in pretraining and training
         self._score = None
         self._is_unique = False
         self._uniqueness_score = None
@@ -96,12 +96,17 @@ class GlobalFragment(object):
                 self._is_unique = True
 
     def compute_repeated_and_missing_ids(self, all_identities):
-        self._repeated_ids = set([x for x in self._ids_assigned if self._ids_assigned.count(x) > 1])
+        self._repeated_ids = set([x for x in self._ids_assigned if list(self._ids_assigned).count(x) > 1])
         self._missing_ids = set(all_identities).difference(set(self._ids_assigned))
+
+    def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
+        self.starts_ends_individual_fragments = [blob.compute_fragment_start_end()
+            for blob in blobs_in_video[self.index_beginning_of_fragment]]
+
 
 def give_me_identities_of_global_fragment(global_fragment, blobs_in_video):
     global_fragment._ids_assigned = [blob.identity
-        for blob in blobs_in_video[global_fragment.index_beginning_of_fragment] ]
+        for blob in blobs_in_video[global_fragment.index_beginning_of_fragment]]
 
 def give_me_list_of_global_fragments(blobs_in_video, num_animals):
     global_fragments_boolean_array = check_global_fragments(blobs_in_video, num_animals)
@@ -120,6 +125,8 @@ def give_me_pre_training_global_fragments(global_fragments, number_of_global_fra
     return ordered_split_global_fragments
 
 def get_images_and_labels_from_global_fragment(global_fragment):
+    if not np.isnan(global_fragment._ids_assigned).any() and list(global_fragment._temporary_ids) != list(global_fragment._ids_assigned -1):
+        raise ValueError("Temporary ids and assigned ids should match in global fragments used for training")
     images = [global_fragment.portraits[i] for i in range(len(global_fragment.portraits))]
     labels = [[id_]*len(images[i]) for i, id_ in enumerate(global_fragment._temporary_ids)]
     images = [im for ims in images for im in ims]
@@ -202,6 +209,8 @@ def check_certainty_individual_fragment(frequencies_individual_fragment,softmax_
     acceptable_individual_fragment = False
     if certainty > CERTAINTY_THRESHOLD:
         acceptable_individual_fragment = True
+    else:
+        print("global fragment discarded with certainty ", certainty)
     return acceptable_individual_fragment
 
 def assign_identities_to_test_global_fragment(global_fragment, number_of_animals):
@@ -210,30 +219,38 @@ def assign_identities_to_test_global_fragment(global_fragment, number_of_animals
     global_fragment.acceptable_for_training = True
     for i, individual_fragment_predictions in enumerate(global_fragment.predictions):
         # compute statistcs
+        print("individual fragment %i" %i)
         identities_in_fragment = np.asarray(individual_fragment_predictions)
         frequencies_in_fragment = compute_identification_frequencies_individual_fragment(identities_in_fragment, number_of_animals)
+        print("frequencies", frequencies_in_fragment)
         P1_of_fragment = compute_P1_individual_fragment_from_blob(frequencies_in_fragment)
+        print("P1", P1_of_fragment)
         # Assign identity to the fragment
         identity_in_fragment = np.argmax(P1_of_fragment)
         global_fragment._temporary_ids.append(identity_in_fragment)
-        acceptable_individual_fragment = check_certainty_individual_fragment(frequencies_in_fragment, global_fragment.softmax_probs_median[i])
+        acceptable_individual_fragment = check_certainty_individual_fragment(P1_of_fragment, global_fragment.softmax_probs_median[i])
         if not acceptable_individual_fragment:
-            # print("This individual fragment is not good for training")
+            print("This individual fragment is not good for training")
             global_fragment.acceptable_for_training = False
             break
-
+    print(global_fragment._temporary_ids)
     if not global_fragment.is_unique:
-        # print("The global fragment is not unique")
+        print("The global fragment is not unique")
         global_fragment.acceptable_for_training = False
+    else:
+        global_fragment._temporary_ids = np.asarray(global_fragment._temporary_ids)
 
 def assign_identities_and_check_eligibility_for_training_global_fragments(global_fragments, number_of_animals):
     """Assigns identities during test to blobs in global fragments and rank them
     according to the score computed from the certainty of identification and the
     minimum distance travelled"""
-    for global_fragment in global_fragments:
+    for i, global_fragment in enumerate(global_fragments):
+        print("\n**** analysing global fragment ", i)
         if global_fragment.used_for_training == False:
             # print("\nnumber of portraits per individual fragment ", global_fragment._number_of_portraits_per_individual_fragment)
             # print("total number of portraits in global fragment ", global_fragment._total_number_of_portraits)
             assign_identities_to_test_global_fragment(global_fragment, number_of_animals)
             # print("Temporary identities, ", global_fragment._temporary_ids)
             # print("Acceptable for training: ", global_fragment.acceptable_for_training)
+        else:
+            print("global fragment %i used for training" %i)
