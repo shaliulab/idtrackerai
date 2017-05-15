@@ -135,7 +135,7 @@ def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filte
             tf.summary.image(scopeName + '/output', convbToPlot, max_outputs=10)
 
 
-    return convb, w, h
+    return convb, w, h, W
 
 
 def maxpool2d(name,inputWidth, inputHeight, inputPool, pool=2 , stride=[1,2,2,1] ,pad='VALID'):
@@ -167,7 +167,7 @@ def buildFc(scopeName, inputFc, height, width, n_filters, n_fc, keep_prob):
         fc_drop = tf.nn.dropout(fc, keep_prob, name = scope.name)
         _activation_summary(fc_drop)
 
-    return fc_drop
+    return fc_drop, W
 
 def reLU(scopeName, inputRelu):
     with tf.variable_scope(scopeName) as scope:
@@ -190,7 +190,7 @@ def buildSoftMax(scopeName, inputSoftMax, n_fc, classes):
             )
         logits = tf.add(tf.matmul(inputSoftMax, W), b, name = scope.name)
         _activation_summary(logits)
-    return logits
+    return logits, W
 
 # def buildSoftMaxWeights(inputSoftMax,n_fc,classes):
 #     # the same as build softmax, but outputs the weights for visualization

@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function
 # Import standard libraries
 import os
 import sys
@@ -193,12 +194,12 @@ def checkROI(video, old_video, usePreviousROI, frame):
             print('\n Getting ROI from previous session')
             mask = old_video.ROI
         else:
-            print '\n Selecting ROI ...'
+            print('\n Selecting ROI ...')
             mask, _ = getMask(frame)
             if np.count_nonzero(mask) == 0:
                 np.ones_like(frame, dtype = np.uint8)*255
     else:
-        print '\n No ROI selected ...'
+        print('\n No ROI selected ...')
         mask = np.ones_like(frame, dtype = np.uint8)*255
     return mask
 
@@ -425,17 +426,6 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
 Fragmentation inspector
 *****************************************************************************'''
 def fragmentation_inspector(video, blobs_in_video):
-    counter = 1
-    for frame in blobs_in_video:
-        for blob in frame:
-            if not blob.is_a_fish_in_a_fragment:
-                blob.fragment_identifier = -1
-            elif blob.fragment_identifier is None:
-                blob.fragment_identifier = counter
-                while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
-                    blob = blob.next[0]
-                    blob.fragment_identifier = counter
-                counter += 1
 
     cap = cv2.VideoCapture(video.video_path)
     numFrames = video._num_frames
@@ -454,12 +444,12 @@ def fragmentation_inspector(video, blobs_in_video):
 
         # Select segment dataframe and change cap if needed
         sNumber = video.in_which_episode(trackbarValue)
-        print 'seg number ', sNumber
-        print 'trackbarValue ', trackbarValue
+        print('seg number ', sNumber)
+        print('trackbarValue ', trackbarValue)
         sFrame = trackbarValue
 
         if sNumber != currentSegment: # we are changing segment
-            print 'Changing segment...'
+            print('Changing segment...')
             currentSegment = sNumber
             if video._paths_to_video_segments:
                 cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
@@ -524,12 +514,12 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
 
         # Select segment dataframe and change cap if needed
         sNumber = video.in_which_episode(trackbarValue)
-        print 'seg number ', sNumber
-        print 'trackbarValue ', trackbarValue
+        print('seg number ', sNumber)
+        print('trackbarValue ', trackbarValue)
         sFrame = trackbarValue
 
         if sNumber != currentSegment: # we are changing segment
-            print 'Changing segment...'
+            print('Changing segment...')
             currentSegment = sNumber
             if video._paths_to_video_segments:
                 cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
@@ -544,7 +534,7 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
         frameCopy = frame.copy()
 
         blobs_in_frame = blobs_in_video[trackbarValue]
-        for blob in blobs_in_frame:
+        for b, blob in enumerate(blobs_in_frame):
 
             blobs_pixels = get_n_previous_blobs_attribute(blob,'pixels',number_of_previous)[::-1]
             blobs_identities = get_n_previous_blobs_attribute(blob,'_identity',number_of_previous)[::-1]
@@ -556,9 +546,27 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                     frame[pxs[0],pxs[1],:] = frameCopy[pxs[0],pxs[1],:]
 
             #draw the centroid
-            cv2.circle(frame, tuple(blob.centroid), 2, colors[blob._identity], 1)
             font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, 1,colors[blob._identity], 5)
+            cv2.circle(frame, tuple(blob.centroid), 2, colors[blob._identity], -1)
+            if blob._assigned_during_accumulation:
+                # we draw a circle in the centroid if the blob has been assigned during accumulation
+
+                cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, 1,colors[blob._identity], 3)
+            elif not blob._assigned_during_accumulation:
+                # we draw a cross in the centroid if the blob has been assigned during assignation
+                # cv2.putText(frame, 'x',tuple(blob.centroid), font, 1,colors[blob._identity], 1)
+                cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, .5,colors[blob._identity], 3)
+
+            print("\nblob ", b)
+            print("identity: ", blob._identity)
+            print("assigned during accumulation: ", blob.assigned_during_accumulation)
+            if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
+                try:
+                    print("frequencies in fragment: ", blob.frequencies_in_fragment)
+                except:
+                    print("this blob does not have frequencies in fragment")
+            print("P1_vector: ", blob.P1_vector)
+            print("P2_vector: ", blob.P2_vector)
 
 
         cv2.imshow('frame_by_frame_identity_inspector', frame)

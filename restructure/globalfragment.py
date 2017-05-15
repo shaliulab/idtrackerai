@@ -148,13 +148,12 @@ def subsample_images_for_last_training(images, labels, number_of_animals, number
         subsampled_labels.append([i] * number_of_samples)
     return np.concatenate(subsampled_images, axis = 0), np.concatenate(subsampled_labels, axis = 0)
 
-
 def assign_identity_to_global_fragment_used_for_training(global_fragment, blobs_in_video):
     """Assign the identities in identities_list to both global fragment and all its blobs if
     after training on the global fragment"""
     assert global_fragment.used_for_training == True
     global_fragment._ids_assigned = np.asarray(global_fragment._temporary_ids) + 1
-    [blob.update_identity_in_fragment(identity_in_fragment)
+    [blob.update_identity_in_fragment(identity_in_fragment, assigned_during_accumulation = True)
         for blob, identity_in_fragment in zip(blobs_in_video[global_fragment.index_beginning_of_fragment], global_fragment._ids_assigned)]
 
 def get_images_from_test_global_fragments(global_fragments):

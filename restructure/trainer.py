@@ -12,7 +12,7 @@ from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
-def train(images, labels, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
+def train(images, labels, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag, global_step = 0):
     net = ConvNetwork(params)
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
@@ -23,7 +23,6 @@ def train(images, labels, params, store_accuracy_and_error, check_for_loss_plate
         plt.ion()
         fig, ax_arr = plt.subplots(3)
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
-
 
     # Instantiate data_set
     training_dataset, validation_dataset = split_data_train_and_validation(params.number_of_animals, images,labels)
@@ -42,10 +41,10 @@ def train(images, labels, params, store_accuracy_and_error, check_for_loss_plate
     #compute weights to be fed to the loss function (weighted cross entropy)
     net.compute_loss_weights(training_dataset.labels)
     trainer = EpochRunner(training_dataset,
-                        starting_epoch = 0,
+                        starting_epoch = global_step,
                         print_flag = print_flag)
     validator = EpochRunner(validation_dataset,
-                        starting_epoch = 0,
+                        starting_epoch = global_step,
                         print_flag = print_flag)
     #set criteria to stop the training
     stop_training = Stop_Training(params.number_of_animals,
@@ -68,6 +67,7 @@ def train(images, labels, params, store_accuracy_and_error, check_for_loss_plate
         trainer._epochs_completed += 1
         validator._epochs_completed += 1
 
+    global_step += trainer.epochs_completed
     # plot if asked
     if plot_flag:
         store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r')
@@ -81,6 +81,8 @@ def train(images, labels, params, store_accuracy_and_error, check_for_loss_plate
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'training.pdf'))
     tf.reset_default_graph()
+    return global_step
+
 
 
 

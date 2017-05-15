@@ -33,6 +33,7 @@ class ConvNetwork():
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
         if self.is_restoring:
+            print('\nRestoring...')
             # Get subfolders from where we will load the network from previous checkpoints
             [self.restore_folder_conv,self.restore_folder_fc_softmax] = get_checkpoint_subfolders( self.params._restore_folder, ['conv', 'softmax'])
         elif self.is_knowledge_transfer:
@@ -40,7 +41,7 @@ class ConvNetwork():
             print('\nPerforming knowledge transfer...')
             [self.restore_folder_conv] = get_checkpoint_subfolders(self.params._knowledge_transfer_folder,['conv'])
             self.session.run(self.global_step.assign(0))
-        self.restore()
+        # self.restore()
         if self.training:
             self.summary_op = tf.summary.merge_all()
             self.summary_writer_training = tf.summary.FileWriter(self.params._save_folder + '/train',self.session.graph)
@@ -50,6 +51,7 @@ class ConvNetwork():
     def is_knowledge_transfer(self):
         if self.params._knowledge_transfer_folder is not None:
             self.restore_folder_fc_softmax = None
+            print("restore_folder_fc_softmax...", self.restore_folder_fc_softmax)
         return self.params._knowledge_transfer_folder is not None
 
     @property
@@ -59,7 +61,7 @@ class ConvNetwork():
     def _build_graph(self):
         self.x_pl = tf.placeholder(tf.float32, [None, self.image_width, self.image_height, self.image_channels], name = 'images')
         # self.y_logits, self.conv_vector = cnn_model(self.x_pl,self.params.number_of_animals)
-        self.y_logits, self.fc_vector = cnn_model(self.x_pl,self.params.number_of_animals)
+        self.y_logits, self.fc_vector, (self.W1, self.W2, self.W3, self.WFC, self.WSoft) = cnn_model(self.x_pl,self.params.number_of_animals)
         self.softmax_probs = tf.nn.softmax(self.y_logits)
         self.predictions = tf.cast(tf.add(tf.argmax(self.softmax_probs,1),1),tf.float32)
 
@@ -151,8 +153,14 @@ class ConvNetwork():
 
     def train(self,batch):
         feed_dict = self.get_feed_dict(batch)
+        # W1b,W2b,W3b,WFCb,WSoftb = self.session.run([self.W1, self.W2, self.W3, self.WFC, self.WSoft], feed_dict = feed_dict)
+        # print("fully", WFCb[0])
+        # print("Soft before backprop, ", WSoftb[0])
         self.session.run(self.optimisation_step,feed_dict = feed_dict)
         outList = self.session.run(self.ops_list, feed_dict = feed_dict)
+        # W1a,W2a,W3a,WFCa,WSofta = self.session.run([self.W1, self.W2, self.W3, self.WFC, self.WSoft], feed_dict = feed_dict)
+        # print("Soft after backprop, ", WSofta[0])
+        # print("mean diff W1, W2, W3, FC, Soft: ", np.mean(np.abs(W1a-W1b)), np.mean(np.abs(W2a-W2b)), np.mean(np.abs(W3a-W3b)), np.mean(np.abs(WFCa-WFCb)),  np.mean(np.abs(WSofta-WSoftb)))
         return outList, feed_dict
 
     def validate(self,batch):
@@ -245,9 +253,13 @@ def create_checkpoint_subfolders(folderName, subfoldersNameList):
 
 def createSaver(name, exclude_fc_and_softmax):
     if not exclude_fc_and_softmax:
+        print("***** including fully connected and softmax")
+        print([v.name for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name])
         saver = tf.train.Saver([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name], name = name)
     elif exclude_fc_and_softmax:
-        saver = tf.train.Saver([v for v in tf.global_variables() if 'soft' not in v.name or 'full' not in v.name], name = name)
+        print("***** excluding fully connected and softmax")
+        print([v.name for v in tf.global_variables() if 'conv' in v.name])
+        saver = tf.train.Saver([v for v in tf.global_variables() if 'conv' in v.name], name = name)
     else:
         raise ValueError('The second argument has to be a boolean')
 

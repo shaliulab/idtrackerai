@@ -12,7 +12,8 @@ STD_TOLERANCE = 1 # tolerance to select a blob as being a single fish according 
 ### NOTE set to 1 because we changed the model area to work with the median.
 
 class Blob(object):
-    def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, portrait = None, pixels = None):
+    def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, portrait = None, pixels = None, number_of_animals = None, frame_number = None):
+        self.frame_number = frame_number
         self.centroid = np.array(centroid) # numpy array (int64): coordinates of the centroid of the blob in pixels
         self.contour = contour # openCV contour [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]]
         self.area = area # int: number of pixels in the blob
@@ -24,6 +25,10 @@ class Blob(object):
         self.previous = [] # previous blob object overlapping in pixels with the current blob object
         self._fragment_identifier = None # identity in individual fragment after fragmentation
         self._identity = None # identity assigned by the algorithm
+        self._frequencies_in_fragment = np.zeros(number_of_animals).astype('int')
+        self._P1_vector = np.zeros(number_of_animals)
+        self._P2_vector = np.zeros(number_of_animals)
+        self._assigned_during_accumulation = False
 
     @property
     def is_a_fish(self):
@@ -61,8 +66,24 @@ class Blob(object):
             self._fragment_identifier = new_fragment_identifier
 
     @property
+    def assigned_during_accumulation(self):
+        return self._assigned_during_accumulation
+
+    @property
     def identity(self):
         return self._identity
+
+    @property
+    def frequencies_in_fragment(self):
+        return self._frequencies_in_fragment
+
+    @property
+    def P1_vector(self):
+        return self._P1_vector
+
+    @property
+    def P2_vector(self):
+        return self._P2_vector
 
     @identity.setter
     def identity(self, new_identifier):
@@ -113,19 +134,100 @@ class Blob(object):
                 identities.append(current._identity)
         return identities
 
-    def update_identity_in_fragment(self, identity_in_fragment):
+    def get_P1_vectors_coexisting_fragments(self, blobs_in_video):
+        P1_vectors = []
+        # print("Getting P1 vectors of coexisting fragments")
+        # print("This blob is in fragment ", self.fragment_identifier)
+        if self.is_a_fish_in_a_fragment:
+            # print("This blob is a fish in a fragment")
+            fragment_identifiers_of_coexisting_fragments = []
+            # print("in loop to check for coexisting blobs")
+            for b, blob in enumerate(blobs_in_video[self.frame_number]):
+                # print("\nframe ", self.frame_number)
+                # print("blob ", b)
+                # print("fragment identifier, ", blob.fragment_identifier)
+                # print("fragment_identifiers_of_coexisting_fragments: ", fragment_identifiers_of_coexisting_fragments)
+                if blob.fragment_identifier is not self.fragment_identifier and blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and blob.fragment_identifier is not None:
+                    P1_vectors.append(blob.P1_vector)
+                    fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
+            current = self
+
+            while current.next[0].is_a_fish_in_a_fragment:
+                # print("************ Propagating forward")
+                current = current.next[0]
+                for b, blob in enumerate(blobs_in_video[current.frame_number]):
+                    # print("\nframe ", current.frame_number)
+                    # print("blob ", b)
+                    # print("fragment identifier, ", blob.fragment_identifier)
+                    # print("fragment_identifiers_of_coexisting_fragments: ", fragment_identifiers_of_coexisting_fragments)
+                    if blob.fragment_identifier is not current.fragment_identifier and blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and blob.fragment_identifier is not None:
+                        P1_vectors.append(blob.P1_vector)
+                        fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
+            current = self
+            while current.previous[0].is_a_fish_in_a_fragment:
+                # print("************ Propagating backward")
+                current = current.previous[0]
+                for blob in blobs_in_video[current.frame_number]:
+                    # print("\nframe ", current.frame_number)
+                    # print("blob ", b)
+                    # print("fragment identifier, ", blob.fragment_identifier)
+                    # print("fragment_identifiers_of_coexisting_fragments: ", fragment_identifiers_of_coexisting_fragments)
+                    if blob.fragment_identifier is not current.fragment_identifier and blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and blob.fragment_identifier is not None:
+                        P1_vectors.append(blob.P1_vector)
+                        fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
+        return np.asarray(P1_vectors)
+
+    def update_identity_in_fragment(self, identity_in_fragment, assigned_during_accumulation = False):
         if self.is_in_a_fragment:
             self._identity = identity_in_fragment
+            if assigned_during_accumulation:
+                self._assigned_during_accumulation = True
+                self._P1_vector[identity_in_fragment-1] = 0.99999999999999
+                self._P2_vector[identity_in_fragment-1] = 0.99999999999999
             current = self
             while current.next[0].is_in_a_fragment:
                 current = current.next[0]
                 current._identity = identity_in_fragment
+                if assigned_during_accumulation:
+                    current._assigned_during_accumulation = True
+                    current._P1_vector[identity_in_fragment-1] = 0.99999999999999
+                    current._P2_vector[identity_in_fragment-1] = 0.99999999999999
+                else:
+                    current._P2_vector = self.P2_vector
             while current.previous[0].is_in_a_fragment:
                 current = current.previous[0]
                 current._identity = identity_in_fragment
+                if assigned_during_accumulation:
+                    current._assigned_during_accumulation = True
+                    current._P1_vector[identity_in_fragment-1] = 0.99999999999999
+                    current._P2_vector[identity_in_fragment-1] = 0.99999999999999
+                else:
+                    current._P2_vector = self.P2_vector
 
+    def update_P1_in_fragment(self):
+        current = self
+        while current.next[0].is_in_a_fragment:
+            current = current.next[0]
+            current._P1_vector = self.P1_vector
+            current._frequencies_in_fragment = self.frequencies_in_fragment
 
+        while current.previous[0].is_in_a_fragment:
+            current = current.previous[0]
+            current._P1_vector = self.P1_vector
+            current._frequencies_in_fragment = self.frequencies_in_fragment
 
+def compute_fragment_identifier(blobs_in_video):
+    counter = 1
+    for frame in tqdm(blobs_in_video, desc = 'assigning fragment identifier'):
+        for blob in frame:
+            if not blob.is_a_fish_in_a_fragment:
+                blob.fragment_identifier = -1
+            elif blob.fragment_identifier is None:
+                blob.fragment_identifier = counter
+                while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
+                    blob = blob.next[0]
+                    blob.fragment_identifier = counter
+                counter += 1
 
 def connect_blob_list(blobs_in_video):
     for frame_i in tqdm(xrange(1,len(blobs_in_video)), desc = 'Connecting blobs progress'):
@@ -207,6 +309,7 @@ class ListOfBlobs(object):
         """save class"""
         print("saving blobs list at ", self.path_to_save)
         np.save(self.path_to_save, self)
+        self.reconnect()
 
     @classmethod
     def load(cls, path_to_load_blob_list_file):

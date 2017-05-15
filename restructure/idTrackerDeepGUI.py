@@ -17,7 +17,7 @@ sys.path.append('./preprocessing')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
-from blob import connect_blob_list, apply_model_area_to_video, ListOfBlobs, get_images_from_blobs_in_video
+from blob import compute_fragment_identifier, connect_blob_list, apply_model_area_to_video, ListOfBlobs, get_images_from_blobs_in_video
 from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, order_global_fragments_by_distance_travelled, give_me_pre_training_global_fragments, assign_identity_to_global_fragment_used_for_training
 from globalfragment import get_images_and_labels_from_global_fragments, get_images_and_labels_from_global_fragment, get_images_from_test_global_fragments, assign_identities_and_check_eligibility_for_training_global_fragments, split_predictions_after_network_assignment
 from globalfragment import subsample_images_for_last_training
@@ -28,11 +28,11 @@ from video_utils import checkBkg
 from pre_trainer import pre_train
 from network_params import NetworkParams
 from trainer import train
-from assigner import assign, assign_identity_to_blobs_in_video, assign_identity_to_blobs_in_fragment
+from assigner import assign, assign_identity_to_blobs_in_video, compute_P1_for_blobs_in_video, assign_identity_to_blobs_in_video_by_fragment
 from visualize_embeddings import visualize_embeddings_global_fragments
 
 NUM_CHUNKS_BLOB_SAVING = 10 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
-NUMBER_OF_SAMPLES = 3000
+NUMBER_OF_SAMPLES = 30000
 
 if __name__ == '__main__':
     cv2.namedWindow('Bars') #FIXME If we do not create the "Bars" window here we have the "Bad window error"...
@@ -117,6 +117,7 @@ if __name__ == '__main__':
             apply_model_area_to_video(blobs, model_area)
             #connect blobs that overlap in consecutive frames
             connect_blob_list(blobs)
+            compute_fragment_identifier(blobs)
             #compute the global fragments (all animals are visible + each animals overlaps
             #with a single blob in the consecutive frame + the blobs respect the area model)
             global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
@@ -125,12 +126,13 @@ if __name__ == '__main__':
             saved = False
             np.save(video.global_fragments_path, global_fragments)
             video.save()
+            fragmentation_inspector(video, blobs)
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
             blobs_list.save()
             #take a look to the resulting fragmentation
-            fragmentation_inspector(video, blobs)
+
         else:
             # Update folders and paths from previous video_object
             video._preprocessing_folder = old_video._preprocessing_folder
@@ -210,6 +212,7 @@ if __name__ == '__main__':
         #### take references in 'good' global fragments          ####
         #############################################################
         if not loadPreviousDict['accumulation']:
+            print("\n******** Acumulation (first fragment) ********")
             video.create_accumulation_folder()
             train_network_params = NetworkParams(video,
                                                 learning_rate = 0.005,
@@ -219,16 +222,24 @@ if __name__ == '__main__':
                                                 restore_folder = None,
                                                 save_folder = video._accumulation_folder,
                                                 knowledge_transfer_folder = video._pretraining_folder)
+            # train_network_params = NetworkParams(video,
+            #                                     learning_rate = 0.005,
+            #                                     keep_prob = 1.0,
+            #                                     use_adam_optimiser = False,
+            #                                     scopes_layers_to_optimize = None,
+            #                                     restore_folder = None,
+            #                                     save_folder = video._accumulation_folder,
+            #                                     knowledge_transfer_folder = video._pretraining_folder)
             first_training_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0]
             max_distance_travelled = first_training_global_fragment.min_distance_travelled
             images, labels = get_images_and_labels_from_global_fragment(first_training_global_fragment)
-            train(images, labels,
-                train_network_params,
-                store_accuracy_and_error = False,
-                check_for_loss_plateau = True,
-                save_summaries = True,
-                print_flag = True,
-                plot_flag = True)
+            global_step = train(images, labels,
+                                train_network_params,
+                                store_accuracy_and_error = False,
+                                check_for_loss_plateau = True,
+                                save_summaries = True,
+                                print_flag = True,
+                                plot_flag = True)
             first_training_global_fragment._used_for_training = True
             first_training_global_fragment.acceptable_for_training = False
             assign_identity_to_global_fragment_used_for_training(first_training_global_fragment, blobs)
@@ -244,7 +255,7 @@ if __name__ == '__main__':
             global_fragments_for_training = ['first accumulation']
 
             while True:
-                print("\n\n*** New accumulation ***")
+                print("\n******** Acumulation ********")
                 #take images from global fragments not used in training (in the remainder test global fragments)
                 images = get_images_from_test_global_fragments(global_fragments)
                 # get predictions for images in test global fragments
@@ -256,20 +267,22 @@ if __name__ == '__main__':
                 global_fragments_for_training = [global_fragment for global_fragment in global_fragments
                                                     if global_fragment.acceptable_for_training == True]
                 if len(global_fragments_for_training) == 0:
+                    print("No more global fragments to accumulate")
                     break
                 print("Number of global fragments for training, ", len(global_fragments_for_training))
                 # get images of globalfragments for training
                 images, labels = get_images_and_labels_from_global_fragments(global_fragments_for_training)
                 print("Images, ", images.shape)
                 print("Labels, ", labels.shape)
-                train(images, labels,
-                    accumulation_network_params,
-                    store_accuracy_and_error = False,
-                    check_for_loss_plateau = True,
-                    save_summaries = True,
-                    print_flag = True,
-                    plot_flag = True)
-
+                global_step = train(images, labels,
+                                    accumulation_network_params,
+                                    store_accuracy_and_error = False,
+                                    check_for_loss_plateau = True,
+                                    save_summaries = True,
+                                    print_flag = True,
+                                    plot_flag = True,
+                                    global_step = global_step)
+                # raise ValueError("stop debugging")
                 for global_fragment_for_training in global_fragments_for_training:
                     global_fragment_for_training._used_for_training = True
                     global_fragment_for_training.acceptable_for_training = False
@@ -298,6 +311,7 @@ if __name__ == '__main__':
         ####
         #############################################################
         if not loadPreviousDict['training']:
+            print("\n******** Last training ********")
             video.create_training_folder()
             global_fragments_used_for_training = [global_fragment for global_fragment in global_fragments
                                                     if global_fragment._used_for_training == True]
@@ -308,14 +322,15 @@ if __name__ == '__main__':
             if minimum_number_of_portraits_per_individual_in_training < number_of_samples:
                 number_of_samples = minimum_number_of_portraits_per_individual_in_training
             subsampled_images, subsampled_labels = subsample_images_for_last_training(images, labels, video.number_of_animals, number_of_samples = number_of_samples)
+            print("total number of images for last training: ", len(subsampled_labels))
             last_train_network_params = NetworkParams(video,
                                                 learning_rate = 0.005,
                                                 keep_prob = 1.0,
                                                 use_adam_optimiser = False,
-                                                scopes_layers_to_optimize = ['fully-connected1','softmax1'],
+                                                scopes_layers_to_optimize = None,
                                                 restore_folder = None,
                                                 save_folder = video._final_training_folder,
-                                                knowledge_transfer_folder = video._accumulation_folder)
+                                                knowledge_transfer_folder = None)
             train(subsampled_images, subsampled_labels,
                 last_train_network_params,
                 store_accuracy_and_error = False,
@@ -348,10 +363,10 @@ if __name__ == '__main__':
             assigner = assign(video, images, assign_network_params, print_flag = True)
             # assign identities to each blob in each frame
             assign_identity_to_blobs_in_video(blobs, assigner)
+            # compute P1 vector for individual fragmets
+            compute_P1_for_blobs_in_video(video, blobs)
             # assign identities based on individual fragments
-            assign_identity_to_blobs_in_fragment(video, blobs)
-            # visualise proposed tracking
-            frame_by_frame_identity_inspector(video, blobs)
+            assign_identity_to_blobs_in_video_by_fragment(video, blobs)
             # finish and save
             video._has_been_assigned = True
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
@@ -359,6 +374,8 @@ if __name__ == '__main__':
             blobs_list.cut_in_chunks()
             blobs_list.save()
             video.save()
+            # visualise proposed tracking
+            frame_by_frame_identity_inspector(video, blobs)
         else:
             # Set preprocessed flag to True
             video._has_been_assigned = True

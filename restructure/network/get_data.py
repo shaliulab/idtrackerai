@@ -128,13 +128,8 @@ def dense_to_one_hot(labels, n_classes=2):
     """Convert class labels from scalars to one-hot vectors."""
     labels = np.array(labels)
     n_labels = labels.shape[0]
-    print('----------------------------------------------------')
-    print('max_labels', max(labels))
-    print('min_labels', min(labels))
-    print('----------------------------------------------------')
     index_offset = np.arange(n_labels) * n_classes
     labels_one_hot = np.zeros((n_labels, n_classes), dtype=np.float32)
     labels_one_hot.flat[index_offset + labels.ravel()] = 1
-    print("********** labels shape ************")
     print(labels_one_hot.shape)
     return labels_one_hot

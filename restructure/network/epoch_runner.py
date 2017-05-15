@@ -25,6 +25,10 @@ class EpochRunner(object):
         # Data set
         self.data_set = data_set
 
+    @property
+    def epochs_completed(self):
+        return self._epochs_completed
+
     def next_batch(self, batch_size):
         """Return the next `batch_size` examples from this data set."""
         start = self._index_in_epoch

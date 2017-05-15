@@ -108,7 +108,7 @@ def cnn_model(images, classes):
     n_filter1 = 16
     stride1 = [1,1,1,1]
     pad1 = 'SAME'
-    conv1, w1, h1 = buildConv2D('conv1', width, height, 1, images, filter_size1, n_filter1, stride1, pad1)
+    conv1, w1, h1, W1 = buildConv2D('conv1', width, height, 1, images, filter_size1, n_filter1, stride1, pad1)
     # relu
     relu1 = reLU('relu1', conv1)
     # maxpool2d
@@ -122,7 +122,7 @@ def cnn_model(images, classes):
     n_filter3 = 64
     stride3 = [1,1,1,1]
     pad3 = 'SAME'
-    conv3, w3, h3 = buildConv2D('conv2', w2, h2, d2, max_pool2, filter_size3, n_filter3, stride3, pad3)
+    conv3, w3, h3, W3 = buildConv2D('conv2', w2, h2, d2, max_pool2, filter_size3, n_filter3, stride3, pad3)
     # relu
     relu2 = reLU('relu2', conv3)
     # maxpool2d
@@ -136,7 +136,7 @@ def cnn_model(images, classes):
     n_filter5 = 100
     stride5 = [1,1,1,1]
     pad5 = 'SAME'
-    conv5, w5, h5 = buildConv2D('conv3', w4, h4, d4, max_pool4, filter_size5, n_filter5, stride5, pad5)
+    conv5, w5, h5, W5  = buildConv2D('conv3', w4, h4, d4, max_pool4, filter_size5, n_filter5, stride5, pad5)
     d5 = n_filter5
     # relu
     relu3 = reLU('relu3', conv5)
@@ -145,8 +145,8 @@ def cnn_model(images, classes):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
     relu = reLU('relu1', fc_drop)
-    y_logits = buildSoftMax('softmax1', relu, n_fc, classes)
+    y_logits, WSoft = buildSoftMax('softmax1', relu, n_fc, classes)
 
-    return y_logits, relu
+    return y_logits, relu, (W1, W3, W5, WFC, WSoft)
