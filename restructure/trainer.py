@@ -12,19 +12,20 @@ from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
-def train(video, blobs_in_video, global_fragments, net, images, labels, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag, global_step = 0, first_accumulation_flag = False):
+def train(net, images, labels, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag, global_step = 0, first_accumulation_flag = False):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
+    print("\nTraining...")
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation')
     if plot_flag:
         # Initialize pre-trainer plot
         plt.ion()
-        fig, ax_arr = plt.subplots(4)
+        fig, ax_arr = plt.subplots(3)
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 
     # Instantiate data_set
-    training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images,labels)
+    training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images, labels)
     # Standarize images
     training_dataset.standarize_images()
     validation_dataset.standarize_images()
@@ -34,8 +35,6 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
     # Convert labels to one hot vectors
     training_dataset.convert_labels_to_one_hot()
     validation_dataset.convert_labels_to_one_hot()
-    # Restore network
-    # net.restore()
     # Reinitialize softmax and fully connected
     if first_accumulation_flag == True:
         net.reinitialize_softmax_and_fully_connected()
@@ -57,7 +56,6 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
                             trainer._epochs_completed):
         # --- Training
         feed_dict_train = trainer.run_epoch('Training', store_training_accuracy_and_loss_data, net.train)
-        ### NOTE here we can shuffle the training data if we think it is necessary.
         # --- Validation
         feed_dict_val = validator.run_epoch('Validation', store_validation_accuracy_and_loss_data, net.validate)
         # update global step
@@ -72,9 +70,6 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
     global_step += trainer.epochs_completed
     # plot if asked
     if plot_flag:
-        global_fragments_used_for_training = [global_fragment for global_fragment in global_fragments
-                                                if global_fragment._used_for_training == True]
-        store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, blobs_in_video, global_fragments_used_for_training)
         store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r')
         store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b')
     # store training and validation losses and accuracies
@@ -86,31 +81,3 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'training.pdf'))
     return global_step, net
-
-
-
-
-
-if __name__ == '__main__':
-    import numpy as np
-    from globalfragment import order_global_fragments_by_distance_travelled
-
-    video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/preprocessing/video_object.npy').item()
-    gfs = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/preprocessing/global_fragments.npy')
-    train_network_params = NetworkParams(video,
-                                            learning_rate = 0.005,
-                                            keep_prob = 1.0,
-                                            use_adam_optimiser = False,
-                                            scopes_layers_to_optimize = ['fully-connected1','softmax1'],
-                                            restore_folder = None,
-                                            save_folder = video._session_path,
-                                            knowledge_transfer_folder = video._pretraining_path)
-    #start pretraining
-    training_global_fragment = order_global_fragments_by_distance_travelled(gfs)[0]
-    train(training_global_fragment,
-            train_network_params,
-            store_accuracy_and_error = False,
-            check_for_loss_plateau = True,
-            save_summaries = True,
-            print_flag = True,
-            plot_flag = True)

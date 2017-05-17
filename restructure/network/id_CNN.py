@@ -47,7 +47,7 @@ class ConvNetwork():
     def is_knowledge_transfer(self):
         if self.params._knowledge_transfer_folder is not None:
             self.restore_folder_fc_softmax = None
-            print("restore_folder_fc_softmax...", self.restore_folder_fc_softmax)
+            print("restore_folder_fc_softmax:", self.restore_folder_fc_softmax)
         return self.params._knowledge_transfer_folder is not None
 
     @property
@@ -114,11 +114,11 @@ class ConvNetwork():
             optimizer = tf.train.AdamOptimizer(learning_rate = self.params.learning_rate, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
         global_step = tf.Variable(0, name='global_step', trainable=False)
         if self.params.scopes_layers_to_optimize is not None:
-            print('\nOptimizing ', self.params.scopes_layers_to_optimize)
+            print('Optimizing ', self.params.scopes_layers_to_optimize, '\n')
             self.get_layers_to_optimize()
             train_op = optimizer.minimize(self.loss, var_list = self.layers_to_optimise)
         else:
-            print('\nOptimizing the whole network')
+            print('Optimizing the whole network\n')
             train_op = optimizer.minimize(loss=self.loss)
         return train_op, global_step
 
@@ -128,7 +128,7 @@ class ConvNetwork():
         return accuracy, individual_accuracy
 
     def reinitialize_softmax_and_fully_connected(self):
-        print('Reinitializing softmax and fully connected')
+        print('\nReinitializing softmax and fully connected')
         self.session.run(tf.variables_initializer([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name]))
 
     def restore(self):
@@ -265,12 +265,8 @@ def create_checkpoint_subfolders(folderName, subfoldersNameList):
 
 def createSaver(name, exclude_fc_and_softmax):
     if not exclude_fc_and_softmax:
-        print("***** including fully connected and softmax")
-        print([v.name for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name])
         saver = tf.train.Saver([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name], name = name)
     elif exclude_fc_and_softmax:
-        print("***** excluding fully connected and softmax")
-        print([v.name for v in tf.global_variables() if 'conv' in v.name])
         saver = tf.train.Saver([v for v in tf.global_variables() if 'conv' in v.name], name = name)
     else:
         raise ValueError('The second argument has to be a boolean')

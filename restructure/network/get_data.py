@@ -131,5 +131,4 @@ def dense_to_one_hot(labels, n_classes=2):
     index_offset = np.arange(n_labels) * n_classes
     labels_one_hot = np.zeros((n_labels, n_classes), dtype=np.float32)
     labels_one_hot.flat[index_offset + labels.ravel()] = 1
-    print(labels_one_hot.shape)
     return labels_one_hot
