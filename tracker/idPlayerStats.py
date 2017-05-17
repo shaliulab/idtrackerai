@@ -1,6 +1,6 @@
 import cv2
 import sys
-sys.path.append('../utils')
+sys.path.append('./IdTrackerDeep/utils')
 
 from py_utils import *
 from video_utils import *
@@ -22,7 +22,7 @@ import itertools
 import cPickle as pickle
 from tqdm import tqdm
 
-videoPaths = scanFolder('/media/chronos/Large_groups_tests_1/TU20170131/41dpf/video1/video_03-14-17_17-37-20.000.avi')
+videoPaths = scanFolder('/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/conflict3and4_20120316T155032_14.avi')
 
 
 frameIndices, segmPaths = getSegmPaths(videoPaths)
@@ -182,7 +182,7 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
                     cur_id = allIdentities[previousGlobFrame,i]
                     px = np.unravel_index(pixel,(height,width))
                     frame[px[0],px[1],:] = np.multiply(colors[cur_id+1],.3).astype('uint8')+np.multiply(frame[px[0],px[1],:],.7).astype('uint8')
-                if previousSegFrame > 0 and shadowsCounter <= 110:
+                if previousSegFrame > 0 and shadowsCounter <= 11:
                     previousSegFrame = previousSegFrame - 1
                     previousGlobFrame = previousGlobFrame - 1
                     # print '----------------------------------'
@@ -246,7 +246,7 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
                 px = np.unravel_index(pixels[i],(height,width))
                 frame[px[0],px[1],:] = frameCopy[px[0],px[1],:]
                 # cv2.putText(frame,text,centroid, font, fontSize,color,thickness)
-                # cv2.putText(frame,str(cur_id+1),(centroid[0]-10,centroid[1]-10) , font, 3,colors[cur_id+1],3)
+                cv2.putText(frame,str(cur_id+1),(centroid[0]-10,centroid[1]-10) , font, 1,colors[cur_id+1],3)
                 cv2.circle(frame, centroid,2, colors[cur_id+1],2)
                 cv2.circle(frame, nose,2, colors[cur_id+1],2)
 
@@ -285,4 +285,4 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
 
 
 statNum = 4
-IdPlayer(videoPaths,segmPaths,allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics,dfGlobal,show=False)
+IdPlayer(videoPaths,segmPaths,allFragIds,frameIndices, numAnimals, width, height,statistics[int(statNum)],statistics,dfGlobal,show=True)
