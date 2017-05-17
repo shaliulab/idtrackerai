@@ -74,8 +74,7 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
                         bounding_box,
                         bounding_box_image = miniframes[i],
                         pixels = pixels[i],
-                        number_of_animals = video.number_of_animals,
-                        frame_number = counter)
+                        number_of_animals = video.number_of_animals)
             blobs_in_frame.append(blob)
 
         if len(centroids) > maxNumBlobs:

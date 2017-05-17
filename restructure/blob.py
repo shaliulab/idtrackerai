@@ -73,6 +73,15 @@ class Blob(object):
     def identity(self):
         return self._identity
 
+    @identity.setter
+    def identity(self, new_identifier):
+        assert self.is_a_fish
+        self._identity = new_identifier
+
+    @property
+    def is_identified(self):
+        return self._identity is not None
+
     @property
     def frequencies_in_fragment(self):
         return self._frequencies_in_fragment
@@ -85,107 +94,102 @@ class Blob(object):
     def P2_vector(self):
         return self._P2_vector
 
-    @identity.setter
-    def identity(self, new_identifier):
-        assert self.is_a_fish
-        self._identity = new_identifier
-
-    @property
-    def is_identified(self):
-        return self._identity is not None
-
     def distance_travelled_in_fragment(self):
         distance = 0
-        if self.is_in_a_fragment:
+        if self.is_a_fish_in_a_fragment:
             current = self
-            while current.next[0].is_in_a_fragment:
+
+            while current.next[0].is_a_fish_in_a_fragment:
                 distance += np.linalg.norm(current.centroid - current.next[0].centroid)
                 current = current.next[0]
+
             current = self
-            while current.previous[0].is_in_a_fragment:
+
+            while current.previous[0].is_a_fish_in_a_fragment:
                 distance += np.linalg.norm(current.centroid - current.previous[0].centroid)
                 current = current.previous[0]
         return distance
 
     def portraits_in_fragment(self):
         portraits = []
-        if self.is_in_a_fragment:
+        if self.is_a_fish_in_a_fragment:
             portraits.append(self.portrait[0])
             current = self
-            while current.next[0].is_in_a_fragment:
+
+            while current.next[0].is_a_fish_in_a_fragment:
                 current = current.next[0]
                 portraits.append(current.portrait[0])
+
             current = self
-            while current.previous[0].is_in_a_fragment:
+
+            while current.previous[0].is_a_fish_in_a_fragment:
                 current = current.previous[0]
                 portraits.append(current.portrait[0])
         return portraits
 
     def identities_in_fragment(self):
         identities = []
-        if self.is_in_a_fragment:
+        if self.is_a_fish_in_a_fragment:
             identities.append(self._identity)
             current = self
-            while current.next[0].is_in_a_fragment:
+
+            while current.next[0].is_a_fish_in_a_fragment:
                 current = current.next[0]
                 identities.append(current._identity)
-            while current.previous[0].is_in_a_fragment:
+
+            current = self
+
+            while current.previous[0].is_a_fish_in_a_fragment:
                 current = current.previous[0]
                 identities.append(current._identity)
         return identities
 
     def get_P1_vectors_coexisting_fragments(self, blobs_in_video):
         P1_vectors = []
-        # print("Getting P1 vectors of coexisting fragments")
-        # print("This blob is in fragment ", self.fragment_identifier)
+
         if self.is_a_fish_in_a_fragment:
-            # print("This blob is a fish in a fragment")
             fragment_identifiers_of_coexisting_fragments = []
-            # print("in loop to check for coexisting blobs")
             for b, blob in enumerate(blobs_in_video[self.frame_number]):
-                # print("\nframe ", self.frame_number)
-                # print("blob ", b)
-                # print("fragment identifier, ", blob.fragment_identifier)
-                # print("fragment_identifiers_of_coexisting_fragments: ", fragment_identifiers_of_coexisting_fragments)
-                if blob.fragment_identifier is not self.fragment_identifier and blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and blob.fragment_identifier is not None:
+                if blob.fragment_identifier is not self.fragment_identifier and \
+                        blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
+                        blob.fragment_identifier is not None:
                     P1_vectors.append(blob.P1_vector)
                     fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
+
             current = self
 
             while current.next[0].is_a_fish_in_a_fragment:
-                # print("************ Propagating forward")
                 current = current.next[0]
                 for b, blob in enumerate(blobs_in_video[current.frame_number]):
-                    # print("\nframe ", current.frame_number)
-                    # print("blob ", b)
-                    # print("fragment identifier, ", blob.fragment_identifier)
-                    # print("fragment_identifiers_of_coexisting_fragments: ", fragment_identifiers_of_coexisting_fragments)
-                    if blob.fragment_identifier is not current.fragment_identifier and blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and blob.fragment_identifier is not None:
+                    if blob.fragment_identifier is not current.fragment_identifier and \
+                            blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
+                            blob.fragment_identifier is not None:
                         P1_vectors.append(blob.P1_vector)
                         fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
+
             current = self
+
             while current.previous[0].is_a_fish_in_a_fragment:
-                # print("************ Propagating backward")
                 current = current.previous[0]
                 for blob in blobs_in_video[current.frame_number]:
-                    # print("\nframe ", current.frame_number)
-                    # print("blob ", b)
-                    # print("fragment identifier, ", blob.fragment_identifier)
-                    # print("fragment_identifiers_of_coexisting_fragments: ", fragment_identifiers_of_coexisting_fragments)
-                    if blob.fragment_identifier is not current.fragment_identifier and blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and blob.fragment_identifier is not None:
+                    if blob.fragment_identifier is not current.fragment_identifier and \
+                            blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
+                            blob.fragment_identifier is not None:
                         P1_vectors.append(blob.P1_vector)
                         fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
         return np.asarray(P1_vectors)
 
     def update_identity_in_fragment(self, identity_in_fragment, assigned_during_accumulation = False):
-        if self.is_in_a_fragment:
+        if self.is_a_fish_in_a_fragment:
             self._identity = identity_in_fragment
             if assigned_during_accumulation:
                 self._assigned_during_accumulation = True
                 self._P1_vector[identity_in_fragment-1] = 0.99999999999999
                 self._P2_vector[identity_in_fragment-1] = 0.99999999999999
+
             current = self
-            while current.next[0].is_in_a_fragment:
+
+            while current.next[0].is_a_fish_in_a_fragment:
                 current = current.next[0]
                 current._identity = identity_in_fragment
                 if assigned_during_accumulation:
@@ -194,7 +198,10 @@ class Blob(object):
                     current._P2_vector[identity_in_fragment-1] = 0.99999999999999
                 else:
                     current._P2_vector = self.P2_vector
-            while current.previous[0].is_in_a_fragment:
+
+            current = self
+
+            while current.previous[0].is_a_fish_in_a_fragment:
                 current = current.previous[0]
                 current._identity = identity_in_fragment
                 if assigned_during_accumulation:
@@ -206,12 +213,15 @@ class Blob(object):
 
     def update_P1_in_fragment(self):
         current = self
-        while current.next[0].is_in_a_fragment:
+
+        while current.next[0].is_a_fish_in_a_fragment:
             current = current.next[0]
             current._P1_vector = self.P1_vector
             current._frequencies_in_fragment = self.frequencies_in_fragment
 
-        while current.previous[0].is_in_a_fragment:
+        current = self
+
+        while current.previous[0].is_a_fish_in_a_fragment:
             current = current.previous[0]
             current._P1_vector = self.P1_vector
             current._frequencies_in_fragment = self.frequencies_in_fragment
@@ -231,9 +241,15 @@ def compute_fragment_identifier(blobs_in_video):
 
 def connect_blob_list(blobs_in_video):
     for frame_i in tqdm(xrange(1,len(blobs_in_video)), desc = 'Connecting blobs progress'):
+        set_frame_number_to_blobs_in_frame(blobs_in_video[frame_i-1], frame_i-1)
         for (blob_0, blob_1) in itertools.product(blobs_in_video[frame_i-1], blobs_in_video[frame_i]):
             if blob_0.is_a_fish and blob_1.is_a_fish and blob_0.overlaps_with(blob_1):
                 blob_0.now_points_to(blob_1)
+    set_frame_number_to_blobs_in_frame(blobs_in_video[frame_i], frame_i)
+
+def set_frame_number_to_blobs_in_frame(blobs_in_frame, frame_number):
+    for blob in blobs_in_frame:
+        blob.frame_number = frame_number
 
 def all_blobs_in_a_fragment(blobs_in_frame):
     return all([blob.is_in_a_fragment for blob in blobs_in_frame])
@@ -264,19 +280,27 @@ def apply_model_area_to_video(blobs_in_video, model_area):
     for blobs_in_frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'):
         apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area)
 
-def get_images_from_blobs_in_video(blobs_in_video, video_episodes_start_end):
-    portraits_in_video = Parallel(n_jobs=1)(delayed(get_blobs_in_frame_from_episode)(blobs_in_video[start:end]) for (start,end) in tqdm(video_episodes_start_end, desc = 'Getting portraits'))
-    return np.concatenate(portraits_in_video, axis = 0)
+# def get_images_from_blobs_in_video(blobs_in_video, video_episodes_start_end):
+#     portraits_in_video = Parallel(n_jobs=1)(delayed(get_blobs_in_frame_from_episode)(blobs_in_video[start:end]) for (start,end) in tqdm(video_episodes_start_end, desc = 'Getting portraits'))
+#     return np.concatenate(portraits_in_video, axis = 0)
+#
+# def get_blobs_in_frame_from_episode(blobs_in_episode):
+#     print(len(blobs_in_episode))
+#     return np.concatenate([get_images_from_blobs_in_frame(blobs_in_frame) for blobs_in_frame in blobs_in_episode if len(get_images_from_blobs_in_frame(blobs_in_frame)) > 0], axis = 0)
+#
+# def get_images_from_blobs_in_frame(blobs_in_frame):
+#     try:
+#         return np.array([blob.portrait[0] for blob in blobs_in_frame if blob.is_a_fish_in_a_fragment])
+#     except:
+#         print('The frame is empty')
 
-def get_blobs_in_frame_from_episode(blobs_in_episode):
-    print(len(blobs_in_episode))
-    return np.concatenate([get_images_from_blobs_in_frame(blobs_in_frame) for blobs_in_frame in blobs_in_episode if len(get_images_from_blobs_in_frame(blobs_in_frame)) > 0], axis = 0)
-
-def get_images_from_blobs_in_frame(blobs_in_frame):
-    try:
-        return np.array([blob.portrait[0] for blob in blobs_in_frame if blob.is_a_fish_in_a_fragment])
-    except:
-        print('The frame is empty')
+def get_images_from_blobs_in_video(blobs_in_video):
+    portraits_in_video = []
+    for blobs_in_frame in blobs_in_video:
+        for blob in blobs_in_frame:
+            if blob.is_a_fish_in_a_fragment and not blob.assigned_during_accumulation:
+                portraits_in_video.append(blob.portrait[0])
+    return np.asarray(portraits_in_video)
 
 
 

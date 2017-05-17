@@ -1,8 +1,12 @@
 from __future__ import absolute_import, division, print_function
 import os
+import sys
+sys.path.append('../utils')
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sb
+
+from py_utils import get_spaced_colors_util
 
 class Store_Accuracy_and_Loss(object):
     """Store the loss, accuracy and individual accuracy values computed during

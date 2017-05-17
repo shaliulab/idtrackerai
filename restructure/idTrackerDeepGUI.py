@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function
 # Import standard libraries
 import os
 from os.path import isdir, isfile
@@ -18,18 +19,20 @@ sys.path.append('./preprocessing')
 
 from video import Video
 from blob import compute_fragment_identifier, connect_blob_list, apply_model_area_to_video, ListOfBlobs, get_images_from_blobs_in_video
-from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, order_global_fragments_by_distance_travelled, give_me_pre_training_global_fragments, assign_identity_to_global_fragment_used_for_training
-from globalfragment import get_images_and_labels_from_global_fragments, get_images_and_labels_from_global_fragment, get_images_from_test_global_fragments, assign_identities_and_check_eligibility_for_training_global_fragments, split_predictions_after_network_assignment
-from globalfragment import subsample_images_for_last_training
+from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, give_me_pre_training_global_fragments
+from globalfragment import get_images_and_labels_from_global_fragments, get_images_and_labels_from_global_fragment
+from globalfragment import subsample_images_for_last_training, order_global_fragments_by_distance_travelled
 from segmentation import segment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector, frame_by_frame_identity_inspector
 from py_utils import getExistentFiles
 from video_utils import checkBkg
 from pre_trainer import pre_train
+from accumulation_manager import AccumulationManager
 from network_params import NetworkParams
 from trainer import train
 from assigner import assign, assign_identity_to_blobs_in_video, compute_P1_for_blobs_in_video, assign_identity_to_blobs_in_video_by_fragment
 from visualize_embeddings import visualize_embeddings_global_fragments
+from id_CNN import ConvNetwork
 
 NUM_CHUNKS_BLOB_SAVING = 10 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
@@ -61,7 +64,7 @@ if __name__ == '__main__':
         prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to do BKG or select a ROI?  ')
         video.subtract_bkg = bool(prepOpts['bkg'])
         video.apply_ROI =  bool(prepOpts['ROI'])
-        print '\nLooking for finished steps in previous session...'
+        print('\nLooking for finished steps in previous session...')
 
         #selecting files to load from previous session...'
         loadPreviousDict = selectOptions(processes_list, existentFiles, text='Steps already processed in this video \n (loaded from ' + video._video_folder + ')')
@@ -80,7 +83,7 @@ if __name__ == '__main__':
         selectPreprocParams(video, old_video, usePreviousPrecParams)
         print("video session folder, ", video._session_folder)
         video.save()
-        print 'The parameters used to preprocess the video are '
+        print('The parameters used to preprocess the video are ')
         pprint({key: getattr(video, key) for key in video.__dict__ if 'ROI' in key or 'bkg' in key})
         #Loading logo during preprocessing
         img = cv2.imread('../utils/loadingIdDeep.png')
@@ -108,6 +111,7 @@ if __name__ == '__main__':
         cv2.waitKey(1)
 
         if not loadPreviousDict['preprocessing']:
+            print("\n**** Preprocessing ****\n")
             video.create_preprocessing_folder()
             blobs = segment(video)
             #compute a model of the area of the animals (considering frames in which
@@ -117,6 +121,7 @@ if __name__ == '__main__':
             apply_model_area_to_video(blobs, model_area)
             #connect blobs that overlap in consecutive frames
             connect_blob_list(blobs)
+            #assign an identifier to each blobl belonging to an individual fragment
             compute_fragment_identifier(blobs)
             #compute the global fragments (all animals are visible + each animals overlaps
             #with a single blob in the consecutive frame + the blobs respect the area model)
@@ -126,12 +131,12 @@ if __name__ == '__main__':
             saved = False
             np.save(video.global_fragments_path, global_fragments)
             video.save()
-            fragmentation_inspector(video, blobs)
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
             blobs_list.save()
             #take a look to the resulting fragmentation
+            fragmentation_inspector(video, blobs)
 
         else:
             # Update folders and paths from previous video_object
@@ -146,7 +151,6 @@ if __name__ == '__main__':
             blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
 
-
         #destroy windows to prevent openCV errors
         cv2.waitKey(1)
         cv2.destroyAllWindows()
@@ -160,45 +164,48 @@ if __name__ == '__main__':
         #### launched                                            ####
         #############################################################
         if not loadPreviousDict['pretraining']:
+            print("\n**** Pretraining ****\n")
             pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [Y/n]')
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
                 number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
                 try:
                     number_of_global_fragments = int(number_of_global_fragments)
-                    print("Pretraining with ", number_of_global_fragments , " fragments")
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments))
-
                 except:
                     number_of_global_fragments = len(global_fragments)
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
-
-                print("pretraining with %i" %number_of_global_fragments, ' global fragments')
+                print("pretraining with %i" %number_of_global_fragments, ' global fragments\n')
+                #create folder to store pretraining
                 video.create_pretraining_folder(number_of_global_fragments)
                 #pretraining network parameters
-                pretrain_network_params = NetworkParams(video,
+                pretrain_network_params = NetworkParams(video.number_of_animals,
                                                         learning_rate = 0.01,
                                                         keep_prob = 1.0,
-                                                        use_adam_optimiser = False,
-                                                        scopes_layers_to_optimize = None,
-                                                        restore_folder = None,
-                                                        save_folder = video._pretraining_folder,
-                                                        knowledge_transfer_folder = video._pretraining_folder)
+                                                        save_folder = video._pretraining_folder)
                 #start pretraining
-                pre_train(pretraining_global_fragments,#TODO: change it to get images as input
-                        number_of_global_fragments,
-                        pretrain_network_params,
-                        store_accuracy_and_error = False,
-                        check_for_loss_plateau = True,
-                        save_summaries = True,
-                        print_flag = True,
-                        plot_flag = True)
+                net = pre_train(pretraining_global_fragments,
+                                pretrain_network_params,
+                                store_accuracy_and_error = False,
+                                check_for_loss_plateau = True,
+                                save_summaries = True,
+                                print_flag = False,
+                                plot_flag = True)
                 #save changes
                 video._has_been_pretrained = True
                 video.save()
         else:
             # Update folders and paths from previous video_object
             video._pretraining_folder = old_video._pretraining_folder
+            pretrain_network_params = NetworkParams(video.number_of_animals,
+                                                    learning_rate = 0.01,
+                                                    keep_prob = 1.0,
+                                                    use_adam_optimiser = False,
+                                                    scopes_layers_to_optimize = None,
+                                                    restore_folder = video._pretraining_folder,
+                                                    save_folder = video._pretraining_folder)
+            net = ConvNetwork(pretrain_network_params)
+            net.restore()
             # Set preprocessed flag to True
             video._has_been_pretrained = True
             video.save()
@@ -212,81 +219,65 @@ if __name__ == '__main__':
         #### take references in 'good' global fragments          ####
         #############################################################
         if not loadPreviousDict['accumulation']:
-            print("\n******** Acumulation (first fragment) ********")
+            print("\n**** Acumulation ****")
+            #create folder to store accumulation models
             video.create_accumulation_folder()
-            train_network_params = NetworkParams(video,
-                                                learning_rate = 0.005,
-                                                keep_prob = 1.0,
-                                                use_adam_optimiser = False,
-                                                scopes_layers_to_optimize = ['fully-connected1','softmax1'],
-                                                restore_folder = None,
-                                                save_folder = video._accumulation_folder,
-                                                knowledge_transfer_folder = video._pretraining_folder)
-            # train_network_params = NetworkParams(video,
-            #                                     learning_rate = 0.005,
-            #                                     keep_prob = 1.0,
-            #                                     use_adam_optimiser = False,
-            #                                     scopes_layers_to_optimize = None,
-            #                                     restore_folder = None,
-            #                                     save_folder = video._accumulation_folder,
-            #                                     knowledge_transfer_folder = video._pretraining_folder)
-            first_training_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0]
-            max_distance_travelled = first_training_global_fragment.min_distance_travelled
-            images, labels = get_images_and_labels_from_global_fragment(first_training_global_fragment)
-            global_step = train(images, labels,
-                                train_network_params,
-                                store_accuracy_and_error = False,
-                                check_for_loss_plateau = True,
-                                save_summaries = True,
-                                print_flag = True,
-                                plot_flag = True)
-            first_training_global_fragment._used_for_training = True
-            first_training_global_fragment.acceptable_for_training = False
-            assign_identity_to_global_fragment_used_for_training(first_training_global_fragment, blobs)
-            accumulation_network_params = NetworkParams(video,
-                                                learning_rate = 0.005,
-                                                keep_prob = 1.0,
-                                                use_adam_optimiser = False,
-                                                scopes_layers_to_optimize = ['fully-connected1','softmax1'],
-                                                restore_folder = video._accumulation_folder,
-                                                save_folder = video._accumulation_folder,
-                                                knowledge_transfer_folder = None)
-            assign_network_params = NetworkParams(video,restore_folder = video._accumulation_folder)
-            global_fragments_for_training = ['first accumulation']
-
-            while True:
-                print("\n******** Acumulation ********")
+            #set network params for the accumulation model
+            accumulation_network_params = NetworkParams(video.number_of_animals,
+                                        learning_rate = 0.005,
+                                        keep_prob = 1.0,
+                                        scopes_layers_to_optimize = ['fully-connected1','softmax1'],
+                                        save_folder = video._accumulation_folder,
+                                        restore_folder = video._pretraining_folder)
+            #instantiate network object
+            net = ConvNetwork(accumulation_network_params)
+            #restore variables from the pretraining
+            net.restore()
+            #instantiate accumulation manager
+            accumulation_manager = AccumulationManager(global_fragments, video.number_of_animals)
+            #set global epoch counter to 0
+            global_step = 0
+            while accumulation_manager.continue_accumulation:
+                print("\n***new accumulation step %i" %accumulation_manager.counter)
+                #get next fragments for accumulation
+                accumulation_manager.get_next_global_fragments()
+                #get images from the new global fragments
+                #(we do not take images from individual fragments already used)
+                accumulation_manager.get_new_images_and_labels()
+                #get images for training
+                #(we mix images already used with new images)
+                images, labels = accumulation_manager.get_images_and_labels_for_training()
+                print("images: ", images.shape)
+                print("labels: ", labels.shape)
+                #start training
+                global_step, net = train(net, images, labels,
+                                        store_accuracy_and_error = False,
+                                        check_for_loss_plateau = True,
+                                        save_summaries = True,
+                                        print_flag = False,
+                                        plot_flag = True,
+                                        global_step = global_step,
+                                        first_accumulation_flag = accumulation_manager == 0)
+                # update used_for_training flag to True for fragments used
+                accumulation_manager.update_global_fragments_used_for_training()
+                accumulation_manager.update_used_images_and_labels()
+                accumulation_manager.update_individual_fragments_used()
+                # update the identity of the accumulated global fragments to their labels during training
+                accumulation_manager.assign_identities_to_accumulated_global_fragments(blobs)
+                # Set accumulation params for rest of the accumulation
+                # net.params.restore_folder = video._accumulation_folder
                 #take images from global fragments not used in training (in the remainder test global fragments)
-                images = get_images_from_test_global_fragments(global_fragments)
-                # get predictions for images in test global fragments
-                assigner = assign(video, images, assign_network_params, print_flag = True)
-                split_predictions_after_network_assignment(global_fragments, assigner._predictions, assigner._softmax_probs)
-                # assign identities to the global fragments based on the predictions
-                assign_identities_and_check_eligibility_for_training_global_fragments(global_fragments, video.number_of_animals)
-                # get global fragments for training
-                global_fragments_for_training = [global_fragment for global_fragment in global_fragments
-                                                    if global_fragment.acceptable_for_training == True]
-                if len(global_fragments_for_training) == 0:
-                    print("No more global fragments to accumulate")
+                if any([not global_fragment.used_for_training for global_fragment in global_fragments]):
+                    images = accumulation_manager.get_images_from_test_global_fragments()
+                else:
+                    print("All the global fragments have been used for accumulation")
                     break
-                print("Number of global fragments for training, ", len(global_fragments_for_training))
-                # get images of globalfragments for training
-                images, labels = get_images_and_labels_from_global_fragments(global_fragments_for_training)
-                print("Images, ", images.shape)
-                print("Labels, ", labels.shape)
-                global_step = train(images, labels,
-                                    accumulation_network_params,
-                                    store_accuracy_and_error = False,
-                                    check_for_loss_plateau = True,
-                                    save_summaries = True,
-                                    print_flag = True,
-                                    plot_flag = True,
-                                    global_step = global_step)
-                # raise ValueError("stop debugging")
-                for global_fragment_for_training in global_fragments_for_training:
-                    global_fragment_for_training._used_for_training = True
-                    global_fragment_for_training.acceptable_for_training = False
-                    assign_identity_to_global_fragment_used_for_training(global_fragment_for_training, blobs)
+                # get predictions for images in test global fragments
+                assigner = assign(net, video, images, print_flag = True)
+                accumulation_manager.split_predictions_after_network_assignment(assigner._predictions, assigner._softmax_probs)
+                # assign identities to the global fragments based on the predictions
+                accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(video.number_of_animals)
+                accumulation_manager.update_counter()
 
             video._accumulation_finished = True
             video.save()
@@ -298,6 +289,15 @@ if __name__ == '__main__':
         else:
             # Update folders and paths from previous video_object
             video._accumulation_folder = old_video._accumulation_folder
+            accumulation_network_params = NetworkParams(video.number_of_animals,
+                                                        learning_rate = 0.005,
+                                                        keep_prob = 1.0,
+                                                        use_adam_optimiser = False,
+                                                        scopes_layers_to_optimize = ['fully-connected1','softmax1'],
+                                                        restore_folder = video._accumulation_folder,
+                                                        save_folder = video._accumulation_folder)
+            net = ConvNetwork(pretrain_network_params)
+            net.restore()
             # Set preprocessed flag to True
             video._accumulation_finished = True
             video.save()
@@ -310,57 +310,57 @@ if __name__ == '__main__':
         ###################     Training       ######################
         ####
         #############################################################
-        if not loadPreviousDict['training']:
-            print("\n******** Last training ********")
-            video.create_training_folder()
-            global_fragments_used_for_training = [global_fragment for global_fragment in global_fragments
-                                                    if global_fragment._used_for_training == True]
-            minimum_number_of_portraits_per_individual_in_training = min(np.sum([np.asarray(global_fragment._number_of_portraits_per_individual_fragment)[np.argsort(np.array(global_fragment._temporary_ids))]
-                                                                for global_fragment in global_fragments_used_for_training], axis = 0))
-            images, labels = get_images_and_labels_from_global_fragments(global_fragments_used_for_training)
-            number_of_samples = NUMBER_OF_SAMPLES
-            if minimum_number_of_portraits_per_individual_in_training < number_of_samples:
-                number_of_samples = minimum_number_of_portraits_per_individual_in_training
-            subsampled_images, subsampled_labels = subsample_images_for_last_training(images, labels, video.number_of_animals, number_of_samples = number_of_samples)
-            print("total number of images for last training: ", len(subsampled_labels))
-            last_train_network_params = NetworkParams(video,
-                                                learning_rate = 0.005,
-                                                keep_prob = 1.0,
-                                                use_adam_optimiser = False,
-                                                scopes_layers_to_optimize = None,
-                                                restore_folder = None,
-                                                save_folder = video._final_training_folder,
-                                                knowledge_transfer_folder = None)
-            train(subsampled_images, subsampled_labels,
-                last_train_network_params,
-                store_accuracy_and_error = False,
-                check_for_loss_plateau = True,
-                save_summaries = True,
-                print_flag = True,
-                plot_flag = True)
-            video._training_finished = True
-            video.save()
-        else:
-            # Update folders and paths from previous video_object
-            video._final_training_folder = old_video._final_training_folder
-            # Set preprocessed flag to True
-            video._training_finished = True
-            video.save()
-            # Load blobs and global fragments
-            list_of_blobs = ListOfBlobs.load(video.blobs_path)
-            blobs = list_of_blobs.blobs_in_video
-            global_fragments = np.load(video.global_fragments_path)
+        # if not loadPreviousDict['training']:
+        #     print("\n******** Last training ********")
+        #     video.create_training_folder()
+        #     global_fragments_used_for_training = [global_fragment for global_fragment in global_fragments
+        #                                             if global_fragment._used_for_training == True]
+        #     minimum_number_of_portraits_per_individual_in_training = min(np.sum([np.asarray(global_fragment._number_of_portraits_per_individual_fragment)[np.argsort(np.array(global_fragment._temporary_ids))]
+        #                                                         for global_fragment in global_fragments_used_for_training], axis = 0))
+        #     images, labels = get_images_and_labels_from_global_fragments(global_fragments_used_for_training)
+        #     number_of_samples = NUMBER_OF_SAMPLES
+        #     if minimum_number_of_portraits_per_individual_in_training < number_of_samples:
+        #         number_of_samples = minimum_number_of_portraits_per_individual_in_training
+        #     subsampled_images, subsampled_labels = subsample_images_for_last_training(images, labels, video.number_of_animals, number_of_samples = number_of_samples)
+        #     print("total number of images for last training: ", len(subsampled_labels))
+        #     net.params.save_folder = video._final_training_folder
+        #     net.set_savers()
+        #     net.create_summaries_writers()
+        #     _, net = train(net, subsampled_images,
+        #                     subsampled_labels,
+        #                     store_accuracy_and_error = False,
+        #                     check_for_loss_plateau = True,
+        #                     save_summaries = True,
+        #                     print_flag = True,
+        #                     plot_flag = True)
+        #     video._training_finished = True
+        #     video.save()
+        # else:
+        #     # Update folders and paths from previous video_object
+        #     video._final_training_folder = old_video._final_training_folder
+        #     last_training_network_params = NetworkParams(restore_folder = video._final_training_folder)
+        #     net = ConvNetwork(last_training_network_params)
+        #     net.restore()
+        #     # Set preprocessed flag to True
+        #     video._training_finished = True
+        #     video.save()
+        #     # Load blobs and global fragments
+        #     list_of_blobs = ListOfBlobs.load(video.blobs_path)
+        #     blobs = list_of_blobs.blobs_in_video
+        #     global_fragments = np.load(video.global_fragments_path)
 
         #############################################################
         ###################     Assigner      ######################
         ####
         #############################################################
         if not loadPreviousDict['assignment']:
-            assign_network_params = NetworkParams(video, restore_folder = video._final_training_folder)
             # Get images from the blob collection
-            images = get_images_from_blobs_in_video(blobs, video._episodes_start_end)
+            images = get_images_from_blobs_in_video(blobs)#, video._episodes_start_end)
+            print("images shape before entering to assign, ", images.shape)
             # get predictions
-            assigner = assign(video, images, assign_network_params, print_flag = True)
+            assigner = assign(net, video, images, print_flag = True)
+            print("number of predictions, ", len(assigner._predictions))
+            print("predictions range", np.unique(assigner._predictions))
             # assign identities to each blob in each frame
             assign_identity_to_blobs_in_video(blobs, assigner)
             # compute P1 vector for individual fragmets

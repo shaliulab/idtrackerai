@@ -11,7 +11,7 @@ def compute_identification_frequencies_individual_fragment(identities_in_fragmen
     """
     # Compute frequencies of assignation for each identity
     return np.asarray([np.sum(identities_in_fragment == i)
-                            for i in range(1, number_of_animals + 1)])
+                            for i in range(1, number_of_animals+1)]) # The predictions come from 1 to number_of_animals + 1
 
 def normalise_frequencies(frequencies):
     return frequencies / np.sum(frequencies)
