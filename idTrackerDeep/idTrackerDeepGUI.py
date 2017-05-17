@@ -122,7 +122,7 @@ if __name__ == '__main__':
     if not loadPreviousDict['fragments']:
         dfGlobal, fragmentsDict = fragment(videoPaths, segmPaths, videoInfo=None)
 
-        playFragmentation(videoPaths,segmPaths,dfGlobal,visualize=False)
+        playFragmentation(videoPaths,segmPaths,dfGlobal,visualize=True)
 
         cv2.waitKey(1)
         cv2.destroyAllWindows()

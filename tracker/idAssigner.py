@@ -366,7 +366,7 @@ def idAssigner(videoPath, trainDict, accumCounter, fragmentsDict = {},portraits 
             print 'Computing softMax probabilities, id-frequencies, and P1 for list of fragments ', i
         # Load data for the assignment (### TODO this can be done in portraits so that we only need to do it once)
         if len(indivFragments) != 0:
-            imsize, portsFragments, imagesnostd =  DataIdAssignation(portraits, indivFragments,i)
+            imsize, portsFragments, imagesnostd =  DataIdAssignation(portraits, indivFragments)
 
             # if i == 0:
             #     portsFragmentssplit = np.split(portsFragments,sumFragIndices)
