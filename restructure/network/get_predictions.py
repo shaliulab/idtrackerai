@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 BATCH_SIZE = 5000 # 32x32 = 1024bytes x BATCH_SIZE ~ 100MB
+KMEANS_NUMBER_OF_STEPS = 100
 
 class GetPrediction(object):
     def __init__(self, data_set,
@@ -41,8 +42,7 @@ class GetPrediction(object):
             print(fc_vectors.shape)
             self._fc_vectors.append(fc_vectors)
         self._fc_vectors = np.concatenate(self._fc_vectors, axis = 0)
-        _, self._predictions = kMeansCluster(self._fc_vectors, number_of_animals, 100)
-
+        _, self._predictions = kMeansCluster(self._fc_vectors, number_of_animals, KMEANS_NUMBER_OF_STEPS)
 
 def kMeansCluster(vector_values, num_clusters, max_num_steps, stop_coeficient = 0.0):
   vectors = tf.constant(vector_values)
@@ -50,44 +50,33 @@ def kMeansCluster(vector_values, num_clusters, max_num_steps, stop_coeficient = 
                                    [0,0],[num_clusters,-1]))
   old_centroids = tf.Variable(tf.zeros([num_clusters,vector_values.shape[1]]))
   centroid_distance = tf.Variable(tf.zeros([num_clusters,vector_values.shape[1]]))
-
   expanded_vectors = tf.expand_dims(vectors, 0)
   expanded_centroids = tf.expand_dims(centroids, 1)
-
-  # print 'vectors shape: '+ str(expanded_vectors.get_shape())
-  # print 'centroids shape: ' + str(expanded_centroids.get_shape())
-
   distances = tf.reduce_sum(
     tf.square(tf.subtract(expanded_vectors, expanded_centroids)), 2)
   assignments = tf.argmin(distances, 0)
-
   means = tf.stack([
     tf.reduce_mean(
         tf.boolean_mask(
             vectors, tf.equal(assignments, c)
         ), 0)
     for c in xrange(num_clusters)])
-
   save_old_centroids = tf.assign(old_centroids, centroids)
-
   update_centroids = tf.assign(centroids, means)
   init_op = tf.initialize_all_variables()
-
   performance = tf.assign(centroid_distance, tf.subtract(centroids, old_centroids))
   check_stop = tf.reduce_sum(tf.abs(performance))
 
   with tf.Session() as sess:
     sess.run(init_op)
     for step in xrange(max_num_steps):
-    #   print "Running step " + str(step)
+      print("KMeanClustering: Running step " + str(step))
       sess.run(save_old_centroids)
       _, centroid_values, assignment_values = sess.run([update_centroids,
                                                         centroids,
                                                         assignments])
       sess.run(check_stop)
       current_stop_coeficient = check_stop.eval()
-    #   print "coeficient:", current_stop_coeficient
       if current_stop_coeficient <= stop_coeficient:
         break
-
     return centroid_values, assignment_values

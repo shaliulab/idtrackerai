@@ -280,20 +280,6 @@ def apply_model_area_to_video(blobs_in_video, model_area):
     for blobs_in_frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'):
         apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area)
 
-# def get_images_from_blobs_in_video(blobs_in_video, video_episodes_start_end):
-#     portraits_in_video = Parallel(n_jobs=1)(delayed(get_blobs_in_frame_from_episode)(blobs_in_video[start:end]) for (start,end) in tqdm(video_episodes_start_end, desc = 'Getting portraits'))
-#     return np.concatenate(portraits_in_video, axis = 0)
-#
-# def get_blobs_in_frame_from_episode(blobs_in_episode):
-#     print(len(blobs_in_episode))
-#     return np.concatenate([get_images_from_blobs_in_frame(blobs_in_frame) for blobs_in_frame in blobs_in_episode if len(get_images_from_blobs_in_frame(blobs_in_frame)) > 0], axis = 0)
-#
-# def get_images_from_blobs_in_frame(blobs_in_frame):
-#     try:
-#         return np.array([blob.portrait[0] for blob in blobs_in_frame if blob.is_a_fish_in_a_fragment])
-#     except:
-#         print('The frame is empty')
-
 def get_images_from_blobs_in_video(blobs_in_video):
     portraits_in_video = []
     for blobs_in_frame in blobs_in_video:

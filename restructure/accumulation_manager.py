@@ -3,11 +3,11 @@ import numpy as np
 import random
 
 from globalfragment import get_images_and_labels_from_global_fragments, order_global_fragments_by_distance_travelled
-from assigner import assign_identities_to_test_global_fragment
 
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
+CERTAINTY_THRESHOLD = 0.5 # threshold to select a individual fragment as eligible for training
 
 class AccumulationManager(object):
     def __init__(self,global_fragments, number_of_animals, accumulation_counter = 0):
@@ -50,34 +50,39 @@ class AccumulationManager(object):
     def get_images_and_labels_for_training(self):
         images = []
         labels = []
+
         for i in range(self.number_of_animals):
             print("\nTaking images for individual %i" %i)
-            number_of_images_for_individual = len(np.where(self.new_labels == i)[0]) + len(np.where(self.used_labels == i)[0])
+            new_images_indices = np.where(self.new_labels == i)[0]
+            used_images_indices = np.where(self.used_labels == i)[0]
+            number_of_new_images = len(new_images_indices)
+            number_of_used_images = len(used_images_indices)
+            number_of_images_for_individual = number_of_new_images + number_of_used_images
             if number_of_images_for_individual > MAXIMAL_IMAGES_PER_ANIMAL:
                 print("The total number of images for this individual is greater than %i " %MAXIMAL_IMAGES_PER_ANIMAL)
                 print("we sample %f from the old ones and %f from the new ones" %(RATIO_OLD, RATIO_NEW))
                 number_samples_new = int(MAXIMAL_IMAGES_PER_ANIMAL * RATIO_NEW)
                 number_samples_used = int(MAXIMAL_IMAGES_PER_ANIMAL * RATIO_OLD)
-                if len(np.where(self.used_labels == i)[0]) < number_samples_used:
-                    number_samples_used = len(np.where(self.used_labels == i)[0])
+                if number_of_used_images < number_samples_used:
+                    number_samples_used = number_of_used_images
                     number_samples_new = MAXIMAL_IMAGES_PER_ANIMAL - number_samples_used
-                if len(np.where(self.new_labels == i)[0]) < number_samples_new:
-                    number_samples_new = len(np.where(self.new_labels == i)[0])
+                if number_of_new_images < number_samples_new:
+                    number_samples_new = number_of_new_images
                     number_samples_used = MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
 
-                images.extend(random.sample(self.new_images[np.where(self.new_labels == i)[0]],number_samples_new))
+                images.extend(random.sample(self.new_images[new_images_indices],number_samples_new))
                 labels.extend([i] * number_samples_new)
                 if self.used_images is not None:
-                    images.extend(random.sample(self.used_images[np.where(self.used_labels == i)[0]],number_samples_used))
+                    images.extend(random.sample(self.used_images[used_images_indices],number_samples_used))
                     labels.extend([i] * number_samples_used)
             else:
                 print("The total number of images for this individual is %i " %number_of_images_for_individual)
                 print("we take all the new images")
-                images.extend(self.new_images[np.where(self.new_labels == i)[0]])
-                labels.extend([i] * len(np.where(self.new_labels == i)[0]))
+                images.extend(self.new_images[new_images_indices])
+                labels.extend([i] * number_of_new_images)
                 if self.used_images is not None:
-                    images.extend(self.used_images[np.where(self.used_labels == i)[0]])
-                    labels.extend([i] * len(np.where(self.used_labels == i)[0]))
+                    images.extend(self.used_images[used_images_indices])
+                    labels.extend([i] * number_of_used_images)
 
         return np.asarray(images), np.asarray(labels)
 
@@ -122,19 +127,14 @@ class AccumulationManager(object):
                     for global_fragment in self.global_fragments
                     if not global_fragment.used_for_training], axis = 0)
 
-
     def split_predictions_after_network_assignment(self,predictions, softmax_probs):
         """Go back to the CPU"""
         print("Un-stacking predictions for the CPU")
         number_of_portraits_per_global_fragment = [global_fragment._total_number_of_portraits
             for global_fragment in self.global_fragments
             if not global_fragment.used_for_training]
-        # print("Number of portraits per global fragment, ", number_of_portraits_per_global_fragment)
-        # print("length, ", len(number_of_portraits_per_global_fragment))
-        # print("sum, ", np.sum(number_of_portraits_per_global_fragment))
         predictions_per_global_fragments = np.split(predictions, np.cumsum(number_of_portraits_per_global_fragment)[:-1])
         softmax_probs_per_global_fragments = np.split(softmax_probs, np.cumsum(number_of_portraits_per_global_fragment)[:-1])
-        # print("\npredictions shape before splitting in ind frags",len(predictions_per_global_fragments))
         c = 0
         for global_fragment in self.global_fragments:
             if not global_fragment.used_for_training:
@@ -142,10 +142,6 @@ class AccumulationManager(object):
                 softmax_probs = np.split(softmax_probs_per_global_fragments[c], np.cumsum(global_fragment._number_of_portraits_per_individual_fragment)[:-1])
                 global_fragment.softmax_probs_median = [np.median(softmax_probs_individual_fragment, axis = 0)
                                                         for softmax_probs_individual_fragment in softmax_probs]
-                # print("\nnumber of portraits per individual fragment ", global_fragment._number_of_portraits_per_individual_fragment)
-                # print("total number of portraits in global fragment ", global_fragment._total_number_of_portraits)
-                # print("predictions shape per global fragment ", [len(indiv_frag_prediction) for indiv_frag_prediction in global_fragment.predictions])
-                # break
                 c += 1
 
     def assign_identities_and_check_eligibility_for_training_global_fragments(self,number_of_animals):
@@ -155,14 +151,9 @@ class AccumulationManager(object):
         for i, global_fragment in enumerate(self.global_fragments):
             print("Analysing whether global fragment %i is good for training" %i)
             if global_fragment.used_for_training == False:
-                # print("\nnumber of portraits per individual fragment ", global_fragment._number_of_portraits_per_individual_fragment)
-                # print("total number of portraits in global fragment ", global_fragment._total_number_of_portraits)
                 assign_identities_to_test_global_fragment(global_fragment, number_of_animals)
-                # print("Temporary identities, ", global_fragment._temporary_ids)
-                # print("Acceptable for training: ", global_fragment.acceptable_for_training)
             else:
                 print("global fragment %i has been used for training" %i)
-
 
 def sample_images_and_labels(images, labels, ratio):
     subsampled_images = []
@@ -177,3 +168,46 @@ def sample_images_and_labels(images, labels, ratio):
             subsampled_labels.append([i] * len(images[np.where(labels == i)[0]]))
 
     return np.concatenate(subsampled_images, axis = 0), np.concatenate(subsampled_labels, axis = 0)
+
+
+"""functions used during accumulation
+but belong to the assign part of the accumulation that's why are here
+"""
+def check_certainty_individual_fragment(frequencies_individual_fragment,softmax_probs_median_individual_fragment):
+    argsort_frequencies = np.argsort(frequencies_individual_fragment)
+    sorted_frequencies = frequencies_individual_fragment[argsort_frequencies]
+    sorted_softmax_probs = softmax_probs_median_individual_fragment[argsort_frequencies]
+    certainty = np.diff(np.multiply(sorted_frequencies,sorted_softmax_probs)[-2:])/np.sum(sorted_frequencies[-2:])
+    acceptable_individual_fragment = False
+    if certainty > CERTAINTY_THRESHOLD:
+        acceptable_individual_fragment = True
+    else:
+        print("global fragment discarded with certainty ", certainty)
+    return acceptable_individual_fragment
+
+def assign_identities_to_test_global_fragment(global_fragment, number_of_animals):
+    assert global_fragment.used_for_training == False
+    global_fragment._temporary_ids = []
+    global_fragment._acceptable_for_training = True
+    for i, individual_fragment_predictions in enumerate(global_fragment.predictions):
+        # compute statistcs
+        # print("individual fragment %i" %i)
+        identities_in_fragment = np.asarray(individual_fragment_predictions)
+        frequencies_in_fragment = compute_identification_frequencies_individual_fragment(identities_in_fragment, number_of_animals)
+        # print("frequencies", frequencies_in_fragment)
+        P1_of_fragment = compute_P1_individual_fragment_from_blob(frequencies_in_fragment)
+        # print("P1", P1_of_fragment)
+        # Assign identity to the fragment
+        identity_in_fragment = np.argmax(P1_of_fragment)
+        global_fragment._temporary_ids.append(identity_in_fragment)
+        acceptable_individual_fragment = check_certainty_individual_fragment(P1_of_fragment, global_fragment.softmax_probs_median[i])
+        if not acceptable_individual_fragment:
+            print("This individual fragment is not good for training")
+            global_fragment._acceptable_for_training = False
+            break
+    print(global_fragment._temporary_ids)
+    if not global_fragment.is_unique:
+        print("The global fragment is not unique")
+        global_fragment._acceptable_for_training = False
+    else:
+        global_fragment._temporary_ids = np.asarray(global_fragment._temporary_ids)

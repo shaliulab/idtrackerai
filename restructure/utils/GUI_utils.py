@@ -139,7 +139,6 @@ def getMask(im):
             c = coordinates[-1]
             p = patches.Rectangle((c[0], c[1]), c[2]-c[0], c[3]-c[1],alpha=0.4)
             p1 = patches.Rectangle((c[0], c[1]), c[2]-c[0], c[3]-c[1],facecolor="white")
-            # mask_ax.add_patch(p1)
             current_ax.add_patch(p)
             plt.draw()
             coord = np.asarray(c).astype('int')
@@ -154,12 +153,11 @@ def getMask(im):
             p = patches.Ellipse((c[0]+w/2, c[1]+h/2), w, h, angle=0.0, alpha=0.4)
             p1 = patches.Ellipse((c[0]+w/2, c[1]+h/2), w, h, angle=0.0,facecolor="white")
             current_ax.add_patch(p)
-            # mask_ax.add_patch(p1)
             plt.draw()
             coord = np.asarray(c).astype('int')
-            center = ((coord[2]+coord[0])/2,(coord[3]+coord[1])/2)
+            center = ((coord[2] + coord[0]) // 2,(coord[3] + coord[1]) // 2)
             angle = 90
-            axes = tuple(sorted(((coord[2]-coord[0])/2,(coord[3]-coord[1])/2)))
+            axes = tuple(sorted(((coord[2] - coord[0]) // 2,(coord[3] - coord[1]) //2)))
             cv2.ellipse(maskout,center,axes,angle,0,360,255,-1)
             centers.append(center)
 
@@ -290,7 +288,6 @@ def SegmentationPreview(video):
 
     def scroll(trackbarValue):
         global frame, avFrame, frameGray, cap, currentSegment
-
         # Select segment dataframe and change cap if needed
         sNumber = video.in_which_episode(trackbarValue)
         sFrame = trackbarValue
@@ -299,17 +296,13 @@ def SegmentationPreview(video):
             currentSegment = sNumber
             if video._paths_to_video_segments:
                 cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
-
         #Get frame from video file
         if video._paths_to_video_segments:
             start = video._episodes_start_end[sNumber][0]
-            # end = video._episodes_start_end[sNumber][1]
-            # frames_in_episode = end - start
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         ret, frame = cap.read()
-
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         avIntensity = np.float32(np.mean(frameGray))
         avFrame = np.divide(frameGray,avIntensity)
