@@ -3,11 +3,12 @@ import numpy as np
 import random
 
 from globalfragment import get_images_and_labels_from_global_fragments, order_global_fragments_by_distance_travelled
+from statistics_for_assignment import compute_P1_individual_fragment_from_blob, compute_identification_frequencies_individual_fragment
 
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
-CERTAINTY_THRESHOLD = 0.5 # threshold to select a individual fragment as eligible for training
+CERTAINTY_THRESHOLD = 0.1 # threshold to select a individual fragment as eligible for training
 
 class AccumulationManager(object):
     def __init__(self,global_fragments, number_of_animals, accumulation_counter = 0):
@@ -42,7 +43,7 @@ class AccumulationManager(object):
         print("Number of global fragments for training, ", len(self.next_global_fragments))
 
     def get_new_images_and_labels(self):
-        self.new_images, self.new_labels = get_images_and_labels_from_global_fragments(self.next_global_fragments,list(self.individual_fragments_used))
+        self.new_images, self.new_labels, _, _ = get_images_and_labels_from_global_fragments(self.next_global_fragments,list(self.individual_fragments_used))
         print("New images for training:", self.new_images.shape, self.new_labels.shape)
         if self.used_images is not None:
             print("Old images for training:", self.used_images.shape, self.used_labels.shape)
@@ -127,33 +128,70 @@ class AccumulationManager(object):
                     for global_fragment in self.global_fragments
                     if not global_fragment.used_for_training], axis = 0)
 
-    def split_predictions_after_network_assignment(self,predictions, softmax_probs):
+    def split_predictions_after_network_assignment(self,predictions, softmax_probs, indices_to_split):
         """Go back to the CPU"""
         print("Un-stacking predictions for the CPU")
-        number_of_portraits_per_global_fragment = [global_fragment._total_number_of_portraits
-            for global_fragment in self.global_fragments
-            if not global_fragment.used_for_training]
-        predictions_per_global_fragments = np.split(predictions, np.cumsum(number_of_portraits_per_global_fragment)[:-1])
-        softmax_probs_per_global_fragments = np.split(softmax_probs, np.cumsum(number_of_portraits_per_global_fragment)[:-1])
-        c = 0
-        for global_fragment in self.global_fragments:
-            if not global_fragment.used_for_training:
-                global_fragment.predictions = np.split(predictions_per_global_fragments[c], np.cumsum(global_fragment._number_of_portraits_per_individual_fragment)[:-1])
-                softmax_probs = np.split(softmax_probs_per_global_fragments[c], np.cumsum(global_fragment._number_of_portraits_per_individual_fragment)[:-1])
-                global_fragment.softmax_probs_median = [np.median(softmax_probs_individual_fragment, axis = 0)
-                                                        for softmax_probs_individual_fragment in softmax_probs]
-                c += 1
+        individual_fragments_predictions = np.split(predictions, indices_to_split)
+        individual_fragments_softmax_probs = np.split(softmax_probs, indices_to_split)
+        self.frequencies_in_candidate_individual_fragments = []
+        self.P1_of_candidate_individual_fragments = []
+        self.median_softmax_candidate_individual_fragments = [] #used to compute the certainty on the network's assignment
+        self.identity_of_candidate_individual_fragments = []
 
-    def assign_identities_and_check_eligibility_for_training_global_fragments(self,number_of_animals):
+        for individual_fragment_predictions, individual_fragment_softmax_probs in zip(individual_fragments_predictions, individual_fragments_softmax_probs):
+            frequencies_in_candidate_individual_fragment = compute_identification_frequencies_individual_fragment(np.asarray(individual_fragment_predictions), self.number_of_animals)
+            P1_of_fragment = compute_P1_individual_fragment_from_blob(frequencies_in_candidate_individual_fragment)
+            self.frequencies_in_candidate_individual_fragments.append(frequencies_in_candidate_individual_fragment)
+            self.P1_of_candidate_individual_fragments.append(P1_of_fragment)
+            self.identity_of_candidate_individual_fragments.append(np.argmax(P1_of_fragment))
+            self.median_softmax_candidate_individual_fragments.append(np.median(individual_fragment_softmax_probs, axis = 0))
+
+    def assign_identities_and_check_eligibility_for_training_global_fragments(self, candidate_individual_fragments_identifiers):
         """Assigns identities during test to blobs in global fragments and rank them
         according to the score computed from the certainty of identification and the
         minimum distance travelled"""
+        self.candidate_individual_fragments_identifiers = candidate_individual_fragments_identifiers
         for i, global_fragment in enumerate(self.global_fragments):
             print("Analysing whether global fragment %i is good for training" %i)
             if global_fragment.used_for_training == False:
-                assign_identities_to_test_global_fragment(global_fragment, number_of_animals)
+                self.assign_identities_to_test_global_fragment(global_fragment)
             else:
                 print("global fragment %i has been used for training" %i)
+
+    def assign_identities_to_test_global_fragment(self, global_fragment):
+        assert global_fragment.used_for_training == False
+        global_fragment._temporary_ids = []
+        global_fragment._P1_vector = []
+        global_fragment._frequencies_in_fragment = []
+        global_fragment._median_softmax_probs = []
+        global_fragment._acceptable_for_training = True
+
+        for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
+            print("frag identifier", individual_fragment_identifier)
+            print("candidate frag identifiers, ", self.candidate_individual_fragments_identifiers)
+            print("index ", list(self.candidate_individual_fragments_identifiers).index(individual_fragment_identifier))
+            index_in_candidate_individual_fragments = list(self.candidate_individual_fragments_identifiers).index(individual_fragment_identifier)
+            print(len(self.identity_of_candidate_individual_fragments))
+            print(len(self.candidate_individual_fragments_identifiers))
+            cur_id = self.identity_of_candidate_individual_fragments[index_in_candidate_individual_fragments]
+            cur_P1 = self.P1_of_candidate_individual_fragments[index_in_candidate_individual_fragments]
+            cur_frequencies = self.frequencies_in_candidate_individual_fragments[index_in_candidate_individual_fragments]
+            cur_softmax_median = self.median_softmax_candidate_individual_fragments[index_in_candidate_individual_fragments]
+
+            global_fragment._temporary_ids.append(cur_id)
+            global_fragment._P1_vector.append(cur_P1)
+            global_fragment._frequencies_in_fragment.append(cur_frequencies)
+            global_fragment._median_softmax_probs.append(cur_softmax_median)
+            acceptable_individual_fragment = check_certainty_individual_fragment(cur_P1, cur_softmax_median)
+            if not acceptable_individual_fragment:
+                print("This individual fragment is not good for training")
+                global_fragment._acceptable_for_training = False
+        print(global_fragment._temporary_ids)
+        if not global_fragment.is_unique:
+            print("The global fragment is not unique")
+            global_fragment._acceptable_for_training = False
+        else:
+            global_fragment._temporary_ids = np.asarray(global_fragment._temporary_ids)
 
 def sample_images_and_labels(images, labels, ratio):
     subsampled_images = []
@@ -184,30 +222,3 @@ def check_certainty_individual_fragment(frequencies_individual_fragment,softmax_
     else:
         print("global fragment discarded with certainty ", certainty)
     return acceptable_individual_fragment
-
-def assign_identities_to_test_global_fragment(global_fragment, number_of_animals):
-    assert global_fragment.used_for_training == False
-    global_fragment._temporary_ids = []
-    global_fragment._acceptable_for_training = True
-    for i, individual_fragment_predictions in enumerate(global_fragment.predictions):
-        # compute statistcs
-        # print("individual fragment %i" %i)
-        identities_in_fragment = np.asarray(individual_fragment_predictions)
-        frequencies_in_fragment = compute_identification_frequencies_individual_fragment(identities_in_fragment, number_of_animals)
-        # print("frequencies", frequencies_in_fragment)
-        P1_of_fragment = compute_P1_individual_fragment_from_blob(frequencies_in_fragment)
-        # print("P1", P1_of_fragment)
-        # Assign identity to the fragment
-        identity_in_fragment = np.argmax(P1_of_fragment)
-        global_fragment._temporary_ids.append(identity_in_fragment)
-        acceptable_individual_fragment = check_certainty_individual_fragment(P1_of_fragment, global_fragment.softmax_probs_median[i])
-        if not acceptable_individual_fragment:
-            print("This individual fragment is not good for training")
-            global_fragment._acceptable_for_training = False
-            break
-    print(global_fragment._temporary_ids)
-    if not global_fragment.is_unique:
-        print("The global fragment is not unique")
-        global_fragment._acceptable_for_training = False
-    else:
-        global_fragment._temporary_ids = np.asarray(global_fragment._temporary_ids)

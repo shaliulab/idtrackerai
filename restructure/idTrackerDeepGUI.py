@@ -20,7 +20,7 @@ sys.path.append('./preprocessing')
 from video import Video
 from blob import compute_fragment_identifier, connect_blob_list, apply_model_area_to_video, ListOfBlobs, get_images_from_blobs_in_video
 from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, give_me_pre_training_global_fragments
-from globalfragment import get_images_and_labels_from_global_fragments, get_images_and_labels_from_global_fragment
+from globalfragment import get_images_and_labels_from_global_fragments
 from globalfragment import subsample_images_for_last_training, order_global_fragments_by_distance_travelled
 from segmentation import segment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector, frame_by_frame_identity_inspector
@@ -261,16 +261,18 @@ if __name__ == '__main__':
                 # Set accumulation params for rest of the accumulation
                 # net.params.restore_folder = video._accumulation_folder
                 #take images from global fragments not used in training (in the remainder test global fragments)
+                candidates_next_global_fragments = [global_fragment for global_fragment in global_fragments if not global_fragment.used_for_training]
+                print("number of candidate global fragments, ", len(candidates_next_global_fragments))
                 if any([not global_fragment.used_for_training for global_fragment in global_fragments]):
-                    images = accumulation_manager.get_images_from_test_global_fragments()
+                    images, _, candidate_individual_fragments_indices, indices_to_split = get_images_and_labels_from_global_fragments(candidates_next_global_fragments,[])
                 else:
                     print("All the global fragments have been used for accumulation")
                     break
                 # get predictions for images in test global fragments
                 assigner = assign(net, video, images, print_flag = True)
-                accumulation_manager.split_predictions_after_network_assignment(assigner._predictions, assigner._softmax_probs)
+                accumulation_manager.split_predictions_after_network_assignment(assigner._predictions, assigner._softmax_probs, indices_to_split)
                 # assign identities to the global fragments based on the predictions
-                accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(video.number_of_animals)
+                accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_indices)
                 accumulation_manager.update_counter()
 
             video._accumulation_finished = True

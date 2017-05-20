@@ -29,6 +29,7 @@ def selectOptions(optionsList, optionsDict=None, text="Select preprocessing opti
     master = Tk()
     if optionsDict==None:
         optionsDict = {el:'1' for el in optionsList}
+
     def createCheckBox(name,i):
         var = IntVar()
         Checkbutton(master, text=name, variable=var).grid(row=i+1, sticky=W)
@@ -36,6 +37,7 @@ def selectOptions(optionsList, optionsDict=None, text="Select preprocessing opti
 
     Label(master, text=text).grid(row=0, sticky=W)
     variables = []
+
     for i, opt in enumerate(optionsList):
         if optionsDict[opt] == '1':
             var = createCheckBox(opt,i)
@@ -80,17 +82,13 @@ def getInput(name,text):
 def displayMessage(title,message):
     window = Tk()
     window.wm_withdraw()
-
-    #centre screen message
     window.geometry("1x1+"+str(window.winfo_screenwidth()/2)+"+"+str(window.winfo_screenheight()/2))
     tkMessageBox.showinfo(title=title, message=message)
 
 def displayError(title, message):
-    #message at x:200,y:200
     window = Tk()
     window.wm_withdraw()
-
-    window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
+    window.geometry("1x1+200+200")
     tkMessageBox.showerror(title=title,message=message,parent=window)
 
 def getMultipleInputs(winTitle, inputTexts):
@@ -104,7 +102,6 @@ def getMultipleInputs(winTitle, inputTexts):
     window.title(winTitle)
     variables = []
 
-
     for inputText in inputTexts:
         text = Label(window, text =inputText)
         guess = Entry(window)
@@ -114,7 +111,6 @@ def getMultipleInputs(winTitle, inputTexts):
     finished = Button(text="ok", command=retrieve_inputs)
     finished.pack()
     window.mainloop()
-
     return inputs
 
 ''' ****************************************************************************
@@ -144,7 +140,6 @@ def getMask(im):
             coord = np.asarray(c).astype('int')
             cv2.rectangle(maskout,(coord[0],coord[1]),(coord[2],coord[3]),255,-1)
             centers.append(None)
-
         if event.key == 'c':
             coordinates.append(coord)
             c = coordinates[-1]
@@ -165,7 +160,6 @@ def getMask(im):
     centers = []
     #visualise frame in full screen
     w, h = pyautogui.size()
-
     fig, ax_arr = plt.subplots(1,1, figsize=(w/96,h/96))
     fig.suptitle('Select mask')
     current_ax = ax_arr
@@ -218,12 +212,9 @@ First preview numAnimals, inspect parameters for segmentation and portraying
 def SegmentationPreview(video):
     if video.number_of_animals == None:
         video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
-
-
     if not video.animal_type:
         video.animal_type = getInput('Animal type','What animal are you tracking? Fish or fly?')
         #exception for unsupported animal is managed in the class Video
-
     global cap, currentSegment
     currentSegment = 0
     cap = cv2.VideoCapture(video.video_path)
@@ -241,33 +232,29 @@ def SegmentationPreview(video):
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')
         bbs, miniFrames, _, _, _, goodContours = blobExtractor(segmentedFrame, frameGray, minArea, maxArea, height, width)
-
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()
         # print showerCopy.shape
         resUp = cv2.getTrackbarPos('ResUp', 'Bars')
         resDown = cv2.getTrackbarPos('ResDown', 'Bars')
-
         showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
         showerCopy = cv2.resize(showerCopy,None, fx = np.true_divide(1,resDown), fy = np.true_divide(1,resDown))
-
         numColumns = 5
         numGoodContours = len(goodContours)
         numBlackPortraits = numColumns - numGoodContours % numColumns
         numPortraits = numGoodContours + numBlackPortraits
-
         j = 0
         portraitSize = 32
         portraitsMat = []
         rowPortrait = []
+
         while j < numPortraits:
             if j < numGoodContours:
                 if video._animal_type == 'fish':
                     portrait,_,_= getPortrait(miniFrames[j],goodContours[j],bbs[j])
                 elif video._animal_type == 'fly' or video._animal_type == 'ant':
                     portrait,_,_= get_portrait_fly(miniFrames[j],goodContours[j],bbs[j])
-
                 portrait = cropPortrait(portrait,portraitSize,shift = (0,0))
                 portrait = np.squeeze(portrait)
             else:
@@ -279,9 +266,7 @@ def SegmentationPreview(video):
             j += 1
 
         portraitsMat = np.vstack(portraitsMat)
-
         cv2.imshow('Bars',np.squeeze(portraitsMat))
-
         cv2.imshow('IdPlayer', showerCopy)
         cv2.moveWindow('Bars', 10,10 )
         cv2.moveWindow('IdPlayer', 200, 10 )
@@ -291,7 +276,6 @@ def SegmentationPreview(video):
         # Select segment dataframe and change cap if needed
         sNumber = video.in_which_episode(trackbarValue)
         sFrame = trackbarValue
-
         if sNumber != currentSegment: # we are changing segment
             currentSegment = sNumber
             if video._paths_to_video_segments:
@@ -347,14 +331,12 @@ def SegmentationPreview(video):
     cv2.createTrackbar('maxArea', 'Bars', 0, 60000, changeMaxArea)
     cv2.createTrackbar('ResUp', 'Bars', 1, 20, resizeImageUp)
     cv2.createTrackbar('ResDown', 'Bars', 1, 20, resizeImageDown)
-
     defFrame = 1
     defMinTh = video._min_threshold
     defMaxTh = video._max_threshold
     defMinA = video._min_area
     defMaxA = video._max_area
     defRes = video._resize
-
     scroll(defFrame)
     cv2.setTrackbarPos('start', 'Bars', defFrame)
     changeMaxArea(defMaxA)
@@ -411,15 +393,18 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         video.animal_type = old_video.animal_type
         video._number_of_animals = old_video._number_of_animals
         video._has_preprocessing_parameters = True
-
-
-
-
 ''' ****************************************************************************
 Fragmentation inspector
 *****************************************************************************'''
 def fragmentation_inspector(video, blobs_in_video):
-
+    """inputs:
+    video: object containing video info and paths
+    blobs_in_video: list of blob objects organised frame-wise:
+                    [[blob_1_in_frame_1, ..., blob_i_frame_1], .... ,
+                     [blob_1_in_frame_m, ..., blob_j_frame_m]]
+    Given a frame it loops on the fragment of each blob and labels all the blobs
+    belonging to the same fragment with a unique identifier.
+    """
     cap = cv2.VideoCapture(video.video_path)
     numFrames = video._num_frames
     bkg = video.bkg
@@ -434,7 +419,6 @@ def fragmentation_inspector(video, blobs_in_video):
 
     def scroll(trackbarValue):
         global frame, currentSegment, cap
-
         # Select segment dataframe and change cap if needed
         sNumber = video.in_which_episode(trackbarValue)
         print('seg number ', sNumber)
@@ -446,7 +430,6 @@ def fragmentation_inspector(video, blobs_in_video):
             currentSegment = sNumber
             if video._paths_to_video_segments:
                 cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
-
         #Get frame from video file
         if video._paths_to_video_segments:
             start = video._episodes_start_end[sNumber][0]
@@ -454,19 +437,16 @@ def fragmentation_inspector(video, blobs_in_video):
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         ret, frame = cap.read()
-
         blobs_in_frame = blobs_in_video[trackbarValue]
+
         for blob in blobs_in_frame:
             #draw the centroid
             cv2.circle(frame, tuple(blob.centroid), 2, (255,0,0),1)
             font = cv2.FONT_HERSHEY_SIMPLEX
             cv2.putText(frame, str(blob.fragment_identifier),tuple(blob.centroid), font, 1,255, 5)
 
-
         cv2.imshow('fragmentInspection', frame)
-
     cv2.createTrackbar('start', 'fragmentInspection', 0, numFrames-1, scroll )
-
     scroll(1)
     cv2.setTrackbarPos('start', 'fragmentInspection', defFrame)
     cv2.waitKey(0)

@@ -5,7 +5,7 @@ import random
 from blob import is_a_global_fragment, check_global_fragments
 from statistics_for_assignment import compute_identification_frequencies_individual_fragment, compute_P1_individual_fragment_from_blob
 
-STD_TOLERANCE = 1.5 ### NOTE set to 1 because we changed the model area to work with the median.
+STD_TOLERANCE = 1 ### NOTE set to 1 because we changed the model area to work with the median.
 
 def detect_beginnings(boolean_array):
     """ detects the frame where the core of a global fragment starts.
@@ -133,36 +133,36 @@ def give_me_pre_training_global_fragments(global_fragments, number_of_global_fra
                                     for global_fragments_in_split in split_global_fragments]
     return ordered_split_global_fragments
 
-def get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_used = []):
+def get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_identifiers_already_used = []):
     if not np.isnan(global_fragment._ids_assigned).any() and list(global_fragment._temporary_ids) != list(global_fragment._ids_assigned -1):
         raise ValueError("Temporary ids and assigned ids should match in global fragments used for training")
     images = []
     labels = []
-    # print("Individual fragments already used:", individual_fragments_used)
-    # print("global fragment indiv fragments, ", global_fragment.individual_fragments_identifiers)
+    lengths = []
     for i, portraits in enumerate(global_fragment.portraits):
-        if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_used:
-            # print("Individual fragment %i has not been added yet" %global_fragment.individual_fragments_identifiers[i])
+        if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_identifiers_already_used:
+            print("This individual fragment has not been used, we take images")
             images.extend(portraits)
             labels.extend([global_fragment._temporary_ids[i]]*len(portraits))
-    # images = [global_fragment.portraits[i] for i in range(len(global_fragment.portraits))
-    #             if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_used]
-    # labels = [[id_]*len(images[i]) for i, id_ in enumerate(global_fragment._temporary_ids)
-    #             if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_used]
-    # images = [im for ims in images for im in ims]
-    # labels = [lab for labs in labels for lab in labs]
-    return images, labels
+            lengths.append(len(portraits))
 
-def get_images_and_labels_from_global_fragments(global_fragments, individual_fragments_used = []):
+    return images, labels, lengths
+
+def get_images_and_labels_from_global_fragments(global_fragments, individual_fragments_identifiers_already_used = []):
     images = []
     labels = []
+    lengths = []
     for global_fragment in global_fragments:
-        images_global_fragment, labels_global_fragment = get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_used)
-        individual_fragments_used.extend(global_fragment.individual_fragments_identifiers)
+        print("\ngetting images from global fragment")
+        print(individual_fragments_identifiers_already_used)
+        images_global_fragment, labels_global_fragment, lengths_global_fragment = get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_identifiers_already_used)
+        individual_fragments_identifiers_already_used.extend(global_fragment.individual_fragments_identifiers)
         if len(images_global_fragment) != 0:
             images.append(images_global_fragment)
             labels.append(labels_global_fragment)
-    return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0)
+            lengths.extend(lengths_global_fragment)
+
+    return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), np.unique(individual_fragments_identifiers_already_used), np.cumsum(lengths)[:-1]
 
 def subsample_images_for_last_training(images, labels, number_of_animals, number_of_samples = 3000):
     """Before assigning identities to the blobs that are not part of the training set we train the network
