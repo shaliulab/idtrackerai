@@ -34,7 +34,7 @@ def pre_train(pretraining_global_fragments, params, store_accuracy_and_error, ch
     #start loop for pre training in the global fragments selected
     for i, pretraining_global_fragment in enumerate(tqdm(pretraining_global_fragments, desc = '\nPretraining network')):
         # Get images and labels from the current global fragment
-        images, labels = get_images_and_labels_from_global_fragment(pretraining_global_fragment)
+        images, labels, _, _ = get_images_and_labels_from_global_fragment(pretraining_global_fragment)
         # Instantiate data_set
         training_dataset, validation_dataset = split_data_train_and_validation(params.number_of_animals,images,labels)
         # Standarize images
