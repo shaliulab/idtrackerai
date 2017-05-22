@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import random
-
 from globalfragment import get_images_and_labels_from_global_fragments, order_global_fragments_by_distance_travelled
 from statistics_for_assignment import compute_P1_individual_fragment_from_blob, compute_identification_frequencies_individual_fragment
 
@@ -9,6 +8,10 @@ RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
 CERTAINTY_THRESHOLD = 0.1 # threshold to select a individual fragment as eligible for training
+
+###
+random.seed(0)
+###
 
 class AccumulationManager(object):
     def __init__(self,global_fragments, number_of_animals, accumulation_counter = 0):

@@ -36,7 +36,9 @@ from id_CNN import ConvNetwork
 
 NUM_CHUNKS_BLOB_SAVING = 10 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
-
+###
+np.random.seed(0)
+###
 if __name__ == '__main__':
     cv2.namedWindow('Bars') #FIXME If we do not create the "Bars" window here we have the "Bad window error"...
     video_path = selectFile() #select path to video
