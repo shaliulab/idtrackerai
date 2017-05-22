@@ -22,7 +22,7 @@ import itertools
 import cPickle as pickle
 from tqdm import tqdm
 
-videoPaths = scanFolder('/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/conflict3and4_20120316T155032_14.avi')
+videoPaths = scanFolder('/media/chronos/RawBoutTrackingData_Vol4/trackingTest/test2/avi/output_1.avi')
 
 
 frameIndices, segmPaths = getSegmPaths(videoPaths)
@@ -94,7 +94,7 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
     if not show:
         fourcc = cv2.cv.CV_FOURCC(*'XVID')
         name = sessionPath +'/'+ filename.split('_')[0]  + '_tracked'+ '.avi'
-        out = cv2.VideoWriter(name, fourcc, 15.0, (width, height))
+        out = cv2.VideoWriter(name, fourcc, 70.0, (width, height))
 
     # Load first segment
     global segmDf, cap, currentSegment, numFrameCurSegment
@@ -171,12 +171,18 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
             # frameShadows = np.zeros_like(frame)
             # print '----------------------------------'
             # print 'Drawing sadows...'
-            while not isinstance(segmDf.loc[previousSegFrame,'permutation'],float):
+            if previousSegFrame > sFrame:
+                segmDf_shadows = prevSegmDf
+            else:
+                segmDf_shadows = segmDf
+            while not isinstance(segmDf_shadows.loc[previousSegFrame,'permutation'],float):
                 # framePreviousShadows = np.zeros_like(frame)
                 if previousSegFrame > sFrame:
-                    previousPixels = prevSegmDf.loc[previousSegFrame,'pixels']
+                    segmDf_shadows = prevSegmDf
+                    previousPixels = segmDf_shadows.loc[previousSegFrame,'pixels']
                 else:
-                    previousPixels = segmDf.loc[previousSegFrame,'pixels']
+                    segmDf_shadows = segmDf
+                    previousPixels = segmDf_shadows.loc[previousSegFrame,'pixels']
 
                 for i, pixel in enumerate(previousPixels):
                     cur_id = allIdentities[previousGlobFrame,i]
