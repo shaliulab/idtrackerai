@@ -27,7 +27,7 @@ class Video(object):
         self.ROI = ROI #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
         self.apply_ROI = apply_ROI #boolean: True if the user applies a ROI to the video
         self._has_preprocessing_parameters = False #boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved
-        self._max_number_of_blobs = None #int: the maximum number of blobs detected in the video
+        self._maximum_number_of_blobs = 0 #int: the maximum number of blobs detected in the video
         self._blobs_path = None #string: path to the saved list of blob objects
         self._has_been_preprocessed = None #boolean: True if a video has been fragmented in a past session
         self._global_fragments_path = None #string: path to saved list of global fragments
@@ -68,6 +68,10 @@ class Video(object):
             self._animal_type = value
         else:
             raise ValueError("The supported animal types are " , SUPPORTED_ANIMAL_TYPES)
+
+    @property
+    def maximum_number_of_blobs(self):
+        return self._maximum_number_of_blobs
 
     def check_split_video(self):
         """If the video is divided in chunks retrieves the path to each chunk"""

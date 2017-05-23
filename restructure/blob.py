@@ -24,6 +24,7 @@ class Blob(object):
         self.next = [] # next blob object overlapping in pixels with current blob object
         self.previous = [] # previous blob object overlapping in pixels with the current blob object
         self._fragment_identifier = None # identity in individual fragment after fragmentation
+        self._blob_index = None # index of the blob to plot the individual fragments
         self._identity = None # identity assigned by the algorithm
         self._frequencies_in_fragment = np.zeros(number_of_animals).astype('int')
         self._P1_vector = np.zeros(number_of_animals)
@@ -55,6 +56,15 @@ class Blob(object):
     @property
     def is_a_fish_in_a_fragment(self):
         return self.is_a_fish and self.is_in_a_fragment
+
+    @property
+    def blob_index(self):
+        return self._blob_index
+
+    @blob_index.setter
+    def blob_index(self, new_blob_index):
+        if self.is_a_fish_in_a_fragment:
+            self._blob_index = new_blob_index
 
     @property
     def fragment_identifier(self):
@@ -109,6 +119,25 @@ class Blob(object):
                 distance += np.linalg.norm(current.centroid - current.previous[0].centroid)
                 current = current.previous[0]
         return distance
+
+    def compute_fragment_start_end(self):
+        if self.is_a_fish_in_a_fragment:
+            start = self.frame_number
+            end = self.frame_number
+
+            current = self
+
+            while current.next[0].is_a_fish_in_a_fragment:
+                current = current.next[0]
+                end = current.frame_number
+
+            current = self
+
+            while current.previous[0].is_a_fish_in_a_fragment:
+                current = current.previous[0]
+                start = current.frame_number
+        return [start, end]
+
 
     def portraits_in_fragment(self):
         portraits = []
@@ -226,18 +255,36 @@ class Blob(object):
             current._P1_vector = self.P1_vector
             current._frequencies_in_fragment = self.frequencies_in_fragment
 
-def compute_fragment_identifier(blobs_in_video):
+# def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of_blobs):
+#     counter = 1
+#     for frame in tqdm(blobs_in_video, desc = 'assigning fragment identifier'):
+#         for blob in frame:
+#             if not blob.is_a_fish_in_a_fragment:
+#                 blob.fragment_identifier = -1
+#             elif blob.fragment_identifier is None:
+#                 blob.fragment_identifier = counter
+#                 while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
+#                     blob = blob.next[0]
+#                     blob.fragment_identifier = counter
+#                 counter += 1
+
+def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of_blobs):
     counter = 1
-    for frame in tqdm(blobs_in_video, desc = 'assigning fragment identifier'):
-        for blob in frame:
-            if not blob.is_a_fish_in_a_fragment:
-                blob.fragment_identifier = -1
-            elif blob.fragment_identifier is None:
+    possible_blob_indices = range(maximum_number_of_blobs)
+    for blobs_in_frame in tqdm(blobs_in_video, desc = 'assigning fragment identifier'):
+        used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]
+        missing_blob_indices =  list(set(possible_blob_indices).difference(set(used_blob_indices)))
+        for blob in blobs_in_frame:
+            if blob.fragment_identifier is None and blob.is_a_fish_in_a_fragment:
                 blob.fragment_identifier = counter
+                blob_index = missing_blob_indices.pop(0)
+                blob._blob_index = blob_index
                 while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
                     blob = blob.next[0]
                     blob.fragment_identifier = counter
+                    blob._blob_index = blob_index
                 counter += 1
+
 
 def connect_blob_list(blobs_in_video):
     for frame_i in tqdm(xrange(1,len(blobs_in_video)), desc = 'Connecting blobs progress'):

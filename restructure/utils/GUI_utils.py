@@ -412,10 +412,39 @@ def fragmentation_inspector(video, blobs_in_video):
     subtract_bkg = video.subtract_bkg
     height = video._height
     width = video._width
-    global currentSegment, cap
+    global currentSegment, cap, frame
     currentSegment = 0
     cv2.namedWindow('fragmentInspection')
     defFrame = 1
+
+
+    def resizer(sizeValue):
+        global frame
+        print("sizeValue, ", sizeValue)
+        real_size = sizeValue - 5
+        print("real_size, ", real_size)
+        if real_size > 0:
+            print("I should enlarge")
+            frame = cv2.resize(frame,None,fx = real_size+1, fy = real_size+1)
+            print(frame.shape)
+        elif real_size < 0:
+            print("I should reduce")
+            frame = cv2.resize(frame,None, fx = np.true_divide(1,abs(real_size)+1), fy = np.true_divide(1,abs(real_size)+1))
+            print(frame.shape)
+        # elif real_size == 0:
+        #     print("real_size is zero")
+        #     real_size = sizeValue - previousSize
+        #     print("real_size, ", real_size)
+        #     if real_size > 0:
+        #         print("I should enlarge")
+        #         frame = cv2.resize(frame,None,fx = real_size+1, fy = real_size+1)
+        #         previousSize = sizeValue
+        #     elif real_size < 0:
+        #         print("I should reduce")
+        #         frame = cv2.resize(frame,None, fx = np.true_divide(1,abs(real_size)+1), fy = np.true_divide(1,abs(real_size)+1))
+        #         previousSize = sizeValue
+
+        cv2.imshow('fragmentInspection', frame)
 
     def scroll(trackbarValue):
         global frame, currentSegment, cap
@@ -445,10 +474,15 @@ def fragmentation_inspector(video, blobs_in_video):
             font = cv2.FONT_HERSHEY_SIMPLEX
             cv2.putText(frame, str(blob.fragment_identifier),tuple(blob.centroid), font, 1,255, 5)
 
+        sizeValue = cv2.getTrackbarPos('frameSize', 'Bars')
+        resizer(sizeValue)
         cv2.imshow('fragmentInspection', frame)
-    cv2.createTrackbar('start', 'fragmentInspection', 0, numFrames-1, scroll )
+
+    cv2.createTrackbar('start', 'Bars', 0, numFrames-1, scroll )
+    cv2.createTrackbar('frameSize', 'Bars', 1, 9, resizer)
+    cv2.setTrackbarPos('start', 'Bars', defFrame)
+    cv2.setTrackbarPos('frameSize', 'Bars', 5)
     scroll(1)
-    cv2.setTrackbarPos('start', 'fragmentInspection', defFrame)
     cv2.waitKey(0)
     cv2.waitKey(1)
     cv2.destroyAllWindows()
