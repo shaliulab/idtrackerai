@@ -66,13 +66,13 @@ def loadIMDB(IMDBPath):
     print '\nloading %s...' %IMDBname
     # checkDatabase(IMDBname)
     with h5py.File(IMDBdir + "/" + IMDBname + '_%i.hdf5', 'r', driver='family') as databaseTrain:
-        [databaseTrainInfo, imagesTrain, labelsTrain] = getVarAttrFromHdf5(databaseTrain)
+        [databaseTrainInfo, imagesTrain, labelsTrain, centroidsTrain] = getVarAttrFromHdf5(databaseTrain)
         [imsizeTrain,numIndivImdb,numImagesPerIndiv] = getAttrsFromGroup(databaseTrainInfo,['imageSize', 'numIndiv','numImagesPerIndiv'])
         imsizeTrain = tuple(imsizeTrain)
         numImagesPerIndiv =  int(numImagesPerIndiv)
         print([item for item in databaseTrainInfo.attrs.iteritems()])
     print '\ndatabase %s loaded' %IMDBname
-    return databaseTrainInfo, imagesTrain, labelsTrain, imsizeTrain,numIndivImdb,numImagesPerIndiv
+    return databaseTrainInfo, imagesTrain, labelsTrain, centroidsTrain, imsizeTrain,numIndivImdb,numImagesPerIndiv
 def checkDatabase(imdb):
     # checks if the dataset given in input is already stored in the folder data
     if not os.path.exists('IdTrackerDeep/data/' + imdb + '_0.hdf5'):
@@ -89,8 +89,9 @@ def getVarAttrFromHdf5(database):
     datanames = grp.keys()
     images = grp['images'][()]
     labels = grp['labels'][()]
+    centroids = grp['centroids'][()]
     # info = [item for item in grp.attrs.iteritems()]
-    return grp, images, labels
+    return grp, images, labels, centroids
 def getAttrsFromGroup(grp, variables):
     # retrieve an array from a h5py file
     return [grp.attrs[var] for var in variables]

@@ -38,6 +38,7 @@ if __name__ == '__main__':
     group = 0
     imagesIMDB = []
     labelsIMDB = []
+    centroidsIMDB = []
     numImagesList = []
     numIndivIMDB = 0
     totalNumImages = 0
@@ -215,11 +216,13 @@ if __name__ == '__main__':
 
             portraits = loadFile(videoPaths[0], 'portraits')
             groupNum = i
-            imsize, images, labels = portraitsToIMDB(portraits, numAnimalsInGroup, group)
-            print 'images, shape, ', images.shape
-            print 'labels, shape, ', labels.shape
+            imsize, images, labels, centroids = portraitsToIMDB(portraits, numAnimalsInGroup, group)
+            print 'images shape, ', images.shape
+            print 'labels shape, ', labels.shape
+            print 'centroids shape, ', centroids.shape
             imagesIMDB.append(images)
             labelsIMDB.append(labels)
+            centroidsIMDB.append(centroids)
 
             totalNumImages += labels.shape[0]
 
@@ -240,8 +243,9 @@ if __name__ == '__main__':
         print 'totalNumImages, ', totalNumImages
         print 'avNumImages, ', averageNumImagesPerIndiv
         print 'minNumImages, ', minimalNumImagesPerIndiv
-        imagesIMDB = np.vstack(imagesIMDB)
-        labelsIMDB = np.vstack(labelsIMDB)
+        imagesIMDB = np.concatenate(imagesIMDB, axis = 0)
+        labelsIMDB = np.concatenate(labelsIMDB, axis = 0)
+        centroidsIMDB = np.concatenate(centroidsIMDB, axis = 0)
 
         nameDatabase =  strain + '_' + ageInDpf + '_' + str(numIndivIMDB) + 'indiv_' + str(int(minimalNumImagesPerIndiv)) + 'ImPerInd_' + preprocessing
         if not os.path.exists(libPath + '/IMDBs'): # Checkpoint folder does not exist
@@ -265,9 +269,11 @@ if __name__ == '__main__':
 
         dset1 = grp.create_dataset("images", imagesIMDB.shape, dtype='f')
         dset2 = grp.create_dataset("labels", labelsIMDB.shape, dtype='i')
+        dset3 = grp.create_dataset("centroids", centroidsIMDB.shape, dtype='i')
 
         dset1[...] = imagesIMDB
         dset2[...] = labelsIMDB
+        dset3[...] = centroidsIMDB
 
         grp.attrs['originalMatPath'] = libPath
         grp.attrs['numIndiv'] = numIndivIMDB
