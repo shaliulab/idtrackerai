@@ -87,6 +87,7 @@ class Video(object):
         cap = cv2.VideoCapture(self._video_path)
         self._width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         self._height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+        self._frames_per_second = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
         if self._paths_to_video_segments is None:
             self._num_frames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
             self.get_episodes()
@@ -163,7 +164,7 @@ class Video(object):
         """Split video in episodes (chunks) of 500 frames
         for parallelisation"""
         starting_frames = np.arange(0, self._num_frames, FRAMES_PER_EPISODE)
-        ending_frames = np.hstack((starting_frames[1:], self._num_frames))
+        ending_frames = np.hstack((starting_frames[1:]-1, self._num_frames))
         self._episodes_start_end =zip(starting_frames, ending_frames)
         self._num_episodes = len(starting_frames)
 

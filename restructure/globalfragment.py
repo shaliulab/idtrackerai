@@ -45,6 +45,9 @@ class GlobalFragment(object):
         self.individual_fragments_identifiers = [blob.fragment_identifier for blob in list_of_blobs[index_beginning_of_fragment]]
         self.portraits = [blob.portraits_in_fragment()
             for blob in list_of_blobs[index_beginning_of_fragment]]
+        self._number_of_portraits_per_individual_fragment = [len(portraits_in_individual_fragment)
+                        for portraits_in_individual_fragment in self.portraits] # length of the portraits contained in each individual fragment part of the global fragment
+        self._total_number_of_portraits = np.sum(self._number_of_portraits_per_individual_fragment) #overall number of portraits
         self.number_of_animals = number_of_animals
         self._used_for_training = False
         self._acceptable_for_training = True
@@ -55,9 +58,19 @@ class GlobalFragment(object):
         self._uniqueness_score = None
         self._repeated_ids = []
         self._missing_ids = []
-        self._number_of_portraits_per_individual_fragment = [len(portraits_in_individual_fragment)
-                        for portraits_in_individual_fragment in self.portraits] # length of the portraits contained in each individual fragment part of the global fragment
-        self._total_number_of_portraits = np.sum(self._number_of_portraits_per_individual_fragment) #overall number of portraits
+        self.predictions = [] #stores predictions per portrait in self, organised according to individual fragments.
+        self.softmax_probs_median = [] #stores softmax median per individual, per individual fragment
+
+    def reset_accumulation_params(self):
+        self._used_for_training = False
+        self._acceptable_for_training = True
+        self._ids_assigned = np.nan * np.ones(self.number_of_animals)
+        self._temporary_ids = np.arange(self.number_of_animals) # I initialize the _ids_assigned like this so that I can use the same function to extract images in pretraining and training
+        self._score = None
+        self._is_unique = False
+        self._uniqueness_score = None
+        self._repeated_ids = []
+        self._missing_ids = []
         self.predictions = [] #stores predictions per portrait in self, organised according to individual fragments.
         self.softmax_probs_median = [] #stores softmax median per individual, per individual fragment
 
@@ -161,7 +174,7 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
     lengths = []
     for global_fragment in global_fragments:
         print("\ngetting images from global fragment")
-        print(individual_fragments_identifiers_already_used)
+        # print(individual_fragments_identifiers_already_used)
         images_global_fragment, labels_global_fragment, lengths_global_fragment, individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_identifiers_already_used)
         # print("len(images_global_fragment) ", len(images_global_fragment))
         # print("len(labels_global_fragment) ", len(labels_global_fragment))

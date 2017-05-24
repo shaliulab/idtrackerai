@@ -168,6 +168,10 @@ if __name__ == '__main__':
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
                 number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
+                #Reset used_for_training and acceptable_for_training flags
+                if old_video._accumulation_finished == True:
+                    for global_fragment in global_fragments:
+                        global_fragment.reset_accumulation_params()
                 try:
                     number_of_global_fragments = int(number_of_global_fragments)
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments))
@@ -194,6 +198,8 @@ if __name__ == '__main__':
                 #save changes
                 video._has_been_pretrained = True
                 video.save()
+            else:
+                print("Loading a net for KT needs to be implemented")
         else:
             # Update folders and paths from previous video_object
             video._pretraining_folder = old_video._pretraining_folder
@@ -221,6 +227,10 @@ if __name__ == '__main__':
             print("\n**** Acumulation ****")
             #create folder to store accumulation models
             video.create_accumulation_folder()
+            #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
+            if old_video._accumulation_finished == True:
+                for global_fragment in global_fragments:
+                    global_fragment.reset_accumulation_params()
             #set network params for the accumulation model
             accumulation_network_params = NetworkParams(video.number_of_animals,
                                         learning_rate = 0.005,
