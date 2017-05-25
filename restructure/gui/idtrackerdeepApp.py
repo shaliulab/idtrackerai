@@ -25,6 +25,12 @@ from kivy.clock import Clock
 from kivy.config import Config #used before running the app to set the keyboard usage
 from kivy.event import EventDispatcher
 
+import matplotlib
+matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
+from kivy.garden.matplotlib import FigureCanvasKivyAgg
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 import sys
 sys.path.append('../')
 sys.path.append('../utils')
@@ -89,8 +95,6 @@ class SelectFile(BoxLayout):
     CHOSEN_VIDEO = Chosen_Video()
 
     def on_enter(self,value):
-        print(self.animal_type_input.text)
-        print(self.animal_number_input.text)
         CHOSEN_VIDEO.video._animal_type = self.animal_type_input.text
         CHOSEN_VIDEO.video._number_of_animals = int(self.animal_number_input.text)
         self.popup.dismiss()
@@ -730,27 +734,24 @@ class Validator(BoxLayout):
 
     # @staticmethod
     def get_first_frame(self):
-        print("in get first frame")
         self.global_fragments = np.load(CHOSEN_VIDEO.old_video.global_fragments_path)
         max_distance_travelled_global_fragment = order_global_fragments_by_distance_travelled(self.global_fragments)[0]
-        print("my best fucking core", max_distance_travelled_global_fragment.index_beginning_of_fragment)
         return max_distance_travelled_global_fragment.index_beginning_of_fragment
 
     def do(self, *args):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
-            print("video has path")
             if CHOSEN_VIDEO.video._has_been_assigned == True:
-                print("current video has been assigned")
                 list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             elif CHOSEN_VIDEO.old_video._has_been_assigned == True:
-                print("old video has been assigned")
                 CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
                 list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             #init variables used for zooming
             self.count_scrollup = 0
             self.scale = 1
+            #create dictionary to store eventual corrections made by the user
+            self.count_user_generated_identities_dict = {i:0 for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
             #init elements in the self widget
             self.init_segmentZero()
 
@@ -776,8 +777,14 @@ class Validator(BoxLayout):
         self.save_groundtruth_btn.bind(on_press=self.show_saving)
         self.save_groundtruth_btn.bind(on_release=self.save_groundtruth)
         self.save_groundtruth_btn.disabled = True
-        # add buttons to the button layout
+        # add button to the button layout
         self.button_box.add_widget(self.save_groundtruth_btn)
+        # create button to compute accuracy with respect to the groundtruth entered by the user
+        self.compute_accuracy_button = Button(id = "compute_accuracy_button", text = "compute accuracy", size_hint  = (1.,1.))
+        self.compute_accuracy_button.disabled = True
+        self.compute_accuracy_button.bind(on_press = self.compute_accuracy_wrt_groundtruth)
+        # add button to layout
+        self.button_box.add_widget(self.compute_accuracy_button)
         #start visualising the video
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.writeIds, frame_index_to_start = self.get_first_frame())
 
@@ -786,7 +793,7 @@ class Validator(BoxLayout):
         #get frame index from the slider initialised in visualiser
         frame_index = int(self.visualiser.video_slider.value)
         #for every subsequent frame check the blobs and stop if a crossing (or a jump) occurs
-        while unCross == True:
+        while non_crossing == True:
             frame_index = frame_index + 1
             blobs_in_frame = self.blobs_in_video[frame_index]
             for blob in blobs_in_frame:
@@ -801,6 +808,7 @@ class Validator(BoxLayout):
         Finds the nearest neighbour in cents with respect to point (in 2D)
         """
         point = np.asarray(point)
+        cents = np.asarray(cents)
         cents_x = cents[:,0]
         cents_y = cents[:,1]
         dist_x = cents_x - point[0]
@@ -811,12 +819,10 @@ class Validator(BoxLayout):
     def correctIdentity(self):
         mouse_coords = self.touches[0]
         mouse_coords = self.fromShowFrameToTexture(mouse_coords)
-        frame_index = int(self.visualiser.video_shower.value) #get the current frame from the slider
+        frame_index = int(self.visualiser.video_slider.value) #get the current frame from the slider
         blobs_in_frame = self.blobs_in_video[frame_index]
         centroids = np.asarray([getattr(blob, "centroid") for blob in blobs_in_frame])
         if self.scale != 1:
-            print('transformation: ', self.M)
-            print('zoom shape ', self.dst.shape)
             R = self.M[:,:-1]
             T = self.M[:,-1]
             centroids = [np.dot(R, centroid) + T for centroid in centroids]
@@ -850,19 +856,23 @@ class Validator(BoxLayout):
         return {attr: [getattr(blob, attr) for blob in blobs_in_frame] for attr in attributes_to_get}
 
     def writeIds(self, frame):
-        print("core best global frag ", int(self.visualiser.video_slider.value))
         blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
         font = cv2.FONT_HERSHEY_SIMPLEX
-        attributes_to_get = ["centroid",  "pixels", "identity"]###TODO separate noses from portraits in main code
+        attributes_to_get = ["centroid","identity","user_generated_identity"]###TODO separate noses from portraits in main code
         attributes_dict = self.get_attributes_from_blobs_in_frame(blobs_in_frame, attributes_to_get)
         frame = self.visualiser.frame
 
-        for centroid, identity in zip(attributes_dict['centroid'], attributes_dict['identity']):
+        for centroid, identity, user_generated_identity in zip(attributes_dict['centroid'], attributes_dict['identity'], attributes_dict['user_generated_identity']):
             fontSize = .5
-            text = str(identity)
+            # print(user_generated_identity)
+            # print(identity)
+            if user_generated_identity is None:
+                text = str(identity)
+            else:
+                text = str(user_generated_identity)
             thickness = 2
-            cv2.putText(frame, str(identity),(centroid[0] - 10, centroid[1] - 10) , font, 1, self.colors[identity],2)
-            cv2.circle(frame, tuple(centroid), 2, self.colors[identity], 2)
+            cv2.putText(frame, text, (centroid[0] - 10, centroid[1] - 10) , font, 1, self.colors[int(text)],2)
+            cv2.circle(frame, tuple(centroid), 2, self.colors[int(text)], 2)
 
         # Visualization of the process
         if self.scale != 1:
@@ -872,7 +882,6 @@ class Validator(BoxLayout):
         else:
             buf = cv2.flip(frame,0)
             buf = buf.tostring()
-
         textureFrame = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
         textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
         # display image from the texture
@@ -880,53 +889,66 @@ class Validator(BoxLayout):
 
     def on_enter(self,value):
         self.identity_update = int(self.identityInput.text)
-        print(self.identity_update)
         self.overwriteIdentity()
         self.popup.dismiss()
 
-    def propagate_groundtruth_identity_in_individual_fragment(self, blob):
-        if blob.is_a_fish_in_a_fragment:
-            current = blob
+    def propagate_groundtruth_identity_in_individual_fragment(self):
+        modified_blob = self.blob_to_modify
+        count_past_corrections = 1 #to take into account the modification already done in the current frame
+        count_future_corrections = 0
+        new_blob_identity = modified_blob.user_generated_identity
+
+        if modified_blob.is_a_fish_in_a_fragment:
+            current = modified_blob
 
             while current.next[0].is_a_fish_in_a_fragment:
+                print("propagating forward")
                 current.next[0].user_generated_identity = current.user_generated_identity
                 current = current.next[0]
+                count_future_corrections += 1
+                print(count_future_corrections)
 
-            current = blob
+            current = modified_blob
 
             while current.previous[0].is_a_fish_in_a_fragment:
+                print("propagating backward")
                 current.previous[0].user_generated_identity = current.user_generated_identity
                 current = current.previous[0]
+                count_past_corrections += 1
+                print(count_past_corrections)
+
+            self.count_user_generated_identities_dict[new_blob_identity] = self.count_user_generated_identities_dict[new_blob_identity] + \
+                                                                        count_future_corrections + \
+                                                                        count_past_corrections
+            print("count_user_generated_identities_dict id, ", self.count_user_generated_identities_dict[new_blob_identity])
 
     def overwriteIdentity(self):
+        # enable buttons to save corrected version and compute the accuracy
         self.save_groundtruth_btn.disabled = False
-        frame_index = int(self.visualiser.video_slider.value)
-        blob_to_modify = self.correctIdentity()
-        blob_to_modify.user_generated_identity = self.identity_update
-        self.propagate_groundtruth_identity_in_individual_fragment(blob_to_modify)
-        self.writeIds(value = int(self.visualiser.video_slider.value))
+        self.compute_accuracy_button.disabled = False
+        self.blob_to_modify.user_generated_identity = self.identity_update
+        self.propagate_groundtruth_identity_in_individual_fragment()
+        self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func=self.writeIds)
 
     def on_press_show_saving(selg, *args):
         self.show_saving()
 
     def save_groundtruth(self, *args):
-        new_stats = self.stats
-        new_stats['fragmentIds'] = self.allIdentities
-        pathToGroundtruth = self.sessionPath + "/groundtruth.pkl"
-        pickle.dump( new_stats , open( pathToGroundtruth, "wb" ) )
+        self.go_and_save()
         self.popup_saving.dismiss()
 
-    def go_and_save(self, path, dict_to_save):
-        blobs_list = ListOfBlobs(blobs_in_video = self.blobs_in_video, path_to_save = video.validation_path)
+    def go_and_save(self):
+        blobs_list = ListOfBlobs(blobs_in_video = self.blobs_in_video, path_to_save = CHOSEN_VIDEO.video.blobs_path)
         blobs_list.generate_cut_points(10)
         blobs_list.cut_in_chunks()
         blobs_list.save()
-        video.save()
+        CHOSEN_VIDEO.video.save()
 
-    def modifyIdOpenPopup(self, id_to_modify):
+    def modifyIdOpenPopup(self, blob_to_modify):
         self.container = BoxLayout()
-        self.id_to_modify = id_to_modify
-        text = str(self.id_to_modify + 1)
+        self.blob_to_modify = blob_to_modify
+        self.id_to_modify = blob_to_modify.identity
+        text = str(self.id_to_modify)
         self.old_id_box = BoxLayout(orientation="vertical")
         self.new_id_box = BoxLayout(orientation="vertical")
         self.selected_label = Label(text='You selected animal:\n')
@@ -955,22 +977,19 @@ class Validator(BoxLayout):
 
     def on_touch_down(self, touch):
         self.touches = []
-        print('scrollup number ', self.count_scrollup)
-        if self.parent is not None and self.visualiser.display_layout.collide_point(*touch.pos):
+        if self.visualiser.display_layout.collide_point(*touch.pos):
             if touch.button =='left':
                 self.touches.append(touch.pos)
-                self.parent.id_to_modify = self.parent.correctIdentity()
-                print('fish id to modify: ', self.parent.id_to_modify)
-                self.modifyIdOpenPopup(self.parent.id_to_modify)
+                self.id_to_modify = self.correctIdentity()
+                self.modifyIdOpenPopup(self.id_to_modify)
 
             elif touch.button == 'scrollup':
                 self.count_scrollup += 1
-
-                coords = self.parent.fromShowFrameToTexture(touch.pos)
-                rows,cols, channels = self.parent.frame.shape
+                coords = self.fromShowFrameToTexture(touch.pos)
+                rows,cols, channels = self.visualiser.frame.shape
                 self.scale = 1.5 * self.count_scrollup
                 self.M = cv2.getRotationMatrix2D((coords[0],coords[1]),0,self.scale)
-                self.dst = cv2.warpAffine(self.parent.frame,self.M,(cols,rows))
+                self.dst = cv2.warpAffine(self.visualiser.frame,self.M,(cols,rows))
                 buf1 = cv2.flip(self.dst, 0)
                 buf = buf1.tostring()
                 textureFrame = Texture.create(size=(self.dst.shape[1], self.dst.shape[0]), colorfmt='bgr')
@@ -982,6 +1001,7 @@ class Validator(BoxLayout):
                 coords = self.fromShowFrameToTexture(touch.pos)
                 rows,cols, channels = self.visualiser.frame.shape
                 self.dst = self.visualiser.frame
+                buf1 = cv2.flip(self.dst, 0)
                 buf = buf1.tostring()
                 textureFrame = Texture.create(size=(self.dst.shape[1], self.dst.shape[0]), colorfmt='bgr')
                 textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
@@ -997,6 +1017,39 @@ class Validator(BoxLayout):
     def disable_touch_down_outside_collided_widget(self, touch):
         return super(Validator, self).on_touch_down(touch)
 
+    def compute_accuracy_wrt_groundtruth(self, *args):
+        count_number_assignment_per_individual = {i: 0 for i in range(1,CHOSEN_VIDEO.video.number_of_animals+1)}
+        for blobs_in_frame in self.blobs_in_video:
+            for blob in blobs_in_frame:
+                if blob.is_a_fish_in_a_fragment:
+                    if blob.user_generated_identity is not None and blob.user_generated_identity != blob.identity:
+                        count_number_assignment_per_individual[blob.user_generated_identity] += 1
+                    else:
+                        count_number_assignment_per_individual[blob.identity] += 1
+        self.individual_accuracy = {i : 1 - self.count_user_generated_identities_dict[i] / count_number_assignment_per_individual[i] for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
+        self.accuracy = np.mean(self.individual_accuracy.values())
+        print("count_user_generated_identities_dict, ", self.count_user_generated_identities_dict)
+        print("count_number_assignment_per_individual, ", count_number_assignment_per_individual)
+        print("individual_accuracy, ", self.individual_accuracy)
+        print("accuracy, ", self.accuracy)
+        self.plot_final_statistics()
+        self.statistics_popup.open()
+
+    def plot_final_statistics(self):
+        content = BoxLayout()
+        self.statistics_popup = Popup(title = "Statistics",
+                                    content = content,
+                                    size_hint = (.5, .5))
+
+        fig, ax = plt.subplots(1)
+        colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals, norm = True)
+
+        width = .5
+        plt.bar(self.individual_accuracy.keys(), self.individual_accuracy.values(), width, color=colors)
+        plt.axhline(self.accuracy, color = 'k')
+        ax.set_xlabel('individual')
+        ax.set_ylabel('Individual accuracy')
+        content.add_widget(FigureCanvasKivyAgg(fig))
 
 class Root(TabbedPanel):
 

@@ -169,7 +169,7 @@ if __name__ == '__main__':
                 #set pretraining parameters
                 number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
                 #Reset used_for_training and acceptable_for_training flags
-                if old_video._accumulation_finished == True:
+                if old_video and old_video._accumulation_finished == True:
                     for global_fragment in global_fragments:
                         global_fragment.reset_accumulation_params()
                 try:
