@@ -27,7 +27,7 @@ class Video(object):
         self.ROI = ROI #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
         self.apply_ROI = apply_ROI #boolean: True if the user applies a ROI to the video
         self._has_preprocessing_parameters = False #boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved
-        self._max_number_of_blobs = None #int: the maximum number of blobs detected in the video
+        self._maximum_number_of_blobs = 0 #int: the maximum number of blobs detected in the video
         self._blobs_path = None #string: path to the saved list of blob objects
         self._has_been_preprocessed = None #boolean: True if a video has been fragmented in a past session
         self._global_fragments_path = None #string: path to saved list of global fragments
@@ -69,6 +69,10 @@ class Video(object):
         else:
             raise ValueError("The supported animal types are " , SUPPORTED_ANIMAL_TYPES)
 
+    @property
+    def maximum_number_of_blobs(self):
+        return self._maximum_number_of_blobs
+
     def check_split_video(self):
         """If the video is divided in chunks retrieves the path to each chunk"""
         paths_to_video_segments = scanFolder(self.video_path)
@@ -83,6 +87,7 @@ class Video(object):
         cap = cv2.VideoCapture(self._video_path)
         self._width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         self._height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+        self._frames_per_second = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
         if self._paths_to_video_segments is None:
             self._num_frames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
             self.get_episodes()
@@ -159,7 +164,7 @@ class Video(object):
         """Split video in episodes (chunks) of 500 frames
         for parallelisation"""
         starting_frames = np.arange(0, self._num_frames, FRAMES_PER_EPISODE)
-        ending_frames = np.hstack((starting_frames[1:], self._num_frames))
+        ending_frames = np.hstack((starting_frames[1:]-1, self._num_frames))
         self._episodes_start_end =zip(starting_frames, ending_frames)
         self._num_episodes = len(starting_frames)
 

@@ -82,7 +82,7 @@ def inference1(images, width, height, channels, classes, keep_prob):
     n_filter1 = 16
     stride1 = [1,1,1,1]
     pad1 = 'SAME'
-    conv1, w1, h1 = buildConv2D('conv1', width, height, 1, images_tensor, filter_size1, n_filter1, stride1, pad1)
+    conv1, w1, h1 = buildConv2D('conv1', width, height, 1, images, filter_size1, n_filter1, stride1, pad1)
     # relu
     relu1 = reLU('relu1', conv1)
     # maxpool2d

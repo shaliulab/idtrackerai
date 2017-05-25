@@ -18,7 +18,7 @@ sys.path.append('./preprocessing')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
-from blob import compute_fragment_identifier, connect_blob_list, apply_model_area_to_video, ListOfBlobs, get_images_from_blobs_in_video
+from blob import compute_fragment_identifier_and_blob_index, connect_blob_list, apply_model_area_to_video, ListOfBlobs, get_images_from_blobs_in_video
 from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, give_me_pre_training_global_fragments
 from globalfragment import get_images_and_labels_from_global_fragments
 from globalfragment import subsample_images_for_last_training, order_global_fragments_by_distance_travelled
@@ -111,6 +111,7 @@ if __name__ == '__main__':
         cv2.waitKey(1)
         if not loadPreviousDict['preprocessing']:
             print("\n**** Preprocessing ****\n")
+            cv2.namedWindow('Bars')
             video.create_preprocessing_folder()
             blobs = segment(video)
             #compute a model of the area of the animals (considering frames in which
@@ -121,7 +122,7 @@ if __name__ == '__main__':
             #connect blobs that overlap in consecutive frames
             connect_blob_list(blobs)
             #assign an identifier to each blobl belonging to an individual fragment
-            compute_fragment_identifier(blobs)
+            compute_fragment_identifier_and_blob_index(blobs, video.maximum_number_of_blobs)
             #compute the global fragments (all animals are visible + each animals overlaps
             #with a single blob in the consecutive frame + the blobs respect the area model)
             global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
@@ -152,6 +153,7 @@ if __name__ == '__main__':
         cv2.waitKey(1)
         cv2.destroyAllWindows()
         cv2.waitKey(1)
+
         #############################################################
         ##################      Pre-trainer      ####################
         #### create the folder training in which all the         ####
@@ -166,6 +168,10 @@ if __name__ == '__main__':
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
                 number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
+                #Reset used_for_training and acceptable_for_training flags
+                if old_video._accumulation_finished == True:
+                    for global_fragment in global_fragments:
+                        global_fragment.reset_accumulation_params()
                 try:
                     number_of_global_fragments = int(number_of_global_fragments)
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments))
@@ -181,7 +187,8 @@ if __name__ == '__main__':
                                                         keep_prob = 1.0,
                                                         save_folder = video._pretraining_folder)
                 #start pretraining
-                net = pre_train(pretraining_global_fragments,
+                net = pre_train(video, blobs,
+                                pretraining_global_fragments,
                                 pretrain_network_params,
                                 store_accuracy_and_error = False,
                                 check_for_loss_plateau = True,
@@ -191,6 +198,8 @@ if __name__ == '__main__':
                 #save changes
                 video._has_been_pretrained = True
                 video.save()
+            else:
+                print("Loading a net for KT needs to be implemented")
         else:
             # Update folders and paths from previous video_object
             video._pretraining_folder = old_video._pretraining_folder
@@ -218,6 +227,10 @@ if __name__ == '__main__':
             print("\n**** Acumulation ****")
             #create folder to store accumulation models
             video.create_accumulation_folder()
+            #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
+            if old_video._accumulation_finished == True:
+                for global_fragment in global_fragments:
+                    global_fragment.reset_accumulation_params()
             #set network params for the accumulation model
             accumulation_network_params = NetworkParams(video.number_of_animals,
                                         learning_rate = 0.005,
@@ -246,7 +259,9 @@ if __name__ == '__main__':
                 print("images: ", images.shape)
                 print("labels: ", labels.shape)
                 #start training
-                global_step, net = train(net, images, labels,
+                global_step, net = train(video, blobs,
+                                        global_fragments,
+                                        net, images, labels,
                                         store_accuracy_and_error = False,
                                         check_for_loss_plateau = True,
                                         save_summaries = True,

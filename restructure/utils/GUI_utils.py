@@ -17,6 +17,7 @@ sns.set(style="white", context="talk")
 import pyautogui
 import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
+from tqdm import tqdm
 from segmentation import segmentVideo, blobExtractor
 from get_portraits import getPortrait, cropPortrait
 # from video_utils import *
@@ -412,10 +413,39 @@ def fragmentation_inspector(video, blobs_in_video):
     subtract_bkg = video.subtract_bkg
     height = video._height
     width = video._width
-    global currentSegment, cap
+    global currentSegment, cap, frame
     currentSegment = 0
     cv2.namedWindow('fragmentInspection')
     defFrame = 1
+
+
+    def resizer(sizeValue):
+        global frame
+        print("sizeValue, ", sizeValue)
+        real_size = sizeValue - 5
+        print("real_size, ", real_size)
+        if real_size > 0:
+            print("I should enlarge")
+            frame = cv2.resize(frame,None,fx = real_size+1, fy = real_size+1)
+            print(frame.shape)
+        elif real_size < 0:
+            print("I should reduce")
+            frame = cv2.resize(frame,None, fx = np.true_divide(1,abs(real_size)+1), fy = np.true_divide(1,abs(real_size)+1))
+            print(frame.shape)
+        # elif real_size == 0:
+        #     print("real_size is zero")
+        #     real_size = sizeValue - previousSize
+        #     print("real_size, ", real_size)
+        #     if real_size > 0:
+        #         print("I should enlarge")
+        #         frame = cv2.resize(frame,None,fx = real_size+1, fy = real_size+1)
+        #         previousSize = sizeValue
+        #     elif real_size < 0:
+        #         print("I should reduce")
+        #         frame = cv2.resize(frame,None, fx = np.true_divide(1,abs(real_size)+1), fy = np.true_divide(1,abs(real_size)+1))
+        #         previousSize = sizeValue
+
+        cv2.imshow('fragmentInspection', frame)
 
     def scroll(trackbarValue):
         global frame, currentSegment, cap
@@ -445,10 +475,15 @@ def fragmentation_inspector(video, blobs_in_video):
             font = cv2.FONT_HERSHEY_SIMPLEX
             cv2.putText(frame, str(blob.fragment_identifier),tuple(blob.centroid), font, 1,255, 5)
 
+        sizeValue = cv2.getTrackbarPos('frameSize', 'Bars')
+        resizer(sizeValue)
         cv2.imshow('fragmentInspection', frame)
-    cv2.createTrackbar('start', 'fragmentInspection', 0, numFrames-1, scroll )
+
+    cv2.createTrackbar('start', 'Bars', 0, numFrames-1, scroll )
+    cv2.createTrackbar('frameSize', 'Bars', 1, 9, resizer)
+    cv2.setTrackbarPos('start', 'Bars', defFrame)
+    cv2.setTrackbarPos('frameSize', 'Bars', 5)
     scroll(1)
-    cv2.setTrackbarPos('start', 'fragmentInspection', defFrame)
     cv2.waitKey(0)
     cv2.waitKey(1)
     cv2.destroyAllWindows()
@@ -468,7 +503,7 @@ def get_n_previous_blobs_attribute(blob,attribute_name,number_of_previous):
             break
     return blobs_attrs
 
-def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous = 10):
+def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous = 10, save_video = False):
     cap = cv2.VideoCapture(video.video_path)
     numFrames = video._num_frames
     bkg = video.bkg
@@ -481,6 +516,11 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
     cv2.namedWindow('frame_by_frame_identity_inspector')
     defFrame = 0
     colors = get_spaced_colors_util(video.number_of_animals)
+
+
+    fourcc = cv2.cv.CV_FOURCC(*'XVID')
+    name = video._session_folder +'/tracked.avi'
+    out = cv2.VideoWriter(name, fourcc, 32.0, (video._width, video._height))
 
     def scroll(trackbarValue):
         global frame, currentSegment, cap
@@ -523,32 +563,52 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
             cv2.circle(frame, tuple(blob.centroid), 2, colors[blob._identity], -1)
             if blob._assigned_during_accumulation:
                 # we draw a circle in the centroid if the blob has been assigned during accumulation
-
                 cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, 1,colors[blob._identity], 3)
             elif not blob._assigned_during_accumulation:
                 # we draw a cross in the centroid if the blob has been assigned during assignation
                 # cv2.putText(frame, 'x',tuple(blob.centroid), font, 1,colors[blob._identity], 1)
                 cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, .5,colors[blob._identity], 3)
 
-            print("\nblob ", b)
-            print("identity: ", blob._identity)
-            print("assigned during accumulation: ", blob.assigned_during_accumulation)
-            if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
-                try:
-                    print("frequencies in fragment: ", blob.frequencies_in_fragment)
-                except:
-                    print("this blob does not have frequencies in fragment")
-            print("P1_vector: ", blob.P1_vector)
-            print("P2_vector: ", blob.P2_vector)
+            if not save_video:
+                print("\nblob ", b)
+                print("identity: ", blob._identity)
+                print("assigned during accumulation: ", blob.assigned_during_accumulation)
+                if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
+                    try:
+                        print("frequencies in fragment: ", blob.frequencies_in_fragment)
+                    except:
+                        print("this blob does not have frequencies in fragment")
+                print("P1_vector: ", blob.P1_vector)
+                print("P2_vector: ", blob.P2_vector)
 
 
-        cv2.imshow('frame_by_frame_identity_inspector', frame)
+        if not save_video:
+            # frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
+            cv2.imshow('frame_by_frame_identity_inspector', frame)
+            pass
+        else:
+            out.write(frame)
 
     cv2.createTrackbar('start', 'frame_by_frame_identity_inspector', 0, numFrames-1, scroll )
 
     scroll(1)
     cv2.setTrackbarPos('start', 'frame_by_frame_identity_inspector', defFrame)
+    # cv2.waitKey(0)
+    # cv2.waitKey(1)
+    # cv2.destroyAllWindows()
+    # cv2.waitKey(1)
+
+    if save_video:
+        for i in tqdm(range(video._num_frames)):
+            scroll(i)
+
     cv2.waitKey(0)
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
+
+    save_video = getInput('Saver' , 'Do you want to save a copy of the tracked video? [y]/n')
+    if not save_video or save_video == 'y':
+        frame_by_frame_identity_inspector(video, blobs_in_video, save_video = True)
+    else:
+        return

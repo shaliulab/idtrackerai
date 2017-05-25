@@ -5,7 +5,7 @@ import random
 from blob import is_a_global_fragment, check_global_fragments
 from statistics_for_assignment import compute_identification_frequencies_individual_fragment, compute_P1_individual_fragment_from_blob
 
-STD_TOLERANCE = 1 ### NOTE set to 1 because we changed the model area to work with the median.
+STD_TOLERANCE = 4 ### NOTE set to 1 because we changed the model area to work with the median.
 
 def detect_beginnings(boolean_array):
     """ detects the frame where the core of a global fragment starts.
@@ -23,13 +23,15 @@ def compute_model_area(blobs_in_video, number_of_animals, std_tolerance = STD_TO
     belong to a crossing.
     """
     areas = [blob.area for blobs_in_frame in blobs_in_video for blob in blobs_in_frame ]
-    media_area = np.median(areas)
+    median_area = np.median(areas)
+    mean_area = np.mean(areas)
     std_area = np.std(areas)
-    return ModelArea(media_area, std_area)
+    return ModelArea(mean_area, median_area, std_area)
 
 class ModelArea(object):
-  def __init__(self, median, std):
+  def __init__(self, mean, median, std):
     self.median = median
+    self.mean = mean
     self.std = std
 
   def __call__(self, area, std_tolerance = STD_TOLERANCE):
@@ -43,6 +45,9 @@ class GlobalFragment(object):
         self.individual_fragments_identifiers = [blob.fragment_identifier for blob in list_of_blobs[index_beginning_of_fragment]]
         self.portraits = [blob.portraits_in_fragment()
             for blob in list_of_blobs[index_beginning_of_fragment]]
+        self._number_of_portraits_per_individual_fragment = [len(portraits_in_individual_fragment)
+                        for portraits_in_individual_fragment in self.portraits] # length of the portraits contained in each individual fragment part of the global fragment
+        self._total_number_of_portraits = np.sum(self._number_of_portraits_per_individual_fragment) #overall number of portraits
         self.number_of_animals = number_of_animals
         self._used_for_training = False
         self._acceptable_for_training = True
@@ -53,9 +58,19 @@ class GlobalFragment(object):
         self._uniqueness_score = None
         self._repeated_ids = []
         self._missing_ids = []
-        self._number_of_portraits_per_individual_fragment = [len(portraits_in_individual_fragment)
-                        for portraits_in_individual_fragment in self.portraits] # length of the portraits contained in each individual fragment part of the global fragment
-        self._total_number_of_portraits = np.sum(self._number_of_portraits_per_individual_fragment) #overall number of portraits
+        self.predictions = [] #stores predictions per portrait in self, organised according to individual fragments.
+        self.softmax_probs_median = [] #stores softmax median per individual, per individual fragment
+
+    def reset_accumulation_params(self):
+        self._used_for_training = False
+        self._acceptable_for_training = True
+        self._ids_assigned = np.nan * np.ones(self.number_of_animals)
+        self._temporary_ids = np.arange(self.number_of_animals) # I initialize the _ids_assigned like this so that I can use the same function to extract images in pretraining and training
+        self._score = None
+        self._is_unique = False
+        self._uniqueness_score = None
+        self._repeated_ids = []
+        self._missing_ids = []
         self.predictions = [] #stores predictions per portrait in self, organised according to individual fragments.
         self.softmax_probs_median = [] #stores softmax median per individual, per individual fragment
 
@@ -112,6 +127,10 @@ class GlobalFragment(object):
     def compute_repeated_and_missing_ids(self, all_identities):
         self._repeated_ids = set([x for x in self._ids_assigned if list(self._ids_assigned).count(x) > 1])
         self._missing_ids = set(all_identities).difference(set(self._ids_assigned))
+
+    def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
+        self.starts_ends_individual_fragments = [blob.compute_fragment_start_end()
+            for blob in blobs_in_video[self.index_beginning_of_fragment]]
 
 def order_global_fragments_by_distance_travelled(global_fragments):
     global_fragments = sorted(global_fragments, key = lambda x: x.min_distance_travelled, reverse = True)

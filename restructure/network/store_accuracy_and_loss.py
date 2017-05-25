@@ -49,6 +49,37 @@ class Store_Accuracy_and_Loss(object):
         plt.draw()
         plt.pause(1e-8)
 
+    def plot_global_fragments(self, ax_handles, video, blobs_in_video, global_fragments):
+        import matplotlib.patches as patches
+        ax4 = ax_handles[3]
+        ax4.cla()
+        colors = get_spaced_colors_util(video.number_of_animals, norm=True)
+
+        for global_fragment in global_fragments:
+            global_fragment.compute_start_end_frame_indices_of_individual_fragments(blobs_in_video)
+            # print("individual fragments starts and ends: ", global_fragment.starts_ends_individual_fragments)
+            for i, (start, end) in enumerate(global_fragment.starts_ends_individual_fragments):
+                blob_index = blobs_in_video[global_fragment.index_beginning_of_fragment][i].blob_index
+                ax4.add_patch(
+                    patches.Rectangle(
+                        (start, blob_index - 0.5),   # (x,y)
+                        end - start,  # width
+                        1.,          # height
+                        fill=True,
+                        edgecolor=None,
+                        facecolor=colors[int(global_fragment._ids_assigned[i]) if global_fragment._used_for_training else int(blob_index)],
+                        alpha = 1.
+                    )
+                )
+
+        ax4.axis('tight')
+        ax4.set_xlabel('Frame number')
+        ax4.set_ylabel('Blob index')
+        ax4.set_yticks(range(0,video.number_of_animals,4))
+        ax4.set_yticklabels(range(1,video.number_of_animals+1,4))
+        ax4.set_xlim([0., video._num_frames])
+        ax4.set_ylim([-.5, .5 + video.number_of_animals])
+
     def save(self):
         np.save(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy'), self.__dict__)
 
