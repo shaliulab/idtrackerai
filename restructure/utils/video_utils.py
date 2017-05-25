@@ -199,6 +199,7 @@ def getBlobsInfoPerFrame(frame, contours, height, width):
     centroids = []
     areas = []
     pixels = []
+
     for i, cnt in enumerate(contours):
         boundingBox, miniFrame, pixelsInFullF = getMiniFrame(frame, cnt, height, width)
         #bounding boxes

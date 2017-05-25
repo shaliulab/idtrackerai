@@ -29,6 +29,17 @@ class Blob(object):
         self._P1_vector = np.zeros(number_of_animals)
         self._P2_vector = np.zeros(number_of_animals)
         self._assigned_during_accumulation = False
+        self._user_generated_identity = None #in the validation part users can correct manually the identities
+
+    @property
+    def user_generated_identity(self):
+        return self._user_generated_identity
+
+    @user_generated_identity.setter
+    def user_generated_identity(self, new_identifier):
+        #check if the identity is different from the one assigned by the algorithm
+        if self._identity != new_identifier:
+            self._user_generated_identity = new_identifier
 
     @property
     def is_a_fish(self):
@@ -41,7 +52,6 @@ class Blob(object):
         intersection = np.intersect1d(self.pixels, other.pixels)
         if len(intersection) > 0:
             overlaps = True
-
         return overlaps
 
     def now_points_to(self, other):
@@ -146,7 +156,6 @@ class Blob(object):
 
     def get_P1_vectors_coexisting_fragments(self, blobs_in_video):
         P1_vectors = []
-
         if self.is_a_fish_in_a_fragment:
             fragment_identifiers_of_coexisting_fragments = []
             for b, blob in enumerate(blobs_in_video[self.frame_number]):
@@ -186,7 +195,6 @@ class Blob(object):
                 self._assigned_during_accumulation = True
                 self._P1_vector[identity_in_fragment-1] = 0.99999999999999
                 self._P2_vector[identity_in_fragment-1] = 0.99999999999999
-
             current = self
 
             while current.next[0].is_a_fish_in_a_fragment:
@@ -198,7 +206,6 @@ class Blob(object):
                     current._P2_vector[identity_in_fragment-1] = 0.99999999999999
                 else:
                     current._P2_vector = self.P2_vector
-
             current = self
 
             while current.previous[0].is_a_fish_in_a_fragment:
@@ -287,8 +294,6 @@ def get_images_from_blobs_in_video(blobs_in_video):
             if blob.is_a_fish_in_a_fragment and not blob.assigned_during_accumulation:
                 portraits_in_video.append(blob.portrait[0])
     return np.asarray(portraits_in_video)
-
-
 
 class ListOfBlobs(object):
     def __init__(self, blobs_in_video = None, path_to_save = None):

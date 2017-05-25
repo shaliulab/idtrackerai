@@ -171,11 +171,11 @@ class AccumulationManager(object):
 
         for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
             print("frag identifier", individual_fragment_identifier)
-            print("candidate frag identifiers, ", self.candidate_individual_fragments_identifiers)
-            print("index ", list(self.candidate_individual_fragments_identifiers).index(individual_fragment_identifier))
+            # print("candidate frag identifiers, ", self.candidate_individual_fragments_identifiers)
+            # print("index ", list(self.candidate_individual_fragments_identifiers).index(individual_fragment_identifier))
             index_in_candidate_individual_fragments = list(self.candidate_individual_fragments_identifiers).index(individual_fragment_identifier)
-            print(len(self.identity_of_candidate_individual_fragments))
-            print(len(self.candidate_individual_fragments_identifiers))
+            # print(len(self.identity_of_candidate_individual_fragments))
+            # print(len(self.candidate_individual_fragments_identifiers))
             cur_id = self.identity_of_candidate_individual_fragments[index_in_candidate_individual_fragments]
             cur_P1 = self.P1_of_candidate_individual_fragments[index_in_candidate_individual_fragments]
             cur_frequencies = self.frequencies_in_candidate_individual_fragments[index_in_candidate_individual_fragments]

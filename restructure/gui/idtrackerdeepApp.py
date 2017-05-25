@@ -28,11 +28,15 @@ from kivy.event import EventDispatcher
 import sys
 sys.path.append('../')
 sys.path.append('../utils')
+sys.path.append('../preprocessing')
 import cv2
 import numpy as np
 from video import Video
-from py_utils import getExistentFiles
-from video_utils import computeBkg
+from py_utils import getExistentFiles, get_spaced_colors_util
+from video_utils import computeBkg, blobExtractor
+from segmentation import segmentVideo
+from blob import ListOfBlobs
+from globalfragment import order_global_fragments_by_distance_travelled
 # from validator import Validator
 """
 Start kivy classes
@@ -54,6 +58,10 @@ class Chosen_Video(EventDispatcher):
         try:
             print("you choose ----------->", value)
             self.video.video_path = value
+            self.video.create_session_folder()
+            processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
+            #get existent files and paths to load them
+            self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
         except:
             print("Choose a video to proceed")
 
@@ -74,6 +82,8 @@ class SelectFile(BoxLayout):
         self.welcome_label.font_size = 20
         self.welcome_label.halign = "center"
         self.welcome_label.valign = "middle"
+        self.video = None
+        self.old_video = None
 
     global CHOSEN_VIDEO
     CHOSEN_VIDEO = Chosen_Video()
@@ -87,24 +97,28 @@ class SelectFile(BoxLayout):
 
     def open(self, path, filename):
         print("opening video file")
+        print("filename  ", filename)
         if filename:
             CHOSEN_VIDEO.set_chosen_item(filename[0])
-            CHOSEN_VIDEO.video.create_session_folder()
-            processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
-            #get existent files and paths to load them
-            self.existentFiles, CHOSEN_VIDEO.old_video = getExistentFiles(CHOSEN_VIDEO.video, processes_list)
-            print(self.existentFiles)
-            if CHOSEN_VIDEO.old_video.animal_type is None and CHOSEN_VIDEO.old_video.number_of_animals is None:
-                self.create_animal_type_and_number_popup()
-                self.animal_type_input.bind(on_text_validate=self.on_enter)
-                self.animal_number_input.bind(on_text_validate=self.on_enter)
-                self.popup.open()
-            else:
-                CHOSEN_VIDEO.video._animal_type = CHOSEN_VIDEO.old_video.animal_type
-                CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
+            if CHOSEN_VIDEO.video.video_path is not None:
+                if CHOSEN_VIDEO.old_video.animal_type is None and CHOSEN_VIDEO.old_video.number_of_animals is None:
+                    self.create_animal_type_and_number_popup()
+                    self.animal_type_input.bind(on_text_validate = self.on_enter)
+                    self.animal_number_input.bind(on_text_validate = self.on_enter)
+                    self.popup.open()
+                else:
+                    CHOSEN_VIDEO.video._animal_type = CHOSEN_VIDEO.old_video.animal_type
+                    CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
+                self.enable_ROI_and_preprocessing_tabs = True
+        return not hasattr(self, 'enable_ROI_and_preprocessing_tabs')
 
-            self.video = CHOSEN_VIDEO.video
-        return not hasattr(self, 'video')
+    def enable_validation(self, path, filename):
+        if filename:
+            CHOSEN_VIDEO.set_chosen_item(filename[0])
+            if CHOSEN_VIDEO.video.video_path is not None:
+                self.video = CHOSEN_VIDEO.video
+                self.old_video = CHOSEN_VIDEO.old_video
+        return not (hasattr(self.video, '_has_been_assigned') or hasattr(self.old_video, "_has_been_assigned"))
 
     def create_animal_type_and_number_popup(self):
         self.popup_container = BoxLayout()
@@ -125,7 +139,7 @@ class SelectFile(BoxLayout):
         self.animal_number_input = TextInput(text ='', multiline=False)
         self.animal_number_box.add_widget(self.animal_number_input)
         self.popup_container.add_widget(self.animal_number_box)
-        self.popup = Popup(title='Correcting identity',
+        self.popup = Popup(title='Animal model and number of animals',
                     content=self.popup_container,
                     size_hint=(.4,.4))
 
@@ -139,18 +153,20 @@ class VisualiseVideo(BoxLayout):
         self.footer = BoxLayout()
         self.footer.size_hint = (1.,.2)
 
-    def visualise_video(self, video_object, func = None):
+    def visualise_video(self, video_object, func = None, frame_index_to_start = 0):
         self.video_object = video_object
         self.add_widget(self.display_layout)
         self.add_slider()
         self.add_widget(self.footer)
         self.cap = cv2.VideoCapture(self.video_object.video_path)
-        self.visualise(0, func = func)
+        self.func = func
+        self.video_slider.value = frame_index_to_start
+        self.visualise(frame_index_to_start, func = func)
 
     def add_slider(self):
         self.video_slider = Slider(id='video_slider',
                                 min=0,
-                                max=self.video_object._num_frames,
+                                max=self.video_object._num_frames - 1,
                                 step=1,
                                 value=0,
                                 size_hint=(1.,1.))
@@ -158,9 +174,11 @@ class VisualiseVideo(BoxLayout):
         self.footer.add_widget(self.video_slider)
 
     def visualise(self, trackbar_value, current_segment = 0, func = None):
-        sNumber = self.video_object.in_which_episode(trackbar_value)
-        print('seg number ', sNumber)
+        self.func = func
         print('trackbar_value ', trackbar_value)
+        sNumber = self.video_object.in_which_episode(int(trackbar_value))
+        print('seg number ', sNumber)
+
         sFrame = trackbar_value
 
         if sNumber != current_segment: # we are changing segment
@@ -174,10 +192,10 @@ class VisualiseVideo(BoxLayout):
             self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
             self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbar_value)
-        ret, frame = self.cap.read()
-        if func is None:
-            func = self.simple_visualisation
-        func(frame)
+        ret, self.frame = self.cap.read()
+        if self.func is None:
+            self.func = self.simple_visualisation
+        self.func(self.frame)
 
     def simple_visualisation(self, frame):
         buf1 = cv2.flip(frame, 0)
@@ -191,7 +209,8 @@ class VisualiseVideo(BoxLayout):
         self.initImH = self.height
 
     def get_value(self, instance, value):
-        self.visualise(value)
+
+        self.visualise(value, func = self.func)
 
 class ROISelector(BoxLayout):
     def __init__(self,**kwargs):
@@ -200,8 +219,6 @@ class ROISelector(BoxLayout):
         self.ROIs = [] #store rectangles on the GUI
         self.ROIOut  = [] #pass them to opencv
         self.touches = [] #store touch events on the figure
-        self.visualiser = VisualiseVideo()
-
         self.footer = BoxLayout()
         self.footer.size_hint = (1.,.1)
         self.btn_load_roi = Button(text = "load ROIs")
@@ -216,18 +233,19 @@ class ROISelector(BoxLayout):
         self.btn_load_roi.bind(on_press = self.load_ROI)
         self.btn_no_roi.bind(on_press = self.no_ROI)
         self.btn_clear_roi.bind(on_press = self.delete_ROI)
-
         global CHOSEN_VIDEO
         CHOSEN_VIDEO.bind(chosen=self.do)
 
     def do(self, *args):
-        if hasattr(CHOSEN_VIDEO, "video"):
+        if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
+            self.visualiser = VisualiseVideo()
             self.add_widget(self.visualiser)
             self.add_widget(self.footer)
+            self.window = Window
+            self.window.bind(on_resize=self.updateROIs)
             self.video_object = CHOSEN_VIDEO.video
             self.visualiser.visualise_video(self.video_object)
-            self.ROIcv2 = np.zeros_like(self.visualiser.frame,dtype='uint8')
-            if hasattr(CHOSEN_VIDEO, "old_video"):
+            if hasattr(CHOSEN_VIDEO, "old_video") and CHOSEN_VIDEO.old_video.ROI is not None:
                 self.btn_load_roi.disabled = not hasattr(CHOSEN_VIDEO.old_video, "ROI")
             else:
                 self.btn_load_roi.disabled = True
@@ -238,9 +256,9 @@ class ROISelector(BoxLayout):
         if self.visualiser.display_layout.collide_point(*touch.pos):
             self.touches.append(touch.pos)
         else:
-            self.disable_touch_down_outside_collided_widget()
+            self.disable_touch_down_outside_collided_widget(touch)
 
-    def disable_touch_down_outside_collided_widget(self):
+    def disable_touch_down_outside_collided_widget(self, touch):
         return super(ROISelector, self).on_touch_down(touch)
 
     def on_touch_up(self, touch):
@@ -254,8 +272,8 @@ class ROISelector(BoxLayout):
                     Color(1, 1, 0,.5)
                     self.rect = Rectangle(pos=(rect[0][0], rect[0][1]), size=(rectS[0],rectS[1]))
                     self.ROIs.append(self.rect)
-                    ratioH = self.visualiser.initImH / self.visualiser.display_layout.texture.height
-                    ratioW = self.visualiser.initImW / self.visualiser.display_layout.texture.width
+                    ratioH = self.visualiser.display_layout.height / self.visualiser.display_layout.texture.height
+                    ratioW = self.visualiser.display_layout.width / self.visualiser.display_layout.texture.width
                     newRectP1 = (self.rect.pos[0] / ratioW, (self.rect.pos[0] + self.rect.size[0]) / ratioW)
                     newRectP2 = (self.rect.pos[1] / ratioH, (self.rect.pos[1] + self.rect.size[1]) / ratioH)
                     point1 = (int(newRectP1[0]), int(self.visualiser.frame.shape[1]-newRectP2[0]))
@@ -275,15 +293,33 @@ class ROISelector(BoxLayout):
         except:
             print('Select one ROI first')
 
+    def updateROIs(self, window, width, height):
+        self.cur_image_height = self.visualiser.display_layout.height
+        self.cur_image_width = self.visualiser.display_layout.width
+        if not (self.visualiser.initImH == 100 and self.visualiser.initImW == 100):
+            wRatio = abs(self.cur_image_width / self.visualiser.initImW)
+            hRatio = abs(self.cur_image_height / self.visualiser.initImH)
+
+            for rect in self.ROIs:
+                rect.pos = (rect.pos[0] * wRatio, rect.pos[1] * hRatio)
+                rect.size = (rect.size[0] * wRatio, rect.size[1] * hRatio)
+
+        self.visualiser.initImH = self.cur_image_height
+        self.visualiser.initImW = self.cur_image_width
+
     def save_ROI(self, *args):
+        print("saving ROI")
         if len(self.ROIOut) > 0:
+            self.ROIcv2 = np.zeros_like(self.visualiser.frame,dtype='uint8')
             for p in self.ROIOut:
-                cv2.rectangle(self.ROIcv2,p[0], p[1],255,-1)
+                print("adding rectangles to ROI")
+                print("rect ", p)
+                cv2.rectangle(self.ROIcv2, p[0], p[1], 255, -1)
         CHOSEN_VIDEO.video.ROI = self.ROIcv2
         CHOSEN_VIDEO.video.save()
 
     def no_ROI(self, *args):
-        CHOSEN_VIDEO.video.ROI = np.ones_like(self.frame,dtype='uint8') * 255
+        CHOSEN_VIDEO.video.ROI = np.ones_like(self.visualiser.frame ,dtype='uint8') * 255
         CHOSEN_VIDEO.apply_ROI = False
         CHOSEN_VIDEO.video.save()
 
@@ -308,8 +344,11 @@ class BkgSubtraction(BoxLayout):
         global CHOSEN_VIDEO
 
     def subtract_bkg(self, *args):
-        if hasattr(CHOSEN_VIDEO.old_video, "bkg"):
-            self.bkg = CHOSEN_VIDEO.old_video.bkg
+        if hasattr(CHOSEN_VIDEO.old_video, "bkg") or hasattr(CHOSEN_VIDEO.video, "bkg"):
+            if CHOSEN_VIDEO.old_video.bkg is not None:
+                self.bkg = CHOSEN_VIDEO.old_video.bkg
+            elif CHOSEN_VIDEO.video.bkg is not None:
+                self.bkg = CHOSEN_VIDEO.video.bkg
         else:
             self.compute_bkg()
 
@@ -320,6 +359,7 @@ class BkgSubtraction(BoxLayout):
 
     def compute_bkg(self, *args):
         self.bkg = computeBkg(CHOSEN_VIDEO.video)
+        self.save_bkg()
         self.computing_popup.dismiss()
 
 class PreprocessingPreview(BoxLayout):
@@ -341,18 +381,40 @@ class PreprocessingPreview(BoxLayout):
         self.bkg_subtraction_label.font_size = 16
         self.bkg_subtraction_label.halign =  "center"
         self.bkg_subtraction_label.valign = "middle"
-        self.container_layout.add_widget(self.bkg_subtraction_label)
         #bkg sub switch
         self.bkg_subtractor_switch = Switch()
+        #ROI label
+        self.ROI_label = Label(text = 'apply ROI')
+        self.ROI_label.text_size = self.ROI_label.size
+        self.ROI_label.size = self.ROI_label.texture_size
+        self.ROI_label.font_size = 16
+        self.ROI_label.halign =  "center"
+        self.ROI_label.valign = "middle"
+        self.container_layout.add_widget(self.ROI_label)
+        #ROI switch
+        self.ROI_switch = Switch()
+        self.container_layout.add_widget(self.ROI_switch)
+        self.container_layout.add_widget(self.bkg_subtraction_label)
         self.container_layout.add_widget(self.bkg_subtractor_switch)
-
+        self.count_scrollup = 0
+        self.scale = 1
+        self.ROI_popup_text = Label(text='It seems that the ROI you are trying to apply corresponds to the entire frame. Please, go to the ROI selection tab to select and save a ROI')
+        self.ROI_popup = Popup(title='ROI warning',
+            content=self.ROI_popup_text,
+            size_hint=(.5,.5))
+        self.ROI_popup_text.text_size = self.ROI_popup.size
+        self.ROI_popup_text.size = self.ROI_popup_text.texture_size
+        self.ROI_popup_text.font_size = 16
+        self.ROI_popup_text.halign =  "center"
+        self.ROI_popup_text.valign = "middle"
         self.saving_popup = Popup(title='Saving',
             content=Label(text='wait ...'),
             size_hint=(.3,.3))
+        self.ROI_popup_text.bind(size=lambda s, w: s.setter('text_size')(s, w))
         self.saving_popup.bind(on_open=self.save_preproc)
 
     def init_preproc_parameters(self):
-        if CHOSEN_VIDEO.old_video._has_been_preprocessed == True:
+        if hasattr(CHOSEN_VIDEO, "old_video") and CHOSEN_VIDEO.old_video._has_been_preprocessed == True:
             self.max_threshold = CHOSEN_VIDEO.old_video.max_threshold
             self.min_threshold = CHOSEN_VIDEO.old_video.min_threshold
             self.min_area = CHOSEN_VIDEO.old_video.min_area
@@ -441,27 +503,44 @@ class PreprocessingPreview(BoxLayout):
         # self.load_prec_params_btn.bind(on_press = self.laod_preproc_params)
 
     def do(self, *args):
-        if hasattr(CHOSEN_VIDEO, "video"):
+        if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
             self.init_preproc_parameters()
-            self.ROI = CHOSEN_VIDEO.video.ROI
-            self.bkg = self.check_bkg()
+            self.ROI_switch.bind(active = self.apply_ROI)
+            self.ROI_switch.active = CHOSEN_VIDEO.video.apply_ROI
+            self.bkg_subtractor_switch.active = CHOSEN_VIDEO.video.subtract_bkg
             self.bkg_subtractor_switch.bind(active = self.apply_bkg_subtraction)
-            self.bkg_subtractor_switch.active = self.flag_bkg
-            print 'active? ', self.bkg_subtractor_switch.active
-            #bind the switch to the background loader / computer
-
+            self.bkg = CHOSEN_VIDEO.video.bkg
+            self.ROI = CHOSEN_VIDEO.video.ROI if CHOSEN_VIDEO.video.ROI is not None else np.ones((CHOSEN_VIDEO.video._height, CHOSEN_VIDEO.video._width) ,dtype='uint8') * 255
+            CHOSEN_VIDEO.video.ROI = self.ROI
+            print("ROI in do - preprocessing", self.ROI)
             self.init_segment_zero()
 
+    def apply_ROI(self, instance, active):
+        print("applying ROI")
+        CHOSEN_VIDEO.video.apply_ROI = active
+        if active  == True:
+            num_valid_pxs_in_ROI = len(sum(np.where(CHOSEN_VIDEO.video.ROI == 255)))
+            num_pxs_in_frame = CHOSEN_VIDEO.video._height * CHOSEN_VIDEO.video._width
+            self.ROI_is_trivial = num_pxs_in_frame == num_valid_pxs_in_ROI
+
+            if CHOSEN_VIDEO.video.ROI is not None and not self.ROI_is_trivial:
+                self.ROI = CHOSEN_VIDEO.video.ROI
+            elif self.ROI_is_trivial:
+                self.ROI_popup.open()
+                instance.active = False
+                CHOSEN_VIDEO.apply_ROI = False
+        elif active == False:
+            self.ROI = np.ones((CHOSEN_VIDEO.video._height, CHOSEN_VIDEO.video._width) ,dtype='uint8') * 255
+        self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
+
     def apply_bkg_subtraction(self, instance, active):
-        CHOSEN_VIDEO.get_bkg_path()
-        print 'flag: ', self.flag_bkg
-        print 'instance ', instance
-        print 'active ', active
         CHOSEN_VIDEO.video.subtract_bkg = active
         if CHOSEN_VIDEO.video.subtract_bkg == True:
             self.bkg_subtractor.subtract_bkg()
-        self.visualiser.visualise_video(self.videoSlider.value)
-        return self.flag_bkg
+            self.bkg = self.bkg_subtractor.bkg
+        else:
+            self.bkg = None
+        return active
 
     def add_widget_list(self):
         for w in self.w_list:
@@ -469,19 +548,20 @@ class PreprocessingPreview(BoxLayout):
 
     def update_max_th_lbl(self,instance, value):
         self.max_threshold_lbl.text = "Max threshold:\n" +  str(int(value))
-        self.show_preprocessing(self.videoSlider.value)
+        self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def update_min_th_lbl(self,instance, value):
         self.min_threshold_lbl.text = "Min threshold:\n" + str(int(value))
-        self.show_preprocessing(self.videoSlider.value)
+        self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
+        # self.show_preprocessing(self.frame)
 
     def update_max_area_lbl(self,instance, value):
         self.max_area_lbl.text = "Max area:\n" + str(int(value))
-        self.show_preprocessing(self.videoSlider.value)
+        self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def update_min_area_lbl(self,instance, value):
         self.min_area_lbl.text = "Min area:\n" + str(int(value))
-        self.show_preprocessing(self.videoSlider.value)
+        self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def save_preproc_params(self):
         self.saving_popup.open()
@@ -498,31 +578,26 @@ class PreprocessingPreview(BoxLayout):
         # create instance of video shower
         self.visualiser = VisualiseVideo()
         self.add_widget(self.visualiser)
-        self.visualiser.visualise_video(self.CHOSEN_VIDEO.video, func = self.show_preprocessing)
+        self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.show_preprocessing)
         self.currentSegment = 0
         #create layout for video and slider
-        self.video_layout_preprocessing = BoxLayout(orientation = 'vertical')
-        self.add_widget(self.video_layout_preprocessing)
+        # self.button_layout = BoxLayout(orientation="horizontal", size_hint=(1.,.1))
+        # self.button_layout.add_widget(self.load_prec_params_btn)
+        # self.button_layout.add_widget(self.segment_video_btn)
+        # self.video_layout_preprocessing.add_widget(self.button_layout)
 
-        #create image to store the video
-        self.video_layout_preprocessing.add_widget(self.video_shower)
-        self.video_layout_preprocessing.add_widget(self.sliderBox)
-        self.button_layout = BoxLayout(orientation="horizontal", size_hint=(1.,.1))
-        self.button_layout.add_widget(self.load_prec_params_btn)
-        self.button_layout.add_widget(self.segment_video_btn)
-        self.video_layout_preprocessing.add_widget(self.button_layout)
-
-        self.show_preprocessing()
-
-    def show_preprocessing(self, value = 0):
+    def show_preprocessing(self, frame):
         # pass frame to grayscale
-        self.frame = cv2.cvtColor( frame, cv2.COLOR_RGB2GRAY )
+        if len(frame.shape) > 2:
+            self.frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY )
+        else:
+            self.frame = frame
         # compute average intensity
         avIntensity = np.float32(np.mean(self.frame))
         # generate a averaged frame for segmentation
         self.av_frame = self.frame / avIntensity
         # threshold the frame according to the sliders' values
-        print 'this is the current background ', self.bkg
+        print('this is the current background ', self.bkg)
         self.segmented_frame = segmentVideo(self.av_frame,
                                             int(self.min_threshold_slider.value),
                                             int(self.max_threshold_slider.value),
@@ -530,78 +605,74 @@ class PreprocessingPreview(BoxLayout):
                                             self.ROI,
                                             self.bkg_subtractor_switch.active)
         #get information on the blobs find by thresholding
-        boundingBoxes, miniFrames, _, _, _, goodContours, bkgSamples = blobExtractor(self.segmented_frame,
-                                                                                    self.frame,
-                                                                                    int(self.min_area_slider.value),
-                                                                                    int(self.max_area_slider.value),
-                                                                                    self.video_height,
-                                                                                    self.video_width)
+        boundingBoxes, miniFrames, _, _, _, goodContours = blobExtractor(self.segmented_frame,
+                                                                        self.frame,
+                                                                        int(self.min_area_slider.value),
+                                                                        int(self.max_area_slider.value),
+                                                                        CHOSEN_VIDEO.video._height,
+                                                                        CHOSEN_VIDEO.video._width)
         #draw the blobs on the original frame
         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)
         #display the segmentation
-        if self.video_shower.count_scrollup != 0:
-            self.dst = cv2.warpAffine(self.frame,self.video_shower.M,(self.video_width, self.video_height))
+        if self.count_scrollup != 0:
+            self.dst = cv2.warpAffine(self.frame, self.M, (CHOSEN_VIDEO.video._width, CHOSEN_VIDEO.video._height))
             buf1 = cv2.flip(self.dst,0)
         else:
             buf1 = cv2.flip(self.frame, 0)
 
         buf = buf1.tostring()
-        textureFrame = Texture.create(size=(self.video_width, self.video_height), colorfmt='luminance')
+        textureFrame = Texture.create(size=(CHOSEN_VIDEO.video._width, CHOSEN_VIDEO.video._height), colorfmt='luminance')
         textureFrame.blit_buffer(buf, colorfmt='luminance', bufferfmt='ubyte')
         # display image from the texture
-        self.video_shower.show_frame_preprocessing.texture = textureFrame
-
-    def on_slider_value_change(self,instance,value):
-        self.sliderValue.text = 'frame ' + str(int(value))
-        self.show_preprocessing(int(value))
+        self.visualiser.display_layout.texture = textureFrame
 
     def fromShowFrameToTexture(self, coords):
         """
-        Maps coordinate in show_frame_preprocessing (the image whose texture is the frame) to
+        Maps coordinate in visualiser.display_layout (the image whose texture is the frame) to
         the coordinates of the original image
         """
         coords = np.asarray(coords)
-        origFrameW = self.video_width
-        origFrameH = self.video_height
+        origFrameW = CHOSEN_VIDEO.video._width
+        origFrameH = CHOSEN_VIDEO.video._height
 
-        actualFrameW, actualFrameH = self.video_shower.show_frame_preprocessing.size
-        self.y_offset = self.sliderBox.height + self.button_layout.height
-        self.x_offset = self.container_layout.width
-        coords[0] = coords[0] - self.x_offset
-        coords[1] = coords[1] - self.y_offset
-        wRatio = abs(origFrameW / actualFrameW)
-        hRatio = abs(origFrameH / actualFrameH)
-        ratios = np.asarray([wRatio, hRatio])
-        coords =  np.multiply(coords, ratios)
-        coords[1] = origFrameH - coords[1]
+        # actualFrameW, actualFrameH = self.visualiser.display_layout.size
+        # self.y_offset = self.sliderBox.height + self.button_layout.height
+        # self.x_offset = self.container_layout.width
+        # coords[0] = coords[0] - self.x_offset
+        # coords[1] = coords[1] - self.y_offset
+        # wRatio = abs(origFrameW / actualFrameW)
+        # hRatio = abs(origFrameH / actualFrameH)
+        # ratios = np.asarray([wRatio, hRatio])
+        # coords =  np.multiply(coords, ratios)
+        # coords[1] = origFrameH - coords[1]
         return coords
 
     def on_touch_down(self, touch):
         self.touches = []
-        print 'scrollup number ', self.count_scrollup
-        if self.parent is not None and self.show_frame_preprocessing.collide_point(*touch.pos):
-            print 'i think you are on the image'
+        print( 'scrollup number ', self.count_scrollup)
+        if self.parent is not None and self.visualiser.display_layout.collide_point(*touch.pos):
+            print( 'i think you are on the image')
             if touch.button == 'scrollup':
                 self.count_scrollup += 1
 
-                coords = self.parent.parent.fromShowFrameToTexture(touch.pos)
-                rows,cols = self.parent.parent.frame.shape
+                coords = self.fromShowFrameToTexture(touch.pos)
+                rows,cols = self.frame.shape
                 self.scale = 1.5 * self.count_scrollup
                 self.M = cv2.getRotationMatrix2D((coords[0],coords[1]),0,self.scale)
-                self.dst = cv2.warpAffine(self.parent.parent.frame,self.M,(cols,rows))
+                self.dst = cv2.warpAffine(self.frame,self.M,(cols,rows))
                 buf1 = cv2.flip(self.dst, 0)
                 buf = buf1.tostring()
                 textureFrame = Texture.create(size=(self.dst.shape[1], self.dst.shape[0]),
                                             colorfmt='luminance')
                 textureFrame.blit_buffer(buf,
                                         colorfmt='luminance', bufferfmt='ubyte')
-                self.show_frame_preprocessing.texture = textureFrame
+                self.visualiser.display_layout.texture = textureFrame
 
             elif touch.button == 'scrolldown':
                 # frame = self.parent.frame
-                coords = self.parent.parent.fromShowFrameToTexture(touch.pos)
-                rows,cols = self.parent.parent.frame.shape
-                self.dst = self.parent.parent.frame
+                coords = self.fromShowFrameToTexture(touch.pos)
+                rows,cols = self.frame.shape
+                self.dst = self.frame
                 buf1 = cv2.flip(self.dst, 0)
                 buf = buf1.tostring()
                 textureFrame = Texture.create(size=(self.dst.shape[1], self.dst.shape[0]),
@@ -609,55 +680,323 @@ class PreprocessingPreview(BoxLayout):
                 textureFrame.blit_buffer(buf,
                                         colorfmt='luminance',
                                         bufferfmt='ubyte')
-                self.show_frame_preprocessing.texture = textureFrame
+                self.visualiser.display_layout.texture = textureFrame
                 self.count_scrollup = 0
 
         else:
             self.scale = 1
+            self.disable_touch_down_outside_collided_widget(touch)
 
-# class VideoShowerPreprocessing(BoxLayout):
-#     def __init__(self, **kwargs):
-#         super(VideoShowerPreprocessing, self).__init__(**kwargs)
-#         self.id="video_layout_validation"
-#         self.orientation = "vertical"
-#         self.show_frame_preprocessing = Image(keep_ratio=False, allow_stretch=True, size_hint = (1.,1.))
-#         self.add_widget(self.show_frame_preprocessing)
-#         self.count_scrollup = 0
-#         self.scale = 1
-#
-#     def on_touch_down(self, touch):
-#         self.touches = []
-#         print 'scrollup number ', self.count_scrollup
-#         if self.parent is not None and self.show_frame_preprocessing.collide_point(*touch.pos):
-#             print 'i think you are on the image'
-#             if touch.button == 'scrollup':
-#                 self.count_scrollup += 1
-#
-#                 coords = self.parent.parent.fromShowFrameToTexture(touch.pos)
-#                 rows,cols = self.parent.parent.frame.shape
-#                 self.scale = 1.5 * self.count_scrollup
-#                 self.M = cv2.getRotationMatrix2D((coords[0],coords[1]),0,self.scale)
-#                 self.dst = cv2.warpAffine(self.parent.parent.frame,self.M,(cols,rows))
-#                 buf1 = cv2.flip(self.dst, 0)
-#                 buf = buf1.tostring()
-#                 textureFrame = Texture.create(size=(self.dst.shape[1], self.dst.shape[0]), colorfmt='luminance')
-#                 textureFrame.blit_buffer(buf, colorfmt='luminance', bufferfmt='ubyte')
-#                 self.show_frame_preprocessing.texture = textureFrame
-#
-#             elif touch.button == 'scrolldown':
-#                 # frame = self.parent.frame
-#                 coords = self.parent.parent.fromShowFrameToTexture(touch.pos)
-#                 rows,cols = self.parent.parent.frame.shape
-#                 self.dst = self.parent.parent.frame
-#                 buf1 = cv2.flip(self.dst, 0)
-#                 buf = buf1.tostring()
-#                 textureFrame = Texture.create(size=(self.dst.shape[1], self.dst.shape[0]), colorfmt='luminance')
-#                 textureFrame.blit_buffer(buf, colorfmt='luminance', bufferfmt='ubyte')
-#                 self.show_frame_preprocessing.texture = textureFrame
-#                 self.count_scrollup = 0
-#
-#         else:
-#             self.scale = 1
+    def disable_touch_down_outside_collided_widget(self, touch):
+        return super(PreprocessingPreview, self).on_touch_down(touch)
+
+class Accumulator(BoxLayout):
+    def __init__(self, **kwargs):
+        super(Accumulator, self).__init__(**kwargs)
+        global CHOSEN_VIDEO
+        CHOSEN_VIDEO.bind(chosen=self.do)
+
+    def do(self, *args):
+        if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
+            if CHOSEN_VIDEO.video._has_been_assigned == True or  CHOSEN_VIDEO.old_video._has_been_assigned == True:
+                return False
+            else:
+                return True
+
+
+
+class Validator(BoxLayout):
+    def __init__(self, **kwargs):
+        super(Validator, self).__init__(**kwargs)
+        global CHOSEN_VIDEO
+        CHOSEN_VIDEO.bind(chosen=self.do)
+        #it should not happen, but a warning just in case
+        self.warning_popup = Popup(title = 'Warning',
+                            content = Label(text = 'The video has not been tracked yet. Track it before performing validation.'),
+                            size_hint = (.3,.3))
+        self.warning_popup.bind(size=lambda s, w: s.setter('text_size')(s, w))
+
+    def show_saving(self, *args):
+        self.popup_saving = Popup(title='Saving',
+            content=Label(text='wait ...'),
+            size_hint=(.3,.3))
+        self.popup_saving.open()
+
+    def showLoading(self):
+        self.popup = Popup(title='Loading',
+            content=Label(text='wait ...'),
+            size_hint=(.3,.3))
+        self.popup.open()
+
+    # @staticmethod
+    def get_first_frame(self):
+        print("in get first frame")
+        self.global_fragments = np.load(CHOSEN_VIDEO.old_video.global_fragments_path)
+        max_distance_travelled_global_fragment = order_global_fragments_by_distance_travelled(self.global_fragments)[0]
+        print("my best fucking core", max_distance_travelled_global_fragment.index_beginning_of_fragment)
+        return max_distance_travelled_global_fragment.index_beginning_of_fragment
+
+    def do(self, *args):
+        if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
+            print("video has path")
+            if CHOSEN_VIDEO.video._has_been_assigned == True:
+                print("current video has been assigned")
+                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
+                self.blobs_in_video = list_of_blobs.blobs_in_video
+            elif CHOSEN_VIDEO.old_video._has_been_assigned == True:
+                print("old video has been assigned")
+                CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
+                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
+                self.blobs_in_video = list_of_blobs.blobs_in_video
+            #init variables used for zooming
+            self.count_scrollup = 0
+            self.scale = 1
+            #init elements in the self widget
+            self.init_segmentZero()
+
+        else:
+            print("no assignment done")
+            self.warning_popup.open()
+
+    def init_segmentZero(self):
+        #create and add widget to visualise the tracked video
+        self.visualiser = VisualiseVideo()
+        self.add_widget(self.visualiser)
+        #get colors to visualise trajectories and so on
+        self.colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals)
+        #create and add layout for buttons
+        self.button_box = BoxLayout(orientation='vertical', size_hint=(.3,1.))
+        self.add_widget(self.button_box)
+        #create, add and bind button: go to next crossing
+        self.cross_button = Button(id='crossing_btn', text='Go to next crossing', size_hint=(1,1))
+        self.cross_button.bind(on_press=self.goToCrossing)
+        self.button_box.add_widget(self.cross_button)
+        #create, add and bind button: save groundtruth
+        self.save_groundtruth_btn = Button(id='save_groundtruth_btn', text='Save updated identities',size_hint = (1,1))
+        self.save_groundtruth_btn.bind(on_press=self.show_saving)
+        self.save_groundtruth_btn.bind(on_release=self.save_groundtruth)
+        self.save_groundtruth_btn.disabled = True
+        # add buttons to the button layout
+        self.button_box.add_widget(self.save_groundtruth_btn)
+        #start visualising the video
+        self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.writeIds, frame_index_to_start = self.get_first_frame())
+
+    def goToCrossing(self,instance):
+        non_crossing = True
+        #get frame index from the slider initialised in visualiser
+        frame_index = int(self.visualiser.video_slider.value)
+        #for every subsequent frame check the blobs and stop if a crossing (or a jump) occurs
+        while unCross == True:
+            frame_index = frame_index + 1
+            blobs_in_frame = self.blobs_in_video[frame_index]
+            for blob in blobs_in_frame:
+                if not blob.is_a_fish_in_a_fragment:
+                    non_crossing = False
+                    self.visualiser.video_slider.value = frame_index
+                    self.visualiser.visualise(frame_index, func = self.writeIds)
+
+    @staticmethod
+    def getNearestCentroid(point, cents):
+        """
+        Finds the nearest neighbour in cents with respect to point (in 2D)
+        """
+        point = np.asarray(point)
+        cents_x = cents[:,0]
+        cents_y = cents[:,1]
+        dist_x = cents_x - point[0]
+        dist_y = cents_y - point[1]
+        distances = dist_x**2 + dist_y**2
+        return np.argmin(distances)
+
+    def correctIdentity(self):
+        mouse_coords = self.touches[0]
+        mouse_coords = self.fromShowFrameToTexture(mouse_coords)
+        frame_index = int(self.visualiser.video_shower.value) #get the current frame from the slider
+        blobs_in_frame = self.blobs_in_video[frame_index]
+        centroids = np.asarray([getattr(blob, "centroid") for blob in blobs_in_frame])
+        if self.scale != 1:
+            print('transformation: ', self.M)
+            print('zoom shape ', self.dst.shape)
+            R = self.M[:,:-1]
+            T = self.M[:,-1]
+            centroids = [np.dot(R, centroid) + T for centroid in centroids]
+
+        print('transformed centroids ', centroids)
+        centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
+        blob_to_modify = blobs_in_frame[centroid_ind]
+        return blob_to_modify
+
+    def fromShowFrameToTexture(self, coords):
+        """
+        Maps coordinate in showFrame (the image whose texture is the frame) to
+        the coordinates of the original image
+        """
+        coords = np.asarray(coords)
+        original_frame_width = CHOSEN_VIDEO.video._width
+        original_frame_height = CHOSEN_VIDEO.video._height
+
+        actual_frame_width, actual_frame_height = self.visualiser.display_layout.size
+        self.offset = self.visualiser.footer.height
+        coords[1] = coords[1] - self.offset
+        wRatio = abs(original_frame_width / actual_frame_width)
+        hRatio = abs(original_frame_height / actual_frame_height)
+        ratios = np.asarray([wRatio, hRatio])
+        coords =  np.multiply(coords, ratios)
+        coords[1] = original_frame_height - coords[1]
+        return coords
+
+    @staticmethod
+    def get_attributes_from_blobs_in_frame(blobs_in_frame, attributes_to_get):
+        return {attr: [getattr(blob, attr) for blob in blobs_in_frame] for attr in attributes_to_get}
+
+    def writeIds(self, frame):
+        print("core best global frag ", int(self.visualiser.video_slider.value))
+        blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        attributes_to_get = ["centroid",  "pixels", "identity"]###TODO separate noses from portraits in main code
+        attributes_dict = self.get_attributes_from_blobs_in_frame(blobs_in_frame, attributes_to_get)
+        frame = self.visualiser.frame
+
+        for centroid, identity in zip(attributes_dict['centroid'], attributes_dict['identity']):
+            fontSize = .5
+            text = str(identity)
+            thickness = 2
+            cv2.putText(frame, str(identity),(centroid[0] - 10, centroid[1] - 10) , font, 1, self.colors[identity],2)
+            cv2.circle(frame, tuple(centroid), 2, self.colors[identity], 2)
+
+        # Visualization of the process
+        if self.scale != 1:
+            self.dst = cv2.warpAffine(frame, self.M, (frame.shape[1], frame.shape[0]))
+            buf = cv2.flip(self.dst,0)
+            buf = self.dst.tostring()
+        else:
+            buf = cv2.flip(frame,0)
+            buf = buf.tostring()
+
+        textureFrame = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+        textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
+        # display image from the texture
+        self.visualiser.display_layout.texture = textureFrame
+
+    def on_enter(self,value):
+        self.identity_update = int(self.identityInput.text)
+        print(self.identity_update)
+        self.overwriteIdentity()
+        self.popup.dismiss()
+
+    def propagate_groundtruth_identity_in_individual_fragment(self, blob):
+        if blob.is_a_fish_in_a_fragment:
+            current = blob
+
+            while current.next[0].is_a_fish_in_a_fragment:
+                current.next[0].user_generated_identity = current.user_generated_identity
+                current = current.next[0]
+
+            current = blob
+
+            while current.previous[0].is_a_fish_in_a_fragment:
+                current.previous[0].user_generated_identity = current.user_generated_identity
+                current = current.previous[0]
+
+    def overwriteIdentity(self):
+        self.save_groundtruth_btn.disabled = False
+        frame_index = int(self.visualiser.video_slider.value)
+        blob_to_modify = self.correctIdentity()
+        blob_to_modify.user_generated_identity = self.identity_update
+        self.propagate_groundtruth_identity_in_individual_fragment(blob_to_modify)
+        self.writeIds(value = int(self.visualiser.video_slider.value))
+
+    def on_press_show_saving(selg, *args):
+        self.show_saving()
+
+    def save_groundtruth(self, *args):
+        new_stats = self.stats
+        new_stats['fragmentIds'] = self.allIdentities
+        pathToGroundtruth = self.sessionPath + "/groundtruth.pkl"
+        pickle.dump( new_stats , open( pathToGroundtruth, "wb" ) )
+        self.popup_saving.dismiss()
+
+    def go_and_save(self, path, dict_to_save):
+        blobs_list = ListOfBlobs(blobs_in_video = self.blobs_in_video, path_to_save = video.validation_path)
+        blobs_list.generate_cut_points(10)
+        blobs_list.cut_in_chunks()
+        blobs_list.save()
+        video.save()
+
+    def modifyIdOpenPopup(self, id_to_modify):
+        self.container = BoxLayout()
+        self.id_to_modify = id_to_modify
+        text = str(self.id_to_modify + 1)
+        self.old_id_box = BoxLayout(orientation="vertical")
+        self.new_id_box = BoxLayout(orientation="vertical")
+        self.selected_label = Label(text='You selected animal:\n')
+        self.selected_label_num = Label(text=text)
+        self.selected_label.text_size = self.selected_label.size
+        self.selected_label.texture_size = self.selected_label.size
+        self.new_id_label = Label(text='Type the new identity and press enter to confirm\n')
+        self.new_id_label.text_size = self.new_id_label.size
+        self.new_id_label.texture_size = self.new_id_label.size
+        self.container.add_widget(self.old_id_box)
+        self.container.add_widget(self.new_id_box)
+
+        self.old_id_box.add_widget(self.selected_label)
+        self.old_id_box.add_widget(self.selected_label_num)
+
+        self.new_id_box.add_widget(self.new_id_label)
+        self.identityInput = TextInput(text ='', multiline=False)
+        self.new_id_box.add_widget(self.identityInput)
+
+        self.popup = Popup(title='Correcting identity',
+            content=self.container,
+            size_hint=(.4,.4))
+        self.popup.color = (0.,0.,0.,0.)
+        self.identityInput.bind(on_text_validate=self.on_enter)
+        self.popup.open()
+
+    def on_touch_down(self, touch):
+        self.touches = []
+        print('scrollup number ', self.count_scrollup)
+        if self.parent is not None and self.visualiser.display_layout.collide_point(*touch.pos):
+            if touch.button =='left':
+                self.touches.append(touch.pos)
+                self.parent.id_to_modify = self.parent.correctIdentity()
+                print('fish id to modify: ', self.parent.id_to_modify)
+                self.modifyIdOpenPopup(self.parent.id_to_modify)
+
+            elif touch.button == 'scrollup':
+                self.count_scrollup += 1
+
+                coords = self.parent.fromShowFrameToTexture(touch.pos)
+                rows,cols, channels = self.parent.frame.shape
+                self.scale = 1.5 * self.count_scrollup
+                self.M = cv2.getRotationMatrix2D((coords[0],coords[1]),0,self.scale)
+                self.dst = cv2.warpAffine(self.parent.frame,self.M,(cols,rows))
+                buf1 = cv2.flip(self.dst, 0)
+                buf = buf1.tostring()
+                textureFrame = Texture.create(size=(self.dst.shape[1], self.dst.shape[0]), colorfmt='bgr')
+                textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
+                self.visualiser.display_layout.texture = textureFrame
+
+            elif touch.button == 'scrolldown':
+                # frame = self.parent.frame
+                coords = self.fromShowFrameToTexture(touch.pos)
+                rows,cols, channels = self.visualiser.frame.shape
+                self.dst = self.visualiser.frame
+                buf = buf1.tostring()
+                textureFrame = Texture.create(size=(self.dst.shape[1], self.dst.shape[0]), colorfmt='bgr')
+                textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
+                self.visualiser.display_layout.texture = textureFrame
+                self.count_scrollup = 0
+
+            elif touch.button == 'right':
+                pass
+        else:
+            self.scale = 1
+            self.disable_touch_down_outside_collided_widget(touch)
+
+    def disable_touch_down_outside_collided_widget(self, touch):
+        return super(Validator, self).on_touch_down(touch)
+
 
 class Root(TabbedPanel):
 
@@ -679,6 +1018,8 @@ class MainWindow(BoxLayout):
 
 class idtrackerdeepApp(App):
     Config.set('kivy', 'keyboard_mode', '')
+    Config.set('graphics', 'fullscreen', '0')
+
     Config.write()
     def build(self):
         return MainWindow()

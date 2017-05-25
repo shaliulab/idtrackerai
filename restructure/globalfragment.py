@@ -155,7 +155,7 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
     lengths = []
     for global_fragment in global_fragments:
         print("\ngetting images from global fragment")
-        print(individual_fragments_identifiers_already_used)
+        # print(individual_fragments_identifiers_already_used)
         images_global_fragment, labels_global_fragment, lengths_global_fragment, individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_identifiers_already_used)
         # print("len(images_global_fragment) ", len(images_global_fragment))
         # print("len(labels_global_fragment) ", len(labels_global_fragment))
