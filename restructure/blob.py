@@ -181,6 +181,7 @@ class Blob(object):
             while current.previous[0].is_a_fish_in_a_fragment:
                 current = current.previous[0]
                 portraits.append(current.portrait[0])
+
         return portraits
 
     def identities_in_fragment(self):

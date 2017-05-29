@@ -11,8 +11,6 @@ import time
 from blob import Blob, compute_fragment_identifier_and_blob_index
 from globalfragment import give_me_list_of_global_fragments, order_global_fragments_by_distance_travelled
 
-
-
 class BlobsListConfig(object):
     def __init__(self,number_of_animals = None, number_of_frames_per_fragment = None, number_of_frames = None, repetition = None):
         self.number_of_animals = number_of_animals
@@ -60,8 +58,8 @@ def generate_list_of_blobs(portraits, centroids, config):
             blob = Blob(centroid, None, None, None,
                         number_of_animals = config.number_of_animals)
             blob.frame_number = frame_number
-            blob.portrait = image
-            blob._user_generated_identity = identity
+            blob.portrait = (image,None,None)
+            blob._user_generated_identity = identity + 1
 
             if frame_number > 0 and frames_in_fragment <= config.number_of_frames_per_fragment + 2 and frames_in_fragment != 0:
                 blob.previous = [blobs_in_video[frame_number-1][identity]]

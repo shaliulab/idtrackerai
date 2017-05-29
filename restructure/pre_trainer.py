@@ -41,7 +41,9 @@ def pre_train(video, blobs_in_video, pretraining_global_fragments, params, store
         training_dataset.standarize_images()
         validation_dataset.standarize_images()
         # Crop images from 36x36 to 32x32 without performing data augmentation
+        # print("\ntraining images shape, ", training_dataset.images.shape)
         training_dataset.crop_images(image_size = 32)
+        # print("validation images shape, ", validation_dataset.images.shape)
         validation_dataset.crop_images(image_size = 32)
         # Convert labels to one hot vectors
         training_dataset.convert_labels_to_one_hot()

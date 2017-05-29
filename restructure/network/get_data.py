@@ -34,6 +34,8 @@ class DataSet(object):
         :param shift (tuple): (x,y) displacement when cropping, it can only go from -max_shift to +max_shift
         """
         current_size = self.images.shape[1]
+        # print(current_size)
+        # print(self.images.shape)
         try:
             shift = np.divide(current_size - image_size,2)
             self.images = self.images[:,shift:current_size-shift,shift:current_size-shift,:]
