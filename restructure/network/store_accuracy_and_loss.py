@@ -60,6 +60,9 @@ class Store_Accuracy_and_Loss(object):
             # print("individual fragments starts and ends: ", global_fragment.starts_ends_individual_fragments)
             for i, (start, end) in enumerate(global_fragment.starts_ends_individual_fragments):
                 blob_index = blobs_in_video[global_fragment.index_beginning_of_fragment][i].blob_index
+                # print("used for training ", global_fragment._used_for_training)
+                # print("ids assigned, ", global_fragment._ids_assigned)
+                # print("blob index, ", blob_index)
                 ax4.add_patch(
                     patches.Rectangle(
                         (start, blob_index - 0.5),   # (x,y)
@@ -67,7 +70,7 @@ class Store_Accuracy_and_Loss(object):
                         1.,          # height
                         fill=True,
                         edgecolor=None,
-                        facecolor=colors[int(global_fragment._ids_assigned[i]) if global_fragment._used_for_training else int(blob_index)],
+                        facecolor=colors[int(global_fragment._ids_assigned[i]) if global_fragment._used_for_training else i],
                         alpha = 1.
                     )
                 )

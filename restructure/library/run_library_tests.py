@@ -34,13 +34,12 @@ from assigner import assign, assign_identity_to_blobs_in_video, compute_P1_for_b
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
-NUM_CHUNKS_BLOB_SAVING = 150 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
+NUM_CHUNKS_BLOB_SAVING = 50 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
 ###
 np.random.seed(0)
 ###
 if __name__ == '__main__':
-    cv2.namedWindow('Bars') #FIXME If we do not create the "Bars" window here we have the "Bad window error"...
     video_path = selectFile() #select path to video
     video = Video() #instantiate object video
     video.video_path = video_path #set path
@@ -53,45 +52,8 @@ if __name__ == '__main__':
     #### parameters are then saved. The same GUI gives the   ####
     #### possibility to load them.                           ####
     #############################################################
-    #Asking user whether to reuse preprocessing steps...'
-    reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previous preprocessing? ([y]/n)')
-    processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
-    #get existent files and paths to load them
-    existentFiles, old_video = getExistentFiles(video, processes_list)
-    if reUseAll == 'n':
-        #############################################################
-        ############ Select preprocessing parameters   ##############
-        ####                                                     ####
-        #############################################################
-        prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to do BKG or select a ROI?  ')
-        video.subtract_bkg = bool(prepOpts['bkg'])
-        video.apply_ROI =  bool(prepOpts['ROI'])
-        print('\nLooking for finished steps in previous session...')
-        #selecting files to load from previous session...'
-        loadPreviousDict = selectOptions(processes_list, existentFiles, text='Steps already processed in this video \n (loaded from ' + video._video_folder + ')')
-        #use previous values and parameters (bkg, roi, preprocessing parameters)?
-        usePreviousROI = loadPreviousDict['ROI']
-        usePreviousBkg = loadPreviousDict['bkg']
-        usePreviousPrecParams = loadPreviousDict['preprocparams']
-        print("video session folder, ", video._session_folder)
-        #ROI selection/loading
-        video.ROI = ROISelectorPreview(video, old_video, usePreviousROI)
-        print("video session folder, ", video._session_folder)
-        #BKG computation/loading
-        video.bkg = checkBkg(video, old_video, usePreviousBkg)
-        print("video session folder, ", video._session_folder)
-        #Selection/loading preprocessing parameters
-        selectPreprocParams(video, old_video, usePreviousPrecParams)
-        print("video session folder, ", video._session_folder)
-        video.save()
-        print('The parameters used to preprocess the video are ')
-        pprint({key: getattr(video, key) for key in video.__dict__ if 'ROI' in key or 'bkg' in key})
-        #Loading logo during preprocessing
-        img = cv2.imread('../utils/loadingIdDeep.png')
-        cv2.imshow('Bars',img)
-        cv2.waitKey(1000)
-        cv2.destroyAllWindows()
-        cv2.waitKey(1)
+
+
         #############################################################
         ####################  Preprocessing   #######################
         #### 1. detect blobs in the video according to parameters####
@@ -106,9 +68,7 @@ if __name__ == '__main__':
         #### save them for future use                            ####
         #############################################################
         #destroy windows to prevent openCV errors
-        cv2.waitKey(1)
-        cv2.destroyAllWindows()
-        cv2.waitKey(1)
+
         if not loadPreviousDict['preprocessing']:
             print("\n**** Preprocessing ****\n")
             #cv2.namedWindow('Bars')
@@ -365,7 +325,6 @@ if __name__ == '__main__':
             blobs_list.save()
             video.save()
             # visualise proposed tracking
-            print("ready to visualise assignation")
             frame_by_frame_identity_inspector(video, blobs)
         else:
             # Set preprocessed flag to True
@@ -379,9 +338,9 @@ if __name__ == '__main__':
             frame_by_frame_identity_inspector(video, blobs)
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
-
-        video._blobs_path = old_video.blobs_path
-        video._global_fragments_path = old_video.global_fragments_path
+        old_video = Video()
+        old_video.video_path = video_path
+        video = np.load(old_video._path_to_video_object).item()
         list_of_blobs = ListOfBlobs.load(video.blobs_path)
         blobs = list_of_blobs.blobs_in_video
         global_fragments = np.load(video.global_fragments_path)
