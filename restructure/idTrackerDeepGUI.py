@@ -22,7 +22,8 @@ from blob import compute_fragment_identifier_and_blob_index,\
                 connect_blob_list,\
                 apply_model_area_to_video,\
                 ListOfBlobs,\
-                get_images_from_blobs_in_video
+                get_images_from_blobs_in_video,\
+                reset_blobs_fragmentation_parameters
 from globalfragment import compute_model_area,\
                             give_me_list_of_global_fragments,\
                             ModelArea,\
@@ -51,7 +52,8 @@ from assigner import assign,\
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
-NUM_CHUNKS_BLOB_SAVING = 10 * 5 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
+
+NUM_CHUNKS_BLOB_SAVING = 550 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
 ###
 np.random.seed(0)
@@ -128,9 +130,27 @@ if __name__ == '__main__':
         cv2.waitKey(1)
         if not loadPreviousDict['preprocessing']:
             print("\n**** Preprocessing ****\n")
-            cv2.namedWindow('Bars')
+            #cv2.namedWindow('Bars')
             video.create_preprocessing_folder()
-            blobs = segment(video)
+            if not old_video or not old_video._has_been_segmented or usePreviousPrecParams == False:
+                blobs = segment(video)
+                video._has_been_segmented = True
+                blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path_segmented)
+                blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
+                blobs_list.cut_in_chunks()
+                blobs_list.save()
+                print("Blobs segmented saved")
+            else:
+                # Load blobs and global fragments
+                print("It has been segmented")
+                list_of_blobs = ListOfBlobs.load(old_video.blobs_path_segmented)
+                blobs = list_of_blobs.blobs_in_video
+                video._preprocessing_folder = old_video._preprocessing_folder
+                video._blobs_path_segmented = old_video._blobs_path_segmented
+                video._has_been_segmented = True
+                video._maximum_number_of_blobs = old_video.maximum_number_of_blobs
+                reset_blobs_fragmentation_parameters(blobs)
+
             #compute a model of the area of the animals (considering frames in which
             #all the animals are visible)
             model_area = compute_model_area(blobs, video.number_of_animals)
@@ -152,8 +172,9 @@ if __name__ == '__main__':
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
             blobs_list.save()
+            print("Blobs saved")
             #take a look to the resulting fragmentation
-            fragmentation_inspector(video, blobs)
+            #fragmentation_inspector(video, blobs)
         else:
             # Update folders and paths from previous video_object
             video._preprocessing_folder = old_video._preprocessing_folder
@@ -179,19 +200,21 @@ if __name__ == '__main__':
         #### number. num increases each time a training is       ####
         #### launched                                            ####
         #############################################################
+        print("\n**** Pretraining ****\n")
         if not loadPreviousDict['pretraining']:
-            print("\n**** Pretraining ****\n")
-            pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [Y/n]')
+            #pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [Y/n]')
+            pretrain_flag = 'y'
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
-                number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
+                #number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
+                number_of_global_fragments = len(global_fragments)
                 #Reset used_for_training and acceptable_for_training flags
                 if old_video and old_video._accumulation_finished == True:
                     for global_fragment in global_fragments:
                         global_fragment.reset_accumulation_params()
                 try:
                     number_of_global_fragments = int(number_of_global_fragments)
-                    pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments))
+                    pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_pretraining_global_fragments = number_of_global_fragments))
                 except:
                     number_of_global_fragments = len(global_fragments)
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
@@ -233,15 +256,15 @@ if __name__ == '__main__':
             video._has_been_pretrained = True
             video.save()
             # Load blobs and global fragments
-            list_of_blobs = ListOfBlobs.load(video.blobs_path)
-            blobs = list_of_blobs.blobs_in_video
-            global_fragments = np.load(video.global_fragments_path)
+            # list_of_blobs = ListOfBlobs.load(video.blobs_path)
+            # blobs = list_of_blobs.blobs_in_video
+            # global_fragments = np.load(video.global_fragments_path)
         #############################################################
         ###################    Accumulation   #######################
         #### take references in 'good' global fragments          ####
         #############################################################
+        print("\n**** Acumulation ****")
         if not loadPreviousDict['accumulation']:
-            print("\n**** Acumulation ****")
             #create folder to store accumulation models
             video.create_accumulation_folder()
             #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
@@ -332,9 +355,9 @@ if __name__ == '__main__':
             video._accumulation_finished = True
             video.save()
             # Load blobs and global fragments
-            list_of_blobs = ListOfBlobs.load(video.blobs_path)
-            blobs = list_of_blobs.blobs_in_video
-            global_fragments = np.load(video.global_fragments_path)
+            # list_of_blobs = ListOfBlobs.load(video.blobs_path)
+            # blobs = list_of_blobs.blobs_in_video
+            # global_fragments = np.load(video.global_fragments_path)
         #############################################################
         ###################     Assigner      ######################
         ####
@@ -359,10 +382,14 @@ if __name__ == '__main__':
             # visualise proposed tracking
             frame_by_frame_identity_inspector(video, blobs)
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
-            blobs_list.generate_cut_points(10)
+            blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
             blobs_list.save()
             video.save()
+            # visualise proposed tracking
+            print("ready to visualise assignation")
+            frame_by_frame_identity_inspector(video, blobs)
+
         else:
             # Set preprocessed flag to True
             video._has_been_assigned = True
@@ -375,9 +402,9 @@ if __name__ == '__main__':
             frame_by_frame_identity_inspector(video, blobs)
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
-        old_video = Video()
-        old_video.video_path = video_path
-        video = np.load(old_video._path_to_video_object).item()
+
+        video._blobs_path = old_video.blobs_path
+        video._global_fragments_path = old_video.global_fragments_path
         list_of_blobs = ListOfBlobs.load(video.blobs_path)
         blobs = list_of_blobs.blobs_in_video
         global_fragments = np.load(video.global_fragments_path)

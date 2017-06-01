@@ -29,6 +29,8 @@ class Video(object):
         self._has_preprocessing_parameters = False #boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved
         self._maximum_number_of_blobs = 0 #int: the maximum number of blobs detected in the video
         self._blobs_path = None #string: path to the saved list of blob objects
+        self._blobs_path_segmented = None
+        self._has_been_segmented = None
         self._has_been_preprocessed = None #boolean: True if a video has been fragmented in a past session
         self._global_fragments_path = None #string: path to saved list of global fragments
         self._has_been_pretrained = None
@@ -203,6 +205,14 @@ class Video(object):
         if self._has_been_preprocessed:
             self._blobs_path = os.path.join(self._preprocessing_folder, 'blobs_collection.npy')
         return self._blobs_path
+
+    @property
+    def blobs_path_segmented(self):
+        """get the path to save the blob collection after segmentation.
+        It checks that the segmentation has been succesfully performed"""
+        if self._has_been_segmented:
+            self._blobs_path_segmented = os.path.join(self._preprocessing_folder, 'blobs_collection_segmented.npy')
+        return self._blobs_path_segmented
 
     @property
     def global_fragments_path(self):

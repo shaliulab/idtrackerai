@@ -14,6 +14,7 @@ STD_TOLERANCE = 1 # tolerance to select a blob as being a single fish according 
 class Blob(object):
     def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, portrait = None, pixels = None, number_of_animals = None, frame_number = None):
         self.frame_number = frame_number
+        self.number_of_animals = number_of_animals
         self.centroid = np.array(centroid) # numpy array (int64): coordinates of the centroid of the blob in pixels
         self.contour = contour # openCV contour [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]]
         self.area = area # int: number of pixels in the blob
@@ -26,9 +27,9 @@ class Blob(object):
         self._fragment_identifier = None # identity in individual fragment after fragmentation
         self._blob_index = None # index of the blob to plot the individual fragments
         self._identity = None # identity assigned by the algorithm
-        self._frequencies_in_fragment = np.zeros(number_of_animals).astype('int')
-        self._P1_vector = np.zeros(number_of_animals)
-        self._P2_vector = np.zeros(number_of_animals)
+        self._frequencies_in_fragment = np.zeros(self.number_of_animals).astype('int')
+        self._P1_vector = np.zeros(self.number_of_animals)
+        self._P2_vector = np.zeros(self.number_of_animals)
         self._assigned_during_accumulation = False
         self._user_generated_identity = None #in the validation part users can correct manually the identities
 
@@ -114,6 +115,21 @@ class Blob(object):
     def P2_vector(self):
         return self._P2_vector
 
+    def reset_before_fragmentation(self):
+        self.next = [] # next blob object overlapping in pixels with current blob object
+        self.previous = [] # previous blob object overlapping in pixels with the current blob object
+        self._fragment_identifier = None # identity in individual fragment after fragmentation
+        self._blob_index = None # index of the blob to plot the individual fragments
+        self._identity = None # identity assigned by the algorithm
+        self._frequencies_in_fragment = np.zeros(self.number_of_animals).astype('int')
+        self._P1_vector = np.zeros(self.number_of_animals)
+        self._P2_vector = np.zeros(self.number_of_animals)
+        self._assigned_during_accumulation = False
+        self._user_generated_identity = None
+
+
+
+
     def distance_travelled_in_fragment(self):
         distance = 0
         if self.is_a_fish_in_a_fragment:
@@ -164,6 +180,7 @@ class Blob(object):
             while current.previous[0].is_a_fish_in_a_fragment:
                 current = current.previous[0]
                 portraits.append(current.portrait[0])
+
         return portraits
 
     def identities_in_fragment(self):
@@ -278,9 +295,12 @@ class Blob(object):
 def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of_blobs):
     counter = 1
     possible_blob_indices = range(maximum_number_of_blobs)
+    # print("possible_blob_indices ", possible_blob_indices)
     for blobs_in_frame in tqdm(blobs_in_video, desc = 'assigning fragment identifier'):
         used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]
+        # print("used_blob_indices ", used_blob_indices)
         missing_blob_indices =  list(set(possible_blob_indices).difference(set(used_blob_indices)))
+        # print("missing_blob_indices ", missing_blob_indices)
         for blob in blobs_in_frame:
             if blob.fragment_identifier is None and blob.is_a_fish_in_a_fragment:
                 blob.fragment_identifier = counter
@@ -341,6 +361,11 @@ def get_images_from_blobs_in_video(blobs_in_video):
             if blob.is_a_fish_in_a_fragment and not blob.assigned_during_accumulation:
                 portraits_in_video.append(blob.portrait[0])
     return np.asarray(portraits_in_video)
+
+def reset_blobs_fragmentation_parameters(blobs_in_video):
+    for blobs_in_frame in blobs_in_video:
+        for blob in blobs_in_frame:
+            blob.reset_before_fragmentation()
 
 class ListOfBlobs(object):
     def __init__(self, blobs_in_video = None, path_to_save = None):

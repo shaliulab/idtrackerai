@@ -145,9 +145,9 @@ def give_me_list_of_global_fragments(blobs_in_video, num_animals):
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
     return [GlobalFragment(blobs_in_video,i,num_animals) for i in indices_beginning_of_fragment]
 
-def give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = 10):
-    step = len(global_fragments) // number_of_global_fragments
-    split_global_fragments = [global_fragments[i:i + step] for i in range(0, len(global_fragments)-1, step)]
+def give_me_pre_training_global_fragments(global_fragments, number_of_pretraining_global_fragments = 10):
+    indices = np.round(np.linspace(0,len(global_fragments),number_of_pretraining_global_fragments+1)).astype(int)
+    split_global_fragments = [global_fragments[indices[i]:indices[i+1]] for i in range(len(indices)-1)]
     ordered_split_global_fragments = [order_global_fragments_by_distance_travelled(global_fragments_in_split)[0]
                                     for global_fragments_in_split in split_global_fragments]
     return ordered_split_global_fragments
@@ -161,7 +161,7 @@ def get_images_and_labels_from_global_fragment(global_fragment, individual_fragm
     individual_fragments_identifiers = []
     for i, portraits in enumerate(global_fragment.portraits):
         if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_identifiers_already_used:
-            print("This individual fragment has not been used, we take images")
+            # print("This individual fragment has not been used, we take images")
             images.extend(portraits)
             labels.extend([global_fragment._temporary_ids[i]]*len(portraits))
             lengths.append(len(portraits))
@@ -173,7 +173,7 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
     labels = []
     lengths = []
     for global_fragment in global_fragments:
-        print("\ngetting images from global fragment")
+        # print("\ngetting images from global fragment")
         # print(individual_fragments_identifiers_already_used)
         images_global_fragment, labels_global_fragment, lengths_global_fragment, individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_identifiers_already_used)
         # print("len(images_global_fragment) ", len(images_global_fragment))
