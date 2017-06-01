@@ -19,7 +19,7 @@ import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
 from segmentation import segmentVideo, blobExtractor
-from get_portraits import getPortrait, cropPortrait
+from get_portraits import getPortrait, cropPortrait, get_portrait_fly
 # from video_utils import *
 from py_utils import get_spaced_colors_util
 

@@ -35,6 +35,7 @@ import sys
 sys.path.append('../')
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
+sys.setrecursionlimit(10000)
 import cv2
 import numpy as np
 from video import Video
@@ -168,9 +169,10 @@ class VisualiseVideo(BoxLayout):
         self.visualise(frame_index_to_start, func = func)
 
     def add_slider(self):
+        print("------NUM FRAMES ", self.video_object._num_frames)
         self.video_slider = Slider(id='video_slider',
                                 min=0,
-                                max=self.video_object._num_frames - 1,
+                                max= int(self.video_object._num_frames) - 1,
                                 step=1,
                                 value=0,
                                 size_hint=(1.,1.))
@@ -197,9 +199,10 @@ class VisualiseVideo(BoxLayout):
         else:
             self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbar_value)
         ret, self.frame = self.cap.read()
-        if self.func is None:
-            self.func = self.simple_visualisation
-        self.func(self.frame)
+        if ret == True:
+            if self.func is None:
+                self.func = self.simple_visualisation
+            self.func(self.frame)
 
     def simple_visualisation(self, frame):
         buf1 = cv2.flip(frame, 0)
@@ -769,9 +772,13 @@ class Validator(BoxLayout):
         self.button_box = BoxLayout(orientation='vertical', size_hint=(.3,1.))
         self.add_widget(self.button_box)
         #create, add and bind button: go to next crossing
-        self.cross_button = Button(id='crossing_btn', text='Go to next crossing', size_hint=(1,1))
-        self.cross_button.bind(on_press=self.goToCrossing)
-        self.button_box.add_widget(self.cross_button)
+        self.next_cross_button = Button(id='crossing_btn', text='Go to next crossing', size_hint=(1,1))
+        self.next_cross_button.bind(on_press=self.go_to_next_crossing)
+        self.button_box.add_widget(self.next_cross_button)
+        #create, add and bind button: go to previous crossing
+        self.previous_cross_button = Button(id='crossing_btn', text='Go to previous crossing', size_hint=(1,1))
+        self.previous_cross_button.bind(on_press=self.go_to_previous_crossing)
+        self.button_box.add_widget(self.previous_cross_button)
         #create, add and bind button: save groundtruth
         self.save_groundtruth_btn = Button(id='save_groundtruth_btn', text='Save updated identities',size_hint = (1,1))
         self.save_groundtruth_btn.bind(on_press=self.show_saving)
@@ -788,13 +795,27 @@ class Validator(BoxLayout):
         #start visualising the video
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.writeIds, frame_index_to_start = self.get_first_frame())
 
-    def goToCrossing(self,instance):
+    def go_to_next_crossing(self,instance):
         non_crossing = True
         #get frame index from the slider initialised in visualiser
         frame_index = int(self.visualiser.video_slider.value)
         #for every subsequent frame check the blobs and stop if a crossing (or a jump) occurs
         while non_crossing == True:
             frame_index = frame_index + 1
+            blobs_in_frame = self.blobs_in_video[frame_index]
+            for blob in blobs_in_frame:
+                if not blob.is_a_fish_in_a_fragment:
+                    non_crossing = False
+                    self.visualiser.video_slider.value = frame_index
+                    self.visualiser.visualise(frame_index, func = self.writeIds)
+
+    def go_to_previous_crossing(self,instance):
+        non_crossing = True
+        #get frame index from the slider initialised in visualiser
+        frame_index = int(self.visualiser.video_slider.value)
+        #for every subsequent frame check the blobs and stop if a crossing (or a jump) occurs
+        while non_crossing == True:
+            frame_index = frame_index - 1
             blobs_in_frame = self.blobs_in_video[frame_index]
             for blob in blobs_in_frame:
                 if not blob.is_a_fish_in_a_fragment:
@@ -939,7 +960,7 @@ class Validator(BoxLayout):
 
     def go_and_save(self):
         blobs_list = ListOfBlobs(blobs_in_video = self.blobs_in_video, path_to_save = CHOSEN_VIDEO.video.blobs_path)
-        blobs_list.generate_cut_points(10)
+        blobs_list.generate_cut_points(100)
         blobs_list.cut_in_chunks()
         blobs_list.save()
         CHOSEN_VIDEO.video.save()

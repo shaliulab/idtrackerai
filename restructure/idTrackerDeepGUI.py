@@ -18,23 +18,40 @@ sys.path.append('./preprocessing')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
-from blob import compute_fragment_identifier_and_blob_index, connect_blob_list, apply_model_area_to_video, ListOfBlobs, get_images_from_blobs_in_video
-from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, give_me_pre_training_global_fragments
-from globalfragment import get_images_and_labels_from_global_fragments
-from globalfragment import subsample_images_for_last_training, order_global_fragments_by_distance_travelled
+from blob import compute_fragment_identifier_and_blob_index,\
+                connect_blob_list,\
+                apply_model_area_to_video,\
+                ListOfBlobs,\
+                get_images_from_blobs_in_video
+from globalfragment import compute_model_area,\
+                            give_me_list_of_global_fragments,\
+                            ModelArea,\
+                            give_me_pre_training_global_fragments,\
+                            get_images_and_labels_from_global_fragments,\
+                            subsample_images_for_last_training,\
+                            order_global_fragments_by_distance_travelled
 from segmentation import segment
-from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector, frame_by_frame_identity_inspector
+from GUI_utils import selectFile,\
+                        getInput,\
+                        selectOptions,\
+                        ROISelectorPreview,\
+                        selectPreprocParams,\
+                        fragmentation_inspector,\
+                        frame_by_frame_identity_inspector
 from py_utils import getExistentFiles
 from video_utils import checkBkg
 from pre_trainer import pre_train
 from accumulation_manager import AccumulationManager
 from network_params import NetworkParams
 from trainer import train
-from assigner import assign, assign_identity_to_blobs_in_video, compute_P1_for_blobs_in_video, assign_identity_to_blobs_in_video_by_fragment
+from assigner import assign,\
+                    assign_identity_to_blobs_in_video,\
+                    compute_P1_for_blobs_in_video,\
+                    assign_identity_to_blobs_in_video_by_fragment
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
-NUM_CHUNKS_BLOB_SAVING = 10 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
+NUM_CHUNKS_BLOB_SAVING = 10 * 5 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
 ###
 np.random.seed(0)
@@ -228,7 +245,7 @@ if __name__ == '__main__':
             #create folder to store accumulation models
             video.create_accumulation_folder()
             #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
-            if old_video._accumulation_finished == True:
+            if old_video and old_video._accumulation_finished == True:
                 for global_fragment in global_fragments:
                     global_fragment.reset_accumulation_params()
             #set network params for the accumulation model
@@ -338,13 +355,14 @@ if __name__ == '__main__':
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
             # finish and save
             video._has_been_assigned = True
+
+            # visualise proposed tracking
+            frame_by_frame_identity_inspector(video, blobs)
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(10)
             blobs_list.cut_in_chunks()
             blobs_list.save()
             video.save()
-            # visualise proposed tracking
-            frame_by_frame_identity_inspector(video, blobs)
         else:
             # Set preprocessed flag to True
             video._has_been_assigned = True

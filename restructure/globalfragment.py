@@ -5,7 +5,7 @@ import random
 from blob import is_a_global_fragment, check_global_fragments
 from statistics_for_assignment import compute_identification_frequencies_individual_fragment, compute_P1_individual_fragment_from_blob
 
-STD_TOLERANCE = 4 ### NOTE set to 1 because we changed the model area to work with the median.
+STD_TOLERANCE = 1 ### NOTE set to 1 because we changed the model area to work with the median.
 
 def detect_beginnings(boolean_array):
     """ detects the frame where the core of a global fragment starts.
