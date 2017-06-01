@@ -34,7 +34,7 @@ from assigner import assign, assign_identity_to_blobs_in_video, compute_P1_for_b
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
-NUM_CHUNKS_BLOB_SAVING = 150 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
+NUM_CHUNKS_BLOB_SAVING = 550 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
 ###
 np.random.seed(0)
@@ -188,14 +188,14 @@ if __name__ == '__main__':
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
                 #number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
-                number_of_global_fragments = 100
+                number_of_global_fragments = len(global_fragments)
                 #Reset used_for_training and acceptable_for_training flags
                 if old_video and old_video._accumulation_finished == True:
                     for global_fragment in global_fragments:
                         global_fragment.reset_accumulation_params()
                 try:
                     number_of_global_fragments = int(number_of_global_fragments)
-                    pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_global_fragments = number_of_global_fragments))
+                    pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_pretraining_global_fragments = number_of_global_fragments))
                 except:
                     number_of_global_fragments = len(global_fragments)
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
@@ -360,7 +360,7 @@ if __name__ == '__main__':
             # finish and save
             video._has_been_assigned = True
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
-            blobs_list.generate_cut_points(10)
+            blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
             blobs_list.save()
             video.save()
