@@ -88,9 +88,9 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
                 print intervalsIndivFrag
                 print 'first frame and column', frames[0], columns[0]
                 if accumDict['counter'] == 0:
-                    print 'The identity of this individual interval is ', identity+1
+                    print 'The identity of this individual interval is ', identity
                 else:
-                    print 'The identity of this individual interval is ', identity+1, id1
+                    print 'The identity of this individual interval is ', identity, id1
 
                 if not identity in refDictTemp.keys(): # if the identity has not been added to the dictionary, I initialize the list
                     framesColumnsRefDict[identity] = []
@@ -99,14 +99,17 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
                 for frame,column in zip(frames,columns): # I loop in all the frames of the individual fragment to add them to the dictionary of references
                     framesColumnsRefDict[identity].append((frame,column))
                     refDictTemp[identity].append(portraits.loc[frame,'images'][column])
+                # if intervalsIndivFrag[0] == 0 and intervalsIndivFrag[1] == 133:
+                #     pickle.dump(np.asarray(refDictTemp[0]),open('./finetuner-imagesInterval0-133.pkl','wb'))
 
                 if accumDict['counter'] != 0:
                     idUsedIntervals.append(identity)
                 usedIndivIntervals.append(intervalsIndivFrag)
 
-        all_identities = range(1,numAnimals+1)
+        all_identities = range(numAnimals)
         if len(set(ids_checked_for_ref)) < numAnimals:
             print 'The identities that we tried to add for references are'
+            print 'identities, ', all_identities
             print 'ids, ', ids_checked_for_ref
             repeated_ids = set([x for x in ids_checked_for_ref if ids_checked_for_ref.count(x) > 1])
             print 'The identities ', list(repeated_ids), ' are repeated'
@@ -118,7 +121,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
                 print 'ids, ', ids_checked_for_ref1
                 repeated_ids = set([x for x in ids_checked_for_ref1 if ids_checked_for_ref1.count(x) > 1])
                 print 'The identities ', list(repeated_ids), ' are repeated'
-                missing_ids = set(all_identities).difference(set(ids_checked_for_ref))
+                missing_ids = set(all_identities).difference(set(ids_checked_for_ref1))
                 print 'The identities ', list(missing_ids), 'are missing'
                 raise ValueError('We are adding bad references')
 
@@ -129,6 +132,7 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
         idUsedIntervals = refDictTemp.keys()
         if printFlag:
             print '\n The keys of the refDict are ', refDictTemp.keys()
+            print 'The intervals used are ', usedIndivIntervals
 
     ''' Updating refDict '''
     if accumDict['counter'] == 0:
@@ -262,17 +266,28 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     print 'size labels after flatten', len(labels)
     # print 'label sample', labels[0:10]
     labels = map(int,labels)
+    print np.unique(labels)
+    labels0Indices = np.where(np.asarray(labels) == 0)
+    print 'labels0Indices, ', labels0Indices
     labels = dense_to_one_hot(labels, numAnimals)
     numImages = len(labels)
+
+    # Standarization of images
+    # print 'Standarizing images...'
+    # if accumDict['counter'] == 0:
+    #     images133 = images[labels0Indices]
+    #     pickle.dump(images133,open('./finetuner-imagesInterval0-133-NOstandarized.pkl','wb'))
+
+    images = standarizeImages(images)
+
+    # if accumDict['counter'] == 0:
+    #     images133 = images[labels0Indices]
+    #     pickle.dump(images133,open('./finetuner-imagesInterval0-133-standarized.pkl','wb'))
 
     # np.random.seed(0)
     perm = np.random.permutation(numImages)
     images = images[perm]
     labels = labels[perm]
-
-    # Standarization of images
-    print 'Standarizing images...'
-    images = standarizeImages(images)
 
     numTrain = np.ceil(np.true_divide(numImages,10)*9).astype('int')
     X_train = images[:numTrain]
@@ -295,39 +310,6 @@ def DataFineTuning(accumDict, trainDict, fragmentsDict, portraits, statistics, n
     trainDict['idUsedIntervals'] = idUsedIntervals
 
     return imsize, X_train, Y_train, X_val, Y_val, trainDict
-
-# def getCkptvideoPath(videoPath, accumCounter, train=0):
-#     """
-#     train = 0 (id assignation)
-#     train = 1 (first fine-tuning)
-#     train = 2 (further tuning from previons checkpoint with more references)
-#     """
-#
-#     def getLastSession(subFolders):
-#         if len(subFolders) == 0:
-#             lastIndex = 0
-#         else:
-#             subFolders = natural_sort(subFolders)[::-1]
-#             lastIndex = int(subFolders[0].split('_')[-1])
-#         return lastIndex
-#
-#     video = os.path.basename(videoPath)
-#     folder = os.path.dirname(videoPath)
-#     filename, extension = os.path.splitext(video)
-#     subFolder = folder + '/CNN_models'
-#     subSubFolders = glob.glob(subFolder +"/*")
-#     lastIndex = getLastSession(subSubFolders)
-#
-#     sessionPath = subFolder + '/Session_' + str(lastIndex)
-#     ckptvideoPath = sessionPath + '/AccumulationStep_' + str(accumCounter)
-#     if train == 0:
-#         print 'you will assign identities from the last checkpoint in ', ckptvideoPath
-#     elif train == 2:
-#         print 'you will keep training from the last checkpoint in ', ckptvideoPath
-#     elif train == 1:
-#         print 'model checkpoints will be saved in ', ckptvideoPath
-#
-#     return ckptvideoPath
 
 def fineTuner(videoPath,
             accumDict, trainDict, fragmentsDict, handlesDict,

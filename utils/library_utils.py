@@ -191,16 +191,15 @@ def assignCenters(paths,centers,video = 1,transform = 'none'):
 
 def portraitsToIMDB(portraits, numAnimalsInGroup, groupNum):
     images = np.asarray(flatten([port for port in portraits.loc[:,'images'] if len(port) == numAnimalsInGroup]))
-    images = np.expand_dims(images, axis=1) #this is because the images are in gray scale and we need the channels to be a dimension explicitely
-    imsize = (images.shape[1],images.shape[2], images.shape[3])
+    imsize = (images.shape[1],images.shape[2])
+    centroids = np.asarray(flatten([centroids for centroids in portraits.loc[:,'centroids'] if len(centroids) == numAnimalsInGroup]))
     labels = np.asarray(flatten([perm for perm in portraits.loc[:,'permutations'] if len(perm) == numAnimalsInGroup])) + numAnimalsInGroup*groupNum
     if len(images) != len(labels):
         raise ValueError('The number of images and labels should match.')
     print 'Group, ', groupNum
     print 'Labels, ', labels
-    labels = np.expand_dims(labels, axis=1)
 
-    return imsize, images, labels
+    return imsize, images, labels, centroids
 
 def newMiniframesToIMDB(newMiniframes):
     images = np.asarray(flatten([port for port in newMiniframes.loc[:,'images']]))

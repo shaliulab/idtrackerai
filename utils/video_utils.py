@@ -66,8 +66,6 @@ def splitVideo(videoPath):
 
     cap.release()
 
-
-# splitVideo('/media/lab/idZebLib_TU31012017/Group_1_2/full video/video_02174359.avi' )
 """
 Get general information from video
 """

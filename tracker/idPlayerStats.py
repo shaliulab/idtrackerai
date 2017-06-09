@@ -1,6 +1,6 @@
 import cv2
 import sys
-sys.path.append('IdTrackerDeep/utils')
+sys.path.append('./IdTrackerDeep/utils')
 
 from py_utils import *
 from video_utils import *
@@ -22,7 +22,8 @@ import itertools
 import cPickle as pickle
 from tqdm import tqdm
 
-videoPaths = scanFolder('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi')
+videoPaths = scanFolder('/media/chronos/RawBoutTrackingData_Vol4/trackingTest/test2/avi/output_1.avi')
+
 
 frameIndices, segmPaths = getSegmPaths(videoPaths)
 videoPath = videoPaths[0]
@@ -93,7 +94,7 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
     if not show:
         fourcc = cv2.cv.CV_FOURCC(*'XVID')
         name = sessionPath +'/'+ filename.split('_')[0]  + '_tracked'+ '.avi'
-        out = cv2.VideoWriter(name, fourcc, 15.0, (width, height))
+        out = cv2.VideoWriter(name, fourcc, 70.0, (width, height))
 
     # Load first segment
     global segmDf, cap, currentSegment, numFrameCurSegment
@@ -170,12 +171,18 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
             # frameShadows = np.zeros_like(frame)
             # print '----------------------------------'
             # print 'Drawing sadows...'
-            while not isinstance(segmDf.loc[previousSegFrame,'permutation'],float):
+            if previousSegFrame > sFrame:
+                segmDf_shadows = prevSegmDf
+            else:
+                segmDf_shadows = segmDf
+            while not isinstance(segmDf_shadows.loc[previousSegFrame,'permutation'],float):
                 # framePreviousShadows = np.zeros_like(frame)
                 if previousSegFrame > sFrame:
-                    previousPixels = prevSegmDf.loc[previousSegFrame,'pixels']
+                    segmDf_shadows = prevSegmDf
+                    previousPixels = segmDf_shadows.loc[previousSegFrame,'pixels']
                 else:
-                    previousPixels = segmDf.loc[previousSegFrame,'pixels']
+                    segmDf_shadows = segmDf
+                    previousPixels = segmDf_shadows.loc[previousSegFrame,'pixels']
 
                 for i, pixel in enumerate(previousPixels):
                     cur_id = allIdentities[previousGlobFrame,i]
@@ -245,7 +252,7 @@ def IdPlayer(videoPaths,segmPaths,allIdentities,frameIndices, numAnimals, width,
                 px = np.unravel_index(pixels[i],(height,width))
                 frame[px[0],px[1],:] = frameCopy[px[0],px[1],:]
                 # cv2.putText(frame,text,centroid, font, fontSize,color,thickness)
-                cv2.putText(frame,str(cur_id+1),(centroid[0]-10,centroid[1]-10) , font, 3,colors[cur_id+1],3)
+                cv2.putText(frame,str(cur_id+1),(centroid[0]-10,centroid[1]-10) , font, 1,colors[cur_id+1],3)
                 cv2.circle(frame, centroid,2, colors[cur_id+1],2)
                 cv2.circle(frame, nose,2, colors[cur_id+1],2)
 

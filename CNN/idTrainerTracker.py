@@ -151,7 +151,6 @@ def run_training(X_t, Y_t, X_v, Y_v,
     with tf.Graph().as_default():
         images_pl, labels_pl = placeholder_inputs(batch_size, width, height, channels, classes)
         keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
-
         logits = inference1(images_pl, width, height, channels, classes, keep_prob_pl)
         loss_weights_pl = tf.placeholder(tf.float32, [None], name = 'loss_weights')
         cross_entropy = weighted_loss(labels_pl,logits,loss_weights_pl)
@@ -594,7 +593,7 @@ def run_pre_training(X_t, Y_t, X_v, Y_v,
                             print 'epsilon (overfitting), ', epsilon
                             print 'epsilon2 (if it is not changing much), ', epsilon2
 
-                        if np.nanmean(valIndivAcc) > .8: ###NOTE: decreased to .8 for large groups (38 animals)
+                        if np.nanmean(valIndivAcc) > 0.: ###NOTE: decreased to .8 for large groups (38 animals)
                             if magCurr > magPrev:
                                 if printFlag:
                                     print '\nOverfitting, passing to new set of images'

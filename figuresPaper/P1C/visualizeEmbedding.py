@@ -4,10 +4,6 @@ import tensorflow as tf
 from tensorflow.contrib.tensorboard.plugins import projector
 
 LOG_DIR = './ckpt'
-# PATH_TO_SPRITE_IMAGE = './8_fish_65536.0imgs_sprite.png'
-# PATH_TO_LABELS = './8_fish_65536labels.tsv'
-# PATH_TO_EMBEDDING = './8_fish_65536images.pkl'
-
 PATH_TO_SPRITE_IMAGE = './4_fish_1024imgs_sprite.png'
 PATH_TO_LABELS = './4_fish_1024labels.tsv'
 PATH_TO_EMBEDDING_IMAGES = './4_fish_1024images.pkl'
@@ -37,7 +33,6 @@ with tf.Session() as session:
     # Link this tensor to its metadata file (e.g. labels).
     embedding.metadata_path =  PATH_TO_LABELS
     embedding2.metadata_path =  PATH_TO_LABELS
-
 
     embedding.sprite.image_path = PATH_TO_SPRITE_IMAGE
     embedding2.sprite.image_path = PATH_TO_SPRITE_IMAGE

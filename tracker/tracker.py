@@ -160,8 +160,8 @@ def pre_tracking(videoPath, fragmentsDict, portraits, trainDict, numAnimals):
     non_overlapping_counter = 0
 
     for k, global_fragment in enumerate(fragmentsDict['intervalsDist']):
-        print 'global fragments to go: ', 10 - non_overlapping_counter
-        if non_overlapping_counter < 10:
+        print 'global fragments to go: ', 30 - non_overlapping_counter
+        if non_overlapping_counter < 30:
             if len(set(global_fragment).intersection(set(used_individual_frags))) == 0:
                 print '\nPre-training on global fragment ', k
                 #create images and labels to train the model
@@ -185,7 +185,7 @@ def pre_tracking(videoPath, fragmentsDict, portraits, trainDict, numAnimals):
                 labels = dense_to_one_hot(labels, numAnimals)
                 images = np.expand_dims(images,axis=3)
                 images = cropImages(images,32)
-                images = standarizeImages(np.asarray(images))
+                images = standarizeImages(images)
                 numImages = len(labels)
                 perm = np.random.permutation(numImages)
                 images = images[perm]

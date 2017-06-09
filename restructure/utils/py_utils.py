@@ -1,20 +1,17 @@
 from __future__ import division
-# Import standard libraries
+from itertools import groupby
 import os
 import glob
 import re
 import datetime
-import numpy as np
-
-# Import third party libraries
-from itertools import groupby
 import pandas as pd
+import numpy as np
+import shutil
 import cPickle as pickle
-import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
-from Tkinter import *
+import sys
+sys.path.append('../utils')
 
-
-
+from video import Video
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):
     ''' get variables from a standard python dictionary '''
@@ -128,11 +125,9 @@ def scanFolder(path):
     # maybe write check on video extension supported by opencv2
     if filename[-2:] == '_1':
         paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
-    else:
-        paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
     return paths
 
-def get_spaced_colors_util(n,norm=False):
+def get_spaced_colors_util(n,norm=False,black=True):
     max_value = 16581375 #255**3
     interval = int(max_value / n)
     colors = [hex(I)[2:].zfill(6) for I in range(100, max_value, interval)]
@@ -140,8 +135,9 @@ def get_spaced_colors_util(n,norm=False):
         rgbcolorslist = [(int(i[4:], 16)/256., int(i[2:4], 16)/256., int(i[:2], 16)/256.) for i in colors]
     else:
         rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
-    black = (0., 0., 0.)
-    rgbcolorslist.insert(0, black)
+    if black:
+        black = (0., 0., 0.)
+        rgbcolorslist.insert(0, black)
     return rgbcolorslist
 
 def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = '', nSegment = None):
@@ -201,6 +197,7 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
     video = os.path.basename(path)
     folder = os.path.dirname(path)
     filename, extension = os.path.splitext(video)
+    subfolder = ''
 
     if name  == 'segmentation':
         subfolder = '/preprocessing/segmentation/'
@@ -214,6 +211,9 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
     elif name == 'statistics':
         filename = 'statistics.pkl'
         return pickle.load(open(sessionPath + '/' + filename,'rb') )
+    elif name == 'trajectories':
+        filename = 'trajectories.pkl'
+        return pickle.load(open(sessionPath + '/' + filename,'rb') )
     else:
         subfolder = '/preprocessing/'
         if hdfpkl == 'hdf':
@@ -225,41 +225,54 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
 
     print 'You just loaded ', folder + subfolder + filename
 
-def getExistentFiles(path, listNames, segmPaths):
+def getExistentFiles(video, listNames):
     """
     get processes already computed in a previous session
     """
     existentFile = {name:'0' for name in listNames}
-    video = os.path.basename(path)
-    folder = os.path.dirname(path)
-
-    # createFolder(path)
-
-    #count how many videos we have
-    numSegments = len(segmPaths)
-
-    filename, extension = os.path.splitext(video)
-    subFolders = glob.glob(folder +"/*/")
-
-    srcSubFolder = folder + '/preprocessing/'
-    for name in listNames:
-        if name == 'segmentation':
-            segDirname = srcSubFolder + name
-            if os.path.isdir(segDirname):
-                print 'Segmentation folder exists'
-                numSegmentedVideos = len(glob.glob1(segDirname,"*.pkl"))
-                print
-                if numSegmentedVideos == numSegments:
-                    print 'The number of segments and videos is the same'
-                    existentFile[name] = '1'
+    old_video = None
+    if os.path.isdir(video._previous_session_folder):
+        print("loading old video object from get existent files")
+        if os.path.isfile(os.path.join(video._previous_session_folder, 'video_object.npy')):
+            old_video = np.load(os.path.join(video._previous_session_folder, 'video_object.npy')).item()
         else:
-            extensions = ['.pkl', '.hdf5']
-            for ext in extensions:
-                fullFileName = srcSubFolder + '/' + name + ext
-                if os.path.isfile(fullFileName):
-                    existentFile[name] = '1'
+            raise ValueError("The folder %s is empty. The tracking cannot be restored." %video._previous_session_folder)
 
-    return existentFile, srcSubFolder
+
+        if old_video.bkg is not None:
+            print('has bkg')
+            existentFile['bkg'] = '1'
+
+        if old_video.ROI is not None:
+            print('has roi')
+            existentFile['ROI'] = '1'
+
+        if old_video._has_preprocessing_parameters == True:
+            print('has preprocessing params')
+            existentFile['preprocparams'] = '1'
+
+        if old_video._has_been_preprocessed == True:
+            print('preprocessing done')
+            existentFile['preprocessing'] = '1'
+
+        if old_video._has_been_pretrained == True:
+            print('pretraining done')
+            existentFile['pretraining'] = '1'
+
+        if old_video._accumulation_finished == True:
+            print('accumulation done')
+            existentFile['accumulation'] = '1'
+
+        if old_video._training_finished == True:
+            print('training done')
+            existentFile['training'] = '1'
+
+        if old_video._has_been_assigned == True:
+            print('assignment done')
+            existentFile['assignment'] = '1'
+
+    return existentFile, old_video
+
 
 def createFolder(path, name = '', timestamp = False):
 
@@ -307,133 +320,3 @@ def createSessionFolder(videoPath):
     print 'You just created ', figurePath
 
     return sessionPath, figurePath
-
-"""
-Display messages and errors
-"""
-# def selectOptions(optionsList):
-#     opt = []
-#     def chkbox_checked():
-#         for ix, item in enumerate(cb):
-#             if cb_v[ix].get() is '0':
-#                 opt[ix]=('0')
-#             else:
-#                 opt[ix]=('1')
-#         print opt
-#     root = Tk()
-#     cb = []
-#     cb_v = []
-#     for ix, text in enumerate(optionsList):
-#         cb_v.append(StringVar())
-#         off_value=0  #whatever you want it to be when the checkbutton is off
-#         cb.append(Checkbutton(root, text=text, onvalue=text,offvalue=off_value,
-#                                  variable=cb_v[ix],
-#                                  command=chkbox_checked))
-#         cb[ix].grid(row=ix, column=0, sticky='w')
-#         opt.append(off_value)
-#         cb[-1].deselect() #uncheck the boxes initially.
-#     label = Label(root, width=20)
-#     label.grid(row=ix+1, column=0, sticky='w')
-#     b1 = Button(root,text = 'Quit', command= root.quit)
-#     root.mainloop()
-#     return opt
-
-def selectOptions(optionsList, optionsDict=None, text="Select preprocessing options:  "):
-    master = Tk()
-    if optionsDict==None:
-        optionsDict = {el:'1' for el in optionsList}
-    def createCheckBox(name,i):
-        var = IntVar()
-        Checkbutton(master, text=name, variable=var).grid(row=i+1, sticky=W)
-        return var
-
-    Label(master, text=text).grid(row=0, sticky=W)
-    variables = []
-    for i, opt in enumerate(optionsList):
-        if optionsDict[opt] == '1':
-            var = createCheckBox(opt,i)
-            variables.append(var)
-            var.set(optionsDict[opt])
-        else:
-            Label(master, text= '     ' + opt).grid(row=i+1, sticky=W)
-            var = IntVar()
-            var.set(0)
-            variables.append(var)
-
-    Button(master, text='Ok', command=master.quit).grid(row=i+2, sticky=W, pady=4)
-    mainloop()
-    varValues = []
-    for var in variables:
-        varValues.append(var.get())
-    optionsDict = dict((key, value) for (key, value) in zip(optionsList, varValues))
-    master.destroy()
-    return optionsDict
-
-def selectFile():
-    root = Tkinter.Tk()
-    root.withdraw()
-    filename = tkFileDialog.askopenfilename()
-    root.destroy()
-    return filename
-
-def selectDir(initialDir):
-    root = Tkinter.Tk()
-    root.withdraw()
-    dirName = tkFileDialog.askdirectory(initialdir = initialDir)
-    root.destroy()
-    return dirName
-
-def getInput(name,text):
-    root = Tkinter.Tk() # dialog needs a root window, or will create an "ugly" one for you
-    root.withdraw() # hide the root window
-    inputString = tkSimpleDialog.askstring(name, text, parent=root)
-    root.destroy() # clean up after yourself!
-    return inputString.lower()
-
-def displayMessage(title,message):
-    window = Tk()
-    window.wm_withdraw()
-
-    #centre screen message
-    window.geometry("1x1+"+str(window.winfo_screenwidth()/2)+"+"+str(window.winfo_screenheight()/2))
-    tkMessageBox.showinfo(title=title, message=message)
-
-def displayError(title, message):
-    #message at x:200,y:200
-    window = Tk()
-    window.wm_withdraw()
-
-    window.geometry("1x1+200+200")#remember its .geometry("WidthxHeight(+or-)X(+or-)Y")
-    tkMessageBox.showerror(title=title,message=message,parent=window)
-
-def getMultipleInputs(winTitle, inputTexts):
-    #Gui Things
-    def retrieve_inputs():
-        global inputs
-        inputs = [var.get() for var in variables]
-        window.destroy()
-        return inputs
-    window = Tk()
-    window.title(winTitle)
-    variables = []
-
-
-    for inputText in inputTexts:
-        text = Label(window, text =inputText)
-        guess = Entry(window)
-        variables.append(guess)
-        text.pack()
-        guess.pack()
-    finished = Button(text="ok", command=retrieve_inputs)
-    finished.pack()
-    window.mainloop()
-
-    return inputs
-
-# inputs = getMultipleInputs('ciccio',['p','ccio', 'pagliaccio'])
-# print inputs
-
-# a = 1
-# createFolder('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi', 'test')
-# saveFile('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi', a, 'test', 'test', addSegNum = False)
-# b = loadFile('../Cafeina5peces/Caffeine5fish_20140206T122428_1.avi', 'test')
