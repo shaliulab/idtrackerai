@@ -255,15 +255,11 @@ if __name__ == '__main__':
             # Set preprocessed flag to True
             video._has_been_pretrained = True
             video.save()
-            # Load blobs and global fragments
-            # list_of_blobs = ListOfBlobs.load(video.blobs_path)
-            # blobs = list_of_blobs.blobs_in_video
-            # global_fragments = np.load(video.global_fragments_path)
         #############################################################
         ###################    Accumulation   #######################
         #### take references in 'good' global fragments          ####
         #############################################################
-        print("\n**** Acumulation ****")
+        print("\n**** Accumulation ****")
         if not loadPreviousDict['accumulation']:
             #create folder to store accumulation models
             video.create_accumulation_folder()
