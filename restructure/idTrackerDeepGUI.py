@@ -33,12 +33,13 @@ from globalfragment import compute_model_area,\
                             order_global_fragments_by_distance_travelled
 from segmentation import segment
 from GUI_utils import selectFile,\
-                        getInput,\
-                        selectOptions,\
-                        ROISelectorPreview,\
-                        selectPreprocParams,\
-                        fragmentation_inspector,\
-                        frame_by_frame_identity_inspector
+                    getInput,\
+                    selectOptions,\
+                    ROISelectorPreview,\
+                    selectPreprocParams,\
+                    fragmentation_inspector,\
+                    frame_by_frame_identity_inspector,\
+                    selectDir
 from py_utils import getExistentFiles
 from video_utils import checkBkg
 from pre_trainer import pre_train
@@ -53,7 +54,7 @@ from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
 
-NUM_CHUNKS_BLOB_SAVING = 550 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
+NUM_CHUNKS_BLOB_SAVING = 10 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
 ###
 np.random.seed(0)
@@ -191,19 +192,33 @@ if __name__ == '__main__':
         cv2.waitKey(1)
         cv2.destroyAllWindows()
         cv2.waitKey(1)
-
+        #############################################################
+        ##################   Knowledge transfer  ####################
+        ####   Take the weights from a different model already   ####
+        ####   trained. Works better when transfering to similar ####
+        ####   conditions (light, animal type, age, ...)         ####
+        #############################################################
+        knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
+        if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
+            video.knowledge_transfer_model_folder = selectDir('', text = "Select a session folder to perform knowledge transfer from the last accumulation point") #select path to video
+            video.tracking_with_knowledge_transfer = True
+            print("exiting the loop")
+        elif knowledge_transfer_flag.lower() == 'n':
+            pass
+        else:
+            raise ValueError("Invalid value, print either 'y' or 'n'")
         #############################################################
         ##################      Pre-trainer      ####################
         #### create the folder training in which all the         ####
         #### CNN-related process will be stored. The structure   ####
-        #### is /training/session_num, where num is an natural   ####
-        #### number. num increases each time a training is       ####
-        #### launched                                            ####
+        #### is /training/session_num, where "num" is an natural ####
+        #### number used to count how many time a video has been ####
+        #### processed                                           ####
         #############################################################
         print("\n**** Pretraining ****\n")
         if not loadPreviousDict['pretraining']:
-            #pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [Y/n]')
-            pretrain_flag = 'y'
+            pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
+            # pretrain_flag = 'y'
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
                 #number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
@@ -226,6 +241,12 @@ if __name__ == '__main__':
                                                         learning_rate = 0.01,
                                                         keep_prob = 1.0,
                                                         save_folder = video._pretraining_folder)
+
+                if video.tracking_with_knowledge_transfer:
+                    #loading the model to perform knowledge transfer
+                    pretrain_network_params.scopes_layers_to_optimize = ['fully-connected1','softmax1']
+                    pretrain_network_params.restore_folder = video.knowledge_transfer_model_folder
+
                 #start pretraining
                 net = pre_train(video, blobs,
                                 pretraining_global_fragments,
@@ -238,8 +259,6 @@ if __name__ == '__main__':
                 #save changes
                 video._has_been_pretrained = True
                 video.save()
-            else:
-                print("Loading a net for KT needs to be implemented")
         else:
             # Update folders and paths from previous video_object
             video._pretraining_folder = old_video._pretraining_folder

@@ -21,6 +21,8 @@ def pre_train(video, blobs_in_video, pretraining_global_fragments, params, store
     global_epoch = 0
     #initialize network
     net = ConvNetwork(params)
+    if video.tracking_with_knowledge_transfer:
+        net.restore()
     #instantiate objects to store loss and accuracy values for training and validation
     #(the loss and accuracy of the validation are saved to allow the automatic stopping of the training)
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')

@@ -35,6 +35,8 @@ class Video(object):
         self._global_fragments_path = None #string: path to saved list of global fragments
         self._has_been_pretrained = None
         self._pretraining_path = None
+        self._knowledge_transfer_model_folder = None
+        self.tracking_with_knowledge_transfer = False
         self._accumulation_finished = None
         self._training_finished = None
         self._has_been_assigned = None
@@ -226,6 +228,20 @@ class Video(object):
         """save class"""
         print("saving video object in %s" %self._path_to_video_object)
         np.save(self._path_to_video_object, self)
+
+    @property
+    def knowledge_transfer_model_folder(self):
+        return self._knowledge_transfer_model_folder
+
+    @knowledge_transfer_model_folder.setter
+    def knowledge_transfer_model_folder(self, new_kt_model_path):    
+        subfolders = glob.glob(os.path.join(new_kt_model_path, "*"))
+        print(subfolders)
+        if os.path.join(new_kt_model_path, "conv") in subfolders and os.path.join(new_kt_model_path, "softmax") in subfolders:
+            self._knowledge_transfer_model_folder = new_kt_model_path
+        else:
+            raise ValueError("The model folders " + os.path.join(new_kt_model_path, "conv") + " and " + os.path.join(new_kt_model_path, "softmax") + " are missing")
+
 
 def get_num_frame(path):
     cap = cv2.VideoCapture(path)

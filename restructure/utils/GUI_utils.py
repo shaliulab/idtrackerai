@@ -66,9 +66,10 @@ def selectFile():
     root.destroy()
     return filename
 
-def selectDir(initialDir):
+def selectDir(initialDir, text = "Select folder"):
     root = Tk()
     root.withdraw()
+    Label(root, text=text).grid(row=0, sticky=W)
     dirName = tkFileDialog.askdirectory(initialdir = initialDir)
     root.destroy()
     return dirName
