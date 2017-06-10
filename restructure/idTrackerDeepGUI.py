@@ -202,11 +202,10 @@ if __name__ == '__main__':
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
             video.knowledge_transfer_model_folder = selectDir('', text = "Select a session folder to perform knowledge transfer from the last accumulation point") #select path to video
             video.tracking_with_knowledge_transfer = True
-            print("exiting the loop")
         elif knowledge_transfer_flag.lower() == 'n':
             pass
         else:
-            raise ValueError("Invalid value, print either 'y' or 'n'")
+            raise ValueError("Invalid value, type either 'y' or 'n'")
         #############################################################
         ##################      Pre-trainer      ####################
         #### create the folder training in which all the         ####
@@ -243,8 +242,7 @@ if __name__ == '__main__':
                                                         save_folder = video._pretraining_folder)
 
                 if video.tracking_with_knowledge_transfer:
-                    #loading the model to perform knowledge transfer
-                    pretrain_network_params.scopes_layers_to_optimize = ['fully-connected1','softmax1']
+                    print("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
                     pretrain_network_params.restore_folder = video.knowledge_transfer_model_folder
 
                 #start pretraining
@@ -259,6 +257,7 @@ if __name__ == '__main__':
                 #save changes
                 video._has_been_pretrained = True
                 video.save()
+
         else:
             # Update folders and paths from previous video_object
             video._pretraining_folder = old_video._pretraining_folder
@@ -284,6 +283,7 @@ if __name__ == '__main__':
             video.create_accumulation_folder()
             #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
             if old_video and old_video._accumulation_finished == True:
+                print("Cleaning previous accumulation")
                 for global_fragment in global_fragments:
                     global_fragment.reset_accumulation_params()
             #set network params for the accumulation model
@@ -291,12 +291,23 @@ if __name__ == '__main__':
                                         learning_rate = 0.005,
                                         keep_prob = 1.0,
                                         scopes_layers_to_optimize = ['fully-connected1','softmax1'],
-                                        save_folder = video._accumulation_folder,
-                                        restore_folder = video._pretraining_folder)
+                                        save_folder = video._accumulation_folder)
+            if video._has_been_pretrained:
+                print("We will restore the network from a previous pretraining: %s\n" %video._pretraining_folder)
+                accumulation_network_params.restore_folder = video._pretraining_folder
+            elif not video._has_been_pretrained:
+                if video.tracking_with_knowledge_transfer:
+                    print("We will restore the network from a previous model (knowledge transfer): %s\n" %video.knowledge_transfer_model_folder)
+                    accumulation_network_params.restore_folder = video.knowledge_transfer_model_folder
+                else:
+                    print("The network will be trained from scracth during accumulation\n")
+                    accumulation_network_params.scopes_layers_to_optimize = None
+
             #instantiate network object
             net = ConvNetwork(accumulation_network_params)
             #restore variables from the pretraining
             net.restore()
+            net.reinitialize_softmax_and_fully_connected()
             #instantiate accumulation manager
             accumulation_manager = AccumulationManager(global_fragments, video.number_of_animals)
             #set global epoch counter to 0
