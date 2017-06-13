@@ -401,6 +401,13 @@ if __name__ == '__main__':
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
             # finish and save
             video._has_been_assigned = True
+            # get individual fragments' extremes
+            for blobs_in_frame in blobs:
+                for blob in blobs_in_frame:
+                    #if a blob has not been assigned
+                    if blob.identity == None and blob.is_a_fish:
+                        if len(blob.next) == 1: blob.identity = blob.next[0].identity
+                        elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
 
             # visualise proposed tracking
             frame_by_frame_identity_inspector(video, blobs)
