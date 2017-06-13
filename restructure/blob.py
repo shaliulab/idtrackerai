@@ -22,6 +22,9 @@ class Blob(object):
         self.bounding_box_image = bounding_box_image # numpy array (uint8): image of the fish cropped from the video according to the bounding_box_in_frame_coordinates
         self.portrait = portrait # (numpy array (uint8),tuple(int,int),tuple(int,int)): (36x36 image of the animal,nose coordinates, head coordinates)
         self.pixels = pixels # list of int's: linearized pixels of the blob
+        self.reset_before_fragmentation()
+
+    def reset_before_fragmentation(self):
         self.next = [] # next blob object overlapping in pixels with current blob object
         self.previous = [] # previous blob object overlapping in pixels with the current blob object
         self._fragment_identifier = None # identity in individual fragment after fragmentation
@@ -114,20 +117,6 @@ class Blob(object):
     @property
     def P2_vector(self):
         return self._P2_vector
-
-    def reset_before_fragmentation(self):
-        self.next = [] # next blob object overlapping in pixels with current blob object
-        self.previous = [] # previous blob object overlapping in pixels with the current blob object
-        self._fragment_identifier = None # identity in individual fragment after fragmentation
-        self._blob_index = None # index of the blob to plot the individual fragments
-        self._identity = None # identity assigned by the algorithm
-        self._frequencies_in_fragment = np.zeros(self.number_of_animals).astype('int')
-        self._P1_vector = np.zeros(self.number_of_animals)
-        self._P2_vector = np.zeros(self.number_of_animals)
-        self._assigned_during_accumulation = False
-        self._user_generated_identity = None
-
-
 
 
     def distance_travelled_in_fragment(self):
@@ -336,7 +325,7 @@ def is_a_global_fragment(blobs_in_frame, num_animals):
 
 def check_global_fragments(blobs_in_video, num_animals):
     """Returns an array with True iff:
-    * each blob has a unique blob intersecting in the past
+    * each blob has a unique blob intersecting in the past and future
     * number of blobs equals num_animals
     """
     return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame) == num_animals for blobs_in_frame in blobs_in_video]
@@ -393,7 +382,7 @@ class ListOfBlobs(object):
                     blob_0.now_points_to(blob_1)
 
     def save(self):
-        """save class"""
+        """save instance"""
         print("saving blobs list at ", self.path_to_save)
         np.save(self.path_to_save, self)
         self.reconnect()

@@ -53,17 +53,7 @@ class GlobalFragment(object):
                         for portraits_in_individual_fragment in self.portraits] # length of the portraits contained in each individual fragment part of the global fragment
         self._total_number_of_portraits = np.sum(self._number_of_portraits_per_individual_fragment) #overall number of portraits
         self.number_of_animals = number_of_animals
-        self._used_for_training = False
-        self._acceptable_for_training = True
-        self._ids_assigned = np.nan * np.ones(self.number_of_animals)
-        self._temporary_ids = np.arange(self.number_of_animals) # I initialize the _ids_assigned like this so that I can use the same function to extract images in pretraining and training
-        self._score = None
-        self._is_unique = False
-        self._uniqueness_score = None
-        self._repeated_ids = []
-        self._missing_ids = []
-        self.predictions = [] #stores predictions per portrait in self, organised according to individual fragments.
-        self.softmax_probs_median = [] #stores softmax median per individual, per individual fragment
+        self.reset_accumulation_params()
 
     def reset_accumulation_params(self):
         self._used_for_training = False
@@ -95,7 +85,7 @@ class GlobalFragment(object):
         individual fragment in the global fragment to the identity matrix of
         dimension number of animals.
         uniqueness_score = 0.0 means that every individual is assigned with
-        certainty 1.0 one and only once in the global fragment
+        certainty 1.0 once and only once in the global fragment
         """
         if not self._used_for_training and self.is_unique:
             identity = np.identity(self.number_of_animals)
