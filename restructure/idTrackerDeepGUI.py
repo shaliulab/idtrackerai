@@ -131,7 +131,7 @@ if __name__ == '__main__':
         cv2.waitKey(1)
         if not loadPreviousDict['preprocessing']:
             print("\n**** Preprocessing ****\n")
-            #cv2.namedWindow('Bars')
+            cv2.namedWindow('Bars')
             video.create_preprocessing_folder()
             if not old_video or not old_video._has_been_segmented or usePreviousPrecParams == False:
                 blobs = segment(video)
@@ -175,7 +175,7 @@ if __name__ == '__main__':
             blobs_list.save()
             print("Blobs saved")
             #take a look to the resulting fragmentation
-            #fragmentation_inspector(video, blobs)
+            fragmentation_inspector(video, blobs)
         else:
             # Update folders and paths from previous video_object
             video._preprocessing_folder = old_video._preprocessing_folder
@@ -188,6 +188,7 @@ if __name__ == '__main__':
             list_of_blobs = ListOfBlobs.load(video.blobs_path)
             blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
+            fragmentation_inspector(video, blobs)
         #destroy windows to prevent openCV errors
         cv2.waitKey(1)
         cv2.destroyAllWindows()
@@ -380,10 +381,6 @@ if __name__ == '__main__':
             # Set preprocessed flag to True
             video._accumulation_finished = True
             video.save()
-            # Load blobs and global fragments
-            # list_of_blobs = ListOfBlobs.load(video.blobs_path)
-            # blobs = list_of_blobs.blobs_in_video
-            # global_fragments = np.load(video.global_fragments_path)
         #############################################################
         ###################     Assigner      ######################
         ####
@@ -415,7 +412,6 @@ if __name__ == '__main__':
             # visualise proposed tracking
             print("ready to visualise assignation")
             frame_by_frame_identity_inspector(video, blobs)
-
         else:
             # Set preprocessed flag to True
             video._has_been_assigned = True

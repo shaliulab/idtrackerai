@@ -339,7 +339,7 @@ def check_global_fragments(blobs_in_video, num_animals):
     * each blob has a unique blob intersecting in the past
     * number of blobs equals num_animals
     """
-    return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame)==num_animals for blobs_in_frame in blobs_in_video]
+    return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame) == num_animals for blobs_in_frame in blobs_in_video]
 
 def apply_model_area(blob, model_area):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
