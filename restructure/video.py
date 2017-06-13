@@ -234,14 +234,16 @@ class Video(object):
         return self._knowledge_transfer_model_folder
 
     @knowledge_transfer_model_folder.setter
-    def knowledge_transfer_model_folder(self, new_kt_model_path):    
-        subfolders = glob.glob(os.path.join(new_kt_model_path, "*"))
-        print(subfolders)
-        if os.path.join(new_kt_model_path, "conv") in subfolders and os.path.join(new_kt_model_path, "softmax") in subfolders:
-            self._knowledge_transfer_model_folder = new_kt_model_path
+    def knowledge_transfer_model_folder(self, new_kt_model_path):
+        if new_kt_model_path is not None:
+            subfolders = glob.glob(os.path.join(new_kt_model_path, "*"))
+            print(subfolders)
+            if os.path.join(new_kt_model_path, "conv") in subfolders and os.path.join(new_kt_model_path, "softmax") in subfolders:
+                self._knowledge_transfer_model_folder = new_kt_model_path
+            else:
+                raise ValueError("The model folders " + os.path.join(new_kt_model_path, "conv") + " and " + os.path.join(new_kt_model_path, "softmax") + " are missing")
         else:
-            raise ValueError("The model folders " + os.path.join(new_kt_model_path, "conv") + " and " + os.path.join(new_kt_model_path, "softmax") + " are missing")
-
+            self._knowledge_transfer_model_folder = None
 
 def get_num_frame(path):
     cap = cv2.VideoCapture(path)
