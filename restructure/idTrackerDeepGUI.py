@@ -131,7 +131,7 @@ if __name__ == '__main__':
         cv2.waitKey(1)
         if not loadPreviousDict['preprocessing']:
             print("\n**** Preprocessing ****\n")
-            #cv2.namedWindow('Bars')
+            cv2.namedWindow('Bars')
             video.create_preprocessing_folder()
             if not old_video or not old_video._has_been_segmented or usePreviousPrecParams == False:
                 blobs = segment(video)
@@ -175,7 +175,7 @@ if __name__ == '__main__':
             blobs_list.save()
             print("Blobs saved")
             #take a look to the resulting fragmentation
-            #fragmentation_inspector(video, blobs)
+            fragmentation_inspector(video, blobs)
         else:
             # Update folders and paths from previous video_object
             video._preprocessing_folder = old_video._preprocessing_folder
@@ -188,6 +188,7 @@ if __name__ == '__main__':
             list_of_blobs = ListOfBlobs.load(video.blobs_path)
             blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
+            fragmentation_inspector(video, blobs)
         #destroy windows to prevent openCV errors
         cv2.waitKey(1)
         cv2.destroyAllWindows()
@@ -380,10 +381,6 @@ if __name__ == '__main__':
             # Set preprocessed flag to True
             video._accumulation_finished = True
             video.save()
-            # Load blobs and global fragments
-            # list_of_blobs = ListOfBlobs.load(video.blobs_path)
-            # blobs = list_of_blobs.blobs_in_video
-            # global_fragments = np.load(video.global_fragments_path)
         #############################################################
         ###################     Assigner      ######################
         ####
@@ -404,6 +401,14 @@ if __name__ == '__main__':
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
             # finish and save
             video._has_been_assigned = True
+            # get individual fragments' extremes
+            for blobs_in_frame in blobs:
+                for blob in blobs_in_frame:
+                    #if a blob has not been assigned but it is a fish and overlaps with one fragment
+                    #assign it!
+                    if blob.identity == 0 and blob.is_a_fish:
+                        if len(blob.next) == 1: blob.identity = blob.next[0].identity
+                        elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
 
             # visualise proposed tracking
             frame_by_frame_identity_inspector(video, blobs)
@@ -415,7 +420,6 @@ if __name__ == '__main__':
             # visualise proposed tracking
             print("ready to visualise assignation")
             frame_by_frame_identity_inspector(video, blobs)
-
         else:
             # Set preprocessed flag to True
             video._has_been_assigned = True
@@ -428,7 +432,6 @@ if __name__ == '__main__':
             frame_by_frame_identity_inspector(video, blobs)
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
-
         video._blobs_path = old_video.blobs_path
         video._global_fragments_path = old_video.global_fragments_path
         list_of_blobs = ListOfBlobs.load(video.blobs_path)

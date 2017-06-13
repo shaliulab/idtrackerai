@@ -5,7 +5,7 @@ import random
 from blob import is_a_global_fragment, check_global_fragments
 from statistics_for_assignment import compute_identification_frequencies_individual_fragment, compute_P1_individual_fragment_from_blob
 
-STD_TOLERANCE = 1 ### NOTE set to 1 because we changed the model area to work with the median.
+STD_TOLERANCE = 4 ### NOTE set to 1 because we changed the model area to work with the median.
 
 def detect_beginnings(boolean_array):
     """ detects the frame where the core of a global fragment starts.
@@ -22,7 +22,11 @@ def compute_model_area(blobs_in_video, number_of_animals, std_tolerance = STD_TO
     These values are later used to discard blobs that are not fish and potentially
     belong to a crossing.
     """
-    areas = [blob.area for blobs_in_frame in blobs_in_video for blob in blobs_in_frame ]
+    frames_with_all_individuals_visible = [i for i, blobs_in_frame in enumerate(blobs_in_video) if len(blobs_in_frame) == number_of_animals]
+    #areas are collected only in global fragments' cores
+    areas = [blob.area for i in frames_with_all_individuals_visible for blob in blobs_in_video[i]]
+    #areas are collected throughout the entire video
+    # areas = [blob.area for blobs_in_frame in blobs_in_video for blob in blobs_in_frame ]
     median_area = np.median(areas)
     mean_area = np.mean(areas)
     std_area = np.std(areas)
@@ -49,17 +53,7 @@ class GlobalFragment(object):
                         for portraits_in_individual_fragment in self.portraits] # length of the portraits contained in each individual fragment part of the global fragment
         self._total_number_of_portraits = np.sum(self._number_of_portraits_per_individual_fragment) #overall number of portraits
         self.number_of_animals = number_of_animals
-        self._used_for_training = False
-        self._acceptable_for_training = True
-        self._ids_assigned = np.nan * np.ones(self.number_of_animals)
-        self._temporary_ids = np.arange(self.number_of_animals) # I initialize the _ids_assigned like this so that I can use the same function to extract images in pretraining and training
-        self._score = None
-        self._is_unique = False
-        self._uniqueness_score = None
-        self._repeated_ids = []
-        self._missing_ids = []
-        self.predictions = [] #stores predictions per portrait in self, organised according to individual fragments.
-        self.softmax_probs_median = [] #stores softmax median per individual, per individual fragment
+        self.reset_accumulation_params()
 
     def reset_accumulation_params(self):
         self._used_for_training = False
@@ -91,7 +85,7 @@ class GlobalFragment(object):
         individual fragment in the global fragment to the identity matrix of
         dimension number of animals.
         uniqueness_score = 0.0 means that every individual is assigned with
-        certainty 1.0 one and only once in the global fragment
+        certainty 1.0 once and only once in the global fragment
         """
         if not self._used_for_training and self.is_unique:
             identity = np.identity(self.number_of_animals)
@@ -146,8 +140,8 @@ def give_me_list_of_global_fragments(blobs_in_video, num_animals):
     return [GlobalFragment(blobs_in_video,i,num_animals) for i in indices_beginning_of_fragment]
 
 def give_me_pre_training_global_fragments(global_fragments, number_of_pretraining_global_fragments = 10):
-    indices = np.round(np.linspace(0,len(global_fragments),number_of_pretraining_global_fragments+1)).astype(int)
-    split_global_fragments = [global_fragments[indices[i]:indices[i+1]] for i in range(len(indices)-1)]
+    indices = np.round(np.linspace(0, len(global_fragments), number_of_pretraining_global_fragments + 1)).astype(int)
+    split_global_fragments = [global_fragments[indices[i]:indices[i + 1]] for i in range(len(indices) - 1)]
     ordered_split_global_fragments = [order_global_fragments_by_distance_travelled(global_fragments_in_split)[0]
                                     for global_fragments_in_split in split_global_fragments]
     return ordered_split_global_fragments
@@ -172,25 +166,14 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
     images = []
     labels = []
     lengths = []
+
     for global_fragment in global_fragments:
-        # print("\ngetting images from global fragment")
-        # print(individual_fragments_identifiers_already_used)
         images_global_fragment, labels_global_fragment, lengths_global_fragment, individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_identifiers_already_used)
-        # print("len(images_global_fragment) ", len(images_global_fragment))
-        # print("len(labels_global_fragment) ", len(labels_global_fragment))
-        # print("sum(lengths_global_fragment) ", sum(lengths_global_fragment))
-        # print("len(lengths_global_fragment) ", len(lengths_global_fragment))
-        # print("len(individual_fragments_identifiers) ", len(individual_fragments_identifiers))
         if len(images_global_fragment) != 0:
             images.append(images_global_fragment)
             labels.append(labels_global_fragment)
             lengths.extend(lengths_global_fragment)
             individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
-    # print("len(images) ", len(np.concatenate(images, axis = 0)))
-    # print("len(labels) ", len(np.concatenate(labels, axis = 0)))
-    # print("sum(lengths) ", sum(lengths))
-    # print("len(lengths) ", len(lengths))
-    # print("len(individual_fragments_identifiers_already_used)", len(individual_fragments_identifiers_already_used))
 
     return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), individual_fragments_identifiers_already_used, np.cumsum(lengths)[:-1]
 

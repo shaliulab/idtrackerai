@@ -743,6 +743,7 @@ class Validator(BoxLayout):
 
     def do(self, *args):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
+            print("has been assigned ", CHOSEN_VIDEO.video._has_been_assigned)
             if CHOSEN_VIDEO.video._has_been_assigned == True:
                 list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
@@ -754,6 +755,7 @@ class Validator(BoxLayout):
             self.count_scrollup = 0
             self.scale = 1
             #create dictionary to store eventual corrections made by the user
+            print("number of animals ", CHOSEN_VIDEO.video.number_of_animals)
             self.count_user_generated_identities_dict = {i:0 for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
             #init elements in the self widget
             self.init_segmentZero()

@@ -546,51 +546,53 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         ret, frame = cap.read()
-        frameCopy = frame.copy()
+        if ret:
+            frameCopy = frame.copy()
 
-        blobs_in_frame = blobs_in_video[trackbarValue]
-        for b, blob in enumerate(blobs_in_frame):
+            blobs_in_frame = blobs_in_video[trackbarValue]
+            for b, blob in enumerate(blobs_in_frame):
 
-            blobs_pixels = get_n_previous_blobs_attribute(blob,'pixels',number_of_previous)[::-1]
-            blobs_identities = get_n_previous_blobs_attribute(blob,'_identity',number_of_previous)[::-1]
-            for i, (blob_pixels, blob_identity) in enumerate(zip(blobs_pixels,blobs_identities)):
-                pxs = np.unravel_index(blob_pixels,(video._height,video._width))
-                if i < number_of_previous-1:
-                    frame[pxs[0],pxs[1],:] = np.multiply(colors[blob_identity],.3).astype('uint8')+np.multiply(frame[pxs[0],pxs[1],:],.7).astype('uint8')
-                else:
-                    frame[pxs[0],pxs[1],:] = frameCopy[pxs[0],pxs[1],:]
+                blobs_pixels = get_n_previous_blobs_attribute(blob,'pixels',number_of_previous)[::-1]
+                blobs_identities = get_n_previous_blobs_attribute(blob,'_identity',number_of_previous)[::-1]
+                for i, (blob_pixels, blob_identity) in enumerate(zip(blobs_pixels,blobs_identities)):
+                    pxs = np.unravel_index(blob_pixels,(video._height,video._width))
+                    if i < number_of_previous-1:
+                        frame[pxs[0],pxs[1],:] = np.multiply(colors[blob_identity],.3).astype('uint8')+np.multiply(frame[pxs[0],pxs[1],:],.7).astype('uint8')
+                    else:
+                        frame[pxs[0],pxs[1],:] = frameCopy[pxs[0],pxs[1],:]
 
-            #draw the centroid
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.circle(frame, tuple(blob.centroid), 2, colors[blob._identity], -1)
-            if blob._assigned_during_accumulation:
-                # we draw a circle in the centroid if the blob has been assigned during accumulation
-                cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, 1,colors[blob._identity], 3)
-            elif not blob._assigned_during_accumulation:
-                # we draw a cross in the centroid if the blob has been assigned during assignation
-                # cv2.putText(frame, 'x',tuple(blob.centroid), font, 1,colors[blob._identity], 1)
-                cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, .5,colors[blob._identity], 3)
+                #draw the centroid
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.circle(frame, tuple(blob.centroid), 2, colors[blob._identity], -1)
+                if blob._assigned_during_accumulation:
+                    # we draw a circle in the centroid if the blob has been assigned during accumulation
+                    cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, 1,colors[blob._identity], 3)
+                elif not blob._assigned_during_accumulation:
+                    # we draw a cross in the centroid if the blob has been assigned during assignation
+                    # cv2.putText(frame, 'x',tuple(blob.centroid), font, 1,colors[blob._identity], 1)
+                    cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, .5,colors[blob._identity], 3)
+
+                if not save_video:
+                    print("\nblob ", b)
+                    print("identity: ", blob._identity)
+                    print("assigned during accumulation: ", blob.assigned_during_accumulation)
+                    if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
+                        try:
+                            print("frequencies in fragment: ", blob.frequencies_in_fragment)
+                        except:
+                            print("this blob does not have frequencies in fragment")
+                    print("P1_vector: ", blob.P1_vector)
+                    print("P2_vector: ", blob.P2_vector)
+
 
             if not save_video:
-                print("\nblob ", b)
-                print("identity: ", blob._identity)
-                print("assigned during accumulation: ", blob.assigned_during_accumulation)
-                if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
-                    try:
-                        print("frequencies in fragment: ", blob.frequencies_in_fragment)
-                    except:
-                        print("this blob does not have frequencies in fragment")
-                print("P1_vector: ", blob.P1_vector)
-                print("P2_vector: ", blob.P2_vector)
-
-
-        if not save_video:
-            # frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
-            cv2.imshow('frame_by_frame_identity_inspector', frame)
-            pass
+                # frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
+                cv2.imshow('frame_by_frame_identity_inspector', frame)
+                pass
+            else:
+                out.write(frame)
         else:
-            out.write(frame)
-
+            print("Warning: unable to read frame ", scroll)
     cv2.createTrackbar('start', 'frame_by_frame_identity_inspector', 0, numFrames-1, scroll )
 
     scroll(1)
