@@ -118,7 +118,6 @@ class Blob(object):
     def P2_vector(self):
         return self._P2_vector
 
-
     def distance_travelled_in_fragment(self):
         distance = 0
         if self.is_a_fish_in_a_fragment:

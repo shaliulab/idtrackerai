@@ -404,8 +404,9 @@ if __name__ == '__main__':
             # get individual fragments' extremes
             for blobs_in_frame in blobs:
                 for blob in blobs_in_frame:
-                    #if a blob has not been assigned
-                    if blob.identity == None and blob.is_a_fish:
+                    #if a blob has not been assigned but it is a fish and overlaps with one fragment
+                    #assign it!
+                    if blob.identity == 0 and blob.is_a_fish:
                         if len(blob.next) == 1: blob.identity = blob.next[0].identity
                         elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
 
@@ -431,7 +432,6 @@ if __name__ == '__main__':
             frame_by_frame_identity_inspector(video, blobs)
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
-
         video._blobs_path = old_video.blobs_path
         video._global_fragments_path = old_video.global_fragments_path
         list_of_blobs = ListOfBlobs.load(video.blobs_path)
