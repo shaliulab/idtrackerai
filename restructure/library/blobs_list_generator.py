@@ -85,22 +85,16 @@ class Dataset(object):
         # Get list of IMDBPaths form IMDB_codes
         print('\nReading IMDB_codes and ids_codes...')
         if not int(self.cluster):
-            self.datafolder = ''
+            self.datafolder = './'
         elif int(self.cluster):
             self.datafolder = '/admin/'
         self.IMDBsDict = {
-                    'A': self.datafolder + 'library/IMDBs/TU20160413_36dpf_60indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
-                    'B': self.datafolder + 'library/IMDBs/TU20160428_36dpf_60indiv_28010ImPerInd_curvaturePortrait_0.hdf5',
-                    'C': self.datafolder + 'library/IMDBs/TU20160920_36dpf_64indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
-                    'D': self.datafolder + 'library/IMDBs/tu20170131_31dpf_40indiv_34770imperind_curvatureportrait_centroids_0.hdf5',
-                    'E': self.datafolder + 'library/IMDBs/TU20170201_31pdf_72indiv_38739ImPerInd_curvaturePortrait_0.hdf5',
-                    'F': self.datafolder + 'library/IMDBs/TU20170202_31pdf_72indiv_38913ImPerInd_curvaturePortrait_0.hdf5',
-                    'a': self.datafolder + 'library/IMDBs/TU20160413_36dpf_16indiv_29938ImPerInd_curvaturePortrait_0.hdf5',
-                    'b': self.datafolder + 'library/IMDBs/TU20160428_36dpf_16indiv_28818ImPerInd_curvaturePortrait_0.hdf5',
-                    'd': self.datafolder + 'library/IMDBs/TU20170131_31dpf_16indiv_38989ImPerInd_curvaturePortrait_0.hdf5',
-                    'c': self.datafolder + 'library/IMDBs/TU20160920_36dpf_16indiv_7731ImPerInd_curvaturePortrait_0.hdf5',
-                    'e': self.datafolder + 'library/IMDBs/TU20170201_31pdf_16indiv_38997ImPerInd_curvaturePortrait_0.hdf5',
-                    'f': self.datafolder + 'library/IMDBs/TU20170202_31pdf_16indiv_38998ImPerInd_curvaturePortrait_0.hdf5'
+                    'A': os.path.join(self.datafolder,'library','IMDBs','TU20160413_36dpf_60indiv_29938imperind_curvatureportrait_centroids_0.hdf5'),
+                    'B': os.path.join(self.datafolder,'library','IMDBs','TU20160428_36dpf_60indiv_28010imperind_curvatureportrait_centroids_0.hdf5'),
+                    'C': os.path.join(self.datafolder,'library','IMDBs','TU20160920_36dpf_64indiv_7731imperInd_curvatureportrait_centroids_0.hdf5'),
+                    'D': os.path.join(self.datafolder,'library','IMDBs','TU20170131_31dpf_40indiv_34770imperind_curvatureportrait_centroids_0.hdf5'),
+                    'E': os.path.join(self.datafolder,'library','IMDBs','TU20170201_31pdf_72indiv_38739ImPerInd_curvaturePortrait_centroids_0.hdf5'),
+                    'F': os.path.join(self.datafolder,'library','IMDBs','TU20170202_31pdf_72indiv_38913imperind_curvatureportrait_centroids_0.hdf5')
                     }
         self.IMDBPaths = []
         self.idsInIMDBs = []
