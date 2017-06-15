@@ -156,7 +156,7 @@ if __name__ == '__main__':
             #all the animals are visible)
             model_area = compute_model_area(blobs, video.number_of_animals)
             #discard blobs that do not respect such model
-            apply_model_area_to_video(blobs, model_area)
+            apply_model_area_to_video(blobs, model_area, video.animal_type)
             #connect blobs that overlap in consecutive frames
             connect_blob_list(blobs)
             #assign an identifier to each blobl belonging to an individual fragment
@@ -221,8 +221,8 @@ if __name__ == '__main__':
             # pretrain_flag = 'y'
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
-                #number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
-                number_of_global_fragments = len(global_fragments)
+                number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
+                # number_of_global_fragments = len(global_fragments)
                 #Reset used_for_training and acceptable_for_training flags
                 if old_video and old_video._accumulation_finished == True:
                     for global_fragment in global_fragments:
@@ -401,7 +401,7 @@ if __name__ == '__main__':
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
             # finish and save
             video._has_been_assigned = True
-            # get individual fragments' extremes
+            # get identity for individual fragments' extremes
             for blobs_in_frame in blobs:
                 for blob in blobs_in_frame:
                     #if a blob has not been assigned but it is a fish and overlaps with one fragment

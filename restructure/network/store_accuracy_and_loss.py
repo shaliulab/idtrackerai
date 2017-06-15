@@ -53,8 +53,7 @@ class Store_Accuracy_and_Loss(object):
         import matplotlib.patches as patches
         ax4 = ax_handles[3]
         ax4.cla()
-        colors = get_spaced_colors_util(video.number_of_animals, norm=True, black=black)
-
+        colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=black)
         for global_fragment in global_fragments:
             global_fragment.compute_start_end_frame_indices_of_individual_fragments(blobs_in_video)
             # print("individual fragments starts and ends: ", global_fragment.starts_ends_individual_fragments)

@@ -81,19 +81,19 @@ class LibraryJobConfig(object):
                             os.makedirs(repetition_path)
 
 def check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, num_frames, frames_in_fragment, repetition):
-    print(job_config.test_name)
+
     return len(results_data_frame.query('test_name == @job_config.test_name' +
-                                            ' & pretraining_flag == @job_config.pretraining_flag)' +
-                                            ' & train_filters_in_accumulation == bool(@job_config.train_filters_in_accumulation))' +
+                                            ' & pretraining_flag == @job_config.pretraining_flag' +
+                                            ' & train_filters_in_accumulation == @job_config.train_filters_in_accumulation' +
                                             ' & knowledge_transfer_flag == @job_config.knowledge_transfer_flag' +
-                                            ' & knowledge_fransfer_folder == @job_config.knowledge_transfer_folder' +
+                                            ' & knowledge_transfer_folder == @job_config.knowledge_transfer_folder' +
                                             ' & certainty_in_accumulation == @job_config.accumulation_certainty' +
                                             ' & IMDB_codes == @job_config.IMDB_codes' +
                                             ' & ids_codes == @job_config.ids_codes' +
                                             ' & group_size == @group_size' +
-                                            ' & frames_in_video == int(@num_frames)' +
-                                            ' & frames_per_fragment == int(@frames_in_fragment)' +
-                                            ' & repetition == int(@repetition)')) != 0
+                                            ' & frames_in_video == @num_frames' +
+                                            ' & frames_per_fragment == @frames_in_fragment' +
+                                            ' & repetition == @repetition')) != 0
 
 if __name__ == '__main__':
     '''
@@ -115,16 +115,15 @@ if __name__ == '__main__':
     job_config = LibraryJobConfig(cluster = sys.argv[1], test_dictionary = test_dictionary)
     job_config.create_folders_structure()
 
-    # raise ValueError('developping')
-
-    dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes)
-    dataset.loadIMDBs()
     if os.path.isfile('./library/results_data_frame.pkl'):
         print("results_data_frame.pkl already exists \n")
         results_data_frame = pd.read_pickle('./library/results_data_frame.pkl')
     else:
         print("results_data_frame.pkl does not exist \n")
         results_data_frame = pd.DataFrame()
+
+    dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes)
+    dataset.loadIMDBs()
 
     for group_size in job_config.group_sizes:
 
@@ -140,8 +139,9 @@ if __name__ == '__main__':
 
 
                     print("\n********** group size %i - num_frames %i - frames_in_fragment %i - repetition %i ********" %(group_size,num_frames,frames_in_fragment,repetition))
-
-                    already_computed = check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, num_frames, frames_in_fragment, repetition)
+                    already_computed = False
+                    if os.path.isfile('./library/results_data_frame.pkl'):
+                        already_computed = check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, num_frames, frames_in_fragment, repetition)
                     if already_computed:
                         print("The algorithm with this comditions has been already tested")
                     else:
@@ -212,6 +212,9 @@ if __name__ == '__main__':
                                             plot_flag = False)
 
                             video._has_been_pretrained = True
+                        else:
+                            print("no pretraining")
+                            number_of_pretraining_global_fragments = 0
 
                         pretraining_time = time.time()
                         #############################################################
@@ -296,6 +299,9 @@ if __name__ == '__main__':
                             # assign identities to the global fragments based on the predictions
                             accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_indices)
                             accumulation_manager.update_counter()
+                            if job_config.only_accumulate_one_fragment:
+                                print("we only accumulate one fragment")
+                                break
 
                         accumulation_time = time.time() - start
                         #############################################################
@@ -318,6 +324,14 @@ if __name__ == '__main__':
                             compute_P1_for_blobs_in_video(video, blobs)
                             # assign identities based on individual fragments
                             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
+                            # assign identity to the extremes of the fragments
+                            for blobs_in_frame in blobs:
+                                for blob in blobs_in_frame:
+                                    #if a blob has not been assigned but it is a fish and overlaps with one fragment
+                                    #assign it!
+                                    if blob.identity == 0 and blob.is_a_fish:
+                                        if len(blob.next) == 1: blob.identity = blob.next[0].identity
+                                        elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
                         else:
                             print("All the global fragments have been used in the accumulation")
                         assignation_time = time.time() - start

@@ -26,17 +26,18 @@ tests_data_frame = pd.DataFrame()
 
 # test 1
 tests_data_frame = tests_data_frame.append({"test_name": 'testing',
+                                                "only_accumulate_one_fragment": True,
                                                 "knowledge_transfer_flag": False,
-                                                "knowledge_transfer_folder": None,
-                                                "pretraining_flag": True,
+                                                "knowledge_transfer_folder": '',
+                                                "pretraining_flag": False,
                                                 "percentage_of_fragments_in_pretraining": 1.,
                                                 "train_filters_in_accumulation": False,
                                                 "accumulation_certainty": .1,
-                                                "IMDB_codes": 'EF',
+                                                "IMDB_codes": 'D',
                                                 "ids_codes": 'aa',
-                                                "group_sizes": [2, 4, 16, 32, 64, 128],
-                                                "frames_in_video": [10000],
-                                                "frames_per_individual_fragment": [5, 10, 20, 40, 80, 160, 320, 640, 1280],
+                                                "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
+                                                "frames_in_video": [5000],
+                                                "frames_per_individual_fragment": [5, 10, 20, 40, 80, 160],
                                                 "repetitions": [1, 2],
                                                  }, ignore_index=True)
 
