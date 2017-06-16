@@ -3,6 +3,7 @@ import os
 
 class NetworkParams(object):
     def __init__(self,number_of_animals,
+                cnn_model = 0,
                 learning_rate = None, keep_prob = None,
                 use_adam_optimiser = False, scopes_layers_to_optimize = None,
                 restore_folder = None, save_folder = None, knowledge_transfer_folder = None):
@@ -15,7 +16,12 @@ class NetworkParams(object):
         self._knowledge_transfer_folder = knowledge_transfer_folder
         self.use_adam_optimiser = use_adam_optimiser
         self.scopes_layers_to_optimize = scopes_layers_to_optimize
+        self._cnn_model = cnn_model
 
+    @property
+    def cnn_model(self):
+        return self._cnn_model
+        
     @property
     def restore_folder(self):
         return self._restore_folder

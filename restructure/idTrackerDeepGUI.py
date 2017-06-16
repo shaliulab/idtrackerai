@@ -178,9 +178,11 @@ if __name__ == '__main__':
             fragmentation_inspector(video, blobs)
         else:
             # Update folders and paths from previous video_object
+            cv2.namedWindow('Bars')
             video._preprocessing_folder = old_video._preprocessing_folder
             video._blobs_path = old_video.blobs_path
             video._global_fragments_path = old_video.global_fragments_path
+            video._maximum_number_of_blobs = old_video.maximum_number_of_blobs
             # Set preprocessed flag to True
             video._has_been_preprocessed = True
             video.save()
@@ -326,7 +328,7 @@ if __name__ == '__main__':
                 print("images: ", images.shape)
                 print("labels: ", labels.shape)
                 #start training
-                global_step, net = train(video, blobs,
+                global_step, net, _ = train(video, blobs,
                                         global_fragments,
                                         net, images, labels,
                                         store_accuracy_and_error = False,

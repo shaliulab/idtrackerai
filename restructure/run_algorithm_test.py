@@ -37,7 +37,7 @@ from assigner import assign, assign_identity_to_blobs_in_video, compute_P1_for_b
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
-from blobs_list_generator import Dataset, BlobsListConfig, subsample_dataset_by_individuals, generate_list_of_blobs
+from library_utils import Dataset, BlobsListConfig, subsample_dataset_by_individuals, generate_list_of_blobs, LibraryJobConfig, check_if_repetition_has_been_computed
 
 NUM_CHUNKS_BLOB_SAVING = 50 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
@@ -48,52 +48,6 @@ CERTAINTY_THRESHOLD = 0.1 # threshold to select a individual fragment as eligibl
 ###
 np.random.seed(0)
 ###
-
-class LibraryJobConfig(object):
-    def __init__(self,cluster = None, test_dictionary = None):
-        self.cluster = int(cluster)
-        for key in test_dictionary:
-            setattr(self, key, test_dictionary[key])
-
-    def create_folders_structure(self):
-        #create main condition folder
-        self.condition_path = os.path.join('./library','library_test_' + self.test_name)
-        if not os.path.exists(self.condition_path):
-            os.makedirs(self.condition_path)
-        #create subfolders for group sizes
-        for group_size in self.group_sizes:
-            group_size_path = os.path.join(self.condition_path,'group_size_' + str(group_size))
-            if not os.path.exists(group_size_path):
-                os.makedirs(group_size_path)
-            #create subfolders for frames_in_video
-            for num_frames in self.frames_in_video:
-                num_frames_path = os.path.join(group_size_path,'num_frames_' + str(num_frames))
-                if not os.path.exists(num_frames_path):
-                    os.makedirs(num_frames_path)
-                #create subfolders for frames_in_fragment
-                for frames_in_fragment in self.frames_per_individual_fragment:
-                    frames_in_fragment_path = os.path.join(num_frames_path, 'frames_in_fragment_' + str(frames_in_fragment))
-                    if not os.path.exists(frames_in_fragment_path):
-                        os.makedirs(frames_in_fragment_path)
-                    for repetition in self.repetitions:
-                        repetition_path = os.path.join(frames_in_fragment_path, 'repetition_' + str(repetition))
-                        if not os.path.exists(repetition_path):
-                            os.makedirs(repetition_path)
-
-def check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, num_frames, frames_in_fragment, repetition):
-
-    return len(results_data_frame.query('test_name == @job_config.test_name' +
-                                            ' & pretraining_flag == @job_config.pretraining_flag' +
-                                            ' & train_filters_in_accumulation == @job_config.train_filters_in_accumulation' +
-                                            ' & knowledge_transfer_flag == @job_config.knowledge_transfer_flag' +
-                                            ' & knowledge_transfer_folder == @job_config.knowledge_transfer_folder' +
-                                            ' & certainty_in_accumulation == @job_config.accumulation_certainty' +
-                                            ' & IMDB_codes == @job_config.IMDB_codes' +
-                                            ' & ids_codes == @job_config.ids_codes' +
-                                            ' & group_size == @group_size' +
-                                            ' & frames_in_video == @num_frames' +
-                                            ' & frames_per_fragment == @frames_in_fragment' +
-                                            ' & repetition == @repetition')) != 0
 
 if __name__ == '__main__':
     '''
@@ -127,21 +81,21 @@ if __name__ == '__main__':
 
     for group_size in job_config.group_sizes:
 
-        for num_frames in job_config.frames_in_video:
+        for frames_in_video in job_config.frames_in_video:
 
             for frames_in_fragment in job_config.frames_per_individual_fragment:
 
                 for repetition in job_config.repetitions:
                     frames_in_fragment_path = os.path.join(job_config.condition_path,'group_size_' + str(group_size),
-                                                            'num_frames_' + str(num_frames),
+                                                            'num_frames_' + str(frames_in_video),
                                                             'frames_in_fragment_' + str(frames_in_fragment),
                                                             'repetition_' + str(repetition))
 
 
-                    print("\n********** group size %i - num_frames %i - frames_in_fragment %i - repetition %i ********" %(group_size,num_frames,frames_in_fragment,repetition))
+                    print("\n********** group size %i - frames_in_video %i - frames_in_fragment %i - repetition %i ********" %(group_size,frames_in_video,frames_in_fragment,repetition))
                     already_computed = False
                     if os.path.isfile('./library/results_data_frame.pkl'):
-                        already_computed = check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, num_frames, frames_in_fragment, repetition)
+                        already_computed = check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, frames_in_fragment, repetition)
                     if already_computed:
                         print("The algorithm with this comditions has been already tested")
                     else:
@@ -152,7 +106,7 @@ if __name__ == '__main__':
                         video._animal_type = 'fish' #string: type of animals to be tracked in the video
                         video._number_of_animals = group_size #int: number of animals in the video
                         video._maximum_number_of_blobs = group_size #int: the maximum number of blobs detected in the video
-                        video._num_frames = num_frames
+                        video._num_frames = frames_in_video
                         video.tracking_with_knowledge_transfer = job_config.knowledge_transfer_flag
                         video.knowledge_transfer_model_folder = job_config.knowledge_transfer_folder
 
@@ -162,7 +116,7 @@ if __name__ == '__main__':
                         #### library                                             ####
                         #############################################################
 
-                        config = BlobsListConfig(number_of_animals = group_size, number_of_frames_per_fragment = frames_in_fragment, number_of_frames = num_frames, repetition = repetition)
+                        config = BlobsListConfig(number_of_animals = group_size, number_of_frames_per_fragment = frames_in_fragment, number_of_frames = frames_in_video, repetition = repetition)
                         portraits, centroids = subsample_dataset_by_individuals(dataset, config)
                         blobs = generate_list_of_blobs(portraits, centroids, config)
                         compute_fragment_identifier_and_blob_index(blobs, config.number_of_animals)
@@ -182,8 +136,8 @@ if __name__ == '__main__':
                         start = time.time()
                         print("\n**** Pretraining ****\n")
                         if job_config.pretraining_flag:
-                            if job_config.percentage_of_fragments_in_pretraining != 1.:
-                                number_of_pretraining_global_fragments = int(len(global_fragments)*job_config.percentage_of_fragments_in_pretraining)
+                            if job_config.percentage_of_frames_in_pretaining != 1.:
+                                number_of_pretraining_global_fragments = int((frames_in_video * job_config.percentage_of_frames_in_pretaining)/frames_in_fragment)
                                 pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_pretraining_global_fragments = number_of_pretraining_global_fragments))
                             else:
                                 number_of_pretraining_global_fragments = len(global_fragments)
@@ -216,7 +170,7 @@ if __name__ == '__main__':
                             print("no pretraining")
                             number_of_pretraining_global_fragments = 0
 
-                        pretraining_time = time.time()
+                        pretraining_time = time.time() - start
                         #############################################################
                         ###################    Accumulation   #######################
                         #### take references in 'good' global fragments          ####
@@ -267,7 +221,7 @@ if __name__ == '__main__':
                             print("images: ", images.shape)
                             print("labels: ", labels.shape)
                             #start training
-                            global_step, net = train(video, blobs,
+                            global_step, net, _ = train(video, blobs,
                                                     global_fragments,
                                                     net, images, labels,
                                                     store_accuracy_and_error = False,
@@ -361,13 +315,13 @@ if __name__ == '__main__':
                                 elif blob.identity is None or blob.identity == 0:
                                     number_of_not_assigned_blobs[i] += 1
 
-                        individual_accuracies_assigned_frames = np.asarray(number_correct_assignations)/(num_frames - np.asarray(number_of_not_assigned_blobs))
-                        accuracy_assigned_frames = np.sum(number_correct_assignations)/(num_frames * group_size - sum(number_of_not_assigned_blobs))
-                        individual_accuracies = np.asarray(number_correct_assignations)/num_frames
-                        accuracy = np.sum(number_correct_assignations)/(num_frames * group_size)
+                        individual_accuracies_assigned_frames = np.asarray(number_correct_assignations)/(frames_in_video - np.asarray(number_of_not_assigned_blobs))
+                        accuracy_assigned_frames = np.sum(number_correct_assignations)/(frames_in_video * group_size - sum(number_of_not_assigned_blobs))
+                        individual_accuracies = np.asarray(number_correct_assignations)/frames_in_video
+                        accuracy = np.sum(number_correct_assignations)/(frames_in_video * group_size)
                         print("number of global fragments: ", len(global_fragments))
                         print("number of accumulated fragments:", sum([global_fragment.used_for_training for global_fragment in global_fragments]))
-                        print("num_frames: ", num_frames)
+                        print("frames_in_video: ", frames_in_video)
                         print("group_size: ", group_size)
                         print("number_correct_assignations: ", number_correct_assignations)
                         print("number_of_not_assigned_blobs: ", number_of_not_assigned_blobs)
@@ -384,30 +338,33 @@ if __name__ == '__main__':
                         results_data_frame = results_data_frame.append({'date': time.strftime("%c"),
                                                                         'cluster': int(job_config.cluster) ,
                                                                         'test_name': job_config.test_name,
-                                                                        'pretraining_flag': job_config.pretraining_flag ,
-                                                                        'train_filters_in_accumulation': bool(job_config.train_filters_in_accumulation),
+                                                                        'CNN_model': job_config.CNN_model,
                                                                         'knowledge_transfer_flag': job_config.knowledge_transfer_flag,
                                                                         'knowledge_transfer_folder': job_config.knowledge_transfer_folder,
-                                                                        'number_of_fragments': int(len(global_fragments)),
-                                                                        'proportion_of_fragments_in_pretraining': number_of_pretraining_global_fragments/len(global_fragments),
-                                                                        'certainty_in_accumulation': job_config.accumulation_certainty,
+                                                                        'pretraining_flag': job_config.pretraining_flag,
+                                                                        'percentage_of_frames_in_pretaining': job_config.percentage_of_frames_in_pretaining,
+                                                                        'only_accumulate_one_fragment': job_config.only_accumulate_one_fragment,
+                                                                        'train_filters_in_accumulation': bool(job_config.train_filters_in_accumulation),
+                                                                        'accumulation_certainty': job_config.accumulation_certainty,
                                                                         'IMDB_codes': job_config.IMDB_codes,
                                                                         'ids_codes': job_config.ids_codes,
                                                                         'group_size': int(group_size),
-                                                                        'frames_in_video': int(num_frames),
+                                                                        'frames_in_video': int(frames_in_video),
                                                                         'frames_per_fragment': int(frames_in_fragment),
                                                                         'repetition': int(repetition),
+                                                                        'number_of_fragments': int(len(global_fragments)),
                                                                         'proportion_of_accumulated_fragments': sum([global_fragment.used_for_training for global_fragment in global_fragments])/len(global_fragments),
                                                                         'number_of_not_assigned_blobs': number_of_not_assigned_blobs,
                                                                         'individual_accuracies': individual_accuracies,
                                                                         'individual_accuracies(assigned)': individual_accuracies_assigned_frames,
                                                                         'accuracy': accuracy,
                                                                         'accuracy(assigned)': accuracy_assigned_frames,
-                                                                        'proportion_of_identity_repetitions': number_of_identity_repetitions/(num_frames * group_size - sum(number_of_not_assigned_blobs)) ,
-                                                                        'proportion_of_identity_shifts_in_accumulated_frames': number_of_identity_shifts_in_accumulated_frames/(num_frames * group_size - sum(number_of_not_assigned_blobs)) ,
+                                                                        'proportion_of_identity_repetitions': number_of_identity_repetitions/(frames_in_video * group_size - sum(number_of_not_assigned_blobs)) ,
+                                                                        'proportion_of_identity_shifts_in_accumulated_frames': number_of_identity_shifts_in_accumulated_frames/(frames_in_video * group_size - sum(number_of_not_assigned_blobs)) ,
                                                                         'pretraining_time': pretraining_time,
                                                                         'accumulation_time': accumulation_time,
-                                                                        'assignation_time': assignation_time
+                                                                        'assignation_time': assignation_time,
+                                                                        'total_time': pretraining_time + accumulation_time + assignation_time,
                                                                          }, ignore_index=True)
 
                         results_data_frame.to_pickle('./library/results_data_frame.pkl')

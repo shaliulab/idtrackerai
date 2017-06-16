@@ -4,7 +4,8 @@ import os
 import tensorflow as tf
 import numpy as np
 
-from cnn_architectures import cnn_model
+from cnn_architectures import cnn_model_0
+CNN_MODELS_DICT = {0: cnn_model_0}
 
 IMAGE_SIZE = (32,32,1)
 
@@ -69,7 +70,10 @@ class ConvNetwork():
     def _build_graph(self):
         self.x_pl = tf.placeholder(tf.float32, [None, self.image_width, self.image_height, self.image_channels], name = 'images')
         # self.y_logits, self.conv_vector = cnn_model(self.x_pl,self.params.number_of_animals)
-        self.y_logits, self.fc_vector, (self.W1, self.W2, self.W3, self.WFC, self.WSoft) = cnn_model(self.x_pl,self.params.number_of_animals)
+        # self.y_logits, self.fc_vector, (self.W1, self.W2, self.W3, self.WFC, self.WSoft) = cnn_model_0(self.x_pl,self.params.number_of_animals)
+        # self.y_logits = cnn_model_0(self.x_pl,self.params.number_of_animals)
+        self.y_logits = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals)
+
         self.softmax_probs = tf.nn.softmax(self.y_logits)
         self.predictions = tf.cast(tf.add(tf.argmax(self.softmax_probs,1),1),tf.float32)
 

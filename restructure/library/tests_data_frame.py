@@ -24,20 +24,93 @@ tests_data_frame = pd.DataFrame()
 'repetitions': (list) repetitions to be run (note that the repetition number is the seed of the random generator for the different random processes in the test)
 """
 
-# test 1
+# testing
 tests_data_frame = tests_data_frame.append({"test_name": 'testing',
-                                                "only_accumulate_one_fragment": True,
+                                                "CNN_model": 0,
                                                 "knowledge_transfer_flag": False,
                                                 "knowledge_transfer_folder": '',
                                                 "pretraining_flag": False,
-                                                "percentage_of_fragments_in_pretraining": 1.,
+                                                "percentage_of_frames_in_pretaining": 1.,
+                                                "only_accumulate_one_fragment": True,
                                                 "train_filters_in_accumulation": False,
                                                 "accumulation_certainty": .1,
                                                 "IMDB_codes": 'D',
-                                                "ids_codes": 'aa',
+                                                "ids_codes": 'a',
+                                                "group_sizes": [2, 5, 10, 30],
+                                                "frames_in_video": [1000],
+                                                "frames_per_individual_fragment": [5, 10, 20, 40],
+                                                "repetitions": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                                                 }, ignore_index=True)
+
+# uncorrleaged_images
+tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_images_A',
+                                                "CNN_model": 0,
+                                                "knowledge_transfer_flag": False,
+                                                "knowledge_transfer_folder": '',
+                                                "pretraining_flag": False,
+                                                "percentage_of_frames_in_pretaining": 0.,
+                                                "only_accumulate_one_fragment": False,
+                                                "train_filters_in_accumulation": False,
+                                                "accumulation_certainty": 0.,
+                                                "IMDB_codes": 'A',
+                                                "ids_codes": 'a',
+                                                "group_sizes": [2, 5, 10, 30],
+                                                "frames_in_video": [20000],
+                                                "frames_per_individual_fragment": [0],
+                                                "repetitions": [1, 2],
+                                                 }, ignore_index=True)
+
+# only_one_global_fragment_for_training
+tests_data_frame = tests_data_frame.append({"test_name": 'Only_one_global_fragment_for_training',
+                                                "CNN_model": 0,
+                                                "knowledge_transfer_flag": False,
+                                                "knowledge_transfer_folder": '',
+                                                "pretraining_flag": False,
+                                                "percentage_of_frames_in_pretaining": 1.,
+                                                "only_accumulate_one_fragment": False,
+                                                "train_filters_in_accumulation": False,
+                                                "accumulation_certainty": .1,
+                                                "IMDB_codes": 'DEF',
+                                                "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
                                                 "frames_in_video": [5000],
-                                                "frames_per_individual_fragment": [5, 10, 20, 40, 80, 160],
+                                                "frames_per_individual_fragment": [5, 10, 20, 40, 80, 160, 320, 640],
+                                                "repetitions": [1, 2],
+                                                 }, ignore_index=True)
+
+# all_accumulation
+tests_data_frame = tests_data_frame.append({"test_name": 'all_accumulation',
+                                                "CNN_model": 0,
+                                                "knowledge_transfer_flag": False,
+                                                "knowledge_transfer_folder": '',
+                                                "pretraining_flag": False,
+                                                "percentage_of_frames_in_pretaining": 1.,
+                                                "only_accumulate_one_fragment": False,
+                                                "train_filters_in_accumulation": False,
+                                                "accumulation_certainty": .1,
+                                                "IMDB_codes": 'DEF',
+                                                "ids_codes": 'aaa',
+                                                "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
+                                                "frames_in_video": [5000],
+                                                "frames_per_individual_fragment": [5, 10, 20, 40, 80, 160, 320, 640],
+                                                "repetitions": [1, 2],
+                                                 }, ignore_index=True)
+
+# pretraining_and_accumulation
+tests_data_frame = tests_data_frame.append({"test_name": 'pretraining_and_accumulation',
+                                                "CNN_model": 0,
+                                                "knowledge_transfer_flag": False,
+                                                "knowledge_transfer_folder": '',
+                                                "pretraining_flag": True,
+                                                "percentage_of_fragments_in_pretraining": 1.,
+                                                "only_accumulate_one_fragment": False,
+                                                "train_filters_in_accumulation": False,
+                                                "accumulation_certainty": .1,
+                                                "IMDB_codes": 'DEF',
+                                                "ids_codes": 'aaa',
+                                                "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
+                                                "frames_in_video": [5000],
+                                                "frames_per_individual_fragment": [5, 10, 20, 40, 80, 160, 320, 640],
                                                 "repetitions": [1, 2],
                                                  }, ignore_index=True)
 
