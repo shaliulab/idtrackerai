@@ -4,8 +4,13 @@ import os
 import tensorflow as tf
 import numpy as np
 
-from cnn_architectures import cnn_model_0
-CNN_MODELS_DICT = {0: cnn_model_0}
+from cnn_architectures import cnn_model_0, cnn_model_1, cnn_model_2, cnn_model_3, cnn_model_4, cnn_model_5
+CNN_MODELS_DICT = {0: cnn_model_0,
+                    1: cnn_model_1,
+                    2: cnn_model_2,
+                    3: cnn_model_3,
+                    4: cnn_model_4,
+                    5: cnn_model_5}
 
 IMAGE_SIZE = (32,32,1)
 
@@ -72,6 +77,7 @@ class ConvNetwork():
         # self.y_logits, self.conv_vector = cnn_model(self.x_pl,self.params.number_of_animals)
         # self.y_logits, self.fc_vector, (self.W1, self.W2, self.W3, self.WFC, self.WSoft) = cnn_model_0(self.x_pl,self.params.number_of_animals)
         # self.y_logits = cnn_model_0(self.x_pl,self.params.number_of_animals)
+        print('training model %i' %self.params.cnn_model)
         self.y_logits = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals)
 
         self.softmax_probs = tf.nn.softmax(self.y_logits)

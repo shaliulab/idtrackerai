@@ -36,15 +36,20 @@ def slice_data_base(images, labels, indicesIndiv):
 def getUncorrelatedImages(images,labels,num_images, minimum_number_of_images_per_individual):
     print('\n *** Getting uncorrelated images')
     print("number of images: ", num_images)
+    print("minimum number of images in IMDB: ", minimum_number_of_images_per_individual)
     new_images = []
     new_labels= []
+    if num_images > minimum_number_of_images_per_individual:
+        raise ValueError('The number of images per individual is larger than the minimum number of images per individua in the IMDB')
 
+    perm = np.random.permutation(len(images))
+    images = images[perm]
+    labels = labels[perm]
     for i in np.unique(labels):
         # print('individual, ', i)
         # Get images of this individual
         thisIndivImages = images[labels==i]
         thisIndivLabels = labels[labels==i]
-        # print('num images of this individual, ', thisIndivImages.shape[0])
 
         # Get train, validation and test, images and labels
         new_images.append(thisIndivImages[:num_images])
@@ -118,6 +123,7 @@ if __name__ == '__main__':
                         print("labels shape: ", labels.shape)
 
                         train_network_params = NetworkParams(group_size,
+                                                                cnn_model = job_config.CNN_model,
                                                                 learning_rate = 0.01,
                                                                 keep_prob = 1.0,
                                                                 use_adam_optimiser = False,
@@ -127,18 +133,26 @@ if __name__ == '__main__':
                         net = ConvNetwork(train_network_params)
                         net.restore()
                         start_time = time.time()
-                        _, _, store_training_accuracy_and_loss_data = train(None, None, None,
+                        # if repetition == 1:
+                        #     save_summaries = True
+                        #     store_accuracy_and_error = True
+                        # else:
+                        #     save_summaries = False
+                        #     store_accuracy_and_error = False
+                        store_accuracy_and_error = False
+                        save_summaries = True
+                        _, _, store_validation_accuracy_and_loss_data = train(None, None, None,
                                                                             net, images, labels,
-                                                                            store_accuracy_and_error = True,
+                                                                            store_accuracy_and_error = store_accuracy_and_error,
                                                                             check_for_loss_plateau = True,
-                                                                            save_summaries = False,
-                                                                            print_flag = True,
+                                                                            save_summaries = save_summaries,
+                                                                            print_flag = False,
                                                                             plot_flag = False,
                                                                             global_step = 0,
                                                                             first_accumulation_flag = True)
                         total_time = time.time() - start_time
-                        print("accuracy: ", store_training_accuracy_and_loss_data.accuracy[-1])
-                        print("individual_accuracies: ", store_training_accuracy_and_loss_data.individual_accuracy[-1])
+                        print("accuracy: ", store_validation_accuracy_and_loss_data.accuracy[-1])
+                        print("individual_accuracies: ", store_validation_accuracy_and_loss_data.individual_accuracy[-1])
 
                         #############################################################
                         ###################  Update data-frame   ####################
@@ -163,10 +177,10 @@ if __name__ == '__main__':
                                                                         'number_of_fragments': None,
                                                                         'proportion_of_accumulated_fragments': None,
                                                                         'number_of_not_assigned_blobs': None,
-                                                                        'individual_accuracies': store_training_accuracy_and_loss_data.individual_accuracy[-1],
-                                                                        'individual_accuracies(assigned)': store_training_accuracy_and_loss_data.individual_accuracy[-1],
-                                                                        'accuracy': store_training_accuracy_and_loss_data.accuracy[-1],
-                                                                        'accuracy(assigned)': store_training_accuracy_and_loss_data.accuracy[-1],
+                                                                        'individual_accuracies': store_validation_accuracy_and_loss_data.individual_accuracy[-1],
+                                                                        'individual_accuracies(assigned)': store_validation_accuracy_and_loss_data.individual_accuracy[-1],
+                                                                        'accuracy': store_validation_accuracy_and_loss_data.accuracy[-1],
+                                                                        'accuracy(assigned)': store_validation_accuracy_and_loss_data.accuracy[-1],
                                                                         'proportion_of_identity_repetitions': None,
                                                                         'proportion_of_identity_shifts_in_accumulated_frames': None,
                                                                         'pretraining_time': None,

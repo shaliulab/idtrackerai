@@ -9,7 +9,7 @@ from pprint import pprint
 
 def get_repetition_averaged_data_frame(results_data_frame):
 
-    repetition_averaged_data_frame = pd.DataFrame(columns = [results_data_frame.mean().keys()])
+    repetition_averaged_data_frame = pd.DataFrame(columns = [results_data_frame.mean().to_dict().keys()])
     count = 0
     for group_size in results_data_frame['group_size'].unique():
 
@@ -21,7 +21,7 @@ def get_repetition_averaged_data_frame(results_data_frame):
                                                             ' & frames_in_video == @frames_in_video' +
                                                             ' & frames_per_fragment == @frames_in_fragment')
                 temp_dict = temp_data_frame.mean().to_dict()
-                repetition_averaged_data_frame.loc[count] = temp_dict
+                repetition_averaged_data_frame.loc[count,:] = temp_dict
 
                 count += 1
     return repetition_averaged_data_frame
@@ -38,8 +38,8 @@ if __name__ == '__main__':
 
     # get tests_data_frame and test to plot
     print("loading tests data frame")
-    tests_data_frame = pd.read_pickle(sys.argv[1])
-    test_name = sys.argv[2]
+    tests_data_frame = pd.read_pickle('./library/tests_data_frame.pkl')
+    test_name = sys.argv[1]
     print('test to plot: ', test_name)
     test_dictionary = tests_data_frame.query('test_name == @test_name').to_dict()
     pprint(test_dictionary)
