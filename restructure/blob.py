@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import sys
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
-from get_portraits import getPortrait
+from get_portraits import getPortrait, get_portrait_fly
 import itertools
 import numpy as np
 from tqdm import tqdm
@@ -329,18 +329,21 @@ def check_global_fragments(blobs_in_video, num_animals):
     """
     return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame) == num_animals for blobs_in_frame in blobs_in_video]
 
-def apply_model_area(blob, model_area):
+def apply_model_area(blob, model_area, animal_type):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
-        blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates)
+        if animal_type == 'fish':
+            blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates)
+        else:
+            blob.portrait = get_portrait_fly(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates)
 
-def apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area):
+def apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area, animal_type):
     for blob in blobs_in_frame:
-        apply_model_area(blob, model_area)
+        apply_model_area(blob, model_area, animal_type)
 
-def apply_model_area_to_video(blobs_in_video, model_area):
+def apply_model_area_to_video(blobs_in_video, model_area, animal_type):
     # Parallel(n_jobs=-1)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'))
     for blobs_in_frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'):
-        apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area)
+        apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area, animal_type)
 
 def get_images_from_blobs_in_video(blobs_in_video):
     portraits_in_video = []

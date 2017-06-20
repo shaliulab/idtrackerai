@@ -148,7 +148,7 @@ def getPortrait(miniframe, cnt, bb, counter = None, px_nose_above_center = 9):
 
     return portrait, tuple(noseFull.astype('int')), tuple(head_centroid_full.astype('int'))
 
-def get_portrait_fly(miniframe, cnt, bb, size = 36):
+def get_portrait_fly(miniframe, cnt, bb, size = 32):
     """Acquiring portraits from miniframe (for flies)
     :param miniframe: A numpy 2-dimensional array
     :param cnt: A cv2-style contour, i.e. (x,:,y)
@@ -169,7 +169,7 @@ def get_portrait_fly(miniframe, cnt, bb, size = 36):
 
     semi_size = int(size / 2)
     crop_distance =  int(ax_length)
-    crop_distance = 35
+    # crop_distance = 16
     x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
     y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
     portrait = minif_rot.take(y_range,mode='wrap',axis=0).take(x_range,mode='wrap',axis=1)

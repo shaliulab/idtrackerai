@@ -11,6 +11,57 @@ import time
 from blob import Blob, compute_fragment_identifier_and_blob_index
 from globalfragment import give_me_list_of_global_fragments, order_global_fragments_by_distance_travelled
 
+""" generage jobConfig """
+class LibraryJobConfig(object):
+    def __init__(self,cluster = None, test_dictionary = None):
+        self.cluster = int(cluster)
+        for key in test_dictionary:
+            setattr(self, key, test_dictionary[key])
+
+    def create_folders_structure(self):
+        #create main condition folder
+        self.condition_path = os.path.join('./library','library_test_' + self.test_name)
+        if not os.path.exists(self.condition_path):
+            os.makedirs(self.condition_path)
+        #create subfolders for group sizes
+        for group_size in self.group_sizes:
+            group_size_path = os.path.join(self.condition_path,'group_size_' + str(group_size))
+            if not os.path.exists(group_size_path):
+                os.makedirs(group_size_path)
+            #create subfolders for frames_in_video
+            for frames_in_video in self.frames_in_video:
+                num_frames_path = os.path.join(group_size_path,'num_frames_' + str(frames_in_video))
+                if not os.path.exists(num_frames_path):
+                    os.makedirs(num_frames_path)
+                #create subfolders for frames_in_fragment
+                for frames_in_fragment in self.frames_per_individual_fragment:
+                    frames_in_fragment_path = os.path.join(num_frames_path, 'frames_in_fragment_' + str(frames_in_fragment))
+                    if not os.path.exists(frames_in_fragment_path):
+                        os.makedirs(frames_in_fragment_path)
+                    for repetition in self.repetitions:
+                        repetition_path = os.path.join(frames_in_fragment_path, 'repetition_' + str(repetition))
+                        if not os.path.exists(repetition_path):
+                            os.makedirs(repetition_path)
+
+def check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, frames_in_fragment, repetition):
+
+    return len(results_data_frame.query('test_name == @job_config.test_name' +
+                                            ' & CNN_model == @job_config.CNN_model' +
+                                            ' & knowledge_transfer_flag == @job_config.knowledge_transfer_flag' +
+                                            ' & knowledge_transfer_folder == @job_config.knowledge_transfer_folder' +
+                                            ' & pretraining_flag == @job_config.pretraining_flag' +
+                                            ' & percentage_of_frames_in_pretaining == @job_config.percentage_of_frames_in_pretaining' +
+                                            ' & only_accumulate_one_fragment == @job_config.only_accumulate_one_fragment' +
+                                            ' & train_filters_in_accumulation == @job_config.train_filters_in_accumulation' +
+                                            ' & accumulation_certainty == @job_config.accumulation_certainty' +
+                                            ' & IMDB_codes == @job_config.IMDB_codes' +
+                                            ' & ids_codes == @job_config.ids_codes' +
+                                            ' & group_size == @group_size' +
+                                            ' & frames_in_video == @frames_in_video' +
+                                            ' & frames_per_fragment == @frames_in_fragment' +
+                                            ' & repetition == @repetition')) != 0
+
+""" generate blob lists """
 class BlobsListConfig(object):
     def __init__(self,number_of_animals = None, number_of_frames_per_fragment = None, number_of_frames = None, repetition = None):
         self.number_of_animals = number_of_animals

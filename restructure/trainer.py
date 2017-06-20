@@ -83,4 +83,4 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
     net.save()
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'training.pdf'))
-    return global_step, net
+    return global_step, net, store_validation_accuracy_and_loss_data

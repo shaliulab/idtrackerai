@@ -235,7 +235,7 @@ class Video(object):
 
     @knowledge_transfer_model_folder.setter
     def knowledge_transfer_model_folder(self, new_kt_model_path):
-        if new_kt_model_path is not None:
+        if new_kt_model_path:
             subfolders = glob.glob(os.path.join(new_kt_model_path, "*"))
             print(subfolders)
             if os.path.join(new_kt_model_path, "conv") in subfolders and os.path.join(new_kt_model_path, "softmax") in subfolders:
