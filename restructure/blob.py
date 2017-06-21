@@ -118,7 +118,6 @@ class Blob(object):
     def P2_vector(self):
         return self._P2_vector
 
-
     def distance_travelled_in_fragment(self):
         distance = 0
         if self.is_a_fish_in_a_fragment:
@@ -301,12 +300,11 @@ def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of
                     blob._blob_index = blob_index
                 counter += 1
 
-
 def connect_blob_list(blobs_in_video):
-    for frame_i in tqdm(xrange(1,len(blobs_in_video)), desc = 'Connecting blobs progress'):
+    for frame_i in tqdm(xrange(1,len(blobs_in_video)), desc = 'Connecting blobs '):
         set_frame_number_to_blobs_in_frame(blobs_in_video[frame_i-1], frame_i-1)
         for (blob_0, blob_1) in itertools.product(blobs_in_video[frame_i-1], blobs_in_video[frame_i]):
-            if blob_0.is_a_fish and blob_1.is_a_fish and blob_0.overlaps_with(blob_1):
+            if blob_0.overlaps_with(blob_1):
                 blob_0.now_points_to(blob_1)
     set_frame_number_to_blobs_in_frame(blobs_in_video[frame_i], frame_i)
 
@@ -321,7 +319,7 @@ def is_a_global_fragment(blobs_in_frame, num_animals):
     """Returns True iff:
     * number of blobs equals num_animals
     """
-    return len(blobs_in_frame)==num_animals
+    return len(blobs_in_frame) == num_animals
 
 def check_global_fragments(blobs_in_video, num_animals):
     """Returns an array with True iff:
@@ -340,7 +338,7 @@ def apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area):
 
 def apply_model_area_to_video(blobs_in_video, model_area):
     # Parallel(n_jobs=-1)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'))
-    for blobs_in_frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'):
+    for blobs_in_frame in tqdm(blobs_in_video, desc = 'Fragmentation '):
         apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area)
 
 def get_images_from_blobs_in_video(blobs_in_video):
@@ -362,7 +360,7 @@ class ListOfBlobs(object):
         self.path_to_save = path_to_save
 
     def generate_cut_points(self, num_chunks):
-        n = len(self.blobs_in_video)// num_chunks
+        n = len(self.blobs_in_video) // num_chunks
         self.cutting_points = np.arange(0,len(self.blobs_in_video),n)
 
     def cut_in_chunks(self):
@@ -376,9 +374,11 @@ class ListOfBlobs(object):
             blob.previous = []
 
     def reconnect(self):
+        print("cutting points from reconnect ", self.cutting_points)
         for frame_i in self.cutting_points:
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
-                if blob_0.is_a_fish and blob_1.is_a_fish and blob_0.overlaps_with(blob_1):
+                if blob_0.overlaps_with(blob_1):
+                    print("Trying to reconnect")
                     blob_0.now_points_to(blob_1)
 
     def save(self):

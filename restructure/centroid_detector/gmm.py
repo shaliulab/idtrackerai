@@ -39,12 +39,13 @@ def count_animals_in_crossing(blobs, frame_num):
     for i, cur_blob in enumerate(cur_blobs):
         print(i)
         for prev_blob in previous_blobs:
-            if len(prev_blob.next)>1 and prev_blob.next[0].__dict__ == cur_blob.__dict__:
-                print("in the if")
+            if len(prev_blob.next) > 0 and prev_blob.next[0] is cur_blob:
                 num_animals_per_current_blobs[i] += 1
+
     print("number of guys ", num_animals_per_current_blobs)
     return num_animals_per_current_blobs
 
+# def count_animals_in_crossing(blobs, frame_num):
 
 
 
@@ -63,19 +64,19 @@ for frame_num, blobs_in_frame in tqdm(enumerate(blobs)):
             else:
                 print("Crossing!")
                 number_of_animals_crossing_in_current_frame = count_animals_in_crossing(blobs, frame_num)[blob_num]
-                print(len(blobs_in_frame))
-                pxs = np.array(np.unravel_index(blob.pixels,(video._height,video._width))).T
-                # pxs = np.concatenate((pxs, blob.bounding_box_image))
-                crossings.append(pxs)
+                # print(len(blobs_in_frame))
+                # pxs = np.array(np.unravel_index(blob.pixels,(video._height,video._width))).T
+                # # pxs = np.concatenate((pxs, blob.bounding_box_image))
+                # crossings.append(pxs)
                 ax_arr[0].imshow(blob.bounding_box_image)
                 print("number of crossing animals: ", number_of_animals_crossing_in_current_frame)
-                colors = fit_samples(pxs, n_components = number_of_animals_crossing_in_current_frame, covariance_type = "full")
-
-            	ax_arr[1].scatter(pxs[:,1], -pxs[:,0], c = colors, alpha=0.8)
-
-                # plt.imshow(blob.bounding_box_image)
+                # colors = fit_samples(pxs, n_components = number_of_animals_crossing_in_current_frame, covariance_type = "full")
+                #
+            	# ax_arr[1].scatter(pxs[:,1], -pxs[:,0], c = colors, alpha=0.8)
+                #
+                # # plt.imshow(blob.bounding_box_image)
                 plt.pause(0.5)
-                ax_arr[1].clear()
+                # ax_arr[1].clear()
         #
         # elif blob.identity == 0 and len(blob.previous) > 0:
         #     crossings.append(blob.bounding_box_image)

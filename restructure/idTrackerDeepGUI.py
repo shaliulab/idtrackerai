@@ -140,17 +140,19 @@ if __name__ == '__main__':
                 blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
                 blobs_list.cut_in_chunks()
                 blobs_list.save()
+                reset_blobs_fragmentation_parameters(blobs)
+                blobs = blobs_list.blobs_in_video
                 print("Blobs segmented saved")
             else:
                 # Load blobs and global fragments
                 print("It has been segmented")
                 list_of_blobs = ListOfBlobs.load(old_video.blobs_path_segmented)
-                blobs = list_of_blobs.blobs_in_video
                 video._preprocessing_folder = old_video._preprocessing_folder
                 video._blobs_path_segmented = old_video._blobs_path_segmented
                 video._has_been_segmented = True
                 video._maximum_number_of_blobs = old_video.maximum_number_of_blobs
                 reset_blobs_fragmentation_parameters(blobs)
+                blobs = list_of_blobs.blobs_in_video
 
             #compute a model of the area of the animals (considering frames in which
             #all the animals are visible)
@@ -161,18 +163,21 @@ if __name__ == '__main__':
             connect_blob_list(blobs)
             #assign an identifier to each blobl belonging to an individual fragment
             compute_fragment_identifier_and_blob_index(blobs, video.maximum_number_of_blobs)
-            #compute the global fragments (all animals are visible + each animals overlaps
-            #with a single blob in the consecutive frame + the blobs respect the area model)
-            global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
+
             #save connected blobs in video (organized frame-wise) and list of global fragments
             video._has_been_preprocessed = True
             saved = False
-            np.save(video.global_fragments_path, global_fragments)
+
             video.save()
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
             blobs_list.save()
+            blobs = blobs_list.blobs_in_video
+            #compute the global fragments (all animals are visible + each animals overlaps
+            #with a single blob in the consecutive frame + the blobs respect the area model)
+            global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
+            np.save(video.global_fragments_path, global_fragments)
             print("Blobs saved")
             #take a look to the resulting fragmentation
             fragmentation_inspector(video, blobs)
