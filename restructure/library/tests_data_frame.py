@@ -37,7 +37,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_DEF_aaa_c
                                                 "IMDB_codes": 'DEF',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-                                                "frames_in_video": [20000],
+                                                "frames_in_video": [3000],
                                                 "frames_per_individual_fragment": [0],
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)
@@ -55,7 +55,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_DEF_aaa_c
                                                 "IMDB_codes": 'DEF',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-                                                "frames_in_video": [20000],
+                                                "frames_in_video": [3000],
                                                 "frames_per_individual_fragment": [0],
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)
@@ -73,7 +73,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_DEF_aaa_c
                                                 "IMDB_codes": 'DEF',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-                                                "frames_in_video": [20000],
+                                                "frames_in_video": [3000],
                                                 "frames_per_individual_fragment": [0],
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)
@@ -91,7 +91,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_DEF_aaa_c
                                                 "IMDB_codes": 'DEF',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-                                                "frames_in_video": [20000],
+                                                "frames_in_video": [3000],
                                                 "frames_per_individual_fragment": [0],
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)
@@ -109,7 +109,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_DEF_aaa_c
                                                 "IMDB_codes": 'DEF',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-                                                "frames_in_video": [20000],
+                                                "frames_in_video": [3000],
                                                 "frames_per_individual_fragment": [0],
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)
@@ -127,7 +127,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_DEF_aaa_c
                                                 "IMDB_codes": 'DEF',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-                                                "frames_in_video": [20000],
+                                                "frames_in_video": [3000],
                                                 "frames_per_individual_fragment": [0],
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)

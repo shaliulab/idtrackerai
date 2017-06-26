@@ -31,7 +31,7 @@ def computeBkgParSingleVideo(starting_frame, ending_frame, video_path, bkg):
             gray = np.true_divide(gray,np.mean(gray))
             bkg = bkg + gray
             numFramesBkg += 1
-            
+
     cap.release()
 
     return bkg, numFramesBkg
@@ -154,7 +154,7 @@ def getBoundigBox(cnt, width, height):
         h = h + 2*n
     else:
         h = height - y
-    return ((x,y),(x+w,y+h))
+    return ((x, y),(x + w, y + h))
 
 def boundingBox_ROI2Full(bb, ROI):
     """

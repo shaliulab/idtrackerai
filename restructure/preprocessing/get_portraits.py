@@ -61,7 +61,7 @@ def getMFandC(path, frameIndices):
 
     return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist()
 
-def fillSquareFrame(square_frame,bkgSamps):
+def fillSquareFrame(square_frame, bkgSamps):
     '''Used in get_miniframes.py'''
     numSamples = 0
     threshold = 150
@@ -83,7 +83,7 @@ def fillSquareFrame(square_frame,bkgSamps):
     square_frame[square_frame == 0] = bkgSamps[indicesSamples]
     return square_frame
 
-def cropPortrait(image,portraitSize,shift=(0,0)):
+def cropPortrait(image, portraitSize, shift=(0,0)):
     """ Given a portait it crops it in a shape (portraitSize,portraitSize) with
     a shift in the rows and columns given by the variable shifts. The size of
     the portait must be bigger than
@@ -102,7 +102,7 @@ def cropPortrait(image,portraitSize,shift=(0,0)):
         maxShift = np.divide(currentSize - portraitSize,2)
         if np.max(shift) > maxShift:
             raise ValueError('The shift when cropping the portrait cannot be bigger than (currentSize - portraitSize)/2')
-        croppedPortrait = image[maxShift+shift[1]:currentSize-maxShift+shift[1],maxShift+shift[0]:currentSize-maxShift+shift[0]]
+        croppedPortrait = image[maxShift + shift[1] : currentSize - maxShift + shift[1], maxShift + shift[0] : currentSize - maxShift + shift[0]]
         # print 'Portrait cropped'
         return croppedPortrait
 
@@ -167,12 +167,12 @@ def get_portrait_fly(miniframe, cnt, bb, size = 32):
     M = cv2.getRotationMatrix2D(tuple(center), rot_ang,1)
     minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_WRAP, flags = cv2.INTER_NEAREST)
 
-    semi_size = int(size / 2)
-    crop_distance =  int(ax_length)
-    # crop_distance = 16
+    # crop_distance = int(ax_length) // 2
+    # print("crop distance ", crop_distance)
+    crop_distance = 35
     x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
     y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
-    portrait = minif_rot.take(y_range,mode='wrap',axis=0).take(x_range,mode='wrap',axis=1)
+    portrait = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
     height, width = portrait.shape
     # portrait_up_av_int = np.mean(portrait[:int(height / 2), : int(width / 2)])
     # portrait_down_av_int = np.mean(portrait[:int(height / 2), : int(width / 2)])

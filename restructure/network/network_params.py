@@ -21,7 +21,7 @@ class NetworkParams(object):
     @property
     def cnn_model(self):
         return self._cnn_model
-        
+
     @property
     def restore_folder(self):
         return self._restore_folder
