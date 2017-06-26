@@ -54,7 +54,7 @@ from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
 
-NUM_CHUNKS_BLOB_SAVING = 10 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
+NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
 ###
 np.random.seed(0)
@@ -226,8 +226,8 @@ if __name__ == '__main__':
             # pretrain_flag = 'y'
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
-                #number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
-                number_of_global_fragments = len(global_fragments)
+                number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
+                # number_of_global_fragments = 100#len(global_fragments)
                 #Reset used_for_training and acceptable_for_training flags
                 if old_video and old_video._accumulation_finished == True:
                     for global_fragment in global_fragments:
