@@ -547,29 +547,41 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
         ret, frame = cap.read()
         if ret:
             frameCopy = frame.copy()
-
             blobs_in_frame = blobs_in_video[trackbarValue]
+
             for b, blob in enumerate(blobs_in_frame):
 
                 blobs_pixels = get_n_previous_blobs_attribute(blob,'pixels',number_of_previous)[::-1]
                 blobs_identities = get_n_previous_blobs_attribute(blob,'_identity',number_of_previous)[::-1]
+
                 for i, (blob_pixels, blob_identity) in enumerate(zip(blobs_pixels,blobs_identities)):
                     pxs = np.unravel_index(blob_pixels,(video._height,video._width))
                     if i < number_of_previous-1:
-                        frame[pxs[0],pxs[1],:] = np.multiply(colors[blob_identity],.3).astype('uint8')+np.multiply(frame[pxs[0],pxs[1],:],.7).astype('uint8')
+                        if type(blob_identity) is 'int':
+                            frame[pxs[0], pxs[1], :] = np.multiply(colors[blob_identity], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
+                        elif type(blob_identity) is 'list':
+                            frame[pxs[0], pxs[1], :] = np.multiply([255, 255, 255], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
                     else:
-                        frame[pxs[0],pxs[1],:] = frameCopy[pxs[0],pxs[1],:]
+                        frame[pxs[0], pxs[1], :] = frameCopy[pxs[0], pxs[1], :]
 
                 #draw the centroid
                 font = cv2.FONT_HERSHEY_SIMPLEX
-                cv2.circle(frame, tuple(blob.centroid), 2, colors[blob._identity], -1)
+                if type(blob.identity) is 'int':
+                    cv2.circle(frame, tuple(blob.centroid), 2, colors[blob._identity], -1)
+                elif type(blob.identity) is 'list':
+                    cv2.circle(frame, tuple(blob.centroid), 2, [255, 255, 255], -1)
                 if blob._assigned_during_accumulation:
                     # we draw a circle in the centroid if the blob has been assigned during accumulation
-                    cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, 1,colors[blob._identity], 3)
+                    cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, 1, colors[blob._identity], 3)
                 elif not blob._assigned_during_accumulation:
                     # we draw a cross in the centroid if the blob has been assigned during assignation
                     # cv2.putText(frame, 'x',tuple(blob.centroid), font, 1,colors[blob._identity], 1)
-                    cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, .5,colors[blob._identity], 3)
+                    if blob.is_a_fish_in_a_fragment:
+                        cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, .5, colors[blob._identity], 3)
+                    elif not blob.is_a_fish:
+                        cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, 1, [255,255,255], 3)
+                    else:
+                        cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, .5, [0, 0, 0], 3)
 
                 if not save_video:
                     print("\nblob ", b)

@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import os
 
 class NetworkParams(object):
-    def __init__(self,number_of_animals,
+    def __init__(self, number_of_animals,
                 learning_rate = None, keep_prob = None,
                 use_adam_optimiser = False, scopes_layers_to_optimize = None,
                 restore_folder = None, save_folder = None, knowledge_transfer_folder = None):

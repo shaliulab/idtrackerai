@@ -415,14 +415,12 @@ if __name__ == '__main__':
                         elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
 
             # visualise proposed tracking
-            frame_by_frame_identity_inspector(video, blobs)
+
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
             blobs_list.save()
             video.save()
-            # visualise proposed tracking
-            print("ready to visualise assignation")
             frame_by_frame_identity_inspector(video, blobs)
         else:
             # Set preprocessed flag to True

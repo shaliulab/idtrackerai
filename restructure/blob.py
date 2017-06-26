@@ -99,7 +99,7 @@ class Blob(object):
 
     @identity.setter
     def identity(self, new_identifier):
-        assert self.is_a_fish
+        # assert self.is_a_fish NOTE: commented to plot identities in crossings!
         self._identity = new_identifier
 
     @property
@@ -133,6 +133,23 @@ class Blob(object):
                 distance += np.linalg.norm(current.centroid - current.previous[0].centroid)
                 current = current.previous[0]
         return distance
+
+    def frame_by_frame_velocity(self):
+        velocity = []
+        if self.is_a_fish_in_a_fragment:
+            current = self
+
+            while current.next[0].is_a_fish_in_a_fragment:
+                velocity.append(np.linalg.norm(current.centroid - current.next[0].centroid))
+                current = current.next[0]
+
+            current = self
+
+            while current.previous[0].is_a_fish_in_a_fragment:
+                velocity.append(np.linalg.norm(current.centroid - current.previous[0].centroid))
+                current = current.previous[0]
+                
+        return velocity
 
     def compute_fragment_start_end(self):
         if self.is_a_fish_in_a_fragment:
