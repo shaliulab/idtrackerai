@@ -145,7 +145,10 @@ class Dataset(object):
                     'C': os.path.join(self.datafolder,'library','IMDBs','TU20160920_36dpf_64indiv_7731imperInd_curvatureportrait_centroids_0.hdf5'),
                     'D': os.path.join(self.datafolder,'library','IMDBs','TU20170131_31dpf_40indiv_34770imperind_curvatureportrait_centroids_0.hdf5'),
                     'E': os.path.join(self.datafolder,'library','IMDBs','TU20170201_31pdf_72indiv_38739ImPerInd_curvaturePortrait_centroids_0.hdf5'),
-                    'F': os.path.join(self.datafolder,'library','IMDBs','TU20170202_31pdf_72indiv_38913imperind_curvatureportrait_centroids_0.hdf5')
+                    'F': os.path.join(self.datafolder,'library','IMDBs','TU20170202_31pdf_72indiv_38913imperind_curvatureportrait_centroids_0.hdf5'),
+                    'G': os.path.join(self.datafolder,'library','IMDBs','tu20170131_31dpf_40indiv_34770imperind_fullbody_centroids_0.hdf5'),
+                    'H': os.path.join(self.datafolder,'library','IMDBs','tu20170201_31pdf_72indiv_38739imperind_fullbody_centroids_0.hdf5'),
+                    'I': os.path.join(self.datafolder,'library','IMDBs','tu20170202_31pdf_72indiv_38913imperind_fullbody_centroids_0.hdf5')
                     }
         self.IMDBPaths = []
         self.idsInIMDBs = []
