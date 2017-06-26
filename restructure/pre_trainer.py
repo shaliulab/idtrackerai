@@ -38,7 +38,7 @@ def pre_train(video, blobs_in_video, pretraining_global_fragments, params, store
         # Get images and labels from the current global fragment
         images, labels, _, _ = get_images_and_labels_from_global_fragment(pretraining_global_fragment)
         # Instantiate data_set
-        training_dataset, validation_dataset = split_data_train_and_validation(params.number_of_animals,images,labels)
+        training_dataset, validation_dataset = split_data_train_and_validation(video.animal_type, params.number_of_animals,images,labels)
         # Standarize images
         training_dataset.standarize_images()
         validation_dataset.standarize_images()

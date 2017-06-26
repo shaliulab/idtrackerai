@@ -54,7 +54,7 @@ from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
 
-NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
+NUM_CHUNKS_BLOB_SAVING = 10 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
 ###
 np.random.seed(0)
