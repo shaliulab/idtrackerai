@@ -164,7 +164,7 @@ def get_portrait_fly(miniframe, cnt, bb, size = 36):
     ax_length = max(axes)
     diag = np.sqrt(np.sum(np.asarray(miniframe.shape)**2)).astype(int)
     diag = (diag, diag)
-    M = cv2.getRotationMatrix2D(tuple(center), rot_ang,1)
+    M = cv2.getRotationMatrix2D(tuple(center), rot_ang - 45,1)
     minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_WRAP, flags = cv2.INTER_NEAREST)
 
     semi_size = int(size / 2)

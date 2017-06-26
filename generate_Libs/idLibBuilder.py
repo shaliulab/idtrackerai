@@ -174,7 +174,7 @@ if __name__ == '__main__':
                     print 'centers, ', centers
                     print 'numAnimalsInGroup, ', numAnimalsInGroup
                     raise ValueError('The number of centers to assign identities is different to the number of animals in the group')
-                dfGlobal = assignCenters(segmPaths,centers,numAnimalsInGroup,video,transform = transform)
+                dfGlobal = assignCenters(segmPaths,centers,video,transform = transform)
                 print dfGlobal.columns
                 playFragmentation(videoPaths,segmPaths,dfGlobal,visualize=False)
                 cv2.waitKey(1)
@@ -185,7 +185,7 @@ if __name__ == '__main__':
             Portraying
             ************************************************************************ '''
             if not int(loadPreviousDict['portraits']):
-                portrait(segmPaths, dfGlobal)
+                portrait(segmPaths, dfGlobal, animal_type = 'fly')
             # portraits = loadFile(videoPaths[0], 'portraits', time=0)
 
         if buildLib == 'y' or buildLib == '':
