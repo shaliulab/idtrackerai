@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
-STD_TOLERANCE = 1 # tolerance to select a blob as being a single fish according to the area model
+# STD_TOLERANCE = 1 # tolerance to select a blob as being a single fish according to the area model
 ### NOTE set to 1 because we changed the model area to work with the median.
 
 class Blob(object):
@@ -148,7 +148,7 @@ class Blob(object):
             while current.previous[0].is_a_fish_in_a_fragment:
                 velocity.append(np.linalg.norm(current.centroid - current.previous[0].centroid))
                 current = current.previous[0]
-                
+
         return velocity
 
     def compute_fragment_start_end(self):
