@@ -4,7 +4,7 @@ import numpy as np
 np.random.seed(0)
 ####
 class DataSet(object):
-    def __init__(self, number_of_animals = None, images = None, labels = None):
+    def __init__(self, number_of_animals = None, images = None, labels = None, animal_type = None):
         """Create dataset of images and labels.
         param: images shaped as [num_of_images, height, width, channels]
         param: labels shaped as [num_of_labels, num_of_classes]
@@ -13,6 +13,7 @@ class DataSet(object):
         self._num_images = len(self.images)
         self.labels = labels
         self.number_of_animals = number_of_animals
+        self.animal_type = animal_type
         #check the number of images and labels are the same. If it true set the num_images
         self.consistency_check()
 
@@ -42,6 +43,9 @@ class DataSet(object):
         except:
             raise ValueError('The size of the input portrait must be bigger than image_size')
 
+
+
+
     # def augment_data(self): ### NOTE in the future write a class as ModelArea
     #     try:
     #         possible_shifts = get_possible_shifts_for_data_augmentation() #(0,0) is included
@@ -63,7 +67,13 @@ class DataSet(object):
         # except:
         #     raise ValueError('Could not convert labels to one hot')
 
-def split_data_train_and_validation(number_of_animals, images, labels, validation_proportion = .1):
+def duplicate_PCA_images(training_images, training_labels):
+    augmented_images = [np.rot90(image, 2) for image in training_images]
+    training_images = np.concatenate([training_images, augmented_images], axis = 0)
+    training_labels = np.concatenate([training_labels, training_labels], axis = 0)
+    return training_images, training_labels
+
+def split_data_train_and_validation(animal_type, number_of_animals, images, labels, validation_proportion = .1):
     # Init variables
     train_images = []
     train_labels = []
@@ -89,9 +99,17 @@ def split_data_train_and_validation(number_of_animals, images, labels, validatio
 
     train_images = np.vstack(train_images)
     train_labels = np.vstack(train_labels)
+    print("train images before duplication ", train_images.shape )
+    print("train labels before duplication ", train_labels.shape )
+    if animal_type is not None and animal_type != 'fish':
+        train_images, train_labels = duplicate_PCA_images(train_images, train_labels)
+        print("train images after duplication ", train_images.shape )
+        print("train labels after duplication ", train_labels.shape )
     train_images, train_labels = shuffle_images_and_labels(train_images, train_labels)
     validation_images = np.vstack(validation_images)
     validation_labels = np.vstack(validation_labels)
+    print("validation images after duplication ", validation_images.shape )
+    print("validation labels after duplication ", validation_labels.shape )
 
     return DataSet(number_of_animals, train_images, train_labels), DataSet(number_of_animals, validation_images, validation_labels)
 

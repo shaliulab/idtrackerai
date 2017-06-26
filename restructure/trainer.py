@@ -25,7 +25,7 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 
     # Instantiate data_set
-    training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images, labels)
+    training_dataset, validation_dataset = split_data_train_and_validation(video.animal_type, net.params.number_of_animals, images, labels)
     # Crop images from 36x36 to 32x32 without performing data augmentation
     training_dataset.crop_images(image_size = 32)
     validation_dataset.crop_images(image_size = 32)
