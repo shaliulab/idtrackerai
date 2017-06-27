@@ -12,6 +12,7 @@ import cPickle as pickle
 from joblib import Parallel, delayed
 import gc
 from tqdm import tqdm
+from scipy import ndimage
 
 # Import application/library specifics
 sys.path.append('../utils')
@@ -51,6 +52,8 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
             frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             avIntensity = np.float32(np.mean(frameGray))
             segmentedFrame = segmentVideo(frameGray/avIntensity, video._min_threshold, video._max_threshold, video.bkg, video.ROI, video.subtract_bkg)
+            # Fill holes in the segmented frame to avoid duplication of contours
+            segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
             # Find contours in the segmented image
             bounding_boxes, miniframes, centroids, areas, pixels, contours = blobExtractor(segmentedFrame, frameGray,
                                                                                                 video._min_area, video._max_area,

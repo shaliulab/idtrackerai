@@ -239,6 +239,7 @@ if __name__ == '__main__':
                 except:
                     number_of_global_fragments = len(global_fragments)
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
+
                 print("pretraining with %i" %number_of_global_fragments, ' global fragments\n')
                 #create folder to store pretraining
                 video.create_pretraining_folder(number_of_global_fragments)
@@ -407,14 +408,14 @@ if __name__ == '__main__':
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
             # finish and save
             video._has_been_assigned = True
-            # get identity for individual fragments' extremes
-            for blobs_in_frame in blobs:
-                for blob in blobs_in_frame:
-                    #if a blob has not been assigned but it is a fish and overlaps with one fragment
-                    #assign it!
-                    if blob.identity == 0 and blob.is_a_fish:
-                        if len(blob.next) == 1: blob.identity = blob.next[0].identity
-                        elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
+            # # get identity for individual fragments' extremes
+            # for blobs_in_frame in blobs:
+            #     for blob in blobs_in_frame:
+            #         #if a blob has not been assigned but it is a fish and overlaps with one fragment
+            #         #assign it!
+            #         if blob.identity == 0 and blob.is_a_fish:
+            #             if len(blob.next) == 1: blob.identity = blob.next[0].identity
+            #             elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
 
             # visualise proposed tracking
 
