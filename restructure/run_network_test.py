@@ -149,7 +149,8 @@ if __name__ == '__main__':
                                                                             print_flag = False,
                                                                             plot_flag = False,
                                                                             global_step = 0,
-                                                                            first_accumulation_flag = True)
+                                                                            first_accumulation_flag = True,
+                                                                            animal_type = job_config.animal_type)
                         total_time = time.time() - start_time
                         print("accuracy: ", store_validation_accuracy_and_loss_data.accuracy[-1])
                         print("individual_accuracies: ", store_validation_accuracy_and_loss_data.individual_accuracy[-1])
@@ -168,6 +169,7 @@ if __name__ == '__main__':
                                                                         'only_accumulate_one_fragment': job_config.only_accumulate_one_fragment,
                                                                         'train_filters_in_accumulation': bool(job_config.train_filters_in_accumulation),
                                                                         'accumulation_certainty': job_config.accumulation_certainty,
+                                                                        'animal_type': job_config.animal_type,
                                                                         'IMDB_codes': job_config.IMDB_codes,
                                                                         'ids_codes': job_config.ids_codes,
                                                                         'group_size': int(group_size),
