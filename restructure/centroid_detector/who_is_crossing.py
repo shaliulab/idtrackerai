@@ -37,6 +37,7 @@ def get_jumps_and_crossing_frames_arrays(blobs_in_video):
     crossing_frames: list
         list of frames indices in which a crossing occurs
     """
+
     crossing_frames = []
     jumps = [] # array of non assigned portrait to be sent to the network for one-shot recognition [to be conditioned wrt 2 * 99perc[velocity]]
 
@@ -47,7 +48,13 @@ def get_jumps_and_crossing_frames_arrays(blobs_in_video):
             if blob.identity == 0 or blob.identity == None:
                 # if it is a fish, than it has a portrait and can be assigned
                 if blob.is_a_fish:
-                    jumps.append(blob)
+                    #first we assign the exteme points of the individual fragments
+                    if len(blob.next) == 1:
+                        blob.identity = blob.next[0].identity
+                    elif len(blob.previous) == 1:
+                        blob.identity = blob.previous[0].identity
+                    else:
+                        jumps.append(blob)
                 else:
                     crossing_frames.append(frame_num)
 
@@ -78,8 +85,6 @@ def compute_model_velocity(blobs_in_video, number_of_animals, percentile = VEL_P
                 distance_travelled_in_individual_fragments.extend(blob.frame_by_frame_velocity())
 
     return 2 * np.percentile(distance_travelled_in_individual_fragments, percentile)
-
-
 
 def assign_jumps(images, video):
     """Restore the network associated to the model used to assign video.
@@ -144,14 +149,16 @@ class Jump(object):
             self.jumping_blob._identity = None
             return True
 
-
     def check_id_availability(self, available_identities, sorted_assignments_indices):
         return [sorted_assignments_index for sorted_assignments_index in sorted_assignments_indices
             if (sorted_assignments_index + 1) in available_identities]
 
     def check_assigned_identity(self, blobs_in_video, available_identities, sorted_assignments_indices):
         if not self.apply_model_velocity(blobs_in_video):
+            print("available_identities ", available_identities)
+            print("removing ", self.jumping_blob.identity)
             available_identities.remove(self.jumping_blob.identity)
+            print("new_available_identities ", available_identities)
             if len(available_identities) > 0:
                 self.jumping_blob.identity = self.check_id_availability(available_identities, sorted_assignments_indices)
                 self.check_assigned_identity(blobs_in_video, available_identities, sorted_assignments_indices)
@@ -171,14 +178,15 @@ class Jump(object):
             sorted_assignments_indices = np.argsort(np.array(self.softmax_probs))[::-1]
             self.check_assigned_identity(blobs_in_video, available_identities, sorted_assignments_indices)
 
-
 def get_crossing_blobs(blobs_in_video, crossing_frames):
     """Get the blob objects representing the birth of a crossing at a certain frame
     these crossings has to be disjoint"""
     crossing_blobs = []
 
     for frame_number in crossing_frames:
-        crossing_blobs_in_frame = [blob for blob in blobs_in_video[frame_number] if len(blob.previous) > 1 or len(blob.next) > 1]
+        crossing_blobs_in_frame = [blob for blob in blobs_in_video[frame_number]
+                                    if blob.identity == 0 and
+                                    len(blob.previous) > 1 or len(blob.next) > 1]
         if len(crossing_blobs_in_frame) > 0:
             crossing_blobs.append(crossing_blobs_in_frame)
 

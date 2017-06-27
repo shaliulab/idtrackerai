@@ -152,6 +152,7 @@ class Blob(object):
         return velocity
 
     def compute_fragment_start_end(self):
+        print(self.__dict__)
         if self.is_a_fish_in_a_fragment:
             start = self.frame_number
             end = self.frame_number

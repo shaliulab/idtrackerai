@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import seaborn as sns
 sns.set(style="white", context="talk")
+from scipy import ndimage
 import pyautogui
 import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
@@ -233,6 +234,7 @@ def SegmentationPreview(video):
         #contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')
+        segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
         bbs, miniFrames, _, areas, _, goodContours = blobExtractor(segmentedFrame, frameGray, minArea, maxArea, height, width)
         print("areas: ", areas)
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
