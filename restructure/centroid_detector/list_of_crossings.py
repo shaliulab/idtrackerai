@@ -47,32 +47,6 @@ def compute_model_velocity(blobs_in_video, number_of_animals, percentile = VEL_P
     # return 2 * np.percentile(distance_travelled_in_individual_fragments, percentile)
     return 2 * np.max(distance_travelled_in_individual_fragments)
 
-def get_jump_blobs(blobs_in_video):
-    """Collect portraits from blobs if blob.is_a_jump"
-    params:
-    ------
-    blobs_in_video: list of blob objects
-        "blobs_in_video" contains the complete collection of blobs detected in
-        a video. Each blob object is endowed with relevant attributes (e.g.,
-        identity, pixels, frame_number) and methods.
-    returns:
-    -----
-    jumps: list
-        list of blobs identified as jumps
-    """
-    jump_blobs = [] # array of non assigned portrait to be sent to the network for one-shot recognition [to be conditioned wrt 2 * 99perc[velocity]]
-
-    for frame_num, blobs_in_frame in tqdm(enumerate(blobs_in_video), desc = "detect jumps and crossing"):
-        print("frame number ", frame_num)
-        for blob_num, blob in enumerate(blobs_in_frame):
-            print("blob number ", blob_num)
-            if blob.identity == 0:
-                # if it is a fish, than it has a portrait and can be assigned
-                if blob.is_a_fish:
-                    #first we assign the exteme points of the individual fragments
-                    jump_blobs.append(blob)
-    return jump_blobs
-
 def assign_jump_portraits(images, video):
     """Restore the network associated to the model used to assign video.
     parameters
@@ -223,13 +197,14 @@ if __name__ == "__main__":
     from GUI_utils import frame_by_frame_identity_inspector
 
     #load video and list of blobs
-    video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/session_2/video_object.npy').item()
+    video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/session_1/video_object.npy').item()
     number_of_animals = video.number_of_animals
-    list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/session_2/preprocessing/blobs_collection.npy'
+    list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/session_1/preprocessing/blobs_collection.npy'
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
     velocity_threshold = compute_model_velocity(blobs, number_of_animals, percentile = VEL_PERCENTILE)
-    jump_blobs = get_jump_blobs(blobs)
+    jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
+                    if blob.is_a_jump or blob.is_a_ghost_crossing]
     jump_images = [blob.portrait[0] for blob in jump_blobs]
     #assign jumps by restoring the network
     assigner = assign_jumps(jump_images, video)
@@ -244,5 +219,79 @@ if __name__ == "__main__":
         blob._identity = jump.jumping_blob.identity
         blob._P1_vector = assigner._softmax_probs[i]
         blob._P2_vector = None
+
+    crossing_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
+                    if blob.is_a_crossing]
+
+
+    def crossing_condition_0(crossing_blob):
+        previous_are_fish = [blob.is_a_fish for blob in crossing_blob.previous]
+        print("frame ", crossing_blob.frame_number)
+        print("condition 0 ", previous_are_fish, all(previous_are_fish))
+        return  all(previous_are_fish) and len(previous_are_fish) > 0
+
+    def propagate_crossing_in_the_future(crossing_blob):
+        ''' checks if the current crossing_blob overlaps with one
+        and only one crossing_blob in the next frame and vice versa'''
+        return len(crossing_blob.next) == 1 and len(crossing_blob.next[0].previous) == 1 and crossing_blob.next[0].is_a_crossing
+
+    def crossing_condition_1(crossing_blob):
+        next_are_fish = [blob.is_a_fish for blob in crossing_blob.next]
+        print("frame ", crossing_blob.frame_number)
+        print("condition 0 ", next_are_fish, all(next_are_fish))
+        return  all(next_are_fish) and len(next_are_fish) > 0
+
+    def propagate_crossing_in_the_past(crossing_blob):
+        ''' checks if the current crossing_blob overlaps with one
+        and only one crossing_blob in the previous frame and vice versa'''
+        return len(crossing_blob.previous) == 1 and len(crossing_blob.previous[0].next) == 1 and crossing_blob.previous[0].is_a_crossing
+
+    def crossing_consistency_condition(crossing_blob):
+        if hasattr(crossing_blob, 'identities_before_crossing') and hasattr(crossing_blob, 'identities_after_crossing'):####NOTE: to be deleted
+            s = set(crossing_blob.identities_before_crossing)
+            t = set(crossing_blob.identities_after_crossing)
+            return s <= t or t <= s
+        else:
+            return False
+
+
+    crossing_identifier = 0
+
+    for i, crossing_blob in enumerate(crossing_blobs):
+
+        if crossing_condition_0(crossing_blob):
+            crossing_blob.identities_before_crossing = [blob.identity for blob in crossing_blob.previous]
+            crossing_blob.crossing_identifier = crossing_identifier
+            temp_crossing_blob = crossing_blob
+
+            while propagate_crossing_in_the_future(temp_crossing_blob):
+                next_crossing = temp_crossing_blob.next[0]
+                next_crossing.identities_before_crossing = temp_crossing_blob.identities_before_crossing
+                next_crossing.crossing_identifier = crossing_identifier
+                temp_crossing_blob = next_crossing
+
+        if crossing_condition_1(crossing_blob):
+            crossing_blob.identities_after_crossing = [blob.identity for blob in crossing_blob.next]
+            crossing_blob.crossing_identifier = crossing_identifier
+            temp_crossing_blob = crossing_blob
+
+            while propagate_crossing_in_the_past(temp_crossing_blob):
+                previous_crossing = temp_crossing_blob.previous[0]
+                previous_crossing.identities_after_crossing = temp_crossing_blob.identities_after_crossing
+                previous_crossing.crossing_identifier = crossing_identifier
+                temp_crossing_blob = previous_crossing
+
+
+
+        crossing_identifier += 1
+
+    for crossing_blob in crossing_blobs:
+        if crossing_consistency_condition(crossing_blob):
+            print("I am passing here")
+            crossing_blob._identity = np.unique([crossing_blob.identities_after_crossing + crossing_blob.identities_before_crossing])
+
+
+
+
 
     frame_by_frame_identity_inspector(video, blobs)
