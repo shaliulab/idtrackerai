@@ -597,6 +597,14 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                             print("this blob does not have frequencies in fragment")
                     print("P1_vector: ", blob.P1_vector)
                     print("P2_vector: ", blob.P2_vector)
+                    print("is_a_fish: ", blob.is_a_fish)
+                    print("is_in_a_fragment: ", blob.is_in_a_fragment)
+                    print("is_a_fish_in_a_fragment: ", blob.is_a_fish_in_a_fragment)
+                    print("is_a_jump: ", blob.is_a_jump)
+                    print("is_a_ghost_crossing: ", blob.is_a_ghost_crossing)
+                    print("is_a_crossing: ", blob.is_a_crossing)
+                    print("next: ", blob.next)
+                    print("previous: ", blob.previous)
 
 
             if not save_video:

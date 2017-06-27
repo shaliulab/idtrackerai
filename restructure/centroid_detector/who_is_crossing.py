@@ -37,7 +37,6 @@ def get_jumps_and_crossing_frames_arrays(blobs_in_video):
     crossing_frames: list
         list of frames indices in which a crossing occurs
     """
-
     crossing_frames = []
     jumps = [] # array of non assigned portrait to be sent to the network for one-shot recognition [to be conditioned wrt 2 * 99perc[velocity]]
 
@@ -45,7 +44,7 @@ def get_jumps_and_crossing_frames_arrays(blobs_in_video):
         print("frame number ", frame_num)
         for blob_num, blob in enumerate(blobs_in_frame):
             print("blob number ", blob_num)
-            if blob.identity == 0 or blob.identity == None:
+            if blob.identity == 0:
                 # if it is a fish, than it has a portrait and can be assigned
                 if blob.is_a_fish:
                     #first we assign the exteme points of the individual fragments
@@ -159,8 +158,8 @@ class Jump(object):
             print("removing ", self.jumping_blob.identity)
             available_identities.remove(self.jumping_blob.identity)
             print("new_available_identities ", available_identities)
-            if len(available_identities) > 0:
-                self.jumping_blob.identity = self.check_id_availability(available_identities, sorted_assignments_indices)
+            if len(list(available_identities)) > 0:
+                self.jumping_blob.identity = self.check_id_availability(available_identities, sorted_assignments_indices)[0]
                 self.check_assigned_identity(blobs_in_video, available_identities, sorted_assignments_indices)
 
     def assign_jump(self, blobs_in_video):
@@ -178,6 +177,12 @@ class Jump(object):
             sorted_assignments_indices = np.argsort(np.array(self.softmax_probs))[::-1]
             self.check_assigned_identity(blobs_in_video, available_identities, sorted_assignments_indices)
 
+def catch_back_crossings(blob):
+    try:
+        return len(blob.previous[0].next) > 1
+    except:
+        return False
+
 def get_crossing_blobs(blobs_in_video, crossing_frames):
     """Get the blob objects representing the birth of a crossing at a certain frame
     these crossings has to be disjoint"""
@@ -185,8 +190,7 @@ def get_crossing_blobs(blobs_in_video, crossing_frames):
 
     for frame_number in crossing_frames:
         crossing_blobs_in_frame = [blob for blob in blobs_in_video[frame_number]
-                                    if blob.identity == 0 and
-                                    len(blob.previous) > 1 or len(blob.next) > 1]
+                                    if len(blob.next) > 1 or catch_back_crossings(blob)]
         if len(crossing_blobs_in_frame) > 0:
             crossing_blobs.append(crossing_blobs_in_frame)
 
@@ -212,6 +216,15 @@ class Crossing(object):
             counter += 1
             blob = blob.next[0]
             self.blobs_in_crossing.append(blob)
+
+        counter = 1
+
+        while len(blob.previous) == 1 and len(blob.previous[0].next) == 1 and not blob.previous[0].is_a_fish:
+            self.crossing_frames.append(self.starting_frame - counter)
+            counter += 1
+            blob = blob.previous[0]
+            self.blobs_in_crossing.append(blob)
+
         print("number of blobs added to crossing ", counter)
 
     def get_identities_in_crossing(self):
@@ -220,11 +233,11 @@ class Crossing(object):
         this case we can get the ids of these fish. On the other hand it can
         consist of the merging of a crossing and a fish, or several crossings.
         """
-        blobs_before_crossing = self.find_ids2(self.blob, attr = 'previous')
+        blobs_before_crossing = self.find_ids(self.blob, attr = 'previous')
         # print("blobs before crossing ", blobs_before_crossing)
         self.ids_before_crossing = self.get_identities_blobs(blobs_before_crossing)
         print("ids before crossing ", self.ids_before_crossing)
-        blobs_after_crossing = self.find_ids2(self.blob, attr = 'next')
+        blobs_after_crossing = self.find_ids(self.blob, attr = 'next')
         # print("blobs after crossing ", blobs_after_crossing)
         self.ids_after_crossing = self.get_identities_blobs(blobs_after_crossing)
         print("ids after crossing ", self.ids_after_crossing)
@@ -236,11 +249,11 @@ class Crossing(object):
     def get_animal_blobs_and_crossing_blobs(list_of_blobs):
         animal_blobs = []
         crossing_blobs = []
-        [animal_blobs.append(blob) if blob.identity != 0 else crossing_blobs.append(blob) for blob in list_of_blobs]
+        [animal_blobs.append(blob) if blob.identity != 0 and blob.is_a_fish else crossing_blobs.append(blob) for blob in list_of_blobs]
         return animal_blobs, crossing_blobs
 
     @staticmethod
-    def find_ids2(crossing_blob, attr = ''):
+    def find_ids(crossing_blob, attr = ''):
         blobs_to_check = getattr(crossing_blob, attr)
         # print(blobs_to_check)
         animal_blobs, crossing_blobs = Crossing.get_animal_blobs_and_crossing_blobs(blobs_to_check)
@@ -249,6 +262,8 @@ class Crossing(object):
 
         while len(crossing_blobs) > 0:
             for blob in crossing_blobs:
+                temp_animals = []
+                temp_crossing = []
                 temp_animals, temp_crossing = Crossing.get_animal_blobs_and_crossing_blobs(getattr(blob, attr))
                 # print("temp animals ", temp_animals)
                 # print("temp bad animals ", temp_crossing)
@@ -267,9 +282,9 @@ if __name__ == "__main__":
     from GUI_utils import frame_by_frame_identity_inspector
 
     #load video and list of blobs
-    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/conflict8Short/session_1/video_object.npy').item()
+    video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/session_1/video_object.npy').item()
     number_of_animals = video.number_of_animals
-    list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/conflict8Short/session_1/preprocessing/blobs_collection.npy'
+    list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/session_1/preprocessing/blobs_collection.npy'
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
     #get portraits for jumps and frame indices for crossings
@@ -290,20 +305,19 @@ if __name__ == "__main__":
         blob._P2_vector = None
 
 
-    # # get crossing blobs
-    # crossing_blobs = get_crossing_blobs(blobs, crossing_frames)
-    # crossings = []
-    #
-    # for blobs_in_crossing in tqdm(crossing_blobs, desc = "generating crossings list"):
-    #     # print("blobs in crossing ", blobs_in_crossing)
-    #     for blob in blobs_in_crossing:
-    #         c = Crossing(blob)
-    #         c.get_crossing_frames()
-    #         c.get_identities_in_crossing()
-    #         blobs_in_crossing = c.get_crossing_blobs()
-    #         for blob in blobs_in_crossing:
-    #             blob._identity = c.ids_before_crossing if len(c.ids_before_crossing) > 1 else c.ids_after_crossing
-    #         crossings.append(c)
+    # get crossing blobs
+    crossing_blobs = get_crossing_blobs(blobs, crossing_frames)
+    crossings = []
 
+    for blobs_in_crossing in tqdm(crossing_blobs, desc = "generating crossings list"):
+        # print("blobs in crossing ", blobs_in_crossing)
+        for blob in blobs_in_crossing:
+            c = Crossing(blob)
+            c.get_crossing_frames()
+            c.get_identities_in_crossing()
+            blobs_in_crossing = c.get_crossing_blobs()
+            for blob in blobs_in_crossing:
+                blob._identity = c.ids_before_crossing if len(c.ids_before_crossing) > 1 else c.ids_after_crossing
+            crossings.append(c)
 
-    # frame_by_frame_identity_inspector(video, blobs)
+    frame_by_frame_identity_inspector(video, blobs)

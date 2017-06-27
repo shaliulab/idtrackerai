@@ -2,7 +2,7 @@ from __future__ import division
 import sys
 sys.path.append('../utils')
 import tensorflow as tf
-from tf_utils import *
+# from tf_utils import *
 from cnn_utils import *
 import numpy as np
 

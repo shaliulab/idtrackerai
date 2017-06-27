@@ -54,8 +54,8 @@ class Store_Accuracy_and_Loss(object):
         ax4 = ax_handles[3]
         ax4.cla()
         colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=black)
+
         for global_fragment in global_fragments:
-            print(global_fragment)
             global_fragment.compute_start_end_frame_indices_of_individual_fragments(blobs_in_video)
             # print("individual fragments starts and ends: ", global_fragment.starts_ends_individual_fragments)
             for i, (start, end) in enumerate(global_fragment.starts_ends_individual_fragments):

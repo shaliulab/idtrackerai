@@ -146,13 +146,13 @@ if __name__ == '__main__':
             else:
                 # Load blobs and global fragments
                 print("It has been segmented")
-                list_of_blobs = ListOfBlobs.load(old_video.blobs_path_segmented)
+                blobs_list = ListOfBlobs.load(old_video.blobs_path_segmented)
                 video._preprocessing_folder = old_video._preprocessing_folder
                 video._blobs_path_segmented = old_video._blobs_path_segmented
                 video._has_been_segmented = True
                 video._maximum_number_of_blobs = old_video.maximum_number_of_blobs
+                blobs = blobs_list.blobs_in_video
                 reset_blobs_fragmentation_parameters(blobs)
-                blobs = list_of_blobs.blobs_in_video
 
             #compute a model of the area of the animals (considering frames in which
             #all the animals are visible)
