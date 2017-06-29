@@ -9,9 +9,8 @@ import numpy as np
 import shutil
 import cPickle as pickle
 import sys
-sys.path.append('../utils')
+# sys.path.append('../utils')
 
-from video import Video
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):
     ''' get variables from a standard python dictionary '''
@@ -135,6 +134,7 @@ def get_spaced_colors_util(n,norm=False,black=True):
         rgbcolorslist = [(int(i[4:], 16)/256., int(i[2:4], 16)/256., int(i[:2], 16)/256.) for i in colors]
     else:
         rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
+
     if black:
         black = (0., 0., 0.)
         rgbcolorslist.insert(0, black)

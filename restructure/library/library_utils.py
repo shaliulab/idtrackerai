@@ -86,6 +86,8 @@ def subsample_dataset_by_individuals(dataset, config):
     config.identities = dataset.identities[np.random.permutation(config.number_of_animals)]
     print("identities, ", config.identities)
     # set stating frame
+    # we set the starting frame so that we take images from both videos of the library.
+    # the greates unbalance can be 1/3 from video_1 and 2/3 from video_2
     config.starting_frame = np.random.randint(dataset.minimum_number_of_images_per_animal-config.number_of_frames)
     print("starting frame, ", config.starting_frame)
 

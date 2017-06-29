@@ -59,21 +59,20 @@ if __name__ == '__main__':
     run_library_tests.py 1 1 P None 0 .5 .1 DEF afs 1_2 (running in the cluster, job1, pretraining, libraries DEF, all individuals in library D and first half obf E second half of F, repetitions[1 2])
     '''
     print("cluster:", sys.argv[1])
-    print("test_data_frame:", sys.argv[2])
-    print("test_number:", sys.argv[3])
+    print("test_number:", sys.argv[2])
 
-    tests_data_frame = pd.read_pickle(sys.argv[2])
-    test_dictionary = tests_data_frame.loc[int(sys.argv[3])].to_dict()
+    tests_data_frame = pd.read_pickle('./library/tests_data_frame_test.pkl')
+    test_dictionary = tests_data_frame.loc[int(sys.argv[2])].to_dict()
     pprint(test_dictionary)
 
     job_config = LibraryJobConfig(cluster = sys.argv[1], test_dictionary = test_dictionary)
     job_config.create_folders_structure()
 
-    if os.path.isfile('./library/results_data_frame.pkl'):
+    if os.path.isfile('./library/results_data_frame_test.pkl'):
         print("results_data_frame.pkl already exists \n")
-        results_data_frame = pd.read_pickle('./library/results_data_frame.pkl')
+        results_data_frame = pd.read_pickle('./library/results_data_frame_test.pkl')
     else:
-        print("results_data_frame.pkl does not exist \n")
+        print("results_data_frame_test.pkl does not exist \n")
         results_data_frame = pd.DataFrame()
 
     dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes)
@@ -94,7 +93,7 @@ if __name__ == '__main__':
 
                     print("\n********** group size %i - frames_in_video %i - frames_in_fragment %i - repetition %i ********" %(group_size,frames_in_video,frames_in_fragment,repetition))
                     already_computed = False
-                    if os.path.isfile('./library/results_data_frame.pkl'):
+                    if os.path.isfile('./library/results_data_frame_test.pkl'):
                         already_computed = check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, frames_in_fragment, repetition)
                     if already_computed:
                         print("The algorithm with this comditions has been already tested")
@@ -198,7 +197,7 @@ if __name__ == '__main__':
                                 accumulation_network_params.scopes_layers_to_optimize = None
 
                         if job_config.train_filters_in_accumulation == True:
-                            accumulation_network_params.scopes_layers_to_optimize = []
+                            accumulation_network_params.scopes_layers_to_optimize = None
                         #instantiate network object
                         net = ConvNetwork(accumulation_network_params)
                         #restore variables from the pretraining
@@ -346,6 +345,7 @@ if __name__ == '__main__':
                                                                         'only_accumulate_one_fragment': job_config.only_accumulate_one_fragment,
                                                                         'train_filters_in_accumulation': bool(job_config.train_filters_in_accumulation),
                                                                         'accumulation_certainty': job_config.accumulation_certainty,
+                                                                        'animal_type': job_config.animal_type,
                                                                         'IMDB_codes': job_config.IMDB_codes,
                                                                         'ids_codes': job_config.ids_codes,
                                                                         'group_size': int(group_size),
@@ -359,7 +359,7 @@ if __name__ == '__main__':
                                                                         'individual_accuracies(assigned)': individual_accuracies_assigned_frames,
                                                                         'accuracy': accuracy,
                                                                         'accuracy(assigned)': accuracy_assigned_frames,
-                                                                        'proportion_of_identity_repetitions': number_of_identity_repetitions/(frames_in_video * group_size - sum(number_of_not_assigned_blobs)) ,
+                                                                        'proportion_of_identity_repetitions': number_of_identity_repetitions/(frames_in_video * group_size - sum(number_of_not_assigned_blobs)),
                                                                         'proportion_of_identity_shifts_in_accumulated_frames': number_of_identity_shifts_in_accumulated_frames/(frames_in_video * group_size - sum(number_of_not_assigned_blobs)) ,
                                                                         'pretraining_time': pretraining_time,
                                                                         'accumulation_time': accumulation_time,
@@ -367,7 +367,40 @@ if __name__ == '__main__':
                                                                         'total_time': pretraining_time + accumulation_time + assignation_time,
                                                                          }, ignore_index=True)
 
-                        results_data_frame.to_pickle('./library/results_data_frame.pkl')
+                        # results_data_frame = results_data_frame.append({'date': time.strftime("%c"),
+                        #                                                 'cluster': int(job_config.cluster) ,
+                        #                                                 'test_name': job_config.test_name,
+                        #                                                 'CNN_model': job_config.CNN_model,
+                        #                                                 'knowledge_transfer_flag': job_config.knowledge_transfer_flag,
+                        #                                                 'knowledge_transfer_folder': job_config.knowledge_transfer_folder,
+                        #                                                 'pretraining_flag': job_config.pretraining_flag,
+                        #                                                 'percentage_of_frames_in_pretaining': job_config.percentage_of_frames_in_pretaining,
+                        #                                                 'only_accumulate_one_fragment': job_config.only_accumulate_one_fragment,
+                        #                                                 'train_filters_in_accumulation': bool(job_config.train_filters_in_accumulation),
+                        #                                                 'accumulation_certainty': job_config.accumulation_certainty,
+                        #                                                 'IMDB_codes': job_config.IMDB_codes,
+                        #                                                 'ids_codes': job_config.ids_codes,
+                        #                                                 'group_size': int(group_size),
+                        #                                                 'frames_in_video': int(frames_in_video),
+                        #                                                 'frames_per_fragment': int(frames_in_fragment),
+                        #                                                 'repetition': int(repetition),
+                        #                                                 'number_of_fragments': int(len(global_fragments)),
+                        #                                                 'proportion_of_accumulated_fragments': sum([global_fragment.used_for_training for global_fragment in global_fragments])/len(global_fragments),
+                        #                                                 'number_of_not_assigned_blobs': number_of_not_assigned_blobs,
+                        #                                                 'individual_accuracies': individual_accuracies,
+                        #                                                 'individual_accuracies(assigned)': individual_accuracies_assigned_frames,
+                        #                                                 'accuracy': accuracy,
+                        #                                                 'accuracy(assigned)': accuracy_assigned_frames,
+                        #                                                 'proportion_of_identity_repetitions': number_of_identity_repetitions/(frames_in_video * group_size - sum(number_of_not_assigned_blobs)) ,
+                        #                                                 'proportion_of_identity_shifts_in_accumulated_frames': number_of_identity_shifts_in_accumulated_frames/(frames_in_video * group_size - sum(number_of_not_assigned_blobs)) ,
+                        #                                                 'pretraining_time': pretraining_time,
+                        #                                                 'accumulation_time': accumulation_time,
+                        #                                                 'assignation_time': assignation_time,
+                        #                                                 'total_time': pretraining_time + accumulation_time + assignation_time,
+                        #                                                  }, ignore_index=True)
+
+
+                        results_data_frame.to_pickle('./library/results_data_frame_test.pkl')
 
                         blobs = None
                         global_fragments = None
