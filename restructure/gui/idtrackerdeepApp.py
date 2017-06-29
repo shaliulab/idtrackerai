@@ -881,21 +881,32 @@ class Validator(BoxLayout):
     def writeIds(self, frame):
         blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
         font = cv2.FONT_HERSHEY_SIMPLEX
-        attributes_to_get = ["centroid","identity","user_generated_identity"]###TODO separate noses from portraits in main code
-        attributes_dict = self.get_attributes_from_blobs_in_frame(blobs_in_frame, attributes_to_get)
+        # attributes_to_get = ["centroid","identity","user_generated_identity"]###TODO separate noses from portraits in main code
+        # attributes_dict = self.get_attributes_from_blobs_in_frame(blobs_in_frame, attributes_to_get)
         frame = self.visualiser.frame
 
-        for centroid, identity, user_generated_identity in zip(attributes_dict['centroid'], attributes_dict['identity'], attributes_dict['user_generated_identity']):
-            fontSize = .5
-            # print(user_generated_identity)
-            # print(identity)
-            if user_generated_identity is None:
-                text = str(identity)
+        for blob in blobs_in_frame:
+            if blob.user_generated_identity is None:
+                text = str(blob.identity)
             else:
-                text = str(user_generated_identity)
-            thickness = 2
-            cv2.putText(frame, text, (centroid[0] - 10, centroid[1] - 10) , font, 1, self.colors[int(text)],2)
-            cv2.circle(frame, tuple(centroid), 2, self.colors[int(text)], 2)
+                text = str(blob.user_generated_identity)
+
+            if type(blob.identity) is 'int':
+                cv2.circle(frame, tuple(blob.centroid), 2, self.colors[blob._identity], -1)
+            elif type(blob.identity) is 'list':
+                cv2.circle(frame, tuple(blob.centroid), 2, [255, 255, 255], -1)
+            if blob._assigned_during_accumulation:
+                # we draw a circle in the centroid if the blob has been assigned during accumulation
+                cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, 1, self.colors[blob._identity], 3)
+            elif not blob._assigned_during_accumulation:
+                # we draw a cross in the centroid if the blob has been assigned during assignation
+                # cv2.putText(frame, 'x',tuple(blob.centroid), font, 1,self.colors[blob._identity], 1)
+                if blob.is_a_fish_in_a_fragment:
+                    cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, .5, self.colors[blob._identity], 3)
+                elif not blob.is_a_fish:
+                    cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, 1, [255,255,255], 3)
+                else:
+                    cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, .5, [0, 0, 0], 3)
 
         # Visualization of the process
         if self.scale != 1:

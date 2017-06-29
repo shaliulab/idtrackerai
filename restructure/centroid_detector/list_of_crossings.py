@@ -6,6 +6,7 @@ sys.path.append('../utils')
 sys.path.append('../network')
 import numpy as np
 from tqdm import tqdm
+import collections
 from blob import ListOfBlobs
 import matplotlib.pyplot as plt
 from py_utils import get_spaced_colors_util
@@ -110,12 +111,13 @@ def compute_velocity_from_list_of_blobs(list_of_blobs):
 
 
 class Jump(object):
-    def __init__(self, jumping_blob = None, number_of_animals = None, net_prediction = None, softmax_probs = None, velocity_threshold = None):
+    def __init__(self, jumping_blob = None, number_of_animals = None, net_prediction = None, softmax_probs = None, velocity_threshold = None, number_of_frames = None):
         self._jumping_blob = jumping_blob
         self.possible_identities = range(1, number_of_animals + 1)
         self.prediction = int(net_prediction)
         self.softmax_probs = softmax_probs
         self.velocity_threshold = velocity_threshold
+        self.number_of_frames = number_of_frames
 
     @property
     def jumping_blob(self):
@@ -141,11 +143,15 @@ class Jump(object):
         if corresponding_blob_list_past:
             corresponding_blob_list.append(corresponding_blob_list_past[0])
         corresponding_blob_list.append(self.jumping_blob)
-        blobs_in_frame = blobs_in_video[self.jumping_blob.frame_number + 1]
-        corresponding_blob_list_future = [blob for blob in blobs_in_frame if blob.is_a_fish and blob.identity == self.jumping_blob.identity]
-        if corresponding_blob_list_future:
-            corresponding_blob_list.append(corresponding_blob_list_future[0])
-        print("corresponding_blob_list ", corresponding_blob_list)
+        print("self.jumping_blob.frame_number + 1 ", self.jumping_blob.frame_number + 1)
+        print("self.number_of_frames ", self.number_of_frames)
+        print("len(blobs_in_video) ", len(blobs_in_video))
+        if self.jumping_blob.frame_number + 1 < self.number_of_frames:
+            blobs_in_frame = blobs_in_video[self.jumping_blob.frame_number + 1]
+            corresponding_blob_list_future = [blob for blob in blobs_in_frame if blob.is_a_fish and blob.identity == self.jumping_blob.identity]
+            if corresponding_blob_list_future:
+                corresponding_blob_list.append(corresponding_blob_list_future[0])
+            print("corresponding_blob_list ", corresponding_blob_list)
         if len(corresponding_blob_list) > 1:
             velocity = compute_velocity_from_list_of_blobs(corresponding_blob_list)
             print("velocity, ", velocity)
@@ -192,17 +198,63 @@ class Jump(object):
             sorted_assignments_indices = np.argsort(np.array(self.softmax_probs))[::-1]
             self.check_assigned_identity(blobs_in_video, available_identities, sorted_assignments_indices)
 
+def flatten(l):
+    for el in l:
+        if isinstance(el, collections.Iterable) and not isinstance(el, basestring):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el
 
 if __name__ == "__main__":
     from GUI_utils import frame_by_frame_identity_inspector
+    NUM_CHUNKS_BLOB_SAVING = 10
 
     #load video and list of blobs
+    # video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4/video_object.npy').item()
     video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/session_1/video_object.npy').item()
     number_of_animals = video.number_of_animals
-    list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/session_1/preprocessing/blobs_collection.npy'
+    # list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4/preprocessing/blobs_collection.npy'
+    list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/session_1/preprocessing/blobs_collection_safe.npy'
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
-    velocity_threshold = compute_model_velocity(blobs, number_of_animals, percentile = VEL_PERCENTILE)
+    if not hasattr(video, "velocity_threshold"):
+        video.velocity_threshold = compute_model_velocity(blobs, number_of_animals, percentile = VEL_PERCENTILE)
+
+    ''' Solve duplications and impossible shits of identity (according to velocity_threshold) '''
+    def get_blobs_with_duplicated_identity_in_frame(blobs_in_frame, duplicated_identity, blobs_assigned_during_accumulation):
+        return [blob for blob in blobs_in_frame
+                    if blob.identity == duplicated_identity and blob not in blobs_assigned_during_accumulation]
+
+    def get_P2_vectors(blobs):
+        return np.concatenate([blob.P2_vector for blob in blobs],axis=0)
+
+    def set_to_zero_P2_values_of_protected_ids(P2_matrix,blobs_assigned_during_accumulation):
+        for blob in blobs_assigned_during_accumulation:
+            P2_matrix[:,blob.identity-1] = 0
+        return P2_matrix
+
+    for blobs_in_frame in blobs:
+        print("frame_number: ", blobs_in_frame[0].frame_number)
+        identities = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
+        blobs_assigned_during_accumulation = [blob for blobs_in_frame if blob.assigned_during_accumulation]
+        duplicated_identities = set([x for x in identities if l.count(x) > 1])
+        if len(duplicated_identities) > 0:
+            for duplicated_identity in duplicated_identities:
+                blobs_with_duplicated_identity_to_reassign = get_blobs_with_duplicated_identity_in_frame(blobs_in_frame,
+                                                                                                            duplicated_identity,
+                                                                                                            blobs_assigned_during_accumulation)
+                P2_of_duplicated_blobs_to_reassign = get_P2_vectors(blobs_with_duplicated_identity_to_reassign)
+                P2_of_duplicated_blobs_to_reassign = set_to_zero_P2_values_of_protected_ids(P2_of_duplicated_blobs_to_reassign,
+                                                                                            blobs_assigned_during_accumulation)
+                identities_to_reassign = get_identities_to_reassign(P2_matrix,)
+
+
+
+
+
+
+    ''' Assign identities to jumps '''
     jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
                     if blob.is_a_jump or blob.is_a_ghost_crossing]
     jump_images = [blob.portrait[0] for blob in jump_blobs]
@@ -214,84 +266,100 @@ if __name__ == "__main__":
                     number_of_animals = video.number_of_animals,
                     net_prediction = assigner._predictions[i],
                     softmax_probs = assigner._softmax_probs[i],
-                    velocity_threshold = velocity_threshold)
+                    velocity_threshold = video.velocity_threshold,
+                    number_of_frames = video._num_frames)
         jump.assign_jump(blobs)
         blob._identity = jump.jumping_blob.identity
         blob._P1_vector = assigner._softmax_probs[i]
         blob._P2_vector = None
 
-    crossing_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
-                    if blob.is_a_crossing]
-
-
-    def crossing_condition_0(crossing_blob):
-        previous_are_fish = [blob.is_a_fish for blob in crossing_blob.previous]
-        print("frame ", crossing_blob.frame_number)
-        print("condition 0 ", previous_are_fish, all(previous_are_fish))
-        return  all(previous_are_fish) and len(previous_are_fish) > 0
-
-    def propagate_crossing_in_the_future(crossing_blob):
-        ''' checks if the current crossing_blob overlaps with one
-        and only one crossing_blob in the next frame and vice versa'''
-        return len(crossing_blob.next) == 1 and len(crossing_blob.next[0].previous) == 1 and crossing_blob.next[0].is_a_crossing
-
-    def crossing_condition_1(crossing_blob):
-        next_are_fish = [blob.is_a_fish for blob in crossing_blob.next]
-        print("frame ", crossing_blob.frame_number)
-        print("condition 0 ", next_are_fish, all(next_are_fish))
-        return  all(next_are_fish) and len(next_are_fish) > 0
-
-    def propagate_crossing_in_the_past(crossing_blob):
-        ''' checks if the current crossing_blob overlaps with one
-        and only one crossing_blob in the previous frame and vice versa'''
-        return len(crossing_blob.previous) == 1 and len(crossing_blob.previous[0].next) == 1 and crossing_blob.previous[0].is_a_crossing
-
-    def crossing_consistency_condition(crossing_blob):
-        if hasattr(crossing_blob, 'identities_before_crossing') and hasattr(crossing_blob, 'identities_after_crossing'):####NOTE: to be deleted
-            s = set(crossing_blob.identities_before_crossing)
-            t = set(crossing_blob.identities_after_crossing)
-            return s <= t or t <= s
-        else:
-            return False
-
-
-    crossing_identifier = 0
-
-    for i, crossing_blob in enumerate(crossing_blobs):
-
-        if crossing_condition_0(crossing_blob):
-            crossing_blob.identities_before_crossing = [blob.identity for blob in crossing_blob.previous]
-            crossing_blob.crossing_identifier = crossing_identifier
-            temp_crossing_blob = crossing_blob
-
-            while propagate_crossing_in_the_future(temp_crossing_blob):
-                next_crossing = temp_crossing_blob.next[0]
-                next_crossing.identities_before_crossing = temp_crossing_blob.identities_before_crossing
-                next_crossing.crossing_identifier = crossing_identifier
-                temp_crossing_blob = next_crossing
-
-        if crossing_condition_1(crossing_blob):
-            crossing_blob.identities_after_crossing = [blob.identity for blob in crossing_blob.next]
-            crossing_blob.crossing_identifier = crossing_identifier
-            temp_crossing_blob = crossing_blob
-
-            while propagate_crossing_in_the_past(temp_crossing_blob):
-                previous_crossing = temp_crossing_blob.previous[0]
-                previous_crossing.identities_after_crossing = temp_crossing_blob.identities_after_crossing
-                previous_crossing.crossing_identifier = crossing_identifier
-                temp_crossing_blob = previous_crossing
-
-
-
-        crossing_identifier += 1
-
-    for crossing_blob in crossing_blobs:
-        if crossing_consistency_condition(crossing_blob):
-            print("I am passing here")
-            crossing_blob._identity = np.unique([crossing_blob.identities_after_crossing + crossing_blob.identities_before_crossing])
+    ''' Find who is in the crossings '''
 
 
 
 
 
-    frame_by_frame_identity_inspector(video, blobs)
+    # crossing_identifier = 0
+    #
+    # for frame_number, blobs_in_frame in enumerate(blobs):
+    #     ''' from past to future '''
+    #     print("---------------frame_number (from past): ", frame_number)
+    #     for blob in blobs_in_frame:
+    #         print('***new blob ')
+    #         if blob.is_a_crossing:
+    #             print('this blob is a crossing')
+    #             blob._identity = list(flatten([previous_blob.identity for previous_blob in blob.previous]))
+    #             blob.bad_crossing = False
+    #             for previous_blob in blob.previous:
+    #                 print("\nprevious_blob: is_a_fish - %i, is_a_crossing - %i" %(previous_blob.is_a_fish, previous_blob.is_a_crossing))
+    #                 print("previous_blob identity: ", previous_blob.identity)
+    #                 if previous_blob.is_a_crossing:
+    #                     print("previous_blob_next_crossings ", [previous_blob_next.is_a_crossing for previous_blob_next in previous_blob.next])
+    #                     for previous_blob_next in previous_blob.next:
+    #                         print('--->', previous_blob_next.identity)
+    #                     previous_has_more_than_one_crossing = sum([previous_blob_next.is_a_crossing for previous_blob_next in previous_blob.next]) > 1
+    #                     print("previous_has_more_than_one_crossing, ", previous_has_more_than_one_crossing)
+    #                     if previous_has_more_than_one_crossing:
+    #                         blob.bad_crossing = True
+    #                     if len(previous_blob.next) != 1: # the previous crossing_blob is splitting
+    #                         for previous_blob_next in previous_blob.next:
+    #                             print("previous_blob_next: is_a_fish - %i, is_a_crossing - %i" %(previous_blob_next.is_a_fish, previous_blob_next.is_a_crossing))
+    #                             print("previous_blob_next identity: ", previous_blob_next.identity)
+    #                             if previous_blob_next is not blob: # for every next of the previous that is not the current blob we remove the identities
+    #                                 print(previous_blob_next.identity)
+    #                                 if previous_blob_next.is_a_fish and previous_blob_next.identity != 0 and previous_blob_next.identity in blob._identity:
+    #                                     blob._identity.remove(previous_blob_next.identity)
+    #                                 else:
+    #                                     print('we do nothing, probably a badly solved jump')
+    #
+    #         blob.crossing_identifier = crossing_identifier
+    #         crossing_identifier += 1
+    #
+    #         print("blob.identity: ", blob.identity)
+
+    # for frame_number, blobs_in_frame in enumerate(blobs[::-1]):
+    #     ''' from future to past '''
+    #     for blob in blobs_in_frame:
+    #         print("\nframe_number (from future): ", blob.frame_number)
+    #         if blob.is_a_crossing:
+    #             print(blob.is_a_crossing)
+    #             has_more_than_one_crossing = sum([blob_previous.is_a_crossing for blob_previous in blob.previous]) > 1
+    #             print("has_more_than_one_crossing, ", has_more_than_one_crossing)
+    #             for blob_previous in blob.previous:
+    #                 if blob_previous.is_a_crossing:
+    #                     print("previous_blob.bad_crossing (before), ", blob_previous.bad_crossing)
+    #                 if blob_previous.is_a_crossing and blob_previous.bad_crossing and has_more_than_one_crossing:
+    #                     blob_previous.bad_crossing = True
+    #                     print("previous_blob.bad_crossing(after), ", blob_previous.bad_crossing)
+    #             blob._identity.extend(list(flatten([next_blob.identity for next_blob in blob.next])))
+    #             blob._identity = list(np.unique(blob._identity))
+    #             for next_blob in blob.next:
+    #                 print("next_blob: is_a_fish - %i, is_a_crossing - %i" %(next_blob.is_a_fish, next_blob.is_a_crossing))
+    #                 print("next_blob identity: ", next_blob.identity)
+    #                 if next_blob.is_a_crossing:
+    #                     if len(next_blob.previous) != 1: # the next crossing_blob is splitting
+    #                         for next_blob_previous in next_blob.previous:
+    #                             print("next_blob_previous: is_a_fish - %i, is_a_crossing - %i" %(next_blob_previous.is_a_fish, next_blob_previous.is_a_crossing))
+    #                             if next_blob_previous is not blob:
+    #                                 print(next_blob_previous.identity)
+    #                                 if next_blob_previous.is_a_fish and next_blob_previous.identity != 0 and next_blob_previous.identity in blob._identity:
+    #                                     blob._identity.remove(next_blob_previous.identity)
+    #                                 elif next_blob_previous.is_a_crossing and not next_blob_previous.bad_crossing:
+    #                                     [blob._identity.remove(identity) for identity in next_blob_previous.identity if identity in blob._identity]
+    #                                 else:
+    #                                     print('we do nothing, probably a badly solved jump')
+    #
+    #             identities_to_remove_from_crossing = [blob_to_remove.identity for blob_to_remove in blobs_in_frame if blob_to_remove.is_a_fish]
+    #             identities_to_remove_from_crossing.extend([0])
+    #             [blob._identity.remove(identity) for identity in identities_to_remove_from_crossing if identity in blob._identity]
+    #             if blob.bad_crossing:
+    #                 blob.number_of_animals_in_crossing = None
+    #             else:
+    #                 blob.number_of_animals_in_crossing = len(blob.identity)
+    #         print("blob.identity: ", blob.identity)
+
+    # frame_by_frame_identity_inspector(video, blobs)
+    blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+    blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
+    blobs_list.cut_in_chunks()
+    blobs_list.save()
