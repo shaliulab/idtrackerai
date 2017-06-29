@@ -526,6 +526,7 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
     name = video._session_folder +'/tracked.avi'
     out = cv2.VideoWriter(name, fourcc, 32.0, (video._width, video._height))
 
+
     def scroll(trackbarValue):
         global frame, currentSegment, cap
 
@@ -589,6 +590,10 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                 if not save_video:
                     print("\nblob ", b)
                     print("identity: ", blob._identity)
+                    if hasattr(blob,"identities_before_crossing"):
+                        print("identity_before_crossing: ", blob.identities_before_crossing)
+                    if hasattr(blob,"identities_after_crossing"):
+                        print("identity_after_crossing: ", blob.identities_after_crossing)
                     print("assigned during accumulation: ", blob.assigned_during_accumulation)
                     if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
                         try:
@@ -597,6 +602,17 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                             print("this blob does not have frequencies in fragment")
                     print("P1_vector: ", blob.P1_vector)
                     print("P2_vector: ", blob.P2_vector)
+                    print("is_a_fish: ", blob.is_a_fish)
+                    print("is_in_a_fragment: ", blob.is_in_a_fragment)
+                    print("is_a_fish_in_a_fragment: ", blob.is_a_fish_in_a_fragment)
+                    print("is_a_jump: ", blob.is_a_jump)
+                    print("is_a_ghost_crossing: ", blob.is_a_ghost_crossing)
+                    print("is_a_crossing: ", blob.is_a_crossing)
+                    if blob.is_a_crossing:
+                        print("bad_crossing ", blob.bad_crossing)
+                        # print("number_of_animals_in_crossing: ", blob.number_of_animals_in_crossing)
+                    print("next: ", blob.next)
+                    print("previous: ", blob.previous)
 
 
             if not save_video:
@@ -611,6 +627,7 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
 
     scroll(1)
     cv2.setTrackbarPos('start', 'frame_by_frame_identity_inspector', defFrame)
+    
     # cv2.waitKey(0)
     # cv2.waitKey(1)
     # cv2.destroyAllWindows()

@@ -50,6 +50,18 @@ class Blob(object):
     def is_a_fish(self):
         return self.portrait is not None
 
+    @property
+    def is_a_jump(self):
+        return (self.is_a_fish and self.identity == 0 and len(self.next) == 0 and len(self.previous) == 0)
+
+    @property
+    def is_a_ghost_crossing(self):
+        return (self.is_a_fish and self.identity == 0 and (len(self.next) != 1 or len(self.previous) != 1))
+
+    @property
+    def is_a_crossing(self):
+        return self.portrait is None
+
     def overlaps_with(self, other):
         """Checks if contours are disjoint
         """
@@ -99,7 +111,11 @@ class Blob(object):
 
     @identity.setter
     def identity(self, new_identifier):
-        # assert self.is_a_fish NOTE: commented to plot identities in crossings!
+        if type(new_identifier) is 'int':
+            assert self.is_a_fish
+        elif type(new_identifier) is 'list':
+            assert self.is_a_crossing
+
         self._identity = new_identifier
 
     @property

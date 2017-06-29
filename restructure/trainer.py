@@ -12,9 +12,11 @@ from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
-def train(video, blobs_in_video, global_fragments, net, images, labels, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag, global_step = 0, first_accumulation_flag = False):
+def train(video, blobs_in_video, global_fragments, net, images, labels, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag, global_step = 0, first_accumulation_flag = False, animal_type = None):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
+    if animal_type is None:
+        animal_type = video.animal_type
     print("\nTraining...")
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation')
@@ -25,7 +27,7 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 
     # Instantiate data_set
-    training_dataset, validation_dataset = split_data_train_and_validation(video.animal_type, net.params.number_of_animals, images, labels)
+    training_dataset, validation_dataset = split_data_train_and_validation(animal_type, net.params.number_of_animals, images, labels)
     # Crop images from 36x36 to 32x32 without performing data augmentation
     training_dataset.crop_images(image_size = 32)
     validation_dataset.crop_images(image_size = 32)

@@ -132,7 +132,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_DEF_aaa_c
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)
 
-# 0 uncorrleaged_images GHI_aaa cnn_model_0
+# 6 uncorrleaged_images GHI_aaa cnn_model_0
 tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_cnn_0',
                                                 "CNN_model": 0,
                                                 "knowledge_transfer_flag": False,
@@ -142,7 +142,8 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_c
                                                 "only_accumulate_one_fragment": False,
                                                 "train_filters_in_accumulation": False,
                                                 "accumulation_certainty": 0.,
-                                                "IMDB_codes": 'DEF',
+                                                "animal_type": 'fly',
+                                                "IMDB_codes": 'GHI',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
                                                 "frames_in_video": [3000],
@@ -150,7 +151,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_c
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)
 
-# 1 uncorrleaged_images GHI_aaa cnn_model_1
+# 7 uncorrleaged_images GHI_aaa cnn_model_1
 tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_cnn_1',
                                                 "CNN_model": 1,
                                                 "knowledge_transfer_flag": False,
@@ -160,7 +161,8 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_c
                                                 "only_accumulate_one_fragment": False,
                                                 "train_filters_in_accumulation": False,
                                                 "accumulation_certainty": 0.,
-                                                "IMDB_codes": 'DEF',
+                                                "animal_type": 'fly',
+                                                "IMDB_codes": 'GHI',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
                                                 "frames_in_video": [3000],
@@ -168,7 +170,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_c
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)
 
-# 2 uncorrleaged_images GHI_aaa cnn_model_2
+# 8 uncorrleaged_images GHI_aaa cnn_model_2
 tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_cnn_2',
                                                 "CNN_model": 2,
                                                 "knowledge_transfer_flag": False,
@@ -178,7 +180,8 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_c
                                                 "only_accumulate_one_fragment": False,
                                                 "train_filters_in_accumulation": False,
                                                 "accumulation_certainty": 0.,
-                                                "IMDB_codes": 'DEF',
+                                                "animal_type": 'fly',
+                                                "IMDB_codes": 'GHI',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
                                                 "frames_in_video": [3000],
@@ -186,7 +189,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_c
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)
 
-# 3 uncorrleaged_images GHI_aaa cnn_model_3
+# 9 uncorrleaged_images GHI_aaa cnn_model_3
 tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_cnn_3',
                                                 "CNN_model": 3,
                                                 "knowledge_transfer_flag": False,
@@ -196,7 +199,8 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_c
                                                 "only_accumulate_one_fragment": False,
                                                 "train_filters_in_accumulation": False,
                                                 "accumulation_certainty": 0.,
-                                                "IMDB_codes": 'DEF',
+                                                "animal_type": 'fly',
+                                                "IMDB_codes": 'GHI',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
                                                 "frames_in_video": [3000],
@@ -204,7 +208,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_c
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)
 
-# 4 uncorrleaged_images GHI_aaa cnn_model_4
+# 10 uncorrleaged_images GHI_aaa cnn_model_4
 tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_cnn_4',
                                                 "CNN_model": 4,
                                                 "knowledge_transfer_flag": False,
@@ -214,7 +218,8 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_c
                                                 "only_accumulate_one_fragment": False,
                                                 "train_filters_in_accumulation": False,
                                                 "accumulation_certainty": 0.,
-                                                "IMDB_codes": 'DEF',
+                                                "animal_type": 'fly',
+                                                "IMDB_codes": 'GHI',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
                                                 "frames_in_video": [3000],
@@ -222,7 +227,7 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_c
                                                 "repetitions": [1, 2, 3],
                                                  }, ignore_index=True)
 
-# 5 uncorrleaged_images GHI_aaa cnn_model_5
+# 11 uncorrleaged_images GHI_aaa cnn_model_5
 tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_cnn_5',
                                                 "CNN_model": 5,
                                                 "knowledge_transfer_flag": False,
@@ -232,7 +237,8 @@ tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_GHI_aaa_c
                                                 "only_accumulate_one_fragment": False,
                                                 "train_filters_in_accumulation": False,
                                                 "accumulation_certainty": 0.,
-                                                "IMDB_codes": 'DEF',
+                                                "animal_type": 'fly',
+                                                "IMDB_codes": 'GHI',
                                                 "ids_codes": 'aaa',
                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
                                                 "frames_in_video": [3000],

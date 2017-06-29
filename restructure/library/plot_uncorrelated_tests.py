@@ -49,7 +49,7 @@ if __name__ == '__main__':
                                                     results_data_frame.loc[0,'IMDB_codes'],
                                                     len(results_data_frame['repetition'].unique())))
 
-    test_names = [test_name for test_name in results_data_frame['test_name'].unique() if 'uncorrelated' in test_name]
+    test_names = [test_name for test_name in results_data_frame['test_name'].unique() if 'uncorrelated' in test_name and 'DEF' in test_name]
     print("test_names: ", test_names)
     cnn_model_names_dict = {0: 'our network',
                             1: '1 conv layer',
