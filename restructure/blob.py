@@ -178,7 +178,7 @@ class Blob(object):
         def distance_between_centroids(blob1, blob2): #This can be rewritten more elegantly as decorators
             return np.linalg.norm(blob1.centroid - blob2.centroid)
         return self._along_transitions_in_individual_fragments(distance_between_centroids)
-        
+
 #        velocity = []
 #        if self.is_a_fish_in_a_fragment:
 #            current = self
@@ -200,7 +200,7 @@ class Blob(object):
     def compute_fragment_start_end(self):
         def frame_number_of_blob(blob):
             return blob.frame_number
-        frame_numbers = _along_blobs_in_individual_segment(frame_number_of_blob)
+        frame_numbers = self._along_blobs_in_individual_segment(frame_number_of_blob)
         return [min(frame_numbers), max(frame_numbers)]
 
 #        if self.is_a_fish_in_a_fragment:
