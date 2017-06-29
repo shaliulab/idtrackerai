@@ -144,92 +144,125 @@ class Blob(object):
     #################################################
 
 
-    def distance_travelled_in_fragment(self):
-        distance = 0
+    def _along_transitions_in_individual_fragments(self, function):
+        output_along_segment = []
         if self.is_a_fish_in_a_fragment:
             current = self
-
             while current.next[0].is_a_fish_in_a_fragment:
-                distance += np.linalg.norm(current.centroid - current.next[0].centroid)
+                output_along_segment.append(function(current, current.next[0]))# np.linalg.norm(current.centroid - current.next[0].centroid))
                 current = current.next[0]
-
             current = self
 
             while current.previous[0].is_a_fish_in_a_fragment:
-                distance += np.linalg.norm(current.centroid - current.previous[0].centroid)
+                output_along_segment.append(function(current, current.previous[0])) #np.linalg.norm(current.centroid - current.previous[0].centroid))
                 current = current.previous[0]
-        return distance
+        return output_along_segment
+
+    def _along_blobs_in_individual_segment(self, function):
+        output_along_segment = []
+        if self.is_a_fish_in_a_fragment:
+            current = self
+            output_along_segment.append(function(current))
+            while current.next[0].is_a_fish_in_a_fragment:
+                current = current.next[0]
+                output_along_segment.append(function(current))# np.linalg.norm(current.centroid - current.next[0].centroid))
+            current = self
+
+            while current.previous[0].is_a_fish_in_a_fragment:
+                current = current.previous[0]
+                output_along_segment.append(function(current)) #np.linalg.norm(current.centroid - current.previous[0].centroid))
+        return output_along_segment
+
 
     def frame_by_frame_velocity(self):
-        velocity = []
-        if self.is_a_fish_in_a_fragment:
-            current = self
+        def distance_between_centroids(blob1, blob2): #This can be rewritten more elegantly as decorators
+            return np.linalg.norm(blob1.centroid - blob2.centroid)
+        return self._along_transitions_in_individual_fragments(distance_between_centroids)
+        
+#        velocity = []
+#        if self.is_a_fish_in_a_fragment:
+#            current = self
+#
+#            while current.next[0].is_a_fish_in_a_fragment:
+#                velocity.append(np.linalg.norm(current.centroid - current.next[0].centroid))
+#                current = current.next[0]
+#
+#            current = self
+#
+#            while current.previous[0].is_a_fish_in_a_fragment:
+#                velocity.append(np.linalg.norm(current.centroid - current.previous[0].centroid))
+#                current = current.previous[0]
+#        return velocity
 
-            while current.next[0].is_a_fish_in_a_fragment:
-                velocity.append(np.linalg.norm(current.centroid - current.next[0].centroid))
-                current = current.next[0]
-
-            current = self
-
-            while current.previous[0].is_a_fish_in_a_fragment:
-                velocity.append(np.linalg.norm(current.centroid - current.previous[0].centroid))
-                current = current.previous[0]
-
-        return velocity
+    def distance_travelled_in_fragment(self):
+        return sum(self.frame_by_frame_velocity())
 
     def compute_fragment_start_end(self):
-        if self.is_a_fish_in_a_fragment:
-            start = self.frame_number
-            end = self.frame_number
+        def frame_number_of_blob(blob):
+            return blob.frame_number
+        frame_numbers = _along_blobs_in_individual_segment(frame_number_of_blob)
+        return [min(frame_numbers), max(frame_numbers)]
 
-            current = self
-
-            while current.next[0].is_a_fish_in_a_fragment:
-                current = current.next[0]
-                end = current.frame_number
-
-            current = self
-
-            while current.previous[0].is_a_fish_in_a_fragment:
-                current = current.previous[0]
-                start = current.frame_number
-        return [start, end]
+#        if self.is_a_fish_in_a_fragment:
+#            start = self.frame_number
+#            end = self.frame_number
+#
+#            current = self
+#
+#            while current.next[0].is_a_fish_in_a_fragment:
+#                current = current.next[0]
+#                end = current.frame_number
+#
+#            current = self
+#
+#            while current.previous[0].is_a_fish_in_a_fragment:
+#                current = current.previous[0]
+#                start = current.frame_number
+#        return [start, end]
 
 
     def portraits_in_fragment(self):
-        portraits = []
-        if self.is_a_fish_in_a_fragment:
-            portraits.append(self.portrait[0])
-            current = self
+        def return_portrait_blob(blob):
+            return blob.portrait[0] #TODO: unpack!
+        return self._along_blobs_in_individual_segment(return_portrait_blob)
 
-            while current.next[0].is_a_fish_in_a_fragment:
-                current = current.next[0]
-                portraits.append(current.portrait[0])
-
-            current = self
-
-            while current.previous[0].is_a_fish_in_a_fragment:
-                current = current.previous[0]
-                portraits.append(current.portrait[0])
-
-        return portraits
+#        portraits = []
+#        if self.is_a_fish_in_a_fragment:
+#            portraits.append(self.portrait[0])
+#            current = self
+#
+#            while current.next[0].is_a_fish_in_a_fragment:
+#                current = current.next[0]
+#                portraits.append(current.portrait[0])
+#
+#            current = self
+#
+#            while current.previous[0].is_a_fish_in_a_fragment:
+#                current = current.previous[0]
+#                portraits.append(current.portrait[0])
+#
+#        return portraits
 
     def identities_in_fragment(self):
-        identities = []
-        if self.is_a_fish_in_a_fragment:
-            identities.append(self._identity)
-            current = self
+        def blob_identity(blob):
+            return blob._identity
+        return self._along_blobs_in_individual_segment(blob_identity)
 
-            while current.next[0].is_a_fish_in_a_fragment:
-                current = current.next[0]
-                identities.append(current._identity)
-
-            current = self
-
-            while current.previous[0].is_a_fish_in_a_fragment:
-                current = current.previous[0]
-                identities.append(current._identity)
-        return identities
+        #identities = []
+        #if self.is_a_fish_in_a_fragment:
+        #    identities.append(self._identity)
+        #    current = self
+        #
+         #   while current.next[0].is_a_fish_in_a_fragment:
+        #        current = current.next[0]
+        #        identities.append(current._identity)
+        #
+        #    current = self
+        #
+        #    while current.previous[0].is_a_fish_in_a_fragment:
+        #        current = current.previous[0]
+        #        identities.append(current._identity)
+        #return identities
 
     def get_P1_vectors_coexisting_fragments(self, blobs_in_video):
         P1_vectors = []
