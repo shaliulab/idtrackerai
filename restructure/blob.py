@@ -134,6 +134,16 @@ class Blob(object):
     def P2_vector(self):
         return self._P2_vector
 
+    ####UGLY HACK UNTIL Blob.portrait is unpacked####
+    @property
+    def nose_coordinates(self):
+        return self.portrait[1]
+    @property
+    def head_coordinates(self):
+        return self.portrait[2]
+    #################################################
+
+
     def distance_travelled_in_fragment(self):
         distance = 0
         if self.is_a_fish_in_a_fragment:
@@ -364,7 +374,7 @@ def check_global_fragments(blobs_in_video, num_animals):
 def apply_model_area(blob, model_area, animal_type):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
         if animal_type == 'fish':
-            blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates)
+            blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates) #TODO: please unpack!
         else:
             blob.portrait = get_portrait_fly(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates)
 

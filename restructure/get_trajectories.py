@@ -21,13 +21,17 @@ def produce_trajectories(file_name):
     list_of_blobs = ListOfBlobs.load(file_name)
     number_of_frames = len(list_of_blobs.blobs_in_video) 
     number_of_animals = list_of_blobs.blobs_in_video[0][0].number_of_animals #TODO number_of_animals should be a member of list_of_blobs
-    trajectories = np.ones((number_of_frames, number_of_animals, 2))*np.NaN
+    centroid_trajectories = np.ones((number_of_frames, number_of_animals, 2))*np.NaN
+    nose_trajectories = np.ones((number_of_frames, number_of_animals, 2))*np.NaN
+    head_trajectories = np.ones((number_of_frames, number_of_animals, 2))*np.NaN
     for frame_number, blobs_in_frame in enumerate(list_of_blobs.blobs_in_video):
         print(frame_number)
         for blob in blobs_in_frame:
             if blob.identity is not None:
-                trajectories[frame_number, blob.identity-1, :] = blob.centroid
-    return trajectories
+                centroid_trajectories[frame_number, blob.identity-1, :] = blob.centroid
+                head_trajectories[frame_number, blob.identity-1, :] = blob.head_trajectories
+                nose_trajectories[frame_number, blob.identity-1, :] = blob.nose_trajectories
+    return {"centroid": centroid_trajectories, "nose": nose_trajectories, "head": head_trajectories}
 
 if __name__ == "__main__":
     trajectories = produce_trajectories(BLOB_FILE_NAME)
