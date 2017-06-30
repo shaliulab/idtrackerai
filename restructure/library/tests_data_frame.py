@@ -273,7 +273,7 @@ def tests_data_frame():
                                                     "percentage_of_frames_in_pretaining": 0.,
                                                     "only_accumulate_one_fragment": True,
                                                     "train_filters_in_accumulation": True,
-                                                    "accumulation_certainty": .1,
+                                                    "accumulation_certainty": 0.,
                                                     "IMDB_codes": 'DEF',
                                                     "ids_codes": 'aaa',
                                                     "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
