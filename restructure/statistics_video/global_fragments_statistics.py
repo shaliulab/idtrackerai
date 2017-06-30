@@ -64,6 +64,7 @@ if __name__ == '__main__':
     video_path = os.path.join(session_path,'video_object.npy')
     print("loading video object...")
     video = np.load(video_path).item(0)
+    #change this
     blobs_path = '/media/atlas/idTrackerDeep_LargeGroups_1/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/blobs_collection.npy'
     global_fragments_path = '/media/atlas/idTrackerDeep_LargeGroups_1/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/global_fragments.npy'
     list_of_blobs = ListOfBlobs.load(blobs_path)
