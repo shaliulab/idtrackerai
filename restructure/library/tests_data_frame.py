@@ -274,11 +274,12 @@ def tests_data_frame():
                                                     "only_accumulate_one_fragment": True,
                                                     "train_filters_in_accumulation": True,
                                                     "accumulation_certainty": 0.,
+                                                    "animal_type": 'fish',
                                                     "IMDB_codes": 'DEF',
                                                     "ids_codes": 'aaa',
                                                     "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
                                                     "frames_in_video": [3000],
-                                                    "frames_per_individual_fragment": [50, 75, 100, 200, 300, 400, 500],
+                                                    "frames_per_individual_fragment": [50, 75, 100, 250, 500],
                                                     "repetitions": [1, 2, 3],
                                                      }, ignore_index=True)
     #
@@ -337,7 +338,7 @@ def tests_data_frame():
     #                                                  }, ignore_index=True)
 
 
-    tests_data_frame.to_pickle('./library/tests_data_frame_test.pkl')
+    tests_data_frame.to_pickle('./library/tests_data_frame.pkl')
     return tests_data_frame
 
 if __name__ == '__main__':

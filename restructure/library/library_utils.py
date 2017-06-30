@@ -72,11 +72,15 @@ class BlobsListConfig(object):
         self.ids_codes = []
 
 def subsample_dataset_by_individuals(dataset, config):
+    # We need to consider that for every individual fragment there are two frames that are not considered for training
+    # In order to have the correct number of trainable images per individual fragment we need to increase the number of
+    # frames in the video to account for those two frames. The total number of frames needes is:
+    number_of_frames = int(config.number_of_frames + 2 * config.number_of_frames / config.number_of_frames_per_fragment)
     if config.number_of_animals > dataset.number_of_animals:
         raise ValueError("The number of animals for subsampling (%i) cannot be bigger than the number of animals in the dataset (%i)" %(config.number_of_animals, dataset.number_of_animals))
 
-    if config.number_of_frames > dataset.minimum_number_of_images_per_animal:
-        raise ValueError("The number of frames for subsampling (%i) cannot be bigger than the minimum number of images per animal in the dataset (%i)" %(config.number_of_frames, dataset.minimum_number_of_images_per_animal))
+    if number_of_frames > dataset.minimum_number_of_images_per_animal:
+        raise ValueError("The number of frames for subsampling (%i) cannot be bigger than the minimum number of images per animal in the dataset (%i)" %(number_of_frames, dataset.minimum_number_of_images_per_animal))
 
     # copy dataset specifics to config. This allows to restore the dataset if needed
     config.IMDB_codes = dataset.IMDB_codes
@@ -88,15 +92,15 @@ def subsample_dataset_by_individuals(dataset, config):
     # set stating frame
     # we set the starting frame so that we take images from both videos of the library.
     # the greates unbalance can be 1/3 from video_1 and 2/3 from video_2
-    config.starting_frame = np.random.randint(dataset.minimum_number_of_images_per_animal-config.number_of_frames)
+    config.starting_frame = np.random.randint(dataset.minimum_number_of_images_per_animal-number_of_frames)
     print("starting frame, ", config.starting_frame)
 
     subsampled_images = []
     subsampled_centroids = []
     for identity in config.identities:
         indices_identity = np.where(dataset.labels == identity)[0]
-        subsampled_images.append(np.expand_dims(dataset.images[indices_identity][config.starting_frame:config.starting_frame + config.number_of_frames], axis = 1))
-        subsampled_centroids.append(np.expand_dims(dataset.centroids[indices_identity][config.starting_frame:config.starting_frame + config.number_of_frames], axis = 1))
+        subsampled_images.append(np.expand_dims(dataset.images[indices_identity][config.starting_frame:config.starting_frame + number_of_frames], axis = 1))
+        subsampled_centroids.append(np.expand_dims(dataset.centroids[indices_identity][config.starting_frame:config.starting_frame + number_of_frames], axis = 1))
 
     return np.concatenate(subsampled_images, axis = 1), np.concatenate(subsampled_centroids, axis = 1)
 

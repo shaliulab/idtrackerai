@@ -61,18 +61,18 @@ if __name__ == '__main__':
     print("cluster:", sys.argv[1])
     print("test_number:", sys.argv[2])
 
-    tests_data_frame = pd.read_pickle('./library/tests_data_frame_test.pkl')
+    tests_data_frame = pd.read_pickle('./library/tests_data_frame.pkl')
     test_dictionary = tests_data_frame.loc[int(sys.argv[2])].to_dict()
     pprint(test_dictionary)
 
     job_config = LibraryJobConfig(cluster = sys.argv[1], test_dictionary = test_dictionary)
     job_config.create_folders_structure()
 
-    if os.path.isfile('./library/results_data_frame_test.pkl'):
+    if os.path.isfile('./library/results_data_frame.pkl'):
         print("results_data_frame.pkl already exists \n")
-        results_data_frame = pd.read_pickle('./library/results_data_frame_test.pkl')
+        results_data_frame = pd.read_pickle('./library/results_data_frame.pkl')
     else:
-        print("results_data_frame_test.pkl does not exist \n")
+        print("results_data_frame.pkl does not exist \n")
         results_data_frame = pd.DataFrame()
 
     dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes)
@@ -120,6 +120,12 @@ if __name__ == '__main__':
                         blobs = generate_list_of_blobs(portraits, centroids, config)
                         compute_fragment_identifier_and_blob_index(blobs, config.number_of_animals)
                         global_fragments = give_me_list_of_global_fragments(blobs, config.number_of_animals)
+                        # check consistency global fragments
+                        number_of_fragments = frames_in_video/frames_in_fragment
+                        if len(global_fragments) != number_of_fragments:
+                            print("len global_fragments: ", len(global_fragments))
+                            print("frames_in_video/frames_in_fragment: ", number_of_fragments)
+                            raise ValueError('The number of global fragments it is not consistent')
                         global_fragments_ordered = order_global_fragments_by_distance_travelled(global_fragments)
                         video._has_been_segmented = True
                         video._has_been_preprocessed = True
@@ -251,6 +257,8 @@ if __name__ == '__main__':
                             accumulation_manager.split_predictions_after_network_assignment(assigner._predictions, assigner._softmax_probs, indices_to_split)
                             # assign identities to the global fragments based on the predictions
                             accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_indices)
+                            number_of_acceptable_fragments_for_training = sum([global_fragment.acceptable_for_training for global_fragment in global_fragments if not global_fragment.used_for_training])
+                            print("global fragments acceptable for training: ", number_of_acceptable_fragments_for_training)
                             accumulation_manager.update_counter()
                             if job_config.only_accumulate_one_fragment:
                                 print("we only accumulate one fragment")
@@ -278,13 +286,13 @@ if __name__ == '__main__':
                             # assign identities based on individual fragments
                             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
                             # assign identity to the extremes of the fragments
-                            for blobs_in_frame in blobs:
-                                for blob in blobs_in_frame:
-                                    #if a blob has not been assigned but it is a fish and overlaps with one fragment
-                                    #assign it!
-                                    if blob.identity == 0 and blob.is_a_fish:
-                                        if len(blob.next) == 1: blob.identity = blob.next[0].identity
-                                        elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
+                            # for blobs_in_frame in blobs:
+                            #     for blob in blobs_in_frame:
+                            #         #if a blob has not been assigned but it is a fish and overlaps with one fragment
+                            #         #assign it!
+                            #         if blob.identity == 0 and blob.is_a_fish:
+                            #             if len(blob.next) == 1: blob.identity = blob.next[0].identity
+                            #             elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
                         else:
                             print("All the global fragments have been used in the accumulation")
                         assignation_time = time.time() - start
@@ -303,22 +311,23 @@ if __name__ == '__main__':
                             identities_in_frame = []
                             for i, blob in enumerate(blobs_in_frame):
                                 frame_with_repetition = False
-                                if blob._assigned_during_accumulation:
-                                    number_of_blobs_assigned_in_accumulation += 1
-                                if blob.identity is not None and blob.identity != 0:
-                                    if blob.identity == blob.user_generated_identity:
-                                        number_correct_assignations[i] += 1
-                                    elif blob._assigned_during_accumulation:
-                                        number_of_identity_shifts_in_accumulated_frames += 1
-                                    if blob.identity in identities_in_frame:
-                                        number_of_identity_repetitions += 1
-                                        frame_with_repetition = True
-                                        if blob._assigned_during_accumulation:
-                                            raise ValueError("duplications during accumulation in frame %i" %frame_number)
+                                if blob.is_a_fish_in_a_fragment:
+                                    if blob._assigned_during_accumulation:
+                                        number_of_blobs_assigned_in_accumulation += 1
+                                    if blob.identity is not None and blob.identity != 0:
+                                        if blob.identity == blob.user_generated_identity:
+                                            number_correct_assignations[i] += 1
+                                        elif blob._assigned_during_accumulation:
+                                            number_of_identity_shifts_in_accumulated_frames += 1
+                                        if blob.identity in identities_in_frame:
+                                            number_of_identity_repetitions += 1
+                                            frame_with_repetition = True
+                                            if blob._assigned_during_accumulation:
+                                                raise ValueError("duplications during accumulation in frame %i" %frame_number)
 
-                                    identities_in_frame.append(blob.identity)
-                                elif blob.identity is None or blob.identity == 0:
-                                    number_of_not_assigned_blobs[i] += 1
+                                        identities_in_frame.append(blob.identity)
+                                    elif blob.identity is None or blob.identity == 0:
+                                        number_of_not_assigned_blobs[i] += 1
                             if frame_with_repetition:
                                 number_of_frames_with_repetitions += 1
 
@@ -328,6 +337,8 @@ if __name__ == '__main__':
                         accuracy = np.sum(number_correct_assignations)/(frames_in_video * group_size)
                         print("number of global fragments: ", len(global_fragments))
                         print("number of accumulated fragments:", sum([global_fragment.used_for_training for global_fragment in global_fragments]))
+                        print("number of candidate global fragments:", len(candidates_next_global_fragments))
+                        print("number of acceptable fragments for training: ", number_of_acceptable_fragments_for_training)
                         print("number of blobs assigned during accumulation: ", number_of_blobs_assigned_in_accumulation)
                         print("frames_in_video: ", frames_in_video)
                         print("group_size: ", group_size)
@@ -363,6 +374,8 @@ if __name__ == '__main__':
                                                                         'frames_per_fragment': int(frames_in_fragment),
                                                                         'repetition': int(repetition),
                                                                         'number_of_fragments': int(len(global_fragments)),
+                                                                        'number_of_candidate_fragments': len(candidates_next_global_fragments),
+                                                                        'number_of_acceptable_fragments_for_training': number_of_acceptable_fragments_for_training,
                                                                         'proportion_of_accumulated_fragments': sum([global_fragment.used_for_training for global_fragment in global_fragments])/len(global_fragments),
                                                                         'number_of_blobs_assigned_in_accumulation': number_of_blobs_assigned_in_accumulation,
                                                                         'number_of_not_assigned_blobs': number_of_not_assigned_blobs,
@@ -412,7 +425,7 @@ if __name__ == '__main__':
                         #                                                  }, ignore_index=True)
 
 
-                        results_data_frame.to_pickle('./library/results_data_frame_test.pkl')
+                        results_data_frame.to_pickle('./library/results_data_frame.pkl')
 
                         blobs = None
                         global_fragments = None
