@@ -64,10 +64,12 @@ if __name__ == '__main__':
     video_path = os.path.join(session_path,'video_object.npy')
     print("loading video object...")
     video = np.load(video_path).item(0)
-    list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    blobs_path = '/media/atlas/idTrackerDeep_LargeGroups_1/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/blobs_collection.npy'
+    global_fragments_path = '/media/atlas/idTrackerDeep_LargeGroups_1/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/global_fragments.npy'
+    list_of_blobs = ListOfBlobs.load(blobs_path)
     blobs = list_of_blobs.blobs_in_video
     print("loading global fragments")
-    global_fragments = np.load(video.global_fragments_path)
+    global_fragments = np.load(global_fragments_path)
 
     # individual fragments statistics
     individual_fragments_added = []
@@ -77,7 +79,7 @@ if __name__ == '__main__':
     number_of_frames_in_longest_individual_fragment = [] #longest in terms of frames
     number_of_frames_in_shortest_individual_fragment = [] # shortest in terms of frames
     median_number_of_frames = []
-    number_of_frames_in_shortest_distance_travelled_individual_fragment = []
+    # minimum_number_of_frames_in_shortest_distance_travelled_individual_fragment = []
     distance_travelled_by_longest_distance_travelled_individual_fragment = []
     distance_travelled_by_shortes_distance_travelled_individual_fragment = []
     min_distance_travelled = []
@@ -99,8 +101,8 @@ if __name__ == '__main__':
         # minimum distance travelled in global fragment
         distance_travelled_by_shortes_distance_travelled_individual_fragment.append(np.min(distance_travelled))
         # number of images for the minimum distance travelled global fragment
-        index = np.argsort(distance_travelled)[0]
-        number_of_frames_in_shortest_distance_travelled_individual_fragment.append(global_fragment._number_of_portraits_per_individual_fragment[index])
+        # index = np.argsort(distance_travelled)[0]
+        # minimum_number_of_frames_in_shortest_distance_travelled_individual_fragment.append(number_of_frames_in_shortest_individual_fragment[index])
 
         for i, individual_fragment_identifier in enumerate(global_fragment.individual_fragments_identifiers):
             if individual_fragment_identifier not in individual_fragments_added:
@@ -126,9 +128,9 @@ if __name__ == '__main__':
     # number of frames in shortest individual fragment
     ax = ax_arr[0,1]
     sns.set_style("ticks")
-    hist, bin_edges = np.histogram(number_of_frames_in_shortest_distance_travelled_individual_fragment, bins = 50)
+    hist, bin_edges = np.histogram(number_of_frames_in_shortest_individual_fragment, bins = 50)
     ax.semilogy(bin_edges[:-1],hist, 'ro-', markersize = 5)
-    ax.text(.5,.95,'only individual fragments \nwith shortest distance \ntravelled in the \nglobal fragment',
+    ax.text(.5,.95,'only individual fragments \nwith minimum \nnumber of frames \nin global fragment',
         horizontalalignment='center',
         transform=ax.transAxes,
         verticalalignment = 'top')
@@ -163,10 +165,13 @@ if __name__ == '__main__':
     a = ax.semilogy(range(len(global_fragments)), median_number_of_frames_ordered, color = 'b', linewidth= 2, label = 'median')
     # ax.semilogy(range(len(global_fragments)), number_of_frames_in_shortest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5)
     for i in range(len(global_fragments)):
-        b = ax.semilogy(i*np.ones(video.number_of_animals),number_of_portraits_per_individual_fragment_ordered[i],'o',alpha = .15,color = 'b',markersize=5,label='individual fragment')
+        a = ax.semilogy(i*np.ones(video.number_of_animals),number_of_portraits_per_individual_fragment_ordered[i],'o',alpha = .05,color = 'b',markersize=5,label='individual fragment')
+    b = ax.semilogy(range(len(global_fragments)), number_of_frames_in_longest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5, label = 'max')
+    c = ax.semilogy(range(len(global_fragments)), median_number_of_frames_ordered, color = 'r', linewidth= 2, label = 'median')
+    d = ax.semilogy(range(len(global_fragments)), number_of_frames_in_shortest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5, label = 'min')
     ax.set_xlabel('global fragments ordered by minimum distance travelled (from max to min)')
     ax.set_ylabel('num of frames')
-    ax.legend(handles = [b[0],a[0]])
+    ax.legend(handles = [c[0],d[0],b[0],a[0]])
 
 
 
