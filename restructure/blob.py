@@ -63,7 +63,7 @@ class Blob(object):
         return self.portrait is None
 
     def overlaps_with(self, other):
-        """Checks if contours are disjoint
+        """Checks if pixels are disjoint
         """
         overlaps = False
         intersection = np.intersect1d(self.pixels, other.pixels)
