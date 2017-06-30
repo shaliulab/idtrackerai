@@ -65,8 +65,10 @@ if __name__ == '__main__':
     print("loading video object...")
     video = np.load(video_path).item(0)
     #change this
-    blobs_path = '/media/atlas/idTrackerDeep_LargeGroups_1/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/blobs_collection.npy'
-    global_fragments_path = '/media/atlas/idTrackerDeep_LargeGroups_1/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/global_fragments.npy'
+    # blobs_path = '/media/atlas/idTrackerDeep_LargeGroups_1/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/blobs_collection.npy'
+    # global_fragments_path = '/media/atlas/idTrackerDeep_LargeGroups_1/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/global_fragments.npy'
+    blobs_path = video.blobs_path
+    global_fragments_path = video.global_fragments_path
     list_of_blobs = ListOfBlobs.load(blobs_path)
     blobs = list_of_blobs.blobs_in_video
     print("loading global fragments")
@@ -123,6 +125,7 @@ if __name__ == '__main__':
     sns.set_style("ticks")
     hist, bin_edges = np.histogram(number_of_frames_in_individual_fragments, bins = 50)
     ax.semilogy(bin_edges[:-1], hist, '-ob' ,markersize = 5)
+    # ax.plot(bin_edges[:-1], hist, '-ob' ,markersize = 5)
     ax.set_xlabel('num frames')
     ax.set_ylabel('num indiv fragments')
 
@@ -131,6 +134,7 @@ if __name__ == '__main__':
     sns.set_style("ticks")
     hist, bin_edges = np.histogram(number_of_frames_in_shortest_individual_fragment, bins = 50)
     ax.semilogy(bin_edges[:-1],hist, 'ro-', markersize = 5)
+    # ax.plot(bin_edges[:-1],hist, 'ro-', markersize = 5)
     ax.text(.5,.95,'only individual fragments \nwith minimum \nnumber of frames \nin global fragment',
         horizontalalignment='center',
         transform=ax.transAxes,
@@ -142,6 +146,7 @@ if __name__ == '__main__':
     sns.set_style("ticks")
     hist, bin_edges = np.histogram(distance_travelled_individual_fragments, bins = 50)
     ax.semilogy(bin_edges[:-1], hist, '-ob' ,markersize = 5)
+    # ax.plot(bin_edges[:-1], hist, '-ob' ,markersize = 5)
     ax.set_xlabel('distance travelled (pixels)')
 
     # number of frames vs distance travelled
@@ -173,6 +178,18 @@ if __name__ == '__main__':
     ax.set_xlabel('global fragments ordered by minimum distance travelled (from max to min)')
     ax.set_ylabel('num of frames')
     ax.legend(handles = [c[0],d[0],b[0],a[0]])
+
+    # # ax.semilogy(range(len(global_fragments)), number_of_frames_in_longest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5)
+    # a = ax.plot(range(len(global_fragments)), median_number_of_frames_ordered, color = 'b', linewidth= 2, label = 'median')
+    # # ax.semilogy(range(len(global_fragments)), number_of_frames_in_shortest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5)
+    # for i in range(len(global_fragments)):
+    #     a = ax.plot(i*np.ones(video.number_of_animals),number_of_portraits_per_individual_fragment_ordered[i],'o',alpha = .05,color = 'b',markersize=5,label='individual fragment')
+    # b = ax.plot(range(len(global_fragments)), number_of_frames_in_longest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5, label = 'max')
+    # c = ax.plot(range(len(global_fragments)), median_number_of_frames_ordered, color = 'r', linewidth= 2, label = 'median')
+    # d = ax.plot(range(len(global_fragments)), number_of_frames_in_shortest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5, label = 'min')
+    # ax.set_xlabel('global fragments ordered by minimum distance travelled (from max to min)')
+    # ax.set_ylabel('num of frames')
+    # ax.legend(handles = [c[0],d[0],b[0],a[0]])
 
 
 
