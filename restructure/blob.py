@@ -134,92 +134,77 @@ class Blob(object):
     def P2_vector(self):
         return self._P2_vector
 
-    def distance_travelled_in_fragment(self):
-        distance = 0
+    ####UGLY HACK UNTIL Blob.portrait is unpacked####
+    @property
+    def nose_coordinates(self):
+        return self.portrait[1]
+    @property
+    def head_coordinates(self):
+        return self.portrait[2]
+    #################################################
+
+
+    def _along_transitions_in_individual_fragments(self, function):
+        '''Crawls along an individual fragment and outputs a list with
+        the result of function applied to all pairs of contiguous blobs
+        '''
+        output_along_segment = []
         if self.is_a_fish_in_a_fragment:
             current = self
-
             while current.next[0].is_a_fish_in_a_fragment:
-                distance += np.linalg.norm(current.centroid - current.next[0].centroid)
+                output_along_segment.append(function(current, current.next[0]))
                 current = current.next[0]
-
             current = self
 
             while current.previous[0].is_a_fish_in_a_fragment:
-                distance += np.linalg.norm(current.centroid - current.previous[0].centroid)
+                output_along_segment.append(function(current, current.previous[0]))
                 current = current.previous[0]
-        return distance
+        return output_along_segment
+
+    def _along_blobs_in_individual_segment(self, function):
+        '''Crawls along an individual fragment and outputs a list with
+        the result of function applied to each blob
+        '''
+        output_along_segment = []
+        if self.is_a_fish_in_a_fragment:
+            current = self
+            output_along_segment.append(function(current))
+            while current.next[0].is_a_fish_in_a_fragment:
+                current = current.next[0]
+                output_along_segment.append(function(current))
+            current = self
+
+            while current.previous[0].is_a_fish_in_a_fragment:
+                current = current.previous[0]
+                output_along_segment.append(function(current)) 
+        return output_along_segment
+
 
     def frame_by_frame_velocity(self):
-        velocity = []
-        if self.is_a_fish_in_a_fragment:
-            current = self
+        def distance_between_centroids(blob1, blob2): 
+            #This can be rewritten more elegantly with decorators
+            #Also, it is faster if declared with global scope. Feel free to change
+            return np.linalg.norm(blob1.centroid - blob2.centroid)
+        return self._along_transitions_in_individual_fragments(distance_between_centroids)
 
-            while current.next[0].is_a_fish_in_a_fragment:
-                velocity.append(np.linalg.norm(current.centroid - current.next[0].centroid))
-                current = current.next[0]
-
-            current = self
-
-            while current.previous[0].is_a_fish_in_a_fragment:
-                velocity.append(np.linalg.norm(current.centroid - current.previous[0].centroid))
-                current = current.previous[0]
-
-        return velocity
+    def distance_travelled_in_fragment(self):
+        return sum(self.frame_by_frame_velocity())
 
     def compute_fragment_start_end(self):
-        if self.is_a_fish_in_a_fragment:
-            start = self.frame_number
-            end = self.frame_number
-
-            current = self
-
-            while current.next[0].is_a_fish_in_a_fragment:
-                current = current.next[0]
-                end = current.frame_number
-
-            current = self
-
-            while current.previous[0].is_a_fish_in_a_fragment:
-                current = current.previous[0]
-                start = current.frame_number
-        return [start, end]
-
+        def frame_number_of_blob(blob):
+            return blob.frame_number
+        frame_numbers = self._along_blobs_in_individual_segment(frame_number_of_blob)
+        return [min(frame_numbers), max(frame_numbers)]
 
     def portraits_in_fragment(self):
-        portraits = []
-        if self.is_a_fish_in_a_fragment:
-            portraits.append(self.portrait[0])
-            current = self
-
-            while current.next[0].is_a_fish_in_a_fragment:
-                current = current.next[0]
-                portraits.append(current.portrait[0])
-
-            current = self
-
-            while current.previous[0].is_a_fish_in_a_fragment:
-                current = current.previous[0]
-                portraits.append(current.portrait[0])
-
-        return portraits
+        def return_portrait_blob(blob):
+            return blob.portrait[0] #TODO: unpack!
+        return self._along_blobs_in_individual_segment(return_portrait_blob)
 
     def identities_in_fragment(self):
-        identities = []
-        if self.is_a_fish_in_a_fragment:
-            identities.append(self._identity)
-            current = self
-
-            while current.next[0].is_a_fish_in_a_fragment:
-                current = current.next[0]
-                identities.append(current._identity)
-
-            current = self
-
-            while current.previous[0].is_a_fish_in_a_fragment:
-                current = current.previous[0]
-                identities.append(current._identity)
-        return identities
+        def blob_identity(blob):
+            return blob._identity
+        return self._along_blobs_in_individual_segment(blob_identity)
 
     def get_P1_vectors_coexisting_fragments(self, blobs_in_video):
         P1_vectors = []
@@ -364,7 +349,7 @@ def check_global_fragments(blobs_in_video, num_animals):
 def apply_model_area(blob, model_area, animal_type):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
         if animal_type == 'fish':
-            blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates)
+            blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates) #TODO: please unpack!
         else:
             blob.portrait = get_portrait_fly(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates)
 

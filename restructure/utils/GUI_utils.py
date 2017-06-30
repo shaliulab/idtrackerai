@@ -608,8 +608,8 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                     print("is_a_jump: ", blob.is_a_jump)
                     print("is_a_ghost_crossing: ", blob.is_a_ghost_crossing)
                     print("is_a_crossing: ", blob.is_a_crossing)
-                    if blob.is_a_crossing:
-                        print("bad_crossing ", blob.bad_crossing)
+                    # if blob.is_a_crossing:
+                    #     print("bad_crossing ", blob.bad_crossing)
                         # print("number_of_animals_in_crossing: ", blob.number_of_animals_in_crossing)
                     print("next: ", blob.next)
                     print("previous: ", blob.previous)
@@ -627,7 +627,7 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
 
     scroll(1)
     cv2.setTrackbarPos('start', 'frame_by_frame_identity_inspector', defFrame)
-    
+
     # cv2.waitKey(0)
     # cv2.waitKey(1)
     # cv2.destroyAllWindows()
