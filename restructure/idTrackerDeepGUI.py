@@ -437,8 +437,7 @@ if __name__ == '__main__':
             frame_by_frame_identity_inspector(video, blobs)
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
-        video._blobs_path = old_video.blobs_path
-        video._global_fragments_path = old_video.global_fragments_path
+        video = old_video
         list_of_blobs = ListOfBlobs.load(video.blobs_path)
         blobs = list_of_blobs.blobs_in_video
         global_fragments = np.load(video.global_fragments_path)

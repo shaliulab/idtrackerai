@@ -146,7 +146,7 @@ def getPortrait(miniframe, cnt, bb, counter = None, px_nose_above_center = 9):
     y_range = xrange(nose_pixels[1]-half_side_sq+px_nose_above_center,nose_pixels[1]+half_side_sq+px_nose_above_center)
     portrait = minif_rot.take(y_range,mode='wrap',axis=0).take(x_range,mode='wrap',axis=1)
 
-    return portrait, tuple(noseFull.astype('int')), tuple(head_centroid_full.astype('int'))
+    return portrait, tuple(noseFull.astype('float32')), tuple(head_centroid_full.astype('float32')) #output as float because it is better for analysis.
 
 def get_portrait_fly(miniframe, cnt, bb, size = 32):
     """Acquiring portraits from miniframe (for flies)

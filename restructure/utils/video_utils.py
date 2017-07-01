@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function
 # Import standard libraries
 import os
 import sys
@@ -20,7 +21,7 @@ Compute background and threshold
 
 def computeBkgParSingleVideo(starting_frame, ending_frame, video_path, bkg):
     cap = cv2.VideoCapture(video_path)
-    print 'Adding from starting frame %i to background' %starting_frame
+    print('Adding from starting frame %i to background' %starting_frame)
     numFramesBkg = 0
     frameInds = range(starting_frame,ending_frame, 100)
     for ind in frameInds:
@@ -37,7 +38,7 @@ def computeBkgParSingleVideo(starting_frame, ending_frame, video_path, bkg):
     return bkg, numFramesBkg
 
 def computeBkgParSegmVideo(video_path, bkg):
-    print 'Adding video %s to background' % video_path
+    print('Adding video %s to background' % video_path)
     cap = cv2.VideoCapture(video_path)
     counter = 0
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
@@ -63,7 +64,7 @@ def computeBkg(video):
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
     if video._paths_to_video_segments is None: # one single video
-        print 'one single video, computing bkg in parallel from single video'
+        print('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSingleVideo)(starting_frame, ending_frame, video.video_path, bkg) for (starting_frame, ending_frame) in video._episodes_start_end)
     else: # multiple segments video
         output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSegmVideo)(videoPath,bkg) for videoPath in video._paths_to_video_segments)
@@ -164,8 +165,13 @@ def boundingBox_ROI2Full(bb, ROI):
 
 def getCentroid(cnt):
     M = cv2.moments(cnt)
-    x = int(M['m10']/M['m00'])
-    y = int(M['m01']/M['m00'])
+
+    # NOTE: do not change to integers. change only in visualisation
+    # NOTE: float32 give more precision for analysis
+    x = M['m10']/M['m00']
+    y = M['m01']/M['m00']
+    # print(x,y)
+
     # x, y = coordROI2Full(x,y,ROI)
     return (x,y)
 
