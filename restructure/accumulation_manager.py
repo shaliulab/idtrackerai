@@ -169,7 +169,7 @@ class AccumulationManager(object):
         global_fragment._frequencies_in_fragment = []
         global_fragment._median_softmax_probs = []
         global_fragment._acceptable_for_training = True
-
+        global_fragment._certainties = []
         for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
             # print("candidate frag identifiers, ", self.candidate_individual_fragments_identifiers)
             # print("index ", list(self.candidate_individual_fragments_identifiers).index(individual_fragment_identifier))
@@ -185,7 +185,8 @@ class AccumulationManager(object):
             global_fragment._P1_vector.append(cur_P1)
             global_fragment._frequencies_in_fragment.append(cur_frequencies)
             global_fragment._median_softmax_probs.append(cur_softmax_median)
-            acceptable_individual_fragment = check_certainty_individual_fragment(cur_P1, cur_softmax_median, self.certainty_threshold)
+            acceptable_individual_fragment, certainty = check_certainty_individual_fragment(cur_P1, cur_softmax_median, self.certainty_threshold)
+            global_fragment._certainties.append(certainty)
             if not acceptable_individual_fragment:
                 # print("This individual fragment is not good for training")
                 global_fragment._acceptable_for_training = False
@@ -224,4 +225,4 @@ def check_certainty_individual_fragment(frequencies_individual_fragment,softmax_
         acceptable_individual_fragment = True
     # else:
         # print("global fragment discarded with certainty ", certainty)
-    return acceptable_individual_fragment
+    return acceptable_individual_fragment, certainty
