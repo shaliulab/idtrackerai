@@ -12,7 +12,7 @@ from joblib import Parallel, delayed
 ### NOTE set to 1 because we changed the model area to work with the median.
 
 class Blob(object):
-    def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, portrait = None, pixels = None, number_of_animals = None, frame_number = None):
+    def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, estimated_body_length = None, portrait = None, pixels = None, number_of_animals = None, frame_number = None):
         self.frame_number = frame_number
         self.number_of_animals = number_of_animals
         self.centroid = np.array(centroid) # numpy array (int64): coordinates of the centroid of the blob in pixels
@@ -20,6 +20,7 @@ class Blob(object):
         self.area = area # int: number of pixels in the blob
         self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates #tuple of tuples: ((x1,y1),(x2,y2)) (top-left corner, bottom-right corner) in pixels
         self.bounding_box_image = bounding_box_image # numpy array (uint8): image of the fish cropped from the video according to the bounding_box_in_frame_coordinates
+        self.estimated_body_length = estimated_body_length
         self.portrait = portrait # (numpy array (uint8),tuple(int,int),tuple(int,int)): (36x36 image of the animal,nose coordinates, head coordinates)
         self.pixels = pixels # list of int's: linearized pixels of the blob
         self.reset_before_fragmentation()
@@ -176,12 +177,12 @@ class Blob(object):
 
             while current.previous[0].is_a_fish_in_a_fragment:
                 current = current.previous[0]
-                output_along_segment.append(function(current)) 
+                output_along_segment.append(function(current))
         return output_along_segment
 
 
     def frame_by_frame_velocity(self):
-        def distance_between_centroids(blob1, blob2): 
+        def distance_between_centroids(blob1, blob2):
             #This can be rewritten more elegantly with decorators
             #Also, it is faster if declared with global scope. Feel free to change
             return np.linalg.norm(blob1.centroid - blob2.centroid)
@@ -346,21 +347,21 @@ def check_global_fragments(blobs_in_video, num_animals):
     """
     return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame) == num_animals for blobs_in_frame in blobs_in_video]
 
-def apply_model_area(blob, model_area, animal_type):
+def apply_model_area(blob, model_area, maximum_body_length, animal_type):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
         if animal_type == 'fish':
-            blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates) #TODO: please unpack!
+            blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, maximum_body_length) #TODO: please unpack!
         else:
-            blob.portrait = get_portrait_fly(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates)
+            blob.portrait = get_portrait_fly(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, maximum_body_length)
 
-def apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area, animal_type):
+def apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area, maximum_body_length, animal_type):
     for blob in blobs_in_frame:
-        apply_model_area(blob, model_area, animal_type)
+        apply_model_area(blob, model_area, maximum_body_length, animal_type)
 
-def apply_model_area_to_video(blobs_in_video, model_area, animal_type):
+def apply_model_area_to_video(blobs_in_video, model_area, maximum_body_length, animal_type):
     # Parallel(n_jobs=-1)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'))
     for blobs_in_frame in tqdm(blobs_in_video, desc = 'Fragmentation '):
-        apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area, animal_type)
+        apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area, maximum_body_length, animal_type)
 
 def get_images_from_blobs_in_video(blobs_in_video):
     portraits_in_video = []

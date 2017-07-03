@@ -24,7 +24,7 @@ from blob import compute_fragment_identifier_and_blob_index,\
                 ListOfBlobs,\
                 get_images_from_blobs_in_video,\
                 reset_blobs_fragmentation_parameters
-from globalfragment import compute_model_area,\
+from globalfragment import compute_model_area_and_body_length,\
                             give_me_list_of_global_fragments,\
                             ModelArea,\
                             give_me_pre_training_global_fragments,\
@@ -154,11 +154,20 @@ if __name__ == '__main__':
                 blobs = blobs_list.blobs_in_video
                 reset_blobs_fragmentation_parameters(blobs)
 
-            #compute a model of the area of the animals (considering frames in which
-            #all the animals are visible)
-            model_area = compute_model_area(blobs, video.number_of_animals)
+            # compute a model of the area of the animals (considering frames in which
+            # all the animals are visible)
+            model_area, maximum_body_length = compute_model_area_and_body_length(blobs, video.number_of_animals)
+            # NOTE: Maybe we can output this from the model area from the get_portraits function
+            if video.animal_type == 'fish':
+                width = int(maximum_body_length/2) + int(maximum_body_length/2)%2
+                height = int(maximum_body_length/2) + int(maximum_body_length/2)%2
+                video.size_cnn_input = (width, height, 1)
+            elif video.animal_type == 'fly':
+                width = int(maximum_body_length + maximum_body_length%2)
+                height = int(maximum_body_length + maximum_body_length%2)
+                video.size_cnn_input = (width, height, 1)
             #discard blobs that do not respect such model
-            apply_model_area_to_video(blobs, model_area, video.animal_type)
+            apply_model_area_to_video(blobs, model_area, maximum_body_length, video.animal_type)
             #connect blobs that overlap in consecutive frames
             connect_blob_list(blobs)
             #assign an identifier to each blobl belonging to an individual fragment
@@ -188,6 +197,7 @@ if __name__ == '__main__':
             video._blobs_path = old_video.blobs_path
             video._global_fragments_path = old_video.global_fragments_path
             video._maximum_number_of_blobs = old_video.maximum_number_of_blobs
+            video.size_cnn_input = old_video.size_cnn_input
             # Set preprocessed flag to True
             video._has_been_preprocessed = True
             video.save()
@@ -247,7 +257,8 @@ if __name__ == '__main__':
                 pretrain_network_params = NetworkParams(video.number_of_animals,
                                                         learning_rate = 0.01,
                                                         keep_prob = 1.0,
-                                                        save_folder = video._pretraining_folder)
+                                                        save_folder = video._pretraining_folder,
+                                                        image_size = video.size_cnn_input)
 
                 if video.tracking_with_knowledge_transfer:
                     print("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
@@ -275,7 +286,8 @@ if __name__ == '__main__':
                                                     use_adam_optimiser = False,
                                                     scopes_layers_to_optimize = None,
                                                     restore_folder = video._pretraining_folder,
-                                                    save_folder = video._pretraining_folder)
+                                                    save_folder = video._pretraining_folder,
+                                                    image_size = video.size_cnn_input)
             net = ConvNetwork(pretrain_network_params)
             net.restore()
             # Set preprocessed flag to True
@@ -299,7 +311,8 @@ if __name__ == '__main__':
                                         learning_rate = 0.005,
                                         keep_prob = 1.0,
                                         scopes_layers_to_optimize = ['fully-connected1','softmax1'],
-                                        save_folder = video._accumulation_folder)
+                                        save_folder = video._accumulation_folder,
+                                        image_size = video.size_cnn_input)
             if video._has_been_pretrained:
                 print("We will restore the network from a previous pretraining: %s\n" %video._pretraining_folder)
                 accumulation_network_params.restore_folder = video._pretraining_folder
@@ -382,7 +395,8 @@ if __name__ == '__main__':
                                                         use_adam_optimiser = False,
                                                         scopes_layers_to_optimize = ['fully-connected1','softmax1'],
                                                         restore_folder = video._accumulation_folder,
-                                                        save_folder = video._accumulation_folder)
+                                                        save_folder = video._accumulation_folder,
+                                                        image_size = video.size_cnn_input)
             net = ConvNetwork(pretrain_network_params)
             net.restore()
             # Set preprocessed flag to True

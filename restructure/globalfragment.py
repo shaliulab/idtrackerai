@@ -17,20 +17,23 @@ def detect_beginnings(boolean_array):
     """
     return [i for i in range(0,len(boolean_array)) if (boolean_array[i] and not boolean_array[i-1])]
 
-def compute_model_area(blobs_in_video, number_of_animals, std_tolerance = STD_TOLERANCE):
-    """computes the median and standard deviation of all the blobs of the video.
+def compute_model_area_and_body_length(blobs_in_video, number_of_animals, std_tolerance = STD_TOLERANCE):
+    """computes the median and standard deviation of all the blobs of the video
+    and the maximum_body_length estimated from the diagonal of the bounding box.
     These values are later used to discard blobs that are not fish and potentially
     belong to a crossing.
     """
     frames_with_all_individuals_visible = [i for i, blobs_in_frame in enumerate(blobs_in_video) if len(blobs_in_frame) == number_of_animals]
     #areas are collected only in global fragments' cores
-    areas = [blob.area for i in frames_with_all_individuals_visible for blob in blobs_in_video[i]]
+    areas_and_body_length = [(blob.area,blob.estimated_body_length) for i in frames_with_all_individuals_visible for blob in blobs_in_video[i]]
+    areas_and_body_length = np.asarray(areas_and_body_length)
     #areas are collected throughout the entire video
     # areas = [blob.area for blobs_in_frame in blobs_in_video for blob in blobs_in_frame ]
-    median_area = np.median(areas)
-    mean_area = np.mean(areas)
-    std_area = np.std(areas)
-    return ModelArea(mean_area, median_area, std_area)
+    median_area = np.median(areas_and_body_length[:,0])
+    mean_area = np.mean(areas_and_body_length[:,0])
+    std_area = np.std(areas_and_body_length[:,0])
+    maximum_body_length = np.max(areas_and_body_length[:,1])
+    return ModelArea(mean_area, median_area, std_area), maximum_body_length
 
 class ModelArea(object):
   def __init__(self, mean, median, std):

@@ -6,18 +6,24 @@ import tensorflow as tf
 from cnn_utils import *
 import numpy as np
 
-IMAGE_SIZE = (32,32,1)
-width = IMAGE_SIZE[0]
-height = IMAGE_SIZE[1]
-channels = IMAGE_SIZE[2]
+# IMAGE_SIZE = (32,32,1)
+# width = IMAGE_SIZE[0]
+# height = IMAGE_SIZE[1]
+# channels = IMAGE_SIZE[2]
 keep_prob = 1.0
 
 ''' original model'''
-def cnn_model_0(images, classes):
+def cnn_model_0(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-
+    # width = tf.to_int32(tf.shape(images)[1])
+    # height = tf.to_int32(tf.shape(images)[2])
+    # channels = tf.to_int32(tf.shape(images)[3])
+    # print(width, height, channels)
+    # width = 68
+    # height = 68
+    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5

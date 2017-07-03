@@ -17,9 +17,9 @@ IMAGE_SIZE = (32,32,1)
 class ConvNetwork():
     def __init__(self, params, training_flag = True):
         # Set main attibutes of the class
-        self.image_width = IMAGE_SIZE[0]
-        self.image_height = IMAGE_SIZE[1]
-        self.image_channels = IMAGE_SIZE[2]
+        self.image_width = params.image_size[0]
+        self.image_height = params.image_size[1]
+        self.image_channels = params.image_size[2]
         self.params = params
         # Initialize layers to optimize to be empty. This means tha we will
         # optimize all the layers of our network
@@ -74,11 +74,12 @@ class ConvNetwork():
 
     def _build_graph(self):
         self.x_pl = tf.placeholder(tf.float32, [None, self.image_width, self.image_height, self.image_channels], name = 'images')
+        # self.x_pl = tf.placeholder(tf.float32, [None, None, None, self.image_channels], name = 'images')
         # self.y_logits, self.conv_vector = cnn_model(self.x_pl,self.params.number_of_animals)
         # self.y_logits, self.fc_vector, (self.W1, self.W2, self.W3, self.WFC, self.WSoft) = cnn_model_0(self.x_pl,self.params.number_of_animals)
         # self.y_logits = cnn_model_0(self.x_pl,self.params.number_of_animals)
         print('training model %i' %self.params.cnn_model)
-        self.y_logits = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals)
+        self.y_logits = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals, self.image_width, self.image_height, self.image_channels)
 
         self.softmax_probs = tf.nn.softmax(self.y_logits)
         self.predictions = tf.cast(tf.add(tf.argmax(self.softmax_probs,1),1),tf.float32)

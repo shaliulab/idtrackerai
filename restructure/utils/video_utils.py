@@ -138,7 +138,8 @@ def cntBB2Full(cnt,boundingBox):
 
 def getBoundigBox(cnt, width, height):
     x,y,w,h = cv2.boundingRect(cnt)
-    n = 25
+    original_diagonal = int(np.ceil(np.sqrt(w**2 + h**2)))
+    n = 45
     if x - n > 0: # We only expand the
         x = x - n
     else:
@@ -155,7 +156,7 @@ def getBoundigBox(cnt, width, height):
         h = h + 2*n
     else:
         h = height - y
-    return ((x, y),(x + w, y + h))
+    return ((x, y),(x + w, y + h)), original_diagonal
 
 def boundingBox_ROI2Full(bb, ROI):
     """
@@ -191,7 +192,7 @@ def sampleBkg(cntBB, miniFrame):
     return bkgSample
 
 def getMiniFrame(frame, cnt, height, width):
-    boundingBox = getBoundigBox(cnt, width, height)
+    boundingBox, estimated_body_length = getBoundigBox(cnt, width, height) # the estimated body length is the diagonal of the original boundingBox
     miniFrame = frame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
     cntBB = cnt2BoundingBox(cnt,boundingBox)
     #miniFrameBkg = miniFrame.copy()
@@ -199,7 +200,7 @@ def getMiniFrame(frame, cnt, height, width):
     pixelsInBB = getPixelsList(cntBB, np.abs(boundingBox[0][0] - boundingBox[1][0]), np.abs(boundingBox[0][1] - boundingBox[1][1]))
     pixelsInFullF = pixelsInBB + np.asarray([boundingBox[0][1], boundingBox[0][0]])
     pixelsInFullFF = np.ravel_multi_index([pixelsInFullF[:,0], pixelsInFullF[:,1]],(height,width))
-    return boundingBox, miniFrame, pixelsInFullFF
+    return boundingBox, miniFrame, pixelsInFullFF, estimated_body_length
 
 def getBlobsInfoPerFrame(frame, contours, height, width):
     boundingBoxes = []
@@ -207,9 +208,10 @@ def getBlobsInfoPerFrame(frame, contours, height, width):
     centroids = []
     areas = []
     pixels = []
+    estimated_body_lengths = []
 
     for i, cnt in enumerate(contours):
-        boundingBox, miniFrame, pixelsInFullF = getMiniFrame(frame, cnt, height, width)
+        boundingBox, miniFrame, pixelsInFullF, estimated_body_length = getMiniFrame(frame, cnt, height, width)
         #bounding boxes
         boundingBoxes.append(boundingBox)
         # miniframes
@@ -220,14 +222,16 @@ def getBlobsInfoPerFrame(frame, contours, height, width):
         areas.append(cv2.contourArea(cnt))
         # pixels lists
         pixels.append(pixelsInFullF)
+        # estimated body lengths list
+        estimated_body_lengths.append(estimated_body_length)
 
-    return boundingBoxes, miniFrames, centroids, areas, pixels
+    return boundingBoxes, miniFrames, centroids, areas, pixels, estimated_body_lengths
 
 def blobExtractor(segmentedFrame, frame, minArea, maxArea, height, width):
     contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
     # Filter contours by size
     goodContoursFull = filterContoursBySize(contours,minArea, maxArea)
     # get contours properties
-    boundingBoxes, miniFrames, centroids, areas, pixels = getBlobsInfoPerFrame(frame, goodContoursFull, height, width)
+    boundingBoxes, miniFrames, centroids, areas, pixels, estimated_body_lengths = getBlobsInfoPerFrame(frame, goodContoursFull, height, width)
 
-    return boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull
+    return boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, estimated_body_lengths

@@ -6,7 +6,8 @@ class NetworkParams(object):
                 cnn_model = 0,
                 learning_rate = None, keep_prob = None,
                 use_adam_optimiser = False, scopes_layers_to_optimize = None,
-                restore_folder = None, save_folder = None, knowledge_transfer_folder = None):
+                restore_folder = None, save_folder = None, knowledge_transfer_folder = None,
+                image_size = None):
 
         self.number_of_animals = number_of_animals
         self.learning_rate = learning_rate
@@ -17,6 +18,7 @@ class NetworkParams(object):
         self.use_adam_optimiser = use_adam_optimiser
         self.scopes_layers_to_optimize = scopes_layers_to_optimize
         self._cnn_model = cnn_model
+        self.image_size = image_size
 
     @property
     def cnn_model(self):

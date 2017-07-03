@@ -112,8 +112,6 @@ if __name__ == '__main__':
         ax = ax_arr1[2]
         ax.plot(group_sizes, proportion_of_unique_fragments_for_accumulation, label = str(int(frames_per_fragment)))
 
-
-
     ax = ax_arr1[0]
     ax.set_ylabel('accuracy')
     ax.set_ylim([0.,1.1])
