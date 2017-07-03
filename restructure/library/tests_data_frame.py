@@ -279,7 +279,26 @@ def tests_data_frame():
                                                     "ids_codes": 'aaa',
                                                     "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
                                                     "frames_in_video": [3000],
-                                                    "frames_per_individual_fragment": [50, 75, 100, 250, 500],
+                                                    "frames_per_individual_fragment": [50, 100, 250, 500, 1000],
+                                                    "repetitions": [1, 2, 3],
+                                                     }, ignore_index=True)
+
+    # 13 correlated_images correlated_images_DEF_aaa_CNN0_trainonly1GF cnn_model_0
+    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_trainonly1GF_long',
+                                                    "CNN_model": 0,
+                                                    "knowledge_transfer_flag": False,
+                                                    "knowledge_transfer_folder": '',
+                                                    "pretraining_flag": False,
+                                                    "percentage_of_frames_in_pretaining": 0.,
+                                                    "only_accumulate_one_fragment": True,
+                                                    "train_filters_in_accumulation": True,
+                                                    "accumulation_certainty": 0.,
+                                                    "animal_type": 'fish',
+                                                    "IMDB_codes": 'DEF',
+                                                    "ids_codes": 'aaa',
+                                                    "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
+                                                    "frames_in_video": [10000],
+                                                    "frames_per_individual_fragment": [50, 100, 250, 500, 1000],
                                                     "repetitions": [1, 2, 3],
                                                      }, ignore_index=True)
     #
