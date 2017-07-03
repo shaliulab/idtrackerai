@@ -116,28 +116,31 @@ if __name__ == '__main__':
 
     ''' plotting '''
     plt.ion()
-    fig, ax_arr = plt.subplots(2,4)
     sns.set_style("ticks")
+    fig, ax_arr = plt.subplots(2,4)
     plt.subplots_adjust(hspace = .3, wspace = .5)
 
     number_of_frames_in_individual_fragments_0 = filter(lambda x: x != 0, number_of_frames_in_individual_fragments)
     number_of_frames_in_shortest_individual_fragment_0 = filter(lambda x: x != 0, number_of_frames_in_shortest_individual_fragment)
     distance_travelled_individual_fragments_0 = filter(lambda x: x != 0, distance_travelled_individual_fragments)
     # number of frames in individual fragments
+    nbins = 25
     ax = ax_arr[0,0]
-    sns.set_style("ticks")
-    hist, bin_edges = np.histogram(np.log10(number_of_frames_in_individual_fragments_0), bins = 50)
-    # ax.semilogy(bin_edges[:-1], hist, '-ob' ,markersize = 5)
-    ax.plot(bin_edges[:-1], hist, '-ob' ,markersize = 5)
+    MIN = np.min(number_of_frames_in_individual_fragments_0)
+    MAX = np.max(number_of_frames_in_individual_fragments_0)
+    hist, bin_edges = np.histogram(number_of_frames_in_individual_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
+    ax.semilogx(bin_edges[:-1], hist, '-ob' ,markersize = 5)
+    # ax.plot(bin_edges[:-1], hist, '-ob' ,markersize = 5)
     ax.set_xlabel('num frames')
     ax.set_ylabel('num indiv fragments')
 
     # number of frames in shortest individual fragment
     ax = ax_arr[0,1]
-    sns.set_style("ticks")
-    hist, bin_edges = np.histogram(np.log10(number_of_frames_in_shortest_individual_fragment_0), bins = 50)
-    # ax.semilogy(bin_edges[:-1],hist, 'ro-', markersize = 5)
-    ax.plot(bin_edges[:-1],hist, 'ro-', markersize = 5)
+    MIN = np.min(number_of_frames_in_shortest_individual_fragment_0)
+    MAX = np.max(number_of_frames_in_shortest_individual_fragment_0)
+    hist, bin_edges = np.histogram(number_of_frames_in_shortest_individual_fragment, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
+    ax.semilogx(bin_edges[:-1],hist, 'ro-', markersize = 5)
+    # ax.plot(bin_edges[:-1],hist, 'ro-', markersize = 5)
     ax.text(.5,.95,'only individual fragments \nwith minimum \nnumber of frames \nin global fragment',
         horizontalalignment='center',
         transform=ax.transAxes,
@@ -146,15 +149,15 @@ if __name__ == '__main__':
 
     # distance travelled in individual fragments
     ax = ax_arr[0,2]
-    sns.set_style("ticks")
-    hist, bin_edges = np.histogram(np.log10(distance_travelled_individual_fragments_0), bins = 50)
-    # ax.semilogy(bin_edges[:-1], hist, '-ob' ,markersize = 5)
-    ax.plot(bin_edges[:-1], hist, '-ob' ,markersize = 5)
+    MIN = np.min(distance_travelled_individual_fragments_0)
+    MAX = np.max(distance_travelled_individual_fragments_0)
+    hist, bin_edges = np.histogram(distance_travelled_individual_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
+    ax.semilogx(bin_edges[:-1], hist, '-ob' ,markersize = 5)
+    # ax.plot(bin_edges[:-1], hist, '-ob' ,markersize = 5)
     ax.set_xlabel('distance travelled (pixels)')
 
     # number of frames vs distance travelled
     ax = ax_arr[0,3]
-    sns.set_style("ticks")
     ax.plot(number_of_frames_in_individual_fragments, distance_travelled_individual_fragments, 'bo', alpha = .1, label = 'individual fragment', markersize = 5)
     ax.set_xlabel('num frames')
     ax.set_ylabel('distance travelled (pixels)')
@@ -163,7 +166,6 @@ if __name__ == '__main__':
 
 
     ax = plt.subplot2grid((2, 4), (1, 0), colspan=4)
-    sns.set_style("ticks")
     index_order_by_max_num_frames = np.argsort(min_distance_travelled)[::-1]
     number_of_frames_in_longest_individual_fragment_ordered = np.asarray(number_of_frames_in_longest_individual_fragment)[index_order_by_max_num_frames]
     number_of_frames_in_shortest_individual_fragment_ordered = np.asarray(number_of_frames_in_shortest_individual_fragment)[index_order_by_max_num_frames]
