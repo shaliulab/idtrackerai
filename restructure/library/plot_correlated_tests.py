@@ -24,7 +24,7 @@ def flatten(l):
 
 def get_repetition_averaged_data_frame(results_data_frame):
 
-    repetition_averaged_data_frame = pd.DataFrame(columns = [results_data_frame.mean().to_dict().keys() + ['individual_accuracies','individual_accuracies_95' , 'individual_accuracies_05']])
+    repetition_averaged_data_frame = pd.DataFrame(columns = [results_data_frame.median().to_dict().keys() + ['individual_accuracies','individual_accuracies_95' , 'individual_accuracies_05']])
     count = 0
     for group_size in results_data_frame['group_size'].unique():
 
@@ -35,7 +35,7 @@ def get_repetition_averaged_data_frame(results_data_frame):
                 temp_data_frame = results_data_frame.query('group_size == @group_size' +
                                                             ' & frames_in_video == @frames_in_video' +
                                                             ' & frames_per_fragment == @frames_in_fragment')
-                temp_dict = temp_data_frame.mean().to_dict()
+                temp_dict = temp_data_frame.median().to_dict()
                 repetition_averaged_data_frame.loc[count,:] = temp_dict
 
                 individual_accuracies = []
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     # get tests_data_frame and test to plot
     print("loading tests data frame")
     tests_data_frame = pd.read_pickle('./library/tests_data_frame.pkl')
-    test_names = [test_name for test_name in results_data_frame['test_name'].unique() if 'uncorrelated' in test_name]
+    test_names = [test_name for test_name in results_data_frame['test_name'].unique() if 'trainonly1GF' in test_name]
     print("test_names: ", test_names)
     cnn_model_names_dict = {0: 'our network',
                             1: '1 conv layer',
@@ -78,7 +78,6 @@ if __name__ == '__main__':
 
     # plot
     plt.ion()
-    sns.set_style("ticks")
     fig, ax_arr = plt.subplots(2,2)
     fig.suptitle('%s - library %s - %i repetitions' %('Uncorrelated images test',
                                                     'DEF',

@@ -5,7 +5,7 @@ import pandas as pd
 from tests_data_frame import tests_data_frame
 
 if __name__ == '__main__':
-    list_of_data_frames_names_to_join = ['PCA', 'portraits']
+    list_of_data_frames_names_to_join = ['uncorrelated_PCA', 'uncorrelated_portraits', 'correlated_onlytraining1GF']
 
     list_of_results_data_frames = []
     for data_frame_name in list_of_data_frames_names_to_join:

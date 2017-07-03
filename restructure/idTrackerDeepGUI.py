@@ -54,7 +54,7 @@ from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
 
-NUM_CHUNKS_BLOB_SAVING = 10 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
+NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
 ###
 np.random.seed(0)
@@ -437,8 +437,7 @@ if __name__ == '__main__':
             frame_by_frame_identity_inspector(video, blobs)
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
-        video._blobs_path = old_video.blobs_path
-        video._global_fragments_path = old_video.global_fragments_path
+        video = old_video
         list_of_blobs = ListOfBlobs.load(video.blobs_path)
         blobs = list_of_blobs.blobs_in_video
         global_fragments = np.load(video.global_fragments_path)
