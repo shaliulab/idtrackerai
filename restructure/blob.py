@@ -347,21 +347,23 @@ def check_global_fragments(blobs_in_video, num_animals):
     """
     return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame) == num_animals for blobs_in_frame in blobs_in_video]
 
-def apply_model_area(blob, model_area, maximum_body_length, animal_type):
+def apply_model_area(video, blob, model_area, portraitSize):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
-        if animal_type == 'fish':
-            blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, maximum_body_length) #TODO: please unpack!
+        if video.animal_type == 'fish':
+            blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize) #TODO: please unpack!
         else:
-            blob.portrait = get_portrait_fly(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, maximum_body_length)
+            # blob.portrait = get_portrait_fly(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, maximum_body_length)
+            blob.portrait = get_portrait_fly(video, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
+            # portrait, _, _ = get_portrait_fly(video, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinate, portraitSize)
 
-def apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area, maximum_body_length, animal_type):
+def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portraitSize):
     for blob in blobs_in_frame:
-        apply_model_area(blob, model_area, maximum_body_length, animal_type)
+        apply_model_area(video, blob, model_area, portraitSize)
 
-def apply_model_area_to_video(blobs_in_video, model_area, maximum_body_length, animal_type):
+def apply_model_area_to_video(video, blobs_in_video, model_area, portraitSize):
     # Parallel(n_jobs=-1)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'))
     for blobs_in_frame in tqdm(blobs_in_video, desc = 'Fragmentation '):
-        apply_model_area_to_blobs_in_frame(blobs_in_frame, model_area, maximum_body_length, animal_type)
+        apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portraitSize)
 
 def get_images_from_blobs_in_video(blobs_in_video):
     portraits_in_video = []

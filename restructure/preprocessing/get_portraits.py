@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 import cv2
 import pandas as pd
 from joblib import Parallel, delayed
+from sklearn.decomposition import PCA
 
 # Import application/library specifics
 sys.path.append('IdTrackerDeep/utils')
@@ -106,7 +107,7 @@ def cropPortrait(image, portraitSize, shift=(0,0)):
         # print 'Portrait cropped'
         return croppedPortrait
 
-def getPortrait(miniframe, cnt, bb, maximum_body_length, px_nose_above_center = 9):
+def getPortrait(miniframe, cnt, bb, portrait_size, px_nose_above_center = 9):
     """Acquiring portraits from miniframe (for fish)
 
     Given a miniframe (i.e. a minimal rectangular image containing an animal)
@@ -115,12 +116,10 @@ def getPortrait(miniframe, cnt, bb, maximum_body_length, px_nose_above_center = 
     :param miniframe: A numpy 2-dimensional array
     :param cnt: A cv2-style contour, i.e. (x,:,y)
     :param bb: Coordinates of the left-top corner of miniframe in the big frame
-    :param maximum_body_length: maximum body length of the blobs. It will be the size of the width and the height of the frame feed it to the CNN
+    :param portrait_size: size of the portrait (input image to cnn)
     :param px_nose_above_center: Number of pixels of nose above the center of portrait
     :return a smaller 2-dimensional array, and a tuple with all the nose coordinates in frame reference
     """
-    # Portrait size
-    portrait_size = int(maximum_body_length/2) + int(maximum_body_length/2)%2
     # Extra parameters
     half_side_sq = int(portrait_size/2)
     overhead = int(np.ceil(np.sqrt(half_side_sq**2 + (half_side_sq+px_nose_above_center)**2))) # Extra pixels when performing rotation, around sqrt(half_side_sq**2 + (half_side_sq+px_nose_above_center)**2)
@@ -148,25 +147,39 @@ def getPortrait(miniframe, cnt, bb, maximum_body_length, px_nose_above_center = 
 
     return portrait, tuple(noseFull.astype('float32')), tuple(head_centroid_full.astype('float32')) #output as float because it is better for analysis.
 
-def get_portrait_fly(miniframe, cnt, bb, maximum_body_length):
+def get_portrait_fly(video, miniframe, pixels, bb, portraitSize):
     """Acquiring portraits from miniframe (for flies)
     :param miniframe: A numpy 2-dimensional array
     :param cnt: A cv2-style contour, i.e. (x,:,y)
     :param bb: Coordinates of the left-top corner of miniframe in the big frame
     :param maximum_body_length: maximum body length of the blobs. It will be the size of the width and the height of the frame feed it to the CNN
     """
-    ellipse = cv2.fitEllipse(cnt)
-    center = ellipse[0]
+    # ellipse = cv2.fitEllipse(cnt)
+    # center = ellipse[0]
+    # print("ellipse center before: ", center)
+    # center = full2miniframe(center, bb)
+    # center = np.array([int(center[0]), int(center[1])])
+    # rot_ang = ellipse[2]
+    # print("ellipse center and angle: ", center, rot_ang)
+
+    pca = PCA()
+    pxs = np.unravel_index(pixels,(video._height,video._width))
+    pxs1 = np.asarray(zip(pxs[0],pxs[1]))
+    pca.fit(pxs1)
+    rot_ang = 180 - np.arctan(pca.components_[0][1]/pca.components_[0][0])*180/np.pi - 45 # we substract 45 so that the fish is aligned in the diagonal. This say we have smaller frames
+    center = (pca.mean_[1], pca.mean_[0])
+    # print("PCA center before: ", center)
     center = full2miniframe(center, bb)
     center = np.array([int(center[0]), int(center[1])])
-    rot_ang = ellipse[2]
+    # print("PCA center and angle: ", center, rot_ang)
+
     #rotate
     diag = np.sqrt(np.sum(np.asarray(miniframe.shape)**2)).astype(int)
     diag = (diag, diag)
     M = cv2.getRotationMatrix2D(tuple(center), rot_ang, 1)
     minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_WRAP, flags = cv2.INTER_CUBIC)
 
-    crop_distance = int(np.ceil(maximum_body_length / 2))
+    crop_distance = int(portraitSize/2)
     x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
     y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
     portrait = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
@@ -175,7 +188,6 @@ def get_portrait_fly(miniframe, cnt, bb, maximum_body_length):
     rot_ang_rad = rot_ang * np.pi / 180
     h_or_t_1 = np.array([np.cos(rot_ang_rad), np.sin(rot_ang_rad)]) * rot_ang_rad
     h_or_t_2 = - h_or_t_1
-
     return portrait, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int'))
 
 def reaper(videoPath, frameIndices, animal_type):

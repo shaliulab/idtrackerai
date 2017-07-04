@@ -235,7 +235,7 @@ def SegmentationPreview(video):
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
-        bbs, miniFrames, _, areas, _, goodContours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray, minArea, maxArea, height, width)
+        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray, minArea, maxArea, height, width)
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()
@@ -260,20 +260,18 @@ def SegmentationPreview(video):
         print("areas: ", areas)
 
         if video.animal_type == 'fish':
-            portraitSize = int(maximum_body_length/2) + int(maximum_body_length/2)%2
+            portraitSize = int(maximum_body_length/2)
+            portraitSize =  portraitSize + portraitSize%2 #this is to make the portraitSize even
         elif video.animal_type == 'fly':
-            portraitSize = int(maximum_body_length + maximum_body_length%2)
+            portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
+            portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
 
         while j < numPortraits:
             if j < numGoodContours:
                 if video._animal_type == 'fish':
-                    portrait,_,_= getPortrait(miniFrames[j],goodContours[j],bbs[j],maximum_body_length)
+                    portrait,_,_= getPortrait(miniFrames[j],goodContours[j],bbs[j],portraitSize)
                 elif video._animal_type == 'fly' or video._animal_type == 'ant':
-                    portrait,_,_= get_portrait_fly(miniFrames[j],goodContours[j],bbs[j],maximum_body_length)
-                # print(portrait.shape)
-                # print("portraitSize", portraitSize)
-                # portrait = cropPortrait(portrait,portraitSize,shift = (0,0))
-                # portrait = np.squeeze(portrait)
+                    portrait, _, _ = get_portrait_fly(video, miniFrames[j], pixels[j], bbs[j], portraitSize)
             else:
                 portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
             rowPortrait.append(portrait)
