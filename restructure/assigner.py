@@ -23,7 +23,7 @@ def assign(net, video, images, print_flag):
     # Instantiate data_set
     data.standarize_images()
     # Crop images from 36x36 to 32x32 without performing data augmentation
-    data.crop_images(image_size = 32)
+    # data.crop_images(image_size = video.portrait_size[0])
     # Train network
     assigner = GetPrediction(data, print_flag = print_flag)
     assigner.get_predictions_softmax(net.predict)
