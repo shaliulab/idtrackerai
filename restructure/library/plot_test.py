@@ -64,7 +64,7 @@ if __name__ == '__main__':
     # get tests_data_frame and test to plot
     print("loading tests data frame")
     tests_data_frame = pd.read_pickle('./library/tests_data_frame.pkl')
-    test_name = 'correlated_images_DEF_aaa_CNN0_trainonly1GF'
+    test_name = 'correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF' 
     print('test to plot: ', test_name)
     test_dictionary = tests_data_frame.query('test_name == @test_name').to_dict()
     pprint(test_dictionary)
