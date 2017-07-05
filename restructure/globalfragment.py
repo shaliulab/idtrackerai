@@ -166,19 +166,20 @@ def get_images_and_labels_from_global_fragment(global_fragment, individual_fragm
     return images, labels, lengths, individual_fragments_identifiers
 
 def get_images_and_labels_from_global_fragments(global_fragments, individual_fragments_identifiers_already_used = []):
+
     images = []
     labels = []
     lengths = []
-
+    candidate_individual_fragments_identifiers = []
     for global_fragment in global_fragments:
         images_global_fragment, labels_global_fragment, lengths_global_fragment, individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_identifiers_already_used)
         if len(images_global_fragment) != 0:
             images.append(images_global_fragment)
             labels.append(labels_global_fragment)
             lengths.extend(lengths_global_fragment)
-            individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
+            candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
 
-    return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), individual_fragments_identifiers_already_used, np.cumsum(lengths)[:-1]
+    return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
 
 def subsample_images_for_last_training(images, labels, number_of_animals, number_of_samples = 3000):
     """Before assigning identities to the blobs that are not part of the training set we train the network

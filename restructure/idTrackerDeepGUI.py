@@ -366,7 +366,8 @@ if __name__ == '__main__':
                 candidates_next_global_fragments = [global_fragment for global_fragment in global_fragments if not global_fragment.used_for_training]
                 print("number of candidate global fragments, ", len(candidates_next_global_fragments))
                 if any([not global_fragment.used_for_training for global_fragment in global_fragments]):
-                    images, _, candidate_individual_fragments_indices, indices_to_split = get_images_and_labels_from_global_fragments(candidates_next_global_fragments,[])
+                    images, _, candidate_individual_fragments_indices, indices_to_split = get_images_and_labels_from_global_fragments(candidates_next_global_fragments,accumulation_manager.individual_fragments_used)
+                    print("*** individual fragments to be used: ", np.unique(candidate_individual_fragments_indices))
                 else:
                     print("All the global fragments have been used for accumulation")
                     break
