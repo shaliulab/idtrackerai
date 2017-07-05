@@ -53,18 +53,18 @@ def compute_P1_for_blobs_in_video(video, blobs_in_video):
                 blob._P1_vector = compute_P1_individual_fragment_from_blob(frequencies_in_fragment)
                 blob.update_P1_in_fragment()
 
-def compute_P1_for_blobs_in_video(video, blobs_in_video):
-    """Assigns individual-fragment-based identities to all the blobs
-    in the video. It uses P1
-    """
-    for i, frame in enumerate(blobs_in_video):
-        for j, blob in enumerate(frame):
-            if blob.is_a_fish_in_a_fragment and not blob.assigned_during_accumulation:
-                identities_in_fragment = np.asarray(blob.identities_in_fragment())
-                frequencies_in_fragment = compute_identification_frequencies_individual_fragment(identities_in_fragment, video.number_of_animals)
-                blob._frequencies_in_fragment = frequencies_in_fragment
-                blob._P1_vector = compute_P1_individual_fragment_from_blob(frequencies_in_fragment)
-                blob.update_P1_in_fragment()
+# def compute_P1_for_blobs_in_video(video, blobs_in_video):
+#     """Assigns individual-fragment-based identities to all the blobs
+#     in the video. It uses P1
+#     """
+#     for i, frame in enumerate(blobs_in_video):
+#         for j, blob in enumerate(frame):
+#             if blob.is_a_fish_in_a_fragment and not blob.assigned_during_accumulation:
+#                 identities_in_fragment = np.asarray(blob.identities_in_fragment())
+#                 frequencies_in_fragment = compute_identification_frequencies_individual_fragment(identities_in_fragment, video.number_of_animals)
+#                 blob._frequencies_in_fragment = frequencies_in_fragment
+#                 blob._P1_vector = compute_P1_individual_fragment_from_blob(frequencies_in_fragment)
+#                 blob.update_P1_in_fragment()
 
 def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
     """Assigns individual-fragment-based identities to all the blobs

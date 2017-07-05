@@ -115,7 +115,7 @@ class AccumulationManager(object):
         print("Old images for training:", self.used_images.shape, self.used_labels.shape)
 
     def assign_identities_to_accumulated_global_fragments(self, blobs_in_video):
-        """Assign the identities in identities_list to both global fragment and all its blobs if
+        """Assign the identities in identities_list to both global fragment and all its blobs
         after training on the global fragment"""
         print("Assigning identities to global fragments and blobs used in this accumulation step")
         for global_fragment in self.next_global_fragments:
