@@ -317,7 +317,7 @@ def tests_data_frame():
                                                     "ids_codes": 'aaa',
                                                     "group_sizes": [100],
                                                     "frames_in_video": [10000],
-                                                    "frames_per_individual_fragment": [100, 250, 500],
+                                                    "frames_per_individual_fragment": [50, 100, 250, 500],
                                                     "repetitions": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                                                      }, ignore_index=True)
     #

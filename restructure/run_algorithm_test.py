@@ -22,7 +22,7 @@ sys.path.append('./library')
 
 from video import Video
 from blob import reset_blobs_fragmentation_parameters, compute_fragment_identifier_and_blob_index, connect_blob_list, apply_model_area_to_video, ListOfBlobs, get_images_from_blobs_in_video
-from globalfragment import compute_model_area, give_me_list_of_global_fragments, ModelArea, give_me_pre_training_global_fragments
+from globalfragment import give_me_list_of_global_fragments, ModelArea, give_me_pre_training_global_fragments
 from globalfragment import get_images_and_labels_from_global_fragments
 from globalfragment import subsample_images_for_last_training, order_global_fragments_by_distance_travelled
 from segmentation import segment
@@ -77,6 +77,7 @@ if __name__ == '__main__':
 
     dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes)
     dataset.loadIMDBs()
+    print(dataset.images.shape)
 
     for group_size in job_config.group_sizes:
 
@@ -93,8 +94,9 @@ if __name__ == '__main__':
 
                     print("\n********** group size %i - frames_in_video %i - frames_in_fragment %i - repetition %i ********" %(group_size,frames_in_video,frames_in_fragment,repetition))
                     already_computed = False
-                    if os.path.isfile('./library/results_data_frame_test.pkl'):
+                    if os.path.isfile('./library/results_data_frame.pkl'):
                         already_computed = check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, frames_in_fragment, repetition)
+                        print("already_computed flag: ", already_computed)
                     if already_computed:
                         print("The algorithm with this comditions has been already tested")
                     else:
@@ -108,6 +110,7 @@ if __name__ == '__main__':
                         video._num_frames = frames_in_video
                         video.tracking_with_knowledge_transfer = job_config.knowledge_transfer_flag
                         video.knowledge_transfer_model_folder = job_config.knowledge_transfer_folder
+                        video.portrait_size = (32, 32, 1) #NOTE: this can change if the library changes. BUILD next library with new preprocessing.
 
                         #############################################################
                         ####################   Preprocessing   ######################
@@ -154,7 +157,8 @@ if __name__ == '__main__':
                             pretrain_network_params = NetworkParams(video.number_of_animals,
                                                                     learning_rate = 0.01,
                                                                     keep_prob = 1.0,
-                                                                    save_folder = video._pretraining_folder)
+                                                                    save_folder = video._pretraining_folder,
+                                                                    image_size = video.portrait_size)
 
                             if video.tracking_with_knowledge_transfer:
                                 print("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
@@ -190,7 +194,8 @@ if __name__ == '__main__':
                                                     learning_rate = 0.005,
                                                     keep_prob = 1.0,
                                                     scopes_layers_to_optimize = ['fully-connected1','softmax1'],
-                                                    save_folder = video._accumulation_folder)
+                                                    save_folder = video._accumulation_folder,
+                                                    image_size = video.portrait_size)
                         if video._has_been_pretrained:
                             print("We will restore the network from pretraining: %s\n" %video._pretraining_folder)
                             accumulation_network_params.restore_folder = video._pretraining_folder
