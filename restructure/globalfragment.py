@@ -57,6 +57,7 @@ class GlobalFragment(object):
         self._total_number_of_portraits = np.sum(self._number_of_portraits_per_individual_fragment) #overall number of portraits
         self.number_of_animals = number_of_animals
         self.reset_accumulation_params()
+        self._is_unique = False
 
     def reset_accumulation_params(self):
         self._used_for_training = False

@@ -185,8 +185,14 @@ class AccumulationManager(object):
                 # if the individual fragment is in the list of candidates we compute the certainty
                 index_in_candidate_individual_fragments = list(self.candidate_individual_fragments_identifiers).index(individual_fragment_identifier)
                 individual_fragment_certainty =  self.certainty_candidate_individual_fragments[index_in_candidate_individual_fragments]
+                # print("P1: ", self.P1_of_candidate_individual_fragments[index_in_candidate_individual_fragments])
+                #print("certainty: ", individual_fragment_certainty)
                 if individual_fragment_certainty <= self.certainty_threshold:
                     global_fragment._acceptable_for_training = False
+                    #print("it does not pass the certainty threshold")
+                    #print("P1: ", self.P1_of_candidate_individual_fragments[index_in_candidate_individual_fragments])
+                    #print("softmax: ", self.median_softmax_candidate_individual_fragments[index_in_candidate_individual_fragments])
+                    #print("threshold: ", self.certainty_threshold)
                     break
                 else:
                     global_fragment._certainties.append(individual_fragment_certainty)
@@ -204,6 +210,7 @@ class AccumulationManager(object):
 
         # Compute identities if the global_fragment is acceptable for training after checking the certainty
         if global_fragment._acceptable_for_training:
+            # print("is passes the certainty threshold")
             global_fragment._temporary_ids = np.zeros(len(global_fragment._certainties)).astype('int')
             # get the index position of the individual fragments ordered by certainty from max to min
             argsort_certainties_max_to_min = np.argsort(np.squeeze(np.asarray(global_fragment._certainties)))[::-1]
@@ -226,7 +233,9 @@ class AccumulationManager(object):
                 # print("The global fragment is not unique")
                 global_fragment._acceptable_for_training = False
             else:
+                # print("is unique and acceptable for training: ", global_fragment._acceptable_for_training)
                 global_fragment._temporary_ids = np.asarray(global_fragment._temporary_ids)
+
 
     # def assign_identities_to_test_global_fragment(self, global_fragment):
     #     assert global_fragment.used_for_training == False
@@ -285,5 +294,7 @@ def compute_certainty_individual_fragment(frequencies_individual_fragment,softma
     argsort_frequencies = np.argsort(frequencies_individual_fragment)
     sorted_frequencies = frequencies_individual_fragment[argsort_frequencies]
     sorted_softmax_probs = softmax_probs_median_individual_fragment[argsort_frequencies]
+    # certainty = np.diff(np.multiply(sorted_frequencies,sorted_softmax_probs)[-2:])/np.sum(sorted_frequencies[-2:])
+    # certainty = np.diff(sorted_frequencies[-2:])/np.sum(sorted_frequencies[-2:])
     certainty = np.diff(np.multiply(sorted_frequencies,sorted_softmax_probs)[-2:])/np.sum(sorted_frequencies[-2:]) - 1/np.sum(frequencies_individual_fragment)
     return certainty
