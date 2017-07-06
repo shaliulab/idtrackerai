@@ -68,11 +68,11 @@ if __name__ == '__main__':
     job_config = LibraryJobConfig(cluster = sys.argv[1], test_dictionary = test_dictionary)
     job_config.create_folders_structure()
 
-    if os.path.isfile('./library/results_data_frame.pkl'):
-        print("results_data_frame.pkl already exists \n")
-        results_data_frame = pd.read_pickle('./library/results_data_frame.pkl')
+    if os.path.isfile('./library/results_data_frame_test.pkl'):
+        print("results_data_frame_test.pkl already exists \n")
+        results_data_frame = pd.read_pickle('./library/results_data_frame_test.pkl')
     else:
-        print("results_data_frame.pkl does not exist \n")
+        print("results_data_frame_test.pkl does not exist \n")
         results_data_frame = pd.DataFrame()
 
     dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes)
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
                     print("\n********** group size %i - frames_in_video %i - frames_in_fragment %i - repetition %i ********" %(group_size,frames_in_video,frames_in_fragment,repetition))
                     already_computed = False
-                    if os.path.isfile('./library/results_data_frame.pkl'):
+                    if os.path.isfile('./library/results_data_frame_test.pkl'):
                         already_computed = check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, frames_in_fragment, repetition)
                         print("already_computed flag: ", already_computed)
                     if already_computed:
@@ -123,6 +123,7 @@ if __name__ == '__main__':
                         blobs = generate_list_of_blobs(portraits, centroids, config)
                         compute_fragment_identifier_and_blob_index(blobs, config.number_of_animals)
                         global_fragments = give_me_list_of_global_fragments(blobs, config.number_of_animals)
+                        raise ValueError("check global fragments before runnin full test")
                         # check consistency global fragments
                         number_of_fragments = frames_in_video/frames_in_fragment
                         if len(global_fragments) != number_of_fragments:
@@ -441,7 +442,7 @@ if __name__ == '__main__':
                         #                                                  }, ignore_index=True)
 
 
-                        results_data_frame.to_pickle('./library/results_data_frame.pkl')
+                        results_data_frame.to_pickle('./library/results_data_frame_test.pkl')
 
                         blobs = None
                         global_fragments = None
