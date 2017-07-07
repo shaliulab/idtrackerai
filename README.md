@@ -6,10 +6,11 @@ Python 2.7
 
 * cd
 * sudo apt install python-pip
+* sudo apt-get install python-dev
 * sudo apt-get install python-setuptools
 * sudo pip install virtualenv (http://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/)
 * sudo pip install virtualenvwrapper (http://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/)
-* foloow http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#ubuntu-installation to install CUDA® Toolkit 8.0
+* follow http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#ubuntu-installation to install CUDA® Toolkit 8.0
 * check NVIDIA drivers compatible with cuda toolkit 8.0
 * download cuDNN v5.1 libraries and copy them in to the correspoding cuda-8.0 folders (typically usr/local/cuda-8.0/include and usr/local/cuda-8.0/lib64)
 * mkvirtualenv --system-site-packages idTracker100 
@@ -17,7 +18,8 @@ Python 2.7
 * sudo apt-get install python-opencv (version 2.4.9.1)
 * sudo apt-get install git
 * git clone http://paco@git.yalp.io/mattia/IdTrackerDeep.git (or whatever HTTP link)
-* 
+* sudo apt-get install python-tk
+* sudo pip install requirements.txt
 
 ### Dependencies needed for the project:
 
