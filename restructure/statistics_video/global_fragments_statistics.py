@@ -29,8 +29,7 @@ from blob import compute_fragment_identifier_and_blob_index,\
                 ListOfBlobs,\
                 get_images_from_blobs_in_video,\
                 reset_blobs_fragmentation_parameters
-from globalfragment import compute_model_area,\
-                            give_me_list_of_global_fragments,\
+from globalfragment import  give_me_list_of_global_fragments,\
                             ModelArea,\
                             give_me_pre_training_global_fragments,\
                             get_images_and_labels_from_global_fragments,\

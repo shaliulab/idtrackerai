@@ -321,13 +321,13 @@ def tests_data_frame():
                                                     "repetitions": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                                                      }, ignore_index=True)
 
-    # 14 correlated_images correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF cnn_model_0
-    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF_100fish_10000_images',
+    # 15 correlated_images correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF cnn_model_0
+    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF_100fish_3000_images_gaussianModel',
                                                     "CNN_model": 0,
                                                     "knowledge_transfer_flag": False,
                                                     "knowledge_transfer_folder": '',
                                                     "pretraining_flag": True,
-                                                    "percentage_of_frames_in_pretaining": 1.,
+                                                    "percentage_of_frames_in_pretaining": .25,
                                                     "only_accumulate_one_fragment": True,
                                                     "train_filters_in_accumulation": False,
                                                     "accumulation_certainty": 0.1,
@@ -336,8 +336,8 @@ def tests_data_frame():
                                                     "ids_codes": 'aaa',
                                                     "group_sizes": [100],
                                                     "frames_in_video": [3000],
-                                                    "frames_per_individual_fragment": [[100,250,500,1000]],
-                                                    "probabilities_frames_per_fragment": [[.15,.5,.2,.15]],
+                                                    "frames_per_individual_fragment": [50,100,250,500,1000],
+                                                    "std_frames_per_individual_fragment": 150,
                                                     "repetitions": [1, 2, 3],
                                                      }, ignore_index=True)
     #

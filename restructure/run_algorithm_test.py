@@ -83,8 +83,7 @@ if __name__ == '__main__':
 
         for frames_in_video in job_config.frames_in_video:
 
-            for frames_in_fragment in job_config.frames_per_individual_fragment:
-
+            for i, frames_in_fragment in enumerate(job_config.frames_per_individual_fragment):
                 for repetition in job_config.repetitions:
                     frames_in_fragment_path = os.path.join(job_config.condition_path,'group_size_' + str(group_size),
                                                             'num_frames_' + str(frames_in_video),
@@ -118,18 +117,22 @@ if __name__ == '__main__':
                         #### library                                             ####
                         #############################################################
 
-                        config = BlobsListConfig(number_of_animals = group_size, number_of_frames_per_fragment = frames_in_fragment, number_of_frames = frames_in_video, repetition = repetition)
+                        config = BlobsListConfig(number_of_animals = group_size,
+                                                number_of_frames_per_fragment = frames_in_fragment,
+                                                std_number_of_frames_per_fragment = job_config.std_frames_per_individual_fragment,
+                                                number_of_frames = frames_in_video,
+                                                repetition = repetition)
                         portraits, centroids = subsample_dataset_by_individuals(dataset, config)
                         blobs = generate_list_of_blobs(portraits, centroids, config)
                         compute_fragment_identifier_and_blob_index(blobs, config.number_of_animals)
                         global_fragments = give_me_list_of_global_fragments(blobs, config.number_of_animals)
-                        raise ValueError("check global fragments before runnin full test")
+                        # raise ValueError("check global fragments before runnin full test")
                         # check consistency global fragments
-                        number_of_fragments = frames_in_video/frames_in_fragment
-                        if len(global_fragments) != number_of_fragments:
-                            print("len global_fragments: ", len(global_fragments))
-                            print("frames_in_video/frames_in_fragment: ", number_of_fragments)
-                            raise ValueError('The number of global fragments it is not consistent')
+                        # number_of_fragments = frames_in_video/frames_in_fragment
+                        # if len(global_fragments) != number_of_fragments:
+                        #     print("len global_fragments: ", len(global_fragments))
+                        #     print("frames_in_video/frames_in_fragment: ", number_of_fragments)
+                        #     raise ValueError('The number of global fragments it is not consistent')
                         global_fragments_ordered = order_global_fragments_by_distance_travelled(global_fragments)
                         video._has_been_segmented = True
                         video._has_been_preprocessed = True
@@ -146,7 +149,7 @@ if __name__ == '__main__':
                         print("\n**** Pretraining ****\n")
                         if job_config.pretraining_flag:
                             if job_config.percentage_of_frames_in_pretaining != 1.:
-                                number_of_pretraining_global_fragments = int((frames_in_video * job_config.percentage_of_frames_in_pretaining)/frames_in_fragment)
+                                number_of_pretraining_global_fragments = int(len(global_fragments) * job_config.percentage_of_frames_in_pretaining)
                                 pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_pretraining_global_fragments = number_of_pretraining_global_fragments))
                             else:
                                 number_of_pretraining_global_fragments = len(global_fragments)
@@ -326,8 +329,6 @@ if __name__ == '__main__':
                                         if blob.identity in identities_in_frame:
                                             number_of_identity_repetitions += 1
                                             frame_with_repetition = True
-                                            if blob._assigned_during_accumulation:
-                                                raise ValueError("duplications during accumulation in frame %i" %frame_number)
 
                                         identities_in_frame.append(blob.identity)
                                     elif blob.identity is None or blob.identity == 0:
@@ -353,7 +354,7 @@ if __name__ == '__main__':
                         print("number of candidate global fragments:", len(candidates_next_global_fragments))
                         print("number of unique fragments: ", number_of_unique_fragments)
                         print("number of acceptable fragments: ", number_of_acceptable_fragments)
-                        print("number of fragments with repetition (after assignation with P2): ", int(number_of_frames_with_repetitions/config.number_of_frames_per_fragment))
+                        print("number of frames with repetition (after assignation with P2): ", int(number_of_frames_with_repetitions))
                         print("number of blobs assigned during accumulation: ", number_of_blobs_assigned_in_accumulation)
                         print("frames_in_video: ", frames_in_video)
                         print("group_size: ", group_size)
@@ -392,7 +393,7 @@ if __name__ == '__main__':
                                                                         'number_of_candidate_fragments': len(candidates_next_global_fragments),
                                                                         'number_of_unique_fragments': number_of_unique_fragments,
                                                                         'number_of_acceptable_fragments': number_of_acceptable_fragments,
-                                                                        'number_of_non_unique_fragments_after_assignation': int(number_of_frames_with_repetitions/config.number_of_frames_per_fragment),
+                                                                        'number_of_non_unique_frames_after_assignation': int(number_of_frames_with_repetitions),
                                                                         'proportion_of_accumulated_fragments': sum([global_fragment.used_for_training for global_fragment in global_fragments])/len(global_fragments),
                                                                         'number_of_blobs_assigned_in_accumulation': number_of_blobs_assigned_in_accumulation,
                                                                         'number_of_not_assigned_blobs': number_of_not_assigned_blobs,
