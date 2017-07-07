@@ -58,9 +58,9 @@ for frame_num, blobs_in_frame in tqdm(enumerate(blobs)):
             print("is it in a fragment? ", blob.is_in_a_fragment)
             if blob.portrait is not None:
                 print("Jump!")
-                jumps.append(blob.portrait[0])
+                jumps.append(blob.portrait)
                 plt.title("Jump")
-                # plt.imshow(blob.portrait[0])
+                # plt.imshow(blob.portrait)
             else:
                 print("Crossing!")
                 number_of_animals_crossing_in_current_frame = count_animals_in_crossing(blobs, frame_num)[blob_num]

@@ -6,3 +6,6 @@
 
 #except gitignore
 !*.gitignore
+
+#except requirements.txt
+!requirements.txt

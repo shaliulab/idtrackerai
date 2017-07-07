@@ -257,7 +257,7 @@ if __name__ == "__main__":
     ''' Assign identities to jumps '''
     jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
                     if blob.is_a_jump or blob.is_a_ghost_crossing]
-    jump_images = [blob.portrait[0] for blob in jump_blobs]
+    jump_images = [blob.portrait for blob in jump_blobs]
     #assign jumps by restoring the network
     assigner = assign_jumps(jump_images, video)
 

@@ -10,6 +10,7 @@ import time
 
 from blob import Blob, compute_fragment_identifier_and_blob_index
 from globalfragment import give_me_list_of_global_fragments, order_global_fragments_by_distance_travelled
+from scipy.stats import truncnorm
 
 """ generage jobConfig """
 class LibraryJobConfig(object):
@@ -63,9 +64,17 @@ def check_if_repetition_has_been_computed(results_data_frame, job_config, group_
 
 """ generate blob lists """
 class BlobsListConfig(object):
-    def __init__(self,number_of_animals = None, number_of_frames_per_fragment = None, number_of_frames = None, repetition = None):
+    def __init__(self,
+                    number_of_animals = None,
+                    number_of_frames_per_fragment = None,
+                    std_number_of_frames_per_fragment = None,
+                    number_of_frames = None,
+                    repetition = None):
         self.number_of_animals = number_of_animals
         self.number_of_frames_per_fragment = number_of_frames_per_fragment
+        self.std_number_of_frames_per_fragment = std_number_of_frames_per_fragment
+        self.max_number_of_frames_per_fragment = number_of_frames
+        self.min_number_of_frames_per_fragment = 1
         self.number_of_frames = number_of_frames
         self.repetition = repetition
         self.IMDB_codes = []
@@ -75,7 +84,8 @@ def subsample_dataset_by_individuals(dataset, config):
     # We need to consider that for every individual fragment there are two frames that are not considered for training
     # In order to have the correct number of trainable images per individual fragment we need to increase the number of
     # frames in the video to account for those two frames. The total number of frames needes is:
-    number_of_frames = int(config.number_of_frames + 2 * config.number_of_frames / config.number_of_frames_per_fragment)
+    # number_of_frames = int(config.number_of_frames + 2 * config.number_of_frames / config.number_of_frames_per_fragment)
+    number_of_frames = config.number_of_frames
     if config.number_of_animals > dataset.number_of_animals:
         raise ValueError("The number of animals for subsampling (%i) cannot be bigger than the number of animals in the dataset (%i)" %(config.number_of_animals, dataset.number_of_animals))
 
@@ -104,34 +114,95 @@ def subsample_dataset_by_individuals(dataset, config):
 
     return np.concatenate(subsampled_images, axis = 1), np.concatenate(subsampled_centroids, axis = 1)
 
+def get_next_number_of_frames_in_fragment(config):
+    lower = config.min_number_of_frames_per_fragment
+    upper = config.max_number_of_frames_per_fragment
+    mu = config.number_of_frames_per_fragment
+    std = config.std_number_of_frames_per_fragment
+    X = truncnorm((lower - mu) / std, (upper - mu) / std, loc=mu, scale=std)
+    number_of_frames_per_fragment = int(X.rvs(1))
+    return number_of_frames_per_fragment
+
 def generate_list_of_blobs(portraits, centroids, config):
     blobs_in_video = []
     frames_in_fragment = 0
     number_of_fragments = 0
 
-    for frame_number, (centroids_in_frame, images_in_frame) in enumerate(zip(centroids,portraits)):
-        blobs_in_frame = []
-        for identity, (centroid, image) in enumerate(zip(centroids_in_frame, images_in_frame)):
+    print("\n***********Generating list of blobs")
+    print("centroids shape ", centroids.shape)
+    print("portraits shape", portraits.shape)
+
+    for identity in range(config.number_of_animals):
+        # print("*\n**identity ", identity)
+        # decide length of first individual fragment for this identity
+        number_of_frames_per_fragment = get_next_number_of_frames_in_fragment(config)
+        frames_in_fragment = 0
+        # print("number_of_frames_per_fragment, ", number_of_frames_per_fragment)
+        # print("frames_in_fragment, ", frames_in_fragment)
+        blobs_in_identity = []
+        for frame_number in range(config.number_of_frames):
+            # print("frame_number, ", frame_number)
+            # print("identity, ", identity)
+            centroid = centroids[frame_number,identity,:]
+            image = portraits[frame_number,identity,:,:]
+
             blob = Blob(centroid, None, None, None,
                         number_of_animals = config.number_of_animals)
             blob.frame_number = frame_number
             blob.portrait = (image,None,None)
             blob._user_generated_identity = identity + 1
 
-            if frame_number > 0 and frames_in_fragment <= config.number_of_frames_per_fragment + 2 and frames_in_fragment != 0:
-                blob.previous = [blobs_in_video[frame_number-1][identity]]
-                blobs_in_video[frame_number-1][identity].next = [blob]
+            if frame_number > 0 and frames_in_fragment <= number_of_frames_per_fragment + 2 and frames_in_fragment != 0:
+                blob.previous = [blobs_in_identity[frame_number-1]]
+                blobs_in_identity[frame_number-1].next = [blob]
 
-            blobs_in_frame.append(blob)
+            if frames_in_fragment <= number_of_frames_per_fragment:
+                frames_in_fragment += 1
+                # print("frames_in_fragment, ", frames_in_fragment)
+            else:
+                frames_in_fragment = 0
+                number_of_fragments += 1
+                number_of_frames_per_fragment = get_next_number_of_frames_in_fragment(config)
+                # print("number_of_frames_per_fragment, ", number_of_frames_per_fragment)
+                # print("frames_in_fragment, ", frames_in_fragment)
 
-        if frames_in_fragment <= config.number_of_frames_per_fragment:
-            frames_in_fragment += 1
-        else:
-            frames_in_fragment = 0
-            number_of_fragments += 1
-        blobs_in_video.append(blobs_in_frame)
+            blobs_in_identity.append(blob)
 
+        blobs_in_video.append(blobs_in_identity)
+
+    blobs_in_video = zip(*blobs_in_video)
+    blobs_in_video = [list(blobs_in_frame) for blobs_in_frame in blobs_in_video]
     return blobs_in_video
+
+
+# def generate_list_of_blobs(portraits, centroids, config):
+#     blobs_in_video = []
+#     frames_in_fragment = 0
+#     number_of_fragments = 0
+#
+#     for frame_number, (centroids_in_frame, images_in_frame) in enumerate(zip(centroids,portraits)):
+#         blobs_in_frame = []
+#         for identity, (centroid, image) in enumerate(zip(centroids_in_frame, images_in_frame)):
+#             blob = Blob(centroid, None, None, None,
+#                         number_of_animals = config.number_of_animals)
+#             blob.frame_number = frame_number
+#             blob.portrait = (image,None,None)
+#             blob._user_generated_identity = identity + 1
+#
+#             if frame_number > 0 and frames_in_fragment <= config.number_of_frames_per_fragment + 2 and frames_in_fragment != 0:
+#                 blob.previous = [blobs_in_video[frame_number-1][identity]]
+#                 blobs_in_video[frame_number-1][identity].next = [blob]
+#
+#             blobs_in_frame.append(blob)
+#
+#         if frames_in_fragment <= config.number_of_frames_per_fragment:
+#             frames_in_fragment += 1
+#         else:
+#             frames_in_fragment = 0
+#             number_of_fragments += 1
+#         blobs_in_video.append(blobs_in_frame)
+#
+#     return blobs_in_video
 
 class Dataset(object):
     def __init__(self, IMDB_codes = 'A', ids_codes = 'a', cluster = 0):
