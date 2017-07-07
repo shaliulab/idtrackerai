@@ -2,6 +2,11 @@
 
 Python 2.7
 
+### Installation in linux Mint 18.1
+
+* install opencv using "sudo apt-get install python-opencv" this installs the version 2.4.9.1 with which idTracker100 has been developed
+* 
+
 ### Dependencies needed for the project:
 
 * os
