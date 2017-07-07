@@ -207,54 +207,100 @@ def flatten(l):
             yield el
 
 class Duplication(object):
-    def __init__(self, blobs_in_frame_with_duplication = [], duplicated_identities = []):
-        ''' Solve duplications and impossible shits of identity (according to velocity_threshold) '''
+    def __init__(self, blobs_in_frame_with_duplication = None, duplicated_identities = None):
         self.blobs_in_frame = blobs_in_frame_with_duplication
-        self.blobs_assigned_during_accumulation = [blob for blob in blobs_in_frame if blob.assigned_during_accumulation]
-        self.identities_assigned_during_accumulation = np.asarray([blob.identity for blob in self.blobs_assigned_during_accumulation])
-        self.possible_identities = range(1, self.blobs_in_frame[0].number_of_animals + 1)
+        self.identities_to_be_reassigned = duplicated_identities
+        #all non duplicated identities in the frame are not available. This list will be
+        #updated later on
+        self.non_available_identities = [blob.identity for blob in self.blobs_in_frame
+                                        if blob.identity not in duplicated_identities]
+        self.possible_identities = range(1, self.blobs_in_frame[0].number_of_animals)
 
-    def get_blobs_to_be_reassigned(self, duplicated_identity):
-        self.blob_to_be_reassigned = [blob for blob in self.blobs_in_frame
-                    if blob.identity == duplicated_identity
-                    and blob not in self.blobs_assigned_during_accumulation]
+    def assign_unique_identities(self):
+        for identity in duplicated_identities:
+            self.available_identities = self.possible_identities - self.non_available_identities
+            self.blobs_to_reassign = self.get_blobs_with_same_identity(identity)
+            self.assign()
 
-    def get_available_identities(self):
-        return set(self.possible_identities) - set(self.identities_assigned_during_accumulation)
-
-    def reassign_identities(self):
-        
-        for duplicated_identity in self.duplicated_identities:
-            self.reassign_identity(duplicated_identity)
+    def get_blobs_with_same_identity(self, identity):
+        """We do not reassign blobs used as references
+        """
+        return [blob for blob in self.blobs_in_frame
+                if blob.identity == identity and
+                not blob.assigned_during_accumulation]
 
     @staticmethod
-    def get_P2_vectors(blobs):
-        return np.asmatrix([blob.P2_vector for blob in blobs])
+    def get_P2_matrix(blobs_list):
+        return np.asmatrix([blob.P2_vector for blob in blobs_list if
+                            not hasattr(blob, 'reassigned_identity')])
 
-    def set_to_zero_P2_values_of_protected_ids(self, P2_matrix):
-        #get indices from identities
-        indices_to_zero = self.identities_assigned_during_accumulation - 1
-        #put the corresponding rows to zero
-        P2_matrix = np.delete(P2_matrix, indices_to_zero, 0)                           
-        #ditto for the columns
-        P2_matrix[:, indices_to_zero] = 0
-        return P2_matrix
-
-    def give_unique_identities(self, P2_matrix):
-        P2_argsort = np.flip(np.argsort(P2_matrix, axis = 1), axis = 1)
+    @staticmethod
+    def sort_P2_matrix(P2_matrix):
+        P2_ids = np.flip(np.argsort(P2_matrix, axis = 1), axis = 1) + 1
         corresponding_P2s = np.flip(np.sort(P2_matrix, axis = 1), axis = 1)
-        #sweep through the columns of P2_argsort to assign the identities
+        return zip(P2_ids.T, corresponding_P2s.T)
 
+    def assign(self):
+        P2_matrix = self.get_P2_matrix(self.blobs_to_reassign)
+        ids_and_P2s = self.sort_P2_matrix(P2_matrix)
 
-    def reassign_identity(self, duplicated_identity):
-        """Get information about the animals contained in a frame in which
-        a duplication occured
-        """
-        blobs_to_reassign = self.get_blobs_to_be_reassigned(duplicated_identity)
-        P2_matrix = self.get_P2_vectors(blobs_to_reassign)
-        P2_matrix = self.set_to_zero_P2_values_of_protected_ids(P2_matrix,
-                                    self.blobs_assigned_during_accumulation)
-        identities_to_reassign = give_unique_identities(P2_matrix)
+        for i, ids_col, P2s_col in enumerate(ids_and_P2s):
+            max_P2_in_column = np.argmax(P2s_col)
+            candidate_id = ids_col[max_P2_in_column]
+            if candidate_id in self.available_identities:
+                self.blobs_to_reassign[i].identity = candidate_id
+                self.available_identities.remove(candidate_id)
+
+#
+# class Duplication(object):
+#     def __init__(self, blobs_in_frame_with_duplication = [], duplicated_identities = []):
+#         ''' Solve duplications and impossible shits of identity (according to velocity_threshold) '''
+#         self.blobs_in_frame = blobs_in_frame_with_duplication
+#         self.blobs_assigned_during_accumulation = [blob for blob in blobs_in_frame if blob.assigned_during_accumulation]
+#         self.identities_assigned_during_accumulation = np.asarray([blob.identity for blob in self.blobs_assigned_during_accumulation])
+#         self.possible_identities = range(1, self.blobs_in_frame[0].number_of_animals + 1)
+#
+#     def get_blobs_to_be_reassigned(self, duplicated_identity):
+#         self.blob_to_be_reassigned = [blob for blob in self.blobs_in_frame
+#                     if blob.identity == duplicated_identity
+#                     and blob not in self.blobs_assigned_during_accumulation]
+#
+#     def get_available_identities(self):
+#         return set(self.possible_identities) - set(self.identities_assigned_during_accumulation)
+#
+#     def reassign_identities(self):
+#
+#         for duplicated_identity in self.duplicated_identities:
+#             self.reassign_identity(duplicated_identity)
+#
+#     @staticmethod
+#     def get_P2_vectors(blobs):
+#         return np.asmatrix([blob.P2_vector for blob in blobs])
+#
+#     def set_to_zero_P2_values_of_protected_ids(self, P2_matrix):
+#         #get indices from identities
+#         indices_to_zero = self.identities_assigned_during_accumulation - 1
+#         #put the corresponding rows to zero
+#         P2_matrix = np.delete(P2_matrix, indices_to_zero, 0)                           
+#         #ditto for the columns
+#         P2_matrix[:, indices_to_zero] = 0
+#         return P2_matrix
+#
+#     def give_unique_identities(self, P2_matrix):
+#         P2_argsort = np.flip(np.argsort(P2_matrix, axis = 1), axis = 1)
+#         corresponding_P2s = np.flip(np.sort(P2_matrix, axis = 1), axis = 1)
+#         #sweep through the columns of P2_argsort to assign the identities
+#
+#
+#     def reassign_identity(self, duplicated_identity):
+#         """Get information about the animals contained in a frame in which
+#         a duplication occured
+#         """
+#         blobs_to_reassign = self.get_blobs_to_be_reassigned(duplicated_identity)
+#         P2_matrix = self.get_P2_vectors(blobs_to_reassign)
+#         P2_matrix = self.set_to_zero_P2_values_of_protected_ids(P2_matrix,
+#                                     self.blobs_assigned_during_accumulation)
+#         identities_to_reassign = give_unique_identities(P2_matrix)
 
 
 if __name__ == "__main__":
