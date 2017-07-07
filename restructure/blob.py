@@ -361,8 +361,10 @@ def apply_model_area(video, blob, model_area, portraitSize):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
         if video.animal_type == 'fish':
             blob._portrait, blob._nose_coordinates, blob._head_coordinates = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize)
+            blob.bounding_box_image = None
         elif video.animal_type == 'fly':
             blob._portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_portrait_fly(video, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
+            blob.bounding_box_image = None
 
 def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portraitSize):
     for blob in blobs_in_frame:
@@ -406,11 +408,11 @@ class ListOfBlobs(object):
             blob.previous = []
 
     def reconnect(self):
-        print("cutting points from reconnect ", self.cutting_points)
+        # print("cutting points from reconnect ", self.cutting_points)
         for frame_i in self.cutting_points:
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                 if blob_0.overlaps_with(blob_1):
-                    print("Trying to reconnect")
+                    # print("Trying to reconnect")
                     blob_0.now_points_to(blob_1)
 
     def save(self):
