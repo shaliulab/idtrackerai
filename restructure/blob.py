@@ -21,7 +21,7 @@ class Blob(object):
         self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates #tuple of tuples: ((x1,y1),(x2,y2)) (top-left corner, bottom-right corner) in pixels
         self.bounding_box_image = bounding_box_image # numpy array (uint8): image of the fish cropped from the video according to the bounding_box_in_frame_coordinates
         self.estimated_body_length = estimated_body_length
-        self.portrait = portrait # (numpy array (uint8),tuple(int,int),tuple(int,int)): (36x36 image of the animal,nose coordinates, head coordinates)
+        self._portrait = portrait # (numpy array (uint8),tuple(int,int),tuple(int,int)): (36x36 image of the animal,nose coordinates, head coordinates)
         self.pixels = pixels # list of int's: linearized pixels of the blob
         self.reset_before_fragmentation()
 
@@ -94,6 +94,26 @@ class Blob(object):
             self._blob_index = new_blob_index
 
     @property
+    def portrait(self):
+        return self._portrait
+
+    @property
+    def nose_coordinates(self):
+        return self._nose_coordinates
+
+    @property
+    def head_coordinates(self):
+        return self._head_coordinates
+
+    @property
+    def extreme1_coordinate(self):
+        return self._extreme1_coordinates
+
+    @property
+    def extreme2_coordinates(self):
+        return self._extreme2_coordinates
+
+    @property
     def fragment_identifier(self):
         return self._fragment_identifier
 
@@ -134,16 +154,6 @@ class Blob(object):
     @property
     def P2_vector(self):
         return self._P2_vector
-
-    ####UGLY HACK UNTIL Blob.portrait is unpacked####
-    @property
-    def nose_coordinates(self):
-        return self.portrait[1]
-    @property
-    def head_coordinates(self):
-        return self.portrait[2]
-    #################################################
-
 
     def _along_transitions_in_individual_fragments(self, function):
         '''Crawls along an individual fragment and outputs a list with
@@ -199,7 +209,7 @@ class Blob(object):
 
     def portraits_in_fragment(self):
         def return_portrait_blob(blob):
-            return blob.portrait[0] #TODO: unpack!
+            return blob.portrait
         return self._along_blobs_in_individual_segment(return_portrait_blob)
 
     def identities_in_fragment(self):
@@ -350,11 +360,9 @@ def check_global_fragments(blobs_in_video, num_animals):
 def apply_model_area(video, blob, model_area, portraitSize):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
         if video.animal_type == 'fish':
-            blob.portrait = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize) #TODO: please unpack!
-        else:
-            # blob.portrait = get_portrait_fly(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, maximum_body_length)
-            blob.portrait = get_portrait_fly(video, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
-            # portrait, _, _ = get_portrait_fly(video, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinate, portraitSize)
+            blob._portrait, blob._nose_coordinates, blob._head_coordinates = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize)
+        elif video.animal_type == 'fly':
+            blob._portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_portrait_fly(video, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
 
 def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portraitSize):
     for blob in blobs_in_frame:
@@ -370,7 +378,7 @@ def get_images_from_blobs_in_video(blobs_in_video):
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
             if blob.is_a_fish_in_a_fragment and not blob.assigned_during_accumulation:
-                portraits_in_video.append(blob.portrait[0])
+                portraits_in_video.append(blob.portrait)
     return np.asarray(portraits_in_video)
 
 def reset_blobs_fragmentation_parameters(blobs_in_video):

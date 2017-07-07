@@ -37,11 +37,12 @@ class DataSet(object):
         current_size = self.images.shape[1]
         # print(current_size)
         # print(self.images.shape)
-        try:
-            shift = np.divide(current_size - image_size,2)
-            self.images = self.images[:,shift:current_size-shift,shift:current_size-shift,:]
-        except:
-            raise ValueError('The size of the input portrait must be bigger than image_size')
+        # try:
+        shift = np.divide(current_size - image_size,2)
+        print(self.images.shape)
+        self.images = self.images[:,shift:current_size-shift,shift:current_size-shift,:]
+        # except:
+        #     raise ValueError('The size of the input portrait must be bigger than image_size')
 
 
 
