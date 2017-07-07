@@ -4,7 +4,19 @@ Python 2.7
 
 ### Installation in linux Mint 18.1
 
-* install opencv using "sudo apt-get install python-opencv" this installs the version 2.4.9.1 with which idTracker100 has been developed
+* cd
+* sudo apt install python-pip
+* sudo apt-get install python-setuptools
+* sudo pip install virtualenv (http://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/)
+* sudo pip install virtualenvwrapper (http://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/)
+* foloow http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#ubuntu-installation to install CUDA® Toolkit 8.0
+* check NVIDIA drivers compatible with cuda toolkit 8.0
+* download cuDNN v5.1 libraries and copy them in to the correspoding cuda-8.0 folders (typically usr/local/cuda-8.0/include and usr/local/cuda-8.0/lib64)
+* mkvirtualenv --system-site-packages idTracker100 
+* workon idTracker100
+* sudo apt-get install python-opencv (version 2.4.9.1)
+* sudo apt-get install git
+* git clone http://paco@git.yalp.io/mattia/IdTrackerDeep.git (or whatever HTTP link)
 * 
 
 ### Dependencies needed for the project:
