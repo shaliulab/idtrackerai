@@ -342,7 +342,28 @@ def tests_data_frame():
                                                     "repetitions": [1, 2, 3],
                                                      }, ignore_index=True)
 
-    # 16 correlated_images correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF cnn_model_0
+
+    # 16 correlated_images correlated_images_DEF_aaa_CNN0_trainonly1GF cnn_model_0
+    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_trainonly1GF_100fish_3000_images_gaussianModel',
+                                                    "CNN_model": 0,
+                                                    "knowledge_transfer_flag": False,
+                                                    "knowledge_transfer_folder": '',
+                                                    "pretraining_flag": False,
+                                                    "percentage_of_frames_in_pretaining": 0.,
+                                                    "only_accumulate_one_fragment": True,
+                                                    "train_filters_in_accumulation": True,
+                                                    "accumulation_certainty": 0.1,
+                                                    "animal_type": 'fish',
+                                                    "IMDB_codes": 'DEF',
+                                                    "ids_codes": 'aaa',
+                                                    "group_sizes": [100],
+                                                    "frames_in_video": [3000],
+                                                    "frames_per_individual_fragment": [50,100,250,500,1000],
+                                                    "std_frames_per_individual_fragment": 150,
+                                                    "repetitions": [1, 2, 3],
+                                                     }, ignore_index=True)
+
+    # 17 correlated_images correlated_images_DEF_aaa_CNN0_accumulation cnn_model_0
     tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_accumulation_100fish_3000_images_gaussianModel',
                                                     "CNN_model": 0,
                                                     "knowledge_transfer_flag": False,
@@ -362,15 +383,15 @@ def tests_data_frame():
                                                     "repetitions": [1, 2, 3],
                                                      }, ignore_index=True)
 
-    # 17 correlated_images correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF cnn_model_0
+    # 18 correlated_images correlated_images_DEF_aaa_CNN0_pretraining_accumulation cnn_model_0
     tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_pretraining_accumulation_100fish_3000_images_gaussianModel',
                                                     "CNN_model": 0,
                                                     "knowledge_transfer_flag": False,
                                                     "knowledge_transfer_folder": '',
-                                                    "pretraining_flag": True,
-                                                    "percentage_of_frames_in_pretaining": 0.25,
+                                                    "pretraining_flag": False,
+                                                    "percentage_of_frames_in_pretaining": 0.,
                                                     "only_accumulate_one_fragment": False,
-                                                    "train_filters_in_accumulation": False,
+                                                    "train_filters_in_accumulation": True,
                                                     "accumulation_certainty": 0.1,
                                                     "animal_type": 'fish',
                                                     "IMDB_codes": 'DEF',
@@ -381,6 +402,8 @@ def tests_data_frame():
                                                     "std_frames_per_individual_fragment": 150,
                                                     "repetitions": [1, 2, 3],
                                                      }, ignore_index=True)
+
+
     #
     # # only_one_global_fragment_for_training
     # tests_data_frame = tests_data_frame.append({"test_name": 'Only_one_global_fragment_for_training',
