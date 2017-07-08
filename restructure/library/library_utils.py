@@ -149,7 +149,7 @@ def generate_list_of_blobs(portraits, centroids, config):
             blob = Blob(centroid, None, None, None,
                         number_of_animals = config.number_of_animals)
             blob.frame_number = frame_number
-            blob.portrait = (image,None,None)
+            blob._portrait = image
             blob._user_generated_identity = identity + 1
 
             if frame_number > 0 and frames_in_fragment <= number_of_frames_per_fragment + 2 and frames_in_fragment != 0:
