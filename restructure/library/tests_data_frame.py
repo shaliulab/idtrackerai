@@ -391,7 +391,7 @@ def tests_data_frame():
                                                     "pretraining_flag": False,
                                                     "percentage_of_frames_in_pretaining": 0.,
                                                     "only_accumulate_one_fragment": False,
-                                                    "train_filters_in_accumulation": True,
+                                                    "train_filters_in_accumulation": False,
                                                     "accumulation_certainty": 0.1,
                                                     "animal_type": 'fish',
                                                     "IMDB_codes": 'DEF',

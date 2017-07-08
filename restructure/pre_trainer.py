@@ -40,8 +40,8 @@ def pre_train(video, blobs_in_video, pretraining_global_fragments, params, store
         # Instantiate data_set
         training_dataset, validation_dataset = split_data_train_and_validation(video.animal_type, params.number_of_animals,images,labels)
         # Standarize images
-        training_dataset.standarize_images()
-        validation_dataset.standarize_images()
+        # training_dataset.standarize_images()
+        # validation_dataset.standarize_images()
         # Crop images from 36x36 to 32x32 without performing data augmentation
         # print("\ntraining images shape, ", training_dataset.images.shape)
         training_dataset.crop_images(image_size = video.portrait_size[0])
