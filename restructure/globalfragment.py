@@ -3,7 +3,6 @@ import numpy as np
 import random
 
 from blob import is_a_global_fragment, check_global_fragments
-from statistics_for_assignment import compute_identification_frequencies_individual_fragment, compute_P1_individual_fragment_from_blob
 
 STD_TOLERANCE = 4 ### NOTE set to 1 because we changed the model area to work with the median.
 
@@ -63,7 +62,7 @@ class GlobalFragment(object):
         self._used_for_training = False
         self._acceptable_for_training = True
         self._ids_assigned = np.nan * np.ones(self.number_of_animals)
-        self._temporary_ids = np.arange(self.number_of_animals) # I initialize the _ids_assigned like this so that I can use the same function to extract images in pretraining and training
+        self._temporary_ids = np.arange(self.number_of_animals) # I initialize the _temporary_ids like this so that I can use the same function to extract images in pretraining and training
         self._score = None
         self._is_unique = False
         self._uniqueness_score = None

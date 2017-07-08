@@ -270,7 +270,7 @@ if __name__ == '__main__':
                                 check_for_loss_plateau = True,
                                 save_summaries = True,
                                 print_flag = False,
-                                plot_flag = True)
+                                plot_flag = False)
                 #save changes
                 video._has_been_pretrained = True
                 video.save()
@@ -351,17 +351,18 @@ if __name__ == '__main__':
                                         check_for_loss_plateau = True,
                                         save_summaries = True,
                                         print_flag = False,
-                                        plot_flag = True,
+                                        plot_flag = False,
                                         global_step = global_step,
                                         first_accumulation_flag = accumulation_manager == 0)
                 # update used_for_training flag to True for fragments used
                 accumulation_manager.update_global_fragments_used_for_training()
+                # update the set of images used for training
                 accumulation_manager.update_used_images_and_labels()
-                accumulation_manager.update_individual_fragments_used()
-                # update the identity of the accumulated global fragments to their labels during training
+                # assign identities fo the global fragments that have been used for training
                 accumulation_manager.assign_identities_to_accumulated_global_fragments(blobs)
+                # update the list of individual fragments that have been used for training
+                accumulation_manager.update_individual_fragments_used()
                 # Set accumulation params for rest of the accumulation
-                # net.params.restore_folder = video._accumulation_folder
                 #take images from global fragments not used in training (in the remainder test global fragments)
                 candidates_next_global_fragments = [global_fragment for global_fragment in global_fragments if not global_fragment.used_for_training]
                 print("number of candidate global fragments, ", len(candidates_next_global_fragments))
@@ -377,6 +378,8 @@ if __name__ == '__main__':
                 # assign identities to the global fragments based on the predictions
                 accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_indices)
                 accumulation_manager.update_counter()
+
+            print("there are no more acceptable global_fragments for training\n")
 
             video._accumulation_finished = True
             video.save()
@@ -405,6 +408,7 @@ if __name__ == '__main__':
         ###################     Assigner      ######################
         ####
         #############################################################
+        print("\n**** Assignment ****")
         if not loadPreviousDict['assignment']:
             # Get images from the blob collection
             images = get_images_from_blobs_in_video(blobs)#, video._episodes_start_end)

@@ -16,9 +16,10 @@ def compute_identification_frequencies_individual_fragment(identities_in_fragmen
 def normalise_frequencies(frequencies):
     return frequencies / np.sum(frequencies)
 
-def compute_P1_individual_fragment_from_blob(frequencies):
-    """Given a blob it computes P1 vector for the individual fragment containing
-    the blob. P1 is the softmax of the frequencies with base 2.
+def compute_P1_individual_fragment_from_frequencies(frequencies):
+    """Given the frequencies of a individual fragment
+    computer the P1 vector. P1 is the softmax of the frequencies with base 2
+    for each identity.
     """
     # Compute numerator of P1 and check that it is not inf
     numerator = 2.**frequencies

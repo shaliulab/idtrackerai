@@ -14,7 +14,7 @@ from get_predictions import GetPrediction
 from blob import get_images_from_blobs_in_video
 from visualize_embeddings import EmbeddingVisualiser
 from globalfragment import get_images_and_labels_from_global_fragment
-from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob, compute_P1_individual_fragment_from_blob, compute_identification_frequencies_individual_fragment
+from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob, compute_P1_individual_fragment_from_frequencies, compute_identification_frequencies_individual_fragment
 
 def assign(net, video, images, print_flag):
     # build data object
@@ -50,7 +50,7 @@ def compute_P1_for_blobs_in_video(video, blobs_in_video):
                 identities_in_fragment = np.asarray(blob.identities_in_fragment())
                 frequencies_in_fragment = compute_identification_frequencies_individual_fragment(identities_in_fragment, video.number_of_animals)
                 blob._frequencies_in_fragment = frequencies_in_fragment
-                blob._P1_vector = compute_P1_individual_fragment_from_blob(frequencies_in_fragment)
+                blob._P1_vector = compute_P1_individual_fragment_from_frequencies(frequencies_in_fragment)
                 blob.update_P1_in_fragment()
 
 # def compute_P1_for_blobs_in_video(video, blobs_in_video):
@@ -63,7 +63,7 @@ def compute_P1_for_blobs_in_video(video, blobs_in_video):
 #                 identities_in_fragment = np.asarray(blob.identities_in_fragment())
 #                 frequencies_in_fragment = compute_identification_frequencies_individual_fragment(identities_in_fragment, video.number_of_animals)
 #                 blob._frequencies_in_fragment = frequencies_in_fragment
-#                 blob._P1_vector = compute_P1_individual_fragment_from_blob(frequencies_in_fragment)
+#                 blob._P1_vector = compute_P1_individual_fragment_from_frequencies(frequencies_in_fragment)
 #                 blob.update_P1_in_fragment()
 
 def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
