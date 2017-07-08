@@ -95,8 +95,8 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
 
 def segment(video):
     # avoid computing with all the cores in very large videos:
-    # num_cores = multiprocessing.cpu_count()
-    num_cores = 4
+    num_cores = multiprocessing.cpu_count()
+    # num_cores = 4
     #init variables to store data
     blobs_in_video = []
     number_of_blobs = []

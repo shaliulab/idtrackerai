@@ -68,11 +68,11 @@ if __name__ == '__main__':
     job_config = LibraryJobConfig(cluster = sys.argv[1], test_dictionary = test_dictionary)
     job_config.create_folders_structure()
 
-    if os.path.isfile('./library/results_data_frame_test.pkl'):
-        print("results_data_frame_test.pkl already exists \n")
-        results_data_frame = pd.read_pickle('./library/results_data_frame_test.pkl')
+    if os.path.isfile('./library/results_data_frame.pkl'):
+        print("results_data_frame.pkl already exists \n")
+        results_data_frame = pd.read_pickle('./library/results_data_frame.pkl')
     else:
-        print("results_data_frame_test.pkl does not exist \n")
+        print("results_data_frame.pkl does not exist \n")
         results_data_frame = pd.DataFrame()
 
     dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes)
@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
                     print("\n********** group size %i - frames_in_video %i - frames_in_fragment %i - repetition %i ********" %(group_size,frames_in_video,frames_in_fragment,repetition))
                     already_computed = False
-                    if os.path.isfile('./library/results_data_frame_test.pkl'):
+                    if os.path.isfile('./library/results_data_frame.pkl'):
                         already_computed = check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, frames_in_fragment, repetition)
                         print("already_computed flag: ", already_computed)
                     if already_computed:
@@ -444,7 +444,7 @@ if __name__ == '__main__':
                         #                                                  }, ignore_index=True)
 
 
-                        results_data_frame.to_pickle('./library/results_data_frame_test.pkl')
+                        results_data_frame.to_pickle('./library/results_data_frame.pkl')
 
                         blobs = None
                         global_fragments = None
