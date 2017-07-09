@@ -17,14 +17,18 @@ from globalfragment import get_images_and_labels_from_global_fragment
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob, compute_P1_individual_fragment_from_frequencies, compute_identification_frequencies_individual_fragment
 
 def assign(net, video, images, print_flag):
+    print("assigning identities to images...")
     # build data object
     images = np.expand_dims(np.asarray(images), axis = 3)
     data = DataSet(net.params.number_of_animals, images)
     # Instantiate data_set
-    data.standarize_images()
+    # print("standarizing...")
+    # data.standarize_images()
     # Crop images from 36x36 to 32x32 without performing data augmentation
+    print("cropping...")
     data.crop_images(image_size = video.portrait_size[0])
     # Train network
+    print("getting predictions...")
     assigner = GetPrediction(data, print_flag = print_flag)
     assigner.get_predictions_softmax(net.predict)
     return assigner

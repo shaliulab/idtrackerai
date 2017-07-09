@@ -248,10 +248,12 @@ if __name__ == '__main__':
                                                     first_accumulation_flag = accumulation_manager == 0)
                             # update used_for_training flag to True for fragments used
                             accumulation_manager.update_global_fragments_used_for_training()
+                            # update the set of images used for training
                             accumulation_manager.update_used_images_and_labels()
-                            accumulation_manager.update_individual_fragments_used()
-                            # update the identity of the accumulated global fragments to their labels during training
+                            # assign identities fo the global fragments that have been used for training
                             accumulation_manager.assign_identities_to_accumulated_global_fragments(blobs)
+                            # update the list of individual fragments that have been used for training
+                            accumulation_manager.update_individual_fragments_used()
                             # Set accumulation params for rest of the accumulation
                             # net.params.restore_folder = video._accumulation_folder
                             #take images from global fragments not used in training (in the remainder test global fragments)

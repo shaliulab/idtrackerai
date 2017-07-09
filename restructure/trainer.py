@@ -32,8 +32,8 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
     training_dataset.crop_images(image_size = video.portrait_size[0])
     validation_dataset.crop_images(image_size = video.portrait_size[0])
     # Standarize images
-    training_dataset.standarize_images()
-    validation_dataset.standarize_images()
+    # training_dataset.standarize_images()
+    # validation_dataset.standarize_images()
     # Convert labels to one hot vectors
     training_dataset.convert_labels_to_one_hot()
     validation_dataset.convert_labels_to_one_hot()

@@ -169,10 +169,10 @@ class AccumulationManager(object):
         If a individual fragment was added before is not added again.
         """
         print("Updating list of individual fragments used for training")
-        new_individual_fragments_and_id = [(individual_fragment_identifier, temporal_identity)
+        new_individual_fragments_and_id = set([(individual_fragment_identifier, temporal_identity)
                                                 for global_fragment in self.next_global_fragments
                                                 for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids)
-                                                if global_fragment.used_for_training and not individual_fragment_identifier in self.individual_fragments_used]
+                                                if global_fragment.used_for_training and individual_fragment_identifier not in self.individual_fragments_used])
         new_individual_fragments = list(np.asarray(list(new_individual_fragments_and_id))[:,0])
         new_ids = list(np.asarray(list(new_individual_fragments_and_id))[:,1])
         self.individual_fragments_used.extend(new_individual_fragments)

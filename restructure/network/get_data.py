@@ -21,13 +21,13 @@ class DataSet(object):
         if self.labels is not None:
             assert len(self.images) == len(self.labels)
 
-    def standarize_images(self):
-        self.images = self.images/255.
-        meanIm = np.mean(self.images, axis=(1,2))
-        meanIm = np.expand_dims(np.expand_dims(meanIm,axis=1),axis=2)
-        stdIm = np.std(self.images,axis=(1,2))
-        stdIm = np.expand_dims(np.expand_dims(stdIm,axis=1),axis=2)
-        self.images = (self.images-meanIm)/stdIm
+    # def standarize_images(self):
+    #     self.images = self.images/255.
+    #     meanIm = np.mean(self.images, axis=(1,2))
+    #     meanIm = np.expand_dims(np.expand_dims(meanIm,axis=1),axis=2)
+    #     stdIm = np.std(self.images,axis=(1,2))
+    #     stdIm = np.expand_dims(np.expand_dims(stdIm,axis=1),axis=2)
+    #     self.images = (self.images-meanIm)/stdIm
 
     def crop_images(self,image_size=32):
         """

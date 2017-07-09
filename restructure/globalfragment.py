@@ -178,6 +178,7 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
             labels.append(labels_global_fragment)
             lengths.extend(lengths_global_fragment)
             candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
+            individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
 
     return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
 
