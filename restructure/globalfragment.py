@@ -57,6 +57,8 @@ class GlobalFragment(object):
         self.number_of_animals = number_of_animals
         self.reset_accumulation_params()
         self._is_unique = False
+        self._is_certain = False
+        self._is_consistent = False
 
     def reset_accumulation_params(self):
         self._used_for_training = False
@@ -180,7 +182,10 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
             candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
             individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
 
-    return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
+    if len(images) != 0:
+        return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
+    else:
+        return None, None, candidate_individual_fragments_identifiers, None
 
 def subsample_images_for_last_training(images, labels, number_of_animals, number_of_samples = 3000):
     """Before assigning identities to the blobs that are not part of the training set we train the network

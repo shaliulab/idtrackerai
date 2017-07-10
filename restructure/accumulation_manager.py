@@ -7,7 +7,7 @@ from statistics_for_assignment import compute_P1_individual_fragment_from_freque
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
-CERTAINTY_THRESHOLD = 0.1 # threshold to select a individual fragment as eligible for training
+CERTAINTY_THRESHOLD = 0.8 # threshold to select a individual fragment as eligible for training
 
 ###
 random.seed(0)
@@ -69,7 +69,11 @@ class AccumulationManager(object):
         to be used for training, this function checks whether the images of a individual
         fragment have been added before"""
         self.new_images, self.new_labels, _, _ = get_images_and_labels_from_global_fragments(self.next_global_fragments,list(self.individual_fragments_used))
-        print("New images for training:", self.new_images.shape, self.new_labels.shape)
+
+        if self.new_images is not None:
+            print("New images for training:", self.new_images.shape, self.new_labels.shape)
+        else:
+            print("There are no new images in this accumulation")
         if self.used_images is not None:
             print("Old images for training:", self.used_images.shape, self.used_labels.shape)
 
@@ -105,8 +109,9 @@ class AccumulationManager(object):
                     number_samples_used = MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
 
                 # we put together a random sample of the new images and the used images
-                images.extend(random.sample(self.new_images[new_images_indices],number_samples_new))
-                labels.extend([i] * number_samples_new)
+                if self.new_images is not None:
+                    images.extend(random.sample(self.new_images[new_images_indices],number_samples_new))
+                    labels.extend([i] * number_samples_new)
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate the variable used_images is None
                     images.extend(random.sample(self.used_images[used_images_indices],number_samples_used))
@@ -114,8 +119,9 @@ class AccumulationManager(object):
             else:
                 # if the total number of images for this label does not exceed the MAXIMAL_IMAGES_PER_ANIMAL
                 # we take all the new images and all the used images
-                images.extend(self.new_images[new_images_indices])
-                labels.extend([i] * number_of_new_images)
+                if self.new_images is not None:
+                    images.extend(self.new_images[new_images_indices])
+                    labels.extend([i] * number_of_new_images)
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate the variable used_images is None
                     images.extend(self.used_images[used_images_indices])
@@ -177,16 +183,6 @@ class AccumulationManager(object):
         new_ids = list(np.asarray(list(new_individual_fragments_and_id))[:,1])
         self.individual_fragments_used.extend(new_individual_fragments)
         self.identities_of_individual_fragments_used.extend(new_ids)
-        print("Individual fragments used for training:", self.individual_fragments_used)
-        print("Ids of individual fragments used for training:", self.identities_of_individual_fragments_used)
-
-    # def get_images_from_test_global_fragments(self):
-    #     """stack all the images in global fragments if they have not been used
-    #     for training. Optimised for GPU computing"""
-    #     print("Stacking images of global fragment for the GPU")
-    #     return np.concatenate([np.concatenate(global_fragment.portraits, axis = 0)
-    #                 for global_fragment in self.global_fragments
-    #                 if not global_fragment.used_for_training], axis = 0)
 
     def split_predictions_after_network_assignment(self,predictions, softmax_probs, indices_to_split):
         """Go back to the CPU"""
@@ -251,6 +247,7 @@ class AccumulationManager(object):
                     global_fragment._certainties.append(individual_fragment_certainty)
                     individual_fragment_P1_vector = self.P1_vector_of_candidate_individual_fragments[index_in_candidate_individual_fragments]
                     global_fragment._P1_vector.append(individual_fragment_P1_vector)
+                    global_fragment._is_certain = True
             elif individual_fragment_identifier in self.individual_fragments_used:
                 # if the individual fragment is no in the list of candidates is because it has been assigned
                 # and it is in the list of individual_fragments_used. We set the certainty to 1. And we
@@ -305,6 +302,7 @@ class AccumulationManager(object):
                 # print("is unique")
                 if self.check_consistency_of_assignation_tests(global_fragment):
                     # print("is consistent")
+                    global_fragment._is_consistent = True
                     for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers,global_fragment._temporary_ids):
                         if individual_fragment_identifier not in self.temporal_inividual_fragments_used:
                             self.temporal_inividual_fragments_used.append(individual_fragment_identifier)

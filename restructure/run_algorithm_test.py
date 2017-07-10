@@ -312,6 +312,7 @@ if __name__ == '__main__':
                         #############################################################
                         print("\n**** Accuracies ****")
                         number_correct_assignations = [0] * group_size
+                        number_assignations = [0]*group_size
                         number_of_identity_repetitions = 0
                         number_of_frames_with_repetitions = 0
                         number_of_identity_shifts_in_accumulated_frames = 0
@@ -322,6 +323,7 @@ if __name__ == '__main__':
                             frame_with_repetition = False
                             for i, blob in enumerate(blobs_in_frame):
                                 if blob.is_a_fish_in_a_fragment:
+                                    number_assignations[i] += 1
                                     if blob._assigned_during_accumulation:
                                         number_of_blobs_assigned_in_accumulation += 1
                                     if blob.identity is not None and blob.identity != 0:
@@ -341,21 +343,19 @@ if __name__ == '__main__':
 
                         number_of_acceptable_fragments = sum([global_fragment._acceptable_for_training for global_fragment in global_fragments])
                         number_of_unique_fragments = sum([global_fragment.is_unique for global_fragment in global_fragments])
+                        number_of_certain_fragments = sum([global_fragment._is_certain for global_fragment in global_fragments])
+                        number_of_consistent_fragments = sum([global_fragment._is_consistent for global_fragment in global_fragments])
 
-                        # for global_fragment in global_fragments:
-                        #     try:
-                        #         print(global_fragment._certainties)
-                        #     except:
-                        #         print('no certainties for this global fragment')
-
-                        individual_accuracies_assigned_frames = np.asarray(number_correct_assignations)/(frames_in_video - np.asarray(number_of_not_assigned_blobs))
-                        accuracy_assigned_frames = np.sum(number_correct_assignations)/(frames_in_video * group_size - sum(number_of_not_assigned_blobs))
+                        individual_accuracies_assigned_frames = np.asarray(number_correct_assignations)/np.asarray(number_assignations)
+                        accuracy_assigned_frames = np.sum(number_correct_assignations)/np.sum(number_assignations)
                         individual_accuracies = np.asarray(number_correct_assignations)/frames_in_video
                         accuracy = np.sum(number_correct_assignations)/(frames_in_video * group_size)
                         print("number of global fragments: ", len(global_fragments))
                         print("number of accumulated fragments:", sum([global_fragment.used_for_training for global_fragment in global_fragments]))
                         print("number of candidate global fragments:", len(candidates_next_global_fragments))
                         print("number of unique fragments: ", number_of_unique_fragments)
+                        print("number of certain fragments: ", number_of_certain_fragments)
+                        print("number of consistent fragments: ", number_of_consistent_fragments)
                         print("number of acceptable fragments: ", number_of_acceptable_fragments)
                         print("number of frames with repetition (after assignation with P2): ", int(number_of_frames_with_repetitions))
                         print("number of blobs assigned during accumulation: ", number_of_blobs_assigned_in_accumulation)
