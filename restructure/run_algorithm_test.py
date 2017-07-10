@@ -111,7 +111,6 @@ if __name__ == '__main__':
                         video.knowledge_transfer_model_folder = job_config.knowledge_transfer_folder
                         video.portrait_size = (32, 32, 1) #NOTE: this can change if the library changes. BUILD next library with new preprocessing.
 
-
                         #############################################################
                         ####################   Preprocessing   ######################
                         #### prepare blobs list and global fragments from the    ####
@@ -127,13 +126,6 @@ if __name__ == '__main__':
                         blobs = generate_list_of_blobs(portraits, centroids, config)
                         compute_fragment_identifier_and_blob_index(blobs, config.number_of_animals)
                         global_fragments = give_me_list_of_global_fragments(blobs, config.number_of_animals)
-                        # raise ValueError("check global fragments before runnin full test")
-                        # check consistency global fragments
-                        # number_of_fragments = frames_in_video/frames_in_fragment
-                        # if len(global_fragments) != number_of_fragments:
-                        #     print("len global_fragments: ", len(global_fragments))
-                        #     print("frames_in_video/frames_in_fragment: ", number_of_fragments)
-                        #     raise ValueError('The number of global fragments it is not consistent')
                         global_fragments_ordered = order_global_fragments_by_distance_travelled(global_fragments)
                         video._has_been_segmented = True
                         video._has_been_preprocessed = True
@@ -245,7 +237,7 @@ if __name__ == '__main__':
                                                     print_flag = False,
                                                     plot_flag = False,
                                                     global_step = global_step,
-                                                    first_accumulation_flag = accumulation_manager == 0)
+                                                    first_accumulation_flag = accumulation_manager.counter == 0)
                             # update used_for_training flag to True for fragments used
                             accumulation_manager.update_global_fragments_used_for_training()
                             # update the set of images used for training
@@ -312,6 +304,7 @@ if __name__ == '__main__':
                         #############################################################
                         print("\n**** Accuracies ****")
                         number_correct_assignations = [0] * group_size
+                        number_assignations = [0]*group_size
                         number_of_identity_repetitions = 0
                         number_of_frames_with_repetitions = 0
                         number_of_identity_shifts_in_accumulated_frames = 0
@@ -322,6 +315,7 @@ if __name__ == '__main__':
                             frame_with_repetition = False
                             for i, blob in enumerate(blobs_in_frame):
                                 if blob.is_a_fish_in_a_fragment:
+                                    number_assignations[i] += 1
                                     if blob._assigned_during_accumulation:
                                         number_of_blobs_assigned_in_accumulation += 1
                                     if blob.identity is not None and blob.identity != 0:
@@ -341,21 +335,19 @@ if __name__ == '__main__':
 
                         number_of_acceptable_fragments = sum([global_fragment._acceptable_for_training for global_fragment in global_fragments])
                         number_of_unique_fragments = sum([global_fragment.is_unique for global_fragment in global_fragments])
+                        number_of_certain_fragments = sum([global_fragment._is_certain for global_fragment in global_fragments])
+                        number_of_consistent_fragments = sum([global_fragment._is_consistent for global_fragment in global_fragments])
 
-                        # for global_fragment in global_fragments:
-                        #     try:
-                        #         print(global_fragment._certainties)
-                        #     except:
-                        #         print('no certainties for this global fragment')
-
-                        individual_accuracies_assigned_frames = np.asarray(number_correct_assignations)/(frames_in_video - np.asarray(number_of_not_assigned_blobs))
-                        accuracy_assigned_frames = np.sum(number_correct_assignations)/(frames_in_video * group_size - sum(number_of_not_assigned_blobs))
+                        individual_accuracies_assigned_frames = np.asarray(number_correct_assignations)/np.asarray(number_assignations)
+                        accuracy_assigned_frames = np.sum(number_correct_assignations)/np.sum(number_assignations)
                         individual_accuracies = np.asarray(number_correct_assignations)/frames_in_video
                         accuracy = np.sum(number_correct_assignations)/(frames_in_video * group_size)
                         print("number of global fragments: ", len(global_fragments))
                         print("number of accumulated fragments:", sum([global_fragment.used_for_training for global_fragment in global_fragments]))
                         print("number of candidate global fragments:", len(candidates_next_global_fragments))
                         print("number of unique fragments: ", number_of_unique_fragments)
+                        print("number of certain fragments: ", number_of_certain_fragments)
+                        print("number of consistent fragments: ", number_of_consistent_fragments)
                         print("number of acceptable fragments: ", number_of_acceptable_fragments)
                         print("number of frames with repetition (after assignation with P2): ", int(number_of_frames_with_repetitions))
                         print("number of blobs assigned during accumulation: ", number_of_blobs_assigned_in_accumulation)

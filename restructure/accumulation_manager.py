@@ -1,18 +1,17 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import random
-from globalfragment import get_images_and_labels_from_global_fragments, order_global_fragments_by_distance_travelled
+from globalfragment import get_images_and_labels_from_global_fragments, order_global_fragments_by_distance_travelled, order_global_fragments_by_distance_to_the_first_global_fragment
 from statistics_for_assignment import compute_P1_individual_fragment_from_frequencies, compute_identification_frequencies_individual_fragment
 
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
-CERTAINTY_THRESHOLD = 0.1 # threshold to select a individual fragment as eligible for training
+CERTAINTY_THRESHOLD = 0.8 # threshold to select a individual fragment as eligible for training
 
 ###
-random.seed(0)
-###
 
+###
 class AccumulationManager(object):
     def __init__(self,global_fragments, number_of_animals, certainty_threshold = CERTAINTY_THRESHOLD):
         """ This class manages the selection of global fragments for accumulation,
@@ -69,7 +68,11 @@ class AccumulationManager(object):
         to be used for training, this function checks whether the images of a individual
         fragment have been added before"""
         self.new_images, self.new_labels, _, _ = get_images_and_labels_from_global_fragments(self.next_global_fragments,list(self.individual_fragments_used))
-        print("New images for training:", self.new_images.shape, self.new_labels.shape)
+
+        if self.new_images is not None:
+            print("New images for training:", self.new_images.shape, self.new_labels.shape)
+        else:
+            print("There are no new images in this accumulation")
         if self.used_images is not None:
             print("Old images for training:", self.used_images.shape, self.used_labels.shape)
 
@@ -78,6 +81,7 @@ class AccumulationManager(object):
         to MAXIMAL_IMAGES_PER_ANIMAL. We take a percentage RATIO_NEW of the new
         images and a percentage RATIO_OLD of the images already used. """
         print("Getting images for training...")
+        random.seed(0)
         images = []
         labels = []
         for i in range(self.number_of_animals):
@@ -105,8 +109,9 @@ class AccumulationManager(object):
                     number_samples_used = MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
 
                 # we put together a random sample of the new images and the used images
-                images.extend(random.sample(self.new_images[new_images_indices],number_samples_new))
-                labels.extend([i] * number_samples_new)
+                if self.new_images is not None:
+                    images.extend(random.sample(self.new_images[new_images_indices],number_samples_new))
+                    labels.extend([i] * number_samples_new)
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate the variable used_images is None
                     images.extend(random.sample(self.used_images[used_images_indices],number_samples_used))
@@ -114,8 +119,9 @@ class AccumulationManager(object):
             else:
                 # if the total number of images for this label does not exceed the MAXIMAL_IMAGES_PER_ANIMAL
                 # we take all the new images and all the used images
-                images.extend(self.new_images[new_images_indices])
-                labels.extend([i] * number_of_new_images)
+                if self.new_images is not None:
+                    images.extend(self.new_images[new_images_indices])
+                    labels.extend([i] * number_of_new_images)
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate the variable used_images is None
                     images.extend(self.used_images[used_images_indices])
@@ -177,16 +183,9 @@ class AccumulationManager(object):
         new_ids = list(np.asarray(list(new_individual_fragments_and_id))[:,1])
         self.individual_fragments_used.extend(new_individual_fragments)
         self.identities_of_individual_fragments_used.extend(new_ids)
-        print("Individual fragments used for training:", self.individual_fragments_used)
-        print("Ids of individual fragments used for training:", self.identities_of_individual_fragments_used)
+        print("Individual fragments used for training:", len(self.individual_fragments_used))
+        print("Ids of individual fragments used for training:", len(self.identities_of_individual_fragments_used))
 
-    # def get_images_from_test_global_fragments(self):
-    #     """stack all the images in global fragments if they have not been used
-    #     for training. Optimised for GPU computing"""
-    #     print("Stacking images of global fragment for the GPU")
-    #     return np.concatenate([np.concatenate(global_fragment.portraits, axis = 0)
-    #                 for global_fragment in self.global_fragments
-    #                 if not global_fragment.used_for_training], axis = 0)
 
     def split_predictions_after_network_assignment(self,predictions, softmax_probs, indices_to_split):
         """Go back to the CPU"""
@@ -222,7 +221,8 @@ class AccumulationManager(object):
         self.candidate_individual_fragments_identifiers = candidate_individual_fragments_identifiers
         self.temporal_inividual_fragments_used = list(self.individual_fragments_used)
         self.temporal_identities_of_individual_fragments_used = list(self.identities_of_individual_fragments_used)
-        for i, global_fragment in enumerate(self.global_fragments):
+        ordered_global_fragments = order_global_fragments_by_distance_to_the_first_global_fragment(self.global_fragments)
+        for i, global_fragment in enumerate(ordered_global_fragments):
             if global_fragment.used_for_training == False:
                 self.assign_identities_to_test_global_fragment(global_fragment)
 
@@ -233,7 +233,7 @@ class AccumulationManager(object):
         global_fragment._certainties = []
         global_fragment._P1_vector = []
         # Check certainties of the individual fragments in the global fragment
-        # print("\nChecking global fragment")
+        print("\nChecking global fragment")
         for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
             # print("\nindividual_fragment_identifier: ", individual_fragment_identifier)
             if individual_fragment_identifier in self.candidate_individual_fragments_identifiers:
@@ -244,13 +244,14 @@ class AccumulationManager(object):
                     # if the certainty of the individual fragment is not high enough
                     # we set the global fragment not to be acceptable for training
                     global_fragment._acceptable_for_training = False
-                    # print("it is not certain enough: ", individual_fragment_certainty)
+                    print("it is not certain enough: ", individual_fragment_certainty)
                     break
                 else:
                     # if the certainty of the individual fragment is high enough
                     global_fragment._certainties.append(individual_fragment_certainty)
                     individual_fragment_P1_vector = self.P1_vector_of_candidate_individual_fragments[index_in_candidate_individual_fragments]
                     global_fragment._P1_vector.append(individual_fragment_P1_vector)
+                    global_fragment._is_certain = True
             elif individual_fragment_identifier in self.individual_fragments_used:
                 # if the individual fragment is no in the list of candidates is because it has been assigned
                 # and it is in the list of individual_fragments_used. We set the certainty to 1. And we
@@ -264,7 +265,7 @@ class AccumulationManager(object):
         # Compute identities if the global_fragment is acceptable for training after checking the certainty
         # and check uniqueness
         if global_fragment._acceptable_for_training:
-            # print("it is certain enough")
+            print("it is certain enough")
             global_fragment._temporary_ids = np.nan * np.ones(self.number_of_animals)
             # get the index position of the individual fragments ordered by certainty from max to min
             index_individual_fragments_sorted_by_certanity_max_to_min = np.argsort(np.squeeze(np.asarray(global_fragment._certainties)))[::-1]
@@ -286,7 +287,7 @@ class AccumulationManager(object):
 
             ### NOTE: we need to decide whether we want to assign the identities by order of P1 or by order of certainty
             ### NOTE: the certainty now considers the distance to the random assignation for each individual fragment. check the function below
-            for index_individual_fragment in index_individual_fragments_sorted_by_certanity_max_to_min:
+            for index_individual_fragment in index_individual_fragments_sorted_by_P1_max_to_min:
                 # print(global_fragment._temporary_ids[index_individual_fragment])
                 if np.isnan(global_fragment._temporary_ids[index_individual_fragment]):
                     temporal_identity = np.argmax(P1_array[index_individual_fragment,:])
@@ -295,22 +296,23 @@ class AccumulationManager(object):
                     P1_array[:,temporal_identity] = 0.
             # Check if the global fragment is unique after assigning the identities
             if not global_fragment.is_unique:
-                # print("is not unique")
+                print("is not unique")
                 global_fragment._acceptable_for_training = False
             else:
                 global_fragment._temporary_ids = np.asarray(global_fragment._temporary_ids).astype('int')
 
             # Check consistenscy with rest of global fragments
             if global_fragment.is_unique:
-                # print("is unique")
+                print("is unique")
                 if self.check_consistency_of_assignation_tests(global_fragment):
-                    # print("is consistent")
+                    print("is consistent")
+                    global_fragment._is_consistent = True
                     for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers,global_fragment._temporary_ids):
                         if individual_fragment_identifier not in self.temporal_inividual_fragments_used:
                             self.temporal_inividual_fragments_used.append(individual_fragment_identifier)
                             self.temporal_identities_of_individual_fragments_used.append(temporal_identity)
                 else:
-                    # print("is not consistent")
+                    print("is not consistent")
                     global_fragment._acceptable_for_training = False
 
 

@@ -4,14 +4,14 @@ import numpy as np
 
 MAX_FLOAT = sys.float_info[0]
 LEARNING_PERCENTAGE_DIFFERENCE = .01
-OVERFITTING_COUNTER_THRESHOLD = 5
+OVERFITTING_COUNTER_THRESHOLD = 10
 MAXIMUM_NUMBER_OF_EPOCHS = 10000
 
 class Stop_Training():
     """Stops the training of the network according to the conditions specified
     in __call__
     """
-    def __init__(self, number_of_animals, epochs_before_checking_stopping_conditions = 10, check_for_loss_plateau = True):
+    def __init__(self, number_of_animals, epochs_before_checking_stopping_conditions = 10, check_for_loss_plateau = True, first_accumulation_flag = False):
         self.num_epochs = MAXIMUM_NUMBER_OF_EPOCHS #maximal num of epochs
         self.number_of_animals = number_of_animals
         self.epochs_before_checking_stopping_conditions = epochs_before_checking_stopping_conditions
@@ -38,7 +38,7 @@ class Stop_Training():
             #check overfitting
             if losses_difference < 0.:
                 self.overfitting_counter += 1
-                if self.overfitting_counter >= OVERFITTING_COUNTER_THRESHOLD:
+                if self.overfitting_counter >= OVERFITTING_COUNTER_THRESHOLD and not first_accumulation_flag:
                     print('Overfitting\n')
                     return True
             else:
@@ -56,4 +56,5 @@ class Stop_Training():
             if previous_loss == 0. or current_loss == 0.:
                 print('The validation loss is 0., we stop the training')
                 return True
+
         return False

@@ -57,6 +57,8 @@ class GlobalFragment(object):
         self.number_of_animals = number_of_animals
         self.reset_accumulation_params()
         self._is_unique = False
+        self._is_certain = False
+        self._is_consistent = False
 
     def reset_accumulation_params(self):
         self._used_for_training = False
@@ -133,6 +135,11 @@ def order_global_fragments_by_distance_travelled(global_fragments):
     global_fragments = sorted(global_fragments, key = lambda x: x.min_distance_travelled, reverse = True)
     return global_fragments
 
+def order_global_fragments_by_distance_to_the_first_global_fragment(global_fragments):
+    index_first_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0].index_beginning_of_fragment
+    global_fragments = sorted(global_fragments, key = lambda x: np.abs(x.index_beginning_of_fragment - index_first_global_fragment), reverse = False)
+    return global_fragments
+
 def give_me_identities_of_global_fragment(global_fragment, blobs_in_video):
     global_fragment._ids_assigned = [blob.identity
         for blob in blobs_in_video[global_fragment.index_beginning_of_fragment]]
@@ -157,7 +164,7 @@ def get_images_and_labels_from_global_fragment(global_fragment, individual_fragm
     lengths = []
     individual_fragments_identifiers = []
     for i, portraits in enumerate(global_fragment.portraits):
-        if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_identifiers_already_used:
+        if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_identifiers_already_used :
             # print("This individual fragment has not been used, we take images")
             images.extend(portraits)
             labels.extend([global_fragment._temporary_ids[i]]*len(portraits))
@@ -171,6 +178,7 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
     labels = []
     lengths = []
     candidate_individual_fragments_identifiers = []
+    individual_fragments_identifiers_already_used = list(individual_fragments_identifiers_already_used)
     for global_fragment in global_fragments:
         images_global_fragment, labels_global_fragment, lengths_global_fragment, individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_identifiers_already_used)
         if len(images_global_fragment) != 0:
@@ -180,7 +188,10 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
             candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
             individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
 
-    return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
+    if len(images) != 0:
+        return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
+    else:
+        return None, None, candidate_individual_fragments_identifiers, None
 
 def subsample_images_for_last_training(images, labels, number_of_animals, number_of_samples = 3000):
     """Before assigning identities to the blobs that are not part of the training set we train the network

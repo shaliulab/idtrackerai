@@ -100,7 +100,7 @@ def buildConv2D(scopeName, inputWidth, inputHeight, inputDepth, inputConv ,filte
             'weights',
             [filter_size, filter_size, inputDepth, n_filters],
             # initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
-            initializer=tf.contrib.layers.xavier_initializer_conv2d(seed=0)
+            initializer=tf.contrib.layers.xavier_initializer_conv2d(seed=0.)
             )
         b = tf.get_variable(
             'biases',
@@ -155,7 +155,7 @@ def buildFc(scopeName, inputFc, height, width, n_filters, n_fc, keep_prob):
             'weights',
             [height * width * n_filters, n_fc],
             # initializer=tf.random_normal_initializer(mean=0.0,stddev=0.1)
-            initializer=tf.contrib.layers.xavier_initializer(seed=0)
+            initializer=tf.contrib.layers.xavier_initializer(seed=0.)
             )
         b = tf.get_variable(
             'biases',
@@ -180,7 +180,7 @@ def buildSoftMax(scopeName, inputSoftMax, n_fc, classes):
         W = tf.get_variable(
             'weights',
             [n_fc, classes],
-            initializer=tf.contrib.layers.xavier_initializer(seed=0)
+            initializer=tf.contrib.layers.xavier_initializer(seed=0.)
             )
         b = tf.get_variable(
             'biases',
@@ -771,6 +771,7 @@ def shuffle_images_and_labels(images, labels):
     """Shuffles images and labels with a random
     permutation, according to the number of examples"""
     perm = np.arange(len(labels))
+    np.random.seed(0)
     np.random.shuffle(perm)
     images = images[perm]
     labels = labels[perm]

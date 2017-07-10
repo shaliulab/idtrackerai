@@ -62,27 +62,27 @@ def getMFandC(path, frameIndices):
 
     return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist()
 
-def fillSquareFrame(square_frame, bkgSamps):
-    '''Used in get_miniframes.py'''
-    numSamples = 0
-    threshold = 150
-    while numSamples <= 10:
-
-        bkgSampsNew = bkgSamps[bkgSamps > threshold]
-        threshold -= 10
-        if threshold == 0:
-            plt.imshow(square_frame,cmap='gray',interpolation='none')
-            plt.show()
-            break
-        numSamples = len(bkgSampsNew)
-    bkgSamps = bkgSampsNew
-    if numSamples == 0:
-        raise ValueError('I do not have enough samples for the background')
-
-    numSamplesRequested = np.sum(square_frame == 0)
-    indicesSamples = np.random.randint(0,numSamples,numSamplesRequested)
-    square_frame[square_frame == 0] = bkgSamps[indicesSamples]
-    return square_frame
+# def fillSquareFrame(square_frame, bkgSamps):
+#     '''Used in get_miniframes.py'''
+#     numSamples = 0
+#     threshold = 150
+#     while numSamples <= 10:
+#
+#         bkgSampsNew = bkgSamps[bkgSamps > threshold]
+#         threshold -= 10
+#         if threshold == 0:
+#             plt.imshow(square_frame,cmap='gray',interpolation='none')
+#             plt.show()
+#             break
+#         numSamples = len(bkgSampsNew)
+#     bkgSamps = bkgSampsNew
+#     if numSamples == 0:
+#         raise ValueError('I do not have enough samples for the background')
+#
+#     numSamplesRequested = np.sum(square_frame == 0)
+#     indicesSamples = np.random.randint(0,numSamples,numSamplesRequested)
+#     square_frame[square_frame == 0] = bkgSamps[indicesSamples]
+#     return square_frame
 
 def cropPortrait(image, portraitSize, shift=(0,0)):
     """ Given a portait it crops it in a shape (portraitSize,portraitSize) with
