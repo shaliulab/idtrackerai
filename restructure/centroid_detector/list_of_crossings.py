@@ -252,9 +252,11 @@ if __name__ == "__main__":
 
 
     for blobs_in_frame in blobs:
-        print("frame_number: ", blobs_in_frame[0].frame_number)
+        print("------------------------frame_number: ", blobs_in_frame[0].frame_number)
         identities = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
+        print("identities in frame ", identities)
         duplicated_identities = set([x for x in identities if identities.count(x) > 1])
+        print("duplicated identities ", duplicated_identities)
         if len(duplicated_identities) > 0:
             frame  = Duplication(blobs_in_frame_with_duplication = blobs_in_frame,
                                 duplicated_identities = duplicated_identities)
