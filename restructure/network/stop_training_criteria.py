@@ -17,6 +17,7 @@ class Stop_Training():
         self.epochs_before_checking_stopping_conditions = epochs_before_checking_stopping_conditions
         self.overfitting_counter = 0 #number of epochs in which the network is overfitting before stopping the training
         self.check_for_loss_plateau = check_for_loss_plateau #bool: if true the training is stopped if the loss is not decreasing enough
+        self.first_accumulation_flag = first_accumulation_flag
 
     def __call__(self, loss_accuracy_training, loss_accuracy_validation, epochs_completed):
         #check that the model did not diverged (nan loss).
@@ -38,7 +39,7 @@ class Stop_Training():
             #check overfitting
             if losses_difference < 0.:
                 self.overfitting_counter += 1
-                if self.overfitting_counter >= OVERFITTING_COUNTER_THRESHOLD and not first_accumulation_flag:
+                if self.overfitting_counter >= OVERFITTING_COUNTER_THRESHOLD and not self.first_accumulation_flag:
                     print('Overfitting\n')
                     return True
             else:
