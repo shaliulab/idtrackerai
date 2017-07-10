@@ -368,7 +368,7 @@ if __name__ == '__main__':
                 print("number of candidate global fragments, ", len(candidates_next_global_fragments))
                 if any([not global_fragment.used_for_training for global_fragment in global_fragments]):
                     images, _, candidate_individual_fragments_indices, indices_to_split = get_images_and_labels_from_global_fragments(candidates_next_global_fragments,accumulation_manager.individual_fragments_used)
-                    print("*** individual fragments to be used: ", np.unique(candidate_individual_fragments_indices))
+                    print("*** individual fragments to be used: ", len(np.unique(candidate_individual_fragments_indices)))
                 else:
                     print("All the global fragments have been used for accumulation")
                     break
@@ -376,6 +376,7 @@ if __name__ == '__main__':
                 assigner = assign(net, video, images, print_flag = True)
                 accumulation_manager.split_predictions_after_network_assignment(assigner._predictions, assigner._softmax_probs, indices_to_split)
                 # assign identities to the global fragments based on the predictions
+                print('0****', len(accumulation_manager.individual_fragments_used), len(accumulation_manager.identities_of_individual_fragments_used))
                 accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_indices)
                 accumulation_manager.update_counter()
 

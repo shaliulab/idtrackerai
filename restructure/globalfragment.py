@@ -157,7 +157,7 @@ def get_images_and_labels_from_global_fragment(global_fragment, individual_fragm
     lengths = []
     individual_fragments_identifiers = []
     for i, portraits in enumerate(global_fragment.portraits):
-        if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_identifiers_already_used:
+        if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_identifiers_already_used :
             # print("This individual fragment has not been used, we take images")
             images.extend(portraits)
             labels.extend([global_fragment._temporary_ids[i]]*len(portraits))
@@ -171,6 +171,7 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
     labels = []
     lengths = []
     candidate_individual_fragments_identifiers = []
+    individual_fragments_identifiers_already_used = list(individual_fragments_identifiers_already_used)
     for global_fragment in global_fragments:
         images_global_fragment, labels_global_fragment, lengths_global_fragment, individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_identifiers_already_used)
         if len(images_global_fragment) != 0:

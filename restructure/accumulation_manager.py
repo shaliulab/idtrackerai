@@ -177,8 +177,8 @@ class AccumulationManager(object):
         new_ids = list(np.asarray(list(new_individual_fragments_and_id))[:,1])
         self.individual_fragments_used.extend(new_individual_fragments)
         self.identities_of_individual_fragments_used.extend(new_ids)
-        print("Individual fragments used for training:", self.individual_fragments_used)
-        print("Ids of individual fragments used for training:", self.identities_of_individual_fragments_used)
+        print("Individual fragments used for training:", len(self.individual_fragments_used))
+        print("Ids of individual fragments used for training:", len(self.identities_of_individual_fragments_used))
 
     # def get_images_from_test_global_fragments(self):
     #     """stack all the images in global fragments if they have not been used
