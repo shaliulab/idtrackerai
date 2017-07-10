@@ -183,6 +183,9 @@ class AccumulationManager(object):
         new_ids = list(np.asarray(list(new_individual_fragments_and_id))[:,1])
         self.individual_fragments_used.extend(new_individual_fragments)
         self.identities_of_individual_fragments_used.extend(new_ids)
+        print("Individual fragments used for training:", len(self.individual_fragments_used))
+        print("Ids of individual fragments used for training:", len(self.identities_of_individual_fragments_used))
+
 
     def split_predictions_after_network_assignment(self,predictions, softmax_probs, indices_to_split):
         """Go back to the CPU"""

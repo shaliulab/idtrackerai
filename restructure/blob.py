@@ -428,6 +428,6 @@ class ListOfBlobs(object):
         print("loading blobs list from ", path_to_load_blob_list_file)
 
         list_of_blobs = np.load(path_to_load_blob_list_file).item()
-        print("cutting points", list_of_blobs.cutting_points)
+        # print("cutting points", list_of_blobs.cutting_points)
         list_of_blobs.reconnect()
         return list_of_blobs
