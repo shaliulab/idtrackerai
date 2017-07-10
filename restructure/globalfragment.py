@@ -135,6 +135,11 @@ def order_global_fragments_by_distance_travelled(global_fragments):
     global_fragments = sorted(global_fragments, key = lambda x: x.min_distance_travelled, reverse = True)
     return global_fragments
 
+def order_global_fragments_by_distance_to_the_first_global_fragment(global_fragments):
+    index_first_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0].index_beginning_of_fragment
+    global_fragments = sorted(global_fragments, key = lambda x: np.abs(x.index_beginning_of_fragment - index_first_global_fragment), reverse = False)
+    return global_fragments
+
 def give_me_identities_of_global_fragment(global_fragment, blobs_in_video):
     global_fragment._ids_assigned = [blob.identity
         for blob in blobs_in_video[global_fragment.index_beginning_of_fragment]]
