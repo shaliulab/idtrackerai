@@ -310,10 +310,15 @@ if __name__ == '__main__':
                         number_of_identity_shifts_in_accumulated_frames = 0
                         number_of_blobs_assigned_in_accumulation = 0
                         number_of_not_assigned_blobs = [0] * group_size
+                        individual_fragments_badly_assigned_in_accumulation = []
+                        individual_fragments_that_are_repetitions = []
+                        individual_fragments = []
                         for frame_number, blobs_in_frame in enumerate(blobs):
                             identities_in_frame = []
                             frame_with_repetition = False
                             for i, blob in enumerate(blobs_in_frame):
+                                if blob._fragment_identifier not in individual_fragments:
+                                    individual_fragments.append(blob._fragment_identifier)
                                 if blob.is_a_fish_in_a_fragment:
                                     number_assignations[i] += 1
                                     if blob._assigned_during_accumulation:
@@ -322,9 +327,13 @@ if __name__ == '__main__':
                                         if blob.identity == blob.user_generated_identity:
                                             number_correct_assignations[i] += 1
                                         elif blob._assigned_during_accumulation:
+                                            if blob._fragment_identifier not in individual_fragments_badly_assigned_in_accumulation:
+                                                individual_fragments_badly_assigned_in_accumulation.append(blob._fragment_identifier)
                                             number_of_identity_shifts_in_accumulated_frames += 1
                                         if blob.identity in identities_in_frame:
                                             number_of_identity_repetitions += 1
+                                            if blob._fragment_identifier not in individual_fragments_that_are_repetitions:
+                                                individual_fragments_that_are_repetitions.append(blob._fragment_identifier)
                                             frame_with_repetition = True
 
                                         identities_in_frame.append(blob.identity)
@@ -351,13 +360,16 @@ if __name__ == '__main__':
                         print("number of acceptable fragments: ", number_of_acceptable_fragments)
                         print("number of frames with repetition (after assignation with P2): ", int(number_of_frames_with_repetitions))
                         print("number of blobs assigned during accumulation: ", number_of_blobs_assigned_in_accumulation)
-                        print("frames_in_video: ", frames_in_video)
-                        print("group_size: ", group_size)
                         print("number_correct_assignations: ", number_correct_assignations)
                         print("number_of_not_assigned_blobs: ", number_of_not_assigned_blobs)
                         print("number_of_identity_repetitions: ", number_of_identity_repetitions)
                         print("number_of_frames_with_repetitions: ", number_of_frames_with_repetitions)
+                        print("number_of_fragments_that_are_repetitions: ", len(individual_fragments_that_are_repetitions))
                         print("number_of_identity_shifts_in_accumulated_frames: ", number_of_identity_shifts_in_accumulated_frames)
+                        print("number of individual fragments badly assigned in acumulation: ", len(individual_fragments_badly_assigned_in_accumulation))
+                        print("number of individual fragments: ", len(individual_fragments))
+                        print("frames_in_video: ", frames_in_video)
+                        print("group_size: ", group_size)
                         print("individual_accuracies (assigned frames): ", individual_accuracies_assigned_frames)
                         print("accuracy (assigned frames): ", accuracy_assigned_frames)
                         print("individual_accuracies: ", individual_accuracies)

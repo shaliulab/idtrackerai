@@ -7,7 +7,7 @@ from statistics_for_assignment import compute_P1_individual_fragment_from_freque
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
-CERTAINTY_THRESHOLD = 0.8 # threshold to select a individual fragment as eligible for training
+CERTAINTY_THRESHOLD = 0.9 # threshold to select a individual fragment as eligible for training
 
 ###
 
@@ -143,7 +143,7 @@ class AccumulationManager(object):
         if self.counter == 0:
             self.used_images = self.new_images
             self.used_labels = self.new_labels
-        else:
+        elif self.new_images is not None:
             self.used_images = np.concatenate([self.used_images, self.new_images], axis = 0)
             self.used_labels = np.concatenate([self.used_labels, self.new_labels], axis = 0)
         print("Used images for training:", self.used_images.shape, self.used_labels.shape)
@@ -219,21 +219,23 @@ class AccumulationManager(object):
         according to the score computed from the certainty of identification and the
         minimum distance travelled"""
         self.candidate_individual_fragments_identifiers = candidate_individual_fragments_identifiers
-        self.temporal_inividual_fragments_used = list(self.individual_fragments_used)
-        self.temporal_identities_of_individual_fragments_used = list(self.identities_of_individual_fragments_used)
+        self.temporal_individual_fragments_used = []
+        self.temporal_identities_of_individual_fragments_used = []
         ordered_global_fragments = order_global_fragments_by_distance_to_the_first_global_fragment(self.global_fragments)
+        # ordered_global_fragments = order_global_fragments_by_distance_travelled(self.global_fragments)
         for i, global_fragment in enumerate(ordered_global_fragments):
             if global_fragment.used_for_training == False:
                 self.assign_identities_to_test_global_fragment(global_fragment)
 
     def assign_identities_to_test_global_fragment(self, global_fragment):
+        np.set_printoptions(precision=3)
         assert global_fragment.used_for_training == False
         global_fragment._acceptable_for_training = True
 
         global_fragment._certainties = []
         global_fragment._P1_vector = []
         # Check certainties of the individual fragments in the global fragment
-        print("\nChecking global fragment")
+        # print("\nChecking global fragment")
         for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
             # print("\nindividual_fragment_identifier: ", individual_fragment_identifier)
             if individual_fragment_identifier in self.candidate_individual_fragments_identifiers:
@@ -243,8 +245,8 @@ class AccumulationManager(object):
                 if individual_fragment_certainty <= self.certainty_threshold:
                     # if the certainty of the individual fragment is not high enough
                     # we set the global fragment not to be acceptable for training
+                    # print("it is not certain enough: ", individual_fragment_certainty)
                     global_fragment._acceptable_for_training = False
-                    print("it is not certain enough: ", individual_fragment_certainty)
                     break
                 else:
                     # if the certainty of the individual fragment is high enough
@@ -262,10 +264,9 @@ class AccumulationManager(object):
                 individual_fragment_P1_vector[individual_fragment_id] = 0.99999999999999
                 global_fragment._P1_vector.append(individual_fragment_P1_vector)
 
-        # Compute identities if the global_fragment is acceptable for training after checking the certainty
-        # and check uniqueness
+        # Compute identities if the global_fragment is still acceptable for training
         if global_fragment._acceptable_for_training:
-            print("it is certain enough")
+            # print("it is certain enough")
             global_fragment._temporary_ids = np.nan * np.ones(self.number_of_animals)
             # get the index position of the individual fragments ordered by certainty from max to min
             index_individual_fragments_sorted_by_certanity_max_to_min = np.argsort(np.squeeze(np.asarray(global_fragment._certainties)))[::-1]
@@ -277,43 +278,73 @@ class AccumulationManager(object):
             index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
 
             # first we set the identities of the individual fragments that have been already used
+            print("assigning identities to individual fragments already used")
             for index_individual_fragment, individual_fragment_identifier in enumerate(global_fragment.individual_fragments_identifiers):
-                if individual_fragment_identifier in self.temporal_inividual_fragments_used:
-                    index = self.temporal_inividual_fragments_used.index(individual_fragment_identifier)
+                if individual_fragment_identifier in self.individual_fragments_used:
+                    # print("individual fragment identifier %i in training set" %individual_fragment_identifier)
+                    index = list(self.individual_fragments_used).index(individual_fragment_identifier)
+                    identity = int(self.identities_of_individual_fragments_used[index])
+                    if identity == np.argmax(global_fragment._P1_vector[index_individual_fragment]):
+                        global_fragment._temporary_ids[index_individual_fragment] = identity
+                        P1_array[index_individual_fragment,:] = 0.
+                        P1_array[:,identity] = 0.
+                    else:
+                        # print("identity ", identity)
+                        # print("argMax P1 ", np.argmax(global_fragment._P1_vector[index_individual_fragment]))
+                        raise ValueError("There is an inconsistency in the identity of the individual fragment %i that was used for training" %individual_fragment_identifier)
+                elif individual_fragment_identifier in self.temporal_individual_fragments_used:
+                    # print("individual fragment identifier %i in candidates set" %individual_fragment_identifier)
+                    index = list(self.temporal_individual_fragments_used).index(individual_fragment_identifier)
                     identity = int(self.temporal_identities_of_individual_fragments_used[index])
+                    # if identity == np.argmax(global_fragment._P1_vector[index_individual_fragment]):
                     global_fragment._temporary_ids[index_individual_fragment] = identity
                     P1_array[index_individual_fragment,:] = 0.
                     P1_array[:,identity] = 0.
+                    # else:
+                    #     print("identity ", identity)
+                    #     print("argMax P1 ", np.argmax(global_fragment._P1_vector[index_individual_fragment]))
+                    #     index_in_candidate_individual_fragments = list(self.candidate_individual_fragments_identifiers).index(individual_fragment_identifier)
+                    #     individual_fragment_P1_vector = self.P1_vector_of_candidate_individual_fragments[index_in_candidate_individual_fragments]
+                    #     print("P1 vector from list of candidates global fragments: ", individual_fragment_P1_vector )
+                    #     raise ValueError("There is an inconsistency in the identity of the individual fragment %i that is a candidate" %individual_fragment_identifier)
 
-            ### NOTE: we need to decide whether we want to assign the identities by order of P1 or by order of certainty
-            ### NOTE: the certainty now considers the distance to the random assignation for each individual fragment. check the function below
-            for index_individual_fragment in index_individual_fragments_sorted_by_P1_max_to_min:
-                # print(global_fragment._temporary_ids[index_individual_fragment])
+            # print("assigning the rest of individual fragments")
+            assigning_at_random = False
+            for index_individual_fragment in index_individual_fragments_sorted_by_certanity_max_to_min:
                 if np.isnan(global_fragment._temporary_ids[index_individual_fragment]):
-                    temporal_identity = np.argmax(P1_array[index_individual_fragment,:])
-                    global_fragment._temporary_ids[index_individual_fragment] = int(temporal_identity)
-                    P1_array[index_individual_fragment,:] = 0.
-                    P1_array[:,temporal_identity] = 0.
+                    # if it has not been assigned an identity
+                    if np.max(P1_array[index_individual_fragment,:]) < 1./global_fragment._number_of_portraits_per_individual_fragment[index_individual_fragment]:
+                        global_fragment._acceptable_for_training = False
+                        # print("it was assigning randomly")
+                        break
+                    else:
+                        temporal_identity = np.argmax(P1_array[index_individual_fragment,:])
+                        global_fragment._temporary_ids[index_individual_fragment] = int(temporal_identity)
+                        P1_array[index_individual_fragment,:] = 0.
+                        P1_array[:,temporal_identity] = 0.
+
             # Check if the global fragment is unique after assigning the identities
-            if not global_fragment.is_unique:
-                print("is not unique")
+            if global_fragment._acceptable_for_training and not global_fragment.is_unique:
+                # print("is not unique")
                 global_fragment._acceptable_for_training = False
-            else:
+            elif global_fragment._acceptable_for_training:
+                # print("is unique and acceptable for training")
                 global_fragment._temporary_ids = np.asarray(global_fragment._temporary_ids).astype('int')
 
-            # Check consistenscy with rest of global fragments
-            if global_fragment.is_unique:
-                print("is unique")
-                if self.check_consistency_of_assignation_tests(global_fragment):
-                    print("is consistent")
-                    global_fragment._is_consistent = True
-                    for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers,global_fragment._temporary_ids):
-                        if individual_fragment_identifier not in self.temporal_inividual_fragments_used:
-                            self.temporal_inividual_fragments_used.append(individual_fragment_identifier)
-                            self.temporal_identities_of_individual_fragments_used.append(temporal_identity)
-                else:
-                    print("is not consistent")
-                    global_fragment._acceptable_for_training = False
+            # # Check consistenscy with rest of global fragments
+            # if global_fragment.is_unique and global_fragment._acceptable_for_training:
+            #     print("is unique")
+            #     if self.check_consistency_of_assignation_tests(global_fragment):
+            #         print("is consistent")
+            #         global_fragment._is_consistent = True
+            #         for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers,global_fragment._temporary_ids):
+            #             if individual_fragment_identifier not in self.temporal_individual_fragments_used:
+            #                 self.temporal_individual_fragments_used.append(individual_fragment_identifier)
+            #                 self.temporal_identities_of_individual_fragments_used.append(temporal_identity)
+            #                 assert len(self.temporal_individual_fragments_used) == len(self.temporal_identities_of_individual_fragments_used)
+            #     else:
+            #         print("is not consistent")
+            #         global_fragment._acceptable_for_training = False
 
 
     def check_consistency_of_assignation_tests(self,global_fragment):
@@ -321,8 +352,8 @@ class AccumulationManager(object):
         fragment that is going to be assigned is consistent with the identities of the individual
         fragments that have already been used for training """
         for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids):
-            if individual_fragment_identifier in self.temporal_inividual_fragments_used:
-                index = self.temporal_inividual_fragments_used.index(individual_fragment_identifier)
+            if individual_fragment_identifier in self.temporal_individual_fragments_used:
+                index = list(self.temporal_individual_fragments_used).index(individual_fragment_identifier)
                 if not self.temporal_identities_of_individual_fragments_used[index] == temporal_identity:
                     return False
         return True
