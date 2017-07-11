@@ -64,10 +64,10 @@ if __name__ == '__main__':
     print("loading video object...")
     video = np.load(video_path).item(0)
     #change this
-    # blobs_path = '/media/atlas/idTrackerDeep_LargeGroups_1/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/blobs_collection.npy'
-    # global_fragments_path = '/media/atlas/idTrackerDeep_LargeGroups_1/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/global_fragments.npy'
-    blobs_path = video.blobs_path
-    global_fragments_path = video.global_fragments_path
+    blobs_path = '/media/atlas/idTrackerDeep_LargeGroups_3/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/blobs_collection.npy'
+    global_fragments_path = '/media/atlas/idTrackerDeep_LargeGroups_3/idTrackerDeep_LargeGroups/TU20170307/numberIndivs_100/First/session_1/preprocessing/global_fragments.npy'
+    # blobs_path = video.blobs_path
+    # global_fragments_path = video.global_fragments_path
     list_of_blobs = ListOfBlobs.load(blobs_path)
     blobs = list_of_blobs.blobs_in_video
     print("loading global fragments")

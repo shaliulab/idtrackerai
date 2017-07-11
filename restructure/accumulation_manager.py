@@ -219,7 +219,7 @@ class AccumulationManager(object):
         according to the score computed from the certainty of identification and the
         minimum distance travelled"""
         self.candidate_individual_fragments_identifiers = candidate_individual_fragments_identifiers
-        self.temporal_inividual_fragments_used = list(self.individual_fragments_used)
+        self.temporal_individual_fragments_used = list(self.individual_fragments_used)
         self.temporal_identities_of_individual_fragments_used = list(self.identities_of_individual_fragments_used)
         for i, global_fragment in enumerate(self.global_fragments):
             if global_fragment.used_for_training == False:
@@ -277,8 +277,11 @@ class AccumulationManager(object):
 
             # first we set the identities of the individual fragments that have been already used
             for index_individual_fragment, individual_fragment_identifier in enumerate(global_fragment.individual_fragments_identifiers):
-                if individual_fragment_identifier in self.temporal_inividual_fragments_used:
-                    index = self.temporal_inividual_fragments_used.index(individual_fragment_identifier)
+                if individual_fragment_identifier in self.temporal_individual_fragments_used:
+                    print("individual_fragment_identifier ", individual_fragment_identifier)
+                    print("this individual fragment has been already assigned")
+                    print("P1_vector ", global_fragment._P1_vector[index_individual_fragment])
+                    index = self.temporal_individual_fragments_used.index(individual_fragment_identifier)
                     identity = int(self.temporal_identities_of_individual_fragments_used[index])
                     global_fragment._temporary_ids[index_individual_fragment] = identity
                     P1_array[index_individual_fragment,:] = 0.
@@ -307,8 +310,8 @@ class AccumulationManager(object):
                     # print("is consistent")
                     global_fragment._is_consistent = True
                     for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers,global_fragment._temporary_ids):
-                        if individual_fragment_identifier not in self.temporal_inividual_fragments_used:
-                            self.temporal_inividual_fragments_used.append(individual_fragment_identifier)
+                        if individual_fragment_identifier not in self.temporal_individual_fragments_used:
+                            self.temporal_individual_fragments_used.append(individual_fragment_identifier)
                             self.temporal_identities_of_individual_fragments_used.append(temporal_identity)
                 else:
                     # print("is not consistent")
@@ -320,8 +323,8 @@ class AccumulationManager(object):
         fragment that is going to be assigned is consistent with the identities of the individual
         fragments that have already been used for training """
         for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids):
-            if individual_fragment_identifier in self.temporal_inividual_fragments_used:
-                index = self.temporal_inividual_fragments_used.index(individual_fragment_identifier)
+            if individual_fragment_identifier in self.temporal_individual_fragments_used:
+                index = self.temporal_individual_fragments_used.index(individual_fragment_identifier)
                 if not self.temporal_identities_of_individual_fragments_used[index] == temporal_identity:
                     return False
         return True

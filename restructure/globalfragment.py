@@ -28,6 +28,7 @@ def compute_model_area_and_body_length(blobs_in_video, number_of_animals, std_to
     areas_and_body_length = np.asarray(areas_and_body_length)
     #areas are collected throughout the entire video
     # areas = [blob.area for blobs_in_frame in blobs_in_video for blob in blobs_in_frame ]
+    print("areas_and_body_length.shape ", areas_and_body_length.shape)
     median_area = np.median(areas_and_body_length[:,0])
     mean_area = np.mean(areas_and_body_length[:,0])
     std_area = np.std(areas_and_body_length[:,0])
@@ -168,21 +169,28 @@ def get_images_and_labels_from_global_fragment(global_fragment, individual_fragm
     return images, labels, lengths, individual_fragments_identifiers
 
 def get_images_and_labels_from_global_fragments(global_fragments, individual_fragments_identifiers_already_used = []):
-
+    print("\nGetting images from global fragments")
+    print("number of individual fragments already used: ", len(individual_fragments_identifiers_already_used))
     images = []
     labels = []
     lengths = []
     candidate_individual_fragments_identifiers = []
     individual_fragments_identifiers_already_used = list(individual_fragments_identifiers_already_used)
     for global_fragment in global_fragments:
-        images_global_fragment, labels_global_fragment, lengths_global_fragment, individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_identifiers_already_used)
+        images_global_fragment, \
+        labels_global_fragment, \
+        lengths_global_fragment, \
+        individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment,
+                                                                                        individual_fragments_identifiers_already_used)
         if len(images_global_fragment) != 0:
             images.append(images_global_fragment)
             labels.append(labels_global_fragment)
             lengths.extend(lengths_global_fragment)
             candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
             individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
-
+    print("number of individual fragments already used (after getting images): ", len(individual_fragments_identifiers_already_used))
+    print('number of individual fragments: ', len(images))
+    print('number of individual fragments: ', len(candidate_individual_fragments_identifiers))
     if len(images) != 0:
         return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
     else:
