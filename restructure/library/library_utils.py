@@ -131,7 +131,6 @@ def generate_list_of_blobs(portraits, centroids, config):
     print("\n***********Generating list of blobs")
     print("centroids shape ", centroids.shape)
     print("portraits shape", portraits.shape)
-
     for identity in range(config.number_of_animals):
         # print("*\n**identity ", identity)
         # decide length of first individual fragment for this identity

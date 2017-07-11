@@ -111,7 +111,6 @@ if __name__ == '__main__':
                         video.knowledge_transfer_model_folder = job_config.knowledge_transfer_folder
                         video.portrait_size = (32, 32, 1) #NOTE: this can change if the library changes. BUILD next library with new preprocessing.
 
-
                         #############################################################
                         ####################   Preprocessing   ######################
                         #### prepare blobs list and global fragments from the    ####
@@ -127,13 +126,6 @@ if __name__ == '__main__':
                         blobs = generate_list_of_blobs(portraits, centroids, config)
                         compute_fragment_identifier_and_blob_index(blobs, config.number_of_animals)
                         global_fragments = give_me_list_of_global_fragments(blobs, config.number_of_animals)
-                        # raise ValueError("check global fragments before runnin full test")
-                        # check consistency global fragments
-                        # number_of_fragments = frames_in_video/frames_in_fragment
-                        # if len(global_fragments) != number_of_fragments:
-                        #     print("len global_fragments: ", len(global_fragments))
-                        #     print("frames_in_video/frames_in_fragment: ", number_of_fragments)
-                        #     raise ValueError('The number of global fragments it is not consistent')
                         global_fragments_ordered = order_global_fragments_by_distance_travelled(global_fragments)
                         video._has_been_segmented = True
                         video._has_been_preprocessed = True
@@ -245,7 +237,7 @@ if __name__ == '__main__':
                                                     print_flag = False,
                                                     plot_flag = False,
                                                     global_step = global_step,
-                                                    first_accumulation_flag = accumulation_manager == 0)
+                                                    first_accumulation_flag = accumulation_manager.counter == 0)
                             # update used_for_training flag to True for fragments used
                             accumulation_manager.update_global_fragments_used_for_training()
                             # update the set of images used for training
