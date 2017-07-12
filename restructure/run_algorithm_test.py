@@ -303,7 +303,7 @@ if __name__ == '__main__':
                         ####
                         #############################################################
                         print("\n**** Accuracies ****")
-                        number_correct_assignations = [0] * group_size
+                        number_of_correct_assignations = [0] * group_size
                         number_assignations = [0]*group_size
                         number_of_identity_repetitions = 0
                         number_of_frames_with_repetitions = 0
@@ -325,7 +325,7 @@ if __name__ == '__main__':
                                         number_of_blobs_assigned_in_accumulation += 1
                                     if blob.identity is not None and blob.identity != 0:
                                         if blob.identity == blob.user_generated_identity:
-                                            number_correct_assignations[i] += 1
+                                            number_of_correct_assignations[i] += 1
                                         elif blob._assigned_during_accumulation:
                                             if blob._fragment_identifier not in individual_fragments_badly_assigned_in_accumulation:
                                                 individual_fragments_badly_assigned_in_accumulation.append(blob._fragment_identifier)
@@ -346,8 +346,8 @@ if __name__ == '__main__':
                         number_of_unique_fragments = sum([global_fragment.is_unique for global_fragment in global_fragments])
                         number_of_certain_fragments = sum([global_fragment._is_certain for global_fragment in global_fragments])
 
-                        individual_accuracies = np.asarray(number_correct_assignations)/np.asarray(number_assignations)
-                        accuracy = np.sum(number_correct_assignations)/np.sum(number_assignations)
+                        individual_accuracies = np.asarray(number_of_correct_assignations)/np.asarray(number_assignations)
+                        accuracy = np.sum(number_of_correct_assignations)/np.sum(number_assignations)
                         print("\n\ngroup_size: ", group_size)
                         print("individual_accuracies: ", individual_accuracies)
                         print("accuracy: ", accuracy)
