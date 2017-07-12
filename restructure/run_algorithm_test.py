@@ -58,6 +58,7 @@ if __name__ == '__main__':
     e.g.
     run_library_tests.py 1 1 P None 0 .5 .1 DEF afs 1_2 (running in the cluster, job1, pretraining, libraries DEF, all individuals in library D and first half obf E second half of F, repetitions[1 2])
     '''
+    print('\n\n ********************************************* \n\n')
     print("cluster:", sys.argv[1])
     print("test_number:", sys.argv[2])
 

@@ -199,27 +199,27 @@ class Dataset(object):
         self.IMDBPaths = []
         self.idsInIMDBs = []
         for (letter1,letter2) in zip(self.IMDB_codes,self.ids_codes):
-            print('\nletter1, ', letter1)
+            # print('\nletter1, ', letter1)
             self.IMDBPaths.append(self.IMDBsDict[letter1])
             IMDBName = getIMDBNameFromPath(self.IMDBsDict[letter1])
-            print('IMDBName, ', IMDBName)
+            # print('IMDBName, ', IMDBName)
             strain, age, numIndivIMDB, numImPerIndiv = getIMDBInfoFromName(IMDBName)
-            print('numIndivIMDB', numIndivIMDB)
-            print('letter2, ', letter2)
+            # print('numIndivIMDB', numIndivIMDB)
+            # print('letter2, ', letter2)
             if letter2 == 'a': # all ids
                 ids = range(numIndivIMDB)
             elif letter2 == 'f': # first half idsInIMDBs
                 ids = range(int(numIndivIMDB/2))
             elif letter2 == 's': # first half idsInIMDBs
                 ids = range(int(numIndivIMDB/2),numIndivIMDB)
-            print('ids selected, ', ids)
+            # print('ids selected, ', ids)
             self.idsInIMDBs.append(ids)
-        print('IMDBPaths, ', self.IMDBPaths)
-        print('idsInIMDBs, ', self.idsInIMDBs)
+        # print('IMDBPaths, ', self.IMDBPaths)
+        # print('idsInIMDBs, ', self.idsInIMDBs)
 
     def loadIMDBs(self):
-        print('\n----------------------------------------------------------------')
-        print('Loading images and labels form the IMDBs selected')
+        # print('\n----------------------------------------------------------------')
+        # print('Loading images and labels form the IMDBs selected')
         # Initialize variables
         self.images = []
         self.labels = []
@@ -230,11 +230,11 @@ class Dataset(object):
         for (IMDBPath,idsInIMDB) in zip(self.IMDBPaths,self.idsInIMDBs):
             IMDBName = getIMDBNameFromPath(IMDBPath)
             strain, age, numIndivIMDB, numImPerIndiv = getIMDBInfoFromName(IMDBName)
-            print('\nExtracting imagaes from ', IMDBName)
-            print('The individuals selected from this IMDB are ',  idsInIMDB)
-            print('strain, ', strain)
-            print('age, ', age)
-            print('numIndivIMDB, ', numIndivIMDB)
+            # print('\nExtracting imagaes from ', IMDBName)
+            # print('The individuals selected from this IMDB are ',  idsInIMDB)
+            # print('strain, ', strain)
+            # print('age, ', age)
+            # print('numIndivIMDB, ', numIndivIMDB)
             self.strains.append(strain)
             self.ages.append(age)
             # Check whether there are enough individuals in the IMDB
@@ -248,13 +248,13 @@ class Dataset(object):
             # Update labels values according to the number of individuals already loaded
             labelsIMDB = labelsIMDB+self.number_of_animals
             # Append labels and images to the list
-            print('images shape ', imagesIMDB.shape)
-            print('labels shape ', labelsIMDB.shape)
-            print('centroids shape ', centroidsIMDB.shape)
+            # print('images shape ', imagesIMDB.shape)
+            # print('labels shape ', labelsIMDB.shape)
+            # print('centroids shape ', centroidsIMDB.shape)
             self.images.append(imagesIMDB)
             self.labels.append(labelsIMDB)
             self.centroids.append(centroidsIMDB)
-            print('The labels added are, ', np.unique(labelsIMDB))
+            # print('The labels added are, ', np.unique(labelsIMDB))
             # Update number of individuals loaded
             self.number_of_animals += len(idsInIMDB)
             # To clear memory
@@ -266,14 +266,14 @@ class Dataset(object):
         self.images = np.concatenate(self.images, axis = 0)
         self.labels = np.concatenate(self.labels, axis = 0)
         self.centroids = np.concatenate(self.centroids, axis = 0)
-        print('images shape ', self.images.shape)
-        print('labels shape ', self.labels.shape)
-        print('centroids shape ', self.centroids.shape)
-        print('labels ', np.unique(self.labels))
+        # print('images shape ', self.images.shape)
+        # print('labels shape ', self.labels.shape)
+        # print('centroids shape ', self.centroids.shape)
+        # print('labels ', np.unique(self.labels))
         self.minimum_number_of_images_per_animal = np.min([np.sum(self.labels == i) for i in np.unique(self.labels)])
         self.identities = np.unique(self.labels)
-        print('num images per label, ', self.minimum_number_of_images_per_animal)
-        print('----------------------------------------------------------------\n')
+        # print('num images per label, ', self.minimum_number_of_images_per_animal)
+        # print('----------------------------------------------------------------\n')
 
 ''' loadDataBase '''
 def loadIMDB(IMDBPath):

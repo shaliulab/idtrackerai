@@ -262,10 +262,10 @@ def tests_data_frame():
     Portrait preprocessing (libaries DEF)
     1000 fish 3000 frames per vidio. Normal distribution of individual fragments
     *************************************************************************'''
-    group_sizes = [10]
+    group_sizes = [100]
     frames_in_video = [3000]
-    frames_per_individual_fragment = [250]
-    repetitions = [1]
+    frames_per_individual_fragment = [50, 100, 250, 500, 1000]
+    repetitions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     # 12 correlated_images noPretrain noAccum Gaussian distribution of individual fragments
     tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_noPretrain_noAccum_100fish_3000frames_gaussian',
                                                     "CNN_model": 0,
