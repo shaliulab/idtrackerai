@@ -41,6 +41,7 @@ class DataSet(object):
         shift = np.divide(current_size - image_size,2)
         print(self.images.shape)
         self.images = self.images[:,shift:current_size-shift,shift:current_size-shift,:]
+        print(self.images.shape)
         # except:
         #     raise ValueError('The size of the input portrait must be bigger than image_size')
 
@@ -100,17 +101,17 @@ def split_data_train_and_validation(animal_type, number_of_animals, images, labe
 
     train_images = np.vstack(train_images)
     train_labels = np.vstack(train_labels)
-    print("train images before duplication ", train_images.shape )
-    print("train labels before duplication ", train_labels.shape )
+    # print("train images before duplication ", train_images.shape )
+    # print("train labels before duplication ", train_labels.shape )
     if animal_type is not None and animal_type != 'fish':
         train_images, train_labels = duplicate_PCA_images(train_images, train_labels)
-        print("train images after duplication ", train_images.shape )
-        print("train labels after duplication ", train_labels.shape )
+        # print("train images after duplication ", train_images.shape )
+        # print("train labels after duplication ", train_labels.shape )
     train_images, train_labels = shuffle_images_and_labels(train_images, train_labels)
     validation_images = np.vstack(validation_images)
     validation_labels = np.vstack(validation_labels)
-    print("validation images after duplication ", validation_images.shape )
-    print("validation labels after duplication ", validation_labels.shape )
+    # print("validation images after duplication ", validation_images.shape )
+    # print("validation labels after duplication ", validation_labels.shape )
 
     return DataSet(number_of_animals, train_images, train_labels), DataSet(number_of_animals, validation_images, validation_labels)
 
@@ -118,6 +119,7 @@ def split_data_train_and_validation(animal_type, number_of_animals, images, labe
 def shuffle_images_and_labels(images, labels):
     """Shuffles images and labels with a random
     permutation, according to the number of examples"""
+    np.random.seed(0)
     perm = np.random.permutation(len(labels))
     images = images[perm]
     labels = labels[perm]

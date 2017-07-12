@@ -131,7 +131,6 @@ def generate_list_of_blobs(portraits, centroids, config):
     print("\n***********Generating list of blobs")
     print("centroids shape ", centroids.shape)
     print("portraits shape", portraits.shape)
-
     for identity in range(config.number_of_animals):
         # print("*\n**identity ", identity)
         # decide length of first individual fragment for this identity
@@ -173,36 +172,6 @@ def generate_list_of_blobs(portraits, centroids, config):
     blobs_in_video = zip(*blobs_in_video)
     blobs_in_video = [list(blobs_in_frame) for blobs_in_frame in blobs_in_video]
     return blobs_in_video
-
-
-# def generate_list_of_blobs(portraits, centroids, config):
-#     blobs_in_video = []
-#     frames_in_fragment = 0
-#     number_of_fragments = 0
-#
-#     for frame_number, (centroids_in_frame, images_in_frame) in enumerate(zip(centroids,portraits)):
-#         blobs_in_frame = []
-#         for identity, (centroid, image) in enumerate(zip(centroids_in_frame, images_in_frame)):
-#             blob = Blob(centroid, None, None, None,
-#                         number_of_animals = config.number_of_animals)
-#             blob.frame_number = frame_number
-#             blob.portrait = (image,None,None)
-#             blob._user_generated_identity = identity + 1
-#
-#             if frame_number > 0 and frames_in_fragment <= config.number_of_frames_per_fragment + 2 and frames_in_fragment != 0:
-#                 blob.previous = [blobs_in_video[frame_number-1][identity]]
-#                 blobs_in_video[frame_number-1][identity].next = [blob]
-#
-#             blobs_in_frame.append(blob)
-#
-#         if frames_in_fragment <= config.number_of_frames_per_fragment:
-#             frames_in_fragment += 1
-#         else:
-#             frames_in_fragment = 0
-#             number_of_fragments += 1
-#         blobs_in_video.append(blobs_in_frame)
-#
-#     return blobs_in_video
 
 class Dataset(object):
     def __init__(self, IMDB_codes = 'A', ids_codes = 'a', cluster = 0):
