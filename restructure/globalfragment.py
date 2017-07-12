@@ -59,7 +59,6 @@ class GlobalFragment(object):
         self.reset_accumulation_params()
         self._is_unique = False
         self._is_certain = False
-        self._is_consistent = False
 
     def reset_accumulation_params(self):
         self._used_for_training = False
