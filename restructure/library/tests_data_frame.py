@@ -260,131 +260,115 @@ def tests_data_frame():
     ''' ************************************************************************
     Tests with correlated images and the real algorithm
     Portrait preprocessing (libaries DEF)
-    No pre-training, no-accumulation (train only train with one global fragment)
-    Assign with the network trained with one global fragment
+    1000 fish 3000 frames per vidio. Normal distribution of individual fragments
     *************************************************************************'''
-
-    # 12 correlated_images correlated_images_DEF_aaa_CNN0_trainonly1GF cnn_model_0
-    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_trainonly1GF',
+    group_sizes = [10]
+    frames_in_video = [3000]
+    frames_per_individual_fragment = [250]
+    repetitions = [1]
+    # 12 correlated_images noPretrain noAccum Gaussian distribution of individual fragments
+    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_noPretrain_noAccum_100fish_3000frames_gaussian',
                                                     "CNN_model": 0,
                                                     "knowledge_transfer_flag": False,
                                                     "knowledge_transfer_folder": '',
                                                     "pretraining_flag": False,
-                                                    "percentage_of_frames_in_pretaining": 0.,
-                                                    "only_accumulate_one_fragment": True,
-                                                    "train_filters_in_accumulation": True,
-                                                    "accumulation_certainty": 0., #change to .1 if we run again the test
-                                                    "animal_type": 'fish',
-                                                    "IMDB_codes": 'DEF',
-                                                    "ids_codes": 'aaa',
-                                                    "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-                                                    "frames_in_video": [3000],
-                                                    "frames_per_individual_fragment": [50, 100, 250, 500, 1000],
-                                                    "repetitions": [1, 2, 3],
-                                                     }, ignore_index=True)
-
-    # 13 correlated_images correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF cnn_model_0
-    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF',
-                                                    "CNN_model": 0,
-                                                    "knowledge_transfer_flag": False,
-                                                    "knowledge_transfer_folder": '',
-                                                    "pretraining_flag": True,
-                                                    "percentage_of_frames_in_pretaining": 1.,
-                                                    "only_accumulate_one_fragment": True,
-                                                    "train_filters_in_accumulation": False,
-                                                    "accumulation_certainty": 0.1,
-                                                    "animal_type": 'fish',
-                                                    "IMDB_codes": 'DEF',
-                                                    "ids_codes": 'aaa',
-                                                    "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-                                                    "frames_in_video": [3000],
-                                                    "frames_per_individual_fragment": [50, 100, 250, 500, 1000],
-                                                    "repetitions": [1, 2, 3],
-                                                     }, ignore_index=True)
-
-    # 14 correlated_images correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF cnn_model_0
-    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF_100fish_10000_images',
-                                                    "CNN_model": 0,
-                                                    "knowledge_transfer_flag": False,
-                                                    "knowledge_transfer_folder": '',
-                                                    "pretraining_flag": True,
-                                                    "percentage_of_frames_in_pretaining": 1.,
-                                                    "only_accumulate_one_fragment": True,
-                                                    "train_filters_in_accumulation": False,
-                                                    "accumulation_certainty": 0.1,
-                                                    "animal_type": 'fish',
-                                                    "IMDB_codes": 'DEF',
-                                                    "ids_codes": 'aaa',
-                                                    "group_sizes": [100],
-                                                    "frames_in_video": [10000],
-                                                    "frames_per_individual_fragment": [50, 100, 250, 500],
-                                                    "repetitions": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                                                     }, ignore_index=True)
-
-    # 15 correlated_images correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF cnn_model_0
-
-    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_pretraining_trainonly1GF_100fish_3000_images_gaussianModel',
-                                                    "CNN_model": 0,
-                                                    "knowledge_transfer_flag": False,
-                                                    "knowledge_transfer_folder": '',
-                                                    "pretraining_flag": True,
-                                                    "percentage_of_frames_in_pretaining": .25,
-                                                    "only_accumulate_one_fragment": True,
-                                                    "train_filters_in_accumulation": False,
-                                                    "accumulation_certainty": 0.1,
-                                                    "animal_type": 'fish',
-                                                    "IMDB_codes": 'DEF',
-                                                    "ids_codes": 'aaa',
-                                                    "group_sizes": [100],
-                                                    "frames_in_video": [3000],
-                                                    "frames_per_individual_fragment": [50,100,250,500,1000],
-                                                    "std_frames_per_individual_fragment": 150,
-                                                    "repetitions": [1, 2, 3],
-                                                     }, ignore_index=True)
-
-
-    # 16 correlated_images correlated_images_DEF_aaa_CNN0_trainonly1GF cnn_model_0
-    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_trainonly1GF_100fish_3000_images_gaussianModel',
-                                                    "CNN_model": 0,
-                                                    "knowledge_transfer_flag": False,
-                                                    "knowledge_transfer_folder": '',
-                                                    "pretraining_flag": False,
-                                                    "percentage_of_frames_in_pretaining": 0.,
+                                                    "percentage_of_frames_in_pretaining": 0,
                                                     "only_accumulate_one_fragment": True,
                                                     "train_filters_in_accumulation": True,
                                                     "accumulation_certainty": 0.1,
                                                     "animal_type": 'fish',
                                                     "IMDB_codes": 'DEF',
                                                     "ids_codes": 'aaa',
-                                                    "group_sizes": [100],
-                                                    "frames_in_video": [3000],
-                                                    "frames_per_individual_fragment": [50,100,250,500,1000],
+                                                    "group_sizes": group_sizes,
+                                                    "frames_in_video": frames_in_video,
+                                                    "frames_per_individual_fragment": frames_per_individual_fragment,
                                                     "std_frames_per_individual_fragment": 150,
-                                                    "repetitions": [1, 2, 3],
+                                                    "repetitions": repetitions,
                                                      }, ignore_index=True)
 
-    # 17 correlated_images correlated_images_DEF_aaa_CNN0_accumulation cnn_model_0
-    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_accumulation_100fish_3000_images_gaussianModel',
+    # 13 correlated_images noPretrain Accum certainty 0.1 Gaussian distribution of individual fragments
+    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_noPretrain_Accum01_100fish_3000frames_gaussian',
                                                     "CNN_model": 0,
                                                     "knowledge_transfer_flag": False,
                                                     "knowledge_transfer_folder": '',
                                                     "pretraining_flag": False,
-                                                    "percentage_of_frames_in_pretaining": 0.,
+                                                    "percentage_of_frames_in_pretaining": 0,
+                                                    "only_accumulate_one_fragment": False,
+                                                    "train_filters_in_accumulation": True,
+                                                    "accumulation_certainty": 0.1,
+                                                    "animal_type": 'fish',
+                                                    "IMDB_codes": 'DEF',
+                                                    "ids_codes": 'aaa',
+                                                    "group_sizes": group_sizes,
+                                                    "frames_in_video": frames_in_video,
+                                                    "frames_per_individual_fragment": frames_per_individual_fragment,
+                                                    "std_frames_per_individual_fragment": 150,
+                                                    "repetitions": repetitions,
+                                                     }, ignore_index=True)
+
+
+    # 14 correlated_images noPretrain Accum certainty 0.5 Gaussian distribution of individual fragments
+    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_noPretrain_Accum05_100fish_3000frames_gaussian',
+                                                    "CNN_model": 0,
+                                                    "knowledge_transfer_flag": False,
+                                                    "knowledge_transfer_folder": '',
+                                                    "pretraining_flag": False,
+                                                    "percentage_of_frames_in_pretaining": 0,
                                                     "only_accumulate_one_fragment": False,
                                                     "train_filters_in_accumulation": True,
                                                     "accumulation_certainty": 0.5,
                                                     "animal_type": 'fish',
                                                     "IMDB_codes": 'DEF',
                                                     "ids_codes": 'aaa',
-                                                    "group_sizes": [100],
-                                                    "frames_in_video": [3000],
-                                                    "frames_per_individual_fragment": [50,100,250,500,1000],
+                                                    "group_sizes": group_sizes,
+                                                    "frames_in_video": frames_in_video,
+                                                    "frames_per_individual_fragment": frames_per_individual_fragment,
                                                     "std_frames_per_individual_fragment": 150,
-                                                    "repetitions": [1, 2, 3],
+                                                    "repetitions": repetitions,
                                                      }, ignore_index=True)
 
-    # 18 correlated_images correlated_images_DEF_aaa_CNN0_pretraining_accumulation cnn_model_0
-    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_pretraining_accumulation_100fish_3000_images_gaussianModel',
+    # 15 correlated_images noPretrain Accum certainty 0.9 Gaussian distribution of individual fragments
+    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_noPretrain_Accum09_100fish_3000frames_gaussian',
+                                                    "CNN_model": 0,
+                                                    "knowledge_transfer_flag": False,
+                                                    "knowledge_transfer_folder": '',
+                                                    "pretraining_flag": False,
+                                                    "percentage_of_frames_in_pretaining": 0,
+                                                    "only_accumulate_one_fragment": False,
+                                                    "train_filters_in_accumulation": True,
+                                                    "accumulation_certainty": 0.9,
+                                                    "animal_type": 'fish',
+                                                    "IMDB_codes": 'DEF',
+                                                    "ids_codes": 'aaa',
+                                                    "group_sizes": group_sizes,
+                                                    "frames_in_video": frames_in_video,
+                                                    "frames_per_individual_fragment": frames_per_individual_fragment,
+                                                    "std_frames_per_individual_fragment": 150,
+                                                    "repetitions": repetitions,
+                                                     }, ignore_index=True)
+
+    # 16 correlated_images Pretrain noAccum Gaussian distribution of individual fragments
+    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_Pretrain_noAccum_100fish_3000frames_gaussian',
+                                                    "CNN_model": 0,
+                                                    "knowledge_transfer_flag": False,
+                                                    "knowledge_transfer_folder": '',
+                                                    "pretraining_flag": True,
+                                                    "percentage_of_frames_in_pretaining": 0.25,
+                                                    "only_accumulate_one_fragment": True,
+                                                    "train_filters_in_accumulation": False,
+                                                    "accumulation_certainty": 0.5,
+                                                    "animal_type": 'fish',
+                                                    "IMDB_codes": 'DEF',
+                                                    "ids_codes": 'aaa',
+                                                    "group_sizes": group_sizes,
+                                                    "frames_in_video": frames_in_video,
+                                                    "frames_per_individual_fragment": frames_per_individual_fragment,
+                                                    "std_frames_per_individual_fragment": 150,
+                                                    "repetitions": repetitions,
+                                                     }, ignore_index=True)
+
+    # 17 correlated_images Pretrain Accum certainty 0.5 Gaussian distribution of individual fragments
+    tests_data_frame = tests_data_frame.append({"test_name": 'correlated_images_DEF_aaa_CNN0_Pretrain_Accum05_100fish_3000frames_gaussian',
                                                     "CNN_model": 0,
                                                     "knowledge_transfer_flag": False,
                                                     "knowledge_transfer_folder": '',
@@ -396,69 +380,12 @@ def tests_data_frame():
                                                     "animal_type": 'fish',
                                                     "IMDB_codes": 'DEF',
                                                     "ids_codes": 'aaa',
-                                                    "group_sizes": [100],
-                                                    "frames_in_video": [3000],
-                                                    "frames_per_individual_fragment": [50,100,250,500,1000],
+                                                    "group_sizes": group_sizes,
+                                                    "frames_in_video": frames_in_video,
+                                                    "frames_per_individual_fragment": frames_per_individual_fragment,
                                                     "std_frames_per_individual_fragment": 150,
-                                                    "repetitions": [1, 2, 3],
+                                                    "repetitions": repetitions,
                                                      }, ignore_index=True)
-
-
-    #
-    # # only_one_global_fragment_for_training
-    # tests_data_frame = tests_data_frame.append({"test_name": 'Only_one_global_fragment_for_training',
-    #                                                 "CNN_model": 0,
-    #                                                 "knowledge_transfer_flag": False,
-    #                                                 "knowledge_transfer_folder": '',
-    #                                                 "pretraining_flag": False,
-    #                                                 "percentage_of_frames_in_pretaining": 1.,
-    #                                                 "only_accumulate_one_fragment": False,
-    #                                                 "train_filters_in_accumulation": False,
-    #                                                 "accumulation_certainty": .1,
-    #                                                 "IMDB_codes": 'DEF',
-    #                                                 "ids_codes": 'aaa',
-    #                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-    #                                                 "frames_in_video": [5000],
-    #                                                 "frames_per_individual_fragment": [5, 10, 20, 40, 80, 160, 320, 640],
-    #                                                 "repetitions": [1, 2],
-    #                                                  }, ignore_index=True)
-    #
-    # # all_accumulation
-    # tests_data_frame = tests_data_frame.append({"test_name": 'all_accumulation',
-    #                                                 "CNN_model": 0,
-    #                                                 "knowledge_transfer_flag": False,
-    #                                                 "knowledge_transfer_folder": '',
-    #                                                 "pretraining_flag": False,
-    #                                                 "percentage_of_frames_in_pretaining": 1.,
-    #                                                 "only_accumulate_one_fragment": False,
-    #                                                 "train_filters_in_accumulation": False,
-    #                                                 "accumulation_certainty": .1,
-    #                                                 "IMDB_codes": 'DEF',
-    #                                                 "ids_codes": 'aaa',
-    #                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-    #                                                 "frames_in_video": [5000],
-    #                                                 "frames_per_individual_fragment": [5, 10, 20, 40, 80, 160, 320, 640],
-    #                                                 "repetitions": [1, 2],
-    #                                                  }, ignore_index=True)
-    #
-    # # pretraining_and_accumulation
-    # tests_data_frame = tests_data_frame.append({"test_name": 'pretraining_and_accumulation',
-    #                                                 "CNN_model": 0,
-    #                                                 "knowledge_transfer_flag": False,
-    #                                                 "knowledge_transfer_folder": '',
-    #                                                 "pretraining_flag": True,
-    #                                                 "percentage_of_fragments_in_pretraining": 1.,
-    #                                                 "only_accumulate_one_fragment": False,
-    #                                                 "train_filters_in_accumulation": False,
-    #                                                 "accumulation_certainty": .1,
-    #                                                 "IMDB_codes": 'DEF',
-    #                                                 "ids_codes": 'aaa',
-    #                                                 "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-    #                                                 "frames_in_video": [5000],
-    #                                                 "frames_per_individual_fragment": [5, 10, 20, 40, 80, 160, 320, 640],
-    #                                                 "repetitions": [1, 2],
-    #                                                  }, ignore_index=True)
-
 
     tests_data_frame.to_pickle('./library/tests_data_frame.pkl')
     return tests_data_frame
