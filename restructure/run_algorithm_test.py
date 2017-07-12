@@ -183,7 +183,6 @@ if __name__ == '__main__':
                         #############################################################
                         start = time.time()
                         print("\n**** Acumulation ****")
-
                         #create folder to store accumulation models
                         video.create_accumulation_folder()
                         #set network params for the accumulation model

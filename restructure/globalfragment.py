@@ -175,7 +175,6 @@ def get_images_and_labels_from_global_fragment(global_fragment, individual_fragm
 
 def get_images_and_labels_from_global_fragments(global_fragments, individual_fragments_identifiers_already_used = []):
     print("\nGetting images from global fragments")
-    print("number of individual fragments already used: ", len(individual_fragments_identifiers_already_used))
     images = []
     labels = []
     lengths = []
@@ -193,9 +192,6 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
             lengths.extend(lengths_global_fragment)
             candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
             individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
-    print("number of individual fragments already used (after getting images): ", len(individual_fragments_identifiers_already_used))
-    print('number of individual fragments: ', len(images))
-    print('number of individual fragments: ', len(candidate_individual_fragments_identifiers))
     if len(images) != 0:
         return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
     else:
