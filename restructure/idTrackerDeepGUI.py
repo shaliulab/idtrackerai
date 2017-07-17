@@ -203,7 +203,7 @@ if __name__ == '__main__':
             list_of_blobs = ListOfBlobs.load(video.blobs_path)
             blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
-            fragmentation_inspector(video, blobs)
+            # fragmentation_inspector(video, blobs)
         #destroy windows to prevent openCV errors
         cv2.waitKey(1)
         cv2.destroyAllWindows()
@@ -214,7 +214,8 @@ if __name__ == '__main__':
         ####   trained. Works better when transfering to similar ####
         ####   conditions (light, animal type, age, ...)         ####
         #############################################################
-        knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
+        # knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
+        knowledge_transfer_flag = 'n'
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
             video.knowledge_transfer_model_folder = selectDir('', text = "Select a session folder to perform knowledge transfer from the last accumulation point") #select path to video
             video.tracking_with_knowledge_transfer = True
@@ -232,11 +233,12 @@ if __name__ == '__main__':
         #############################################################
         print("\n**** Pretraining ****\n")
         if not loadPreviousDict['pretraining']:
-            pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
-            # pretrain_flag = 'y'
+            # pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
+            pretrain_flag = 'y'
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
-                number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
+                #number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
+                number_of_global_fragments = 100
                 #Reset used_for_training and acceptable_for_training flags
                 if old_video and old_video._accumulation_finished == True:
                     for global_fragment in global_fragments:

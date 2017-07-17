@@ -7,7 +7,7 @@ from statistics_for_assignment import compute_P1_individual_fragment_from_freque
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
-CERTAINTY_THRESHOLD = 0.9 # threshold to select a individual fragment as eligible for training
+CERTAINTY_THRESHOLD = 0.5 # threshold to select a individual fragment as eligible for training
 
 ###
 
@@ -278,20 +278,20 @@ class AccumulationManager(object):
             index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
 
             # first we set the identities of the individual fragments that have been already used
-            print("assigning identities to individual fragments already used")
+            # print("assigning identities to individual fragments already used")
             for index_individual_fragment, individual_fragment_identifier in enumerate(global_fragment.individual_fragments_identifiers):
                 if individual_fragment_identifier in self.individual_fragments_used:
                     # print("individual fragment identifier %i in training set" %individual_fragment_identifier)
                     index = list(self.individual_fragments_used).index(individual_fragment_identifier)
                     identity = int(self.identities_of_individual_fragments_used[index])
-                    if identity == np.argmax(global_fragment._P1_vector[index_individual_fragment]):
-                        global_fragment._temporary_ids[index_individual_fragment] = identity
-                        P1_array[index_individual_fragment,:] = 0.
-                        P1_array[:,identity] = 0.
-                    else:
+                    #if identity == np.argmax(global_fragment._P1_vector[index_individual_fragment]):
+                    global_fragment._temporary_ids[index_individual_fragment] = identity
+                    P1_array[index_individual_fragment,:] = 0.
+                    P1_array[:,identity] = 0.
+                    # else:
                         # print("identity ", identity)
                         # print("argMax P1 ", np.argmax(global_fragment._P1_vector[index_individual_fragment]))
-                        raise ValueError("There is an inconsistency in the identity of the individual fragment %i that was used for training" %individual_fragment_identifier)
+                        # raise ValueError("There is an inconsistency in the identity of the individual fragment %i that was used for training" %individual_fragment_identifier)
                 elif individual_fragment_identifier in self.temporal_individual_fragments_used:
                     # print("individual fragment identifier %i in candidates set" %individual_fragment_identifier)
                     index = list(self.temporal_individual_fragments_used).index(individual_fragment_identifier)

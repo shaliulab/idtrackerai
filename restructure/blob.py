@@ -255,11 +255,11 @@ class Blob(object):
         if self.is_a_fish_in_a_fragment:
             self._identity = identity_in_fragment
             if assigned_during_accumulation:
-                if self._user_generated_identity != identity_in_fragment:
+                # if self._user_generated_identity != identity_in_fragment:
                     # print("fragment identifier ", self._fragment_identifier)
                     # print("real_identity ", self._user_generated_identity)
                     # print("assigned_identity ", identity_in_fragment)
-                    raise ValueError('The assigned identity is not correct')
+                    # raise ValueError('The assigned identity is not correct')
                 self._assigned_during_accumulation = True
                 self._P1_vector[identity_in_fragment-1] = 0.99999999999999
                 self._P2_vector[identity_in_fragment-1] = 0.99999999999999
