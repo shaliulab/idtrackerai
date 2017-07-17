@@ -187,7 +187,7 @@ if __name__ == '__main__':
             np.save(video.global_fragments_path, global_fragments)
             print("Blobs saved")
             #take a look to the resulting fragmentation
-            fragmentation_inspector(video, blobs)
+            # fragmentation_inspector(video, blobs)
         else:
             # Update folders and paths from previous video_object
             cv2.namedWindow('Bars')
@@ -233,8 +233,8 @@ if __name__ == '__main__':
         #############################################################
         print("\n**** Pretraining ****\n")
         if not loadPreviousDict['pretraining']:
-            # pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
-            pretrain_flag = 'y'
+            pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
+            # pretrain_flag = 'y'
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
                 #number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
