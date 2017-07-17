@@ -260,7 +260,7 @@ def tests_data_frame():
     ''' ************************************************************************
     Tests with correlated images and the real algorithm
     Portrait preprocessing (libaries DEF)
-    1000 fish 3000 frames per vidio. Normal distribution of individual fragments
+    100 fish 3000 frames per video. Normal distribution of individual fragments
     *************************************************************************'''
     group_sizes = [100]
     frames_in_video = [3000]

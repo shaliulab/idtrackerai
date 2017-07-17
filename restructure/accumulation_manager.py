@@ -295,7 +295,7 @@ class AccumulationManager(object):
             for index_individual_fragment in index_individual_fragments_sorted_by_P1_max_to_min:
                 if np.isnan(global_fragment._temporary_ids[index_individual_fragment]):
                     # if it has not been assigned an identity
-                    if np.max(P1_array[index_individual_fragment,:]) < 1./global_fragment._number_of_portraits_per_individual_fragment[index_individual_fragment]:
+                    if global_fragment._number_of_portraits_per_individual_fragment[index_individual_fragment] != 0 and np.max(P1_array[index_individual_fragment,:]) < 1./global_fragment._number_of_portraits_per_individual_fragment[index_individual_fragment]:
                         global_fragment._acceptable_for_training = False
                         # print("it was assigning randomly")
                         break
