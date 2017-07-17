@@ -149,6 +149,10 @@ def give_me_list_of_global_fragments(blobs_in_video, num_animals):
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
     return [GlobalFragment(blobs_in_video,i,num_animals) for i in indices_beginning_of_fragment]
 
+def filter_global_fragments_by_minimum_number_of_frames(global_fragments,minimum_number_of_frames = 3):
+    return [global_fragment for global_fragment in global_fragments
+                if np.min(global_fragment._number_of_portraits_per_individual_fragment) >= minimum_number_of_frames]
+
 def give_me_pre_training_global_fragments(global_fragments, number_of_pretraining_global_fragments = 10):
     indices = np.round(np.linspace(0, len(global_fragments), number_of_pretraining_global_fragments + 1)).astype(int)
     split_global_fragments = [global_fragments[indices[i]:indices[i + 1]] for i in range(len(indices) - 1)]

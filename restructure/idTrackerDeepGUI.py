@@ -30,7 +30,8 @@ from globalfragment import compute_model_area_and_body_length,\
                             give_me_pre_training_global_fragments,\
                             get_images_and_labels_from_global_fragments,\
                             subsample_images_for_last_training,\
-                            order_global_fragments_by_distance_travelled
+                            order_global_fragments_by_distance_travelled,\
+                            filter_global_fragments_by_minimum_number_of_frames
 from segmentation import segment
 from GUI_utils import selectFile,\
                     getInput,\
@@ -184,10 +185,11 @@ if __name__ == '__main__':
             #compute the global fragments (all animals are visible + each animals overlaps
             #with a single blob in the consecutive frame + the blobs respect the area model)
             global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
+            global_fragments = filter_global_fragments_by_minimum_number_of_frames(global_fragments, minimum_number_of_frames = 3)
             np.save(video.global_fragments_path, global_fragments)
             print("Blobs saved")
             #take a look to the resulting fragmentation
-            fragmentation_inspector(video, blobs)
+            #fragmentation_inspector(video, blobs)
         else:
             # Update folders and paths from previous video_object
             cv2.namedWindow('Bars')
