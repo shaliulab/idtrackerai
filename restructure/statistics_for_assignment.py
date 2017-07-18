@@ -52,3 +52,10 @@ def compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video):
     # Compute logP2
     logP2 = np.log(np.asarray(blob.P1_vector)) + np.sum(np.log(1. - coexisting_blobs_P1_vectors),axis=0)
     return P2
+
+def is_assignment_ambiguous(P2_vector):
+    """Check if P2 has two identical maxima. In that case returns the indices.
+    Else return false.
+    """
+    maxima_indices = np.where(P2_vector == np.max(P2_vector))[0]
+    return maxima_indices + 1 if len(maxima_indices) > 1 else False

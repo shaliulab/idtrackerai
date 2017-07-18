@@ -395,7 +395,7 @@ if __name__ == '__main__':
                                                         restore_folder = video._accumulation_folder,
                                                         save_folder = video._accumulation_folder,
                                                         image_size = video.portrait_size)
-            net = ConvNetwork(pretrain_network_params)
+            net = ConvNetwork(accumulation_network_params)
             net.restore()
             # Set preprocessed flag to True
             video._accumulation_finished = True
