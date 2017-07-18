@@ -207,33 +207,60 @@ class Duplication(object):
         """We do not reassign blobs used as references
         """
         return [blob for blob in self.blobs_in_frame
-                if blob.identity == identity and
-                not blob.assigned_during_accumulation]
+                if blob.identity == identity]
 
     @staticmethod
     def get_P2_matrix(blobs_list):
-        return np.asmatrix([blob._P2_vector for blob in blobs_list if
-                            not hasattr(blob, 'reassigned_identity')])
+        return np.asarray([blob._P2_vector for blob in blobs_list])
+
 
     @staticmethod
     def sort_P2_matrix(P2_matrix):
         P2_ids = np.flip(np.argsort(P2_matrix, axis = 1), axis = 1) + 1
         corresponding_P2s = np.flip(np.sort(P2_matrix, axis = 1), axis = 1)
-        return P2_ids.T, corresponding_P2s.T
+        return np.squeeze(np.asarray(P2_ids.T)), np.squeeze(np.asarray(corresponding_P2s.T))
 
     def assign(self):
+        number_of_blobs_to_reassign = len(self.blobs_to_reassign)
         P2_matrix = self.get_P2_matrix(self.blobs_to_reassign)
         print("P2 matrix ", P2_matrix)
-        ids, P2s = self.sort_P2_matrix(P2_matrix)
-        print("ids and P2s zipped ", ids, P2s)
 
-        for i, ids_col, P2s_col in enumerate(ids_and_P2s):
+        ids, P2s = self.sort_P2_matrix(P2_matrix)
+
+        print("ids and P2s ", zip(ids, P2s))
+        print("ids shape ", ids.shape)
+        print("P2s shape ", P2s.shape )
+        counter = 0
+
+        for i in range(number_of_blobs_to_reassign):
+            print("evaluating blob", i)
+
+            ids_col = ids[i]
+            P2s_col = P2s[i]
+            print("ids col ", ids_col)
+            print("p2s ", P2s_col)
             max_P2_in_column = np.argmax(P2s_col)
             candidate_id = ids_col[max_P2_in_column]
-            self.blobs_to_reassign[i]._identity = 'dup'
-            if candidate_id in self.available_identities:
-                self.blobs_to_reassign[i]._identity = candidate_id
+            print("candidate_id: ", candidate_id)
+            print("available identities ", self.available_identities)
+
+            if candidate_id in self.available_identities and np.max(P2s_col) != 0:
+                print("assigning")
+                print('old id: ', self.blobs_to_reassign[max_P2_in_column].identity)
+                self.blobs_to_reassign[max_P2_in_column]._identity = candidate_id
+                print("P2s without zeros ", P2s)
+
+                print("P2s with zeros ", P2s)
+                print('new id: ', self.blobs_to_reassign[max_P2_in_column].identity)
                 self.available_identities.remove(candidate_id)
+                counter += 1
+            elif np.max(P2s_col) == 0 or i == ids.shape[0]:
+                self.blobs_to_reassign[max_P2_in_column]._identity = 0
+
+
+            if counter == number_of_blobs_to_reassign:
+                break
+
 
 if __name__ == "__main__":
     from GUI_utils import frame_by_frame_identity_inspector
@@ -241,10 +268,10 @@ if __name__ == "__main__":
 
     #load video and list of blobs
     # video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4/video_object.npy').item()
-    video = np.load('/Users/mattiagiuseppebergomi/Desktop/duplication_test/conflict8Short/session_1/video_object.npy').item()
+    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/conflict8Short/session_1/video_object.npy').item()
     number_of_animals = video.number_of_animals
     # list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4/preprocessing/blobs_collection.npy'
-    list_of_blobs_path = '/Users/mattiagiuseppebergomi/Desktop/duplication_test/conflict8Short/session_1/preprocessing/blobs_collection_safe.npy'
+    list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/conflict8Short/session_1/preprocessing/blobs_collection_safe.npy'
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
     if not hasattr(video, "velocity_threshold"):
@@ -252,7 +279,10 @@ if __name__ == "__main__":
 
 
     for blobs_in_frame in blobs:
-        print("------------------------frame_number: ", blobs_in_frame[0].frame_number)
+        try:
+            print("------------------------frame_number: ", blobs_in_frame[0].frame_number)
+        except:
+            print("--------")
         identities = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
         print("identities in frame ", identities)
         duplicated_identities = set([x for x in identities if identities.count(x) > 1])
@@ -264,8 +294,9 @@ if __name__ == "__main__":
 
             for blob in blobs_in_frame:
                 for blob_d in blobs_to_reassign:
-                    if blob is blob_d:
-                        blob._identity = blob_d.identity
+                    if blob is blob_d and blob.identity != blob_d.identity:
+                        blob.update_identity_in_fragment(blob_d.identity)
+
 
 
 
@@ -373,7 +404,7 @@ if __name__ == "__main__":
     #                 blob.number_of_animals_in_crossing = len(blob.identity)
     #         print("blob.identity: ", blob.identity)
 
-    # frame_by_frame_identity_inspector(video, blobs)
+    frame_by_frame_identity_inspector(video, blobs)
     blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
     blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
     blobs_list.cut_in_chunks()
