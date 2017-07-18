@@ -1,4 +1,6 @@
 from __future__ import absolute_import, print_function, division
+import matplotlib
+matplotlib.use('TKAgg')
 import sys
 sys.path.append('../')
 sys.path.append('../preprocessing')
@@ -8,6 +10,7 @@ import numpy as np
 from tqdm import tqdm
 import collections
 from blob import ListOfBlobs
+
 import matplotlib.pyplot as plt
 from py_utils import get_spaced_colors_util
 from assigner import assign
@@ -29,7 +32,7 @@ def compute_model_velocity(blobs_in_video, number_of_animals, percentile = VEL_P
         collection of blobs detected in the video.
     number_of_animals int
     percentile int
-
+    -----
     return
     -----
     float
@@ -47,33 +50,6 @@ def compute_model_velocity(blobs_in_video, number_of_animals, percentile = VEL_P
 
     # return 2 * np.percentile(distance_travelled_in_individual_fragments, percentile)
     return 2 * np.max(distance_travelled_in_individual_fragments)
-
-def assign_jump_portraits(images, video):
-    """Restore the network associated to the model used to assign video.
-    parameters
-    ------
-    images: ndarray (num_images, height, width)
-        "images" collection of images to be assigned
-    video: object
-        "video" object associated to the tracked video. It contains information
-        about the video, the animals tracked, and the status of the tracking.
-    return
-    -----
-    assigner: object
-        contains predictions (ndarray of shape [number of images]) of the network, the values in the last fully
-        conencted layer (ndarray of shape [number of images, 100]), and the values of the softmax layer
-        (ndarray of shape [number of images, number of animals in the tracked video])
-    """
-    assert video._has_been_assigned == True
-    net_params = NetworkParams(video.number_of_animals,
-                    learning_rate = 0.005,
-                    keep_prob = 1.0,
-                    use_adam_optimiser = False,
-                    restore_folder = video._accumulation_folder,
-                    save_folder = video._accumulation_folder)
-    net = ConvNetwork(net_params)
-    net.restore()
-    return assign(net, video, images, print_flag = True)
 
 def assign_jumps(images, video):
     """Restore the network associated to the model used to assign video.
@@ -206,50 +182,120 @@ def flatten(l):
         else:
             yield el
 
+class Duplication(object):
+    def __init__(self, blobs_in_frame_with_duplication = None, duplicated_identities = None):
+        self.blobs_in_frame = blobs_in_frame_with_duplication
+        self.identities_to_be_reassigned = duplicated_identities
+        #all non duplicated identities in the frame are not available. This list will be
+        #updated later on
+        self.non_available_identities = [blob.identity for blob in self.blobs_in_frame
+                                        if blob.identity not in duplicated_identities]
+        self.possible_identities = range(1, self.blobs_in_frame[0].number_of_animals)
+
+    def assign_unique_identities(self):
+        all_blobs_to_reassign = []
+
+        for identity in duplicated_identities:
+            self.available_identities = list(set(self.possible_identities) - set(self.non_available_identities))
+            self.blobs_to_reassign = self.get_blobs_with_same_identity(identity)
+            self.assign()
+            all_blobs_to_reassign.extend(self.blobs_to_reassign)
+
+        return all_blobs_to_reassign
+
+    def get_blobs_with_same_identity(self, identity):
+        """We do not reassign blobs used as references
+        """
+        return [blob for blob in self.blobs_in_frame
+                if blob.identity == identity]
+
+    @staticmethod
+    def get_P2_matrix(blobs_list):
+        return np.asarray([blob._P2_vector for blob in blobs_list])
+
+
+    @staticmethod
+    def sort_P2_matrix(P2_matrix):
+        P2_ids = np.flip(np.argsort(P2_matrix, axis = 1), axis = 1) + 1
+        corresponding_P2s = np.flip(np.sort(P2_matrix, axis = 1), axis = 1)
+        return np.squeeze(np.asarray(P2_ids.T)), np.squeeze(np.asarray(corresponding_P2s.T))
+
+    def assign(self):
+        number_of_blobs_to_reassign = len(self.blobs_to_reassign)
+        P2_matrix = self.get_P2_matrix(self.blobs_to_reassign)
+        print("P2 matrix ", P2_matrix)
+
+        ids, P2s = self.sort_P2_matrix(P2_matrix)
+
+        print("ids and P2s ", zip(ids, P2s))
+        print("ids shape ", ids.shape)
+        print("P2s shape ", P2s.shape )
+        counter = 0
+
+        for i in range(number_of_blobs_to_reassign):
+            print("evaluating blob", i)
+
+            ids_col = ids[i]
+            P2s_col = P2s[i]
+            print("ids col ", ids_col)
+            print("p2s ", P2s_col)
+            max_P2_in_column = np.argmax(P2s_col)
+            candidate_id = ids_col[max_P2_in_column]
+            print("candidate_id: ", candidate_id)
+            print("available identities ", self.available_identities)
+
+            if candidate_id in self.available_identities and np.max(P2s_col) != 0:
+                print("assigning")
+                print('old id: ', self.blobs_to_reassign[max_P2_in_column].identity)
+                self.blobs_to_reassign[max_P2_in_column]._identity = candidate_id
+                print("P2s without zeros ", P2s)
+
+                print("P2s with zeros ", P2s)
+                print('new id: ', self.blobs_to_reassign[max_P2_in_column].identity)
+                self.available_identities.remove(candidate_id)
+                counter += 1
+            elif np.max(P2s_col) == 0 or i == ids.shape[0]:
+                self.blobs_to_reassign[max_P2_in_column]._identity = 0
+
+
+            if counter == number_of_blobs_to_reassign:
+                break
+
+
 if __name__ == "__main__":
     from GUI_utils import frame_by_frame_identity_inspector
     NUM_CHUNKS_BLOB_SAVING = 10
 
     #load video and list of blobs
     # video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4/video_object.npy').item()
-    video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/session_1/video_object.npy').item()
+    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/conflict8Short/session_1/video_object.npy').item()
     number_of_animals = video.number_of_animals
     # list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4/preprocessing/blobs_collection.npy'
-    list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/conflicto_short/session_1/preprocessing/blobs_collection_safe.npy'
+    list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/conflict8Short/session_1/preprocessing/blobs_collection_safe.npy'
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
     if not hasattr(video, "velocity_threshold"):
         video.velocity_threshold = compute_model_velocity(blobs, number_of_animals, percentile = VEL_PERCENTILE)
 
-    ''' Solve duplications and impossible shits of identity (according to velocity_threshold) '''
-    def get_blobs_with_duplicated_identity_in_frame(blobs_in_frame, duplicated_identity, blobs_assigned_during_accumulation):
-        return [blob for blob in blobs_in_frame
-                    if blob.identity == duplicated_identity and blob not in blobs_assigned_during_accumulation]
-
-    def get_P2_vectors(blobs):
-        return np.concatenate([blob.P2_vector for blob in blobs],axis=0)
-
-    def set_to_zero_P2_values_of_protected_ids(P2_matrix,blobs_assigned_during_accumulation):
-        for blob in blobs_assigned_during_accumulation:
-            P2_matrix[:,blob.identity-1] = 0
-        return P2_matrix
 
     for blobs_in_frame in blobs:
-        print("frame_number: ", blobs_in_frame[0].frame_number)
+        try:
+            print("------------------------frame_number: ", blobs_in_frame[0].frame_number)
+        except:
+            print("--------")
         identities = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
-        blobs_assigned_during_accumulation = [blob for blobs_in_frame if blob.assigned_during_accumulation]
-        duplicated_identities = set([x for x in identities if l.count(x) > 1])
+        print("identities in frame ", identities)
+        duplicated_identities = set([x for x in identities if identities.count(x) > 1])
+        print("duplicated identities ", duplicated_identities)
         if len(duplicated_identities) > 0:
-            for duplicated_identity in duplicated_identities:
-                blobs_with_duplicated_identity_to_reassign = get_blobs_with_duplicated_identity_in_frame(blobs_in_frame,
-                                                                                                            duplicated_identity,
-                                                                                                            blobs_assigned_during_accumulation)
-                P2_of_duplicated_blobs_to_reassign = get_P2_vectors(blobs_with_duplicated_identity_to_reassign)
-                P2_of_duplicated_blobs_to_reassign = set_to_zero_P2_values_of_protected_ids(P2_of_duplicated_blobs_to_reassign,
-                                                                                            blobs_assigned_during_accumulation)
-                identities_to_reassign = get_identities_to_reassign(P2_matrix,)
+            frame  = Duplication(blobs_in_frame_with_duplication = blobs_in_frame,
+                                duplicated_identities = duplicated_identities)
+            blobs_to_reassign = frame.assign_unique_identities()
 
-
+            for blob in blobs_in_frame:
+                for blob_d in blobs_to_reassign:
+                    if blob is blob_d and blob.identity != blob_d.identity:
+                        blob.update_identity_in_fragment(blob_d.identity)
 
 
 
@@ -358,7 +404,7 @@ if __name__ == "__main__":
     #                 blob.number_of_animals_in_crossing = len(blob.identity)
     #         print("blob.identity: ", blob.identity)
 
-    # frame_by_frame_identity_inspector(video, blobs)
+    frame_by_frame_identity_inspector(video, blobs)
     blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
     blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
     blobs_list.cut_in_chunks()
