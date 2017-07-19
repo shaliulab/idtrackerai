@@ -115,13 +115,12 @@ class GlobalFragment(object):
         return self._is_unique
 
     def check_uniqueness(self):
-        if not self._used_for_training:
-            all_identities = range(self.number_of_animals)
-            if set(all_identities).difference(set(self._temporary_ids)):
-                self._is_unique = False
-                self.compute_repeated_and_missing_ids(all_identities)
-            else:
-                self._is_unique = True
+        all_identities = range(self.number_of_animals)
+        if set(all_identities).difference(set(self._temporary_ids)):
+            self._is_unique = False
+            self.compute_repeated_and_missing_ids(all_identities)
+        else:
+            self._is_unique = True
 
     def compute_repeated_and_missing_ids(self, all_identities):
         self._repeated_ids = set([x for x in self._ids_assigned if list(self._ids_assigned).count(x) > 1])
@@ -148,6 +147,10 @@ def give_me_list_of_global_fragments(blobs_in_video, num_animals):
     global_fragments_boolean_array = check_global_fragments(blobs_in_video, num_animals)
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
     return [GlobalFragment(blobs_in_video,i,num_animals) for i in indices_beginning_of_fragment]
+
+def filter_global_fragments_by_minimum_number_of_frames(global_fragments,minimum_number_of_frames = 3):
+    return [global_fragment for global_fragment in global_fragments
+                if np.min(global_fragment._number_of_portraits_per_individual_fragment) >= minimum_number_of_frames]
 
 def give_me_pre_training_global_fragments(global_fragments, number_of_pretraining_global_fragments = 10):
     indices = np.round(np.linspace(0, len(global_fragments), number_of_pretraining_global_fragments + 1)).astype(int)

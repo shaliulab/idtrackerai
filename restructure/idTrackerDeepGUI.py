@@ -30,7 +30,8 @@ from globalfragment import compute_model_area_and_body_length,\
                             give_me_pre_training_global_fragments,\
                             get_images_and_labels_from_global_fragments,\
                             subsample_images_for_last_training,\
-                            order_global_fragments_by_distance_travelled
+                            order_global_fragments_by_distance_travelled,\
+                            filter_global_fragments_by_minimum_number_of_frames
 from segmentation import segment
 from GUI_utils import selectFile,\
                     getInput,\
@@ -184,6 +185,7 @@ if __name__ == '__main__':
             #compute the global fragments (all animals are visible + each animals overlaps
             #with a single blob in the consecutive frame + the blobs respect the area model)
             global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
+            global_fragments = filter_global_fragments_by_minimum_number_of_frames(global_fragments, minimum_number_of_frames = 3)
             np.save(video.global_fragments_path, global_fragments)
             print("Blobs saved")
             #take a look to the resulting fragmentation
@@ -353,7 +355,7 @@ if __name__ == '__main__':
                                         check_for_loss_plateau = True,
                                         save_summaries = True,
                                         print_flag = False,
-                                        plot_flag = False,
+                                        plot_flag = True,
                                         global_step = global_step,
                                         first_accumulation_flag = accumulation_manager == 0)
                 # update used_for_training flag to True for fragments used
@@ -364,6 +366,15 @@ if __name__ == '__main__':
                 accumulation_manager.assign_identities_to_accumulated_global_fragments(blobs)
                 # update the list of individual fragments that have been used for training
                 accumulation_manager.update_individual_fragments_used()
+                # Check uniqueness global_fragments
+                for global_fragment in global_fragments:
+                    if global_fragment._used_for_training == True and not global_fragment.is_unique:
+                        print("is unique ", global_fragment.is_unique)
+                        print("global_fragment ids ", global_fragment._temporary_ids)
+                        print("global_fragment assigned ids, ", global_fragment._ids_assigned)
+                        raise ValueError("This global Fragment is not unique")
+                    elif global_fragment._used_for_training == True:
+                        print("this global fragment used for training is unique ", global_fragment.is_unique)
                 # Set accumulation params for rest of the accumulation
                 #take images from global fragments not used in training (in the remainder test global fragments)
                 candidates_next_global_fragments = [global_fragment for global_fragment in global_fragments if not global_fragment.used_for_training]
@@ -378,9 +389,10 @@ if __name__ == '__main__':
                 assigner = assign(net, video, images, print_flag = True)
                 accumulation_manager.split_predictions_after_network_assignment(assigner._predictions, assigner._softmax_probs, indices_to_split)
                 # assign identities to the global fragments based on the predictions
-                print('0****', len(accumulation_manager.individual_fragments_used), len(accumulation_manager.identities_of_individual_fragments_used))
                 accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_indices)
                 accumulation_manager.update_counter()
+                if accumulation_manager.counter == 2:
+                    break
 
             print("there are no more acceptable global_fragments for training\n")
 
