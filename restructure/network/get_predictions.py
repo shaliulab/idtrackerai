@@ -11,13 +11,15 @@ BATCH_SIZE = 5000 # 32x32 = 1024bytes x BATCH_SIZE ~ 100MB
 KMEANS_NUMBER_OF_STEPS = 100
 
 class GetPrediction(object):
-    def __init__(self, data_set,
+    def __init__(self, video, data_set,
                 print_flag = True):
         # Data set
         self.data_set = data_set
         self._softmax_probs = []
         self._predictions = []
         self._fc_vectors = []
+        self.batch_size =
+
 
     def next_batch(self, batch_size):
         """Return the next `batch_size` examples from this data set."""
@@ -29,7 +31,7 @@ class GetPrediction(object):
     def get_predictions_softmax(self, batch_operation):
         self._index_in_epoch = 0
         while self._index_in_epoch < self.data_set._num_images:
-            softmax_probs_batch, predictions_batch = batch_operation(self.next_batch(BATCH_SIZE))
+            softmax_probs_batch, predictions_batch = batch_operation(self.next_batch(self.batch_size))
             self._softmax_probs.append(softmax_probs_batch)
             self._predictions.append(predictions_batch)
         self._softmax_probs = np.concatenate(self._softmax_probs, axis = 0)
@@ -38,7 +40,7 @@ class GetPrediction(object):
     def get_predictions_fully_connected_embedding(self, batch_operation, number_of_animals):
         self._index_in_epoch = 0
         while self._index_in_epoch < self.data_set._num_images:
-            fc_vectors = batch_operation(self.next_batch(BATCH_SIZE))
+            fc_vectors = batch_operation(self.next_batch(self.batch_size))
             print(fc_vectors.shape)
             self._fc_vectors.append(fc_vectors)
         self._fc_vectors = np.concatenate(self._fc_vectors, axis = 0)

@@ -259,6 +259,11 @@ class AccumulationManager(object):
                 individual_fragment_P1_vector[individual_fragment_id] = 0.99999999999999
                 global_fragment._P1_vector.append(individual_fragment_P1_vector)
                 global_fragment._is_certain = True
+            else:
+                print("individual_fragment_identifier ", individual_fragment_identifier)
+                print("self.individual_fragments_used ", self.individual_fragments_used)
+                print(" self.candidate_individual_fragments_identifiers ",  self.candidate_individual_fragments_identifiers)
+                raise ValueError("Individual fragment not in candidates or in used")
 
         # Compute identities if the global_fragment is still acceptable for training
         if global_fragment._acceptable_for_training:
