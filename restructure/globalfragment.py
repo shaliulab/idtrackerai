@@ -115,13 +115,12 @@ class GlobalFragment(object):
         return self._is_unique
 
     def check_uniqueness(self):
-        if not self._used_for_training:
-            all_identities = range(self.number_of_animals)
-            if set(all_identities).difference(set(self._temporary_ids)):
-                self._is_unique = False
-                self.compute_repeated_and_missing_ids(all_identities)
-            else:
-                self._is_unique = True
+        all_identities = range(self.number_of_animals)
+        if set(all_identities).difference(set(self._temporary_ids)):
+            self._is_unique = False
+            self.compute_repeated_and_missing_ids(all_identities)
+        else:
+            self._is_unique = True
 
     def compute_repeated_and_missing_ids(self, all_identities):
         self._repeated_ids = set([x for x in self._ids_assigned if list(self._ids_assigned).count(x) > 1])

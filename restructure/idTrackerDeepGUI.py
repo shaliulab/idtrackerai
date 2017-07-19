@@ -192,7 +192,7 @@ if __name__ == '__main__':
             video.save()
             print("Blobs saved")
             #take a look to the resulting fragmentation
-            #fragmentation_inspector(video, blobs)
+            # fragmentation_inspector(video, blobs)
         else:
             # Update folders and paths from previous video_object
             cv2.namedWindow('Bars')
@@ -239,8 +239,8 @@ if __name__ == '__main__':
         #############################################################
         print("\n**** Pretraining ****\n")
         if not loadPreviousDict['pretraining']:
-            #pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
-            pretrain_flag = 'n'
+
+            pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
                 #number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
@@ -359,7 +359,7 @@ if __name__ == '__main__':
                                         check_for_loss_plateau = True,
                                         save_summaries = True,
                                         print_flag = False,
-                                        plot_flag = False,
+                                        plot_flag = True,
                                         global_step = global_step,
                                         first_accumulation_flag = accumulation_manager == 0)
                 # update used_for_training flag to True for fragments used
@@ -370,6 +370,15 @@ if __name__ == '__main__':
                 accumulation_manager.assign_identities_to_accumulated_global_fragments(blobs)
                 # update the list of individual fragments that have been used for training
                 accumulation_manager.update_individual_fragments_used()
+                # Check uniqueness global_fragments
+                for global_fragment in global_fragments:
+                    if global_fragment._used_for_training == True and not global_fragment.is_unique:
+                        print("is unique ", global_fragment.is_unique)
+                        print("global_fragment ids ", global_fragment._temporary_ids)
+                        print("global_fragment assigned ids, ", global_fragment._ids_assigned)
+                        raise ValueError("This global Fragment is not unique")
+                    elif global_fragment._used_for_training == True:
+                        print("this global fragment used for training is unique ", global_fragment.is_unique)
                 # Set accumulation params for rest of the accumulation
                 #take images from global fragments not used in training (in the remainder test global fragments)
                 candidates_next_global_fragments = [global_fragment for global_fragment in global_fragments if not global_fragment.used_for_training]
@@ -466,6 +475,12 @@ if __name__ == '__main__':
                     print("All the global fragments have been used for accumulation")
                     break
 
+                # get predictions for images in test global fragments
+                assigner = assign(net, video, images, print_flag = True)
+                accumulation_manager.split_predictions_after_network_assignment(assigner._predictions, assigner._softmax_probs, indices_to_split)
+                # assign identities to the global fragments based on the predictions
+                accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_indices)
+                accumulation_manager.update_counter()
 
             print("there are no more acceptable global_fragments for training\n")
 

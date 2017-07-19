@@ -29,14 +29,9 @@ def compute_P1_individual_fragment_from_frequencies(frequencies):
     denominator = np.sum(numerator)
     # Compute P1 and check that it is not 0. for any identity
     P1_of_fragment = numerator / denominator
-    if np.any(P1_of_fragment == 0.):
-        P1_of_fragment[P1_of_fragment == 0.] = MIN_FLOAT
-    if np.any(P1_of_fragment == 0.):
-        raise ValueError('P1_of_fragment cannot be 0')
+    P1_of_fragment[P1_of_fragment == 0.] = MIN_FLOAT
     # Change P1 that are 1. for 0.9999 so that we do not have problems when computing P2
     P1_of_fragment[P1_of_fragment == 1.] = 0.99999999999999
-    if np.any(P1_of_fragment == 1.):
-        raise ValueError('P1_of_fragment cannot be 1')
     return P1_of_fragment
 
 def compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video):
@@ -47,9 +42,9 @@ def compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video):
     numerator = np.asarray(blob.P1_vector) * np.prod(1. - coexisting_blobs_P1_vectors, axis = 0)
     denominator = np.sum(numerator)
     if denominator == 0:
+        print("P1 of blob, ", blob.P1_vector)
+        print("coexisting_blobs_P1_vectors, ", coexisting_blobs_P1_vectors)
         raise ValueError('denominator of P2 is 0')
 
     P2 = numerator / denominator
-    # Compute logP2
-    logP2 = np.log(np.asarray(blob.P1_vector)) + np.sum(np.log(1. - coexisting_blobs_P1_vectors),axis=0)
     return P2
