@@ -475,13 +475,6 @@ if __name__ == '__main__':
                     print("All the global fragments have been used for accumulation")
                     break
 
-                # get predictions for images in test global fragments
-                assigner = assign(net, video, images, print_flag = True)
-                accumulation_manager.split_predictions_after_network_assignment(assigner._predictions, assigner._softmax_probs, indices_to_split)
-                # assign identities to the global fragments based on the predictions
-                accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_indices)
-                accumulation_manager.update_counter()
-
             print("there are no more acceptable global_fragments for training\n")
 
             video._accumulation_finished = True

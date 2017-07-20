@@ -35,8 +35,8 @@ if __name__ == '__main__':
     for i, mean_frames in enumerate(frames_per_fragment_conditions):
         accuracies = np.squeeze(acc[:,i,:])
         print(accuracies)
-        acc_median = np.nanmedian(accuracies,axis = 1)
-        ax.plot(np.asarray([0,1,2,3,4,5]),acc_median,label = str(mean_frames), color = np.asarray(RGB_tuples[i]))
+        acc_mean = np.nanmedian(accuracies,axis = 1)
+        ax.plot(np.asarray([0,1,2,3,4,5]),acc_mean,label = str(mean_frames), color = np.asarray(RGB_tuples[i]))
         for j in range(10):
             ax.scatter(np.asarray([0,1,2,3,4,5])+epsilon[i], accuracies[:,j], color = np.asarray(RGB_tuples[i]), alpha = .3)
 
@@ -49,3 +49,4 @@ if __name__ == '__main__':
                                 'noPretrain-Accum-certainty0.9',
                                 'Pretrain-noAccum',
                                 'Pretrain-Accum-certainty0.5'])
+    ax.set_ylim(0.75,1.)
