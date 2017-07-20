@@ -7,7 +7,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-BATCH_SIZE = 5000 # 32x32 = 1024bytes x BATCH_SIZE ~ 100MB
+BATCH_SIZE = 500 # 32x32 = 1024bytes x BATCH_SIZE ~ 100MB
 KMEANS_NUMBER_OF_STEPS = 100
 
 class GetPrediction(object):

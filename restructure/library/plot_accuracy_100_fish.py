@@ -4,26 +4,21 @@ import numpy as np
 
 if __name__ == '__main__':
 
-    results = pd.read_pickle('library/results_data_frame_all.pkl')
-    results_on_themis = pd.read_pickle('library/results_data_frame_on_themis.pkl')
+    results = pd.read_pickle('library/results_data_frame_all_2.pkl')
     tests_names = [ 'correlated_images_DEF_aaa_CNN0_noPretrain_noAccum_100fish_3000frames_gaussian',
-                           'correlated_images_DEF_aaa_CNN0_noPretrain_Accum01_100fish_3000frames_gaussian',
-                           'correlated_images_DEF_aaa_CNN0_noPretrain_Accum05_100fish_3000frames_gaussian',
-                           'correlated_images_DEF_aaa_CNN0_noPretrain_Accum09_100fish_3000frames_gaussian',
-                           'correlated_images_DEF_aaa_CNN0_Pretrain_noAccum_100fish_3000frames_gaussian',
-                           'correlated_images_DEF_aaa_CNN0_Pretrain_Accum05_100fish_3000frames_gaussian']
+                    'correlated_images_DEF_aaa_CNN0_noPretrain_Accum01_100fish_3000frames_gaussian',
+                    'correlated_images_DEF_aaa_CNN0_noPretrain_Accum05_100fish_3000frames_gaussian',
+                    'correlated_images_DEF_aaa_CNN0_noPretrain_Accum09_100fish_3000frames_gaussian',
+                    'correlated_images_DEF_aaa_CNN0_Pretrain_noAccum_100fish_3000frames_gaussian',
+                    'correlated_images_DEF_aaa_CNN0_Pretrain_Accum05_100fish_3000frames_gaussian']
     frames_per_fragment_conditions = list(results.frames_per_fragment.unique())
     num_frames_conditions = len(frames_per_fragment_conditions)
     num_repetitions = len(list(results.repetition.unique()))
 
     acc = np.ones((6,5,10))*np.nan
     for i, test_name in enumerate(tests_names):
-        if test_name == 'correlated_images_DEF_aaa_CNN0_Pretrain_Accum05_100fish_3000frames_gaussian':
-            results_test = results_on_themis[results_on_themis.test_name == test_name]
-            acc[i,:2,:] = np.reshape(np.asarray(results_test.accuracy)[:20],(2,10))
-        else:
-            results_test = results[results.test_name == test_name]
-            acc[i,:,:] = np.reshape(np.asarray(results_test.accuracy),(num_frames_conditions,num_repetitions))
+        results_test = results[results.test_name == test_name]
+        acc[i,:,:] = np.reshape(np.asarray(results_test.accuracy),(num_frames_conditions,num_repetitions))
 
     plt.ion()
     fig, ax = plt.subplots(1)
