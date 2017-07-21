@@ -32,8 +32,8 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
     training_dataset.crop_images(image_size = video.portrait_size[0])
     validation_dataset.crop_images(image_size = video.portrait_size[0])
     # Standarize images
-    training_dataset.standarize_images()
-    validation_dataset.standarize_images()
+    # training_dataset.standarize_images()
+    # validation_dataset.standarize_images()
     # Convert labels to one hot vectors
     training_dataset.convert_labels_to_one_hot()
     validation_dataset.convert_labels_to_one_hot()
@@ -51,7 +51,8 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
                         print_flag = print_flag)
     #set criteria to stop the training
     stop_training = Stop_Training(net.params.number_of_animals,
-                                check_for_loss_plateau = check_for_loss_plateau)
+                                check_for_loss_plateau = check_for_loss_plateau,
+                                first_accumulation_flag = first_accumulation_flag)
 
     while not stop_training(store_training_accuracy_and_loss_data,
                             store_validation_accuracy_and_loss_data,
@@ -70,6 +71,7 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
         validator._epochs_completed += 1
 
     global_step += trainer.epochs_completed
+    print('\nvalidation losses: ', store_validation_accuracy_and_loss_data.loss)
     # plot if asked
     if plot_flag:
         global_fragments_used_for_training = [global_fragment for global_fragment in global_fragments

@@ -339,6 +339,11 @@ def SegmentationPreview(video):
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
 
+    def resizePortraitDown(res):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+
     cv2.createTrackbar('start', 'Bars', 0, numFrames-1, scroll )
     cv2.createTrackbar('minTh', 'Bars', 0, 255, changeMinTh)
     cv2.createTrackbar('maxTh', 'Bars', 0, 255, changeMaxTh)
