@@ -29,9 +29,13 @@ def compute_P1_individual_fragment_from_frequencies(frequencies):
     denominator = np.sum(numerator)
     # Compute P1 and check that it is not 0. for any identity
     P1_of_fragment = numerator / denominator
-    P1_of_fragment[P1_of_fragment == 0.] = MIN_FLOAT
+    if np.all(P1_of_fragment == 0.):
+        P1_of_fragment[P1_of_fragment == 0.] = 1/len(P1_of_fragment) #if all the frequencies are very high then the denominator is very big and all the P1 are 0. so we set then to random.
+    else:
+        P1_of_fragment[P1_of_fragment == 0.] = MIN_FLOAT
     # Change P1 that are 1. for 0.9999 so that we do not have problems when computing P2
     P1_of_fragment[P1_of_fragment == 1.] = 0.99999999999999
+
     return P1_of_fragment
 
 def compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video):

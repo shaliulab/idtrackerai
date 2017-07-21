@@ -11,14 +11,14 @@ BATCH_SIZE = 5000 # 32x32 = 1024bytes x BATCH_SIZE ~ 100MB
 KMEANS_NUMBER_OF_STEPS = 100
 
 class GetPrediction(object):
-    def __init__(self, video, data_set,
+    def __init__(self, data_set,
                 print_flag = True):
         # Data set
         self.data_set = data_set
         self._softmax_probs = []
         self._predictions = []
         self._fc_vectors = []
-        self.batch_size =
+        self.batch_size = BATCH_SIZE
 
 
     def next_batch(self, batch_size):

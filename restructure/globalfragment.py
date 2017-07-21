@@ -32,7 +32,7 @@ def compute_model_area_and_body_length(blobs_in_video, number_of_animals, std_to
     median_area = np.median(areas_and_body_length[:,0])
     mean_area = np.mean(areas_and_body_length[:,0])
     std_area = np.std(areas_and_body_length[:,0])
-    maximum_body_length = np.max(areas_and_body_length[:,1])
+    maximum_body_length = np.median(areas_and_body_length[:,1])
     return ModelArea(mean_area, median_area, std_area), maximum_body_length
 
 class ModelArea(object):

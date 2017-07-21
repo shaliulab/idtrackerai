@@ -236,7 +236,7 @@ class AccumulationManager(object):
                 # if the individual fragment is in the list of candidates we check the certainty
                 index_in_candidate_individual_fragments = list(self.candidate_individual_fragments_identifiers).index(individual_fragment_identifier)
                 individual_fragment_certainty =  self.certainty_of_candidate_individual_fragments[index_in_candidate_individual_fragments]
-                if individual_fragment_certainty <= 0.1:
+                if individual_fragment_certainty <= 0.9:
                     # if the certainty of the individual fragment is not high enough
                     # we set the global fragment not to be acceptable for training
                     # print("it is not certain enough: ", individual_fragment_certainty)
