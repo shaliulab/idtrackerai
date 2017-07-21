@@ -154,14 +154,7 @@ def get_portrait_fly(video, miniframe, pixels, bb, portraitSize):
     :param bb: Coordinates of the left-top corner of miniframe in the big frame
     :param maximum_body_length: maximum body length of the blobs. It will be the size of the width and the height of the frame feed it to the CNN
     """
-    # ellipse = cv2.fitEllipse(cnt)
-    # center = ellipse[0]
-    # print("ellipse center before: ", center)
-    # center = full2miniframe(center, bb)
-    # center = np.array([int(center[0]), int(center[1])])
-    # rot_ang = ellipse[2]
-    # print("ellipse center and angle: ", center, rot_ang)
-
+    miniframe = only_blob_pixels(video, miniframe, pixels, bb)
     pca = PCA()
     pxs = np.unravel_index(pixels,(video._height,video._width))
     pxs1 = np.asarray(zip(pxs[0],pxs[1]))
@@ -189,6 +182,21 @@ def get_portrait_fly(video, miniframe, pixels, bb, portraitSize):
     h_or_t_1 = np.array([np.cos(rot_ang_rad), np.sin(rot_ang_rad)]) * rot_ang_rad
     h_or_t_2 = - h_or_t_1
     return portrait, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int'))
+
+def only_blob_pixels(video, miniframe, pixels, bb):
+    pxs = np.array(np.unravel_index(pixels,(video._height,video._width))).T
+    # print("pixels ", pxs)
+    pxs = np.array([pxs[:, 0] - bb[0][1], pxs[:, 1] - bb[0][0]])
+    temp_image = np.zeros_like(miniframe).astype('uint8')
+    temp_image[pxs[0,:], pxs[1,:]] = 255
+    temp_image = cv2.dilate(temp_image, np.ones((3,3)).astype('uint8'), iterations = 1)
+    rows, columns = np.where(temp_image == 255)
+    dilated_pixels = np.array([rows, columns])
+    print("dilated pixels ", dilated_pixels.shape)
+
+    temp_image[dilated_pixels[0,:], dilated_pixels[1,:]] = miniframe[dilated_pixels[0,:], dilated_pixels[1,:]]
+    return temp_image
+
 
 def reaper(videoPath, frameIndices, animal_type):
     # only function called from idTrackerDeepGUI
