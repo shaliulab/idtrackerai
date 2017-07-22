@@ -195,7 +195,7 @@ if __name__ == '__main__':
                 videoInfo = loadFile(videoPaths[0], 'videoInfo')
                 height = videoInfo['height']
                 width = videoInfo['width']
-                portrait(segmPaths, dfGlobal, preprocParams['preprocessing_type'], height, width)
+                portrait(segmPaths, dfGlobal, height, width)
             # portraits = loadFile(videoPaths[0], 'portraits', time=0)
 
         if buildLib == 'y' or buildLib == '':
