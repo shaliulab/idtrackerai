@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import sys
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
-from get_portraits import getPortrait, get_portrait_fly
+from get_portraits import get_portrait, get_body
 import itertools
 import numpy as np
 from tqdm import tqdm
