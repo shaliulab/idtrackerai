@@ -20,9 +20,9 @@ import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
 from segmentation import segmentVideo, blobExtractor
-from get_portraits import getPortrait, cropPortrait, get_portrait_fly
+from get_portraits import get_portrait, get_body
 # from video_utils import *
-from py_utils import get_spaced_colors_util
+from py_utils import get_spaced_colors_util, saveFile, loadFile
 
 """
 Display messages and errors
@@ -209,14 +209,48 @@ def ROISelectorPreview(video, old_video, usePreviousROI):
     mask = checkROI(video, old_video, usePreviousROI, frameGray)
     return mask
 
+
+def checkROI_library(useROI, usePreviousROI, frame, videoPath):
+    ''' Select ROI '''
+    if useROI:
+        if usePreviousROI:
+            mask = loadFile(videoPath, 'ROI')
+            mask = np.asarray(mask)
+            centers= loadFile(videoPath, 'centers')
+            centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
+        else:
+            print('\n Selecting ROI ...')
+            mask, centers = getMask(frame)
+            # mask = adaptROI(mask)
+    else:
+        print('\n No ROI selected ...')
+        mask = np.ones_like(frame)*255
+        centers = []
+    return mask, centers
+
+def ROISelectorPreview_library(videoPaths, useROI, usePreviousROI, numSegment=0):
+    """
+    loads a preview of the video for manual fine-tuning
+    """
+    cap2 = cv2.VideoCapture(videoPaths[0])
+    flag, frame = cap2.read()
+    cap2.release()
+    height = frame.shape[0]
+    width = frame.shape[1]
+    frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    mask, centers = checkROI_library(useROI, usePreviousROI, frameGray, videoPaths[0])
+    saveFile(videoPaths[0], mask, 'ROI')
+    saveFile(videoPaths[0], centers, 'centers')
+    return width, height, mask, centers
+
 ''' ****************************************************************************
 First preview numAnimals, inspect parameters for segmentation and portraying
 **************************************************************************** '''
 def SegmentationPreview(video):
     if video.number_of_animals == None:
         video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
-    if not video.animal_type:
-        video.animal_type = getInput('Animal type','What animal are you tracking? Fish or fly?')
+    if not video.preprocessing_type:
+        video.preprocessing_type = getInput('Preprocessing type','What preprocessing do you want to apply? portrait, body or body_blob?')
         #exception for unsupported animal is managed in the class Video
     global cap, currentSegment
     currentSegment = 0
@@ -259,19 +293,21 @@ def SegmentationPreview(video):
         print("maximum_body_length: ", maximum_body_length)
         print("areas: ", areas)
 
-        if video.animal_type == 'fish':
+        if video.preprocessing_type == 'portrait':
             portraitSize = int(maximum_body_length/2)
             portraitSize =  portraitSize + portraitSize%2 #this is to make the portraitSize even
-        elif video.animal_type == 'fly':
+        elif video.preprocessing_type == 'body':
             portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
             portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
 
         while j < numPortraits:
             if j < numGoodContours:
-                if video._animal_type == 'fish':
-                    portrait,_,_= getPortrait(miniFrames[j],goodContours[j],bbs[j],portraitSize)
-                elif video._animal_type == 'fly' or video._animal_type == 'ant':
-                    portrait, _, _ = get_portrait_fly(video, miniFrames[j], pixels[j], bbs[j], portraitSize)
+                if video._preprocessing_type == 'portrait':
+                    portrait, _, _= get_portrait(miniFrames[j],goodContours[j],bbs[j],portraitSize)
+                elif video._preprocessing_type == 'body' or video._preprocessing_type == 'ant':
+                    portrait, _, _ = get_body(video, miniFrames[j], pixels[j], bbs[j], portraitSize)
+                elif preprocessing_type == 'body_blob':
+                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
             else:
                 portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
             rowPortrait.append(portrait)
@@ -393,6 +429,211 @@ def SegmentationPreview(video):
     cv2.destroyAllWindows()
     cv2.waitKey(1)
 
+def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, preprocParams, frameIndices, size = 1):
+
+    ### FIXME Currently the scale factor of the image is not passed everytime we change the segment. It need to be changed so that we do not need to resize everytime we open a new segmen.
+    minArea = preprocParams['minArea']
+    maxArea = preprocParams['maxArea']
+    minThreshold = preprocParams['minThreshold']
+    maxThreshold = preprocParams['maxThreshold']
+    numAnimals = preprocParams['numAnimals']
+    preprocessing_type = preprocParams['preprocessing_type']
+
+    if numAnimals == None:
+        numAnimals = getInput('Number of animals','Type the number of animals')
+        numAnimals = int(numAnimals)
+
+    if preprocessing_type is None:
+        preprocessing_type = getInput('Preprocessing type','What kind of preprocessing do you want? portrait, body or body_blob?')
+
+    if preprocessing_type != 'portrait' and preprocessing_type != 'body' and preprocessing_type != 'body_blob':
+        # print(len(preprocessing_type))
+        raise ValueError('The animal you selected is not trackable yet :)')
+
+    global cap, currentSegment
+    currentSegment = 0
+    cap = cv2.VideoCapture(videoPaths[0])
+    numFrames = len(frameIndices)
+
+    def thresholder(minTh, maxTh):
+        toile = np.zeros_like(frameGray, dtype='uint8')
+        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, bkg, mask, useBkg)
+        #contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+        maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
+        minArea = cv2.getTrackbarPos('minArea', 'Bars')
+        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray, minArea, maxArea, height, width)
+        cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
+        shower = cv2.addWeighted(frameGray,1,toile,.5,0)
+        showerCopy = shower.copy()
+        # print showerCopy.shape
+        resUp = cv2.getTrackbarPos('ResUp', 'Bars')
+        resDown = cv2.getTrackbarPos('ResDown', 'Bars')
+        showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
+        showerCopy = cv2.resize(showerCopy,None, fx = np.true_divide(1,resDown), fy = np.true_divide(1,resDown))
+        numColumns = 5
+        numGoodContours = len(goodContours)
+        numBlackPortraits = numColumns - numGoodContours % numColumns
+        numPortraits = numGoodContours + numBlackPortraits
+        j = 0
+        maximum_body_length = 70
+        if estimated_body_lengths:
+            maximum_body_length = np.max(estimated_body_lengths)
+        portraitsMat = []
+        rowPortrait = []
+
+        print("num blobs detected: ", numGoodContours)
+        print("maximum_body_length: ", maximum_body_length)
+        print("areas: ", areas)
+
+        if preprocessing_type == 'portrait':
+            portraitSize = int(maximum_body_length/2)
+            portraitSize =  portraitSize + portraitSize%2 #this is to make the portraitSize even
+        elif preprocessing_type == 'body' or preprocessing_type == 'body_blob':
+            portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
+            portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
+
+        while j < numPortraits:
+            if j < numGoodContours:
+                if preprocessing_type == 'portrait':
+                    portrait,_,_= get_portrait(miniFrames[j],goodContours[j],bbs[j],portraitSize)
+                elif preprocessing_type == 'body':
+                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = False)
+                elif preprocessing_type == 'body_blob':
+                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
+            else:
+                portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
+            rowPortrait.append(portrait)
+            if (j+1) % numColumns == 0:
+                portraitsMat.append(np.hstack(rowPortrait))
+                rowPortrait = []
+            j += 1
+
+        portraitsMat = np.vstack(portraitsMat)
+        cv2.imshow('Bars',np.squeeze(portraitsMat))
+        cv2.imshow('IdPlayer', showerCopy)
+        cv2.moveWindow('Bars', 10,10 )
+        cv2.moveWindow('IdPlayer', 200, 10 )
+
+    def scroll(trackbarValue):
+        global frame, avFrame, frameGray, cap, currentSegment
+
+        # Select segment dataframe and change cap if needed
+        sNumber = frameIndices.loc[trackbarValue,'segment']
+        sFrame = frameIndices.loc[trackbarValue,'frame']
+
+        if sNumber != currentSegment: # we are changing segment
+            print('Changing segment...')
+            currentSegment = sNumber
+
+            if len(videoPaths) > 1:
+                cap = cv2.VideoCapture(videoPaths[sNumber-1])
+
+        #Get frame from video file
+        if len(videoPaths) > 1:
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame)
+        else:
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+        ret, frame = cap.read()
+
+        frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        avIntensity = np.float32(np.mean(frameGray))
+        avFrame = np.divide(frameGray,avIntensity)
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+        pass
+
+
+    def changeMinTh(minTh):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+        pass
+
+    def changeMaxTh(maxTh):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+        pass
+
+    def changeMinArea(x):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+        pass
+
+    def changeMaxArea(maxArea):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+        pass
+
+    def resizeImageUp(res):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+        pass
+
+    def resizeImageDown(res):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+        pass
+
+    cv2.createTrackbar('start', 'Bars', 0, numFrames-1, scroll )
+    cv2.createTrackbar('minTh', 'Bars', 0, 255, changeMinTh)
+    cv2.createTrackbar('maxTh', 'Bars', 0, 255, changeMaxTh)
+    cv2.createTrackbar('minArea', 'Bars', 0, 1000, changeMinArea)
+    cv2.createTrackbar('maxArea', 'Bars', 0, 60000, changeMaxArea)
+    cv2.createTrackbar('ResUp', 'Bars', 1, 20, resizeImageUp)
+    cv2.createTrackbar('ResDown', 'Bars', 1, 20, resizeImageDown)
+
+    defFrame = 1
+    defMinTh = minThreshold
+    defMaxTh = maxThreshold
+    defMinA = minArea
+    defMaxA = maxArea
+    defRes = size
+
+    scroll(defFrame)
+    cv2.setTrackbarPos('start', 'Bars', defFrame)
+    changeMaxArea(defMaxA)
+    cv2.setTrackbarPos('maxArea', 'Bars', defMaxA)
+    changeMinArea(defMinA)
+    cv2.setTrackbarPos('minArea', 'Bars', defMinA)
+    changeMinTh(defMinTh)
+    cv2.setTrackbarPos('minTh', 'Bars', defMinTh)
+    changeMaxTh(defMaxTh)
+    cv2.setTrackbarPos('maxTh', 'Bars', defMaxTh)
+    resizeImageUp(defRes)
+    cv2.setTrackbarPos('ResUp', 'Bars', defRes)
+    resizeImageDown(defRes)
+    cv2.setTrackbarPos('ResDown', 'Bars', defRes)
+
+    #start = cv2.getTrackbarPos('start','Bars')
+    #minThresholdStart = cv2.getTrackbarPos('minTh', 'Bars')
+    #minAreaStart = cv2.getTrackbarPos('minArea', 'Bars')
+    #maxAreaStart = cv2.getTrackbarPos('maxArea', 'Bars')
+
+    cv2.waitKey(0)
+
+    preprocParams = {
+                'minThreshold': cv2.getTrackbarPos('minTh', 'Bars'),
+                'maxThreshold': cv2.getTrackbarPos('maxTh', 'Bars'),
+                'minArea': cv2.getTrackbarPos('minArea', 'Bars'),
+                'maxArea': cv2.getTrackbarPos('maxArea', 'Bars'),
+                'numAnimals': numAnimals,
+                'preprocessing_type':preprocessing_type}
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+    cv2.waitKey(1)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
+
+    return preprocParams
+
 def selectPreprocParams(video, old_video, usePreviousPrecParams):
     if not usePreviousPrecParams:
         video._min_threshold = 0
@@ -410,9 +651,31 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         video._min_area = old_video._min_area
         video._max_area = old_video._max_area
         video._resize = old_video._resize
-        video.animal_type = old_video.animal_type
+        video.preprocessing_type = old_video.preprocessing_type
         video._number_of_animals = old_video._number_of_animals
         video._has_preprocessing_parameters = True
+
+def selectPreprocParams_library(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg, frameIndices):
+    if not usePreviousPrecParams:
+        videoPath = videoPaths[0]
+        preprocParams = {
+                    'minThreshold': 0,
+                    'maxThreshold': 155,
+                    'minArea': 150,
+                    'maxArea': 60000,
+                    'numAnimals': None,
+                    'preprocessing_type': None
+                    }
+        preprocParams = SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, preprocParams, frameIndices)
+
+        cv2.waitKey(1)
+        cv2.destroyAllWindows()
+        cv2.waitKey(1)
+
+        saveFile(videoPaths[0], preprocParams, 'preprocparams',hdfpkl='pkl')
+    else:
+        preprocParams = loadFile(videoPaths[0], 'preprocparams',hdfpkl='pkl')
+    return preprocParams
 ''' ****************************************************************************
 Fragmentation inspector
 *****************************************************************************'''
@@ -508,6 +771,99 @@ def fragmentation_inspector(video, blobs_in_video):
     cv2.destroyAllWindows()
     cv2.waitKey(1)
 
+def playFragmentation_library(videoPaths,segmPaths,dfGlobal,visualize = False):
+    from fragmentation import computeFrameIntersection ### FIXME For some reason it does not import well in the top and I have to import it here
+    """
+    IdInspector
+    """
+    if visualize:
+        info = loadFile(videoPaths[0], 'videoInfo', hdfpkl = 'pkl')
+        width = info['width']
+        height = info['height']
+        numAnimals = info['numAnimals']
+        maxNumBlobs = info['maxNumBlobs']
+        numSegment = 0
+        frameIndices = loadFile(videoPaths[0], 'frameIndices')
+        path = videoPaths[numSegment]
+
+        def IdPlayerFragmentation(videoPaths,segmPaths,numAnimals, width, height,frameIndices):
+
+            global segmDf, cap, currentSegment
+            segmDf,sNumber = loadFile(segmPaths[0], 'segmentation')
+            currentSegment = int(sNumber)
+            print('Visualizing video %s' % path)
+            cap = cv2.VideoCapture(videoPaths[0])
+            numFrames = len(frameIndices)
+            # numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+
+            def onChange(trackbarValue):
+                global segmDf, cap, currentSegment
+
+                # Select segment dataframe and change cap if needed
+                sNumber = frameIndices.loc[trackbarValue,'segment']
+                sFrame = frameIndices.loc[trackbarValue,'frame']
+
+                if sNumber != currentSegment: # we are changing segment
+                    print('Changing segment...')
+                    prevSegmDf, _ = loadFile(segmPaths[sNumber-2], 'segmentation')
+                    segmDf, _ = loadFile(segmPaths[sNumber-1], 'segmentation')
+                    currentSegment = sNumber
+
+                    if len(videoPaths) > 1:
+                        cap = cv2.VideoCapture(videoPaths[sNumber-1])
+
+                #Get frame from video file
+                if len(videoPaths) > 1:
+                    cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame)
+                else:
+                    cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+                ret, frame = cap.read()
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                frameCopy = frame.copy()
+
+                # print('**********************************')
+                # print('sNumber, ', sNumber)
+                # print('sFrame, ', sFrame)
+                # print('trackbarValue, ', trackbarValue)
+                #
+                # permutation = dfGlobal.loc[trackbarValue,'permutations']
+                # centroids = dfGlobal.loc[trackbarValue,'centroids']
+                # pixelsA = segmDf.loc[sFrame-1,'pixels']
+                # pixelsB = segmDf.loc[sFrame,'pixels']
+                # print('------------------------------------------------------------')
+                # print('previous frame, ', str(trackbarValue-1), ', permutation, ', dfGlobal.loc[trackbarValue-1,'permutations'])
+                # print('current frame, ', str(trackbarValue), ', permutation, ', permutation)
+                # trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
+                # print('overlapMat, ')
+                # print(overlapMat)
+                # print('permutation, ', s)
+
+                #Color to gray scale
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                font = cv2.FONT_HERSHEY_SIMPLEX
+
+                # Plot segmentated blobs
+                for i, pixel in enumerate(pixelsB):
+                    px = np.unravel_index(pixel,(height,width))
+                    frame[px[0],px[1]] = 255
+
+                for i, centroid in enumerate(centroids):
+                    cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
+
+                cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
+
+                # Visualization of the process
+                cv2.imshow('IdPlayerFragmentation',frame)
+                pass
+
+            cv2.namedWindow('IdPlayerFragmentation')
+            cv2.createTrackbar( 'start', 'IdPlayerFragmentation', 0, numFrames-1, onChange )
+
+            onChange(1)
+            cv2.waitKey()
+
+        IdPlayerFragmentation(videoPaths,segmPaths,numAnimals, width, height,frameIndices)
+
 ''' ****************************************************************************
 Frame by frame identification inspector
 *****************************************************************************'''
@@ -577,7 +933,6 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                     if i < number_of_previous-1:
                         # print(type(blob_identity))
                         if type(blob_identity) is not 'list' and blob_identity is not None and blob_identity != 0:
-                            # print('adding shadows to fish')
                             frame[pxs[0], pxs[1], :] = np.multiply(colors[blob_identity], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
                         elif type(blob_identity) is 'list' or blob_identity is None or blob_identity == 0:
                             # print('adding shadows to crossing')

@@ -167,8 +167,6 @@ def boundingBox_ROI2Full(bb, ROI):
 def getCentroid(cnt):
     M = cv2.moments(cnt)
 
-    # NOTE: do not change to integers. change only in visualisation
-    # NOTE: float32 give more precision for analysis
     x = M['m10']/M['m00']
     y = M['m01']/M['m00']
     # print(x,y)
