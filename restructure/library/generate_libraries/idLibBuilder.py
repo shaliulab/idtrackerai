@@ -281,7 +281,7 @@ if __name__ == '__main__':
         print 'labelsIMDB, ', np.unique(labelsIMDB)
         print 'num images per indiv, ', [np.sum(labelsIMDB == i) for i in np.unique(labelsIMDB)]
 
-        nameDatabase =  strain + '_' + ageInDpf + '_' + str(numIndivIMDB) + 'indiv_' + str(int(minimalNumImagesPerIndiv)) + 'ImPerInd'
+        nameDatabase =  strain + '_' + ageInDpf + '_' + str(numIndivIMDB) + 'indiv_' + str(int(minimalNumImagesPerIndiv)) + 'ImPerInd_' + 'portraits'
         if not os.path.exists(libPath + '/IMDBs'): # Checkpoint folder does not exist
             os.makedirs(libPath + '/IMDBs') # we create a checkpoint folder
         else:
@@ -303,21 +303,21 @@ if __name__ == '__main__':
 
         dset1 = grp.create_dataset("labels", labelsIMDB.shape, dtype='i')
         dset2 = grp.create_dataset("portraits", portraitsIMDB.shape, dtype='f')
-        dset3 = grp.create_dataset("bodies", bodiesIMDB.shape, dtype='f')
-        dset4 = grp.create_dataset("bodyblobs", bodyblobsIMDB.shape, dtype='f')
-        dset5 = grp.create_dataset("centroids", centroidsIMDB.shape, dtype='f')
-        dset6 = grp.create_dataset("noses", nosesIMDB.shape, dtype='f')
-        dset7 = grp.create_dataset("head_centroids", head_centroidsIMDB.shape, dtype='f')
-        dset8 = grp.create_dataset("areas", areasIMDB.shape, dtype='f')
+        #dset3 = grp.create_dataset("bodies", bodiesIMDB.shape, dtype='f')
+        #dset4 = grp.create_dataset("bodyblobs", bodyblobsIMDB.shape, dtype='f')
+        dset3 = grp.create_dataset("centroids", centroidsIMDB.shape, dtype='f')
+        dset4 = grp.create_dataset("noses", nosesIMDB.shape, dtype='f')
+        dset5 = grp.create_dataset("head_centroids", head_centroidsIMDB.shape, dtype='f')
+        dset6 = grp.create_dataset("areas", areasIMDB.shape, dtype='f')
 
         dset1[...] = labelsIMDB
         dset2[...] = portraitsIMDB
-        dset3[...] = bodiesIMDB
-        dset4[...] = bodyblobsIMDB
-        dset5[...] = centroidsIMDB
-        dset6[...] = nosesIMDB
-        dset7[...] = head_centroidsIMDB
-        dset8[...] = areasIMDB
+        #dset3[...] = bodiesIMDB
+        #dset4[...] = bodyblobsIMDB
+        dset3[...] = centroidsIMDB
+        dset4[...] = nosesIMDB
+        dset5[...] = head_centroidsIMDB
+        dset6[...] = areasIMDB
 
         grp.attrs['originalMatPath'] = libPath
         grp.attrs['numIndiv'] = numIndivIMDB
