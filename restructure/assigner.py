@@ -14,20 +14,28 @@ from get_predictions import GetPrediction
 from blob import get_images_from_blobs_in_video
 from visualize_embeddings import EmbeddingVisualiser
 from globalfragment import get_images_and_labels_from_global_fragment
+<<<<<<< HEAD
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob,\
                                     compute_P1_individual_fragment_from_blob,\
                                     compute_identification_frequencies_individual_fragment,\
                                     is_assignment_ambiguous
+=======
+from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob, compute_P1_individual_fragment_from_frequencies, compute_identification_frequencies_individual_fragment
+>>>>>>> ffc5c9ebacc232a42c52b1d8a41cd233e6bc74bb
 
 def assign(net, video, images, print_flag):
+    print("assigning identities to images...")
     # build data object
     images = np.expand_dims(np.asarray(images), axis = 3)
     data = DataSet(net.params.number_of_animals, images)
     # Instantiate data_set
-    data.standarize_images()
+    # print("standarizing...")
+    # data.standarize_images()
     # Crop images from 36x36 to 32x32 without performing data augmentation
+    print("cropping...")
     data.crop_images(image_size = video.portrait_size[0])
     # Train network
+    print("getting predictions...")
     assigner = GetPrediction(data, print_flag = print_flag)
     assigner.get_predictions_softmax(net.predict)
     return assigner
@@ -53,7 +61,7 @@ def compute_P1_for_blobs_in_video(video, blobs_in_video):
                 identities_in_fragment = np.asarray(blob.identities_in_fragment())
                 frequencies_in_fragment = compute_identification_frequencies_individual_fragment(identities_in_fragment, video.number_of_animals)
                 blob._frequencies_in_fragment = frequencies_in_fragment
-                blob._P1_vector = compute_P1_individual_fragment_from_blob(frequencies_in_fragment)
+                blob._P1_vector = compute_P1_individual_fragment_from_frequencies(frequencies_in_fragment)
                 blob.update_P1_in_fragment()
 
 def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):

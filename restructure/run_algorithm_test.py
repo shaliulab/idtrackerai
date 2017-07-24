@@ -58,6 +58,7 @@ if __name__ == '__main__':
     e.g.
     run_library_tests.py 1 1 P None 0 .5 .1 DEF afs 1_2 (running in the cluster, job1, pretraining, libraries DEF, all individuals in library D and first half obf E second half of F, repetitions[1 2])
     '''
+    print('\n\n ********************************************* \n\n')
     print("cluster:", sys.argv[1])
     print("test_number:", sys.argv[2])
 
@@ -126,13 +127,6 @@ if __name__ == '__main__':
                         blobs = generate_list_of_blobs(portraits, centroids, config)
                         compute_fragment_identifier_and_blob_index(blobs, config.number_of_animals)
                         global_fragments = give_me_list_of_global_fragments(blobs, config.number_of_animals)
-                        # raise ValueError("check global fragments before runnin full test")
-                        # check consistency global fragments
-                        # number_of_fragments = frames_in_video/frames_in_fragment
-                        # if len(global_fragments) != number_of_fragments:
-                        #     print("len global_fragments: ", len(global_fragments))
-                        #     print("frames_in_video/frames_in_fragment: ", number_of_fragments)
-                        #     raise ValueError('The number of global fragments it is not consistent')
                         global_fragments_ordered = order_global_fragments_by_distance_travelled(global_fragments)
                         video._has_been_segmented = True
                         video._has_been_preprocessed = True
@@ -190,7 +184,6 @@ if __name__ == '__main__':
                         #############################################################
                         start = time.time()
                         print("\n**** Acumulation ****")
-
                         #create folder to store accumulation models
                         video.create_accumulation_folder()
                         #set network params for the accumulation model
@@ -244,13 +237,15 @@ if __name__ == '__main__':
                                                     print_flag = False,
                                                     plot_flag = False,
                                                     global_step = global_step,
-                                                    first_accumulation_flag = accumulation_manager == 0)
+                                                    first_accumulation_flag = accumulation_manager.counter == 0)
                             # update used_for_training flag to True for fragments used
                             accumulation_manager.update_global_fragments_used_for_training()
+                            # update the set of images used for training
                             accumulation_manager.update_used_images_and_labels()
-                            accumulation_manager.update_individual_fragments_used()
-                            # update the identity of the accumulated global fragments to their labels during training
+                            # assign identities fo the global fragments that have been used for training
                             accumulation_manager.assign_identities_to_accumulated_global_fragments(blobs)
+                            # update the list of individual fragments that have been used for training
+                            accumulation_manager.update_individual_fragments_used()
                             # Set accumulation params for rest of the accumulation
                             # net.params.restore_folder = video._accumulation_folder
                             #take images from global fragments not used in training (in the remainder test global fragments)
@@ -308,26 +303,37 @@ if __name__ == '__main__':
                         ####
                         #############################################################
                         print("\n**** Accuracies ****")
-                        number_correct_assignations = [0] * group_size
+                        number_of_correct_assignations = [0] * group_size
+                        number_assignations = [0]*group_size
                         number_of_identity_repetitions = 0
                         number_of_frames_with_repetitions = 0
                         number_of_identity_shifts_in_accumulated_frames = 0
                         number_of_blobs_assigned_in_accumulation = 0
                         number_of_not_assigned_blobs = [0] * group_size
+                        individual_fragments_badly_assigned_in_accumulation = []
+                        individual_fragments_that_are_repetitions = []
+                        individual_fragments = []
                         for frame_number, blobs_in_frame in enumerate(blobs):
                             identities_in_frame = []
                             frame_with_repetition = False
                             for i, blob in enumerate(blobs_in_frame):
+                                if blob._fragment_identifier not in individual_fragments:
+                                    individual_fragments.append(blob._fragment_identifier)
                                 if blob.is_a_fish_in_a_fragment:
+                                    number_assignations[i] += 1
                                     if blob._assigned_during_accumulation:
                                         number_of_blobs_assigned_in_accumulation += 1
                                     if blob.identity is not None and blob.identity != 0:
                                         if blob.identity == blob.user_generated_identity:
-                                            number_correct_assignations[i] += 1
+                                            number_of_correct_assignations[i] += 1
                                         elif blob._assigned_during_accumulation:
+                                            if blob._fragment_identifier not in individual_fragments_badly_assigned_in_accumulation:
+                                                individual_fragments_badly_assigned_in_accumulation.append(blob._fragment_identifier)
                                             number_of_identity_shifts_in_accumulated_frames += 1
                                         if blob.identity in identities_in_frame:
                                             number_of_identity_repetitions += 1
+                                            if blob._fragment_identifier not in individual_fragments_that_are_repetitions:
+                                                individual_fragments_that_are_repetitions.append(blob._fragment_identifier)
                                             frame_with_repetition = True
 
                                         identities_in_frame.append(blob.identity)
@@ -336,37 +342,31 @@ if __name__ == '__main__':
                             if frame_with_repetition:
                                 number_of_frames_with_repetitions += 1
 
-                        number_of_acceptable_fragments = sum([global_fragment.acceptable_for_training for global_fragment in global_fragments])
+                        number_of_acceptable_fragments = sum([global_fragment._acceptable_for_training for global_fragment in global_fragments])
                         number_of_unique_fragments = sum([global_fragment.is_unique for global_fragment in global_fragments])
+                        number_of_certain_fragments = sum([global_fragment._is_certain for global_fragment in global_fragments])
 
-                        # for global_fragment in global_fragments:
-                        #     try:
-                        #         print(global_fragment._certainties)
-                        #     except:
-                        #         print('no certainties for this global fragment')
-
-                        individual_accuracies_assigned_frames = np.asarray(number_correct_assignations)/(frames_in_video - np.asarray(number_of_not_assigned_blobs))
-                        accuracy_assigned_frames = np.sum(number_correct_assignations)/(frames_in_video * group_size - sum(number_of_not_assigned_blobs))
-                        individual_accuracies = np.asarray(number_correct_assignations)/frames_in_video
-                        accuracy = np.sum(number_correct_assignations)/(frames_in_video * group_size)
-                        print("number of global fragments: ", len(global_fragments))
-                        print("number of accumulated fragments:", sum([global_fragment.used_for_training for global_fragment in global_fragments]))
-                        print("number of candidate global fragments:", len(candidates_next_global_fragments))
-                        print("number of unique fragments: ", number_of_unique_fragments)
-                        print("number of acceptable fragments: ", number_of_acceptable_fragments)
-                        print("number of frames with repetition (after assignation with P2): ", int(number_of_frames_with_repetitions))
-                        print("number of blobs assigned during accumulation: ", number_of_blobs_assigned_in_accumulation)
-                        print("frames_in_video: ", frames_in_video)
-                        print("group_size: ", group_size)
-                        print("number_correct_assignations: ", number_correct_assignations)
-                        print("number_of_not_assigned_blobs: ", number_of_not_assigned_blobs)
-                        print("number_of_identity_repetitions: ", number_of_identity_repetitions)
-                        print("number_of_frames_with_repetitions: ", number_of_frames_with_repetitions)
-                        print("number_of_identity_shifts_in_accumulated_frames: ", number_of_identity_shifts_in_accumulated_frames)
-                        print("individual_accuracies (assigned frames): ", individual_accuracies_assigned_frames)
-                        print("accuracy (assigned frames): ", accuracy_assigned_frames)
+                        individual_accuracies = np.asarray(number_of_correct_assignations)/np.asarray(number_assignations)
+                        accuracy = np.sum(number_of_correct_assignations)/np.sum(number_assignations)
+                        print("\n\ngroup_size: ", group_size)
                         print("individual_accuracies: ", individual_accuracies)
                         print("accuracy: ", accuracy)
+                        print("\nnumber of global fragments: ", len(global_fragments))
+                        print("number of accumulated fragments:", sum([global_fragment.used_for_training for global_fragment in global_fragments]))
+                        print("number of candidate global fragments:", len(candidates_next_global_fragments))
+                        print("number of acceptable fragments: ", number_of_acceptable_fragments)
+                        print("number of unique fragments: ", number_of_unique_fragments + 1)
+                        print("number of certain fragments: ", number_of_certain_fragments + 1)
+                        print("\nnumber of individual fragments: ", len(individual_fragments))
+                        print("number of individual fragments badly assigned in acumulation: ", len(individual_fragments_badly_assigned_in_accumulation))
+                        print("number of fragments that are repetitions: ", len(individual_fragments_that_are_repetitions))
+                        print("\nframes in video: ", frames_in_video)
+                        print("number of frames with repetitions: ", number_of_frames_with_repetitions)
+                        print("number of assignation: ", number_assignations)
+                        print("number correct assignations: ", number_of_correct_assignations)
+                        print("number of identity repetitions: ", number_of_identity_repetitions)
+                        print("number of identity shifts in accumulated frames: ", number_of_identity_shifts_in_accumulated_frames)
+                        print("****************************************************************************************************\n\n")
 
                         #############################################################
                         ###################  Update data-frame   ####################
@@ -389,58 +389,28 @@ if __name__ == '__main__':
                                                                         'frames_in_video': int(frames_in_video),
                                                                         'frames_per_fragment': int(frames_in_fragment),
                                                                         'repetition': int(repetition),
-                                                                        'number_of_fragments': int(len(global_fragments)),
+                                                                        'individual_accuracies': individual_accuracies,
+                                                                        'accuracy': accuracy,
+                                                                        'number_of_fragments': len(global_fragments),
                                                                         'number_of_candidate_fragments': len(candidates_next_global_fragments),
                                                                         'number_of_unique_fragments': number_of_unique_fragments,
+                                                                        'number_of_certain_fragments': number_of_certain_fragments,
                                                                         'number_of_acceptable_fragments': number_of_acceptable_fragments,
-                                                                        'number_of_non_unique_frames_after_assignation': int(number_of_frames_with_repetitions),
-                                                                        'proportion_of_accumulated_fragments': sum([global_fragment.used_for_training for global_fragment in global_fragments])/len(global_fragments),
+                                                                        'number_of_frames_with_repetitions_after_assignation': int(number_of_frames_with_repetitions),
                                                                         'number_of_blobs_assigned_in_accumulation': number_of_blobs_assigned_in_accumulation,
                                                                         'number_of_not_assigned_blobs': number_of_not_assigned_blobs,
-                                                                        'individual_accuracies': individual_accuracies,
-                                                                        'individual_accuracies(assigned)': individual_accuracies_assigned_frames,
-                                                                        'accuracy': accuracy,
-                                                                        'accuracy(assigned)': accuracy_assigned_frames,
-                                                                        'proportion_of_frames_with_repetitions': number_of_frames_with_repetitions/frames_in_video,
-                                                                        'proportion_of_identity_repetitions': number_of_identity_repetitions/(frames_in_video * group_size - sum(number_of_not_assigned_blobs)),
-                                                                        'proportion_of_identity_shifts_in_accumulated_frames': number_of_identity_shifts_in_accumulated_frames/(frames_in_video * group_size - sum(number_of_not_assigned_blobs)) ,
+                                                                        'number_of_individual_fragments':len(individual_fragments),
+                                                                        'number_of_missassigned_individual_fragments_in_accumulation':len(individual_fragments_badly_assigned_in_accumulation),
+                                                                        'number_of_individual_fragments_that_are_repetitions':individual_fragments_that_are_repetitions,
+                                                                        'number_of_assignation': number_assignations,
+                                                                        'number_of_correct_assignations': number_of_correct_assignations,
+                                                                        'number_of_identity_repetitions': number_of_identity_repetitions,
+                                                                        'number_of_identity_shifts_in_accumulated_frames': number_of_identity_shifts_in_accumulated_frames,
                                                                         'pretraining_time': pretraining_time,
                                                                         'accumulation_time': accumulation_time,
                                                                         'assignation_time': assignation_time,
                                                                         'total_time': pretraining_time + accumulation_time + assignation_time,
                                                                          }, ignore_index=True)
-
-                        # results_data_frame = results_data_frame.append({'date': time.strftime("%c"),
-                        #                                                 'cluster': int(job_config.cluster) ,
-                        #                                                 'test_name': job_config.test_name,
-                        #                                                 'CNN_model': job_config.CNN_model,
-                        #                                                 'knowledge_transfer_flag': job_config.knowledge_transfer_flag,
-                        #                                                 'knowledge_transfer_folder': job_config.knowledge_transfer_folder,
-                        #                                                 'pretraining_flag': job_config.pretraining_flag,
-                        #                                                 'percentage_of_frames_in_pretaining': job_config.percentage_of_frames_in_pretaining,
-                        #                                                 'only_accumulate_one_fragment': job_config.only_accumulate_one_fragment,
-                        #                                                 'train_filters_in_accumulation': bool(job_config.train_filters_in_accumulation),
-                        #                                                 'accumulation_certainty': job_config.accumulation_certainty,
-                        #                                                 'IMDB_codes': job_config.IMDB_codes,
-                        #                                                 'ids_codes': job_config.ids_codes,
-                        #                                                 'group_size': int(group_size),
-                        #                                                 'frames_in_video': int(frames_in_video),
-                        #                                                 'frames_per_fragment': int(frames_in_fragment),
-                        #                                                 'repetition': int(repetition),
-                        #                                                 'number_of_fragments': int(len(global_fragments)),
-                        #                                                 'proportion_of_accumulated_fragments': sum([global_fragment.used_for_training for global_fragment in global_fragments])/len(global_fragments),
-                        #                                                 'number_of_not_assigned_blobs': number_of_not_assigned_blobs,
-                        #                                                 'individual_accuracies': individual_accuracies,
-                        #                                                 'individual_accuracies(assigned)': individual_accuracies_assigned_frames,
-                        #                                                 'accuracy': accuracy,
-                        #                                                 'accuracy(assigned)': accuracy_assigned_frames,
-                        #                                                 'proportion_of_identity_repetitions': number_of_identity_repetitions/(frames_in_video * group_size - sum(number_of_not_assigned_blobs)) ,
-                        #                                                 'proportion_of_identity_shifts_in_accumulated_frames': number_of_identity_shifts_in_accumulated_frames/(frames_in_video * group_size - sum(number_of_not_assigned_blobs)) ,
-                        #                                                 'pretraining_time': pretraining_time,
-                        #                                                 'accumulation_time': accumulation_time,
-                        #                                                 'assignation_time': assignation_time,
-                        #                                                 'total_time': pretraining_time + accumulation_time + assignation_time,
-                        #                                                  }, ignore_index=True)
 
 
                         results_data_frame.to_pickle('./library/results_data_frame.pkl')

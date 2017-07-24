@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import sys
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
-from get_portraits import getPortrait, get_portrait_fly
+from get_portraits import get_portrait, get_body
 import itertools
 import numpy as np
 from tqdm import tqdm
@@ -364,10 +364,12 @@ def check_global_fragments(blobs_in_video, num_animals):
 def apply_model_area(video, blob, model_area, portraitSize):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
         if video.animal_type == 'fish':
-            blob._portrait, blob._nose_coordinates, blob._head_coordinates = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize)
+            portrait, blob._nose_coordinates, blob._head_coordinates = getPortrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize)
+            blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
             blob.bounding_box_image = None
         elif video.animal_type == 'fly':
-            blob._portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_portrait_fly(video, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
+            portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_portrait_fly(video, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
+            blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
             blob.bounding_box_image = None
 
 def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portraitSize):
@@ -430,6 +432,6 @@ class ListOfBlobs(object):
         print("loading blobs list from ", path_to_load_blob_list_file)
 
         list_of_blobs = np.load(path_to_load_blob_list_file).item()
-        print("cutting points", list_of_blobs.cutting_points)
+        # print("cutting points", list_of_blobs.cutting_points)
         list_of_blobs.reconnect()
         return list_of_blobs

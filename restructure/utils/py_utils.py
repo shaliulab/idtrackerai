@@ -273,6 +273,42 @@ def getExistentFiles(video, listNames):
 
     return existentFile, old_video
 
+def getExistentFiles_library(path, listNames, segmPaths):
+    """
+    get processes already computed in a previous session
+    """
+    existentFile = {name:'0' for name in listNames}
+    video = os.path.basename(path)
+    folder = os.path.dirname(path)
+
+    # createFolder(path)
+
+    #count how many videos we have
+    numSegments = len(segmPaths)
+
+    filename, extension = os.path.splitext(video)
+    subFolders = glob.glob(folder +"/*/")
+
+    srcSubFolder = folder + '/preprocessing/'
+    for name in listNames:
+        if name == 'segmentation':
+            segDirname = srcSubFolder + name
+            if os.path.isdir(segDirname):
+                print 'Segmentation folder exists'
+                numSegmentedVideos = len(glob.glob1(segDirname,"*.pkl"))
+                print
+                if numSegmentedVideos == numSegments:
+                    print 'The number of segments and videos is the same'
+                    existentFile[name] = '1'
+        else:
+            extensions = ['.pkl', '.hdf5']
+            for ext in extensions:
+                fullFileName = srcSubFolder + '/' + name + ext
+                if os.path.isfile(fullFileName):
+                    existentFile[name] = '1'
+
+    return existentFile, srcSubFolder
+
 
 def createFolder(path, name = '', timestamp = False):
 

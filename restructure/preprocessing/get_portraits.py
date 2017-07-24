@@ -62,28 +62,6 @@ def getMFandC(path, frameIndices):
 
     return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist()
 
-def fillSquareFrame(square_frame, bkgSamps):
-    '''Used in get_miniframes.py'''
-    numSamples = 0
-    threshold = 150
-    while numSamples <= 10:
-
-        bkgSampsNew = bkgSamps[bkgSamps > threshold]
-        threshold -= 10
-        if threshold == 0:
-            plt.imshow(square_frame,cmap='gray',interpolation='none')
-            plt.show()
-            break
-        numSamples = len(bkgSampsNew)
-    bkgSamps = bkgSampsNew
-    if numSamples == 0:
-        raise ValueError('I do not have enough samples for the background')
-
-    numSamplesRequested = np.sum(square_frame == 0)
-    indicesSamples = np.random.randint(0,numSamples,numSamplesRequested)
-    square_frame[square_frame == 0] = bkgSamps[indicesSamples]
-    return square_frame
-
 def cropPortrait(image, portraitSize, shift=(0,0)):
     """ Given a portait it crops it in a shape (portraitSize,portraitSize) with
     a shift in the rows and columns given by the variable shifts. The size of
@@ -107,7 +85,7 @@ def cropPortrait(image, portraitSize, shift=(0,0)):
         # print 'Portrait cropped'
         return croppedPortrait
 
-def getPortrait(miniframe, cnt, bb, portrait_size, px_nose_above_center = 9):
+def get_portrait(miniframe, cnt, bb, portrait_size, px_nose_above_center = 9):
     """Acquiring portraits from miniframe (for fish)
 
     Given a miniframe (i.e. a minimal rectangular image containing an animal)
@@ -147,23 +125,17 @@ def getPortrait(miniframe, cnt, bb, portrait_size, px_nose_above_center = 9):
 
     return portrait, tuple(noseFull.astype('float32')), tuple(head_centroid_full.astype('float32')) #output as float because it is better for analysis.
 
-def get_portrait_fly(video, miniframe, pixels, bb, portraitSize):
+def get_body(height, width, miniframe, pixels, bb, portraitSize, only_blob = False):
     """Acquiring portraits from miniframe (for flies)
     :param miniframe: A numpy 2-dimensional array
     :param cnt: A cv2-style contour, i.e. (x,:,y)
     :param bb: Coordinates of the left-top corner of miniframe in the big frame
     :param maximum_body_length: maximum body length of the blobs. It will be the size of the width and the height of the frame feed it to the CNN
     """
-    # ellipse = cv2.fitEllipse(cnt)
-    # center = ellipse[0]
-    # print("ellipse center before: ", center)
-    # center = full2miniframe(center, bb)
-    # center = np.array([int(center[0]), int(center[1])])
-    # rot_ang = ellipse[2]
-    # print("ellipse center and angle: ", center, rot_ang)
-
+    if only_blob:
+        miniframe = only_blob_pixels(height, width, miniframe, pixels, bb)
     pca = PCA()
-    pxs = np.unravel_index(pixels,(video._height,video._width))
+    pxs = np.unravel_index(pixels,(height,width))
     pxs1 = np.asarray(zip(pxs[0],pxs[1]))
     pca.fit(pxs1)
     rot_ang = 180 - np.arctan(pca.components_[0][1]/pca.components_[0][0])*180/np.pi - 45 # we substract 45 so that the fish is aligned in the diagonal. This say we have smaller frames
@@ -188,9 +160,25 @@ def get_portrait_fly(video, miniframe, pixels, bb, portraitSize):
     rot_ang_rad = rot_ang * np.pi / 180
     h_or_t_1 = np.array([np.cos(rot_ang_rad), np.sin(rot_ang_rad)]) * rot_ang_rad
     h_or_t_2 = - h_or_t_1
+    # print(h_or_t_1,h_or_t_2,portrait.shape)
     return portrait, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int'))
 
-def reaper(videoPath, frameIndices, animal_type):
+def only_blob_pixels(height, width, miniframe, pixels, bb):
+    pxs = np.array(np.unravel_index(pixels,(height, width))).T
+    # print("pixels ", pxs)
+    pxs = np.array([pxs[:, 0] - bb[0][1], pxs[:, 1] - bb[0][0]])
+    temp_image = np.zeros_like(miniframe).astype('uint8')
+    temp_image[pxs[0,:], pxs[1,:]] = 255
+    temp_image = cv2.dilate(temp_image, np.ones((3,3)).astype('uint8'), iterations = 1)
+    rows, columns = np.where(temp_image == 255)
+    dilated_pixels = np.array([rows, columns])
+    # print("dilated pixels ", dilated_pixels.shape)
+
+    temp_image[dilated_pixels[0,:], dilated_pixels[1,:]] = miniframe[dilated_pixels[0,:], dilated_pixels[1,:]]
+    return temp_image
+
+
+def reaper(videoPath, frameIndices, height, width):
     # only function called from idTrackerDeepGUI
     print 'reaping', videoPath
     df, numSegment = loadFile(videoPath, 'segmentation')
@@ -199,92 +187,110 @@ def reaper(videoPath, frameIndices, animal_type):
     miniframes = np.asarray(df.loc[:, 'miniFrames']) #image containing the blob, same size
     miniframes = np.asarray(miniframes)
     contours = np.asarray(df.loc[:, 'contours'])
-    bkgSamples = np.asarray(df.loc[:,'bkgSamples'])
     centroidsSegment = np.asarray(df.loc[:,'centroids'])
+    pixels = np.asarray(df.loc[:, 'pixels'])
+    areasSegment = np.asarray(df.loc[:, 'areas'])
 
     segmentIndices = frameIndices.loc[frameIndices.loc[:,'segment']==int(numSegment)]
     segmentIndices = segmentIndices.index.tolist()
 
-
     """ Visualise """
-    AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['images'])
+    AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['portraits'])
+    AllBodies = pd.DataFrame(index = segmentIndices, columns= ['bodies'])
+    AllBodyBlobs = pd.DataFrame(index = segmentIndices, columns= ['bodyblobs'])
     AllNoses = pd.DataFrame(index = segmentIndices, columns= ['noses'])
     AllCentroids= pd.DataFrame(index = segmentIndices, columns= ['centroids'])
     AllHeadCentroids = pd.DataFrame(index = segmentIndices, columns= ['head_centroids'])
+    AllAreas = pd.DataFrame(index = segmentIndices, columns= ['areas'])
 
     counter = 0
     while counter < len(miniframes):
         portraits = []
+        bodies = []
+        bodyblobs = []
         noses = []
         head_centroids = []
+        areas = areasSegment[counter]
         bbs = boundingboxes[counter]
         minif = miniframes[counter]
         cnts = contours[counter]
-        bkgSamps = bkgSamples[counter]
         centroids = centroidsSegment[counter]
+        pxs = pixels[counter]
         for j, miniframe in enumerate(minif):
             ### Uncomment to plot
             # cv2.imshow('frame', miniframe)
             # cv2.waitKey()
-            if animal_type == 'fish':
-                portrait, nose_pixels, head_centroid_pixels = getPortrait(miniframe,cnts[j],bbs[j],bkgSamps[j],j)
 
-                # get all the heads in a single list
-                portraits.append(portrait)
-                noses.append(nose_pixels)
-                head_centroids.append(head_centroid_pixels)
+            portraitSize = 36
+            portrait, nose_pixels, head_centroid_pixels = get_portrait(miniframe,cnts[j],bbs[j],portraitSize)
+            portraits.append(portrait)
+            noses.append(nose_pixels)
+            head_centroids.append(head_centroid_pixels)
 
-            elif animal_type == 'fly':
-                portrait, nose_pixels, head_centroid_pixels = get_portrait_fly(miniframe,cnts[j],bbs[j])
+            portraitSize = 52
+            body, _, _ = get_body(height, width, miniframe, pxs[j], bbs[j], portraitSize, only_blob = False)
+            bodies.append(body)
 
-                # get all the heads in a single list
-                portraits.append(portrait)
-                noses.append(nose_pixels)
-                head_centroids.append(head_centroid_pixels)
+            bodyblob, _, _ = get_body(height, width, miniframe, pxs[j], bbs[j], portraitSize, only_blob = True)
+            bodyblobs.append(bodyblob)
 
-        ### UNCOMMENT TO PLOT ##################################################
-        #    cv2.imshow(str(j),portrait)
-        #
-        #k = cv2.waitKey(100) & 0xFF
-        #if k == 27: #pres esc to quit
-        #    break
-        ########################################################################
 
-        AllPortraits.set_value(segmentIndices[counter], 'images', portraits)
+        AllPortraits.set_value(segmentIndices[counter], 'portraits', portraits)
+        AllBodies.set_value(segmentIndices[counter], 'bodies', bodies)
+        AllBodyBlobs.set_value(segmentIndices[counter], 'bodyblobs', bodyblobs)
         AllNoses.set_value(segmentIndices[counter], 'noses', noses)
         AllHeadCentroids.set_value(segmentIndices[counter], 'head_centroids', head_centroids)
         AllCentroids.set_value(segmentIndices[counter], 'centroids', centroids)
+        AllAreas.set_value(segmentIndices[counter], 'areas', areas)
+
         counter += 1
     print 'you just reaped', videoPath
-    return AllPortraits, AllNoses, AllCentroids, AllHeadCentroids
+    return AllPortraits, AllBodies, AllBodyBlobs, AllNoses, AllHeadCentroids, AllCentroids, AllAreas
 
-def portrait(videoPaths, dfGlobal, animal_type):
+def portrait(videoPaths, dfGlobal, height, width):
     frameIndices = loadFile(videoPaths[0], 'frameIndices')
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    allPortraitsAndNoses = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath,frameIndices, animal_type) for videoPath in videoPaths)
-    allPortraits = [t[0] for t in allPortraitsAndNoses]
-    allNoses = [t[1] for t in allPortraitsAndNoses]
-    allCentroids = [t[2] for t in allPortraitsAndNoses]
-    allHeadCentroids = [t[3] for t in allPortraitsAndNoses]
+    out = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath, frameIndices, height, width) for videoPath in videoPaths)
+    allPortraits = [t[0] for t in out]
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)
+
+    allBodies = [t[1] for t in out]
+    allBodies = pd.concat(allBodies)
+    allBodies = allBodies.sort_index(axis=0,ascending=True)
+
+    allBodyBlobs = [t[2] for t in out]
+    allBodyBlobs = pd.concat(allBodyBlobs)
+    allBodyBlobs = allBodyBlobs.sort_index(axis=0,ascending=True)
+
+    allNoses = [t[3] for t in out]
     allNoses = pd.concat(allNoses)
     allNoses = allNoses.sort_index(axis=0, ascending=True)
+
+    allHeadCentroids = [t[4] for t in out]
     allHeadCentroids = pd.concat(allHeadCentroids)
     allHeadCentroids = allHeadCentroids.sort_index(axis=0, ascending=True)
+
+    allCentroids = [t[5] for t in out]
     allCentroids = pd.concat(allCentroids)
     allCentroids = allCentroids.sort_index(axis=0, ascending=True)
 
+    allAreas = [t[6] for t in out]
+    allAreas = pd.concat(allAreas)
+    allAreas = allAreas.sort_index(axis=0, ascending=True)
 
     if list(allPortraits.index) != list(dfGlobal.index):
         raise ValueError('The list of indexes in allPortraits and dfGlobal should be the same')
     # dfGlobal1 = pd.DataFrame(index = range(len(dfGlobal)), columns=['images'])
-    dfGlobal['images'] = allPortraits
     dfGlobal['identities'] = dfGlobal['permutations']
+    dfGlobal['portraits'] = allPortraits
+    dfGlobal['bodies'] = allBodies
+    dfGlobal['bodyblobs'] = allBodyBlobs
     dfGlobal['noses'] = allNoses
     dfGlobal['head_centroids'] = allHeadCentroids
     dfGlobal['centroids'] = allCentroids
+    dfGlobal['areas'] = allAreas
 
     saveFile(videoPaths[0], dfGlobal, 'portraits',hdfpkl='pkl')
     return dfGlobal

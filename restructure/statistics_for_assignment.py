@@ -16,9 +16,10 @@ def compute_identification_frequencies_individual_fragment(identities_in_fragmen
 def normalise_frequencies(frequencies):
     return frequencies / np.sum(frequencies)
 
-def compute_P1_individual_fragment_from_blob(frequencies):
-    """Given a blob it computes P1 vector for the individual fragment containing
-    the blob. P1 is the softmax of the frequencies with base 2.
+def compute_P1_individual_fragment_from_frequencies(frequencies):
+    """Given the frequencies of a individual fragment
+    computer the P1 vector. P1 is the softmax of the frequencies with base 2
+    for each identity.
     """
     # Compute numerator of P1 and check that it is not inf
     numerator = 2.**frequencies
@@ -28,14 +29,13 @@ def compute_P1_individual_fragment_from_blob(frequencies):
     denominator = np.sum(numerator)
     # Compute P1 and check that it is not 0. for any identity
     P1_of_fragment = numerator / denominator
-    if np.any(P1_of_fragment == 0.):
+    if np.all(P1_of_fragment == 0.):
+        P1_of_fragment[P1_of_fragment == 0.] = 1/len(P1_of_fragment) #if all the frequencies are very high then the denominator is very big and all the P1 are 0. so we set then to random.
+    else:
         P1_of_fragment[P1_of_fragment == 0.] = MIN_FLOAT
-    if np.any(P1_of_fragment == 0.):
-        raise ValueError('P1_of_fragment cannot be 0')
     # Change P1 that are 1. for 0.9999 so that we do not have problems when computing P2
     P1_of_fragment[P1_of_fragment == 1.] = 0.99999999999999
-    if np.any(P1_of_fragment == 1.):
-        raise ValueError('P1_of_fragment cannot be 1')
+
     return P1_of_fragment
 
 def compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video):
@@ -46,11 +46,11 @@ def compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video):
     numerator = np.asarray(blob.P1_vector) * np.prod(1. - coexisting_blobs_P1_vectors, axis = 0)
     denominator = np.sum(numerator)
     if denominator == 0:
+        print("P1 of blob, ", blob.P1_vector)
+        print("coexisting_blobs_P1_vectors, ", coexisting_blobs_P1_vectors)
         raise ValueError('denominator of P2 is 0')
 
     P2 = numerator / denominator
-    # Compute logP2
-    logP2 = np.log(np.asarray(blob.P1_vector)) + np.sum(np.log(1. - coexisting_blobs_P1_vectors),axis=0)
     return P2
 
 def is_assignment_ambiguous(P2_vector):
