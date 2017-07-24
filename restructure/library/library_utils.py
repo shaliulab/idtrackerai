@@ -197,7 +197,7 @@ class Dataset(object):
         self.IMDBsDict = {
                     'A': os.path.join(self.datafolder,'library','IMDBs','IMDBs_portraits_new','TU20170131_31dpf_40indiv_34770ImPerInd_portraits_0.hdf5'),
                     'B': os.path.join(self.datafolder,'library','IMDBs','IMDBs_portraits_new','TU20170201_31pdf_72indiv_38739ImPerInd_portraits_0.hdf5'),
-                    'C': os.path.join(self.datafolder,'library','IMDBs','IMDBs_portraits_new','TU20170202_31pdf_72indiv_38913ImPerInd__portraits_0.hdf5'),
+                    'C': os.path.join(self.datafolder,'library','IMDBs','IMDBs_portraits_new','TU20170202_31pdf_72indiv_38913ImPerInd_portraits_0.hdf5'),
                     'D': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodies_new','TU20170131_31dpf_40indiv_34770imperind_bodies_0.hdf5'),
                     'E': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodies_new','TU20170201_31pdf_72indiv_38739ImPerInd_bodies_0.hdf5'),
                     'F': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodies_new','TU20170202_31pdf_72indiv_38913imperind_bodies_0.hdf5'),
@@ -250,7 +250,7 @@ class Dataset(object):
             if numIndivIMDB < len(idsInIMDB):
                 raise ValueError('The number of indiv requested is bigger than the number of indiv in the IMDB')
             # Load IMDB
-            _, imagesIMDB, labelsIMDB, centroidsIMDB, self.imsize, _, _ = loadIMDB(IMDBPath, self.preprocessing_type)
+            _, imagesIMDB, labelsIMDB, centroidsIMDB, _, _ = loadIMDB(IMDBPath, self.preprocessing_type)
             # If the number of individuals requested is smaller I need to slice the IMDB
             if numIndivIMDB > len(idsInIMDB):
                 imagesIMDB, labelsIMDB, centroidsIMDB = sliceDatabase(imagesIMDB, labelsIMDB, centroidsIMDB, idsInIMDB)
@@ -472,11 +472,13 @@ def assignCenters(paths,centers,video = 1,transform = 'none'):
     return dfGlobal
 
 if __name__ == '__main__':
-    IMDBPath = '/media/chronos/idZebLib_TU31012017/fakeLib/IMDBs/idzeblib_tu31012017_fakelib_16indiv_38996imperind_0.hdf5'
-    IMDB_info, images, labels, centroids, number_of_individual_in_IMDB, minimum_number_of_images_per_individual = loadIMDB(IMDBPath, 'body')
+    IMDBPath = '/home/themis/Desktop/IdTrackerDeep/restructure/library/IMDBs/IMDBs_bodyblobs_new/TU20170131_31dpf_40indiv_34770ImPerInd_bodyblobs_0.hdf5'
+    IMDB_info, images, labels, centroids, number_of_individual_in_IMDB, minimum_number_of_images_per_individual = loadIMDB(IMDBPath, 'body_blob')
     from matplotlib import pyplot as plt
     for i in range(12,16):
         this_centroids = centroids[labels==i]
         plt.ion()
         plt.scatter(this_centroids[:,0],this_centroids[:,1],alpha = .01, s = 5)
         plt.axis('equal')
+    plt.figure()
+    plt.imshow(images[0,:,:],cmap='gray')

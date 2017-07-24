@@ -281,7 +281,7 @@ if __name__ == '__main__':
         print 'labelsIMDB, ', np.unique(labelsIMDB)
         print 'num images per indiv, ', [np.sum(labelsIMDB == i) for i in np.unique(labelsIMDB)]
 
-        nameDatabase =  strain + '_' + ageInDpf + '_' + str(numIndivIMDB) + 'indiv_' + str(int(minimalNumImagesPerIndiv)) + 'ImPerInd_' + 'bodies'
+        nameDatabase =  strain + '_' + ageInDpf + '_' + str(numIndivIMDB) + 'indiv_' + str(int(minimalNumImagesPerIndiv)) + 'ImPerInd_' + 'bodyblobs'
         if not os.path.exists(libPath + '/IMDBs'): # Checkpoint folder does not exist
             os.makedirs(libPath + '/IMDBs') # we create a checkpoint folder
         else:
