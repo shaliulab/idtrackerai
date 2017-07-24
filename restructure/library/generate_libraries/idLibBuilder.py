@@ -302,14 +302,14 @@ if __name__ == '__main__':
 
 
         dset1 = grp.create_dataset("labels", labelsIMDB.shape, dtype='i')
-        dset2 = grp.create_dataset("bodies", bodiesIMDB.shape, dtype='f')
+        dset2 = grp.create_dataset("bodyblobs", bodyblobsIMDB.shape, dtype='f')
         dset3 = grp.create_dataset("centroids", centroidsIMDB.shape, dtype='f')
         dset4 = grp.create_dataset("noses", nosesIMDB.shape, dtype='f')
         dset5 = grp.create_dataset("head_centroids", head_centroidsIMDB.shape, dtype='f')
         dset6 = grp.create_dataset("areas", areasIMDB.shape, dtype='f')
 
         dset1[...] = labelsIMDB
-        dset2[...] = bodiesIMDB
+        dset2[...] = bodyblobsIMDB
         #dset3[...] = bodiesIMDB
         #dset4[...] = bodyblobsIMDB
         dset3[...] = centroidsIMDB
