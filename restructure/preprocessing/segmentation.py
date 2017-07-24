@@ -42,8 +42,8 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,segmFrameInd[0])
     max_number_of_blobs = 0
     max_body_length = 0
+    
     while counter < numFrames:
-
         blobs_in_frame = []
         #Get frame from video file
         ret, frame = cap.read()
