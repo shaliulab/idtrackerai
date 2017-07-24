@@ -46,7 +46,7 @@ class Stop_Training():
                 self.overfitting_counter = 0
             #check if the error is not decreasing much
             if self.check_for_loss_plateau:
-                if np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE*10**(int(np.log10(current_loss))-1):
+                if np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE*10**(int(np.log10(current_loss))-1) and not self.first_accumulation_flag:
                     print('The losses difference is very small, we stop the training\n')
                     return True
             # if the individual accuracies in validation are 1. for all the animals

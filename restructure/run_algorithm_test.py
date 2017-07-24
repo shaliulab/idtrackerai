@@ -76,9 +76,9 @@ if __name__ == '__main__':
         print("results_data_frame.pkl does not exist \n")
         results_data_frame = pd.DataFrame()
 
-    dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes)
+    dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes, preprocessing_type = job_config.preprocessing_type)
     dataset.loadIMDBs()
-    print(dataset.images.shape)
+    print("images shape, ", dataset.images.shape)
 
     for group_size in job_config.group_sizes:
 
@@ -298,6 +298,34 @@ if __name__ == '__main__':
                         else:
                             print("All the global fragments have been used in the accumulation")
                         assignation_time = time.time() - start
+
+
+                        #############################################################
+                        ###################  Duplications removal ###################
+                        ####
+                        #############################################################
+                        start = time.time()
+                        if job_config.solve_duplications:
+                            for blobs_in_frame in blobs:
+                                try:
+                                    print("------------------------frame_number: ", blobs_in_frame[0].frame_number)
+                                except:
+                                    print("--------")
+                                identities = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
+                                print("identities in frame ", identities)
+                                duplicated_identities = set([x for x in identities if identities.count(x) > 1])
+                                print("duplicated identities ", duplicated_identities)
+                                if len(duplicated_identities) > 0:
+                                    frame  = Duplication(blobs_in_frame_with_duplication = blobs_in_frame,
+                                                        duplicated_identities = duplicated_identities)
+                                    blobs_to_reassign = frame.assign_unique_identities()
+
+                                    for blob in blobs_in_frame:
+                                        for blob_d in blobs_to_reassign:
+                                            if blob is blob_d and blob.identity != blob_d.identity:
+                                                blob.update_identity_in_fragment(blob_d.identity)
+                        duplications_removal_time = time.time() - start
+
                         #############################################################
                         ###################     Accuracies     ######################
                         ####
@@ -409,7 +437,8 @@ if __name__ == '__main__':
                                                                         'pretraining_time': pretraining_time,
                                                                         'accumulation_time': accumulation_time,
                                                                         'assignation_time': assignation_time,
-                                                                        'total_time': pretraining_time + accumulation_time + assignation_time,
+                                                                        'duplications_removal_time': duplications_removal_time,
+                                                                        'total_time': pretraining_time + accumulation_time + assignation_time + duplications_removal_time,
                                                                          }, ignore_index=True)
 
 

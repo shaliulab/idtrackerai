@@ -81,8 +81,9 @@ if __name__ == '__main__':
         print("results_data_frame.pkl does not exist \n")
         results_data_frame = pd.DataFrame()
 
-    dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes)
+    dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes, preprocessing_type = job_config.preprocessing_type)
     dataset.loadIMDBs()
+    print("images shape, ", dataset.images.shape)
 
     for group_size in job_config.group_sizes:
 

@@ -63,6 +63,7 @@ def check_if_repetition_has_been_computed(results_data_frame, job_config, group_
                                             ' & only_accumulate_one_fragment == @job_config.only_accumulate_one_fragment' +
                                             ' & train_filters_in_accumulation == @job_config.train_filters_in_accumulation' +
                                             ' & accumulation_certainty == @job_config.accumulation_certainty' +
+                                            ' & preprocessing_type == @job_config.preprocessing_type' +
                                             ' & IMDB_codes == @job_config.IMDB_codes' +
                                             ' & ids_codes == @job_config.ids_codes' +
                                             ' & group_size == @group_size' +
@@ -109,8 +110,7 @@ def subsample_dataset_by_individuals(dataset, config):
     print("identities, ", config.identities)
     # set stating frame
     # we set the starting frame so that we take images from both videos of the library.
-    # the greates unbalance can be 1/3 from video_1 and 2/3 from video_2
-    config.starting_frame = np.random.randint(dataset.minimum_number_of_images_per_animal-number_of_frames)
+    config.starting_frame = np.random.randint(int(dataset.minimum_number_of_images_per_animal/3)-number_of_frames)
     print("starting frame, ", config.starting_frame)
 
     subsampled_images = []
@@ -182,10 +182,11 @@ def generate_list_of_blobs(portraits, centroids, config):
     return blobs_in_video
 
 class Dataset(object):
-    def __init__(self, IMDB_codes = 'A', ids_codes = 'a', cluster = 0):
+    def __init__(self, IMDB_codes = 'A', ids_codes = 'a', cluster = 0, preprocessing_type = None):
         self.IMDB_codes = IMDB_codes
         self.ids_codes = ids_codes
         self.cluster = cluster
+        self.preprocessing_type = preprocessing_type
 
         # Get list of IMDBPaths form IMDB_codes
         print('\nReading IMDB_codes and ids_codes...')
@@ -194,15 +195,15 @@ class Dataset(object):
         elif int(self.cluster):
             self.datafolder = '/admin/'
         self.IMDBsDict = {
-                    'A': os.path.join(self.datafolder,'library','IMDBs','TU20160413_36dpf_60indiv_29938imperind_curvatureportrait_centroids_0.hdf5'),
-                    'B': os.path.join(self.datafolder,'library','IMDBs','TU20160428_36dpf_60indiv_28010imperind_curvatureportrait_centroids_0.hdf5'),
-                    'C': os.path.join(self.datafolder,'library','IMDBs','TU20160920_36dpf_64indiv_7731imperInd_curvatureportrait_centroids_0.hdf5'),
-                    'D': os.path.join(self.datafolder,'library','IMDBs','TU20170131_31dpf_40indiv_34770imperind_curvatureportrait_centroids_0.hdf5'),
-                    'E': os.path.join(self.datafolder,'library','IMDBs','TU20170201_31pdf_72indiv_38739ImPerInd_curvaturePortrait_centroids_0.hdf5'),
-                    'F': os.path.join(self.datafolder,'library','IMDBs','TU20170202_31pdf_72indiv_38913imperind_curvatureportrait_centroids_0.hdf5'),
-                    'G': os.path.join(self.datafolder,'library','IMDBs','tu20170131_31dpf_40indiv_34770imperind_fullbody_centroids_0.hdf5'),
-                    'H': os.path.join(self.datafolder,'library','IMDBs','tu20170201_31pdf_72indiv_38739imperind_fullbody_centroids_0.hdf5'),
-                    'I': os.path.join(self.datafolder,'library','IMDBs','tu20170202_31pdf_72indiv_38913imperind_fullbody_centroids_0.hdf5')
+                    'A': os.path.join(self.datafolder,'library','IMDBs','IMDBs_portraits_new','TU20170131_31dpf_40indiv_34770ImPerInd_portraits_0.hdf5'),
+                    'B': os.path.join(self.datafolder,'library','IMDBs','IMDBs_portraits_new','TU20170201_31pdf_72indiv_38739ImPerInd_portraits_0.hdf5'),
+                    'C': os.path.join(self.datafolder,'library','IMDBs','IMDBs_portraits_new','TU20170202_31pdf_72indiv_38913ImPerInd__portraits_0.hdf5'),
+                    'D': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodies_new','TU20170131_31dpf_40indiv_34770imperind_bodies_0.hdf5'),
+                    'E': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodies_new','TU20170201_31pdf_72indiv_38739ImPerInd_bodies_0.hdf5'),
+                    'F': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodies_new','TU20170202_31pdf_72indiv_38913imperind_bodies_0.hdf5'),
+                    'G': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodyblobs_new','TU20170131_31dpf_40indiv_34770imperind_bodyblobs_0.hdf5'),
+                    'H': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodyblobs_new','TU20170201_31pdf_72indiv_38739ImPerInd_bodyblobs_0.hdf5'),
+                    'I': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodyblobs_new','TU20170202_31pdf_72indiv_38913imperind_bodyblobs_0.hdf5'),
                     }
         self.IMDBPaths = []
         self.idsInIMDBs = []
@@ -249,7 +250,7 @@ class Dataset(object):
             if numIndivIMDB < len(idsInIMDB):
                 raise ValueError('The number of indiv requested is bigger than the number of indiv in the IMDB')
             # Load IMDB
-            _, imagesIMDB, labelsIMDB, centroidsIMDB, self.imsize, _, _ = loadIMDB(IMDBPath)
+            _, imagesIMDB, labelsIMDB, centroidsIMDB, self.imsize, _, _ = loadIMDB(IMDBPath, self.preprocessing_type)
             # If the number of individuals requested is smaller I need to slice the IMDB
             if numIndivIMDB > len(idsInIMDB):
                 imagesIMDB, labelsIMDB, centroidsIMDB = sliceDatabase(imagesIMDB, labelsIMDB, centroidsIMDB, idsInIMDB)
