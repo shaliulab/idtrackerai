@@ -198,12 +198,12 @@ class Dataset(object):
                     'A': os.path.join(self.datafolder,'library','IMDBs','IMDBs_portraits_new','TU20170131_31dpf_40indiv_34770ImPerInd_portraits_0.hdf5'),
                     'B': os.path.join(self.datafolder,'library','IMDBs','IMDBs_portraits_new','TU20170201_31pdf_72indiv_38739ImPerInd_portraits_0.hdf5'),
                     'C': os.path.join(self.datafolder,'library','IMDBs','IMDBs_portraits_new','TU20170202_31pdf_72indiv_38913ImPerInd_portraits_0.hdf5'),
-                    'D': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodies_new','TU20170131_31dpf_40indiv_34770imperind_bodies_0.hdf5'),
+                    'D': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodies_new','TU20170131_31dpf_40indiv_34770ImPerInd_bodies_0.hdf5'),
                     'E': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodies_new','TU20170201_31pdf_72indiv_38739ImPerInd_bodies_0.hdf5'),
-                    'F': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodies_new','TU20170202_31pdf_72indiv_38913imperind_bodies_0.hdf5'),
-                    'G': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodyblobs_new','TU20170131_31dpf_40indiv_34770imperind_bodyblobs_0.hdf5'),
+                    'F': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodies_new','TU20170202_31pdf_72indiv_38913ImPerInd_bodies_0.hdf5'),
+                    'G': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodyblobs_new','TU20170131_31dpf_40indiv_34770ImPerInd_bodyblobs_0.hdf5'),
                     'H': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodyblobs_new','TU20170201_31pdf_72indiv_38739ImPerInd_bodyblobs_0.hdf5'),
-                    'I': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodyblobs_new','TU20170202_31pdf_72indiv_38913imperind_bodyblobs_0.hdf5'),
+                    'I': os.path.join(self.datafolder,'library','IMDBs','IMDBs_bodyblobs_new','TU20170202_31pdf_72indiv_38913ImPerInd_bodyblobs_0.hdf5'),
                     }
         self.IMDBPaths = []
         self.idsInIMDBs = []
