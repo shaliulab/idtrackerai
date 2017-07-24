@@ -63,6 +63,10 @@ class Blob(object):
     def is_a_crossing(self):
         return self.portrait is None
 
+    @property
+    def has_ambiguous_identity(self):
+        return self.is_a_fish_in_a_fragment and self.identity is list
+
     def overlaps_with(self, other):
         """Checks if pixels are disjoint
         """

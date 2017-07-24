@@ -178,7 +178,7 @@ def only_blob_pixels(height, width, miniframe, pixels, bb):
     return temp_image
 
 
-def reaper(videoPath, frameIndices, preprocessing_type, height, width):
+def reaper(videoPath, frameIndices, height, width):
     # only function called from idTrackerDeepGUI
     print 'reaping', videoPath
     df, numSegment = loadFile(videoPath, 'segmentation')
@@ -247,11 +247,11 @@ def reaper(videoPath, frameIndices, preprocessing_type, height, width):
     print 'you just reaped', videoPath
     return AllPortraits, AllBodies, AllBodyBlobs, AllNoses, AllHeadCentroids, AllCentroids, AllAreas
 
-def portrait(videoPaths, dfGlobal, preprocessing_type, height, width):
+def portrait(videoPaths, dfGlobal, height, width):
     frameIndices = loadFile(videoPaths[0], 'frameIndices')
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    out = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath,frameIndices, preprocessing_type, height, width) for videoPath in videoPaths)
+    out = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath, frameIndices, height, width) for videoPath in videoPaths)
     allPortraits = [t[0] for t in out]
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)

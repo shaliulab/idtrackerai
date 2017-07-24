@@ -14,7 +14,14 @@ from get_predictions import GetPrediction
 from blob import get_images_from_blobs_in_video
 from visualize_embeddings import EmbeddingVisualiser
 from globalfragment import get_images_and_labels_from_global_fragment
+<<<<<<< HEAD
+from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob,\
+                                    compute_P1_individual_fragment_from_blob,\
+                                    compute_identification_frequencies_individual_fragment,\
+                                    is_assignment_ambiguous
+=======
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob, compute_P1_individual_fragment_from_frequencies, compute_identification_frequencies_individual_fragment
+>>>>>>> ffc5c9ebacc232a42c52b1d8a41cd233e6bc74bb
 
 def assign(net, video, images, print_flag):
     print("assigning identities to images...")
@@ -57,22 +64,9 @@ def compute_P1_for_blobs_in_video(video, blobs_in_video):
                 blob._P1_vector = compute_P1_individual_fragment_from_frequencies(frequencies_in_fragment)
                 blob.update_P1_in_fragment()
 
-# def compute_P1_for_blobs_in_video(video, blobs_in_video):
-#     """Assigns individual-fragment-based identities to all the blobs
-#     in the video. It uses P1
-#     """
-#     for i, frame in enumerate(blobs_in_video):
-#         for j, blob in enumerate(frame):
-#             if blob.is_a_fish_in_a_fragment and not blob.assigned_during_accumulation:
-#                 identities_in_fragment = np.asarray(blob.identities_in_fragment())
-#                 frequencies_in_fragment = compute_identification_frequencies_individual_fragment(identities_in_fragment, video.number_of_animals)
-#                 blob._frequencies_in_fragment = frequencies_in_fragment
-#                 blob._P1_vector = compute_P1_individual_fragment_from_frequencies(frequencies_in_fragment)
-#                 blob.update_P1_in_fragment()
-
 def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
     """Assigns individual-fragment-based identities to all the blobs
-    in the video. It uses P1
+    in the video.
     """
     # print('In assign_identity_to_blobs_in_video_by_fragment')
     for blobs_in_frame in blobs_in_video:
@@ -83,5 +77,8 @@ def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
                 blob._P2_vector = compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video)
                 # Assign identity to the fragment
                 identity_in_fragment = np.argmax(blob._P2_vector) + 1
+                ambiguous_identity_in_fragment = is_assignment_ambiguous(blob.P2_vector)
+                if ambiguous_identity_in_fragment is list:
+                    identity_in_fragment = ambiguous_identity_in_fragment
                 # Update identity of all blobs in fragment
                 blob.update_identity_in_fragment(identity_in_fragment)
