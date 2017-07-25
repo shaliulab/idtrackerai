@@ -199,7 +199,7 @@ class Duplication(object):
     def assign_unique_identities(self):
         all_blobs_to_reassign = []
 
-        for identity in duplicated_identities:
+        for identity in self.identities_to_be_reassigned:
             self.available_identities = list(set(self.possible_identities) - set(self.non_available_identities))
             self.blobs_to_reassign = self.get_blobs_with_same_identity(identity)
             self.assign()
