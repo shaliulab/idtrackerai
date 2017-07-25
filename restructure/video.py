@@ -13,13 +13,13 @@ from natsort import natsorted
 import cv2
 
 AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4']
-SUPPORTED_ANIMAL_TYPES = ['fish', 'fly', 'ant']
+SUPPORTED_PREPROCESSING_TYPES = ['portrait', 'body', 'body_blob']
 FRAMES_PER_EPISODE = 500 #long videos are divided into chunks. This is the number of frame per chunk
 
 class Video(object):
-    def __init__(self, video_path = None, animal_type = None, number_of_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
+    def __init__(self, video_path = None, preprocessing_type = None, number_of_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
         self._video_path = video_path #string: path to the video
-        self._animal_type = animal_type #string: type of animals to be tracked in the video
+        self._preprocessing_type = preprocessing_type #string: type of animals to be tracked in the video
         self._number_of_animals = number_of_animals #int: number of animals in the video
         self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split for parallel computation]
         self.bkg = bkg #matrix [shape = shape of a frame] background used to do bkg subtraction
@@ -59,19 +59,21 @@ class Video(object):
             raise ValueError("Supported video extensions are ", AVAILABLE_VIDEO_EXTENSION)
 
     @property
-    def animal_type(self):
-        return self._animal_type
+    def preprocessing_type(self):
+        return self._preprocessing_type
+
+    @preprocessing_type.setter
+    def preprocessing_type(self, value):
+        if value in SUPPORTED_PREPROCESSING_TYPES:
+            self._preprocessing_type = value
+        else:
+            raise ValueError("The supported animal types are " , SUPPORTED_PREPROCESSING_TYPES)
 
     @property
     def number_of_animals(self):
         return self._number_of_animals
 
-    @animal_type.setter
-    def animal_type(self, value):
-        if value in SUPPORTED_ANIMAL_TYPES:
-            self._animal_type = value
-        else:
-            raise ValueError("The supported animal types are " , SUPPORTED_ANIMAL_TYPES)
+
 
     @property
     def maximum_number_of_blobs(self):
