@@ -412,7 +412,7 @@ if __name__ == '__main__':
                                                                         'only_accumulate_one_fragment': job_config.only_accumulate_one_fragment,
                                                                         'train_filters_in_accumulation': bool(job_config.train_filters_in_accumulation),
                                                                         'accumulation_certainty': job_config.accumulation_certainty,
-                                                                        'animal_type': job_config.animal_type,
+                                                                        'preprocessing_type': job_config.preprocessing_type,
                                                                         'IMDB_codes': job_config.IMDB_codes,
                                                                         'ids_codes': job_config.ids_codes,
                                                                         'group_size': int(group_size),
