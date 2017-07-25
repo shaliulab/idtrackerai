@@ -59,9 +59,9 @@ def tests_data_frame():
     solve_duplications = [True, False]
     preprocessing_types = ['portrait', 'body', 'body_blob']
     IMDB_codes = ['ABC','DEF','GHI']
-    test_names = ['correlated_images_DEF_aaa_CNN0_noPretrain_noAccum_100fish_3000frames_gaussian',
-                    'correlated_images_DEF_aaa_CNN0_noPretrain_Accum05_100fish_3000frames_gaussian',
-                    'correlated_images_DEF_aaa_CNN0_Pretrain_Accum05_100fish_3000frames_gaussian'
+    test_names = ['correlated_images_DEF_aaa_CNN0_noPretrain_noAccum_10fish_3000frames_gaussian',
+                    'correlated_images_DEF_aaa_CNN0_noPretrain_Accum05_10fish_3000frames_gaussian',
+                    'correlated_images_DEF_aaa_CNN0_Pretrain_Accum05_10fish_3000frames_gaussian'
                     ]
     pretraining_flags = [False, False, True]
     percentage_of_frames_in_pretainings = [0,0,0.25]
@@ -89,7 +89,7 @@ def tests_data_frame():
                                                                 "preprocessing_type": preprocessing,
                                                                 "IMDB_codes": IMBD_code,
                                                                 "ids_codes": 'aaa',
-                                                                "group_sizes": [100],
+                                                                "group_sizes": [10],
                                                                 "frames_in_video": [3000],
                                                                 "frames_per_individual_fragment": [50, 100, 250, 500, 1000],
                                                                 "std_frames_per_individual_fragment": 150,
