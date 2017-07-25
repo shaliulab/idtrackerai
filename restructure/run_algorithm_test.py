@@ -18,6 +18,7 @@ from pprint import pprint
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
 sys.path.append('./library')
+sys.path.append('./centroid_detector')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
@@ -38,7 +39,7 @@ from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
 from library_utils import Dataset, BlobsListConfig, subsample_dataset_by_individuals, generate_list_of_blobs, LibraryJobConfig, check_if_repetition_has_been_computed
-
+from list_of_crossings import Duplication
 NUM_CHUNKS_BLOB_SAVING = 50 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
 RATIO_OLD = 0.6
