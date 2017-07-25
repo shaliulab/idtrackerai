@@ -3,7 +3,8 @@ import sys
 import numpy as np
 
 MAX_FLOAT = sys.float_info[0]
-LEARNING_PERCENTAGE_DIFFERENCE = .005
+LEARNING_PERCENTAGE_DIFFERENCE_2 = .005
+LEARNING_PERCENTAGE_DIFFERENCE_1 = .005
 OVERFITTING_COUNTER_THRESHOLD = 5
 MAXIMUM_NUMBER_OF_EPOCHS = 10000
 
@@ -46,7 +47,10 @@ class Stop_Training():
                 self.overfitting_counter = 0
             #check if the error is not decreasing much
             if self.check_for_loss_plateau:
-                if np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE*10**(int(np.log10(current_loss))-1) and not self.first_accumulation_flag:
+                if self.first_accumulation_flag and np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE_1*10**(int(np.log10(current_loss))-1):
+                    print('The losses difference is very small, we stop the training\n')
+                    return True
+                elif np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE_2*10**(int(np.log10(current_loss))-1):
                     print('The losses difference is very small, we stop the training\n')
                     return True
             # if the individual accuracies in validation are 1. for all the animals
