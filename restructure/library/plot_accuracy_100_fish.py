@@ -7,7 +7,6 @@ if __name__ == '__main__':
     results = pd.read_pickle('library/results_data_frame_all_2.pkl')
     tests_names = [ 'correlated_images_DEF_aaa_CNN0_noPretrain_noAccum_100fish_3000frames_gaussian',
                     'correlated_images_DEF_aaa_CNN0_noPretrain_Accum05_100fish_3000frames_gaussian',
-                    'correlated_images_DEF_aaa_CNN0_Pretrain_noAccum_100fish_3000frames_gaussian',
                     'correlated_images_DEF_aaa_CNN0_Pretrain_Accum05_100fish_3000frames_gaussian']
     frames_per_fragment_conditions = list(results.frames_per_fragment.unique())
     num_frames_conditions = len(frames_per_fragment_conditions)
@@ -31,15 +30,14 @@ if __name__ == '__main__':
         accuracies = np.squeeze(acc[:,i,:])
         print(accuracies)
         acc_mean = np.nanmean(accuracies,axis = 1)
-        ax.plot(np.asarray([0,1,2,3]),acc_mean,label = str(mean_frames), color = np.asarray(RGB_tuples[i]))
+        ax.plot(np.asarray([0,1,2]),acc_mean,label = str(mean_frames), color = np.asarray(RGB_tuples[i]))
         for j in range(10):
-            ax.scatter(np.asarray([0,1,2,3])+epsilon[i], accuracies[:,j], color = np.asarray(RGB_tuples[i]), alpha = .3)
+            ax.scatter(np.asarray([0,1,2])+epsilon[i], accuracies[:,j], color = np.asarray(RGB_tuples[i]), alpha = .3)
 
     ax.legend()
     ax.set_xlabel('condition')
     ax.set_ylabel('accuracy')
-    plt.xticks([0,1,2,3], [ 'noPretain-noAccum',
+    plt.xticks([0,1,2], [ 'noPretain-noAccum',
                                 'noPretrain-Accum',
-                                'Pretrain-noAccum',
                                 'Pretrain-Accum'])
     ax.set_ylim(0.75,1.01)

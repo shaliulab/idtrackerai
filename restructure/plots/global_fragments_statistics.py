@@ -119,9 +119,16 @@ if __name__ == '__main__':
     fig, ax_arr = plt.subplots(2,4)
     plt.subplots_adjust(hspace = .3, wspace = .5)
 
-    number_of_frames_in_individual_fragments_0 = filter(lambda x: x != 0, number_of_frames_in_individual_fragments)
-    number_of_frames_in_shortest_individual_fragment_0 = filter(lambda x: x != 0, number_of_frames_in_shortest_individual_fragment)
-    distance_travelled_individual_fragments_0 = filter(lambda x: x != 0, distance_travelled_individual_fragments)
+    # remove global fragments that are lenght 0
+    number_of_frames_in_individual_fragments_0 = np.asarray(filter(lambda x: x != 0, number_of_frames_in_individual_fragments))
+    number_of_frames_in_shortest_individual_fragment_0 = np.asarray(filter(lambda x: x != 0, number_of_frames_in_shortest_individual_fragment))
+    distance_travelled_individual_fragments_0 = np.asarray(filter(lambda x: x != 0, distance_travelled_individual_fragments))
+    # scale to match frame rate
+    current_frame_rate = 25
+    new_frame_rate = 32
+    number_of_frames_in_individual_fragments_0 = number_of_frames_in_individual_fragments_0 * new_frame_rate / current_frame_rate
+    number_of_frames_in_shortest_individual_fragment_0 = number_of_frames_in_shortest_individual_fragment_0 * new_frame_rate / current_frame_rate
+
     # number of frames in individual fragments
     nbins = 25
     ax = ax_arr[0,0]
@@ -198,3 +205,5 @@ if __name__ == '__main__':
 
 
     plt.show()
+
+    fig.savefig('8fish_global_fragments_sumamry.pdf', transparent=True)

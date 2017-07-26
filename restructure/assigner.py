@@ -14,14 +14,10 @@ from get_predictions import GetPrediction
 from blob import get_images_from_blobs_in_video
 from visualize_embeddings import EmbeddingVisualiser
 from globalfragment import get_images_and_labels_from_global_fragment
-<<<<<<< HEAD
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob,\
-                                    compute_P1_individual_fragment_from_blob,\
+                                    compute_P1_individual_fragment_from_frequencies,\
                                     compute_identification_frequencies_individual_fragment,\
                                     is_assignment_ambiguous
-=======
-from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob, compute_P1_individual_fragment_from_frequencies, compute_identification_frequencies_individual_fragment
->>>>>>> ffc5c9ebacc232a42c52b1d8a41cd233e6bc74bb
 
 def assign(net, video, images, print_flag):
     print("assigning identities to images...")
