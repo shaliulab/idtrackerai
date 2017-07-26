@@ -182,14 +182,14 @@ if __name__ == '__main__':
                     blob_index = blob_indices_individial_fragments[np.where(blob_indices_individial_fragments[:,1] == blob._fragment_identifier)[0],:][0][0] + 1
                     # ax.plot([i,i+1],[blob_index, blob_index], '-' ,c = colors[blob._identity], linewidth = 20, solid_capstyle ='butt')
                     ax.plot([i,i+1],[blob._identity, blob._identity], 'o-' ,c = colors[blob._identity], markersize = 5, solid_capstyle ='butt',linewidth = 1)
-                    # imscatter(i, blob_index, -blob.portrait, ax = ax, zoom = .3)
-                    # imscatter(i+1 ,blob_index, -blob.next[0].portrait, ax = ax, zoom = .3)
+                    imscatter(i, blob_index, -blob.portrait, ax = ax, zoom = .3)
+                    imscatter(i+1 ,blob_index, -blob.next[0].portrait, ax = ax, zoom = .3)
 
     ax.set_ylabel('blob index')
     ax.set_xlabel('frame number')
     ax.set_yticks(list(range(1,video.number_of_animals+1)))
     ax.set_yticklabels(list(range(1,video.number_of_animals+1)))
-    fig.savefig('8fish_global_fragment.pdf', transparent=True)
+    fig.savefig('8fish_global_fragment_portraits.pdf', transparent=True)
     # ax.set_xlim([245,314])
 
     ''' 3d trajectories '''

@@ -1,5 +1,9 @@
 import pandas as pd
 from matplotlib import pyplot as plt
+import matplotlib
+font = {'family' : 'normal',
+        'size'   : 18}
+matplotlib.rc('font', **font)
 import numpy as np
 
 if __name__ == '__main__':
@@ -12,13 +16,17 @@ if __name__ == '__main__':
     num_frames_conditions = len(frames_per_fragment_conditions)
     num_repetitions = len(list(results.repetition.unique()))
 
-    acc = np.ones((4,5,10))*np.nan
+    acc = np.ones((3,5,10))*np.nan
     for i, test_name in enumerate(tests_names):
         results_test = results[results.test_name == test_name]
         acc[i,:,:] = np.reshape(np.asarray(results_test.accuracy),(num_frames_conditions,num_repetitions))
 
     plt.ion()
     fig, ax = plt.subplots(1)
+    window = plt.get_current_fig_manager().window
+    screen_y = window.winfo_screenheight()
+    screen_x = window.winfo_screenwidth()
+    fig.set_size_inches((screen_x/100,screen_y/100))
 
     import colorsys
     HSV_tuples = [(x*1.0/num_frames_conditions, 0.5, 0.5) for x in range(num_frames_conditions)]
@@ -29,15 +37,16 @@ if __name__ == '__main__':
     for i, mean_frames in enumerate(frames_per_fragment_conditions):
         accuracies = np.squeeze(acc[:,i,:])
         print(accuracies)
-        acc_mean = np.nanmean(accuracies,axis = 1)
-        ax.plot(np.asarray([0,1,2]),acc_mean,label = str(mean_frames), color = np.asarray(RGB_tuples[i]))
+        acc_median = np.nanmedian(accuracies,axis = 1)
+        ax.plot(np.asarray([0,1,2]),acc_median,label = str(mean_frames), color = np.asarray(RGB_tuples[i]), linewidth = 2)
         for j in range(10):
             ax.scatter(np.asarray([0,1,2])+epsilon[i], accuracies[:,j], color = np.asarray(RGB_tuples[i]), alpha = .3)
 
-    ax.legend()
-    ax.set_xlabel('condition')
+    ax.legend(title="mean number of \nframes in \nindividual fragments", fancybox=True)
+    ax.set_xlabel('Algorithm protocol')
     ax.set_ylabel('accuracy')
-    plt.xticks([0,1,2], [ 'noPretain-noAccum',
-                                'noPretrain-Accum',
-                                'Pretrain-Accum'])
+    plt.xticks([0,1,2], [ 'noPretain\nnoAccum',
+                                'noPretrain\nAccum',
+                                'Pretrain\nAccum'])
     ax.set_ylim(0.75,1.01)
+    fig.savefig('100fish_library_tests_algorithm_protocols_portraits.pdf', transparent=True)
