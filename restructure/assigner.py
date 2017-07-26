@@ -58,6 +58,7 @@ def compute_P1_for_blobs_in_video(video, blobs_in_video):
                 frequencies_in_fragment = compute_identification_frequencies_individual_fragment(identities_in_fragment, video.number_of_animals)
                 blob._frequencies_in_fragment = frequencies_in_fragment
                 blob._P1_vector = compute_P1_individual_fragment_from_frequencies(frequencies_in_fragment)
+                # print(blob.P1_vector)XXX sometimes P2 gets to 0...
                 blob.update_P1_in_fragment()
 
 def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):

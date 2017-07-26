@@ -159,11 +159,11 @@ if __name__ == '__main__':
             # compute a model of the area of the animals (considering frames in which
             # all the animals are visible)
             model_area, maximum_body_length = compute_model_area_and_body_length(blobs, video.number_of_animals)
-            if video.animal_type == 'fish':
+            if video.preprocessing_type == 'portrait':
                 portrait_size = int(maximum_body_length/2)
                 portrait_size =  portrait_size + portrait_size%2 #this is to make the portrait_size even
                 video.portrait_size = (portrait_size, portrait_size, 1)
-            elif video.animal_type == 'fly':
+            elif video.preprocessing_type == 'body' or video.preprocessing_type == 'body_blob':
                 portrait_size = int(np.sqrt(maximum_body_length ** 2 / 2))
                 portrait_size = portrait_size + portrait_size%2  #this is to make the portrait_size
                 video.portrait_size = (portrait_size, portrait_size, 1)

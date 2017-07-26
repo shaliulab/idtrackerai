@@ -296,17 +296,17 @@ def SegmentationPreview(video):
         if video.preprocessing_type == 'portrait':
             portraitSize = int(maximum_body_length/2)
             portraitSize =  portraitSize + portraitSize%2 #this is to make the portraitSize even
-        elif video.preprocessing_type == 'body':
+        elif video.preprocessing_type == 'body' or  video.preprocessing_type == 'body_blob':
             portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
             portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
 
         while j < numPortraits:
             if j < numGoodContours:
-                if video._preprocessing_type == 'portrait':
+                if video.preprocessing_type == 'portrait':
                     portrait, _, _= get_portrait(miniFrames[j],goodContours[j],bbs[j],portraitSize)
-                elif video._preprocessing_type == 'body' or video._preprocessing_type == 'ant':
+                elif video.preprocessing_type == 'body':
                     portrait, _, _ = get_body(video, miniFrames[j], pixels[j], bbs[j], portraitSize)
-                elif preprocessing_type == 'body_blob':
+                elif video.preprocessing_type == 'body_blob':
                     portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
             else:
                 portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')

@@ -4,7 +4,7 @@ import numpy as np
 np.random.seed(0)
 ####
 class DataSet(object):
-    def __init__(self, number_of_animals = None, images = None, labels = None, animal_type = None):
+    def __init__(self, number_of_animals = None, images = None, labels = None, preprocessing_type = None):
         """Create dataset of images and labels.
         param: images shaped as [num_of_images, height, width, channels]
         param: labels shaped as [num_of_labels, num_of_classes]
@@ -13,7 +13,7 @@ class DataSet(object):
         self._num_images = len(self.images)
         self.labels = labels
         self.number_of_animals = number_of_animals
-        self.animal_type = animal_type
+        self.preprocessing_type = preprocessing_type
         #check the number of images and labels are the same. If it true set the num_images
         self.consistency_check()
 
@@ -75,7 +75,7 @@ def duplicate_PCA_images(training_images, training_labels):
     training_labels = np.concatenate([training_labels, training_labels], axis = 0)
     return training_images, training_labels
 
-def split_data_train_and_validation(animal_type, number_of_animals, images, labels, validation_proportion = .1):
+def split_data_train_and_validation(preprocessing_type, number_of_animals, images, labels, validation_proportion = .1):
     # Init variables
     train_images = []
     train_labels = []
@@ -103,7 +103,7 @@ def split_data_train_and_validation(animal_type, number_of_animals, images, labe
     train_labels = np.vstack(train_labels)
     # print("train images before duplication ", train_images.shape )
     # print("train labels before duplication ", train_labels.shape )
-    if animal_type is not None and animal_type != 'fish':
+    if preprocessing_type is not None and preprocessing_type != 'portrait':
         train_images, train_labels = duplicate_PCA_images(train_images, train_labels)
         # print("train images after duplication ", train_images.shape )
         # print("train labels after duplication ", train_labels.shape )

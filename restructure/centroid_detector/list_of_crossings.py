@@ -227,111 +227,49 @@ class Duplication(object):
     def assign(self):
         number_of_blobs_to_reassign = len(self.blobs_to_reassign)
         P2_matrix = self.get_P2_matrix(self.blobs_to_reassign)
+        print("P2 matrix not sorted ", P2_matrix)
         ids, P2s = self.sort_P2_matrix(P2_matrix)
-        counter = 0
+        print("sorted P2 matrix", P2s)
+        print("sorted ids ", ids)
         assigned_identities = []
 
-        while counter < number_of_blobs_to_reassign:
-            for i in range(P2_matrix.shape[0]):
-                ids_col = ids[i]
-                P2s_col = P2s[i]
-                max_P2_in_column = np.argmax(P2s_col)
-                candidate_id = ids_col[max_P2_in_column]
-                if candidate_id in self.available_identities and np.max(P2s_col) != 0:
-                    self.blobs_to_reassign[max_P2_in_column]._identity = candidate_id
+
+        for i, (ids_row, P2s_row) in enumerate(zip(ids, P2s)):
+            max_indices = np.where(P2s_row == np.max(P2s_row))[0]
+            if len(max_indices) == len(P2s_row) and sum(P2s_row) != 0:
+                print("baaaad maxima are all the same")
+                for index in max_indices:
+                    self.blobs_to_reassign[index]._identity = 0
+                    P2s[:, index] = 0
+                break
+            elif len(max_indices) > 1:
+                print("removing duplicated maxima")
+                for index in max_indices:
+                    self.blobs_to_reassign[index]._identity = 0
+                    P2s[:, index] = 0
+            elif len(max_indices) == 1:
+                print("gooood duplication!")
+                index_of_blob_to_reassign = max_indices[0]
+                candidate_id = ids_row[index_of_blob_to_reassign]
+                if candidate_id in self.available_identities and np.max(P2s_row) > 1 / blob.number_of_animals:
+                    self.blobs_to_reassign[index_of_blob_to_reassign]._identity = candidate_id
+                    P2s[:, index_of_blob_to_reassign] = 0
                     self.available_identities.remove(candidate_id)
-                    counter += 1
                     assigned_identities.append(candidate_id)
-                elif np.max(P2s_col) == 0 or i == ids.shape[0]:
-                    self.blobs_to_reassign[max_P2_in_column]._identity = 0
-            if candidate_id in assigned_identities:
-                self.blobs_to_reassign[max_P2_in_column]._identity = 0
+                    print("assigned identities ", candidate_id)
+                elif candidate_id in self.available_identities and np.max(P2s_row) < 1 / blob.number_of_animals:
+                    print("put to zero because P2 is lower than random")
+                    self.blobs_to_reassign[index_of_blob_to_reassign]._identity = 0
+                    P2s[:, index_of_blob_to_reassign] = 0
+                elif np.max(P2s_row) == 0 or i == ids.shape[0]:
+                    self.blobs_to_reassign[index_of_blob_to_reassign]._identity = 0
+            if len(assigned_identities) == number_of_blobs_to_reassign:
+                print("done!")
+                break
 
-class TwoFishCrossing(object):
-    def __init__(self, crossing_blob = None):
-        self.blob = crossing_blob
+        # if candidate_id in assigned_identities:
+        #     self.blobs_to_reassign[index_of_blob_to_reassign]._identity = 0
 
-    @staticmethod
-    def fit_samples(samples, n_components = 2, covariance_type = COVARIANCE_TYPE):
-        gmix = mixture.GMM(n_components= n_components, covariance_type = covariance_type)
-        gmix.fit(samples)
-        available_colors = get_spaced_colors_util(n_components, norm = True, black = False)
-        return gmix.predict(samples)
-
-    def clusters2blob_parameters(self, clusters, video):
-        pixels = [self.pxs[np.where(clusters == i)[0]] for i in range(self.number_of_clusters)]
-        areas = [len(pixel) for pixel in pixels]
-        centroids = [np.sum(pixel, axis = 0) / pixel.shape[0] for pixel in pixels]
-        centroids = [[cent[1], cent[0]] for cent in centroids]
-        pixels =  [np.ravel_multi_index([pixel[:,0], pixel[:,1]],(video._height, video._width)) for pixel in pixels]
-        return pixels, areas, centroids
-
-    def get_candidate_blob(self, candidate_blob, previous_blob):
-        if type(previous_blob.identity) is not list:
-            candidate_blob._identity = int(previous_blob.identity)
-            candidate_blob.previous = [previous_blob]
-            candidate_blob.next = self.blob.next
-            candidate_blob._portrait = 'crossing_solved'
-            for next_blob in candidate_blob.next:
-                next_blob.previous = [candidate_blob]
-            print("____________________________________________")
-            print("identity in crossing ", self.blob.identity)
-            print("assigned identity ", candidate_blob.identity)
-            print("is a crossing ", candidate_blob.is_a_crossing)
-            print("____________________________________________")
-        else:
-            candidate_blob._identity = 0
-            candidate_blob._portrait = 'crossing_solved'
-        return candidate_blob
-
-    def get_clusters(self, video):
-        self.number_of_clusters = len(self.blob.identity)
-        self.pxs = np.array(np.unravel_index(self.blob.pixels, (video._height, video._width))).T
-        self.clusters = self.fit_samples(self.pxs, n_components = self.number_of_clusters)
-
-    # def compute_assignment_score(self, overlapping):
-    #     return np.sort(overlapping)[::-1], np.argsort(overlapping)[::-1]
-
-    @staticmethod
-    def naive_assignment(overlapping_percentages):
-        return np.argmax(overlapping_percentages, axis = 0)
-
-    def assign_clusters_identity(self, video):
-        self.get_clusters(video)
-        pixels, areas, centroids = self.clusters2blob_parameters(self.clusters, video)
-        available_identities = self.blob.identity
-        print("available identities ", available_identities)
-        self.blobs_previous_frame = [blob for blob in self.blob.previous]
-        overlapping_percentages = []
-        candidate_blobs = []
-
-        for i in range(self.number_of_clusters):
-            candidate_blob = Blob(centroids[i],
-                                self.blob.contour,
-                                areas[i],
-                                self.blob.bounding_box_in_frame_coordinates,
-                                pixels = pixels[i],
-                                number_of_animals = video.number_of_animals,
-                                frame_number = self.blob.frame_number)
-
-            overlapping = [len(np.intersect1d(candidate_blob.pixels, prev_blob.pixels))/candidate_blob.area for prev_blob in self.blobs_previous_frame]
-            overlapping_percentages.append(overlapping)
-            candidate_blobs.append(candidate_blob)
-
-        overlapping_percentages = np.asarray(overlapping_percentages)
-        print(overlapping_percentages)
-        first_assign = self.naive_assignment(overlapping_percentages)
-        print(first_assign)
-        [available_identities.remove(self.blobs_previous_frame[i].identity) for i in np.unique(first_assign)]
-
-
-        print(available_identities)
-
-        uncrossed_blobs = [self.get_candidate_blob(candidate_blobs[j], self.blobs_previous_frame[i]) for j,i in enumerate(np.unique(first_assign))]
-        if len(available_identities) > 0:
-            prev_blob = [b for b in self.blobs_previous_frame is b.identity in available_identities]
-            uncrossed_blobs.append(self.get_candidate_blob(candidate_blobs[1], prev_blob))
-        return uncrossed_blobs
 
 import cv2
 from pprint import pprint
@@ -355,12 +293,23 @@ class Crossing(object):
         self.width = video._width
         self.blob = crossing_blob
         self.bounding_box = self.blob.bounding_box_in_frame_coordinates
+        print("start solving crossing in frame: " , self.blob.frame_number)
 
     def get_binary_image_from_pixels(self):
         pixels = np.array(np.unravel_index(self.blob.pixels, (self.height, self.width))).T
         image = np.zeros((self.height, self.width)).astype('uint8')
         image[pixels[:, 0], pixels[:,1]] = 255
         return image
+
+    def get_binary_images_from_list_of_pixels(self, list_of_pixels):
+        images = []
+
+        for pixels in list_of_pixels:
+            image = np.zeros((self.height, self.width)).astype('uint8')
+            image[pixels[:, 0], pixels[:,1]] = 255
+            images.append(image)
+
+        return images
 
     @staticmethod
     def erode(image, kernel_size = (3,3)):
@@ -399,73 +348,127 @@ class Crossing(object):
         contours, hierarchy = cv2.findContours(image.astype('uint8'), cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         return contours
 
-    def separate_blobs(self):
+    def separate_blobs(self, erosion_kernel_size = (3,3), threshold_distance_transform = .5):
         print(self.blob.number_of_animals_in_crossing)
         self.image = self.get_binary_image_from_pixels()
-        self.image = self.erode(self.image)
+        self.image = self.erode(self.image, kernel_size = erosion_kernel_size)
         self.image = self.get_distance_transform(self.image)
         self.image = self.normalize(self.image)
-        ret, self.image = cv2.threshold(self.image, .5, 1., cv2.cv.CV_THRESH_BINARY)
-        kernel = np.ones((3,3), np.uint8)
-        self.image = cv2.dilate(self.image, kernel, iterations=1)
+        ret, self.image = cv2.threshold(self.image, threshold_distance_transform, 1., cv2.cv.CV_THRESH_BINARY)
+
         # cv2.imshow('img', self.image)
         # cv2.waitKey()
         contours = self.get_contours(self.image)
         self.contours = self.get_n_contours_by_area(contours, self.blob.number_of_animals_in_crossing)
         self.pixels = [self.get_pixels_from_contour(self.image, contour) for contour in self.contours]
+        images = self.get_binary_images_from_list_of_pixels(self.pixels)
+
+        print("length of images ", len(images))
+        kernel = np.ones((5,5), np.uint8)
+
+        self.pixels = [self.get_pixels_from_contour(image, self.get_contours(cv2.dilate(image, kernel, iterations=1))[0]) for image in images]
+        # images = self.get_binary_images_from_list_of_pixels(self.pixels)
+        # for image in images:
+        #     cv2.imshow('img', image)
+        #     cv2.waitKey()
         self.areas = [len(pixel) for pixel in self.pixels]
+        print("pixels areas ",self.areas)
         self.centroids = [np.sum(pixel, axis = 0) / pixel.shape[0] for pixel in self.pixels]
         self.centroids = [[cent[1], cent[0]] for cent in self.centroids]
         self.pixels = [np.ravel_multi_index([pixel[:,0], pixel[:,1]],(self.height, self.width)) for pixel in self.pixels]
         self.bounding_boxes = [getBoundigBox(contour, self.width, self.height) for contour in self.contours]
+        self.number_of_split_blobs = len(self.pixels)
 
-    def assign_blobs(self):
-        self.next_blobs = self.get_non_crossing_connected_blobs('next')
-        self.prev_blobs = self.get_non_crossing_connected_blobs('previous')
-        prev_next_blobs = [self.prev_blobs, self.next_blobs]
+    def assign_blobs(self, next_or_previous_attribute = None):
+        self.next_or_previous_attribute = next_or_previous_attribute
+        self.connected_blobs = self.get_non_crossing_connected_blobs(self.next_or_previous_attribute)
         #we get the identities in the crossing by considering the next and previous blobs
-        self.identities = np.unique([[_blob.identity for _blob in _blobs] for _blobs in prev_next_blobs if _blobs is not None])
-        #we compute the overlapping of each blob obtained from the crossing blob with all previous and next blobs
-        self.overlapping = np.asarray([np.asarray([self.get_overlapping(pixel, blobs)
-                                            for blobs in prev_next_blobs if blobs is not None])
-                                            for i,pixel in enumerate(self.pixels)])
-        #we consider the mean of previous and next overlapping percentages (if available)
-        self.averaged_overlapping = np.mean(self.overlapping, axis = 1)
-        print("----- ids and overlappings \n")
-        print("identities ",self.identities)
-        print("overlapping\n")
-        pprint(self.overlapping)
-        print("averaged overlapping\n")
-        pprint(self.averaged_overlapping)
-        if not np.sum(np.isnan(self.averaged_overlapping)):
-            self.get_identities_of_crossing_blobs()
-            return self.blobs
-        else:
-            return [self.blob]
+        if self.connected_blobs is not None:
+            self.identities = np.asarray([_blob.identity for _blob in self.connected_blobs ])
+            print("identities not unique ", self.identities)
+            _, identities_ind = np.unique(self.identities, return_index = True)
+            self.identities = self.identities[np.sort(identities_ind)]
+            print("identities ordered and unique ", self.identities)
+            # assert len(self.identities) == self.blob.number_of_animals_in_crossing
+            #we compute the overlapping of each blob obtained from the crossing blob with all previous and next blobs
+            self.overlapping = np.asarray([[self.get_overlapping_percentage(connected_blob.pixels, pixel)
+                                for connected_blob in self.connected_blobs]
+                                for pixel in self.pixels])
 
-    def get_overlapping(self, pixels, blobs):
-        overlapping = [self.get_overlapping_percentage(pixels, blob.pixels) for blob in blobs]
-        # identities = np.asarray([blob.identity for blob in blobs])
-        # return corresponding_identities[np.argsort(overlapping)[::-1]], np.sort(overlapping)[::-1]
-        return overlapping#, identities
+            #we consider the mean of previous and next overlapping percentages (if available)
+            print("----- ids and overlappings \n")
+            print("identities ",self.identities)
+            print("overlapping\n")
+            pprint(self.overlapping)
+            print("number of blobs found in crossing ", self.number_of_split_blobs)
+            self.get_identities_of_crossing_blobs()
+        else:
+            self.blobs = None
+        return self.blobs
 
     def get_non_crossing_connected_blobs(self, attribute = 'None'):
-        blobs = [blob for blob in getattr(self.blob, attribute) if not blob.is_a_crossing]
+        blobs = [blob for blob in getattr(self.blob, attribute) if not blob.is_a_crossing and blob.identity != 0]
         return blobs if len(blobs) > 0 else None
 
     def get_overlapping_percentage(self, pixels1, pixels2):
         return len(np.intersect1d(pixels1, pixels2))/len(pixels1)
 
     def get_identities_of_crossing_blobs(self):
-        predictions = self.averaged_overlapping
-        identities_index = np.argsort(predictions, axis = 1)
-        self.identities = self.identities[identities_index]
+        predictions = self.overlapping
         #case 1
-        if len(self.identities[:,0]) == self.blob.number_of_animals_in_crossing and len(self.identities[0,:]) == self.blob.number_of_animals_in_crossing:
-            self.blobs = [self.init_blob(i, identity) for i, identity in enumerate(self.identities[:,0])]
-        else:
-            self.blobs = [self.blob]
+        if len(self.identities) <= 1 or np.sum(np.isnan(predictions)):
+            print("______bad case: no previous or next non crossing blobs found")
+            self.blobs = None
 
+        elif self.number_of_split_blobs == 1:# bad case
+            print("______bad case: we are not able to split the crossing")
+            threshold = .5
+
+            while self.number_of_split_blobs == 1 and threshold != 1.:
+                threshold += .1
+                print("no blobs found, eroding more", threshold)
+                self.separate_blobs(threshold_distance_transform = threshold)
+
+            if threshold == 1. or self.number_of_split_blobs == 1:
+                self.blobs = None
+            else:
+                self.assign_blobs(next_or_previous_attribute = self.next_or_previous_attribute)
+        # case 2
+        # elif predictions.shape[0] == self.blob.number_of_animals_in_crossing -1 and predictions.shape[1] == self.blob.number_of_animals_in_crossing:
+        elif predictions.shape[0] == self.blob.number_of_animals_in_crossing and predictions.shape[1] == self.blob.number_of_animals_in_crossing:
+            print("______good case 1")
+            self.identities = self.check_prediction_matrix(predictions, self.identities)
+            if self.identities is not None:
+                self.blobs = [self.init_blob(i, identity) for i, identity in enumerate(self.identities)]
+            else:
+                self.blobs = None
+        else:
+            print("______other cases")
+            self.blobs = None
+
+    def bad_case(self):
+        self.blobs = [self.init_blob(0, identity) for identity in self.blob.identity]
+
+    def check_prediction_matrix(self, predictions, identities):
+        print("identities ")
+        #if len(np.unique(identities)) == len(identities) - 1:
+        for column in predictions.T:
+            column[column!= max(column)] = 0
+        print("predictions ", predictions)
+        identities_index = np.argmax(predictions, axis = 1)
+        identities = identities[identities_index]
+        num_non_zero_rows = np.sum(~np.all(predictions == 0, axis=1))
+        print("num_non_zero_rows", num_non_zero_rows)
+        if num_non_zero_rows == self.blob.number_of_animals_in_crossing - 1:
+            print("identities ", identities)
+            print("assigned identities ", set(identities[~np.all(predictions == 0, axis=1)]))
+            missing_identity = set(self.identities) - set(identities[~np.all(predictions == 0, axis=1)])
+            print("missing identity ", missing_identity)
+            identities[np.all(predictions == 0, axis=1)] = list(missing_identity)[0]
+        elif num_non_zero_rows == 0:
+            return None
+
+        return identities
 
     def init_blob(self, index, identity):
         print("index ", index)
@@ -478,8 +481,11 @@ class Crossing(object):
                     number_of_animals = video.number_of_animals,
                     frame_number = self.blob.frame_number)
         blob._identity = identity
-        blob.previous = self.prev_blobs
-        blob.next = self.blob.next
+        if self.connected_blobs is not None:
+            blobs_to_be_connected = [connected_blob for connected_blob in self.connected_blobs if connected_blob.identity == blob.identity]
+            setattr(blob, self.next_or_previous_attribute, blobs_to_be_connected)
+        else:
+            setattr(blob, self.next_or_previous_attribute, getattr(self.blob, self.next_or_previous_attribute))
         blob._portrait = 'uncrossed blob'
         return blob
 
@@ -493,10 +499,10 @@ if __name__ == "__main__":
 
     #load video and list of blobs
     # video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4/video_object.npy').item()
-    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/conflict8Short/session_1/video_object.npy').item()
+    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Conflicto8/session_12/video_object.npy').item()
     number_of_animals = video.number_of_animals
     # list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4/preprocessing/blobs_collection.npy'
-    list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/conflict8Short/session_1/preprocessing/blobs_collection_safe.npy'
+    list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Conflicto8/session_12/preprocessing/blobs_collection_safe.npy'
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
     if not hasattr(video, "velocity_threshold"):
@@ -504,15 +510,18 @@ if __name__ == "__main__":
 
 
     for blobs_in_frame in blobs:
-        try:
-            print("------------------------frame_number: ", blobs_in_frame[0].frame_number)
-        except:
-            print("--------")
+
         identities = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
-        print("identities in frame ", identities)
+        # print("identities in frame ", identities)
         duplicated_identities = set([x for x in identities if identities.count(x) > 1])
-        print("duplicated identities ", duplicated_identities)
+        # print("duplicated identities ", duplicated_identities)
         if len(duplicated_identities) > 0:
+            try:
+                print("------------------------frame_number: ", blobs_in_frame[0].frame_number)
+            except:
+                print("--------")
+            print("identities in frame ", identities)
+            print("duplicated identities ", duplicated_identities)
             frame  = Duplication(blobs_in_frame_with_duplication = blobs_in_frame,
                                 duplicated_identities = duplicated_identities)
             blobs_to_reassign = frame.assign_unique_identities()
@@ -540,9 +549,9 @@ if __name__ == "__main__":
         blob._identity = jump.jumping_blob.identity
         blob._P1_vector = assigner._softmax_probs[i]
         blob._P2_vector = None
-
-    ''' Find who is in the crossings '''
-
+    #
+    # ''' Find who is in the crossings '''
+    #
     crossing_identifier = 0
 
     for frame_number, blobs_in_frame in enumerate(blobs):
@@ -597,6 +606,7 @@ if __name__ == "__main__":
                         print("previous_blob.bad_crossing(after), ", blob_previous.bad_crossing)
                 blob._identity.extend(list(flatten([next_blob.identity for next_blob in blob.next])))
                 blob._identity = list(np.unique(blob._identity))
+
                 for next_blob in blob.next:
                     print("next_blob: is_a_fish - %i, is_a_crossing - %i" %(next_blob.is_a_fish, next_blob.is_a_crossing))
                     print("next_blob identity: ", next_blob.identity)
@@ -625,25 +635,45 @@ if __name__ == "__main__":
             if blob.is_a_crossing:
                 print("num animals ", blob.number_of_animals_in_crossing)
 
-    #Solving 2-fish crossings
     for blobs_in_frame in blobs:
         for blob in blobs_in_frame:
-            if blob.is_a_crossing:
-                print(blob.frame_number)
+            if blob.is_a_crossing and blob.frame_number != 0:
+                print("\n***************************frame number ",blob.frame_number)
                 crossing = Crossing(blob, video)
                 crossing.separate_blobs()
-                uncrossed_blobs = crossing.assign_blobs()
-                blobs_in_frame.remove(blob)
-                blobs_in_frame.extend(uncrossed_blobs)
-    #         if blob.is_a_crossing and blob.number_of_animals_in_crossing == 2 and blob.frame_number != 0:
-    #             print("__________frame number ", blob.frame_number)
-    #             crossing = TwoFishCrossing(crossing_blob = blob)
-    #             uncrossed_blobs = crossing.assign_clusters_identity(video)
-    #             blobs_in_frame.remove(blob)
-    #             blobs_in_frame.extend(uncrossed_blobs)
-    #
-    # blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
-    # blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
-    # blobs_list.cut_in_chunks()
-    # blobs_list.save()
-    # frame_by_frame_identity_inspector(video, blobs)
+                uncrossed_blobs = crossing.assign_blobs(next_or_previous_attribute = 'previous')
+                if uncrossed_blobs is not None:
+                    for _blob in blob.next:
+                        _blob.previous.remove(blob)
+                        _blob.previous.extend(uncrossed_blobs)
+                    print("identities of uncrossed blobs ", [b.identity for b in uncrossed_blobs])
+                    blobs_in_frame.remove(blob)
+                    blobs_in_frame.extend(uncrossed_blobs)
+                    print("new identities in frame ", [b.identity for b in blobs_in_frame])
+                else:
+                    print("no blobs found")
+
+    for blobs_in_frame in blobs[::-1]:
+        for blob in blobs_in_frame:
+            if blob.is_a_crossing and blob.frame_number != 0:
+                print("\n***************************frame number ",blob.frame_number)
+                crossing = Crossing(blob, video)
+                crossing.separate_blobs()
+                uncrossed_blobs = crossing.assign_blobs(next_or_previous_attribute = 'next')
+                if uncrossed_blobs is not None:
+                    for _blob in blob.previous:
+                        _blob.next.remove(blob)
+                        _blob.next.extend(uncrossed_blobs)
+                    print("identities of uncrossed blobs ", [b.identity for b in uncrossed_blobs])
+                    blobs_in_frame.remove(blob)
+                    blobs_in_frame.extend(uncrossed_blobs)
+                    print("new identities in frame ", [b.identity for b in blobs_in_frame])
+                else:
+                    print("no blobs found")
+
+
+    blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+    blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
+    blobs_list.cut_in_chunks()
+    blobs_list.save()
+    frame_by_frame_identity_inspector(video, blobs)
