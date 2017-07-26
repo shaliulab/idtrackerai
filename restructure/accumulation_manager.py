@@ -7,13 +7,13 @@ from statistics_for_assignment import compute_P1_individual_fragment_from_freque
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
-# CERTAINTY_THRESHOLD = 0.5 # threshold to select a individual fragment as eligible for training
+CERTAINTY_THRESHOLD = 0.5 # threshold to select a individual fragment as eligible for training
 
 ###
 
 ###
 class AccumulationManager(object):
-    def __init__(self,global_fragments, number_of_animals):
+    def __init__(self,global_fragments, number_of_animals, certainty_threshold = CERTAINTY_THRESHOLD):
         """ This class manages the selection of global fragments for accumulation,
         the retrieval of images from the new global fragments, the selection of
         of images for training, the final assignment of identities to the global fragments
@@ -28,7 +28,7 @@ class AccumulationManager(object):
         self.number_of_animals = number_of_animals
         self.global_fragments = global_fragments
         self.counter = 0
-        # self.certainty_threshold = certainty_threshold
+        self.certainty_threshold = certainty_threshold
         self.individual_fragments_used = [] # list with the individual_fragments_identifiers of the individual fragments used for training
         self.identities_of_individual_fragments_used = [] # identities of the individual fragments used for training
         self.used_images = None # images used for training the network
@@ -236,7 +236,7 @@ class AccumulationManager(object):
                 # if the individual fragment is in the list of candidates we check the certainty
                 index_in_candidate_individual_fragments = list(self.candidate_individual_fragments_identifiers).index(individual_fragment_identifier)
                 individual_fragment_certainty =  self.certainty_of_candidate_individual_fragments[index_in_candidate_individual_fragments]
-                if individual_fragment_certainty <= 0.8:
+                if individual_fragment_certainty <= self.certainty_threshold:
                     # if the certainty of the individual fragment is not high enough
                     # we set the global fragment not to be acceptable for training
                     # print("it is not certain enough: ", individual_fragment_certainty)

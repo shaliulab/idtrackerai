@@ -18,6 +18,7 @@ from pprint import pprint
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
 sys.path.append('./library')
+sys.path.append('./centroid_detector')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
@@ -38,7 +39,7 @@ from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
 from library_utils import Dataset, BlobsListConfig, subsample_dataset_by_individuals, generate_list_of_blobs, LibraryJobConfig, check_if_repetition_has_been_computed
-
+from list_of_crossings import Duplication
 NUM_CHUNKS_BLOB_SAVING = 50 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
 RATIO_OLD = 0.6
@@ -79,6 +80,7 @@ if __name__ == '__main__':
     dataset = Dataset(IMDB_codes = job_config.IMDB_codes, ids_codes = job_config.ids_codes, preprocessing_type = job_config.preprocessing_type)
     dataset.loadIMDBs()
     print("images shape, ", dataset.images.shape)
+    imsize = dataset.images.shape[1]
 
     for group_size in job_config.group_sizes:
 
@@ -110,7 +112,7 @@ if __name__ == '__main__':
                         video._num_frames = frames_in_video
                         video.tracking_with_knowledge_transfer = job_config.knowledge_transfer_flag
                         video.knowledge_transfer_model_folder = job_config.knowledge_transfer_folder
-                        video.portrait_size = (32, 32, 1) #NOTE: this can change if the library changes. BUILD next library with new preprocessing.
+                        video.portrait_size = (imsize, imsize, 1) #NOTE: this can change if the library changes. BUILD next library with new preprocessing.
 
                         #############################################################
                         ####################   Preprocessing   ######################
@@ -410,7 +412,7 @@ if __name__ == '__main__':
                                                                         'only_accumulate_one_fragment': job_config.only_accumulate_one_fragment,
                                                                         'train_filters_in_accumulation': bool(job_config.train_filters_in_accumulation),
                                                                         'accumulation_certainty': job_config.accumulation_certainty,
-                                                                        'animal_type': job_config.animal_type,
+                                                                        'preprocessing_type': job_config.preprocessing_type,
                                                                         'IMDB_codes': job_config.IMDB_codes,
                                                                         'ids_codes': job_config.ids_codes,
                                                                         'group_size': int(group_size),
