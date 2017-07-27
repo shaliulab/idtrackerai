@@ -127,7 +127,7 @@ def get_next_number_of_frames_in_fragment(config):
     std = config.std_number_of_frames_per_fragment
     X = gamma(a = std, loc = 1, scale = mu)
     number_of_frames_per_fragment = int(X.rvs(1))
-    while number_of_frames_per_fragment < min_number_of_frames_per_fragment or number_of_frames_per_fragment > max_number_of_frames_per_fragment:
+    while number_of_frames_per_fragment < config.min_number_of_frames_per_fragment or number_of_frames_per_fragment > config.max_number_of_frames_per_fragment:
         number_of_frames_per_fragment = int(X.rvs(1))
 
     return number_of_frames_per_fragment

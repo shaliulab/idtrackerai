@@ -60,7 +60,8 @@ def tests_data_frame():
     solve_duplications = [False]
     # preprocessing_types = ['portrait', 'body', 'body_blob']
     preprocessing_types = ['portrait']
-    IMDB_codes = ['ABC','DEF','GHI']
+    # IMDB_codes = ['ABC','DEF','GHI']
+    IMDB_codes = ['ABC']
     test_names = ['correlated_images_DEF_aaa_CNN0_noPretrain_noAccum_10fish_3000frames_gamma',
                     'correlated_images_DEF_aaa_CNN0_noPretrain_Accum05_10fish_3000frames_gamma',
                     'correlated_images_DEF_aaa_CNN0_Pretrain_Accum05_10fish_3000frames_gamma'
