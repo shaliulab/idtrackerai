@@ -305,7 +305,7 @@ def SegmentationPreview(video):
                 if video.preprocessing_type == 'portrait':
                     portrait, _, _= get_portrait(miniFrames[j],goodContours[j],bbs[j],portraitSize)
                 elif video.preprocessing_type == 'body':
-                    portrait, _, _ = get_body(video, miniFrames[j], pixels[j], bbs[j], portraitSize)
+                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize)
                 elif video.preprocessing_type == 'body_blob':
                     portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
             else:
