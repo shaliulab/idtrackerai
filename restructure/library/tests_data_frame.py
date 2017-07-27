@@ -56,8 +56,10 @@ def tests_data_frame():
     Portrait preprocessing
     100 fish 3000 frames per video. Normal distribution of individual fragments
     *************************************************************************'''
-    solve_duplications = [True, False]
-    preprocessing_types = ['portrait', 'body', 'body_blob']
+    # solve_duplications = [True, False]
+    solve_duplications = [False]
+    # preprocessing_types = ['portrait', 'body', 'body_blob']
+    preprocessing_types = ['portrait']
     IMDB_codes = ['ABC','DEF','GHI']
     test_names = ['correlated_images_DEF_aaa_CNN0_noPretrain_noAccum_10fish_3000frames_gamma',
                     'correlated_images_DEF_aaa_CNN0_noPretrain_Accum05_10fish_3000frames_gamma',
@@ -93,7 +95,7 @@ def tests_data_frame():
                                                                 "frames_in_video": [3000],
                                                                 "frames_per_individual_fragment": [50, 165, 848.5],
                                                                 "std_frames_per_individual_fragment": [1.5, 1, .6], # it is the parameter of the gamma related to the variance "a" in scipy
-                                                                "repetitions": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                                                                "repetitions": [1, 2, 3, 4, 5],
                                                                  }, ignore_index=True)
 
     tests_data_frame.to_pickle('./library/tests_data_frame.pkl')
