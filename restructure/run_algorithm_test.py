@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
         for frames_in_video in job_config.frames_in_video:
 
-            for i, frames_in_fragment in enumerate(job_config.frames_per_individual_fragment):
+            for i, (frames_in_fragment, variance) in enumerate(zip(job_config.frames_per_individual_fragment,job_config.std_frames_per_individual_fragment)):
                 for repetition in job_config.repetitions:
                     frames_in_fragment_path = os.path.join(job_config.condition_path,'group_size_' + str(group_size),
                                                             'num_frames_' + str(frames_in_video),
@@ -94,7 +94,7 @@ if __name__ == '__main__':
                                                             'repetition_' + str(repetition))
 
 
-                    print("\n********** group size %i - frames_in_video %i - frames_in_fragment %i - repetition %i ********" %(group_size,frames_in_video,frames_in_fragment,repetition))
+                    print("\n********** group size %i - frames_in_video %i - frames_in_fragment %s - repetition %i ********" %(group_size,frames_in_video,str(frames_in_fragment),repetition))
                     already_computed = False
                     if os.path.isfile('./library/results_data_frame.pkl'):
                         already_computed = check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, frames_in_fragment, repetition)
@@ -122,7 +122,7 @@ if __name__ == '__main__':
 
                         config = BlobsListConfig(number_of_animals = group_size,
                                                 number_of_frames_per_fragment = frames_in_fragment,
-                                                std_number_of_frames_per_fragment = job_config.std_frames_per_individual_fragment,
+                                                std_number_of_frames_per_fragment = variance,
                                                 number_of_frames = frames_in_video,
                                                 repetition = repetition)
                         portraits, centroids = subsample_dataset_by_individuals(dataset, config)
@@ -417,7 +417,7 @@ if __name__ == '__main__':
                                                                         'ids_codes': job_config.ids_codes,
                                                                         'group_size': int(group_size),
                                                                         'frames_in_video': int(frames_in_video),
-                                                                        'frames_per_fragment': int(frames_in_fragment),
+                                                                        'frames_per_fragment': frames_in_fragment,
                                                                         'repetition': int(repetition),
                                                                         'individual_accuracies': individual_accuracies,
                                                                         'accuracy': accuracy,

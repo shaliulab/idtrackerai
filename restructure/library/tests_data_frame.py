@@ -59,9 +59,9 @@ def tests_data_frame():
     solve_duplications = [True, False]
     preprocessing_types = ['portrait', 'body', 'body_blob']
     IMDB_codes = ['ABC','DEF','GHI']
-    test_names = ['correlated_images_DEF_aaa_CNN0_noPretrain_noAccum_10fish_3000frames_gaussian',
-                    'correlated_images_DEF_aaa_CNN0_noPretrain_Accum05_10fish_3000frames_gaussian',
-                    'correlated_images_DEF_aaa_CNN0_Pretrain_Accum05_10fish_3000frames_gaussian'
+    test_names = ['correlated_images_DEF_aaa_CNN0_noPretrain_noAccum_10fish_3000frames_gamma',
+                    'correlated_images_DEF_aaa_CNN0_noPretrain_Accum05_10fish_3000frames_gamma',
+                    'correlated_images_DEF_aaa_CNN0_Pretrain_Accum05_10fish_3000frames_gamma'
                     ]
     pretraining_flags = [False, False, True]
     percentage_of_frames_in_pretainings = [0,0,0.25]
@@ -89,10 +89,10 @@ def tests_data_frame():
                                                                 "preprocessing_type": preprocessing,
                                                                 "IMDB_codes": IMBD_code,
                                                                 "ids_codes": 'aaa',
-                                                                "group_sizes": [10],
+                                                                "group_sizes": [100],
                                                                 "frames_in_video": [3000],
-                                                                "frames_per_individual_fragment": [50, 100, 250, 500, 1000],
-                                                                "std_frames_per_individual_fragment": 150,
+                                                                "frames_per_individual_fragment": [50, 165, 848.5],
+                                                                "std_frames_per_individual_fragment": [1.5, 1, .6], # it is the parameter of the gamma related to the variance "a" in scipy
                                                                 "repetitions": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                                                                  }, ignore_index=True)
 
