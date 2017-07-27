@@ -121,13 +121,13 @@ if __name__ == '__main__':
                 centroid_trajectories[frame_number, blob.identity-1, :] = blob.centroid
 
     for individual in range(video.number_of_animals):
-        ax.plot(centroid_trajectories[:,individual,0], centroid_trajectories[:,individual,1], range(video._num_frames),color = colors[individual + 1] )
+        ax.plot(range(video._num_frames-500),centroid_trajectories[500:,individual,0], centroid_trajectories[500:,individual,1],color = colors[individual + 1] )
         # ax.plot(centroid_trajectories[:,individual,0], np.ones(number_of_frames)*650, range(number_of_frames),color = colors[individual + 1], alpha = 1 , linewidth = 1)
         # ax.plot(np.ones(number_of_frames)*950, centroid_trajectories[:,individual,1], range(number_of_frames),color = colors[individual + 1], alpha = 1, linewidth = 1)
 
-    ax.view_init(5, -135)
-    print(screen_y, screen_x)
-    fig.set_size_inches((screen_x/3/100,screen_y/100))
+    # ax.set_xlim([0,900])
+    ax.view_init(20, -85)
+    fig.set_size_inches((screen_x/100,screen_y/3/100))
 
     # import mpl_toolkits.mplot3d.art3d as art3d
     # from matplotlib.patches import Circle, PathPatch
@@ -139,13 +139,18 @@ if __name__ == '__main__':
     # art3d.pathpatch_2d_to_3d(p2, z=950, zdir="x")
 
     # Get rid of the ticks
-    ax.set_xticks([])
+    ax.set_zticks([])
     ax.set_yticks([])
+
     # ax.set_xlim((750,950))
     # ax.set_ylim((50,650))
-    ax.set_zlabel('frame number', labelpad=20)
-    ax.zaxis.set_rotate_label(True)
-    # fig.savefig('8fish_3dtrajectories.pdf', transparent=True)
-    plt.show()
+    ax.set_xlabel('frame number', labelpad=50)
+    # ax.zaxis.set_rotate_label(True)
+    plt.axis('equal')
+    # plt.subplots_adjust(left=0, bottom=.3, right=1, top=.7,
+                # wspace=.2, hspace=.2)
+    fig.savefig('all_8fish_3dtrajectories.pdf', transparent=True)
+    # plt.tight_layout()
+    # plt.show()
 
     # ax.set_zlim([245-min_start_individual_fragments,314-min_start_individual_fragments])

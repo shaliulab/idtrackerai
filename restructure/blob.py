@@ -364,7 +364,7 @@ def check_global_fragments(blobs_in_video, num_animals):
 def apply_model_area(video, blob, model_area, portraitSize):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
         if video.preprocessing_type == 'portrait':
-            portrait, blob._nose_coordinates, blob._head_coordinates = get_potrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize)
+            portrait, blob._nose_coordinates, blob._head_coordinates = get_portrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize)
             blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
             blob.bounding_box_image = None
         elif video.preprocessing_type == 'body':
