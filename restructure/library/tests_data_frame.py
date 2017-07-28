@@ -94,8 +94,8 @@ def tests_data_frame():
                                                                 "ids_codes": 'aaa',
                                                                 "group_sizes": [100],
                                                                 "frames_in_video": [3000],
-                                                                "frames_per_individual_fragment": [250] #[50, 165, 848.5],
-                                                                "std_frames_per_individual_fragment": [0.35]#[1.5, 1, .6], # it is the parameter of the gamma related to the variance "a" in scipy
+                                                                "frames_per_individual_fragment": [250], #[50, 165, 848.5],
+                                                                "std_frames_per_individual_fragment": [0.35],#[1.5, 1, .6], # it is the parameter of the gamma related to the variance "a" in scipy
                                                                 "repetitions": [1, 2, 3, 4, 5],
                                                                  }, ignore_index=True)
 
