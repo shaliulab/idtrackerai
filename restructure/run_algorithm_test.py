@@ -39,7 +39,8 @@ from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 
 from library_utils import Dataset, BlobsListConfig, subsample_dataset_by_individuals, generate_list_of_blobs, LibraryJobConfig, check_if_repetition_has_been_computed
-from list_of_crossings import Duplication
+from list_of_crossings import Duplication, solve_duplications
+
 NUM_CHUNKS_BLOB_SAVING = 50 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
 RATIO_OLD = 0.6
@@ -301,38 +302,12 @@ if __name__ == '__main__':
                             print("All the global fragments have been used in the accumulation")
                         assignation_time = time.time() - start
 
-
-                        #############################################################
-                        ###################  Duplications removal ###################
-                        ####
-                        #############################################################
-                        start = time.time()
-                        if job_config.solve_duplications:
-                            for blobs_in_frame in blobs:
-                                try:
-                                    print("------------------------frame_number: ", blobs_in_frame[0].frame_number)
-                                except:
-                                    print("--------")
-                                identities = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
-                                print("identities in frame ", identities)
-                                duplicated_identities = set([x for x in identities if identities.count(x) > 1])
-                                print("duplicated identities ", duplicated_identities)
-                                if len(duplicated_identities) > 0:
-                                    frame  = Duplication(blobs_in_frame_with_duplication = blobs_in_frame,
-                                                        duplicated_identities = duplicated_identities)
-                                    blobs_to_reassign = frame.assign_unique_identities()
-
-                                    for blob in blobs_in_frame:
-                                        for blob_d in blobs_to_reassign:
-                                            if blob is blob_d and blob.identity != blob_d.identity:
-                                                blob.update_identity_in_fragment(blob_d.identity)
-                        duplications_removal_time = time.time() - start
-
                         #############################################################
                         ###################     Accuracies     ######################
                         ####
                         #############################################################
                         print("\n**** Accuracies ****")
+                        number_of_possible_assignations = 0
                         number_of_correct_assignations = [0] * group_size
                         number_assignations = [0]*group_size
                         number_of_identity_repetitions = 0
@@ -350,12 +325,13 @@ if __name__ == '__main__':
                                 if blob._fragment_identifier not in individual_fragments:
                                     individual_fragments.append(blob._fragment_identifier)
                                 if blob.is_a_fish_in_a_fragment:
-                                    number_assignations[i] += 1
+                                    number_of_possible_assignations += 1
                                     if blob._assigned_during_accumulation:
                                         number_of_blobs_assigned_in_accumulation += 1
                                     if blob.identity is not None and blob.identity != 0:
+                                        number_assignations[blob.user_generated_identity-1] += 1
                                         if blob.identity == blob.user_generated_identity:
-                                            number_of_correct_assignations[i] += 1
+                                            number_of_correct_assignations[blob.user_generated_identity-1] += 1
                                         elif blob._assigned_during_accumulation:
                                             if blob._fragment_identifier not in individual_fragments_badly_assigned_in_accumulation:
                                                 individual_fragments_badly_assigned_in_accumulation.append(blob._fragment_identifier)
@@ -378,9 +354,99 @@ if __name__ == '__main__':
 
                         individual_accuracies = np.asarray(number_of_correct_assignations)/np.asarray(number_assignations)
                         accuracy = np.sum(number_of_correct_assignations)/np.sum(number_assignations)
+                        accuracy_overall = np.sum(number_of_correct_assignations)/number_of_possible_assignations
                         print("\n\ngroup_size: ", group_size)
-                        print("individual_accuracies: ", individual_accuracies)
-                        print("accuracy: ", accuracy)
+                        print("individual_accuracies(assigned): ", individual_accuracies)
+                        print("accuracy(assigned): ", accuracy)
+                        print("accuracy: ", accuracy_overall)
+                        print("\nnumber of global fragments: ", len(global_fragments))
+                        print("number of accumulated fragments:", sum([global_fragment.used_for_training for global_fragment in global_fragments]))
+                        print("number of candidate global fragments:", len(candidates_next_global_fragments))
+                        print("number of acceptable fragments: ", number_of_acceptable_fragments)
+                        print("number of unique fragments: ", number_of_unique_fragments + 1)
+                        print("number of certain fragments: ", number_of_certain_fragments + 1)
+                        print("\nnumber of individual fragments: ", len(individual_fragments))
+                        print("number of individual fragments badly assigned in acumulation: ", len(individual_fragments_badly_assigned_in_accumulation))
+                        print("number of fragments that are repetitions: ", len(individual_fragments_that_are_repetitions))
+                        print("\nframes in video: ", frames_in_video)
+                        print("number of frames with repetitions: ", number_of_frames_with_repetitions)
+                        print("number of assignation: ", number_assignations)
+                        print("number correct assignations: ", number_of_correct_assignations)
+                        print("number of identity repetitions: ", number_of_identity_repetitions)
+                        print("number of identity shifts in accumulated frames: ", number_of_identity_shifts_in_accumulated_frames)
+                        print("****************************************************************************************************\n\n")
+
+                        #############################################################
+                        ###################  Duplications removal ###################
+                        ####
+                        #############################################################
+                        start = time.time()
+                        if job_config.solve_duplications:
+                            print("\n**** Solving duplicated identities ****")
+                            solve_duplications(blobs,group_size)
+
+
+                        duplications_removal_time = time.time() - start
+
+                        #############################################################
+                        ###################     Accuracies     ######################
+                        ####
+                        #############################################################
+                        print("\n**** Accuracies ****")
+                        number_of_possible_assignations = 0
+                        number_of_correct_assignations = [0] * group_size
+                        number_assignations = [0]*group_size
+                        number_of_identity_repetitions = 0
+                        number_of_frames_with_repetitions = 0
+                        number_of_identity_shifts_in_accumulated_frames = 0
+                        number_of_blobs_assigned_in_accumulation = 0
+                        number_of_not_assigned_blobs = [0] * group_size
+                        individual_fragments_badly_assigned_in_accumulation = []
+                        individual_fragments_that_are_repetitions = []
+                        individual_fragments = []
+                        for frame_number, blobs_in_frame in enumerate(blobs):
+                            identities_in_frame = []
+                            frame_with_repetition = False
+                            for i, blob in enumerate(blobs_in_frame):
+                                if blob._fragment_identifier not in individual_fragments:
+                                    individual_fragments.append(blob._fragment_identifier)
+                                if blob.is_a_fish_in_a_fragment:
+                                    number_of_possible_assignations += 1
+                                    if blob._assigned_during_accumulation:
+                                        number_of_blobs_assigned_in_accumulation += 1
+                                    if blob.identity is not None and blob.identity != 0:
+                                        number_assignations[blob.user_generated_identity-1] += 1
+                                        if blob.identity == blob.user_generated_identity:
+                                            number_of_correct_assignations[blob.user_generated_identity-1] += 1
+                                        elif blob._assigned_during_accumulation:
+                                            if blob._fragment_identifier not in individual_fragments_badly_assigned_in_accumulation:
+                                                individual_fragments_badly_assigned_in_accumulation.append(blob._fragment_identifier)
+                                            number_of_identity_shifts_in_accumulated_frames += 1
+                                        if blob.identity in identities_in_frame:
+                                            print([blob.identity for blob in blobs_in_frame])
+                                            raise ValueError("Duplication after removing duplications")
+                                            number_of_identity_repetitions += 1
+                                            if blob._fragment_identifier not in individual_fragments_that_are_repetitions:
+                                                individual_fragments_that_are_repetitions.append(blob._fragment_identifier)
+                                            frame_with_repetition = True
+
+                                        identities_in_frame.append(blob.identity)
+                                    elif blob.identity is None or blob.identity == 0:
+                                        number_of_not_assigned_blobs[i] += 1
+                            if frame_with_repetition:
+                                number_of_frames_with_repetitions += 1
+
+                        number_of_acceptable_fragments = sum([global_fragment._acceptable_for_training for global_fragment in global_fragments])
+                        number_of_unique_fragments = sum([global_fragment.is_unique for global_fragment in global_fragments])
+                        number_of_certain_fragments = sum([global_fragment._is_certain for global_fragment in global_fragments])
+
+                        individual_accuracies = np.asarray(number_of_correct_assignations)/np.asarray(number_assignations)
+                        accuracy = np.sum(number_of_correct_assignations)/np.sum(number_assignations)
+                        accuracy_overall = np.sum(number_of_correct_assignations)/number_of_possible_assignations
+                        print("\n\ngroup_size: ", group_size)
+                        print("individual_accuracies(assigned): ", individual_accuracies)
+                        print("accuracy(assigned): ", accuracy)
+                        print("accuracy: ", accuracy_overall)
                         print("\nnumber of global fragments: ", len(global_fragments))
                         print("number of accumulated fragments:", sum([global_fragment.used_for_training for global_fragment in global_fragments]))
                         print("number of candidate global fragments:", len(candidates_next_global_fragments))
@@ -412,6 +478,7 @@ if __name__ == '__main__':
                                                                         'only_accumulate_one_fragment': job_config.only_accumulate_one_fragment,
                                                                         'train_filters_in_accumulation': bool(job_config.train_filters_in_accumulation),
                                                                         'accumulation_certainty': job_config.accumulation_certainty,
+                                                                        'solve_duplications': job_config.solve_duplications,
                                                                         'preprocessing_type': job_config.preprocessing_type,
                                                                         'IMDB_codes': job_config.IMDB_codes,
                                                                         'ids_codes': job_config.ids_codes,

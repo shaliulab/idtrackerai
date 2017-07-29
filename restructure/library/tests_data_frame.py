@@ -57,7 +57,7 @@ def tests_data_frame():
     100 fish 3000 frames per video. Normal distribution of individual fragments
     *************************************************************************'''
     # solve_duplications = [True, False]
-    solve_duplications = [False]
+    solve_duplications = [True]
     # preprocessing_types = ['portrait', 'body', 'body_blob']
     preprocessing_types = ['portrait']
     # IMDB_codes = ['ABC','DEF','GHI']
@@ -92,10 +92,10 @@ def tests_data_frame():
                                                                 "preprocessing_type": preprocessing,
                                                                 "IMDB_codes": IMBD_code,
                                                                 "ids_codes": 'aaa',
-                                                                "group_sizes": [100],
+                                                                "group_sizes": [10],
                                                                 "frames_in_video": [3000],
-                                                                "frames_per_individual_fragment": [250], #[50, 165, 848.5],
-                                                                "std_frames_per_individual_fragment": [0.35],#[1.5, 1, .6], # it is the parameter of the gamma related to the variance "a" in scipy
+                                                                "frames_per_individual_fragment": [50, 250, 165, 848.5],
+                                                                "std_frames_per_individual_fragment": [1.5, 0.35, 1, .6], # it is the parameter of the gamma related to the variance "a" in scipy
                                                                 "repetitions": [1, 2, 3, 4, 5],
                                                                  }, ignore_index=True)
 

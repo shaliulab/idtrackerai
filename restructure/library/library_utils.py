@@ -63,6 +63,7 @@ def check_if_repetition_has_been_computed(results_data_frame, job_config, group_
                                             ' & only_accumulate_one_fragment == @job_config.only_accumulate_one_fragment' +
                                             ' & train_filters_in_accumulation == @job_config.train_filters_in_accumulation' +
                                             ' & accumulation_certainty == @job_config.accumulation_certainty' +
+                                            ' & solve_duplications == @job_config.solve_duplications' +
                                             ' & preprocessing_type == @job_config.preprocessing_type' +
                                             ' & IMDB_codes == @job_config.IMDB_codes' +
                                             ' & ids_codes == @job_config.ids_codes' +

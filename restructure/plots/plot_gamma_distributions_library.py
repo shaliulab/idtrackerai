@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import MultipleLocator
-#import matplotlib
-#font = {'family' : 'normal',
-#        'size'   : 18}
-#matplotlib.rc('font', **font)
+import matplotlib
+font = {'family' : 'normal',
+       'size'   : 18}
+matplotlib.rc('font', **font)
 
 def gamma_params(mean, std):
     a = (mean/std)**2
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     window = plt.get_current_fig_manager().window
     screen_y = window.winfo_screenheight()
     screen_x = window.winfo_screenwidth()
-    fig.set_size_inches((screen_x/100,screen_y/100))
+    fig.set_size_inches((screen_x*2/3/100,screen_y/100))
     labels = ['shoaling','schooling']
     colors = ['b', 'r']
 
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     window = plt.get_current_fig_manager().window
     screen_y = window.winfo_screenheight()
     screen_x = window.winfo_screenwidth()
-    fig.set_size_inches((screen_x/100,screen_y/100))
+    fig.set_size_inches((screen_x*2/3/100,screen_y/100))
 
     labels = ['shoaling','schooling',
                 '%.2f' %np.mean(gamma_shoaling) + '    %.2f' %np.std(gamma_shoaling),
