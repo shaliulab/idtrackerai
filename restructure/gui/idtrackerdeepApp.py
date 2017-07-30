@@ -96,7 +96,7 @@ class SelectFile(BoxLayout):
     CHOSEN_VIDEO = Chosen_Video()
 
     def on_enter(self,value):
-        CHOSEN_VIDEO.video._animal_type = self.animal_type_input.text
+        CHOSEN_VIDEO.video._preprocessing_type = self.preprocessing_type_input.text
         CHOSEN_VIDEO.video._number_of_animals = int(self.animal_number_input.text)
         self.popup.dismiss()
 
@@ -106,13 +106,13 @@ class SelectFile(BoxLayout):
         if filename:
             CHOSEN_VIDEO.set_chosen_item(filename[0])
             if CHOSEN_VIDEO.video.video_path is not None:
-                if CHOSEN_VIDEO.old_video.animal_type is None and CHOSEN_VIDEO.old_video.number_of_animals is None:
-                    self.create_animal_type_and_number_popup()
-                    self.animal_type_input.bind(on_text_validate = self.on_enter)
+                if CHOSEN_VIDEO.old_video.preprocessing_type is None and CHOSEN_VIDEO.old_video.number_of_animals is None:
+                    self.create_preprocessing_type_and_number_popup()
+                    self.preprocessing_type_input.bind(on_text_validate = self.on_enter)
                     self.animal_number_input.bind(on_text_validate = self.on_enter)
                     self.popup.open()
                 else:
-                    CHOSEN_VIDEO.video._animal_type = CHOSEN_VIDEO.old_video.animal_type
+                    CHOSEN_VIDEO.video._preprocessing_type = CHOSEN_VIDEO.old_video.preprocessing_type
                     CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
                 self.enable_ROI_and_preprocessing_tabs = True
         return not hasattr(self, 'enable_ROI_and_preprocessing_tabs')
@@ -125,16 +125,16 @@ class SelectFile(BoxLayout):
                 self.old_video = CHOSEN_VIDEO.old_video
         return not (hasattr(self.video, '_has_been_assigned') or hasattr(self.old_video, "_has_been_assigned"))
 
-    def create_animal_type_and_number_popup(self):
+    def create_preprocessing_type_and_number_popup(self):
         self.popup_container = BoxLayout()
-        self.animal_type_box = BoxLayout(orientation="vertical")
-        self.animal_type_label = Label(text='What animal are you tracking? [fish/flies]:\n')
-        self.animal_type_label.text_size = self.animal_type_label.size
-        self.animal_type_label.texture_size = self.animal_type_label.size
-        self.animal_type_box.add_widget(self.animal_type_label)
-        self.animal_type_input = TextInput(text ='', multiline=False)
-        self.animal_type_box.add_widget(self.animal_type_input)
-        self.popup_container.add_widget(self.animal_type_box)
+        self.preprocessing_type_box = BoxLayout(orientation="vertical")
+        self.preprocessing_type_label = Label(text='What animal are you tracking? [fish/flies]:\n')
+        self.preprocessing_type_label.text_size = self.preprocessing_type_label.size
+        self.preprocessing_type_label.texture_size = self.preprocessing_type_label.size
+        self.preprocessing_type_box.add_widget(self.preprocessing_type_label)
+        self.preprocessing_type_input = TextInput(text ='', multiline=False)
+        self.preprocessing_type_box.add_widget(self.preprocessing_type_input)
+        self.popup_container.add_widget(self.preprocessing_type_box)
 
         self.animal_number_box = BoxLayout(orientation="vertical")
         self.animal_number_label = Label(text='How many animals are you going to track:\n')
@@ -612,7 +612,7 @@ class PreprocessingPreview(BoxLayout):
                                             self.ROI,
                                             self.bkg_subtractor_switch.active)
         #get information on the blobs find by thresholding
-        boundingBoxes, miniFrames, _, _, _, goodContours = blobExtractor(self.segmented_frame,
+        boundingBoxes, miniFrames, _, _, _, goodContours, _ = blobExtractor(self.segmented_frame,
                                                                         self.frame,
                                                                         int(self.min_area_slider.value),
                                                                         int(self.max_area_slider.value),
@@ -897,7 +897,11 @@ class Validator(BoxLayout):
                 cv2.circle(frame, tuple(blob.centroid), 2, [255, 255, 255], -1)
             if blob._assigned_during_accumulation:
                 # we draw a circle in the centroid if the blob has been assigned during accumulation
-                cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, 1, self.colors[blob._identity], 3)
+                print("blob._identity ", blob._identity, type(blob.identity))
+                print("centroid ", blob.centroid, type(blob.centroid))
+
+
+                cv2.putText(frame, str(blob._identity),tuple(blob.centroid.astype('int')), font, 1, self.colors[blob._identity], 3)
             elif not blob._assigned_during_accumulation:
                 # we draw a cross in the centroid if the blob has been assigned during assignation
                 # cv2.putText(frame, 'x',tuple(blob.centroid), font, 1,self.colors[blob._identity], 1)
