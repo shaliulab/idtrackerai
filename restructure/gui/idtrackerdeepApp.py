@@ -216,8 +216,8 @@ class VisualiseVideo(BoxLayout):
         self.initImH = self.height
 
     def get_value(self, instance, value):
-
         self.visualise(value, func = self.func)
+
 
 class ROISelector(BoxLayout):
     def __init__(self,**kwargs):
@@ -722,7 +722,10 @@ class Validator(BoxLayout):
                             content = Label(text = 'The video has not been tracked yet. Track it before performing validation.'),
                             size_hint = (.3,.3))
         self.warning_popup.bind(size=lambda s, w: s.setter('text_size')(s, w))
-
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+                                                                                                                                          
+                                                                                                                          
     def show_saving(self, *args):
         self.popup_saving = Popup(title='Saving',
             content=Label(text='wait ...'),
@@ -825,6 +828,25 @@ class Validator(BoxLayout):
                     self.visualiser.video_slider.value = frame_index
                     self.visualiser.visualise(frame_index, func = self.writeIds)
 
+    def _keyboard_closed(self):
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
+                                                                                                                                 
+
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):                                                              
+
+
+        frame_index = int(self.visualiser.video_slider.value)
+
+        if keycode[1] == 'left':
+            frame_index -= 1
+        elif keycode[1] == 'right':
+            frame_index += 1
+        self.visualiser.video_slider.value = frame_index
+        self.visualiser.visualise(frame_index, func = self.writeIds)
+        return True
+
+
     @staticmethod
     def getNearestCentroid(point, cents):
         """
@@ -881,8 +903,6 @@ class Validator(BoxLayout):
     def writeIds(self, frame):
         blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
         font = cv2.FONT_HERSHEY_SIMPLEX
-        # attributes_to_get = ["centroid","identity","user_generated_identity"]###TODO separate noses from portraits in main code
-        # attributes_dict = self.get_attributes_from_blobs_in_frame(blobs_in_frame, attributes_to_get)
         frame = self.visualiser.frame
 
         for blob in blobs_in_frame:
