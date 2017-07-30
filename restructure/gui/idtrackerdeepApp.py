@@ -886,31 +886,32 @@ class Validator(BoxLayout):
         frame = self.visualiser.frame
 
         for blob in blobs_in_frame:
+            int_centroid = blob.centroid.astype('int')
             if blob.user_generated_identity is None:
                 text = str(blob.identity)
             else:
                 text = str(blob.user_generated_identity)
 
             if type(blob.identity) is 'int':
-                cv2.circle(frame, tuple(blob.centroid), 2, self.colors[blob._identity], -1)
+                cv2.circle(frame, tuple(int_centroid), 2, self.colors[blob._identity], -1)
             elif type(blob.identity) is 'list':
-                cv2.circle(frame, tuple(blob.centroid), 2, [255, 255, 255], -1)
+                cv2.circle(frame, tuple(int_centroid), 2, [255, 255, 255], -1)
             if blob._assigned_during_accumulation:
                 # we draw a circle in the centroid if the blob has been assigned during accumulation
                 print("blob._identity ", blob._identity, type(blob.identity))
-                print("centroid ", blob.centroid, type(blob.centroid))
+                print("centroid ", int_centroid, type(int_centroid))
 
 
-                cv2.putText(frame, str(blob._identity),tuple(blob.centroid.astype('int')), font, 1, self.colors[blob._identity], 3)
+                cv2.putText(frame, str(blob._identity),tuple(int_centroid), font, 1, self.colors[blob._identity], 3)
             elif not blob._assigned_during_accumulation:
                 # we draw a cross in the centroid if the blob has been assigned during assignation
-                # cv2.putText(frame, 'x',tuple(blob.centroid), font, 1,self.colors[blob._identity], 1)
+                # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[blob._identity], 1)
                 if blob.is_a_fish_in_a_fragment:
-                    cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, .5, self.colors[blob._identity], 3)
+                    cv2.putText(frame, str(blob.identity), tuple(int_centroid), font, .5, self.colors[blob._identity], 3)
                 elif not blob.is_a_fish:
-                    cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, 1, [255,255,255], 3)
+                    cv2.putText(frame, str(blob.identity), tuple(int_centroid), font, 1, [255,255,255], 3)
                 else:
-                    cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, .5, [0, 0, 0], 3)
+                    cv2.putText(frame, str(blob.identity), tuple(int_centroid), font, .5, [0, 0, 0], 3)
 
         # Visualization of the process
         if self.scale != 1:
