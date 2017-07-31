@@ -305,7 +305,7 @@ def SegmentationPreview(video):
                 if video.preprocessing_type == 'portrait':
                     portrait, _, _= get_portrait(miniFrames[j],goodContours[j],bbs[j],portraitSize)
                 elif video.preprocessing_type == 'body':
-                    portrait, _, _ = get_body(video, miniFrames[j], pixels[j], bbs[j], portraitSize)
+                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize)
                 elif video.preprocessing_type == 'body_blob':
                     portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
             else:
@@ -957,7 +957,7 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                     elif not blob.is_a_fish:
                         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, 1, [255,255,255], 3)
                     else:
-                        cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, [0, 0, 0], 3)
+                        cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
 
                 if not save_video:
                     print("\nblob ", b)

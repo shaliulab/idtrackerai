@@ -206,4 +206,4 @@ if __name__ == '__main__':
 
     plt.show()
 
-    fig.savefig('8fish_global_fragments_sumamry.pdf', transparent=True)
+    # fig.savefig('40_flies.pdf', transparent=True)
