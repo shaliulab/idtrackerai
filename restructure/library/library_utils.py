@@ -11,7 +11,7 @@ import time
 
 from blob import Blob, compute_fragment_identifier_and_blob_index
 from globalfragment import give_me_list_of_global_fragments, order_global_fragments_by_distance_travelled
-from scipy.stats import truncnorm
+from scipy.stats import gamma
 from joblib import Parallel, delayed
 import multiprocessing
 from natsort import natsorted, ns
@@ -63,6 +63,7 @@ def check_if_repetition_has_been_computed(results_data_frame, job_config, group_
                                             ' & only_accumulate_one_fragment == @job_config.only_accumulate_one_fragment' +
                                             ' & train_filters_in_accumulation == @job_config.train_filters_in_accumulation' +
                                             ' & accumulation_certainty == @job_config.accumulation_certainty' +
+                                            ' & solve_duplications == @job_config.solve_duplications' +
                                             ' & preprocessing_type == @job_config.preprocessing_type' +
                                             ' & IMDB_codes == @job_config.IMDB_codes' +
                                             ' & ids_codes == @job_config.ids_codes' +
@@ -123,12 +124,13 @@ def subsample_dataset_by_individuals(dataset, config):
     return np.concatenate(subsampled_images, axis = 1), np.concatenate(subsampled_centroids, axis = 1)
 
 def get_next_number_of_frames_in_fragment(config):
-    lower = config.min_number_of_frames_per_fragment
-    upper = config.max_number_of_frames_per_fragment
     mu = config.number_of_frames_per_fragment
     std = config.std_number_of_frames_per_fragment
-    X = truncnorm((lower - mu) / std, (upper - mu) / std, loc=mu, scale=std)
+    X = gamma(a = std, loc = 1, scale = mu)
     number_of_frames_per_fragment = int(X.rvs(1))
+    while number_of_frames_per_fragment < config.min_number_of_frames_per_fragment or number_of_frames_per_fragment > config.max_number_of_frames_per_fragment:
+        number_of_frames_per_fragment = int(X.rvs(1))
+
     return number_of_frames_per_fragment
 
 def generate_list_of_blobs(portraits, centroids, config):

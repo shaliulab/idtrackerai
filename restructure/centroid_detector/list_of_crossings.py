@@ -186,22 +186,56 @@ def flatten(l):
         else:
             yield el
 
+def solve_duplications(blobs, group_size):
+    possible_identities = set(range(1,group_size+1))
+    for blobs_in_frame in blobs:
+        identities_in_frame = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
+        duplicated_identities = set([x for x in identities_in_frame if identities_in_frame.count(x) > 1])
+        missing_identities = list(possible_identities.difference(identities_in_frame))
+        if len(duplicated_identities) > 0:
+            # print("\n*******solving frame with duplications...")
+            # print("identities in frame: ", identities_in_frame)
+            # print("duplicated identities: ", duplicated_identities)
+            # print("missing identities: ", missing_identities)
+            frame  = Duplication(blobs_in_frame_with_duplication = blobs_in_frame,
+                                duplicated_identities = duplicated_identities,
+                                missing_identities = missing_identities)
+            blobs_to_reassign = frame.assign_unique_identities()
+
+            for blob in blobs_in_frame:
+                for blob_d in blobs_to_reassign:
+                    if blob is blob_d and blob.identity != blob_d.identity:
+                        blob.update_identity_in_fragment(blob_d.identity)
+
+        identities_in_frame = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
+        duplicated_identities = set([x for x in identities_in_frame if identities_in_frame.count(x) > 1])
+        if len(duplicated_identities) > 0:
+            print("identities_in_frame, ",  identities_in_frame)
+            raise ValueError("I have not remove all the duplications")
+
+
 class Duplication(object):
-    def __init__(self, blobs_in_frame_with_duplication = None, duplicated_identities = None):
+    def __init__(self, blobs_in_frame_with_duplication = None, duplicated_identities = None, missing_identities = None):
         self.blobs_in_frame = blobs_in_frame_with_duplication
         self.identities_to_be_reassigned = duplicated_identities
         #all non duplicated identities in the frame are not available. This list will be
         #updated later on
         self.non_available_identities = [blob.identity for blob in self.blobs_in_frame
                                         if blob.identity not in duplicated_identities]
-        self.possible_identities = range(1, self.blobs_in_frame[0].number_of_animals)
+
+        self.possible_identities = range(1, self.blobs_in_frame[0].number_of_animals+1)
+        self.missing_identities = missing_identities
 
     def assign_unique_identities(self):
         all_blobs_to_reassign = []
 
+        # self.available_identities = list(set(self.possible_identities) - set(self.non_available_identities))
         for identity in self.identities_to_be_reassigned:
-            self.available_identities = list(set(self.possible_identities) - set(self.non_available_identities))
+            # print("\nsolving identity ", identity)
+            self.available_identities = self.missing_identities + [identity]
+            # print("available identities: ", self.available_identities)
             self.blobs_to_reassign = self.get_blobs_with_same_identity(identity)
+            # print("number of blobs with same identity: ", len(self.blobs_to_reassign))
             self.assign()
             all_blobs_to_reassign.extend(self.blobs_to_reassign)
 
@@ -217,55 +251,133 @@ class Duplication(object):
     def get_P2_matrix(blobs_list):
         return np.asarray([blob._P2_vector for blob in blobs_list])
 
-
     @staticmethod
     def sort_P2_matrix(P2_matrix):
         P2_ids = np.flip(np.argsort(P2_matrix, axis = 1), axis = 1) + 1
         corresponding_P2s = np.flip(np.sort(P2_matrix, axis = 1), axis = 1)
         return np.squeeze(np.asarray(P2_ids.T)), np.squeeze(np.asarray(corresponding_P2s.T))
 
+    def set_to_0_non_available_ids(self,P2_matrix):
+        no_available_now = np.asarray(list(set(self.possible_identities).difference(set(self.available_identities))))-1
+        P2_matrix[:,no_available_now] = 0.
+        return P2_matrix
+
     def assign(self):
         number_of_blobs_to_reassign = len(self.blobs_to_reassign)
         P2_matrix = self.get_P2_matrix(self.blobs_to_reassign)
-        print("P2 matrix not sorted ", P2_matrix)
-        ids, P2s = self.sort_P2_matrix(P2_matrix)
-        print("sorted P2 matrix", P2s)
-        print("sorted ids ", ids)
+        # print("P2 matrix ", P2_matrix)
+        P2_matrix = self.set_to_0_non_available_ids(P2_matrix) # I set the probabilities fo the non availabie identieies to 0
+        # print("P2 matrix ", P2_matrix)
         assigned_identities = []
 
-
-        for i, (ids_row, P2s_row) in enumerate(zip(ids, P2s)):
-            max_indices = np.where(P2s_row == np.max(P2s_row))[0]
-            if len(max_indices) == len(P2s_row) and sum(P2s_row) != 0:
-                print("baaaad maxima are all the same")
-                for index in max_indices:
-                    self.blobs_to_reassign[index]._identity = 0
-                    P2s[:, index] = 0
-                break
-            elif len(max_indices) > 1:
-                print("removing duplicated maxima")
-                for index in max_indices:
-                    self.blobs_to_reassign[index]._identity = 0
-                    P2s[:, index] = 0
-            elif len(max_indices) == 1:
-                print("gooood duplication!")
-                index_of_blob_to_reassign = max_indices[0]
-                candidate_id = ids_row[index_of_blob_to_reassign]
-                if candidate_id in self.available_identities and np.max(P2s_row) > 1 / blob.number_of_animals:
-                    self.blobs_to_reassign[index_of_blob_to_reassign]._identity = candidate_id
-                    P2s[:, index_of_blob_to_reassign] = 0
+        while len(assigned_identities) != number_of_blobs_to_reassign:
+            # print("ids assigned: ", len(assigned_identities), "blobs to reasign: ", number_of_blobs_to_reassign)
+            P2_max = np.max(P2_matrix,axis = 1) # I take the best value for of P2 for each blob
+            max_indices = np.where(P2_max == np.max(P2_max))[0]
+            if len(max_indices) == 1: # There is a blob that has a better P2max than the rest
+                # print("there is a unique maxima")
+                index_blob = np.argmax(P2_max)
+                P2_max_blob = np.max(P2_max)
+                candidate_id = np.argmax(P2_matrix[index_blob,:]) + 1
+                # print("candidate_id: ", candidate_id)
+                # print("P2_max_blob: ", P2_max_blob)
+                if candidate_id in self.available_identities and P2_max_blob > 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment):
+                    # print("id is available and P2 above random")
+                    # print("we assign the candidate id", candidate_id)
+                    # I assign the candidate_id if it is available and the probability is less than random
+                    self.blobs_to_reassign[index_blob]._identity = candidate_id
+                    P2_matrix[:, candidate_id-1] = 0
+                    P2_matrix[index_blob, :] = 0
                     self.available_identities.remove(candidate_id)
+                    if candidate_id in self.missing_identities:
+                        self.missing_identities.remove(candidate_id)
                     assigned_identities.append(candidate_id)
-                    print("assigned identities ", candidate_id)
-                elif candidate_id in self.available_identities and np.max(P2s_row) < 1 / blob.number_of_animals:
-                    print("put to zero because P2 is lower than random")
-                    self.blobs_to_reassign[index_of_blob_to_reassign]._identity = 0
-                    P2s[:, index_of_blob_to_reassign] = 0
-                elif np.max(P2s_row) == 0 or i == ids.shape[0]:
-                    self.blobs_to_reassign[index_of_blob_to_reassign]._identity = 0
-            if len(assigned_identities) == number_of_blobs_to_reassign:
-                print("done!")
-                break
+                    # print("P2 matrix ", P2_matrix)
+                elif candidate_id in self.available_identities and P2_max_blob < 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment):
+                    # print("id is available and P2 below random")
+                    if len(self.available_identities) > 1 :
+                        # print("there are other available")
+                        # print("we assign 0")
+                        # I assing the id to 0 because otherwise I would be assigning randomly
+                        self.blobs_to_reassign[index_blob]._identity = 0
+                        assigned_identities.append(0)
+                        P2_matrix[index_blob, :] = 0
+                        # print("P2 matrix ", P2_matrix)
+                    elif len(self.missing_identities) == 1 and len(self.available_identities) == 1:
+                        # print("is the last missing identity")
+                        self.missing_identities.remove(candidate_id)
+                        self.blobs_to_reassign[index_blob]._identity = candidate_id
+                        assigned_identities.append(candidate_id)
+                else:
+                    raise ValueError("condition no considered")
+            elif len(max_indices) > 1:
+                # print("P2max is degeneraged")
+                # if there are duplicated maxima, we set the id of those blobs to 0 and put P2_matrix of thos ids to 0
+                for max_index in max_indices:
+                    candidate_id = np.argmax(P2_matrix[max_index,:])+1
+                    # print("candidate_id: ", candidate_id-1)
+                    P2_matrix[max_index, :] = 0
+                    self.blobs_to_reassign[max_index]._identity = 0
+                    assigned_identities.append(0)
+                    # print("we assign to 0")
+                    if candidate_id in self.available_identities:
+                        P2_matrix[:, candidate_id-1] = 0
+                        self.available_identities.remove(candidate_id)
+                    # print("P2 matrix ", P2_matrix)
+            else:
+                raise ValueError("condition no considered")
+
+    # def assign(self):
+    #     number_of_blobs_to_reassign = len(self.blobs_to_reassign)
+    #     P2_matrix = self.get_P2_matrix(self.blobs_to_reassign)
+    #     print("P2 matrix not sorted ", P2_matrix)
+    #     ids, P2s = self.sort_P2_matrix(P2_matrix)
+    #     print("sorted P2 matrix", P2s)
+    #     print("sorted ids ", ids)
+    #     assigned_identities = []
+    #
+    #     for i, (ids_row, P2s_row) in enumerate(zip(ids, P2s)):
+    #         print("row ", i)
+    #         max_indices = np.where(P2s_row == np.max(P2s_row))[0]
+    #         print("max_indices ", max_indices)
+    #         if len(max_indices) == len(P2s_row) and sum(P2s_row) != 0:
+    #             print("baaaad maxima are all the same")
+    #             for index in max_indices:
+    #                 self.blobs_to_reassign[index]._identity = 0
+    #                 P2s[:, index] = 0
+    #             break
+    #         elif len(max_indices) > 1:
+    #             print("removing duplicated maxima")
+    #             for index in max_indices:
+    #                 self.blobs_to_reassign[index]._identity = 0
+    #                 P2s[:, index] = 0
+    #         elif len(max_indices) == 1:
+    #             print("gooood duplication!")
+    #             index_of_blob_to_reassign = max_indices[0]
+    #             candidate_id = ids_row[index_of_blob_to_reassign]
+    #             if candidate_id in self.available_identities and np.max(P2s_row) > 1 / np.sum(self.blobs_to_reassign[index_of_blob_to_reassign]._frequencies_in_fragment):
+    #                 self.blobs_to_reassign[index_of_blob_to_reassign]._identity = candidate_id
+    #                 P2s[:, index_of_blob_to_reassign] = 0
+    #                 self.available_identities.remove(candidate_id)
+    #                 assigned_identities.append(candidate_id)
+    #                 print("assigned identities ", candidate_id)
+    #                 print("available identities ", self.available_identities)
+    #             elif candidate_id in self.available_identities and np.max(P2s_row) < 1 / np.sum(self.blobs_to_reassign[index_of_blob_to_reassign]._frequencies_in_fragment):
+    #                 print("frequencies in fragment ", self.blobs_to_reassign[index_of_blob_to_reassign]._frequencies_in_fragment)
+    #                 print("number of frames in fragment ", np.sum(self.blobs_to_reassign[index_of_blob_to_reassign]._frequencies_in_fragment))
+    #                 print("P2:",  np.max(P2s_row))
+    #                 print("put identity to zero because P2 is lower than random")
+    #                 self.blobs_to_reassign[index_of_blob_to_reassign]._identity = 0
+    #                 P2s[:, index_of_blob_to_reassign] = 0
+    #             elif np.max(P2s_row) == 0 or i == ids.shape[0] - 1:
+    #                 print("P2 is 0 or is the last row")
+    #                 self.blobs_to_reassign[index_of_blob_to_reassign]._identity = 0
+    #
+    #
+    #         print("sorted P2 matrix", P2s)
+    #         if len(assigned_identities) == number_of_blobs_to_reassign:
+    #             print("done!")
+    #             break
 
         # if candidate_id in assigned_identities:
         #     self.blobs_to_reassign[index_of_blob_to_reassign]._identity = 0
@@ -508,9 +620,8 @@ if __name__ == "__main__":
     if not hasattr(video, "velocity_threshold"):
         video.velocity_threshold = compute_model_velocity(blobs, number_of_animals, percentile = VEL_PERCENTILE)
 
-
+    ''' Duplications '''
     for blobs_in_frame in blobs:
-
         identities = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
         # print("identities in frame ", identities)
         duplicated_identities = set([x for x in identities if identities.count(x) > 1])

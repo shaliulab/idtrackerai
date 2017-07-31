@@ -15,6 +15,10 @@ from matplotlib import pyplot as plt
 import matplotlib.lines as mlines
 from matplotlib.patches import Rectangle
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+import matplotlib
+font = {'family' : 'normal',
+        'size'   : 18}
+matplotlib.rc('font', **font)
 import seaborn as sns
 
 
@@ -91,7 +95,7 @@ if __name__ == '__main__':
     print("loading global fragments")
     global_fragments = np.load(global_fragments_path)
 
-    global_fragment = global_fragments[2]
+    global_fragment = global_fragments[30]
 
     global_fragment.compute_start_end_frame_indices_of_individual_fragments(blobs)
     strats_ends_individual_fragments = np.asarray(global_fragment.starts_ends_individual_fragments)
@@ -104,62 +108,62 @@ if __name__ == '__main__':
 
     plt.ion()
     ''' global fragment sketch'''
-    # fig, ax_arr = plt.subplots(4,1)
-    # colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=True)
-    #
-    # ax_arr[0].add_patch(Rectangle((max_start_individual_fragments-.5, 0.5),min_end_individual_fragments-max_start_individual_fragments + 1,video.number_of_animals ,alpha=1, fc = '0.85'))
-    # ax_arr[1].add_patch(Rectangle((max_start_individual_fragments-.5, 0.5),min_end_individual_fragments-max_start_individual_fragments + 1,video.number_of_animals ,alpha=1, fc = '0.85'))
-    # ax_arr[2].add_patch(Rectangle((max_start_individual_fragments-.5, 0.5),min_end_individual_fragments-max_start_individual_fragments + 1,video.number_of_animals ,alpha=1, fc = '0.85'))
-    # ax_arr[3].add_patch(Rectangle((max_start_individual_fragments-.5, 0.5),min_end_individual_fragments-max_start_individual_fragments + 1,video.number_of_animals ,alpha=1, fc = '0.85'))
-    #
-    # for i in range(min_start_individual_fragments, max_end_individual_fragments):
-    #     blobs_in_frame = blobs[i]
-    #     for j, blob in enumerate(blobs_in_frame):
-    #         next_blobs = blob.next
-    #         for next_blob in next_blobs:
-    #
-    #             # individual fragments and crossings
-    #             blob_index_next = blobs[i+1].index(next_blob) + 1
-    #             if blob._identity == 0:
-    #                 ax_arr[0].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = 'k', markersize = 3)
-    #             else:
-    #                 ax_arr[0].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = '.75', markersize = 3)
-    #
-    #             # hightlight invidiaul fragments in globl fragment
-    #             if blob._fragment_identifier in global_fragment.individual_fragments_identifiers:
-    #                 ax_arr[1].plot([i, i+1],[j + 1, blob_index_next], 'o-' ,c = colors[blob._identity], markersize = 3)
-    #             else:
-    #                 if blob._identity == 0:
-    #                     ax_arr[1].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = 'k', markersize = 3)
-    #                 else:
-    #                     ax_arr[1].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = '.75', markersize = 3)
-    #
-    #             # Extact individual fragments from global fragmtn
-    #             blob_index_next = blobs[i+1].index(next_blob) + 1
-    #             if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_a_fish:
-    #                 ax_arr[2].plot([i, i+1],[j + 1, blob_index_next], 'o-' ,c = colors[blob._identity], markersize = 3)
-    #
-    #             # Unroll hierarchies
-    #             if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_a_fish:
-    #                 blob_index = blob_indices_individial_fragments[np.where(blob_indices_individial_fragments[:,1] == blob._fragment_identifier)[0],:][0][0] + 1
-    #                 ax_arr[3].plot([i,i+1],[blob_index, blob_index], '-' ,c = colors[blob._identity], linewidth = 10, solid_capstyle ='butt')
-    #                 # ax_arr[3].plot([i,i+1],[blob._identity, blob._identity], 'o-' ,c = colors[blob._identity], markersize = 3, solid_capstyle ='butt')
-    #                 imscatter(i, blob_index, -blob.portrait, ax = ax_arr[3], zoom = .3)
-    #                 imscatter(i+1 ,blob_index, -blob.next[0].portrait, ax = ax_arr[3], zoom = .3)
-    #
-    # ax_arr[0].set_yticks(range(1,video.number_of_animals+1),range(1,video.number_of_animals+1))
-    # ax_arr[0].set_yticks(list(range(1,video.number_of_animals+1)))
-    # ax_arr[0].set_yticklabels(list(range(1,video.number_of_animals+1)))
-    # ax_arr[1].set_ylabel('segmentation hierarchy index')
-    # ax_arr[1].set_yticks(list(range(1,video.number_of_animals+1)))
-    # ax_arr[1].set_yticklabels(list(range(1,video.number_of_animals+1)))
-    # ax_arr[2].set_yticks(list(range(1,video.number_of_animals+1)))
-    # ax_arr[2].set_yticklabels(list(range(1,video.number_of_animals+1)))
-    # ax_arr[3].set_ylabel('blob index')
-    # ax_arr[3].set_xlabel('frame number')
-    # ax_arr[3].set_yticks(list(range(1,video.number_of_animals+1)))
-    # ax_arr[3].set_yticklabels(list(range(1,video.number_of_animals+1)))
-    # ax_arr[3].set_xlim([245,314])
+    fig, ax_arr = plt.subplots(4,1, sharex=True)
+    colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=True)
+
+    ax_arr[0].add_patch(Rectangle((max_start_individual_fragments-.5, 0.5),min_end_individual_fragments-max_start_individual_fragments + 1,video.number_of_animals ,alpha=1, fc = '0.85'))
+    ax_arr[1].add_patch(Rectangle((max_start_individual_fragments-.5, 0.5),min_end_individual_fragments-max_start_individual_fragments + 1,video.number_of_animals ,alpha=1, fc = '0.85'))
+    ax_arr[2].add_patch(Rectangle((max_start_individual_fragments-.5, 0.5),min_end_individual_fragments-max_start_individual_fragments + 1,video.number_of_animals ,alpha=1, fc = '0.85'))
+    ax_arr[3].add_patch(Rectangle((max_start_individual_fragments-.5, 0.5),min_end_individual_fragments-max_start_individual_fragments + 1,video.number_of_animals ,alpha=1, fc = '0.85'))
+
+    for i in range(min_start_individual_fragments, max_end_individual_fragments):
+        blobs_in_frame = blobs[i]
+        for j, blob in enumerate(blobs_in_frame):
+            next_blobs = blob.next
+            for next_blob in next_blobs:
+
+                # individual fragments and crossings
+                blob_index_next = blobs[i+1].index(next_blob) + 1
+                if blob._identity == 0:
+                    ax_arr[0].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = 'k', markersize = 3)
+                else:
+                    ax_arr[0].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = '.75', markersize = 3)
+
+                # hightlight invidiaul fragments in globl fragment
+                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers:
+                    ax_arr[1].plot([i, i+1],[j + 1, blob_index_next], 'o-' ,c = colors[blob._identity], markersize = 3)
+                else:
+                    if blob._identity == 0:
+                        ax_arr[1].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = 'k', markersize = 3)
+                    else:
+                        ax_arr[1].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = '.75', markersize = 3)
+
+                # Extact individual fragments from global fragmtn
+                blob_index_next = blobs[i+1].index(next_blob) + 1
+                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_a_fish:
+                    ax_arr[2].plot([i, i+1],[j + 1, blob_index_next], 'o-' ,c = colors[blob._identity], markersize = 3)
+
+                # Unroll hierarchies
+                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_a_fish:
+                    blob_index = blob_indices_individial_fragments[np.where(blob_indices_individial_fragments[:,1] == blob._fragment_identifier)[0],:][0][0] + 1
+                    ax_arr[3].plot([i,i+1],[blob_index, blob_index], '-' ,c = colors[blob._identity], linewidth = 10, solid_capstyle ='butt')
+                    # ax_arr[3].plot([i,i+1],[blob._identity, blob._identity], 'o-' ,c = colors[blob._identity], markersize = 3, solid_capstyle ='butt')
+                    imscatter(i, blob_index, -blob.portrait, ax = ax_arr[3], zoom = .3)
+                    imscatter(i+1 ,blob_index, -blob.next[0].portrait, ax = ax_arr[3], zoom = .3)
+
+    ax_arr[0].set_yticks(range(1,video.number_of_animals+1),range(1,video.number_of_animals+1))
+    ax_arr[0].set_yticks(list(range(1,video.number_of_animals+1)))
+    ax_arr[0].set_yticklabels(list(range(1,video.number_of_animals+1)))
+    ax_arr[1].set_ylabel('segmentation hierarchy index')
+    ax_arr[1].set_yticks(list(range(1,video.number_of_animals+1)))
+    ax_arr[1].set_yticklabels(list(range(1,video.number_of_animals+1)))
+    ax_arr[2].set_yticks(list(range(1,video.number_of_animals+1)))
+    ax_arr[2].set_yticklabels(list(range(1,video.number_of_animals+1)))
+    ax_arr[3].set_ylabel('blob index')
+    ax_arr[3].set_xlabel('frame number')
+    ax_arr[3].set_yticks(list(range(1,video.number_of_animals+1)))
+    ax_arr[3].set_yticklabels(list(range(1,video.number_of_animals+1)))
+
 
     ''' individual fragments sketch single'''
     window = plt.get_current_fig_manager().window
@@ -178,19 +182,50 @@ if __name__ == '__main__':
             for next_blob in next_blobs:
 
                 # Unroll hierarchies
-                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_a_fish:
+                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_a_fish_in_a_fragment:
                     blob_index = blob_indices_individial_fragments[np.where(blob_indices_individial_fragments[:,1] == blob._fragment_identifier)[0],:][0][0] + 1
-                    # ax.plot([i,i+1],[blob_index, blob_index], '-' ,c = colors[blob._identity], linewidth = 20, solid_capstyle ='butt')
                     ax.plot([i,i+1],[blob._identity, blob._identity], 'o-' ,c = colors[blob._identity], markersize = 5, solid_capstyle ='butt',linewidth = 1)
-                    imscatter(i, blob_index, -blob.portrait, ax = ax, zoom = .3)
-                    imscatter(i+1 ,blob_index, -blob.next[0].portrait, ax = ax, zoom = .3)
+
 
     ax.set_ylabel('blob index')
     ax.set_xlabel('frame number')
     ax.set_yticks(list(range(1,video.number_of_animals+1)))
     ax.set_yticklabels(list(range(1,video.number_of_animals+1)))
     fig.savefig('8fish_global_fragment_portraits.pdf', transparent=True)
-    # ax.set_xlim([245,314])
+
+    ''' individual fragments sketch single with images'''
+    window = plt.get_current_fig_manager().window
+    screen_y = window.winfo_screenheight()
+    screen_x = window.winfo_screenwidth()
+    fig, ax = plt.subplots(1)
+    fig.set_size_inches((screen_x/100,screen_y/1.5/100))
+    colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=True)
+
+    ax.add_patch(Rectangle((max_start_individual_fragments-.5, 0.5),min_end_individual_fragments-max_start_individual_fragments + 1,video.number_of_animals ,alpha=1, fc = '0.85'))
+
+    for i in range(min_start_individual_fragments, max_end_individual_fragments):
+        blobs_in_frame = blobs[i]
+        for j, blob in enumerate(blobs_in_frame):
+            next_blobs = blob.next
+            for next_blob in next_blobs:
+
+                # Unroll hierarchies
+                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_a_fish:
+                    blob_index = blob_indices_individial_fragments[np.where(blob_indices_individial_fragments[:,1] == blob._fragment_identifier)[0],:][0][0] + 1
+                    ax.plot([i,i+1],[blob._identity, blob._identity], '-' ,c = colors[blob._identity], linewidth = 20, solid_capstyle ='butt')
+                    imscatter(i, blob._identity, -blob.portrait, ax = ax, zoom = 1)
+                    imscatter(i+1 ,blob._identity, -blob.next[0].portrait, ax = ax, zoom = 1    )
+
+    ax.set_ylabel('blob index')
+    ax.set_xlabel('frame number')
+    ax.set_yticks(list(range(1,video.number_of_animals+1)))
+    ax.set_yticklabels(list(range(1,video.number_of_animals+1)))
+    frame_range = [740, 758]
+    ax.set_xlim(frame_range)
+    blob_index_example = 4
+    ax.set_ylim([blob_index_example - .5, blob_index_example + .5])
+    fig.savefig('8fish_global_fragment_portraits_zoom.pdf', transparent=True)
+
 
     ''' 3d trajectories '''
     import matplotlib.pyplot as plt
@@ -208,7 +243,7 @@ if __name__ == '__main__':
                 centroid_trajectories[i, blob.identity-1, :] = blob.centroid
 
     for individual in range(video.number_of_animals):
-        ax.plot(centroid_trajectories[:,individual,0], centroid_trajectories[:,individual,1], range(number_of_frames),color = colors[individual + 1] )
+        ax.plot(centroid_trajectories[:,individual,0], centroid_trajectories[:,individual,1], range(min_start_individual_fragments, max_end_individual_fragments), color = colors[individual + 1] )
         # ax.plot(centroid_trajectories[:,individual,0], np.ones(number_of_frames)*650, range(number_of_frames),color = colors[individual + 1], alpha = 1 , linewidth = 1)
         # ax.plot(np.ones(number_of_frames)*950, centroid_trajectories[:,individual,1], range(number_of_frames),color = colors[individual + 1], alpha = 1, linewidth = 1)
 
@@ -218,18 +253,20 @@ if __name__ == '__main__':
 
     import mpl_toolkits.mplot3d.art3d as art3d
     from matplotlib.patches import Circle, PathPatch
-    p1 = Rectangle((750,max_start_individual_fragments-1),200,min_end_individual_fragments-max_start_individual_fragments,alpha=1, fc = '0.8')
-    p2 = Rectangle((50,max_start_individual_fragments-1),600,min_end_individual_fragments-max_start_individual_fragments,alpha=1, fc = '0.85')
+    x_lim = ax.get_xlim()
+    y_lim = ax.get_ylim()
+    p1 = Rectangle((x_lim[0],max_start_individual_fragments-1),np.diff(x_lim),min_end_individual_fragments-max_start_individual_fragments,alpha=1, fc = '0.8')
+    p2 = Rectangle((y_lim[0],max_start_individual_fragments-1),np.diff(y_lim),min_end_individual_fragments-max_start_individual_fragments,alpha=1, fc = '0.85')
     ax.add_patch(p1)
     ax.add_patch(p2)
-    art3d.pathpatch_2d_to_3d(p1, z=650, zdir="y")
-    art3d.pathpatch_2d_to_3d(p2, z=950, zdir="x")
+    art3d.pathpatch_2d_to_3d(p1, z=y_lim[1], zdir="y")
+    art3d.pathpatch_2d_to_3d(p2, z=x_lim[1], zdir="x")
 
     # Get rid of the ticks
-    ax.set_xticks([])
     ax.set_yticks([])
-    ax.set_xlim((750,950))
-    ax.set_ylim((50,650))
+    ax.set_xticks([])
+    #ax.set_xlim((750,950))
+    #ax.set_ylim((50,650))
     ax.set_zlabel('frame number', labelpad=20)
     ax.zaxis.set_rotate_label(True)
     fig.savefig('8fish_3dtrajectories.pdf', transparent=True)
