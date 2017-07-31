@@ -919,10 +919,6 @@ class Validator(BoxLayout):
                 cv2.circle(frame, tuple(int_centroid), 2, [255, 255, 255], -1)
             if blob._assigned_during_accumulation:
                 # we draw a circle in the centroid if the blob has been assigned during accumulation
-                print("cur_id ", cur_id, type(cur_id))
-                print("centroid ", int_centroid, type(int_centroid))
-
-
                 cv2.putText(frame, str(cur_id),tuple(int_centroid), font, 1, self.colors[cur_id], 3)
             elif not blob._assigned_during_accumulation:
                 # we draw a cross in the centroid if the blob has been assigned during assignation
@@ -957,8 +953,6 @@ class Validator(BoxLayout):
         count_past_corrections = 1 #to take into account the modification already done in the current frame
         count_future_corrections = 0
         new_blob_identity = modified_blob.user_generated_identity
-        print("===================== new identity ", new_blob_identity)
-
         if modified_blob.is_a_fish_in_a_fragment:
             current = modified_blob
 
@@ -982,6 +976,7 @@ class Validator(BoxLayout):
                                                                         count_future_corrections + \
                                                                         count_past_corrections
             print("count_user_generated_identities_dict id, ", self.count_user_generated_identities_dict[new_blob_identity])
+        #init and bind keyboard again
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
