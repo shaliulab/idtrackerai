@@ -835,9 +835,9 @@ class Validator(BoxLayout):
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):                                                              
 
-
         frame_index = int(self.visualiser.video_slider.value)
 
+        print("I am here")
         if keycode[1] == 'left':
             frame_index -= 1
         elif keycode[1] == 'right':
@@ -906,32 +906,33 @@ class Validator(BoxLayout):
         frame = self.visualiser.frame
 
         for blob in blobs_in_frame:
+            print("______________________user generated id ", blob.user_generated_identity)
             int_centroid = blob.centroid.astype('int')
             if blob.user_generated_identity is None:
-                text = str(blob.identity)
+                cur_id = blob.identity
             else:
-                text = str(blob.user_generated_identity)
+                cur_id = blob.user_generated_identity
 
-            if type(blob.identity) is 'int':
-                cv2.circle(frame, tuple(int_centroid), 2, self.colors[blob._identity], -1)
-            elif type(blob.identity) is 'list':
+            if type(cur_id) is 'int':
+                cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
+            elif type(cur_id) is 'list':
                 cv2.circle(frame, tuple(int_centroid), 2, [255, 255, 255], -1)
             if blob._assigned_during_accumulation:
                 # we draw a circle in the centroid if the blob has been assigned during accumulation
-                print("blob._identity ", blob._identity, type(blob.identity))
+                print("cur_id ", cur_id, type(cur_id))
                 print("centroid ", int_centroid, type(int_centroid))
 
 
-                cv2.putText(frame, str(blob._identity),tuple(int_centroid), font, 1, self.colors[blob._identity], 3)
+                cv2.putText(frame, str(cur_id),tuple(int_centroid), font, 1, self.colors[cur_id], 3)
             elif not blob._assigned_during_accumulation:
                 # we draw a cross in the centroid if the blob has been assigned during assignation
-                # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[blob._identity], 1)
+                # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[cur_id], 1)
                 if blob.is_a_fish_in_a_fragment:
-                    cv2.putText(frame, str(blob.identity), tuple(int_centroid), font, .5, self.colors[blob._identity], 3)
+                    cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
                 elif not blob.is_a_fish:
-                    cv2.putText(frame, str(blob.identity), tuple(int_centroid), font, 1, [255,255,255], 3)
+                    cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, [255,255,255], 3)
                 else:
-                    cv2.putText(frame, str(blob.identity), tuple(int_centroid), font, .5, [0, 0, 0], 3)
+                    cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, [0, 0, 0], 3)
 
         # Visualization of the process
         if self.scale != 1:
@@ -956,6 +957,7 @@ class Validator(BoxLayout):
         count_past_corrections = 1 #to take into account the modification already done in the current frame
         count_future_corrections = 0
         new_blob_identity = modified_blob.user_generated_identity
+        print("===================== new identity ", new_blob_identity)
 
         if modified_blob.is_a_fish_in_a_fragment:
             current = modified_blob
@@ -980,6 +982,8 @@ class Validator(BoxLayout):
                                                                         count_future_corrections + \
                                                                         count_past_corrections
             print("count_user_generated_identities_dict id, ", self.count_user_generated_identities_dict[new_blob_identity])
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
     def overwriteIdentity(self):
         # enable buttons to save corrected version and compute the accuracy
