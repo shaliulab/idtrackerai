@@ -96,7 +96,7 @@ class SelectFile(BoxLayout):
     CHOSEN_VIDEO = Chosen_Video()
 
     def on_enter(self,value):
-        CHOSEN_VIDEO.video._animal_type = self.animal_type_input.text
+        CHOSEN_VIDEO.video._preprocessing_type = self.preprocessing_type_input.text
         CHOSEN_VIDEO.video._number_of_animals = int(self.animal_number_input.text)
         self.popup.dismiss()
 
@@ -106,13 +106,13 @@ class SelectFile(BoxLayout):
         if filename:
             CHOSEN_VIDEO.set_chosen_item(filename[0])
             if CHOSEN_VIDEO.video.video_path is not None:
-                if CHOSEN_VIDEO.old_video.animal_type is None and CHOSEN_VIDEO.old_video.number_of_animals is None:
-                    self.create_animal_type_and_number_popup()
-                    self.animal_type_input.bind(on_text_validate = self.on_enter)
+                if CHOSEN_VIDEO.old_video.preprocessing_type is None and CHOSEN_VIDEO.old_video.number_of_animals is None:
+                    self.create_preprocessing_type_and_number_popup()
+                    self.preprocessing_type_input.bind(on_text_validate = self.on_enter)
                     self.animal_number_input.bind(on_text_validate = self.on_enter)
                     self.popup.open()
                 else:
-                    CHOSEN_VIDEO.video._animal_type = CHOSEN_VIDEO.old_video.animal_type
+                    CHOSEN_VIDEO.video._preprocessing_type = CHOSEN_VIDEO.old_video.preprocessing_type
                     CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
                 self.enable_ROI_and_preprocessing_tabs = True
         return not hasattr(self, 'enable_ROI_and_preprocessing_tabs')
@@ -125,16 +125,16 @@ class SelectFile(BoxLayout):
                 self.old_video = CHOSEN_VIDEO.old_video
         return not (hasattr(self.video, '_has_been_assigned') or hasattr(self.old_video, "_has_been_assigned"))
 
-    def create_animal_type_and_number_popup(self):
+    def create_preprocessing_type_and_number_popup(self):
         self.popup_container = BoxLayout()
-        self.animal_type_box = BoxLayout(orientation="vertical")
-        self.animal_type_label = Label(text='What animal are you tracking? [fish/flies]:\n')
-        self.animal_type_label.text_size = self.animal_type_label.size
-        self.animal_type_label.texture_size = self.animal_type_label.size
-        self.animal_type_box.add_widget(self.animal_type_label)
-        self.animal_type_input = TextInput(text ='', multiline=False)
-        self.animal_type_box.add_widget(self.animal_type_input)
-        self.popup_container.add_widget(self.animal_type_box)
+        self.preprocessing_type_box = BoxLayout(orientation="vertical")
+        self.preprocessing_type_label = Label(text='What animal are you tracking? [fish/flies]:\n')
+        self.preprocessing_type_label.text_size = self.preprocessing_type_label.size
+        self.preprocessing_type_label.texture_size = self.preprocessing_type_label.size
+        self.preprocessing_type_box.add_widget(self.preprocessing_type_label)
+        self.preprocessing_type_input = TextInput(text ='', multiline=False)
+        self.preprocessing_type_box.add_widget(self.preprocessing_type_input)
+        self.popup_container.add_widget(self.preprocessing_type_box)
 
         self.animal_number_box = BoxLayout(orientation="vertical")
         self.animal_number_label = Label(text='How many animals are you going to track:\n')
@@ -179,19 +179,16 @@ class VisualiseVideo(BoxLayout):
         self.video_slider.bind(value=self.get_value)
         self.footer.add_widget(self.video_slider)
 
-    def visualise(self, trackbar_value, current_segment = 0, func = None):
+    def visualise(self, trackbar_value, func = None):
         self.func = func
         print('trackbar_value ', trackbar_value)
         sNumber = self.video_object.in_which_episode(int(trackbar_value))
         print('seg number ', sNumber)
 
         sFrame = trackbar_value
-
-        if sNumber != current_segment: # we are changing segment
-            print('Changing segment...')
-            currentSegment = sNumber
-            if self.video_object._paths_to_video_segments:
-                self.cap = cv2.VideoCapture(self.video_object._paths_to_video_segments[sNumber])
+        current_segment = sNumber
+        if self.video_object._paths_to_video_segments:
+            self.cap = cv2.VideoCapture(self.video_object._paths_to_video_segments[sNumber])
         #Get frame from video file
         if self.video_object._paths_to_video_segments:
             start = self.video_object._episodes_start_end[sNumber][0]
@@ -216,8 +213,8 @@ class VisualiseVideo(BoxLayout):
         self.initImH = self.height
 
     def get_value(self, instance, value):
-
         self.visualise(value, func = self.func)
+
 
 class ROISelector(BoxLayout):
     def __init__(self,**kwargs):
@@ -612,7 +609,7 @@ class PreprocessingPreview(BoxLayout):
                                             self.ROI,
                                             self.bkg_subtractor_switch.active)
         #get information on the blobs find by thresholding
-        boundingBoxes, miniFrames, _, _, _, goodContours = blobExtractor(self.segmented_frame,
+        boundingBoxes, miniFrames, _, _, _, goodContours, _ = blobExtractor(self.segmented_frame,
                                                                         self.frame,
                                                                         int(self.min_area_slider.value),
                                                                         int(self.max_area_slider.value),
@@ -722,7 +719,10 @@ class Validator(BoxLayout):
                             content = Label(text = 'The video has not been tracked yet. Track it before performing validation.'),
                             size_hint = (.3,.3))
         self.warning_popup.bind(size=lambda s, w: s.setter('text_size')(s, w))
-
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+                                                                                                                                          
+                                                                                                                          
     def show_saving(self, *args):
         self.popup_saving = Popup(title='Saving',
             content=Label(text='wait ...'),
@@ -825,6 +825,25 @@ class Validator(BoxLayout):
                     self.visualiser.video_slider.value = frame_index
                     self.visualiser.visualise(frame_index, func = self.writeIds)
 
+    def _keyboard_closed(self):
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
+                                                                                                                                 
+
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):                                                              
+
+        frame_index = int(self.visualiser.video_slider.value)
+
+        print("I am here")
+        if keycode[1] == 'left':
+            frame_index -= 1
+        elif keycode[1] == 'right':
+            frame_index += 1
+        self.visualiser.video_slider.value = frame_index
+        self.visualiser.visualise(frame_index, func = self.writeIds)
+        return True
+
+
     @staticmethod
     def getNearestCentroid(point, cents):
         """
@@ -881,32 +900,32 @@ class Validator(BoxLayout):
     def writeIds(self, frame):
         blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
         font = cv2.FONT_HERSHEY_SIMPLEX
-        # attributes_to_get = ["centroid","identity","user_generated_identity"]###TODO separate noses from portraits in main code
-        # attributes_dict = self.get_attributes_from_blobs_in_frame(blobs_in_frame, attributes_to_get)
         frame = self.visualiser.frame
 
         for blob in blobs_in_frame:
+            print("______________________user generated id ", blob.user_generated_identity)
+            int_centroid = blob.centroid.astype('int')
             if blob.user_generated_identity is None:
-                text = str(blob.identity)
+                cur_id = blob.identity
             else:
-                text = str(blob.user_generated_identity)
+                cur_id = blob.user_generated_identity
 
-            if type(blob.identity) is 'int':
-                cv2.circle(frame, tuple(blob.centroid), 2, self.colors[blob._identity], -1)
-            elif type(blob.identity) is 'list':
-                cv2.circle(frame, tuple(blob.centroid), 2, [255, 255, 255], -1)
+            if type(cur_id) is 'int':
+                cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
+            elif type(cur_id) is 'list':
+                cv2.circle(frame, tuple(int_centroid), 2, [255, 255, 255], -1)
             if blob._assigned_during_accumulation:
                 # we draw a circle in the centroid if the blob has been assigned during accumulation
-                cv2.putText(frame, str(blob._identity),tuple(blob.centroid), font, 1, self.colors[blob._identity], 3)
+                cv2.putText(frame, str(cur_id),tuple(int_centroid), font, 1, self.colors[cur_id], 3)
             elif not blob._assigned_during_accumulation:
                 # we draw a cross in the centroid if the blob has been assigned during assignation
-                # cv2.putText(frame, 'x',tuple(blob.centroid), font, 1,self.colors[blob._identity], 1)
+                # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[cur_id], 1)
                 if blob.is_a_fish_in_a_fragment:
-                    cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, .5, self.colors[blob._identity], 3)
+                    cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
                 elif not blob.is_a_fish:
-                    cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, 1, [255,255,255], 3)
+                    cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, [255,255,255], 3)
                 else:
-                    cv2.putText(frame, str(blob.identity), tuple(blob.centroid), font, .5, [0, 0, 0], 3)
+                    cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, [0, 0, 0], 3)
 
         # Visualization of the process
         if self.scale != 1:
@@ -931,7 +950,6 @@ class Validator(BoxLayout):
         count_past_corrections = 1 #to take into account the modification already done in the current frame
         count_future_corrections = 0
         new_blob_identity = modified_blob.user_generated_identity
-
         if modified_blob.is_a_fish_in_a_fragment:
             current = modified_blob
 
@@ -955,6 +973,9 @@ class Validator(BoxLayout):
                                                                         count_future_corrections + \
                                                                         count_past_corrections
             print("count_user_generated_identities_dict id, ", self.count_user_generated_identities_dict[new_blob_identity])
+        #init and bind keyboard again
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
     def overwriteIdentity(self):
         # enable buttons to save corrected version and compute the accuracy
