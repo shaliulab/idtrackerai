@@ -58,6 +58,7 @@ from id_CNN import ConvNetwork
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
+PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING = .25
 ###
 np.random.seed(0)
 ###
@@ -242,17 +243,26 @@ if __name__ == '__main__':
             pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
-                #number_of_global_fragments = getInput('Pretraining','Choose the number of global fragments that will be used to pretrain the network. Default 10')
-                number_of_global_fragments = 100
+                text_global_fragments_for_pretraining = 'Choose the ratio (0 -> None ,1 -> All] of global fragments to be used for pretraining. Default ' + str(PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING)
+                percentage_of_global_fragments_for_pretraining = getInput('Pretraining', text_global_fragments_for_pretraining)
+                if percentage_of_global_fragments_for_pretraining == '':
+                    percentage_of_global_fragments_for_pretraining = PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING
+                else:
+                    percentage_of_global_fragments_for_pretraining = float(percentage_of_global_fragments_for_pretraining)
+
+                    if percentage_of_global_fragments_for_pretraining > 1:
+                        percentage_of_global_fragments_for_pretraining /= 100
+
+                total_number_of_global_fragments = len(global_fragments)
+                number_of_global_fragments = int(total_number_of_global_fragments * percentage_of_global_fragments_for_pretraining)
                 #Reset used_for_training and acceptable_for_training flags
                 if old_video and old_video._accumulation_finished == True:
                     for global_fragment in global_fragments:
                         global_fragment.reset_accumulation_params()
                 try:
-                    number_of_global_fragments = int(number_of_global_fragments)
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_pretraining_global_fragments = number_of_global_fragments))
                 except:
-                    number_of_global_fragments = len(global_fragments)
+                    number_of_global_fragments = total_number_of_global_fragments
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
 
                 print("pretraining with %i" %number_of_global_fragments, ' global fragments\n')
@@ -549,7 +559,7 @@ if __name__ == '__main__':
             frame_by_frame_identity_inspector(video, blobs)
 
         # solve crossings
-        ### NOTE: add flag to 
+        ### NOTE: add flag to
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         video = old_video
