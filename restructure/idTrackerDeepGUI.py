@@ -16,6 +16,7 @@ import psutil
 # Import application/library specifics
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
+sys.path.append('./postprocessing')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
@@ -54,6 +55,10 @@ from assigner import assign,\
                     assign_identity_to_blobs_in_video_by_fragment
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
+from assign_individual_fragment_extremes import assing_identity_to_individual_fragments_extremes
+from assign_jumps import assign_identity_to_jumps
+from correct_duplications import solve_duplications
+
 
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
@@ -516,6 +521,7 @@ if __name__ == '__main__':
         #############################################################
         print("\n**** Assignment ****")
         if not loadPreviousDict['assignment']:
+            reset_blobs_fragmentation_parameters(blobs, recovering_from = 'assignment')
             # Get images from the blob collection
             images = get_images_from_blobs_in_video(blobs)#, video._episodes_start_end)
             print("images shape before entering to assign, ", images.shape)
@@ -536,7 +542,7 @@ if __name__ == '__main__':
             # solve jumps
             assign_identity_to_jumps(video, blobs)
             # solve duplications
-            solve_duplications(blobs, group_size)
+            solve_duplications(blobs, video.number_of_animals)
             # solve impossible jumps
             ### NOTE: to be coded
 
