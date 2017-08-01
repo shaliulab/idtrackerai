@@ -186,6 +186,36 @@ def flatten(l):
         else:
             yield el
 
+def assign_identity_to_jumps(video, blobs):
+    if not hasattr(video, "velocity_threshold"):
+        video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals, percentile = VEL_PERCENTILE)
+    jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
+                    if blob.is_a_jump or blob.is_a_ghost_crossing]
+    jump_images = [blob.portrait for blob in jump_blobs]
+    #assign jumps by restoring the network
+    assigner = assign_jumps(jump_images, video)
+
+    for i, blob in enumerate(jump_blobs):
+        jump = Jump(jumping_blob = blob,
+                    number_of_animals = video.number_of_animals,
+                    net_prediction = assigner._predictions[i],
+                    softmax_probs = assigner._softmax_probs[i],
+                    velocity_threshold = video.velocity_threshold,
+                    number_of_frames = video._num_frames)
+        jump.assign_jump(blobs)
+        blob._identity = jump.jumping_blob.identity
+        blob._P1_vector = assigner._softmax_probs[i]
+        blob._P2_vector = None
+
+def assing_identity_to_individual_fragments_extremes(blobs):
+    for blobs_in_frame in blobs:
+        for blob in blobs_in_frame:
+            #if a blob has not been assigned but it is a fish and overlaps with one fragment
+            #assign it!
+            if blob.identity == 0 and blob.is_a_fish:
+                if len(blob.next) == 1: blob.identity = blob.next[0].identity
+                elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
+
 def solve_duplications(blobs, group_size):
     possible_identities = set(range(1,group_size+1))
     for blobs_in_frame in blobs:
@@ -212,6 +242,7 @@ def solve_duplications(blobs, group_size):
         if len(duplicated_identities) > 0:
             print("identities_in_frame, ",  identities_in_frame)
             raise ValueError("I have not remove all the duplications")
+
 
 
 class Duplication(object):
@@ -617,49 +648,11 @@ if __name__ == "__main__":
     list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Conflicto8/session_12/preprocessing/blobs_collection_safe.npy'
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
-    if not hasattr(video, "velocity_threshold"):
-        video.velocity_threshold = compute_model_velocity(blobs, number_of_animals, percentile = VEL_PERCENTILE)
 
     ''' Duplications '''
-    for blobs_in_frame in blobs:
-        identities = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
-        # print("identities in frame ", identities)
-        duplicated_identities = set([x for x in identities if identities.count(x) > 1])
-        # print("duplicated identities ", duplicated_identities)
-        if len(duplicated_identities) > 0:
-            try:
-                print("------------------------frame_number: ", blobs_in_frame[0].frame_number)
-            except:
-                print("--------")
-            print("identities in frame ", identities)
-            print("duplicated identities ", duplicated_identities)
-            frame  = Duplication(blobs_in_frame_with_duplication = blobs_in_frame,
-                                duplicated_identities = duplicated_identities)
-            blobs_to_reassign = frame.assign_unique_identities()
-
-            for blob in blobs_in_frame:
-                for blob_d in blobs_to_reassign:
-                    if blob is blob_d and blob.identity != blob_d.identity:
-                        blob.update_identity_in_fragment(blob_d.identity)
-
+    solve_duplications(blobs, video.number_of_animals)
     ''' Assign identities to jumps '''
-    jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
-                    if blob.is_a_jump or blob.is_a_ghost_crossing]
-    jump_images = [blob.portrait for blob in jump_blobs]
-    #assign jumps by restoring the network
-    assigner = assign_jumps(jump_images, video)
-
-    for i, blob in enumerate(jump_blobs):
-        jump = Jump(jumping_blob = blob,
-                    number_of_animals = video.number_of_animals,
-                    net_prediction = assigner._predictions[i],
-                    softmax_probs = assigner._softmax_probs[i],
-                    velocity_threshold = video.velocity_threshold,
-                    number_of_frames = video._num_frames)
-        jump.assign_jump(blobs)
-        blob._identity = jump.jumping_blob.identity
-        blob._P1_vector = assigner._softmax_probs[i]
-        blob._P2_vector = None
+    assign_identity_to_jumps()
     #
     # ''' Find who is in the crossings '''
     #
