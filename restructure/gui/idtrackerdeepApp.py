@@ -179,19 +179,16 @@ class VisualiseVideo(BoxLayout):
         self.video_slider.bind(value=self.get_value)
         self.footer.add_widget(self.video_slider)
 
-    def visualise(self, trackbar_value, current_segment = 0, func = None):
+    def visualise(self, trackbar_value, func = None):
         self.func = func
         print('trackbar_value ', trackbar_value)
         sNumber = self.video_object.in_which_episode(int(trackbar_value))
         print('seg number ', sNumber)
 
         sFrame = trackbar_value
-
-        if sNumber != current_segment: # we are changing segment
-            print('Changing segment...')
-            currentSegment = sNumber
-            if self.video_object._paths_to_video_segments:
-                self.cap = cv2.VideoCapture(self.video_object._paths_to_video_segments[sNumber])
+        current_segment = sNumber
+        if self.video_object._paths_to_video_segments:
+            self.cap = cv2.VideoCapture(self.video_object._paths_to_video_segments[sNumber])
         #Get frame from video file
         if self.video_object._paths_to_video_segments:
             start = self.video_object._episodes_start_end[sNumber][0]
