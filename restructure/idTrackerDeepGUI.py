@@ -306,6 +306,7 @@ if __name__ == '__main__':
         if not loadPreviousDict['accumulation']:
             #create folder to store accumulation models
             video.create_accumulation_folder()
+            reset_blobs_fragmentation_parameters(blobs, recovering_from = 'accumulation')
             #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
             if old_video and old_video._accumulation_finished == True:
                 print("Cleaning previous accumulation")

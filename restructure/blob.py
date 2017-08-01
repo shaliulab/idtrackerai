@@ -25,17 +25,26 @@ class Blob(object):
         self.pixels = pixels # list of int's: linearized pixels of the blob
         self.reset_before_fragmentation()
 
-    def reset_before_fragmentation(self):
-        self.next = [] # next blob object overlapping in pixels with current blob object
-        self.previous = [] # previous blob object overlapping in pixels with the current blob object
-        self._fragment_identifier = None # identity in individual fragment after fragmentation
-        self._blob_index = None # index of the blob to plot the individual fragments
-        self._identity = None # identity assigned by the algorithm
+    def reset_before_fragmentation(self, recovering_from):
         self._frequencies_in_fragment = np.zeros(self.number_of_animals).astype('int')
         self._P1_vector = np.zeros(self.number_of_animals)
         self._P2_vector = np.zeros(self.number_of_animals)
         self._assigned_during_accumulation = False
         self._user_generated_identity = None #in the validation part users can correct manually the identities
+        self._identity = None
+        if recovering_from == 'fragmentation':
+            self.next = [] # next blob object overlapping in pixels with current blob object
+            self.previous = [] # previous blob object overlapping in pixels with the current blob object
+            self._fragment_identifier = None # identity in individual fragment after fragmentation
+            self._blob_index = None # index of the blob to plot the individual fragments
+            self._identity = None # identity assigned by the algorithm
+            self._frequencies_in_fragment = np.zeros(self.number_of_animals).astype('int')
+            self._P1_vector = np.zeros(self.number_of_animals)
+            self._P2_vector = np.zeros(self.number_of_animals)
+            self._assigned_during_accumulation = False
+            self._user_generated_identity = None #in the validation part users can correct manually the identities
+
+
 
     @property
     def user_generated_identity(self):
@@ -393,10 +402,10 @@ def get_images_from_blobs_in_video(blobs_in_video):
                 portraits_in_video.append(blob.portrait)
     return np.asarray(portraits_in_video)
 
-def reset_blobs_fragmentation_parameters(blobs_in_video):
+def reset_blobs_fragmentation_parameters(blobs_in_video, recovering_from = 'fragmentation'):
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
-            blob.reset_before_fragmentation()
+            blob.reset_before_fragmentation(recovering_from)
 
 class ListOfBlobs(object):
     def __init__(self, blobs_in_video = None, path_to_save = None):
