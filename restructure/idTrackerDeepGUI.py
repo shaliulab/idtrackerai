@@ -521,17 +521,16 @@ if __name__ == '__main__':
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
             # finish and save
             video._has_been_assigned = True
-            # # get identity for individual fragments' extremes
-            # for blobs_in_frame in blobs:
-            #     for blob in blobs_in_frame:
-            #         #if a blob has not been assigned but it is a fish and overlaps with one fragment
-            #         #assign it!
-            #         if blob.identity == 0 and blob.is_a_fish:
-            #             if len(blob.next) == 1: blob.identity = blob.next[0].identity
-            #             elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
+            # assign identity to individual fragments' extremes
+            assing_identity_to_individual_fragments_extremes(blobs)
+            # solve jumps
+            assign_identity_to_jumps(video, blobs)
+            # solve duplications
+            solve_duplications(blobs, group_size)
+            # solve impossible jumps
+            ### NOTE: to be coded
 
             # visualise proposed tracking
-
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
@@ -548,6 +547,9 @@ if __name__ == '__main__':
             global_fragments = np.load(video.global_fragments_path)
             # visualise proposed tracking
             frame_by_frame_identity_inspector(video, blobs)
+
+        # solve crossings
+        ### NOTE: add flag to 
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         video = old_video
