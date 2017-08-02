@@ -69,8 +69,13 @@ class Duplication(object):
         index_of_blobs_assigned = []
 
         counter = 0
+<<<<<<< HEAD
         while len(assigned_identities) < number_of_blobs_to_reassign:
             #print("ids assigned: ", len(assigned_identities), "blobs to reasign: ", number_of_blobs_to_reassign)
+=======
+        while len(assigned_identities) != number_of_blobs_to_reassign:
+            # print("ids assigned: ", len(assigned_identities), "blobs to reasign: ", number_of_blobs_to_reassign)
+>>>>>>> 0563299b14b47b82355a7f3eb371f284ca177fc9
             P2_max = np.max(P2_matrix,axis = 1) # I take the best value for of P2 for each blob
             max_indices = np.where(P2_max == np.max(P2_max))[0]
             if len(max_indices) == 1: # There is a blob that has a better P2max than the rest
@@ -155,12 +160,10 @@ class Duplication(object):
                 else:
                     raise ValueError("condition no considered")
             else:
-                #print("P2_matrix ", P2_matrix)
-                #print("max_indices ", max_indices)
-                raise ValueError("condition no considered")
+                raise ValueError("condition not considered")
             counter += 1
-            if counter > 100:
-                raise ValueError("go traped in the while loop")
+            if counter > 10000:
+                raise ValueError('Got trapped in the loop')
 
 def solve_duplications(blobs, group_size):
     possible_identities = set(range(1,group_size+1))
