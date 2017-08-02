@@ -131,7 +131,7 @@ class Duplication(object):
                     #print("P2 matrix ", P2_matrix)
             elif len(max_indices) > 1 and np.all(P2_max == 0):
                 #print("all P2_max are 0 ")
-                index_of_blobs_to_be_assigned = list(set(range(index_of_blobs_assigned)).difference(set(number_of_blobs_to_reassign)))
+                index_of_blobs_to_be_assigned = list(set(range(number_of_blobs_to_reassign)).difference(set(index_of_blobs_assigned)))
                 #print("indices to be reassign ", index_of_blobs_to_be_assigned)
                 #print("available_identities ", self.available_identities)
                 #print("missing identities ", self.missing_identities)
