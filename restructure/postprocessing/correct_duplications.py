@@ -104,7 +104,7 @@ class Duplication(object):
                         index_of_blobs_assigned.append(index_blob)
                         P2_matrix[index_blob, :] = 0
                         # print("P2 matrix ", P2_matrix)
-                    elif len(self.missing_identities) == 1 and len(self.available_identities) == 1:
+                    elif len(self.available_identities) == 1:
                         #print("is the last missing identity")
                         self.missing_identities.remove(candidate_id)
                         self.blobs_to_reassign[index_blob]._identity = candidate_id
