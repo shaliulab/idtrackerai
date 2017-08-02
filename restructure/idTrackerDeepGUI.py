@@ -245,7 +245,8 @@ if __name__ == '__main__':
         print("\n**** Pretraining ****\n")
         if not loadPreviousDict['pretraining']:
 
-            pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
+            # pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
+            pretrain_flag = 'n'
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
                 text_global_fragments_for_pretraining = 'Choose the ratio (0 -> None ,1 -> All] of global fragments to be used for pretraining. Default ' + str(PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING)
