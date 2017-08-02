@@ -942,7 +942,7 @@ class Validator(BoxLayout):
         if self.scale != 1:
             self.dst = cv2.warpAffine(frame, self.M, (frame.shape[1], frame.shape[0]))
             buf = cv2.flip(self.dst,0)
-            buf = self.dst.tostring()
+            buf = buf.tostring()
         else:
             buf = cv2.flip(frame,0)
             buf = buf.tostring()
