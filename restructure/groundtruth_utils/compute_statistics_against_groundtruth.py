@@ -32,7 +32,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
                 if groundtruth_blob.identity != tracked_blob.identity:
                     misassigned_blob_count[groundtruth_blob.identity] += 1
             else:
-                misassigned_blob_count_in_crossings = check_crossing_assignment(groundtruth_blob, tracked_blob. misassigned_blob_count_in_crossings)
+                misassigned_blob_count_in_crossings = check_crossing_assignment(groundtruth_blob, tracked_blob, misassigned_blob_count_in_crossings)
     return misassigned_blob_count, misassigned_blob_count_in_crossings
 
 def get_statistics_against_groundtruth(groundtruth, blobs_list_tracked):

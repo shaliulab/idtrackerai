@@ -23,7 +23,7 @@ class Blob(object):
         self.estimated_body_length = estimated_body_length
         self._portrait = portrait # (numpy array (uint8),tuple(int,int),tuple(int,int)): (36x36 image of the animal,nose coordinates, head coordinates)
         self.pixels = pixels # list of int's: linearized pixels of the blob
-        self.reset_before_fragmentation()
+        self.reset_before_fragmentation('fragmentation')
 
     def reset_before_fragmentation(self, recovering_from):
         if recovering_from == 'accumulation' or recovering_from == 'fragmentation':
@@ -33,6 +33,8 @@ class Blob(object):
             self._assigned_during_accumulation = False
             self._user_generated_identity = None #in the validation part users can correct manually the identities
             self._identity = None
+            self._user_generated_centroids = []
+            self._user_generated_identities = []
         if recovering_from == 'fragmentation':
             self.next = [] # next blob object overlapping in pixels with current blob object
             self.previous = [] # previous blob object overlapping in pixels with the current blob object
@@ -43,15 +45,12 @@ class Blob(object):
             self._P1_vector = np.zeros(self.number_of_animals)
             self._P2_vector = np.zeros(self.number_of_animals)
             self._assigned_during_accumulation = False
-            self._user_generated_identity = None #in the validation part users can correct manually the identities
         if recovering_from == 'assignment':
             if not self.assigned_during_accumulation:
                 self._identity = None
                 self._frequencies_in_fragment = np.zeros(self.number_of_animals).astype('int')
                 self._P1_vector = np.zeros(self.number_of_animals)
                 self._P2_vector = np.zeros(self.number_of_animals)
-
-
 
     @property
     def user_generated_identity(self):

@@ -735,7 +735,6 @@ class Validator(BoxLayout):
             size_hint=(.3,.3))
         self.popup.open()
 
-    # @staticmethod
     def get_first_frame(self):
         self.global_fragments = np.load(CHOSEN_VIDEO.old_video.global_fragments_path)
         max_distance_travelled_global_fragment = order_global_fragments_by_distance_travelled(self.global_fragments)[0]
@@ -833,8 +832,6 @@ class Validator(BoxLayout):
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):                                                              
 
         frame_index = int(self.visualiser.video_slider.value)
-
-        print("I am here")
         if keycode[1] == 'left':
             frame_index -= 1
         elif keycode[1] == 'right':
@@ -872,7 +869,7 @@ class Validator(BoxLayout):
         print('transformed centroids ', centroids)
         centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
         blob_to_modify = blobs_in_frame[centroid_ind]
-        return blob_to_modify
+        return blob_to_modify, mouse_coords
 
     def fromShowFrameToTexture(self, coords):
         """
@@ -897,35 +894,49 @@ class Validator(BoxLayout):
     def get_attributes_from_blobs_in_frame(blobs_in_frame, attributes_to_get):
         return {attr: [getattr(blob, attr) for blob in blobs_in_frame] for attr in attributes_to_get}
 
+
+
+
+
     def writeIds(self, frame):
         blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
         font = cv2.FONT_HERSHEY_SIMPLEX
         frame = self.visualiser.frame
 
         for blob in blobs_in_frame:
-            print("______________________user generated id ", blob.user_generated_identity)
-            int_centroid = blob.centroid.astype('int')
-            if blob.user_generated_identity is None:
-                cur_id = blob.identity
-            else:
-                cur_id = blob.user_generated_identity
-
-            if type(cur_id) is 'int':
-                cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
-            elif type(cur_id) is 'list':
-                cv2.circle(frame, tuple(int_centroid), 2, [255, 255, 255], -1)
-            if blob._assigned_during_accumulation:
-                # we draw a circle in the centroid if the blob has been assigned during accumulation
-                cv2.putText(frame, str(cur_id),tuple(int_centroid), font, 1, self.colors[cur_id], 3)
-            elif not blob._assigned_during_accumulation:
-                # we draw a cross in the centroid if the blob has been assigned during assignation
-                # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[cur_id], 1)
-                if blob.is_a_fish_in_a_fragment:
-                    cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
-                elif not blob.is_a_fish:
-                    cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, [255,255,255], 3)
+            if not blob.is_a_crossing:
+                print("______________________user generated id ", blob.user_generated_identity)
+                int_centroid = blob.centroid.astype('int')
+                if blob.user_generated_identity is None:
+                    cur_id = blob.identity
                 else:
-                    cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, [0, 0, 0], 3)
+                    cur_id = blob.user_generated_identity
+
+                if type(cur_id) is 'int':
+                    cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
+                elif type(cur_id) is 'list':
+                    cv2.circle(frame, tuple(int_centroid), 2, [255, 255, 255], -1)
+                if blob._assigned_during_accumulation:
+                    # we draw a circle in the centroid if the blob has been assigned during accumulation
+                    cv2.putText(frame, str(cur_id),tuple(int_centroid), font, 1, self.colors[cur_id], 3)
+                elif not blob._assigned_during_accumulation:
+                    # we draw a cross in the centroid if the blob has been assigned during assignation
+                    # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[cur_id], 1)
+                    if blob.is_a_fish_in_a_fragment:
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
+                    elif not blob.is_a_fish:
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, [255,255,255], 3)
+                    else:
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, [0, 0, 0], 3)
+            elif blob.is_a_crossing:
+                print("writing crossing ids")
+                for centroid, identity in zip(blob._user_generated_centroids, blob._user_generated_identities):
+                    centroid = centroid.astype('int')
+                    cv2.putText(frame, str(identity), tuple(centroid), font, .5, self.colors[identity], 3)
+                    cv2.circle(frame, tuple(centroid), 2, self.colors[identity], -1)
+                self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+                self._keyboard.bind(on_key_down=self._on_keyboard_down)
+
 
         # Visualization of the process
         if self.scale != 1:
@@ -981,8 +992,15 @@ class Validator(BoxLayout):
         # enable buttons to save corrected version and compute the accuracy
         self.save_groundtruth_btn.disabled = False
         self.compute_accuracy_button.disabled = False
-        self.blob_to_modify.user_generated_identity = self.identity_update
-        self.propagate_groundtruth_identity_in_individual_fragment()
+        if not self.blob_to_modify.is_a_crossing:
+            self.blob_to_modify.user_generated_identity = self.identity_update
+            self.propagate_groundtruth_identity_in_individual_fragment()
+        else:
+            self.blob_to_modify._user_generated_centroids.append(self.user_generated_centroids)
+            self.blob_to_modify._user_generated_identities.append(self.identity_update)
+            print("assigning ids and centroids to crossings:")
+            print(self.blob_to_modify._user_generated_identities)
+            print(self.blob_to_modify._user_generated_centroids)
         self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func=self.writeIds)
 
     def on_press_show_saving(selg, *args):
@@ -1035,7 +1053,7 @@ class Validator(BoxLayout):
         if self.visualiser.display_layout.collide_point(*touch.pos):
             if touch.button =='left':
                 self.touches.append(touch.pos)
-                self.id_to_modify = self.correctIdentity()
+                self.id_to_modify, self.user_generated_centroids = self.correctIdentity()
                 self.modifyIdOpenPopup(self.id_to_modify)
 
             elif touch.button == 'scrollup':

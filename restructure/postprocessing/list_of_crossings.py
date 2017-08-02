@@ -559,7 +559,7 @@ class Crossing(object):
     def get_identities_of_crossing_blobs(self):
         predictions = self.overlapping
         #case 1
-        if len(self.identities) <= 1 or np.sum(np.isnan(predictions)):
+        if len(self.identities) <= 1 or np.sum(np.isnan(predictions)) or np.all(predictions == 0):
             print("______bad case: no previous or next non crossing blobs found")
             self.blobs = None
 
@@ -642,17 +642,17 @@ if __name__ == "__main__":
 
     #load video and list of blobs
     # video = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4/video_object.npy').item()
-    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Conflicto8/session_12/video_object.npy').item()
+    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Conflicto8/session_2/video_object.npy').item()
     number_of_animals = video.number_of_animals
     # list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4/preprocessing/blobs_collection.npy'
-    list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Conflicto8/session_12/preprocessing/blobs_collection_safe.npy'
+    list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Conflicto8/session_2/preprocessing/blobs_collection.npy'
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
 
     ''' Duplications '''
     solve_duplications(blobs, video.number_of_animals)
     ''' Assign identities to jumps '''
-    assign_identity_to_jumps()
+    assign_identity_to_jumps(video, blobs)
     #
     # ''' Find who is in the crossings '''
     #
