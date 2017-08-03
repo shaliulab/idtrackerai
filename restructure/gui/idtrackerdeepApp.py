@@ -721,8 +721,7 @@ class Validator(BoxLayout):
         self.warning_popup.bind(size=lambda s, w: s.setter('text_size')(s, w))
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
-                                                                                                                                          
-                                                                                                                          
+                                                                                                                     
     def show_saving(self, *args):
         self.popup_saving = Popup(title='Saving',
             content=Label(text='wait ...'),
@@ -773,13 +772,17 @@ class Validator(BoxLayout):
         self.button_box = BoxLayout(orientation='vertical', size_hint=(.3,1.))
         self.add_widget(self.button_box)
         #create, add and bind button: go to next crossing
-        self.next_cross_button = Button(id='crossing_btn', text='Go to next crossing', size_hint=(1,1))
+        self.next_cross_button = Button(id='crossing_btn', text='Next crossing', size_hint=(1,1))
         self.next_cross_button.bind(on_press=self.go_to_next_crossing)
         self.button_box.add_widget(self.next_cross_button)
         #create, add and bind button: go to previous crossing
-        self.previous_cross_button = Button(id='crossing_btn', text='Go to previous crossing', size_hint=(1,1))
+        self.previous_cross_button = Button(id='crossing_btn', text='Previous crossing', size_hint=(1,1))
         self.previous_cross_button.bind(on_press=self.go_to_previous_crossing)
         self.button_box.add_widget(self.previous_cross_button)
+        #create, add and bind button to go back to the first global fragments
+        self.go_to_first_global_fragment_button = Button(id='back_to_first_gf_btn', text='First global fragment', size_hint=(1,1))
+        self.go_to_first_global_fragment_button.bind(on_press = self.go_to_first_global_fragment)
+        self.button_box.add_widget(self.go_to_first_global_fragment_button)
         #create, add and bind button: save groundtruth
         self.save_groundtruth_btn = Button(id='save_groundtruth_btn', text='Save updated identities',size_hint = (1,1))
         self.save_groundtruth_btn.bind(on_press=self.show_saving)
@@ -788,7 +791,7 @@ class Validator(BoxLayout):
         # add button to the button layout
         self.button_box.add_widget(self.save_groundtruth_btn)
         # create button to compute accuracy with respect to the groundtruth entered by the user
-        self.compute_accuracy_button = Button(id = "compute_accuracy_button", text = "compute accuracy", size_hint  = (1.,1.))
+        self.compute_accuracy_button = Button(id = "compute_accuracy_button", text = "Compute accuracy", size_hint  = (1.,1.))
         self.compute_accuracy_button.disabled = True
         self.compute_accuracy_button.bind(on_press = self.compute_accuracy_wrt_groundtruth)
         # add button to layout
@@ -802,13 +805,16 @@ class Validator(BoxLayout):
         frame_index = int(self.visualiser.video_slider.value)
         #for every subsequent frame check the blobs and stop if a crossing (or a jump) occurs
         while non_crossing == True:
-            frame_index = frame_index + 1
-            blobs_in_frame = self.blobs_in_video[frame_index]
-            for blob in blobs_in_frame:
-                if not blob.is_a_fish_in_a_fragment:
-                    non_crossing = False
-                    self.visualiser.video_slider.value = frame_index
-                    self.visualiser.visualise(frame_index, func = self.writeIds)
+            if frame_index < CHOSEN_VIDEO.video._num_frames:
+                frame_index = frame_index + 1
+                blobs_in_frame = self.blobs_in_video[frame_index]
+                for blob in blobs_in_frame:
+                    if not blob.is_a_fish_in_a_fragment:
+                        non_crossing = False
+                        self.visualiser.video_slider.value = frame_index
+                        self.visualiser.visualise(frame_index, func = self.writeIds)
+            else:
+                break
 
     def go_to_previous_crossing(self,instance):
         non_crossing = True
@@ -816,19 +822,25 @@ class Validator(BoxLayout):
         frame_index = int(self.visualiser.video_slider.value)
         #for every subsequent frame check the blobs and stop if a crossing (or a jump) occurs
         while non_crossing == True:
-            frame_index = frame_index - 1
-            blobs_in_frame = self.blobs_in_video[frame_index]
-            for blob in blobs_in_frame:
-                if not blob.is_a_fish_in_a_fragment:
-                    non_crossing = False
-                    self.visualiser.video_slider.value = frame_index
-                    self.visualiser.visualise(frame_index, func = self.writeIds)
+            if frame_index > 0:
+                frame_index = frame_index - 1
+                blobs_in_frame = self.blobs_in_video[frame_index]
+                for blob in blobs_in_frame:
+                    if not blob.is_a_fish_in_a_fragment:
+                        non_crossing = False
+                        self.visualiser.video_slider.value = frame_index
+                        self.visualiser.visualise(frame_index, func = self.writeIds)
+            else:
+                break
+
+    def go_to_first_global_fragment(self, instance):
+        self.visualiser.visualise(self.get_first_frame(), func = self.writeIds)
+        self.visualiser.video_slider.value = self.get_first_frame()
 
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
                                                                                                                                  
-
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):                                                              
 
         frame_index = int(self.visualiser.video_slider.value)
@@ -839,7 +851,6 @@ class Validator(BoxLayout):
         self.visualiser.video_slider.value = frame_index
         self.visualiser.visualise(frame_index, func = self.writeIds)
         return True
-
 
     @staticmethod
     def getNearestCentroid(point, cents):
@@ -855,20 +866,30 @@ class Validator(BoxLayout):
         distances = dist_x**2 + dist_y**2
         return np.argmin(distances)
 
+    def apply_affine_transform_on_point(self, affine_transform_matrix, point):
+        R = affine_transform_matrix[:,:-1]
+        T = affine_transform_matrix[:,-1]
+        return np.dot(R, point) + T
+
+    def apply_inverse_affine_transform_on_point(self, affine_transform_matrix, point):
+        inverse_affine_transform_matrix = cv2.invertAffineTransform(affine_transform_matrix)
+        return self.apply_affine_transform_on_point(inverse_affine_transform_matrix, point)
+
     def correctIdentity(self):
         mouse_coords = self.touches[0]
-        mouse_coords = self.fromShowFrameToTexture(mouse_coords)
         frame_index = int(self.visualiser.video_slider.value) #get the current frame from the slider
         blobs_in_frame = self.blobs_in_video[frame_index]
         centroids = np.asarray([getattr(blob, "centroid") for blob in blobs_in_frame])
         if self.scale != 1:
-            R = self.M[:,:-1]
-            T = self.M[:,-1]
-            centroids = [np.dot(R, centroid) + T for centroid in centroids]
-
+            #transforms the centroids to the visualised texture
+            centroids = [self.apply_affine_transform_on_point(self.M, centroid) for centroid in centroids]
+        mouse_coords = self.fromShowFrameToTexture(mouse_coords)
+        if self.scale != 1:
+            mouse_coords = self.apply_inverse_affine_transform_on_point(self.M, mouse_coords)
         print('transformed centroids ', centroids)
         centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
         blob_to_modify = blobs_in_frame[centroid_ind]
+        print("mouse coords ", mouse_coords)
         return blob_to_modify, mouse_coords
 
     def fromShowFrameToTexture(self, coords):
@@ -879,7 +900,6 @@ class Validator(BoxLayout):
         coords = np.asarray(coords)
         original_frame_width = CHOSEN_VIDEO.video._width
         original_frame_height = CHOSEN_VIDEO.video._height
-
         actual_frame_width, actual_frame_height = self.visualiser.display_layout.size
         self.offset = self.visualiser.footer.height
         coords[1] = coords[1] - self.offset
@@ -893,10 +913,6 @@ class Validator(BoxLayout):
     @staticmethod
     def get_attributes_from_blobs_in_frame(blobs_in_frame, attributes_to_get):
         return {attr: [getattr(blob, attr) for blob in blobs_in_frame] for attr in attributes_to_get}
-
-
-
-
 
     def writeIds(self, frame):
         blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
@@ -1059,7 +1075,7 @@ class Validator(BoxLayout):
             elif touch.button == 'scrollup':
                 self.count_scrollup += 1
                 coords = self.fromShowFrameToTexture(touch.pos)
-                rows,cols, channels = self.visualiser.frame.shape
+                rows, cols, channels = self.visualiser.frame.shape
                 self.scale = 1.5 * self.count_scrollup
                 self.M = cv2.getRotationMatrix2D((coords[0],coords[1]),0,self.scale)
                 self.dst = cv2.warpAffine(self.visualiser.frame,self.M,(cols,rows))
@@ -1070,7 +1086,6 @@ class Validator(BoxLayout):
                 self.visualiser.display_layout.texture = textureFrame
 
             elif touch.button == 'scrolldown':
-                # frame = self.parent.frame
                 coords = self.fromShowFrameToTexture(touch.pos)
                 rows,cols, channels = self.visualiser.frame.shape
                 self.dst = self.visualiser.frame
@@ -1080,6 +1095,7 @@ class Validator(BoxLayout):
                 textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
                 self.visualiser.display_layout.texture = textureFrame
                 self.count_scrollup = 0
+                self.scale = 1
 
             elif touch.button == 'right':
                 pass

@@ -40,8 +40,6 @@ def correct_impossible_jumps(video_object, blobs_in_video):
                         print("shit! it jumped")
 
 
-
-
 if __name__ == "__main__":
     from GUI_utils import frame_by_frame_identity_inspector
     NUM_CHUNKS_BLOB_SAVING = 10
