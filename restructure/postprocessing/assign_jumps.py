@@ -139,7 +139,7 @@ def assign_jumps(images, video):
 
 def assign_identity_to_jumps(video, blobs):
     if not hasattr(video, "velocity_threshold"):
-        video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals, percentile = VEL_PERCENTILE)
+        video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals)
     jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
                     if blob.is_a_jump or blob.is_a_ghost_crossing]
     jump_images = [blob.portrait for blob in jump_blobs]
