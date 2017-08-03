@@ -17,8 +17,9 @@ from scipy.ndimage.filters import gaussian_filter1d
 # Import application/library specifics
 sys.path.append('IdTrackerDeep/restructure')
 sys.path.append('IdTrackerDeep/tracker')
-
+from tqdm import tqdm
 from blob import ListOfBlobs
+
 
 def smooth_trajectories(t, sigma = 1.5, truncate = 4.0, derivative = 0):
     """Smooth trajectories (and maybe perform derivatives)
@@ -46,20 +47,19 @@ def produce_trajectories(blob_file):
     nose_trajectories = np.ones((number_of_animals,number_of_frames, 2))*np.NaN
     head_trajectories = np.ones((number_of_animals, number_of_frames, 2))*np.NaN
     
-    for frame_number, blobs_in_frame in enumerate(list_of_blobs.blobs_in_video):
-        print(frame_number)
+    missing_head = False
+    for frame_number, blobs_in_frame in enumerate(tqdm(list_of_blobs.blobs_in_video)):
         for blob in blobs_in_frame:
             if (blob.identity is not None) and (blob.identity != 0): #If blob is not a jump and it is not a crossing
                 centroid_trajectories[blob.identity-1, frame_number, :] = blob.centroid
                 try:
                     head_trajectories[blob.identity-1, frame_number, :] = blob.head_coordinates
                     nose_trajectories[blob.identity-1, frame_number, :] = blob.nose_coordinates
-                except: #For compatibility with previous versions where portrait is a tuple
-                    print("Warning: you are using an old ListOfBlobs file")
-                    head_trajectories[blob.identity-1, frame_number, :] = blob.portrait[2]
-                    nose_trajectories[blob.identity-1, frame_number, :] = blob.portrait[1]
- 
-    return {"centroid": centroid_trajectories, "nose": nose_trajectories, "head": head_trajectories}
+                except:
+                    missing_head = True
+    if missing_head:
+        return {"centroid": centroid_trajectories, "head": head_trajectories, "nose": nose_trajectories} 
+    return {"centroid": centroid_trajectories}
 
 if __name__ == "__main__":
     #SIMPLE USAGE EXAMPLE     
