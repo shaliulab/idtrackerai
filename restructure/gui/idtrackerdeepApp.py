@@ -1080,6 +1080,7 @@ class Validator(BoxLayout):
                 textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
                 self.visualiser.display_layout.texture = textureFrame
                 self.count_scrollup = 0
+                self.scale = 1
 
             elif touch.button == 'right':
                 pass
