@@ -780,6 +780,10 @@ class Validator(BoxLayout):
         self.previous_cross_button = Button(id='crossing_btn', text='Go to previous crossing', size_hint=(1,1))
         self.previous_cross_button.bind(on_press=self.go_to_previous_crossing)
         self.button_box.add_widget(self.previous_cross_button)
+        #create, add and bind button to go back to the first global fragments
+        self.go_to_first_global_fragment_button = Button(id='back_to_first_gf_btn', text='Go to first global fragment', size_hint=(1,1))
+        self.go_to_first_global_fragment_button.bind(on_press = self.go_to_first_global_fragment)
+        self.button_box.add_widget(self.go_to_first_global_fragment_button)
         #create, add and bind button: save groundtruth
         self.save_groundtruth_btn = Button(id='save_groundtruth_btn', text='Save updated identities',size_hint = (1,1))
         self.save_groundtruth_btn.bind(on_press=self.show_saving)
@@ -824,6 +828,10 @@ class Validator(BoxLayout):
                     self.visualiser.video_slider.value = frame_index
                     self.visualiser.visualise(frame_index, func = self.writeIds)
 
+    def go_to_first_global_fragment(self, instance):
+        self.visualiser.visualise(self.get_first_frame(), func = self.writeIds)
+        self.visualiser.video_slider.value = self.get_first_frame()
+
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
@@ -857,7 +865,7 @@ class Validator(BoxLayout):
 
     def correctIdentity(self):
         mouse_coords = self.touches[0]
-        mouse_coords = self.fromShowFrameToTexture(mouse_coords)
+
         frame_index = int(self.visualiser.video_slider.value) #get the current frame from the slider
         blobs_in_frame = self.blobs_in_video[frame_index]
         centroids = np.asarray([getattr(blob, "centroid") for blob in blobs_in_frame])
@@ -866,9 +874,11 @@ class Validator(BoxLayout):
             T = self.M[:,-1]
             centroids = [np.dot(R, centroid) + T for centroid in centroids]
 
+        mouse_coords = self.fromShowFrameToTexture(mouse_coords)
         print('transformed centroids ', centroids)
         centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
         blob_to_modify = blobs_in_frame[centroid_ind]
+        print("mouse coords ", mouse_coords)
         return blob_to_modify, mouse_coords
 
     def fromShowFrameToTexture(self, coords):
@@ -1070,7 +1080,6 @@ class Validator(BoxLayout):
                 self.visualiser.display_layout.texture = textureFrame
 
             elif touch.button == 'scrolldown':
-                # frame = self.parent.frame
                 coords = self.fromShowFrameToTexture(touch.pos)
                 rows,cols, channels = self.visualiser.frame.shape
                 self.dst = self.visualiser.frame
