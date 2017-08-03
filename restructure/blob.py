@@ -21,7 +21,7 @@ class Blob(object):
         self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates #tuple of tuples: ((x1,y1),(x2,y2)) (top-left corner, bottom-right corner) in pixels
         self.bounding_box_image = bounding_box_image # numpy array (uint8): image of the fish cropped from the video according to the bounding_box_in_frame_coordinates
         self.estimated_body_length = estimated_body_length
-        self._portrait = portrait # (numpy array (uint8),tuple(int,int),tuple(int,int)): (36x36 image of the animal,nose coordinates, head coordinates)
+        self._portrait = portrait # numpy array (float32)
         self.pixels = pixels # list of int's: linearized pixels of the blob
         self.reset_before_fragmentation('fragmentation')
 
