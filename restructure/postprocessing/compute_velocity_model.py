@@ -26,13 +26,13 @@ def compute_model_velocity(blobs_in_video, number_of_animals, percentile = None)
     2 * percentile(velocity distribution of identified animals) otherwise
     """
     distance_travelled_in_individual_fragments = []
-    current_individual_fragment_identifier = -1
+    used_individual_fragments = []
 
     for blobs_in_frame in tqdm( blobs_in_video, desc = "computing velocity model"):
 
         for blob in blobs_in_frame:
-            if blob.is_a_fish_in_a_fragment and current_individual_fragment_identifier != blob.fragment_identifier:
-                current_individual_fragment_identifier = blob.fragment_identifier
+            if blob.is_a_fish_in_a_fragment and blob.fragment_identifier not in used_individual_fragments:
+                used_individual_fragments.extend([blob.fragment_identifier])
                 distance_travelled_in_individual_fragments.extend(blob.frame_by_frame_velocity())
 
     return 2 * np.max(distance_travelled_in_individual_fragments) if percentile is None else 2 * np.percentile(distance_travelled_in_individual_fragments, percentile)
