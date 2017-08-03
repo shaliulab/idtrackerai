@@ -866,11 +866,14 @@ class Validator(BoxLayout):
         distances = dist_x**2 + dist_y**2
         return np.argmin(distances)
 
-    @staticmethod
-    def apply_affine_transform_on_point(affine_transform_matrix, point):
+    def apply_affine_transform_on_point(self, affine_transform_matrix, point):
         R = affine_transform_matrix[:,:-1]
         T = affine_transform_matrix[:,-1]
         return np.dot(R, point) + T
+
+    def apply_inverse_affine_transform_on_point(self, affine_transform_matrix, point):
+        inverse_affine_transform_matrix = cv2.invertAffineTransform(affine_transform_matrix)
+        return self.apply_affine_transform_on_point(inverse_affine_transform_matrix, point)
 
     def correctIdentity(self):
         mouse_coords = self.touches[0]
@@ -881,6 +884,8 @@ class Validator(BoxLayout):
             #transforms the centroids to the visualised texture
             centroids = [self.apply_affine_transform_on_point(self.M, centroid) for centroid in centroids]
         mouse_coords = self.fromShowFrameToTexture(mouse_coords)
+        if self.scale != 1:
+            mouse_coords = self.apply_inverse_affine_transform_on_point(self.M, mouse_coords)
         print('transformed centroids ', centroids)
         centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
         blob_to_modify = blobs_in_frame[centroid_ind]
@@ -1070,7 +1075,7 @@ class Validator(BoxLayout):
             elif touch.button == 'scrollup':
                 self.count_scrollup += 1
                 coords = self.fromShowFrameToTexture(touch.pos)
-                rows,cols, channels = self.visualiser.frame.shape
+                rows, cols, channels = self.visualiser.frame.shape
                 self.scale = 1.5 * self.count_scrollup
                 self.M = cv2.getRotationMatrix2D((coords[0],coords[1]),0,self.scale)
                 self.dst = cv2.warpAffine(self.visualiser.frame,self.M,(cols,rows))
