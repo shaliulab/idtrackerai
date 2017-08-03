@@ -707,8 +707,6 @@ class Accumulator(BoxLayout):
             else:
                 return True
 
-
-
 class Validator(BoxLayout):
     def __init__(self, **kwargs):
         super(Validator, self).__init__(**kwargs)
@@ -886,10 +884,8 @@ class Validator(BoxLayout):
         mouse_coords = self.fromShowFrameToTexture(mouse_coords)
         if self.scale != 1:
             mouse_coords = self.apply_inverse_affine_transform_on_point(self.M, mouse_coords)
-        print('transformed centroids ', centroids)
         centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
         blob_to_modify = blobs_in_frame[centroid_ind]
-        print("mouse coords ", mouse_coords)
         return blob_to_modify, mouse_coords
 
     def fromShowFrameToTexture(self, coords):
