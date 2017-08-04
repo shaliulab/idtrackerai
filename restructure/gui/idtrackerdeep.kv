@@ -1,0 +1,47 @@
+<MainWindow>:
+    Root:
+        id: tabs
+        size_hint: 1,1
+        pos_hint: {'center_x': .5, 'center_y': .5}
+        do_default_tab: False
+
+        TabbedPanelItem:
+            id: tab1
+            text:"Welcome"
+            SelectFile:
+                id: select_file
+                size_hint: 1.,1.
+                FileChooserListView:
+                    id: filechooser
+                    size_hint: 1.,1.
+                    path: '/home/lab/Desktop/TF_models/IdTrackerDeep/videos'
+                    on_selection: select_file.open(filechooser.path,filechooser.selection)
+                    on_selection: select_file.enable_validation(filechooser.path,filechooser.selection)
+        TabbedPanelItem:
+            id: tab2
+            text:"ROI selection"
+            disabled: select_file.open(filechooser.path,filechooser.selection)
+            ROISelector:
+                id:roi_selector
+        TabbedPanelItem:
+            id:tab4
+            text: "Preprocessing"
+            disabled: select_file.open(filechooser.path,filechooser.selection)
+            PreprocessingPreview:
+                id:preprocessing_preview
+        TabbedPanelItem:
+            id: tab5
+            text:"Pre-training"
+            disabled: True
+        TabbedPanelItem:
+            id: tab6
+            text:"Accumulation"
+            disabled: True
+            Accumulator
+                id: accumulator
+        TabbedPanelItem:
+            id: tab7
+            text:"Validation"
+            disabled: select_file.enable_validation(filechooser.path,filechooser.selection)
+            Validator:
+                id: validator

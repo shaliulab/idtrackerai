@@ -90,7 +90,7 @@ def give_me_identities_in_crossings(list_of_blobs):
 
     return list_of_blobs
 
-def find_crossing_fragments(list_of_blobs):
+def assign_crossing_identifier(list_of_blobs):
     """we define a crossing fragment as a crossing that in subsequent frames
     involves the same individuals"""
     crossing_identifier = 0
@@ -101,18 +101,27 @@ def find_crossing_fragments(list_of_blobs):
                 print('crossing number ', crossing_identifier)
                 print('frame number ', blob.frame_number)
                 if len(blob.next) == 1 and len(blob.previous) == 1:
-                    print("cur crossing id ", blob.identity)
-                    print("prev crossing id ", blob.previous[0].identity)
-                    print("next crossing id ", blob.next[0].identity)
-
                     blob.is_a_crossing_in_a_fragment = True
                     blob.crossing_identifier = crossing_identifier
                 else:
-                    print("-----------------------------------")
                     crossing_identifier += 1
             else:
                 blob.is_a_crossing_in_a_fragment = False
+    return crossing_identifier
 
+def get_crossing_and_statistics(list_of_blobs, max_crossing_identifier):
+    number_of_crossing_frames = 0
+    crossings = {i: [] for i in range(max_crossing_identifier)}
+
+    for blobs_in_frame in list_of_blobs:
+        for blob in blobs_in_frame:
+            local_crossing = []
+            if blob.is_a_crossing:
+                number_of_crossing_frames += 1
+                crossings[blob.crossing_identifier].append(blob)
+
+    crossings_lengths = [len(c) for c in crossings]
+    return crossings, len(crossings), number_of_crossing_frames, crossings_lengths
 
 
 
@@ -129,8 +138,8 @@ if __name__ == "__main__":
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
     blobs = give_me_identities_in_crossings(blobs)
-    crossing_identifier = find_crossing_fragments(blobs)
-
+    max_crossing_identifier = assign_crossing_identifier(blobs)
+    crossings, number_of_crossings, number_of_crossing_frames, crossing_lengths = get_crossing_and_statistics(blobs, max_crossing_identifier)
     # blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
     # blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
     # blobs_list.cut_in_chunks()
