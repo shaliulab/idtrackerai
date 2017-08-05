@@ -35,7 +35,7 @@ import sys
 sys.path.append('../')
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
-sys.setrecursionlimit(10000)
+sys.setrecursionlimit(100000)
 import cv2
 import numpy as np
 from video import Video
