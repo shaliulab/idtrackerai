@@ -21,6 +21,7 @@ class Jump(object):
         self.softmax_probs = softmax_probs
         self.velocity_threshold = velocity_threshold
         self.number_of_frames = number_of_frames
+        self.number_of_animals = number_of_animals
 
     @property
     def jumping_blob(self):
@@ -71,8 +72,9 @@ class Jump(object):
         if not self.apply_model_velocity(blobs_in_video):
             print("available_identities ", available_identities)
             print("removing ", self.jumping_blob.identity)
-            available_identities.remove(self.jumping_blob.identity)
-            print("new_available_identities ", available_identities)
+            if len(list(available_identities)) > 0:
+                available_identities.remove(self.jumping_blob.identity)
+                print("new_available_identities ", available_identities)
             if len(list(available_identities)) > 0:
                 self.jumping_blob.identity = self.check_id_availability(available_identities, sorted_assignments_indices)[0]
                 print("self.check_id_availability(available_identities, sorted_assignments_indices), ", self.check_id_availability(available_identities, sorted_assignments_indices))
@@ -88,21 +90,24 @@ class Jump(object):
 
     def assign_jump(self, blobs_in_video):
         available_identities = self.get_available_identities(blobs_in_video)
-
-        if self.prediction in available_identities:
+        if len(list(available_identities)) == 1:
+            self.jumping_blob._identity = list(available_identities)[0]
+        elif len(list(available_identities)) > 1 and self.prediction in available_identities:
             self.jumping_blob._identity = self.prediction
         else:
+            not_assigned = True
             sorted_assignments_indices = np.argsort(np.array(self.softmax_probs))[::-1]
-            try:
-                new_identity = [sorted_assignments_index for sorted_assignments_index in sorted_assignments_indices
-                    if (sorted_assignments_index + 1) in available_identities][0]
-            except:
+            new_identities = [sorted_assignments_index for sorted_assignments_index in sorted_assignments_indices
+                if (sorted_assignments_index + 1) in available_identities and self.softmax_probs[sorted_assignments_index] > 1 / self.number_of_animals]
+            if len(new_identities) > 0:
+                new_identity = new_identities[0]
+            else:
                 new_identity = -1
             self.jumping_blob._identity = new_identity + 1
 
-        if self.jumping_blob.frame_number >= 1:
-            sorted_assignments_indices = np.argsort(np.array(self.softmax_probs))[::-1]
-            self.check_assigned_identity(blobs_in_video, available_identities, sorted_assignments_indices)
+        # if self.jumping_blob.frame_number >= 1:
+        #     sorted_assignments_indices = np.argsort(np.array(self.softmax_probs))[::-1]
+        #     self.check_assigned_identity(blobs_in_video, available_identities, sorted_assignments_indices)
 
 def flatten(l):
     for el in l:
@@ -141,8 +146,8 @@ def assign_jumps(images, video):
     return assign(net, video, images, print_flag = True)
 
 def assign_identity_to_jumps(video, blobs):
-    if not hasattr(video, "velocity_threshold"):
-        video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals)
+    # if not hasattr(video, "velocity_threshold"):
+    #     video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals)
     jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
                     if blob.is_a_jump or blob.is_a_ghost_crossing]
     jump_images = [blob.portrait for blob in jump_blobs]
