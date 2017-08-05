@@ -42,7 +42,7 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,segmFrameInd[0])
     max_number_of_blobs = 0
     max_body_length = 0
-    
+
     while counter < numFrames:
         blobs_in_frame = []
         #Get frame from video file
@@ -56,8 +56,8 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
             segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
             # Find contours in the segmented image
             bounding_boxes, miniframes, centroids, areas, pixels, contours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray,
-                                                                                                        video._min_area, video._max_area,
-                                                                                                        video._height, video._width)
+                                                                                                    video._min_area, video._max_area,
+                                                                                                    video._height, video._width)
         except:
             print("frame number, ", counter)
             print("ret, ", ret)

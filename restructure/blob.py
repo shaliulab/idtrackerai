@@ -58,9 +58,7 @@ class Blob(object):
 
     @user_generated_identity.setter
     def user_generated_identity(self, new_identifier):
-        #check if the identity is different from the one assigned by the algorithm
-        if self._identity != new_identifier:
-            self._user_generated_identity = new_identifier
+        self._user_generated_identity = new_identifier
 
     @property
     def is_a_fish(self):
@@ -68,11 +66,11 @@ class Blob(object):
 
     @property
     def is_a_jump(self):
-        return (self.is_a_fish and self.identity == 0 and len(self.next) == 0 and len(self.previous) == 0)
+        return (self.is_a_fish and len(self.next) == 0 and len(self.previous) == 0)
 
     @property
     def is_a_ghost_crossing(self):
-        return (self.is_a_fish and self.identity == 0 and (len(self.next) != 1 or len(self.previous) != 1))
+        return (self.is_a_fish and (len(self.next) != 1 or len(self.previous) != 1))
 
     @property
     def is_a_crossing(self):

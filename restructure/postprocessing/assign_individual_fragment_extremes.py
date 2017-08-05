@@ -20,5 +20,9 @@ def assing_identity_to_individual_fragments_extremes(blobs):
             #if a blob has not been assigned but it is a fish and overlaps with one fragment
             #assign it!
             if blob.identity == 0 and blob.is_a_fish:
-                if len(blob.next) == 1: blob.identity = blob.next[0].identity
-                elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
+                if len(blob.next) == 1:
+                    blob.identity = blob.next[0].identity
+                    blob.is_an_extreme_of_individual_fragment = True
+                elif len(blob.previous) == 1:
+                    blob.identity = blob.previous[0].identity
+                    blob.is_an_extreme_of_individual_fragment = True

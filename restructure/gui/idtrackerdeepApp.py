@@ -750,9 +750,6 @@ class Validator(BoxLayout):
             #init variables used for zooming
             self.count_scrollup = 0
             self.scale = 1
-            #create dictionary to store eventual corrections made by the user
-            print("number of animals ", CHOSEN_VIDEO.video.number_of_animals)
-            self.count_user_generated_identities_dict = {i:0 for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
             #init elements in the self widget
             self.init_segmentZero()
 
@@ -864,6 +861,18 @@ class Validator(BoxLayout):
         distances = dist_x**2 + dist_y**2
         return np.argmin(distances)
 
+    @staticmethod
+    def get_clicked_blob(point, contours):
+        """
+        Get contour in which point is contained
+        """
+        print("point ", point)
+        print("contours ", contours)
+        try:
+            return [i for i, cnt in enumerate(contours) if cv2.pointPolygonTest(cnt, tuple(point), measureDist = False) >= 0][0]
+        except:
+            return None
+
     def apply_affine_transform_on_point(self, affine_transform_matrix, point):
         R = affine_transform_matrix[:,:-1]
         T = affine_transform_matrix[:,-1]
@@ -873,20 +882,29 @@ class Validator(BoxLayout):
         inverse_affine_transform_matrix = cv2.invertAffineTransform(affine_transform_matrix)
         return self.apply_affine_transform_on_point(inverse_affine_transform_matrix, point)
 
+    def apply_affine_transform_on_contours(self, affine_transform_matrix, contours):
+        return [self.apply_affine_transform_on_point(affine_transform_matrix, cnt) for cnt in contours]
+
     def correctIdentity(self):
         mouse_coords = self.touches[0]
         frame_index = int(self.visualiser.video_slider.value) #get the current frame from the slider
         blobs_in_frame = self.blobs_in_video[frame_index]
-        centroids = np.asarray([getattr(blob, "centroid") for blob in blobs_in_frame])
+        # centroids = np.asarray([getattr(blob, "centroid") for blob in blobs_in_frame])
+        contours = [getattr(blob, "contour") for blob in blobs_in_frame]
         if self.scale != 1:
             #transforms the centroids to the visualised texture
-            centroids = [self.apply_affine_transform_on_point(self.M, centroid) for centroid in centroids]
+            # centroids = [self.apply_affine_transform_on_point(self.M, centroid) for centroid in centroids]
+            contours = [self.apply_affine_transform_on_contours(self.M, cnt) for cnt in contours]
         mouse_coords = self.fromShowFrameToTexture(mouse_coords)
         if self.scale != 1:
             mouse_coords = self.apply_inverse_affine_transform_on_point(self.M, mouse_coords)
-        centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
-        blob_to_modify = blobs_in_frame[centroid_ind]
-        return blob_to_modify, mouse_coords
+        # centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
+        blob_ind = self.get_clicked_blob(mouse_coords, contours)
+        if blob_ind is not None:
+            blob_to_modify = blobs_in_frame[blob_ind]
+            return blob_to_modify, mouse_coords
+        else:
+            return None, None
 
     def fromShowFrameToTexture(self, coords):
         """
@@ -938,14 +956,29 @@ class Validator(BoxLayout):
                         cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
                     elif not blob.is_a_fish:
                         cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, [255,255,255], 3)
+                    elif blob.is_a_jump:
+                        bounding_box = blob.bounding_box_in_frame_coordinates
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
+                        cv2.rectangle(frame, bounding_box[0], bounding_box[1], (0, 255, 0) , 2)
+                    elif blob.is_a_ghost_crossing:
+                        bounding_box = blob.bounding_box_in_frame_coordinates
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
+                        cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 255, 255) , 2)
+                    elif hasattr(blob , 'is_an_extreme_of_individual_fragment'):
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
                     else:
                         cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, [0, 0, 0], 3)
             elif blob.is_a_crossing:
                 print("writing crossing ids")
-                for centroid, identity in zip(blob._user_generated_centroids, blob._user_generated_identities):
-                    centroid = centroid.astype('int')
-                    cv2.putText(frame, str(identity), tuple(centroid), font, .5, self.colors[identity], 3)
-                    cv2.circle(frame, tuple(centroid), 2, self.colors[identity], -1)
+                if blob.user_generated_identity is not None:
+                    for centroid, identity in zip(blob._user_generated_centroids, blob._user_generated_identities):
+                        centroid = centroid.astype('int')
+                        cv2.putText(frame, str(identity), tuple(centroid), font, .5, self.colors[identity], 3)
+                        cv2.circle(frame, tuple(centroid), 2, self.colors[identity], -1)
+                else:
+                    bounding_box = blob.bounding_box_in_frame_coordinates
+                    cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
+
                 self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
@@ -970,6 +1003,7 @@ class Validator(BoxLayout):
 
     def propagate_groundtruth_identity_in_individual_fragment(self):
         modified_blob = self.blob_to_modify
+        print('********************** self.blob_to_modify.user_generated_identity, ', self.blob_to_modify.user_generated_identity)
         count_past_corrections = 1 #to take into account the modification already done in the current frame
         count_future_corrections = 0
         new_blob_identity = modified_blob.user_generated_identity
@@ -992,6 +1026,8 @@ class Validator(BoxLayout):
                 count_past_corrections += 1
                 print(count_past_corrections)
 
+            print(self.count_user_generated_identities_dict)
+            print(new_blob_identity)
             self.count_user_generated_identities_dict[new_blob_identity] = self.count_user_generated_identities_dict[new_blob_identity] + \
                                                                         count_future_corrections + \
                                                                         count_past_corrections
@@ -1032,7 +1068,10 @@ class Validator(BoxLayout):
     def modifyIdOpenPopup(self, blob_to_modify):
         self.container = BoxLayout()
         self.blob_to_modify = blob_to_modify
-        self.id_to_modify = blob_to_modify.identity
+        if blob_to_modify.user_generated_identity is None:
+            self.id_to_modify = blob_to_modify.identity
+        else:
+            self.id_to_modify = blob_to_modify.user_generated_identity
         text = str(self.id_to_modify)
         self.old_id_box = BoxLayout(orientation="vertical")
         self.new_id_box = BoxLayout(orientation="vertical")
@@ -1066,7 +1105,8 @@ class Validator(BoxLayout):
             if touch.button =='left':
                 self.touches.append(touch.pos)
                 self.id_to_modify, self.user_generated_centroids = self.correctIdentity()
-                self.modifyIdOpenPopup(self.id_to_modify)
+                if self.id_to_modify is not None:
+                    self.modifyIdOpenPopup(self.id_to_modify)
 
             elif touch.button == 'scrollup':
                 self.count_scrollup += 1
@@ -1104,16 +1144,20 @@ class Validator(BoxLayout):
 
     def compute_accuracy_wrt_groundtruth(self, *args):
         count_number_assignment_per_individual = {i: 0 for i in range(1,CHOSEN_VIDEO.video.number_of_animals+1)}
+        #create dictionary to store eventual corrections made by the user
+        count_errors_identities_dict = {i:0 for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
-                if blob.is_a_fish_in_a_fragment:
+                if (blob.is_a_fish_in_a_fragment or blob.is_a_jump or blob.is_an_extreme_of_individual_fragment) and blob.user_generated_identity != -1: # we are not considering crossing or failures of the model area
+                    # failures of the model area are set to -1
                     if blob.user_generated_identity is not None and blob.user_generated_identity != blob.identity:
                         count_number_assignment_per_individual[blob.user_generated_identity] += 1
+                        count_errors_identities_dict[blob.user_generated_identity] += 1
                     else:
                         count_number_assignment_per_individual[blob.identity] += 1
-        self.individual_accuracy = {i : 1 - self.count_user_generated_identities_dict[i] / count_number_assignment_per_individual[i] for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
+        self.individual_accuracy = {i : 1 - self.count_errors_identities_dict[i] / count_number_assignment_per_individual[i] for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
         self.accuracy = np.mean(self.individual_accuracy.values())
-        print("count_user_generated_identities_dict, ", self.count_user_generated_identities_dict)
+        print("count_errors_identities_dict, ", self.count_errors_identities_dict)
         print("count_number_assignment_per_individual, ", count_number_assignment_per_individual)
         print("individual_accuracy, ", self.individual_accuracy)
         print("accuracy, ", self.accuracy)
