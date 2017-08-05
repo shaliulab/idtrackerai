@@ -876,14 +876,14 @@ class Validator(BoxLayout):
     def apply_affine_transform_on_point(self, affine_transform_matrix, point):
         R = affine_transform_matrix[:,:-1]
         T = affine_transform_matrix[:,-1]
-        return np.dot(R, point) + T
+        return np.dot(R, np.squeeze(point)) + T
 
     def apply_inverse_affine_transform_on_point(self, affine_transform_matrix, point):
         inverse_affine_transform_matrix = cv2.invertAffineTransform(affine_transform_matrix)
         return self.apply_affine_transform_on_point(inverse_affine_transform_matrix, point)
 
-    def apply_affine_transform_on_contours(self, affine_transform_matrix, contours):
-        return [self.apply_affine_transform_on_point(affine_transform_matrix, cnt) for cnt in contours]
+    def apply_affine_transform_on_contour(self, affine_transform_matrix, contour):
+        return np.expand_dims(np.asarray([self.apply_affine_transform_on_point(affine_transform_matrix, point) for point in contour]).astype(int),axis = 1)
 
     def correctIdentity(self):
         mouse_coords = self.touches[0]
@@ -894,11 +894,13 @@ class Validator(BoxLayout):
         if self.scale != 1:
             #transforms the centroids to the visualised texture
             # centroids = [self.apply_affine_transform_on_point(self.M, centroid) for centroid in centroids]
-            contours = [self.apply_affine_transform_on_contours(self.M, cnt) for cnt in contours]
+            contours = [self.apply_affine_transform_on_contour(self.M, cnt) for cnt in contours]
+
         mouse_coords = self.fromShowFrameToTexture(mouse_coords)
         if self.scale != 1:
             mouse_coords = self.apply_inverse_affine_transform_on_point(self.M, mouse_coords)
         # centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
+        print("contours shape, ", contours[0].shape)
         blob_ind = self.get_clicked_blob(mouse_coords, contours)
         if blob_ind is not None:
             blob_to_modify = blobs_in_frame[blob_ind]
@@ -1026,12 +1028,12 @@ class Validator(BoxLayout):
                 count_past_corrections += 1
                 print(count_past_corrections)
 
-            print(self.count_user_generated_identities_dict)
-            print(new_blob_identity)
-            self.count_user_generated_identities_dict[new_blob_identity] = self.count_user_generated_identities_dict[new_blob_identity] + \
-                                                                        count_future_corrections + \
-                                                                        count_past_corrections
-            print("count_user_generated_identities_dict id, ", self.count_user_generated_identities_dict[new_blob_identity])
+            # print(self.count_user_generated_identities_dict)
+            # print(new_blob_identity)
+            # self.count_user_generated_identities_dict[new_blob_identity] = self.count_user_generated_identities_dict[new_blob_identity] + \
+            #                                                             count_future_corrections + \
+            #                                                             count_past_corrections
+            # print("count_user_generated_identities_dict id, ", self.count_user_generated_identities_dict[new_blob_identity])
         #init and bind keyboard again
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)

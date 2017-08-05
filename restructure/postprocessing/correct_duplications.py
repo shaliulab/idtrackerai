@@ -56,7 +56,7 @@ class Duplication(object):
 
     def set_to_0_non_available_ids(self,P2_matrix):
         no_available_now = np.asarray(list(set(self.possible_identities).difference(set(self.available_identities))))-1
-        P2_matrix[:,no_available_now] = 0.
+        P2_matrix[:,no_available_now.astype(int)] = 0.
         return P2_matrix
 
     def assign(self):

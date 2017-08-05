@@ -159,7 +159,7 @@ def assign_identity_to_jumps(video, blobs):
                     number_of_animals = video.number_of_animals,
                     net_prediction = assigner._predictions[i],
                     softmax_probs = assigner._softmax_probs[i],
-                    velocity_threshold = video.velocity_threshold,
+                    velocity_threshold = None,
                     number_of_frames = video._num_frames)
         jump.assign_jump(blobs)
         blob._identity = jump.jumping_blob.identity
