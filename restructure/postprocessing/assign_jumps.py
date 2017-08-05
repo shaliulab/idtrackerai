@@ -93,8 +93,11 @@ class Jump(object):
             self.jumping_blob._identity = self.prediction
         else:
             sorted_assignments_indices = np.argsort(np.array(self.softmax_probs))[::-1]
-            new_identity = [sorted_assignments_index for sorted_assignments_index in sorted_assignments_indices
-                if (sorted_assignments_index + 1) in available_identities][0]
+            try:
+                new_identity = [sorted_assignments_index for sorted_assignments_index in sorted_assignments_indices
+                    if (sorted_assignments_index + 1) in available_identities][0]
+            except:
+                new_identity = -1
             self.jumping_blob._identity = new_identity + 1
 
         if self.jumping_blob.frame_number >= 1:
