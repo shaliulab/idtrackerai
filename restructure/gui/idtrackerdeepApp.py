@@ -866,11 +866,12 @@ class Validator(BoxLayout):
         """
         Get contour in which point is contained
         """
-        print("point ", point)
-        print("contours ", contours)
-        try:
-            return [i for i, cnt in enumerate(contours) if cv2.pointPolygonTest(cnt, tuple(point), measureDist = False) >= 0][0]
-        except:
+        # print("point ", point)
+        # print("contours ", contours)
+        indices = [i for i, cnt in enumerate(contours) if cv2.pointPolygonTest(cnt, tuple(point), measureDist = False) >= 0]
+        if len(indices) != 0:
+            return indices[0]
+        else:
             return None
 
     def apply_affine_transform_on_point(self, affine_transform_matrix, point):
@@ -934,10 +935,10 @@ class Validator(BoxLayout):
         blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
         font = cv2.FONT_HERSHEY_SIMPLEX
         frame = self.visualiser.frame
-
+        cv2.putText(frame, str(self.visualiser.video_slider.value),(50,50), font, 1, [0, 0, 0], 3)
         for blob in blobs_in_frame:
             if not blob.is_a_crossing:
-                print("______________________user generated id ", blob.user_generated_identity)
+                # print("______________________user generated id ", blob.user_generated_identity)
                 int_centroid = blob.centroid.astype('int')
                 if blob.user_generated_identity is None:
                     cur_id = blob.identity
@@ -1005,7 +1006,7 @@ class Validator(BoxLayout):
 
     def propagate_groundtruth_identity_in_individual_fragment(self):
         modified_blob = self.blob_to_modify
-        print('********************** self.blob_to_modify.user_generated_identity, ', self.blob_to_modify.user_generated_identity)
+        # print('********************** self.blob_to_modify.user_generated_identity, ', self.blob_to_modify.user_generated_identity)
         count_past_corrections = 1 #to take into account the modification already done in the current frame
         count_future_corrections = 0
         new_blob_identity = modified_blob.user_generated_identity
@@ -1013,20 +1014,20 @@ class Validator(BoxLayout):
             current = modified_blob
 
             while current.next[0].is_a_fish_in_a_fragment:
-                print("propagating forward")
+                # print("propagating forward")
                 current.next[0].user_generated_identity = current.user_generated_identity
                 current = current.next[0]
                 count_future_corrections += 1
-                print(count_future_corrections)
+                # print(count_future_corrections)
 
             current = modified_blob
 
             while current.previous[0].is_a_fish_in_a_fragment:
-                print("propagating backward")
+                # print("propagating backward")
                 current.previous[0].user_generated_identity = current.user_generated_identity
                 current = current.previous[0]
                 count_past_corrections += 1
-                print(count_past_corrections)
+                # print(count_past_corrections)
 
             # print(self.count_user_generated_identities_dict)
             # print(new_blob_identity)
