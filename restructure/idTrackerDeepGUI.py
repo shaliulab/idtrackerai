@@ -540,6 +540,9 @@ if __name__ == '__main__':
             video._has_been_assigned = True
             # assign identity to individual fragments' extremes
             assing_identity_to_individual_fragments_extremes(blobs)
+            for blob in blobs[46]:
+                print("is a ghost crossing ", blob.is_a_ghost_crossing)
+                print("id ", blob.identity)
             # solve jumps
             assign_identity_to_jumps(video, blobs)
             # solve duplications

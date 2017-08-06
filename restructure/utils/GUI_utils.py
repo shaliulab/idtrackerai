@@ -948,7 +948,7 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                 elif type(blob.identity) is list:
                     cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, [255, 255, 255], -1)
                 if blob._assigned_during_accumulation:
-                    cv2.putText(frame, str(blob._identity),tuple(blob.centroid.astype('int')), font, 1, colors[blob.identity], 3)
+                    cv2.putText(frame, str(blob.identity),tuple(blob.centroid.astype('int')), font, 1, colors[blob.identity], 3)
                 else:
                     print("the current blob is a fish ", blob.is_a_fish)
                     print("id ", type(blob.identity) is int)

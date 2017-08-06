@@ -66,7 +66,20 @@ class Blob(object):
 
     @property
     def is_a_jump(self):
-        return (self.is_a_fish and len(self.next) == 0 and len(self.previous) == 0)
+        is_a_jump = False
+        if self.is_a_fish and len(self.next) == 0 and len(self.previous) == 0: # 1 frame jumps
+            is_a_jump = True
+        return is_a_jump
+
+    @property
+    def is_a_jumping_fragment(self):
+        # this is a fragment of 2 frames that it is not considered a individual fragment but it is also not a single frame jump
+        is_a_jumping_fragment = False
+        if self.is_a_fish and len(self.next) == 0 and len(self.previous) == 1 and len(self.previous[0].previous) == 0 and len(self.previous[0].next) == 1: # 2 frames jumps
+            is_a_jumping_fragment = True
+        elif self.is_a_fish and len(self.next) == 1 and len(self.previous) == 0 and len(self.next[0].next) == 0 and len(self.next[0].previous) == 1: # 2 frames jumps
+            is_a_jumping_fragment = True
+        return is_a_jumping_fragment
 
     @property
     def is_a_ghost_crossing(self):

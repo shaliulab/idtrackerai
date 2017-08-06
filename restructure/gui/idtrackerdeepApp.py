@@ -763,7 +763,6 @@ class Validator(BoxLayout):
             self.scale = 1
             #init elements in the self widget
             self.init_segmentZero()
-
         else:
             print("no assignment done")
             self.warning_popup.open()
@@ -798,7 +797,7 @@ class Validator(BoxLayout):
         self.button_box.add_widget(self.save_groundtruth_btn)
         # create button to compute accuracy with respect to the groundtruth entered by the user
         self.compute_accuracy_button = Button(id = "compute_accuracy_button", text = "Compute accuracy", size_hint  = (1.,1.))
-        self.compute_accuracy_button.disabled = True
+        self.compute_accuracy_button.disabled = False
         self.compute_accuracy_button.bind(on_press = self.compute_accuracy_wrt_groundtruth)
         # add button to layout
         self.button_box.add_widget(self.compute_accuracy_button)
@@ -946,7 +945,7 @@ class Validator(BoxLayout):
         blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
         font = cv2.FONT_HERSHEY_SIMPLEX
         frame = self.visualiser.frame
-        cv2.putText(frame, str(self.visualiser.video_slider.value),(50,50), font, 1, [0, 0, 0], 3)
+        # cv2.putText(frame, str(self.visualiser.video_slider.value),(50,50), font, 1, [0, 0, 0], 3)
         for blob in blobs_in_frame:
             if not blob.is_a_crossing:
                 # print("______________________user generated id ", blob.user_generated_identity)
@@ -1156,28 +1155,94 @@ class Validator(BoxLayout):
     def disable_touch_down_outside_collided_widget(self, touch):
         return super(Validator, self).on_touch_down(touch)
 
+    def frame_interval_popup(self):
+        print("-----------------------------------------------------")
+        self.popup_container = BoxLayout(orientation = "vertical")
+        # self.popup_container_lbl = Label(text = "Input start and ending frame to compute accuracy against groundtruth")
+        # self.popup_container_lbl.text_size = self.popup_container_lbl.size
+        # self.popup_container_lbl.texture_size = self.popup_container_lbl.size
+        # self.popup_container.add_widget(self.popup_container_lbl)
+        # self.text_input_box = BoxLayout(orientation = "horizontal")
+        #
+        # self.start_frame_input = TextInput(text ='start', multiline=False)
+        # self.end_frame_input = TextInput(text ='end', multiline=False)
+        #
+        # self.text_input_box.add_widget(self.start_frame_input)
+        # self.text_input_box.add_widget(self.end_frame_input)
+        # self.popup_container.add_widget(self.text_input_box)
+        self.popup_start_end_groundtruth = Popup(title='Groundtruth Accuracy - Frame Interval',
+                    content=self.popup_container,
+                    size_hint=(.5,.5))
+        # self.start_frame_input.bind(on_text_validate = self.on_enter_start_end)
+        # self.end_frame_input.bind(on_text_validate = self.on_enter_start_end)
+        self.popup_start_end_groundtruth.open()
+
+    def on_enter_start_end(self,value):
+        if self.start_frame_input.text != '':
+            start = int(self.start_frame_input.text)
+        else:
+            start = 0
+
+        if self.end_frame_input.text != '':
+            end = int(self.end_frame_input.text)
+        else:
+            end = self.CHOSEN_VIDEO.video_object._num_frames
+        self.groundtruth_interval = [start, end]
+        self.popup_start_end_groundtruth.dismiss()
+
+
     def compute_accuracy_wrt_groundtruth(self, *args):
-        count_number_assignment_per_individual = {i: 0 for i in range(1,CHOSEN_VIDEO.video.number_of_animals+1)}
+        # self.frame_interval_popup()
+        start = int(raw_input('starting frame: '))
+        end = int(raw_input('end frame:'))
+        blobs_in_video = self.blobs_in_video[start:end+1]
+        # blobs_in_video = self.blobs_in_video
+        count_number_assignment_per_individual_assigned = {i: 0 for i in range(1,CHOSEN_VIDEO.video.number_of_animals+1)}
+        count_number_assignment_per_individual_all = {i: 0 for i in range(1,CHOSEN_VIDEO.video.number_of_animals+1)}
         #create dictionary to store eventual corrections made by the user
-        count_errors_identities_dict = {i:0 for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
-        for blobs_in_frame in self.blobs_in_video:
+        count_errors_identities_dict_assigned = {i:0 for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
+        count_errors_identities_dict_all = {i:0 for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
+        check_ground_truth = False
+        frames_with_zeros = []
+        for blobs_in_frame in blobs_in_video:
             for blob in blobs_in_frame:
-                if (blob.is_a_fish_in_a_fragment or blob.is_a_jump or blob.is_an_extreme_of_individual_fragment) and blob.user_generated_identity != -1: # we are not considering crossing or failures of the model area
-                    # failures of the model area are set to -1
+                if (blob.is_a_fish_in_a_fragment or\
+                        blob.is_a_jump or\
+                        blob.is_a_jumping_fragment or\
+                        hasattr(blob,'is_an_extreme_of_individual_fragment')) and\
+                        blob.user_generated_identity != -1: # we are not considering crossing or failures of the model area
                     if blob.user_generated_identity is not None and blob.user_generated_identity != blob.identity:
-                        print('*************user gen ide, ', blob.user_generated_identity)
-                        count_number_assignment_per_individual[blob.user_generated_identity] += 1
-                        count_errors_identities_dict[blob.user_generated_identity] += 1
+                        count_number_assignment_per_individual_all[blob.user_generated_identity] += 1
+                        count_errors_identities_dict_all[blob.user_generated_identity] += 1
+                        if blob.identity != 0:
+                            count_number_assignment_per_individual_assigned[blob.user_generated_identity] += 1
+                            count_errors_identities_dict_assigned[blob.user_generated_identity] += 1
+                    elif blob.identity != 0:
+                        count_number_assignment_per_individual_assigned[blob.identity] += 1
+                        count_number_assignment_per_individual_all[blob.identity] += 1
                     else:
-                        count_number_assignment_per_individual[blob.identity] += 1
-        self.individual_accuracy = {i : 1 - self.count_errors_identities_dict[i] / count_number_assignment_per_individual[i] for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
-        self.accuracy = np.mean(self.individual_accuracy.values())
-        print("count_errors_identities_dict, ", self.count_errors_identities_dict)
-        print("count_number_assignment_per_individual, ", count_number_assignment_per_individual)
-        print("individual_accuracy, ", self.individual_accuracy)
-        print("accuracy, ", self.accuracy)
-        self.plot_final_statistics()
-        self.statistics_popup.open()
+                        print("frame number, ", blob.frame_number)
+                        frames_with_zeros.append(blob.frame_number)
+                        check_ground_truth = True
+
+        if not check_ground_truth:
+            self.individual_accuracy_assigned = {i : 1 - count_errors_identities_dict_assigned[i] / count_number_assignment_per_individual_assigned[i] for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
+            self.accuracy_assigned = np.mean(self.individual_accuracy_assigned.values())
+            self.individual_accuracy = {i : 1 - count_errors_identities_dict_all[i] / count_number_assignment_per_individual_all[i] for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
+            self.accuracy = np.mean(self.individual_accuracy.values())
+            print("count_errors_identities_dict_assigned, ", count_errors_identities_dict_assigned)
+            print("count_errors_identities_dict_all, ", count_errors_identities_dict_all)
+            print("count_number_assignment_per_individual_assigned, ", count_number_assignment_per_individual_assigned)
+            print("count_number_assignment_per_individual_all, ", count_number_assignment_per_individual_all)
+            print("individual_accuracy_assigned, ", self.individual_accuracy_assigned)
+            print("accuracy_assigned, ", self.accuracy_assigned)
+            print("individual_accuracy, ", self.individual_accuracy)
+            print("accuracy, ", self.accuracy)
+
+            self.plot_final_statistics()
+            self.statistics_popup.open()
+        else:
+            print("there are fish with 0 identity in frame ", frames_with_zeros)
 
     def plot_final_statistics(self):
         content = BoxLayout()

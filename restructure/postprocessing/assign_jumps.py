@@ -6,6 +6,7 @@ from tqdm import tqdm
 import collections
 from blob import ListOfBlobs
 from assigner import assign
+from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob, is_assignment_ambiguous, compute_P1_individual_fragment_from_frequencies
 from id_CNN import ConvNetwork
 from network_params import NetworkParams
 from blob import Blob
@@ -14,11 +15,15 @@ from compute_velocity_model import compute_velocity_from_list_of_blobs, compute_
 VEL_PERCENTILE = 99 #percentile used to model velocity
 
 class Jump(object):
-    def __init__(self, jumping_blob = None, number_of_animals = None, net_prediction = None, softmax_probs = None, velocity_threshold = None, number_of_frames = None):
+    def __init__(self, jumping_blob = None, number_of_animals = None, _P2_vector = None, velocity_threshold = None, number_of_frames = None):
         self._jumping_blob = jumping_blob
         self.possible_identities = range(1, number_of_animals + 1)
-        self.prediction = int(net_prediction)
-        self.softmax_probs = softmax_probs
+        self._P2_vector = _P2_vector
+        identity_in_fragment = np.argmax(_P2_vector) + 1
+        self.prediction = identity_in_fragment
+        ambiguous_identity_in_fragment = is_assignment_ambiguous(_P2_vector)
+        if ambiguous_identity_in_fragment is list:
+            self.prediction = ambiguous_identity_in_fragment
         self.velocity_threshold = velocity_threshold
         self.number_of_frames = number_of_frames
         self.number_of_animals = number_of_animals
@@ -36,7 +41,7 @@ class Jump(object):
         self._jumping_blob = jumping_blob
 
     def get_available_identities(self, blobs_in_video):
-        blobs_in_frame_sure_identities = [blob.identity for blob in blobs_in_video[self.jumping_blob.frame_number] if blob.identity != 0]
+        blobs_in_frame_sure_identities = [blob.identity for blob in blobs_in_video[self.jumping_blob.frame_number] if blob.is_a_fish_in_a_fragment or hasattr(blob,'is_an_extreme_of_individual_fragment')]
         return set(self.possible_identities) - set(blobs_in_frame_sure_identities)
 
     def apply_model_velocity(self, blobs_in_video):
@@ -70,7 +75,7 @@ class Jump(object):
 
     def check_assigned_identity(self, blobs_in_video, available_identities, sorted_assignments_indices):
         if not self.apply_model_velocity(blobs_in_video):
-            print("available_identities ", available_identities)
+            print("\navailable_identities ", available_identities)
             print("removing ", self.jumping_blob.identity)
             if len(list(available_identities)) > 0:
                 available_identities.remove(self.jumping_blob.identity)
@@ -87,27 +92,51 @@ class Jump(object):
             print("it passes the velocity model")
             print("self.jumping_blob.identity, ", self.jumping_blob.identity)
 
-
     def assign_jump(self, blobs_in_video):
         available_identities = self.get_available_identities(blobs_in_video)
+        print("\n\n***** assigning jump")
+        if self.prediction is list and len(self.prediction) > 1 and len(self.prediction) < self.number_of_animals:
+            predictions_in_available_identities = [pred for pred in self.prediction if pred in available_identities]
+            if len(predictions_in_available_identities) == 1:
+                # case 1: only one prediction is in the available identities
+                self.prediction = predictions_in_available_identities[0]
+            elif len(predictions_in_available_identities) == 0:
+                # case 2: none of the predictions are in the available identities (the prediction has to be in the available identities)
+                self.prediction = self.prediction[0] # it is solved in the third condition below (in check_assigned_identity)
+            elif len(predictions_in_available_identities) > 1:
+                # case 3: more than two predictions are in the available identities (we choose the prediction by the model velocity)
+                passes_model_velocity = []
+                for prediction in self.predictions:
+                    self.jumping_blob._identity = prediction
+                    passes_model_velocity.append(self.apply_model_velocity(blobs_in_video))
+                if np.sum(passes_model_velocity) == 1:
+                    self.prediction = self.prediction[np.where(passes_model_velocity == True)[0]]
+                else:
+                    # this case cannot be solved here and it will be solved by interpolation
+                    return
+
         if len(list(available_identities)) == 1:
             self.jumping_blob._identity = list(available_identities)[0]
         elif len(list(available_identities)) > 1 and self.prediction in available_identities:
             self.jumping_blob._identity = self.prediction
-        else:
+        elif len(list(available_identities)) > 1 and self.prediction not in available_identities:
             not_assigned = True
-            sorted_assignments_indices = np.argsort(np.array(self.softmax_probs))[::-1]
+            sorted_assignments_indices = np.argsort(np.array(self._P2_vector))[::-1]
             new_identities = [sorted_assignments_index for sorted_assignments_index in sorted_assignments_indices
-                if (sorted_assignments_index + 1) in available_identities and self.softmax_probs[sorted_assignments_index] > 1 / self.number_of_animals]
+                if (sorted_assignments_index + 1) in available_identities and self._P2_vector[sorted_assignments_index] > 1 / self.number_of_animals]
             if len(new_identities) > 0:
                 new_identity = new_identities[0]
             else:
+                print("pass")
                 new_identity = -1
             self.jumping_blob._identity = new_identity + 1
+        else:
+            raise ValueError('condition not considered')
 
-        # if self.jumping_blob.frame_number >= 1:
-        #     sorted_assignments_indices = np.argsort(np.array(self.softmax_probs))[::-1]
-        #     self.check_assigned_identity(blobs_in_video, available_identities, sorted_assignments_indices)
+        print("prediciton", self.prediction)
+        if self.jumping_blob.frame_number >= 1 and self.jumping_blob.identity != 0:
+            sorted_assignments_indices = np.argsort(np.array(self._P2_vector))[::-1]
+            self.check_assigned_identity(blobs_in_video, available_identities, sorted_assignments_indices)
 
 def flatten(l):
     for el in l:
@@ -116,6 +145,30 @@ def flatten(l):
                 yield sub
         else:
             yield el
+
+def get_frequencies_P1_for_jump(video, blob):
+    if not np.any(blob._P1_vector != 0):
+        blob._frequencies = np.zeros(video.number_of_animals)
+        blob._frequencies[blob.prediction-1] += 1
+        if blob.is_a_jumping_fragment:
+            # print(blob.next[0].is_a_jumping_fragment)
+            # print(blob.identity)
+            # print(len(blob.next))
+            # print(len(blob.next[0].next))
+            # print(len(blob.next[0].previous))
+            # print(len(blob.previous))
+            blob._frequencies[blob.next[0].prediction-1] += 1
+            blob._P1_vector = compute_P1_individual_fragment_from_frequencies(blob._frequencies)
+            blob.next[0]._frequencies = blob._frequencies
+            blob.next[0]._P1_vector = blob._P1_vector
+        else: # is a jump or is a identity 0
+            blob._P1_vector = compute_P1_individual_fragment_from_frequencies(blob._frequencies)
+
+def compute_P2_for_jump(blob, blobs):
+    if not np.any(blob._P2_vector != 0):
+        blob._P2_vector = compute_P2_of_individual_fragment_from_blob(blob, blobs)
+        if blob.is_a_jumping_fragment:
+            blob.next[0]._P2_vector = blob._P2_vector
 
 def assign_jumps(images, video):
     """Restore the network associated to the model used to assign video.
@@ -146,22 +199,28 @@ def assign_jumps(images, video):
     return assign(net, video, images, print_flag = True)
 
 def assign_identity_to_jumps(video, blobs):
-    # if not hasattr(video, "velocity_threshold"):
-    #     video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals)
+    if not hasattr(video, "velocity_threshold"):
+        video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals)
     jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
-                    if blob.is_a_jump or blob.is_a_ghost_crossing]
+                    if blob.is_a_jump or (blob.is_a_fish and blob.identity == 0)]
     jump_images = [blob.portrait for blob in jump_blobs]
     #assign jumps by restoring the network
     assigner = assign_jumps(jump_images, video)
 
     for i, blob in enumerate(jump_blobs):
+        blob.prediction = int(assigner._predictions[i])
+
+    for blob in jump_blobs:
+        get_frequencies_P1_for_jump(video, blob)
+
+    for i, blob in enumerate(jump_blobs):
+        compute_P2_for_jump(blob, blobs)
+
         jump = Jump(jumping_blob = blob,
                     number_of_animals = video.number_of_animals,
-                    net_prediction = assigner._predictions[i],
-                    softmax_probs = assigner._softmax_probs[i],
-                    velocity_threshold = None,
+                    _P2_vector = blob._P2_vector,
+                    velocity_threshold = video.velocity_threshold,
                     number_of_frames = video._num_frames)
+
         jump.assign_jump(blobs)
         blob._identity = jump.jumping_blob.identity
-        blob._P1_vector = assigner._softmax_probs[i]
-        blob._P2_vector = None
