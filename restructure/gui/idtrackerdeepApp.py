@@ -956,21 +956,21 @@ class Validator(BoxLayout):
                     # we draw a cross in the centroid if the blob has been assigned during assignation
                     # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[cur_id], 1)
                     if blob.is_a_fish_in_a_fragment:
-                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, self.colors[cur_id], 2)
                     elif not blob.is_a_fish:
                         cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, [255,255,255], 3)
                     elif blob.is_a_jump:
                         bounding_box = blob.bounding_box_in_frame_coordinates
-                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, self.colors[cur_id], 2)
                         cv2.rectangle(frame, bounding_box[0], bounding_box[1], (0, 255, 0) , 2)
                     elif blob.is_a_ghost_crossing:
                         bounding_box = blob.bounding_box_in_frame_coordinates
-                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, self.colors[cur_id], 2)
                         cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 255, 255) , 2)
                     elif hasattr(blob , 'is_an_extreme_of_individual_fragment'):
-                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, self.colors[cur_id], 3)
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, self.colors[cur_id], 2)
                     else:
-                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, .5, [0, 0, 0], 3)
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, [0, 0, 0], 2)
             elif blob.is_a_crossing:
                 print("writing crossing ids")
                 if blob.user_generated_identity is not None:
@@ -1154,6 +1154,7 @@ class Validator(BoxLayout):
                 if (blob.is_a_fish_in_a_fragment or blob.is_a_jump or blob.is_an_extreme_of_individual_fragment) and blob.user_generated_identity != -1: # we are not considering crossing or failures of the model area
                     # failures of the model area are set to -1
                     if blob.user_generated_identity is not None and blob.user_generated_identity != blob.identity:
+                        print('*************user gen ide, ', blob.user_generated_identity)
                         count_number_assignment_per_individual[blob.user_generated_identity] += 1
                         count_errors_identities_dict[blob.user_generated_identity] += 1
                     else:
