@@ -175,9 +175,19 @@ class VisualiseVideo(BoxLayout):
                                 max= int(self.video_object._num_frames) - 1,
                                 step=1,
                                 value=0,
-                                size_hint=(1.,1.))
+                                size_hint=(.8,1.))
         self.video_slider.bind(value=self.get_value)
+        self.video_slider_lbl = Label( id = 'max_threshold_lbl')
+        self.video_slider_lbl.text = "Frame number:" + str(int(self.video_slider.value))
+        self.video_slider_lbl.text_size = self.video_slider_lbl.size
+        self.video_slider_lbl.size = self.video_slider_lbl.texture_size
+        self.video_slider_lbl.font_size = 16
+        self.video_slider_lbl.halign =  "center"
+        self.video_slider_lbl.valign = "middle"
         self.footer.add_widget(self.video_slider)
+        self.footer.add_widget(self.video_slider_lbl)
+
+
 
     def visualise(self, trackbar_value, func = None):
         self.func = func
@@ -213,6 +223,7 @@ class VisualiseVideo(BoxLayout):
         self.initImH = self.height
 
     def get_value(self, instance, value):
+        self.video_slider_lbl.text = "Frame number:" + str(int(value))
         self.visualise(value, func = self.func)
 
 
