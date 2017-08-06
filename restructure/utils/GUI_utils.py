@@ -896,7 +896,6 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
     name = video._session_folder +'/tracked.avi'
     out = cv2.VideoWriter(name, fourcc, 32.0, (video._width, video._height))
 
-
     def scroll(trackbarValue):
         global frame, currentSegment, cap
 
@@ -1017,5 +1016,148 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
     save_video = getInput('Saver' , 'Do you want to save a copy of the tracked video? [y]/n')
     if not save_video or save_video == 'y':
         frame_by_frame_identity_inspector(video, blobs_in_video, save_video = True)
+    else:
+        return
+
+def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_previous = 100, save_video = False):
+    cap = cv2.VideoCapture(video.video_path)
+    numFrames = video._num_frames
+    bkg = video.bkg
+    mask = video.ROI
+    subtract_bkg = video.subtract_bkg
+    height = video._height
+    width = video._width
+    global currentSegment, cap
+    currentSegment = 0
+    cv2.namedWindow('frame_by_frame_identity_inspector')
+    defFrame = 0
+    colors = get_spaced_colors_util(video.number_of_animals,black=True)
+
+    fourcc = cv2.cv.CV_FOURCC(*'XVID')
+    if save_video:
+        name = video._session_folder +'/tracked.avi'
+        out = cv2.VideoWriter(name, fourcc, 32.0, (video._width, video._height))
+
+    def scroll(trackbarValue):
+        global frame, currentSegment, cap
+
+        # Select segment dataframe and change cap if needed
+        sNumber = video.in_which_episode(trackbarValue)
+        print('seg number ', sNumber)
+        print('trackbarValue ', trackbarValue)
+        sFrame = trackbarValue
+
+        if sNumber != currentSegment: # we are changing segment
+            print('Changing segment...')
+            currentSegment = sNumber
+            if video._paths_to_video_segments:
+                cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
+
+        #Get frame from video file
+        if video._paths_to_video_segments:
+            start = video._episodes_start_end[sNumber][0]
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
+        else:
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+        ret, frame = cap.read()
+        if ret:
+            # frameCopy = frame.copy()
+            frame = np.zeros_like(frame)
+            blobs_in_frame = blobs_in_video[trackbarValue]
+
+            for b, blob in enumerate(blobs_in_frame):
+                blobs_pixels = get_n_previous_blobs_attribute(blob,'pixels',number_of_previous)[::-1]
+                blobs_identities = get_n_previous_blobs_attribute(blob,'identity',number_of_previous)[::-1]
+
+                for i, (blob_pixels, blob_identity) in enumerate(zip(blobs_pixels,blobs_identities)):
+                    # print(i)
+                    pxs = np.unravel_index(blob_pixels,(video._height,video._width))
+                    if i < number_of_previous-1:
+                        # print(type(blob_identity))
+                        if type(blob_identity) is not list and blob_identity is not None and blob_identity != 0:
+                            # print('adding shadows to fish')
+                            frame[pxs[0], pxs[1], :] = np.multiply(colors[blob_identity], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
+                        elif type(blob_identity) is list or blob_identity is None or blob_identity == 0:
+                            # print('adding shadows to crossing')
+                            frame[pxs[0], pxs[1], :] = np.multiply([0, 0, 0], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
+                    # else:
+                    #     frame[pxs[0], pxs[1], :] = frameCopy[pxs[0], pxs[1], :]
+
+                #draw the centroid
+                # font = cv2.FONT_HERSHEY_SIMPLEX
+                # if type(blob.identity) is int:
+                #     cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, colors[blob._identity], -1)
+                # elif type(blob.identity) is list:
+                #     cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, [255, 255, 255], -1)
+                # if blob._assigned_during_accumulation:
+                #     cv2.putText(frame, str(blob.identity),tuple(blob.centroid.astype('int')), font, 1, colors[blob.identity], 3)
+                # else:
+                #     print("the current blob is a fish ", blob.is_a_fish)
+                #     print("id ", type(blob.identity) is int)
+                #     if blob.is_a_fish and type(blob.identity) is int:
+                #         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
+                #     elif not blob.is_a_fish:
+                #         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, 1, [255,255,255], 3)
+                #     else:
+                #         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
+
+                # if not save_video:
+                    # print("\nblob ", b)
+                    # print("identity: ", blob._identity)
+                    # if hasattr(blob,"identities_before_crossing"):
+                    #     print("identity_before_crossing: ", blob.identities_before_crossing)
+                    # if hasattr(blob,"identities_after_crossing"):
+                    #     print("identity_after_crossing: ", blob.identities_after_crossing)
+                    # print("assigned during accumulation: ", blob.assigned_during_accumulation)
+                    # if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
+                    #     try:
+                    #         print("frequencies in fragment: ", blob.frequencies_in_fragment)
+                    #     except:
+                    #         print("this blob does not have frequencies in fragment")
+                    # print("P1_vector: ", blob.P1_vector)
+                    # print("P2_vector: ", blob.P2_vector)
+                    # print("is_a_fish: ", blob.is_a_fish)
+                    # print("is_in_a_fragment: ", blob.is_in_a_fragment)
+                    # print("is_a_fish_in_a_fragment: ", blob.is_a_fish_in_a_fragment)
+                    # print("is_a_jump: ", blob.is_a_jump)
+                    # print("is_a_ghost_crossing: ", blob.is_a_ghost_crossing)
+                    # print("is_a_crossing: ", blob.is_a_crossing)
+                    # # if blob.is_a_crossing:
+                    # #     print("bad_crossing ", blob.bad_crossing)
+                    #     # print("number_of_animals_in_crossing: ", blob.number_of_animals_in_crossing)
+                    # print("next: ", blob.next)
+                    # print("previous: ", blob.previous)
+
+
+            if not save_video:
+                # frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
+                cv2.imshow('frame_by_frame_identity_inspector', frame)
+                pass
+            else:
+                out.write(frame)
+        else:
+            print("Warning: unable to read frame ", scroll)
+    cv2.createTrackbar('start', 'frame_by_frame_identity_inspector', 0, numFrames-1, scroll )
+
+    scroll(1)
+    cv2.setTrackbarPos('start', 'frame_by_frame_identity_inspector', defFrame)
+
+    # cv2.waitKey(0)
+    # cv2.waitKey(1)
+    # cv2.destroyAllWindows()
+    # cv2.waitKey(1)
+
+    if save_video:
+        for i in tqdm(range(video._num_frames)):
+            scroll(i)
+
+    cv2.waitKey(0)
+    cv2.waitKey(1)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
+
+    save_video = getInput('Saver' , 'Do you want to save a copy of the tracked video? [y]/n')
+    if not save_video or save_video == 'y':
+        frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, save_video = True)
     else:
         return
