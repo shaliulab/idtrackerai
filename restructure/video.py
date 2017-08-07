@@ -104,26 +104,22 @@ class Video(object):
             self._num_episodes = len(self._paths_to_video_segments)
         cap.release()
 
-    def create_session_folder(self):
+    def create_session_folder(self, name = ''):
         """Creates a folder named training in video_folder and a folder session_num
         where num is the session number and it is created everytime one starts
         training a network for a certain video_path
         """
-        self._session_folder = os.path.join(self._video_folder, 'session_1')
+        if name == '':
+            self._session_folder = os.path.join(self._video_folder, 'session')
+        else:
+            self._session_folder = os.path.join(self._video_folder, 'session_' + name)
+
         if not os.path.isdir(self._session_folder):
             os.makedirs(self._session_folder)
             self._previous_session_folder = ''
         else:
-            self._sessions_folders = glob.glob(self._video_folder +"/session*")
-            last_session_index = get_last_training_session_index(self._sessions_folders)
-            self._previous_session_folder = os.path.join(self._video_folder + "/session_" + str(last_session_index))
-            if len(os.listdir(self._previous_session_folder)) == 0:
-                self._session_folder = self._previous_session_folder
-                self._previous_session_folder = os.path.join(self._video_folder + "/session_" + str(last_session_index-1))
-            else:
-                new_session_index = str(last_session_index + 1)
-                self._session_folder = os.path.join(self._video_folder + "/session_" + new_session_index)
-                os.makedirs(self._session_folder)
+            self._previous_session_folder = self._session_folder
+
         #give a unique name (wrt the video)
         self._path_to_video_object = os.path.join(self._session_folder, 'video_object.npy')
         print("the folder " + self._session_folder + " has been created")
@@ -261,16 +257,6 @@ def scanFolder(path):
     filename = filename.split("_")[:-1][0]
     paths = natsorted([path for path in paths if filename in path])
     return paths
-
-def get_last_training_session_index(subFolders):
-    """gets path to the last training session
-    """
-    if len(subFolders) == 0:
-        lastIndex = 0
-    else:
-        subFolders = natsorted(subFolders)[::-1]
-        lastIndex = int(subFolders[0].split('_')[-1])
-    return lastIndex
 
 
 if __name__ == "__main__":

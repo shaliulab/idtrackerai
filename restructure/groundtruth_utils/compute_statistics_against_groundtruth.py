@@ -29,8 +29,6 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
                     tracked_blob.is_a_jumping_fragment or\
                     hasattr(tracked_blob,'is_an_extreme_of_individual_fragment')) and\
                     groundtruth_blob.identity != -1: # we are not considering crossing or failures of the model area
-                print("groundtruth_blob identity, ", groundtruth_blob.identity)
-                print("tracked_blob identity, ", tracked_blob.identity)
                 if groundtruth_blob.identity != tracked_blob.identity:
                     count_errors_identities_dict_all[groundtruth_blob.identity] += 1
                     if tracked_blob.identity != 0:
@@ -70,9 +68,11 @@ if __name__ == '__main__':
     global_fragments_path = video.global_fragments_path
     list_of_blobs = ListOfBlobs.load(blobs_path)
     blobs = list_of_blobs.blobs_in_video
+    blobs = blobs[:-1]
 
     ''' select ground truth file '''
     groundtruth_path = os.path.join(video._video_folder,'_groundtruth.npy')
     groundtruth = np.load(groundtruth_path).item()
+    groundtruth.list_of_blobs = groundtruth.list_of_blobs[:-1]
 
     accuracy, individual_accuracy, accuracy_assigned, individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs)

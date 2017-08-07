@@ -66,8 +66,9 @@ def generate_groundtruth_files(video_object):
                     if blob.identity != 0:
                         count_number_assignment_per_individual_assigned[blob.user_generated_identity] += 1
                 elif blob.identity != 0:
-                    count_number_assignment_per_individual_assigned[blob.identity] += 1
                     count_number_assignment_per_individual_all[blob.identity] += 1
+                    count_number_assignment_per_individual_assigned[blob.identity] += 1
+
         groundtruth_blobs_list.append(groundtruth_blobs_in_frame)
     groundtruth = GroundTruth(video_object = video_object,
                             list_of_blobs = groundtruth_blobs_list,

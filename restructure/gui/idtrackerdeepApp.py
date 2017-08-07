@@ -35,6 +35,7 @@ import sys
 sys.path.append('../')
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
+sys.path.append('../groundtruth_utils')
 sys.setrecursionlimit(100000)
 import cv2
 import numpy as np
@@ -65,7 +66,8 @@ class Chosen_Video(EventDispatcher):
         try:
             print("you choose ----------->", value)
             self.video.video_path = value
-            self.video.create_session_folder()
+            new_name_session_folder = raw_input('Session name: ')
+            self.video.create_session_folder(name = new_name_session_folder)
             processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
             #get existent files and paths to load them
             self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
@@ -1220,7 +1222,7 @@ class Validator(BoxLayout):
                     elif blob.identity != 0:
                         count_number_assignment_per_individual_assigned[blob.identity] += 1
                         count_number_assignment_per_individual_all[blob.identity] += 1
-                    else:
+                    elif blob.identity == 0 and blob.user_generated_identity is not None:
                         print("frame number, ", blob.frame_number)
                         frames_with_zeros.append(blob.frame_number)
                         check_ground_truth = True
