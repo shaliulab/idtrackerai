@@ -5,7 +5,8 @@ sys.path.append('../')
 sys.path.append('../preprocessing')
 sys.path.append('../utils')
 import numpy as np
-from blob import ListOfBlobs
+from blob import ListOfBlobs, Blob
+from GUI_utils import selectDir
 
 class GroundTruthBlob(object):
     """Lighter blob objects.
@@ -14,7 +15,7 @@ class GroundTruthBlob(object):
         centroid
         pixels (pixels is stored to check the groundtruth in crossings)
     """
-    def __init__(self, attributes_to_get = ['identity', 'centroid', 'pixels']):
+    def __init__(self, attributes_to_get = ['identity', 'centroid', 'pixels', 'frame_number']):
         self.attributes = attributes_to_get
 
     def get_attribute(self, blob):
@@ -25,11 +26,11 @@ class GroundTruthBlob(object):
                 setattr(self, attribute, getattr(blob, attribute))
 
 class GroundTruth(object):
-    def __init__(self, video_object = [], list_of_blobs = [], count_unoccluded_individual_assignments = {}, count_crossing_individual_assignments = {}):
+    def __init__(self, video_object = [], list_of_blobs = [], count_number_assignment_per_individual_assigned = {}, count_number_assignment_per_individual_all = {}):
         self.video_object = video_object
         self.list_of_blobs = list_of_blobs
-        self.unoccluded_individual_assignments = count_unoccluded_individual_assignments
-        self.crossing_individual_assignments = count_crossing_individual_assignments
+        self.count_number_assignment_per_individual_assigned = count_number_assignment_per_individual_assigned
+        self.count_number_assignment_per_individual_all = count_number_assignment_per_individual_all
 
     def save(self):
         path_to_save_groundtruth = os.path.join(os.path.split(self.video_object.video_path)[0], '_groundtruth.npy')
@@ -45,39 +46,40 @@ def generate_groundtruth_files(video_object):
     #read blob list from video
     blobs_list = ListOfBlobs.load(video_object.blobs_path)
     blobs = blobs_list.blobs_in_video
+    count_number_assignment_per_individual_assigned = {i: 0 for i in range(1,video_object.number_of_animals+1)}
+    count_number_assignment_per_individual_all = {i: 0 for i in range(1,video_object.number_of_animals+1)}
     #init groundtruth blobs list
     groundtruth_blobs_list = []
-    #count number of assignment per individual in groundtruth
-    count_number_assignment_per_individual_no_crossing = {i: 0 for i in range(1, video_object.number_of_animals + 1)}
-    #XXX here we include, but it has to be removed
-    count_number_assignment_per_individual_during_crossing = {i: 0 for i in range(video_object.number_of_animals + 1)}
-
     for blobs_in_frame in blobs:
-
+        groundtruth_blobs_in_frame = []
         for blob in blobs_in_frame:
             gt_blob = GroundTruthBlob()
             gt_blob.get_attribute(blob)
-            groundtruth_blobs_list.append(gt_blob)
-            if not blob.is_a_crossing:
+            groundtruth_blobs_in_frame.append(gt_blob)
+            if (blob.is_a_fish_in_a_fragment or\
+                    blob.is_a_jump or\
+                    blob.is_a_jumping_fragment or\
+                    hasattr(blob,'is_an_extreme_of_individual_fragment')) and\
+                    blob.user_generated_identity != -1: # we are not considering crossing or failures of the model area
                 if blob.user_generated_identity is not None and blob.user_generated_identity != blob.identity:
-                    count_number_assignment_per_individual_no_crossing[blob.user_generated_identity] += 1
-                else:
-                    count_number_assignment_per_individual_no_crossing[blob.identity] += 1
-            else:
-                if blob.user_generated_identity is not None and blob.user_generated_identity != blob.identity:
-                    count_number_assignment_per_individual_during_crossing[blob.user_generated_identity] += 1
-                else:
-                    count_number_assignment_per_individual_during_crossing[blob.identity] += 1
-
+                    count_number_assignment_per_individual_all[blob.user_generated_identity] += 1
+                    if blob.identity != 0:
+                        count_number_assignment_per_individual_assigned[blob.user_generated_identity] += 1
+                elif blob.identity != 0:
+                    count_number_assignment_per_individual_assigned[blob.identity] += 1
+                    count_number_assignment_per_individual_all[blob.identity] += 1
+        groundtruth_blobs_list.append(groundtruth_blobs_in_frame)
     groundtruth = GroundTruth(video_object = video_object,
                             list_of_blobs = groundtruth_blobs_list,
-                            count_unoccluded_individual_assignments = count_number_assignment_per_individual_no_crossing,
-                            count_crossing_individual_assignments = count_number_assignment_per_individual_during_crossing)
+                            count_number_assignment_per_individual_assigned = count_number_assignment_per_individual_assigned,
+                            count_number_assignment_per_individual_all = count_number_assignment_per_individual_all)
     groundtruth.save()
 
 
 
-
 if __name__ == "__main__":
-    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/conflict8Short/session_1/video_object.npy').item()
+
+    session_path = selectDir('./') #select path to video
+    video_path = os.path.join(session_path,'video_object.npy')
+    video = np.load(video_path).item()
     generate_groundtruth_files(video)
