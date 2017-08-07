@@ -28,10 +28,11 @@ from py_utils import get_spaced_colors_util, saveFile, loadFile
 """
 def rename_session_folder(video_object, new_session_name):
     assert new_session_name != ''
+    new_session_name = 'session_' + new_session_name
     current_session_name = os.path.split(video_object._session_folder)[1]
     print("Modifying folder name: ", current_session_name, " --> ", new_session_name)
     os.rename(video_object._session_folder,
-            os.path.join(video_object.video_folder, new_session_name))
+            os.path.join(video_object._video_folder, new_session_name))
     print("Done")
 
     attributes_to_modify = {key: getattr(video_object, key) for key in video_object.__dict__

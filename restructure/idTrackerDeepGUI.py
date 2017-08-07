@@ -72,7 +72,7 @@ if __name__ == '__main__':
     video_path = selectFile() #select path to video
     video = Video() #instantiate object video
     video.video_path = video_path #set path
-    new_name_session_folder = getInput('Session name, ', 'Input new session name:')
+    new_name_session_folder = getInput('Session name, ', 'Input session name. Use an old session name to load and overwrite files')
     video.create_session_folder(name = new_name_session_folder)
     #############################################################
     ####################   Preprocessing   ######################
