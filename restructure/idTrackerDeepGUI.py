@@ -42,8 +42,7 @@ from GUI_utils import selectFile,\
                     selectPreprocParams,\
                     fragmentation_inspector,\
                     frame_by_frame_identity_inspector,\
-                    selectDir,\
-                    frame_by_frame_identity_inspector_for_Liad
+                    selectDir
 from py_utils import getExistentFiles
 from video_utils import checkBkg
 from pre_trainer import pre_train
@@ -542,9 +541,6 @@ if __name__ == '__main__':
             video._has_been_assigned = True
             # assign identity to individual fragments' extremes
             assing_identity_to_individual_fragments_extremes(blobs)
-            for blob in blobs[46]:
-                print("is a ghost crossing ", blob.is_a_ghost_crossing)
-                print("id ", blob.identity)
             # solve jumps
             assign_identity_to_jumps(video, blobs)
             # solve duplications
@@ -558,7 +554,7 @@ if __name__ == '__main__':
             blobs_list.cut_in_chunks()
             blobs_list.save()
             video.save()
-            frame_by_frame_identity_inspector_for_Liad(video, blobs)
+            frame_by_frame_identity_inspector(video, blobs)
         else:
             # Set preprocessed flag to True
             video._has_been_assigned = True
@@ -568,7 +564,7 @@ if __name__ == '__main__':
             blobs = list_of_blobs.blobs_in_video
             global_fragments = np.load(video.global_fragments_path)
             # visualise proposed tracking
-            frame_by_frame_identity_inspector_for_Liad(video, blobs)
+            frame_by_frame_identity_inspector(video, blobs)
 
         # solve crossings
         ### NOTE: add flag to
@@ -578,6 +574,6 @@ if __name__ == '__main__':
         list_of_blobs = ListOfBlobs.load(video.blobs_path)
         blobs = list_of_blobs.blobs_in_video
         global_fragments = np.load(video.global_fragments_path)
-        frame_by_frame_identity_inspector_for_Liad(video, blobs)
+        frame_by_frame_identity_inspector(video, blobs)
     else:
         raise ValueError('The input introduced does not match the possible options')

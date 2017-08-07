@@ -24,6 +24,33 @@ from get_portraits import get_portrait, get_body
 # from video_utils import *
 from py_utils import get_spaced_colors_util, saveFile, loadFile
 
+"""Change session folder name
+"""
+def rename_session_folder(video_object, new_session_name):
+    assert new_session_name != ''
+    current_session_name = os.path.split(video_object._session_folder)[1]
+    print("Modifying folder name: ", current_session_name, " --> ", new_session_name)
+    os.rename(video_object._session_folder,
+            os.path.join(video_object.video_folder, new_session_name))
+    print("Done")
+
+    attributes_to_modify = {key: getattr(video_object, key) for key in video_object.__dict__
+    if isinstance(getattr(video_object, key), basestring)
+    and current_session_name in getattr(video_object, key) }
+
+    print("Updating video object")
+
+    for key in attributes_to_modify:
+        new_value = attributes_to_modify[key].replace(current_session_name, new_session_name)
+        setattr(video_object, key, new_value)
+
+    video_object.save()
+    print("Done")
+
+
+
+
+
 """
 Display messages and errors
 """
