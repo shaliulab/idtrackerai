@@ -19,9 +19,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
     count_errors_identities_dict_assigned = {i:0 for i in range(1, number_of_animals + 1)}
     count_errors_identities_dict_all = {i:0 for i in range(1, number_of_animals + 1)}
 
-    for groundtruth_blobs_in_frame in blobs_list_groundtruth:
-        frame_number = groundtruth_blobs_in_frame[0].frame_number
-        tracked_blobs_in_frame = blobs_list_tracked[frame_number]
+    for groundtruth_blobs_in_frame, tracked_blobs_in_frame in zip(blobs_list_groundtruth, blobs_list_tracked):
 
         for groundtruth_blob, tracked_blob in zip(groundtruth_blobs_in_frame,tracked_blobs_in_frame):
             if (tracked_blob.is_a_fish_in_a_fragment or\
