@@ -21,7 +21,7 @@ class CrossingDataset(object):
         self.crossings = [blob for frame in self.blobs for blob in frame if blob.is_a_crossing and not blob.is_a_ghost_crossing]
         self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossings]) + 5
         self.fish = [blob for frame in self.blobs for blob in frame if blob.is_a_fish and blob.user_generated_identity != -1]
-        ratio = 1
+        ratio = 10
         if len(self.fish) > ratio * len(self.crossings):
             self.fish = self.fish[:ratio * len(self.crossings)]
         self.test = [blob for frame in self.blobs for blob in frame if blob.user_generated_identity == -1]
@@ -157,8 +157,8 @@ if __name__ == "__main__":
     blobs = list_of_blobs.blobs_in_video
 
     training_set = CrossingDataset(blobs, video)
-    training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9, scope = 'training')
+    training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .5, scope = 'training')
     np.save(video_folder + '_training_set.npy', training_set)
     validation_set = CrossingDataset(blobs, video)
-    validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1., scope = 'validation')
+    validation_set.get_data(sampling_ratio_start = .5, sampling_ratio_end = 1., scope = 'validation')
     np.save(video_folder + '_validation_set.npy', validation_set)
