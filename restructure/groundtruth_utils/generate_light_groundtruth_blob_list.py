@@ -6,7 +6,7 @@ sys.path.append('../preprocessing')
 sys.path.append('../utils')
 import numpy as np
 from blob import ListOfBlobs, Blob
-from GUI_utils import selectDir
+from GUI_utils import selectDir, getInput
 
 class GroundTruthBlob(object):
     """Lighter blob objects.
@@ -26,18 +26,20 @@ class GroundTruthBlob(object):
                 setattr(self, attribute, getattr(blob, attribute))
 
 class GroundTruth(object):
-    def __init__(self, video_object = [], list_of_blobs = [], count_number_assignment_per_individual_assigned = {}, count_number_assignment_per_individual_all = {}):
+    def __init__(self, video_object = [], list_of_blobs = [], count_number_assignment_per_individual_assigned = {}, count_number_assignment_per_individual_all = {}, start = None, end = None):
         self.video_object = video_object
         self.list_of_blobs = list_of_blobs
         self.count_number_assignment_per_individual_assigned = count_number_assignment_per_individual_assigned
         self.count_number_assignment_per_individual_all = count_number_assignment_per_individual_all
+        self.start = start
+        self.end = end
 
     def save(self):
         path_to_save_groundtruth = os.path.join(os.path.split(self.video_object.video_path)[0], '_groundtruth.npy')
         print("saving groundtruth at ", path_to_save_groundtruth)
         np.save(path_to_save_groundtruth, self)
 
-def generate_groundtruth_files(video_object):
+def generate_groundtruth_files(video_object, start = None, end = None):
     """Generates a list of light blobs, given a video object corresponding to a
     tracked video
     """
@@ -73,7 +75,9 @@ def generate_groundtruth_files(video_object):
     groundtruth = GroundTruth(video_object = video_object,
                             list_of_blobs = groundtruth_blobs_list,
                             count_number_assignment_per_individual_assigned = count_number_assignment_per_individual_assigned,
-                            count_number_assignment_per_individual_all = count_number_assignment_per_individual_all)
+                            count_number_assignment_per_individual_all = count_number_assignment_per_individual_all,
+                            start = start,
+                            end = end)
     groundtruth.save()
 
 
@@ -83,4 +87,6 @@ if __name__ == "__main__":
     session_path = selectDir('./') #select path to video
     video_path = os.path.join(session_path,'video_object.npy')
     video = np.load(video_path).item()
-    generate_groundtruth_files(video)
+    start = getInput('GroundTruth (start)', 'Input the starting frame for the interval in which the video has been validated')
+    end = getInput('GroundTruth (end)', 'Input the ending frame for the interval in which the video has been validated')
+    generate_groundtruth_files(video, int(start), int(end))

@@ -68,11 +68,12 @@ if __name__ == '__main__':
     global_fragments_path = video.global_fragments_path
     list_of_blobs = ListOfBlobs.load(blobs_path)
     blobs = list_of_blobs.blobs_in_video
-    blobs = blobs[:-1]
+
 
     ''' select ground truth file '''
     groundtruth_path = os.path.join(video._video_folder,'_groundtruth.npy')
     groundtruth = np.load(groundtruth_path).item()
-    groundtruth.list_of_blobs = groundtruth.list_of_blobs[:-1]
+    groundtruth.list_of_blobs = groundtruth.list_of_blobs[groundtruth.start:groundtruth.end]
+    blobs = blobs[groundtruth.start:groundtruth.end]
 
     accuracy, individual_accuracy, accuracy_assigned, individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs)
