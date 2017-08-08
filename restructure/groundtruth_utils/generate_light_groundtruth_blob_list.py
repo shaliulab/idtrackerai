@@ -50,6 +50,8 @@ def generate_groundtruth_files(video_object, start = None, end = None):
     blobs = blobs_list.blobs_in_video
     count_number_assignment_per_individual_assigned = {i: 0 for i in range(1,video_object.number_of_animals+1)}
     count_number_assignment_per_individual_all = {i: 0 for i in range(1,video_object.number_of_animals+1)}
+    count_number_of_model_area_failures = 0
+    count_number_of_crossings = 0
     #init groundtruth blobs list
     groundtruth_blobs_list = []
     for blobs_in_frame in blobs:
@@ -70,8 +72,14 @@ def generate_groundtruth_files(video_object, start = None, end = None):
                 elif blob.identity != 0:
                     count_number_assignment_per_individual_all[blob.identity] += 1
                     count_number_assignment_per_individual_assigned[blob.identity] += 1
+            else:
+                count_number_of_crossings += 1
+                if blob.user_generated_identity == -1:
+                    count_number_of_model_area_failures += 1
 
         groundtruth_blobs_list.append(groundtruth_blobs_in_frame)
+
+    print("proportion of crossings that we miss: ", 1-count_number_of_model_area_failures/count_number_of_crossings)
     groundtruth = GroundTruth(video_object = video_object,
                             list_of_blobs = groundtruth_blobs_list,
                             count_number_assignment_per_individual_assigned = count_number_assignment_per_individual_assigned,

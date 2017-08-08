@@ -9,6 +9,7 @@ import numpy as np
 import shutil
 import cPickle as pickle
 import sys
+from pprint import pprint
 # sys.path.append('../utils')
 
 ### Dict utils ###
@@ -225,6 +226,30 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
 
     print 'You just loaded ', folder + subfolder + filename
 
+def check_and_change_video_path(video,old_video):
+    current_video_folder = os.path.split(video.video_path)[0]
+    old_video_folder = os.path.split(old_video.video_path)[0]
+    print("current_video_folder, ", current_video_folder)
+    print("old_video_folder, ", old_video_folder)
+    if current_video_folder != old_video_folder:
+        print("we need to substitute paths")
+
+        attributes_to_modify = {key: getattr(old_video, key) for key in old_video.__dict__
+        if isinstance(getattr(old_video, key), basestring)
+        and old_video_folder in getattr(old_video, key) }
+
+        print("Updating video object")
+        for key in attributes_to_modify:
+            new_value = attributes_to_modify[key].replace(old_video_folder, current_video_folder)
+            setattr(old_video, key, new_value)
+        if len(old_video._paths_to_video_segments) != 0:
+            new_paths_to_video_segments = []
+            for path in old_video._paths_to_video_segments:
+                new_paths_to_video_segments.append(path.replace(old_video_folder, current_video_folder))
+            old_video._paths_to_video_segments = new_paths_to_video_segments
+        pprint(old_video.__dict__)
+    return old_video
+
 def getExistentFiles(video, listNames):
     """
     get processes already computed in a previous session
@@ -238,6 +263,7 @@ def getExistentFiles(video, listNames):
         else:
             raise ValueError("The folder %s is empty. The tracking cannot be restored." %video._previous_session_folder)
 
+        old_video = check_and_change_video_path(video,old_video)
 
         if old_video.bkg is not None:
             print('has bkg')

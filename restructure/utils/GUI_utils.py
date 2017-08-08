@@ -48,10 +48,6 @@ def rename_session_folder(video_object, new_session_name):
     video_object.save()
     print("Done")
 
-
-
-
-
 """
 Display messages and errors
 """
