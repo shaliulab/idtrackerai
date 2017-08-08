@@ -149,7 +149,10 @@ def get_body(height, width, miniframe, pixels, bb, portraitSize, only_blob = Fal
     diag = np.sqrt(np.sum(np.asarray(miniframe.shape)**2)).astype(int)
     diag = (diag, diag)
     M = cv2.getRotationMatrix2D(tuple(center), rot_ang, 1)
-    minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_WRAP, flags = cv2.INTER_CUBIC)
+    if only_blob:
+        minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_CONSTANT, flags = cv2.INTER_CUBIC)
+    else:
+        minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_WRAP, flags = cv2.INTER_CUBIC)
 
     crop_distance = int(portraitSize/2)
     x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
