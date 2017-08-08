@@ -23,10 +23,12 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
 
         for groundtruth_blob, tracked_blob in zip(groundtruth_blobs_in_frame,tracked_blobs_in_frame):
             if (tracked_blob.is_a_fish_in_a_fragment or\
-                    tracked_blob.is_a_jump or\
-                    tracked_blob.is_a_jumping_fragment or\
-                    hasattr(tracked_blob,'is_an_extreme_of_individual_fragment')) and\
-                    groundtruth_blob.identity != -1: # we are not considering crossing or failures of the model area
+                tracked_blob.is_a_jump or\
+                tracked_blob.is_a_jumping_fragment or\
+                hasattr(tracked_blob,'is_an_extreme_of_individual_fragment')) and\
+                groundtruth_blob.identity != -1: # we are not considering crossing or failures of the model area
+                print("gt blob id ", groundtruth_blob.identity)
+                print(tracked_blob.frame_number)
                 if groundtruth_blob.identity != tracked_blob.identity:
                     count_errors_identities_dict_all[groundtruth_blob.identity] += 1
                     if tracked_blob.identity != 0:
