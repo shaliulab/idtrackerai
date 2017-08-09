@@ -3,8 +3,10 @@ from __future__ import absolute_import, division, print_function
 import itertools
 import pickle
 import os
+import sys
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 from network_nose_detector import ConvNetwork
 

@@ -178,7 +178,7 @@ if __name__ == '__main__':
             apply_model_area_to_video(video, blobs, model_area, video.portrait_size[0])
             #connect blobs that overlap in consecutive frames
             connect_blob_list(blobs)
-            #assign an identifier to each blobl belonging to an individual fragment
+            #assign an identifier to each blob belonging to an individual fragment
             compute_fragment_identifier_and_blob_index(blobs, video.maximum_number_of_blobs)
             #save connected blobs in video (organized frame-wise) and list of global fragments
             video._has_been_preprocessed = True

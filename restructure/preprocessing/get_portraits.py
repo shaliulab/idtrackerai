@@ -168,14 +168,12 @@ def get_body(height, width, miniframe, pixels, bb, portraitSize, only_blob = Fal
 
 def only_blob_pixels(height, width, miniframe, pixels, bb):
     pxs = np.array(np.unravel_index(pixels,(height, width))).T
-    # print("pixels ", pxs)
     pxs = np.array([pxs[:, 0] - bb[0][1], pxs[:, 1] - bb[0][0]])
     temp_image = np.zeros_like(miniframe).astype('uint8')
     temp_image[pxs[0,:], pxs[1,:]] = 255
     temp_image = cv2.dilate(temp_image, np.ones((3,3)).astype('uint8'), iterations = 1)
     rows, columns = np.where(temp_image == 255)
     dilated_pixels = np.array([rows, columns])
-    # print("dilated pixels ", dilated_pixels.shape)
 
     temp_image[dilated_pixels[0,:], dilated_pixels[1,:]] = miniframe[dilated_pixels[0,:], dilated_pixels[1,:]]
     return temp_image
