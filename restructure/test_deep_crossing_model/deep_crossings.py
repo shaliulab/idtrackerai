@@ -4,6 +4,7 @@ import sys
 sys.path.append('../')
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
+sys.path.append('../network')
 
 import cv2
 import numpy as np
@@ -11,10 +12,11 @@ from GUI_utils import selectDir
 from get_portraits import get_body
 from blob import ListOfBlobs, Blob
 import matplotlib.pyplot as plt
+from get_data import duplicate_PCA_images
 
 class CrossingDataset(object):
     def __init__(self, blobs_list, video):
-        self.blobs = blobs_list
+        self.blobs = blobs_list[3810:4810]
         self.video_height = video._height
         self.video_width = video._width
         self.video = video
@@ -58,6 +60,8 @@ class CrossingDataset(object):
         self.crossings = self.slice(self.crossings, sampling_ratio_start, sampling_ratio_end)
         self.crossings =  self.generate_crossing_images()
         self.crossing_labels = np.ones(len(self.crossings))
+        if self.scope == "training":
+            self.crossings, self.crossing_labels = duplicate_PCA_images(self.crossings, self.crossing_labels)
         assert len(self.crossing_labels) == len(self.crossings)
         print("Done")
         # negative examples (non crossings)
@@ -72,18 +76,19 @@ class CrossingDataset(object):
         assert len(self.fish_labels) == len(self.fish)
         print("Done")
         print("Preparing images and labels")
-        self.images = np.asarray(self.crossings + self.fish)
+        self.images = np.asarray(list(self.crossings) + self.fish)
         self.images = np.expand_dims(self.images, axis = 3)
         self.labels = np.concatenate([self.crossing_labels, self.fish_labels], axis = 0)
-        permutation = np.random.permutation(len(self.labels))
-        self.images = self.images[permutation]
-        self.labels = self.labels[permutation]
         self.labels = self.dense_to_one_hot(np.expand_dims(self.labels, axis = 1))
         assert len(self.images) == len(self.labels)
         if self.scope == 'training':
+            # self.images, self.labels = duplicate_PCA_images(self.images, self.labels)
             self.weight_positive = 1 - len(self.crossing_labels)/len(self.labels)
         else:
             self.weight_positive = 1
+        permutation = np.random.permutation(len(self.labels))
+        self.images = self.images[permutation]
+        self.labels = self.labels[permutation]
         print("Done")
 
     def generate_crossing_images(self):

@@ -23,12 +23,12 @@ class ConvNetwork():
             self.restore(from_video_path)
 
     def _build_graph(self):
-        images = tf.placeholder(tf.float32, shape = [None, 294, 294, 1])
-        Y_logits = self.architecture(images, 2, 294, 294, 1)
+        images = tf.placeholder(tf.float32, shape = [None, 278, 278, 1])
+        Y_logits = self.architecture(images, 2, 278, 278, 1)
         Y_target = tf.placeholder(tf.float32, shape = [None, 2])
         loss = self.weighted_loss(Y_logits, Y_target, self.weight_positive)
-        # train_step = tf.train.AdamOptimizer(self.learning_rate).minimize(loss)
-        train_step = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(loss)
+        train_step = tf.train.AdamOptimizer(self.learning_rate).minimize(loss)
+        # train_step = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(loss)
         accuracy = self.compute_accuracy(Y_target, Y_logits)
         return (images, Y_logits, Y_target, loss, accuracy, train_step)
 
@@ -55,6 +55,7 @@ class ConvNetwork():
         loss_mean = np.mean(loss_value)
         acc_mean = np.mean(acc_value)
         print("(training) loss: %f, acc: %f " %(loss_mean, acc_mean))
+        return loss_mean, acc_mean
 
     def validate(self,batch):
         (batch_images, batch_labels) = batch
@@ -63,6 +64,7 @@ class ConvNetwork():
         loss_mean = np.mean(loss_value)
         acc_mean = np.mean(acc_value)
         print("(validation) loss: %f, acc: %f " %(loss_mean, acc_mean))
+        return loss_mean, acc_mean
 
     def prediction(self,images):
         return self.sesh.run(self.Y, feed_dict={self.X: images})
