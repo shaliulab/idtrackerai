@@ -186,7 +186,6 @@ def assign_jumps(images, video):
         conencted layer (ndarray of shape [number of images, 100]), and the values of the softmax layer
         (ndarray of shape [number of images, number of animals in the tracked video])
     """
-    assert video._has_been_assigned == True
     net_params = NetworkParams(video.number_of_animals,
                     learning_rate = 0.005,
                     keep_prob = 1.0,
