@@ -16,14 +16,14 @@ from get_data import duplicate_PCA_images
 
 class CrossingDataset(object):
     def __init__(self, blobs_list, video):
-        self.blobs = blobs_list[3810:4810]
+        self.blobs = blobs_list[390:9022]
         self.video_height = video._height
         self.video_width = video._width
         self.video = video
         self.crossings = [blob for frame in self.blobs for blob in frame if blob.is_a_crossing and not blob.is_a_ghost_crossing]
         self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossings]) + 5
         self.fish = [blob for frame in self.blobs for blob in frame if blob.is_a_fish and blob.user_generated_identity != -1]
-        ratio = 10
+        ratio = 1
         if len(self.fish) > ratio * len(self.crossings):
             self.fish = self.fish[:ratio * len(self.crossings)]
         self.test = [blob for frame in self.blobs for blob in frame if blob.user_generated_identity == -1]
@@ -51,6 +51,30 @@ class CrossingDataset(object):
         else:
             return None
 
+    def data_augmentation_by_rotation(self,images,labels):
+        images = [self.image_rotation(im, rotation_angle).astype('float16') for im in images for rotation_angle in range(0,360,90)]
+        labels = [label for label in labels for rotation_angle in range(0,360,90)]
+        return images, labels
+
+    @staticmethod
+    def image_rotation(image, rotation_angle):
+        image_size = image.shape
+        #rotate
+        diag = np.sqrt(np.sum(np.asarray(image.shape)**2)).astype(int)
+        diag = (diag, diag)
+        center = (image_size[1]//2, image_size[0]//2) # (x,y) coordinates of the center pixel
+        M = cv2.getRotationMatrix2D(tuple(center), rotation_angle, 1)
+        image = cv2.warpAffine(image, M, diag, borderMode=cv2.BORDER_CONSTANT, flags = cv2.INTER_CUBIC)
+
+        new_center = (image.shape[1]//2, image.shape[0]//2)
+        x_range = xrange(new_center[0] - center[0], new_center[0] + center[0])
+        y_range = xrange(new_center[1] - center[1], new_center[1] + center[1])
+        image = image.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
+        height, width = image.shape
+        assert image.shape == image_size
+
+        return image
+
     def get_data(self, sampling_ratio_start = 0, sampling_ratio_end = 1., scope = ''):
         self.scope = scope
         # positive examples (crossings)
@@ -61,6 +85,7 @@ class CrossingDataset(object):
         self.crossings =  self.generate_crossing_images()
         self.crossing_labels = np.ones(len(self.crossings))
         if self.scope == "training":
+            # self.crossings, self.crossing_labels = self.data_augmentation_by_rotation(self.crossings, self.crossing_labels)
             self.crossings, self.crossing_labels = duplicate_PCA_images(self.crossings, self.crossing_labels)
         assert len(self.crossing_labels) == len(self.crossings)
         print("Done")
@@ -68,15 +93,16 @@ class CrossingDataset(object):
         print("Generating single individual ", scope, " set")
 
         np.random.shuffle(self.fish)
-        if len(self.fish) > 2 * len(self.crossings):
-            self.fish = self.fish[:2 * len(self.crossings)]
         self.fish = self.slice(self.fish, sampling_ratio_start, sampling_ratio_end)
         self.fish = self.generate_fish_images()
         self.fish_labels = np.zeros(len(self.fish))
+        if self.scope == "training":
+            # self.fish, self.fish_labels = self.data_augmentation_by_rotation(self.fish, self.fish_labels)
+            self.fish, self.fish_labels = duplicate_PCA_images(self.fish, self.fish_labels)
         assert len(self.fish_labels) == len(self.fish)
         print("Done")
         print("Preparing images and labels")
-        self.images = np.asarray(list(self.crossings) + self.fish)
+        self.images = np.asarray(list(self.crossings) + list(self.fish))
         self.images = np.expand_dims(self.images, axis = 3)
         self.labels = np.concatenate([self.crossing_labels, self.fish_labels], axis = 0)
         self.labels = self.dense_to_one_hot(np.expand_dims(self.labels, axis = 1))
@@ -86,6 +112,7 @@ class CrossingDataset(object):
             self.weight_positive = 1 - len(self.crossing_labels)/len(self.labels)
         else:
             self.weight_positive = 1
+        np.random.seed(0)
         permutation = np.random.permutation(len(self.labels))
         self.images = self.images[permutation]
         self.labels = self.labels[permutation]

@@ -12,7 +12,7 @@ from cnn_architectures import cnn_model_crossing_detector
 import seaborn as sns
 
 class TrainDeepCrossing(object):
-    def __init__(self, video_folder, training_dataset, validation_dataset, num_epochs = 50, plot_flag = True):
+    def __init__(self, session_folder, training_dataset, validation_dataset, num_epochs = 50, plot_flag = True):
         """Build the dataset and trains the model
         The dataset is built according to
         Taken from tensorflow/contrib/learn/datasets/mnist.
@@ -27,10 +27,20 @@ class TrainDeepCrossing(object):
         self._num_examples_train = len(training_dataset.images)
         self._num_examples_val = len(validation_dataset.images)
         self.num_epochs = num_epochs
-        self.ckpt_path = os.path.join(video_folder, 'deep_crossings_ckpt')
         self.plot_flag = plot_flag
-        self.net = ConvNetwork(weight_positive = training_dataset.weight_positive, architecture = cnn_model_crossing_detector, learning_rate = 0.001)
+        self.save_path(session_folder)
+        self.net = ConvNetwork(weight_positive = training_dataset.weight_positive,
+                                architecture = cnn_model_crossing_detector,
+                                learning_rate = 0.001,
+                                image_size = training_dataset.images.shape[1:])
         self.train_model()
+
+    def save_path(self, video_path):
+        print('setting path to save crossing detector model')
+        self.crossing_detector_path = os.path.join(session_folder, 'crossing_detector')
+        if not os.path.isdir(self.crossing_detector_path):
+            print('creating folder to store checkpoints for the crossing_detector')
+            os.makedirs(self.crossing_detector_path)
 
     def next_batch_train(self, batch_size):
         """Return the next `batch_size` examples from this data set."""
@@ -91,6 +101,9 @@ class TrainDeepCrossing(object):
             loss, acc = self.net.validate(self.next_batch_validation(batch_size = 100))
             loss_val.append(loss)
             acc_val.append(acc)
+            if next(batch_counter)%100 == 0:
+                #save checkpoint
+                self.net.save(os.path.join(self.crossing_detector_path, 'checkpoint'), next(batch_counter))
             if self.plot_flag:
                 self.plotter(loss_train, acc_train, loss_val, acc_val)
 
@@ -127,39 +140,26 @@ if __name__ == "__main__":
     video_path = os.path.join(session_path,'video_object.npy')
     print("loading video object...")
     video = np.load(video_path).item(0)
-    video_folder = video._video_folder
-    training_file_in_video_folder = [f for f in listdir(video_folder) if isfile(join(video_folder, f)) and '.npy' in f and 'training' in f]
-    if len(training_file_in_video_folder) > 0:
-        training_set = np.load(training_file_in_video_folder[0]).item()
-        validation_file_in_video_folder = [f for f in listdir(video_folder) if isfile(join(video_folder, f)) and '.npy' in f and 'validation' in f]
-        if len(training_file_in_video_folder) > 0:
-            validation_set = np.load(validation_file_in_video_folder[0]).item()
-        else:
-            raise ValueError("No validation found, silly moose!")
-        test_file_in_video_folder = [f for f in listdir(video_folder) if isfile(join(video_folder, f)) and '.npy' in f and 'test' in f]
-        if len(training_file_in_video_folder) > 0:
-            test_set = np.load(test_file_in_video_folder[0]).item()
-        else:
-            raise ValueError("No test found, silly moose!")
-    else:
-        blobs_path = video.blobs_path
-        global_fragments_path = video.global_fragments_path
-        list_of_blobs = ListOfBlobs.load(blobs_path)
-        blobs = list_of_blobs.blobs_in_video
+    session_folder = video._session_folder
 
-        training_set = CrossingDataset(blobs, video)
-        training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9, scope = 'training')
-        # np.save(os.path.join(video_folder, '_training_set.npy'), training_set)
-        validation_set = CrossingDataset(blobs, video)
-        validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1., scope = 'validation')
-        # np.save(os.path.join(video_folder, '_validation_set.npy'), validation_set)
-        test_set = CrossingDataset(blobs, video)
-        # np.save(os.path.join(video_folder,'_test_set.npy'), validation_set)
+    blobs_path = video.blobs_path
+    global_fragments_path = video.global_fragments_path
+    list_of_blobs = ListOfBlobs.load(blobs_path)
+    blobs = list_of_blobs.blobs_in_video
 
-    crossing_detector = TrainDeepCrossing(video_folder, training_set, validation_set, num_epochs = 100, plot_flag = True)
+    training_set = CrossingDataset(blobs, video)
+    training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9, scope = 'training')
+    # np.save(os.path.join(video_folder, '_training_set.npy'), training_set)
+    validation_set = CrossingDataset(blobs, video)
+    validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1., scope = 'validation')
+    # np.save(os.path.join(video_folder, '_validation_set.npy'), validation_set)
+    test_set = CrossingDataset(blobs, video)
+    # np.save(os.path.join(video_folder,'_test_set.npy'), validation_set)
+
+    crossing_detector = TrainDeepCrossing(session_folder, training_set, validation_set, num_epochs = 95, plot_flag = True)
     test_images = test_set.generate_test_images()
-    predictions = crossing_detector.net.prediction(test_images)
+    softmax_probs, predictions = crossing_detector.net.prediction(test_images)
     print(predictions)
-    fish_indices = np.where(predictions[:,0]>predictions[:,1])[0]
-    crossing_indices = np.where(predictions[:,0]<predictions[:,1])[0]
+    fish_indices = np.where(predictions == 0)[0]
+    crossing_indices = np.where(predictions == 1)[0]
     print("accuracy on test: ", len(crossing_indices)/(len(crossing_indices)+len(fish_indices)))

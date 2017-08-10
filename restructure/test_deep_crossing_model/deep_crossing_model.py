@@ -7,14 +7,15 @@ sys.path.append('../utils')
 import numpy as np
 
 class ConvNetwork():
-    def __init__(self, from_video_path = None, weight_positive = 1, architecture = None, learning_rate = 0.01):
+    def __init__(self, from_video_path = None, weight_positive = 1, architecture = None, learning_rate = 0.01, image_size = None):
         self.sesh = tf.Session()
         self.weight_positive = weight_positive
         self.architecture = architecture
         self.learning_rate = learning_rate
+        self.image_size = image_size
         handles = self._build_graph()
         print("Building graph....")
-        (self.X, self.Y, self.Y_target, self.loss, self.accuracy, self.train_step) = handles
+        (self.X, self.Y, self.Y_target, self.loss, self.accuracy, self.train_step, self.softmax_probs, self.predictions) = handles
         self.saver = tf.train.Saver()
 
         if from_video_path == None:
@@ -23,14 +24,16 @@ class ConvNetwork():
             self.restore(from_video_path)
 
     def _build_graph(self):
-        images = tf.placeholder(tf.float32, shape = [None, 278, 278, 1])
-        Y_logits = self.architecture(images, 2, 278, 278, 1)
+        images = tf.placeholder(tf.float32, shape = [None, self.image_size[0], self.image_size[1], self.image_size[2]])
+        Y_logits = self.architecture(images, 2, self.image_size[0], self.image_size[1], self.image_size[2])
         Y_target = tf.placeholder(tf.float32, shape = [None, 2])
         loss = self.weighted_loss(Y_logits, Y_target, self.weight_positive)
         train_step = tf.train.AdamOptimizer(self.learning_rate).minimize(loss)
         # train_step = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(loss)
         accuracy = self.compute_accuracy(Y_target, Y_logits)
-        return (images, Y_logits, Y_target, loss, accuracy, train_step)
+        softmax_probs = tf.nn.softmax(Y_logits)
+        predictions = tf.cast(tf.argmax(softmax_probs,1),tf.float32)
+        return (images, Y_logits, Y_target, loss, accuracy, train_step, softmax_probs, predictions)
 
     @staticmethod
     def weighted_loss(Y_logits, Y_target, weight):
@@ -67,7 +70,7 @@ class ConvNetwork():
         return loss_mean, acc_mean
 
     def prediction(self,images):
-        return self.sesh.run(self.Y, feed_dict={self.X: images})
+        return self.sesh.run([self.softmax_probs, self.predictions], feed_dict={self.X: images})
 
     def save(self, filename, global_step):
         save_path = self.saver.save(self.sesh, filename, global_step=global_step)

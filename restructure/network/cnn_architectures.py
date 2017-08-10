@@ -269,7 +269,7 @@ def cnn_model_4(images, classes):
     return y_logits
     # return y_logits, relu, (W1, W3, W5, WFC, WSoft)
 
-''' no linearlities '''
+''' no nonlinearlities '''
 def cnn_model_5(images, classes):
     '''
     Gives predictions for a given set of images

@@ -40,6 +40,8 @@ class Video(object):
         self._accumulation_finished = None
         self._training_finished = None
         self._has_been_assigned = None
+        self._has_crossings_solved = None
+        self._has_trajectories = None
         self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
 
     @property
