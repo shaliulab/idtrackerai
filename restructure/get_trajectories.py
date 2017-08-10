@@ -59,7 +59,7 @@ def produce_trajectories(blob_file):
                     nose_trajectories[blob.identity-1, frame_number, :] = blob.nose_coordinates
                 except:
                     missing_head = True
-    if missing_head:
+    if not missing_head:
         return {"centroid": centroid_trajectories, "head": head_trajectories, "nose": nose_trajectories}
     return {"centroid": centroid_trajectories}
 
