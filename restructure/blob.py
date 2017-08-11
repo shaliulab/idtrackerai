@@ -156,6 +156,25 @@ class Blob(object):
     def assigned_during_accumulation(self):
         return self._assigned_during_accumulation
 
+    def in_a_global_fragment_core(self, blobs_in_frame):
+        '''a blob in a frame is a fish in the core of a global fragment if in
+        that frame there are as many blobs as number of animals to track
+        '''
+        return len(blobs_in_frame) == self.number_of_animals
+
+    # @property
+    # def in_a_global_fragment_core(self):
+    #     print("calling getter")
+    #     return self._in_a_global_fragment_core
+    #
+    # @in_a_global_fragment_core.setter
+    # def in_a_global_fragment_core(self, blobs_in_frame):
+    #     '''a blob in a frame is a fish in the core of a global fragment if in
+    #     that frame there are as many blobs as number of animals to track
+    #     '''
+    #     print("calling setter")
+    #     self._in_a_global_fragment_core = len(blobs_in_frame) == self.number_of_animals
+
     @property
     def identity(self):
         return self._identity
@@ -387,20 +406,33 @@ def check_global_fragments(blobs_in_video, num_animals):
     """
     return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame) == num_animals for blobs_in_frame in blobs_in_video]
 
+def compute_portrait_size(video, maximum_body_length):
+    if video.preprocessing_type == 'portrait':
+        portrait_size = int(maximum_body_length/2)
+        portrait_size =  portrait_size + portrait_size%2 #this is to make the portrait_size even
+        video.portrait_size = (portrait_size, portrait_size, 1)
+    elif video.preprocessing_type == 'body' or video.preprocessing_type == 'body_blob':
+        portrait_size = int(np.sqrt(maximum_body_length ** 2 / 2))
+        portrait_size = portrait_size + portrait_size%2  #this is to make the portrait_size
+        video.portrait_size = (portrait_size, portrait_size, 1)
+
 def apply_model_area(video, blob, model_area, portraitSize):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
         if video.preprocessing_type == 'portrait':
             portrait, blob._nose_coordinates, blob._head_coordinates = get_portrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize)
             blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
-            blob.bounding_box_image = None
+            # if not blob.in_a_global_fragment_core:
+            #     blob.bounding_box_image = None
         elif video.preprocessing_type == 'body':
             portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(video._height, video._width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
             blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
-            blob.bounding_box_image = None
+            # if not blob.in_a_global_fragment_core:
+            #     blob.bounding_box_image = None
         elif video.preprocessing_type == 'body_blob':
             portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(video._height, video._width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize, only_blob = True)
             blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
-            blob.bounding_box_image = None
+            # if not blob.in_a_global_fragment_core:
+            #     blob.bounding_box_image = None
 
 def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portraitSize):
     for blob in blobs_in_frame:
@@ -408,7 +440,7 @@ def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portra
 
 def apply_model_area_to_video(video, blobs_in_video, model_area, portraitSize):
     # Parallel(n_jobs=-1)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'))
-    for blobs_in_frame in tqdm(blobs_in_video, desc = 'Fragmentation '):
+    for blobs_in_frame in tqdm(blobs_in_video, desc = 'Applying model area'):
         apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portraitSize)
 
 def get_images_from_blobs_in_video(blobs_in_video):

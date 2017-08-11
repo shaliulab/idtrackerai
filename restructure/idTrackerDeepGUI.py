@@ -17,6 +17,7 @@ import psutil
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
 sys.path.append('./postprocessing')
+sys.path.append('./deep_crossing_model')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
@@ -25,7 +26,8 @@ from blob import compute_fragment_identifier_and_blob_index,\
                 apply_model_area_to_video,\
                 ListOfBlobs,\
                 get_images_from_blobs_in_video,\
-                reset_blobs_fragmentation_parameters
+                reset_blobs_fragmentation_parameters,\
+                compute_portrait_size
 from globalfragment import compute_model_area_and_body_length,\
                             give_me_list_of_global_fragments,\
                             ModelArea,\
@@ -35,6 +37,8 @@ from globalfragment import compute_model_area_and_body_length,\
                             order_global_fragments_by_distance_travelled,\
                             filter_global_fragments_by_minimum_number_of_frames
 from segmentation import segment
+from get_crossings_data_set import CrossingDataset
+from train_crossing_detector import TrainDeepCrossing
 from GUI_utils import selectFile,\
                     getInput,\
                     selectOptions,\
@@ -162,27 +166,46 @@ if __name__ == '__main__':
                 video._maximum_number_of_blobs = old_video.maximum_number_of_blobs
                 blobs = blobs_list.blobs_in_video
                 reset_blobs_fragmentation_parameters(blobs)
+            video.save()
 
             # compute a model of the area of the animals (considering frames in which
             # all the animals are visible)
             model_area, maximum_body_length = compute_model_area_and_body_length(blobs, video.number_of_animals)
-            if video.preprocessing_type == 'portrait':
-                portrait_size = int(maximum_body_length/2)
-                portrait_size =  portrait_size + portrait_size%2 #this is to make the portrait_size even
-                video.portrait_size = (portrait_size, portrait_size, 1)
-            elif video.preprocessing_type == 'body' or video.preprocessing_type == 'body_blob':
-                portrait_size = int(np.sqrt(maximum_body_length ** 2 / 2))
-                portrait_size = portrait_size + portrait_size%2  #this is to make the portrait_size
-                video.portrait_size = (portrait_size, portrait_size, 1)
-            #discard blobs that do not respect such model
+            # compute portrait size
+            compute_portrait_size(video, maximum_body_length)
+            # discard blobs that do not respect such model
             apply_model_area_to_video(video, blobs, model_area, video.portrait_size[0])
+            # get fish and crossings data sets
+            training_set = CrossingDataset(blobs, video)
+            training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9, scope = 'training')
+            validation_set = CrossingDataset(blobs, video, crossings = training_set.crossings,
+                                                            fish = training_set.fish,
+                                                            test = training_set.test,
+                                                            image_size = training_set.image_size)
+            validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1., scope = 'validation')
+            # train crossing detector model
+            crossing_detector = TrainDeepCrossing(video._session_folder, training_set, validation_set, num_epochs = 95, plot_flag = True)
+            # detect crossings
+            test_set = CrossingDataset(blobs, video, crossings = training_set.crossings,
+                                                    fish = training_set.fish,
+                                                    test = training_set.test,
+                                                    image_size = training_set.image_size)
+            test_images = test_set.generate_test_images()
+            predictions = crossing_detector.predict(test_images)
+            # set blobs as crossings by deliting the portrait
+            [setattr(blob,'_portrait',None) if prediction == 1 else setattr(blob,'bounding_box_image', None)
+                                            for blob, prediction in zip(test_set.test, predictions)]
+            # delete bounding_box_image from blobs that have portraits
+            [setattr(blob,'bounding_box_image', None) for blobs_in_frame in blobs
+                                                        for blob in blobs_in_frame
+                                                        if blob.is_a_fish
+                                                        and blob.bounding_box_image is not None]
             #connect blobs that overlap in consecutive frames
             connect_blob_list(blobs)
             #assign an identifier to each blob belonging to an individual fragment
             compute_fragment_identifier_and_blob_index(blobs, video.maximum_number_of_blobs)
             #save connected blobs in video (organized frame-wise) and list of global fragments
             video._has_been_preprocessed = True
-
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
@@ -517,6 +540,7 @@ if __name__ == '__main__':
             # Set preprocessed flag to True
             video._accumulation_finished = True
             video.save()
+
         #############################################################
         ###################     Assigner      ######################
         ####
