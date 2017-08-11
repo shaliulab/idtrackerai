@@ -62,8 +62,7 @@ from id_CNN import ConvNetwork
 from assign_individual_fragment_extremes import assing_identity_to_individual_fragments_extremes
 from assign_jumps import assign_identity_to_jumps
 from correct_duplications import solve_duplications
-
-
+from get_trajectories import produce_trajectories
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
@@ -605,8 +604,18 @@ if __name__ == '__main__':
         #############################################################
         print("\n**** Generate trajectories ****")
         if not loadPreviousDict['trajectories']:
-            video._has_trajectories = False
-            pass
+            trajectories_folder = os.path.join(video._session_folder,'trajectories')
+            if not os.path.isdir(trajectories_folder):
+                print("Creating trajectories folder...")
+                os.makedirs(trajectories_folder)
+            trajectories = produce_trajectories(video._blobs_path)
+            for name in trajectories:
+                np.save(os.path.join(trajectories_folder, name + '_trajectories.npy'), trajectories[name])
+                np.save(os.path.join(trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
+                np.save(os.path.join(trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
+                np.save(os.path.join(trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
+            video._has_trajectories = True
+
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         video = old_video
