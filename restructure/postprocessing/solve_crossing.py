@@ -97,17 +97,29 @@ def assign_crossing_identifier(list_of_blobs):
     # get crossings in a fragment
     for blobs_in_frame in list_of_blobs:
         for blob in blobs_in_frame:
-            if blob.is_a_crossing:
-                print('crossing number ', crossing_identifier)
-                print('frame number ', blob.frame_number)
-                if len(blob.next) == 1 and len(blob.previous) == 1:
-                    blob.is_a_crossing_in_a_fragment = True
-                    blob.crossing_identifier = crossing_identifier
-                else:
-                    crossing_identifier += 1
+            if blob.is_a_crossing and not hasattr(blob, 'crossing_identifier'):
+                crossing_identifier = propagate_crossing_identifier(blob, crossing_identifier)
             else:
                 blob.is_a_crossing_in_a_fragment = False
     return crossing_identifier
+
+def propagate_crossing_identifier(blob, crossing_identifier):
+    blob.is_a_crossing_in_a_fragment = True
+    blob.crossing_identifier = crossing_identifier
+    cur_blob = blob
+
+    while len(cur_blob.next) == 1:
+        cur_blob.next[0].is_a_crossing_in_a_fragment = True
+        cur_blob.next[0].crossing_identifier = crossing_identifier
+        cur_blob = cur_blob.next[0]
+
+    cur_blob = blob
+
+    while len(cur_blob.previous) == 1:
+        cur_blob.previous[0].is_a_crossing_in_a_fragment = True
+        cur_blob.previous[0].crossing_identifier = crossing_identifier
+        cur_blob = cur_blob.previous[0]
+    return crossing_identifier + 1
 
 def get_crossing_and_statistics(list_of_blobs, max_crossing_identifier):
     number_of_crossing_frames = 0
@@ -117,10 +129,11 @@ def get_crossing_and_statistics(list_of_blobs, max_crossing_identifier):
         for blob in blobs_in_frame:
             local_crossing = []
             if blob.is_a_crossing:
+                print("frame number ", blob.frame_number)
                 number_of_crossing_frames += 1
                 crossings[blob.crossing_identifier].append(blob)
 
-    crossings_lengths = [len(c) for c in crossings]
+    crossings_lengths = [len(crossings[c]) for c in crossings]
     return crossings, len(crossings), number_of_crossing_frames, crossings_lengths
 
 
