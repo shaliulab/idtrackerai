@@ -537,6 +537,7 @@ if __name__ == '__main__':
             compute_P1_for_blobs_in_video(video, blobs)
             # assign identities based on individual fragments
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
+            video._has_been_assigned = True
             # assign identity to individual fragments' extremes
             assing_identity_to_individual_fragments_extremes(blobs)
             # solve jumps
@@ -547,7 +548,6 @@ if __name__ == '__main__':
             ### NOTE: to be coded
 
             # finish and save
-            video._has_been_assigned = True
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
@@ -571,7 +571,7 @@ if __name__ == '__main__':
         ####
         #############################################################
         print("\n**** Assign crossings ****")
-        if not loadPreviousDict['assign-crossings']:
+        if not loadPreviousDict['crossings']:
             video._has_crossings_solved = False
             pass
 

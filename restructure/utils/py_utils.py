@@ -297,12 +297,12 @@ def getExistentFiles(video, listNames):
             print('assignment done')
             existentFile['assignment'] = '1'
 
-        if hasattr('_has_crossings_solved', old_video): #old video objects do not have this property
+        if hasattr(old_video,'_has_crossings_solved'): #old video objects do not have this property
             if old_video._has_crossings_solved == True:
                 print('crossings done')
                 existentFile['crossings'] = '1'
 
-        if hasattr('_has_trajectories', old_video): #old video objects do not have this property
+        if hasattr(old_video,'_has_trajectories'): #old video objects do not have this property
             if old_video._has_trajectories == True:
                 print('trajectories done')
                 existentFile['trajectories'] = '1'
