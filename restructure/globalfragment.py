@@ -22,13 +22,11 @@ def compute_model_area_and_body_length(blobs_in_video, number_of_animals, std_to
     These values are later used to discard blobs that are not fish and potentially
     belong to a crossing.
     """
-    frames_with_all_individuals_visible = [i for i, blobs_in_frame in enumerate(blobs_in_video) if len(blobs_in_frame) == number_of_animals]
     #areas are collected only in global fragments' cores
-    areas_and_body_length = [(blob.area,blob.estimated_body_length) for i in frames_with_all_individuals_visible for blob in blobs_in_video[i]]
-    areas_and_body_length = np.asarray(areas_and_body_length)
+    areas_and_body_length = np.asarray([(blob.area,blob.estimated_body_length) for blobs_in_frame in blobs_in_video
+                                                                                for blob in blobs_in_frame
+                                                                                if len(blobs_in_frame) == number_of_animals])
     #areas are collected throughout the entire video
-    # areas = [blob.area for blobs_in_frame in blobs_in_video for blob in blobs_in_frame ]
-    print("areas_and_body_length.shape ", areas_and_body_length.shape)
     median_area = np.median(areas_and_body_length[:,0])
     mean_area = np.mean(areas_and_body_length[:,0])
     std_area = np.std(areas_and_body_length[:,0])
