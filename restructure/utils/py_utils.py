@@ -302,7 +302,6 @@ def getExistentFiles(video, listNames):
                 print('crossings done')
                 existentFile['crossings'] = '1'
 
-
         if hasattr(old_video, '_has_trajectories'): #old video objects do not have this property
             if old_video._has_trajectories == True:
                 print('trajectories done')
