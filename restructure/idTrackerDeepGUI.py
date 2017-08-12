@@ -177,6 +177,7 @@ if __name__ == '__main__':
             compute_portrait_size(video, maximum_body_length)
             # discard blobs that do not respect such model
             apply_model_area_to_video(video, blobs, model_area, video.portrait_size[0])
+
             # get fish and crossings data sets
             training_set = CrossingDataset(blobs, video)
             training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9, scope = 'training')
@@ -192,7 +193,7 @@ if __name__ == '__main__':
                                                     fish = training_set.fish,
                                                     test = training_set.test,
                                                     image_size = training_set.image_size)
-
+            # get predictions of individual blobs outside of global fragments
             predictions = crossing_detector.get_all_predictions(test_set)
             # set blobs as crossings by deliting the portrait
             [setattr(blob,'_portrait',None) if prediction == 1 else setattr(blob,'bounding_box_image', None)
