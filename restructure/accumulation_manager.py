@@ -1,9 +1,10 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import random
+import psutil
 from globalfragment import get_images_and_labels_from_global_fragments, order_global_fragments_by_distance_travelled, order_global_fragments_by_distance_to_the_first_global_fragment
 from statistics_for_assignment import compute_P1_individual_fragment_from_frequencies, compute_identification_frequencies_individual_fragment
-
+from assigner import assign
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
@@ -348,10 +349,6 @@ class AccumulationManager(object):
                             return False
         return True
 
-
-
-
-
 def sample_images_and_labels(images, labels, ratio):
     subsampled_images = []
     subsampled_labels = []
@@ -384,3 +381,79 @@ def compute_certainty_of_individual_fragment(p1_vector_individual_fragment,media
     sorted_softmax_probs = median_softmax_of_candidate_individual_fragment[argsort_p1_vector]
     certainty = np.diff(np.multiply(sorted_p1_vector,sorted_softmax_probs)[-2:])/np.sum(sorted_p1_vector[-2:])
     return certainty
+
+""" Get predictions of individual fragments in candidates global fragments"""
+def get_predictions_of_candidates_global_fragments(net,video,candidates_next_global_fragments,individual_fragments_identifiers_already_used = []):
+
+    def get_images_and_labels_from_global_fragment(video, global_fragment, individual_fragments_identifiers_already_used = []):
+        images = np.ones((video.maximum_number_of_portraits_in_global_fragments, video.portrait_size[0], video.portrait_size[1]))
+        labels = np.ones((video.maximum_number_of_portraits_in_global_fragments, 1))
+        lengths = []
+        individual_fragments_identifiers = []
+        num_images = 0
+        for i, portraits in enumerate(global_fragment.portraits):
+            if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_identifiers_already_used :
+                # print("This individual fragment has not been used, we take images")
+                images[num_images : len(portraits) + num_images] = np.asarray(portraits)
+                labels[num_images : len(portraits) + num_images] = np.asarray(global_fragment._temporary_ids[i] * len(portraits))
+                lengths.append(len(portraits))
+                individual_fragments_identifiers.append(global_fragment.individual_fragments_identifiers[i])
+                num_images += len(portraits)
+        images = images[:num_images]
+        labels = labels[:num_images]
+        return images, labels, lengths, individual_fragments_identifiers
+
+    predictions = []
+    softmax_probs = []
+    lengths = []
+    candidate_individual_fragments_identifiers = []
+
+    print("\nGetting images from candidate global fragments for predictions...")
+    # compute maximum number of images given the available RAM and SWAP
+    image_size_bytes = np.prod(video.portrait_size)*4
+    if psutil.virtual_memory().available > 2 * video.maximum_number_of_portraits_in_global_fragments * image_size_bytes:
+        num_images = psutil.virtual_memory().available//image_size_bytes
+        print("There is enough RAM to host %i images" %num_images)
+    elif psutil.swap_memory().free > 2 * video.maximum_number_of_portraits_in_global_fragments * image_size_bytes:
+        num_images = psutil.swap_memory().free * .8 // image_size_bytes
+        print("There is enough Swap to host %i images" %num_images)
+        print("WARNING: using swap memory, performance reduced")
+    else:
+        print("Virtual memory")
+        print(psutil.virtual_memory())
+        print("Swap memory")
+        print(psutil.swap_memory())
+        raise MemoryError('There is not enough free RAM and swap to continue with the process')
+
+    while len(candidates_next_global_fragments) > 0:
+        images = np.ones((2 * video.maximum_number_of_portraits_in_global_fragments, video.portrait_size[0], video.portrait_size[1])) * np.nan
+        individual_fragments_identifiers_already_used = list(individual_fragments_identifiers_already_used)
+        num_images = 0
+        for global_fragment in candidates_next_global_fragments:
+            images_global_fragment, \
+            _, \
+            lengths_global_fragment, \
+            individual_fragments_identifiers = get_images_and_labels_from_global_fragment(video, global_fragment,
+                                                                                            individual_fragments_identifiers_already_used)
+
+
+            if len(images_global_fragment) != 0 and len(images_global_fragment) < 2 * video.maximum_number_of_portraits_in_global_fragments - num_images:
+                images[num_images : num_images + len(images_global_fragment)] = images_global_fragment
+                lengths.extend(lengths_global_fragment)
+                candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
+                individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
+                num_images += len(images_global_fragment)
+                # update list of candidates global fragments
+                candidates_next_global_fragments = candidates_next_global_fragments[1:]
+            elif len(images_global_fragment) > 2 * video.maximum_number_of_portraits_in_global_fragments - num_images:
+                break
+            elif len(images_global_fragment) == 0:
+                candidates_next_global_fragments = candidates_next_global_fragments[1:]
+
+        if num_images != 0:
+            images = images[:num_images]
+            assigner = assign(net, video, images, print_flag = True)
+            predictions.extend(assigner._predictions)
+            softmax_probs.extend(assigner._softmax_probs)
+
+    return predictions, softmax_probs, np.cumsum(lengths)[:-1], candidate_individual_fragments_identifiers
