@@ -15,7 +15,7 @@ class Stop_Training(object):
     """Stops the training of the network according to the conditions specified
     in __call__
     """
-    def __init__(self, epochs_before_checking_stopping_conditions = 3, check_for_loss_plateau = True):
+    def __init__(self, epochs_before_checking_stopping_conditions = 10, check_for_loss_plateau = True):
         self.num_epochs = MAXIMUM_NUMBER_OF_EPOCHS #maximal num of epochs
         self.number_of_classes = 2
         self.epochs_before_checking_stopping_conditions = epochs_before_checking_stopping_conditions
