@@ -41,7 +41,11 @@ from globalfragment import compute_model_area_and_body_length,\
 from get_portraits import get_body
 from segmentation import segment
 from get_crossings_data_set import CrossingDataset
+from network_params_crossings import NetworkParams_crossings
+from cnn_architectures import cnn_model_crossing_detector
+from crossings_detector_model import ConvNetwork_crossings
 from train_crossings_detector import TrainDeepCrossing
+from get_predictions_crossings import GetPredictionCrossigns
 from GUI_utils import selectFile,\
                     getInput,\
                     selectOptions,\
@@ -187,15 +191,26 @@ if __name__ == '__main__':
                                                             image_size = training_set.image_size)
             validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1., scope = 'validation')
             # train crossing detector model
-            crossing_detector = TrainDeepCrossing(video._session_folder, training_set, validation_set, num_epochs = 95, plot_flag = True)
+            video.create_crossings_detector_folder()
+            crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
+                                                                        learning_rate = 0.001,
+                                                                        architecture = cnn_model_crossing_detector,
+                                                                        keep_prob = 1.0,
+                                                                        save_folder = video._crossings_detector_folder,
+                                                                        restore_folder = video._crossings_detector_folder,
+                                                                        image_size = training_set.images.shape[1:])
+            net = ConvNetwork_crossings(crossings_detector_network_params)
+            TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
             # detect crossings
+            # net.restore()
             test_set = CrossingDataset(blobs, video, crossings = training_set.crossings,
                                                     fish = training_set.fish,
                                                     test = training_set.test,
                                                     image_size = training_set.image_size)
             # get predictions of individual blobs outside of global fragments
-            predictions = crossing_detector.get_all_predictions(test_set)
-            # set blobs as crossings by deliting the portrait
+            crossings_predictor = GetPredictionCrossigns(net)
+            predictions = crossings_predictor.get_all_predictions(test_set)
+            # set blobs as crossings by deleting the portrait
             [setattr(blob,'_portrait',None) if prediction == 1 else setattr(blob,'bounding_box_image', None)
                                             for blob, prediction in zip(test_set.test, predictions)]
             # delete bounding_box_image from blobs that have portraits
