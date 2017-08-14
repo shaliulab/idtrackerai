@@ -101,7 +101,7 @@ class CrossingDataset(object):
         if interval is None:
             blobs = self.test
         else:
-            blobs = selt.test[interval[0]:interval[1]]
+            blobs = self.test[interval[0]:interval[1]]
         for blob in blobs:
             test_image, _, _ = get_body(self.video_height, self.video_width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, self.image_size , only_blob = True)
             test_image = ((test_image - np.mean(test_image))/np.std(test_image)).astype('float32')
