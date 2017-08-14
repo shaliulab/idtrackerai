@@ -183,13 +183,13 @@ if __name__ == '__main__':
             apply_model_area_to_video(video, blobs, model_area, video.portrait_size[0])
 
             # get fish and crossings data sets
-            training_set = CrossingDataset(blobs, video)
-            training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9, scope = 'training')
-            validation_set = CrossingDataset(blobs, video, crossings = training_set.crossings,
+            training_set = CrossingDataset(blobs, video, scope = 'training')
+            training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)
+            validation_set = CrossingDataset(blobs, video, scope = 'validation',
+                                                            crossings = training_set.crossings,
                                                             fish = training_set.fish,
-                                                            test = training_set.test,
                                                             image_size = training_set.image_size)
-            validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1., scope = 'validation')
+            validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1.)
             # train crossing detector model
             video.create_crossings_detector_folder()
             crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
@@ -203,9 +203,7 @@ if __name__ == '__main__':
             TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
             # detect crossings
             # net.restore()
-            test_set = CrossingDataset(blobs, video, crossings = training_set.crossings,
-                                                    fish = training_set.fish,
-                                                    test = training_set.test,
+            test_set = CrossingDataset(blobs, video, scope = 'test',
                                                     image_size = training_set.image_size)
             # get predictions of individual blobs outside of global fragments
             crossings_predictor = GetPredictionCrossigns(net)

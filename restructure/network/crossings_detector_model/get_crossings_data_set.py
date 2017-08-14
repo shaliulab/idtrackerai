@@ -14,12 +14,13 @@ import matplotlib.pyplot as plt
 from get_data import duplicate_PCA_images
 
 class CrossingDataset(object):
-    def __init__(self, blobs_list, video, crossings = [], fish = [], test = [], image_size = None):
+    def __init__(self, blobs_list, video, crossings = [], fish = [], test = [], image_size = None, scope = ''):
         self.blobs = blobs_list
         self.video_height = video._height
         self.video_width = video._width
         self.video = video
-        if len(crossings) == 0 or image_size is None:
+        self.scope = scope
+        if (scope == 'training' or scope == 'validation') and len(crossings) == 0 or image_size is None:
             self.crossings = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_a_crossing and not blob.is_a_ghost_crossing]
             np.random.seed(0)
             np.random.shuffle(self.crossings)
@@ -27,7 +28,7 @@ class CrossingDataset(object):
         else:
             self.crossings = crossings
             self.image_size = image_size
-        if len(fish) == 0:
+        if (scope == 'training' or scope == 'validation') and len(fish) == 0:
             self.fish = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_a_fish and blob.in_a_global_fragment_core(blobs_in_frame)]
             ratio = 1
             if len(self.fish) > ratio * len(self.crossings):
@@ -35,15 +36,14 @@ class CrossingDataset(object):
             np.random.shuffle(self.fish)
         else:
             self.fish = fish
-        if len(test) == 0:
+        if scope == 'test' and len(test) == 0:
             self.test = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_a_fish and not blob.in_a_global_fragment_core(blobs_in_frame)]
         else:
             self.test = test
 
-    def get_data(self, sampling_ratio_start = 0, sampling_ratio_end = 1., scope = ''):
-        self.scope = scope
+    def get_data(self, sampling_ratio_start = 0, sampling_ratio_end = 1.):
         # positive examples (crossings)
-        print("Generating crossing ", scope, " set.")
+        print("Generating crossing ", self.scope, " set.")
         self.crossings_sliced = self.slice(self.crossings, sampling_ratio_start, sampling_ratio_end)
         self.crossings_images =  self.generate_crossing_images()
         self.crossing_labels = np.ones(len(self.crossings_images))
@@ -52,7 +52,7 @@ class CrossingDataset(object):
             self.crossings_images, self.crossing_labels = duplicate_PCA_images(self.crossings_images, self.crossing_labels)
         assert len(self.crossing_labels) == len(self.crossings_images)
         # negative examples (non crossings_images)
-        print("Generating single individual ", scope, " set")
+        print("Generating single individual ", self.scope, " set")
 
 
         self.fish_sliced = self.slice(self.fish, sampling_ratio_start, sampling_ratio_end)
