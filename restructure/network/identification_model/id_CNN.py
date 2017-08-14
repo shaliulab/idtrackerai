@@ -176,14 +176,8 @@ class ConvNetwork():
 
     def train(self,batch):
         feed_dict = self.get_feed_dict(batch)
-        # W1b,W2b,W3b,WFCb,WSoftb = self.session.run([self.W1, self.W2, self.W3, self.WFC, self.WSoft], feed_dict = feed_dict)
-        # print("fully", WFCb[0])
-        # print("Soft before backprop, ", WSoftb[0])
         self.session.run(self.optimisation_step,feed_dict = feed_dict)
         outList = self.session.run(self.ops_list, feed_dict = feed_dict)
-        # W1a,W2a,W3a,WFCa,WSofta = self.session.run([self.W1, self.W2, self.W3, self.WFC, self.WSoft], feed_dict = feed_dict)
-        # print("Soft after backprop, ", WSofta[0])
-        # print("mean diff W1, W2, W3, FC, Soft: ", np.mean(np.abs(W1a-W1b)), np.mean(np.abs(W2a-W2b)), np.mean(np.abs(W3a-W3b)), np.mean(np.abs(WFCa-WFCb)),  np.mean(np.abs(WSofta-WSoftb)))
         return outList, feed_dict
 
     def validate(self,batch):

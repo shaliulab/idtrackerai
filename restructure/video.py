@@ -75,8 +75,6 @@ class Video(object):
     def number_of_animals(self):
         return self._number_of_animals
 
-
-
     @property
     def maximum_number_of_blobs(self):
         return self._maximum_number_of_blobs
@@ -133,6 +131,13 @@ class Video(object):
         if not os.path.isdir(self._preprocessing_folder):
             os.makedirs(self._preprocessing_folder)
             print("the folder " + self._preprocessing_folder + " has been created")
+
+    def create_crossings_detector_folder(self):
+        print('setting path to save crossing detector model')
+        self._crossings_detector_folder = os.path.join(self._session_folder, 'crossings_detector')
+        if not os.path.isdir(self._crossings_detector_folder):
+            print("the folder " + self._crossings_detector_folder + " has been created")
+            os.makedirs(self._crossings_detector_folder)
 
     def create_pretraining_folder(self, number_of_global_fragments_used_to_pretrain):
         """Creates a folder named pretraining in video_folder where the model

@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 import os
 import sys
 sys.path.append('./network')
+sys.path.append('./network/identification_model')
 
 import itertools
 from tqdm import tqdm
