@@ -38,7 +38,7 @@ class GetPredictionCrossigns(object):
 
     def get_all_predictions(self, test_set):
         # compute maximum number of images given the available RAM
-        image_size_bytes = np.prod(test_set.image_size**2)*4
+        image_size_bytes = np.prod(test_set.image_size)*4 #XXX:Check it out!!!! np.prod(test_set.image_size**2)*4
         number_of_images_to_be_fitted_in_RAM = len(test_set.test)
         num_images_that_can_fit_in_RAM = int(psutil.virtual_memory().available*.9/image_size_bytes)
         if number_of_images_to_be_fitted_in_RAM > num_images_that_can_fit_in_RAM:
@@ -56,4 +56,24 @@ class GetPredictionCrossigns(object):
             print("getting predictions...")
             test_images = test_set.generate_test_images()
             predictions = self.predict(test_images)
+        return predictions
+
+    def get_predictions_from_images(self, images):
+        image_size_bytes = np.prod(images.shape[1:])*4
+        number_of_images_to_be_fitted_in_RAM = len(images)
+        num_images_that_can_fit_in_RAM = int(psutil.virtual_memory().available*.9/image_size_bytes)
+        if number_of_images_to_be_fitted_in_RAM > num_images_that_can_fit_in_RAM:
+            print("There is NOT enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
+            number_of_predictions_retrieved = 0
+            predictions = []
+            i = 0
+            while number_of_predictions_retrieved < number_of_images_to_be_fitted_in_RAM:
+                images_batch = images[i*num_images_that_can_fit_in_RAM : (i+1)*num_images_that_can_fit_in_RAM]
+                predictions.extend(self.predict(images_batch))
+                number_of_predictions_retrieved = len(predictions)
+                i += 1
+        else:
+            print("There is enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
+            print("getting predictions...")
+            predictions = self.predict(images)
         return predictions

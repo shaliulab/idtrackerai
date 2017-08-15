@@ -208,6 +208,7 @@ if __name__ == '__main__':
             # get predictions of individual blobs outside of global fragments
             crossings_predictor = GetPredictionCrossigns(net)
             predictions = crossings_predictor.get_all_predictions(test_set)
+            video.crossing_discriminator_images_shape = training_set.images.shape[1:]
             # set blobs as crossings by deleting the portrait
             [setattr(blob,'_portrait',None) if prediction == 1 else setattr(blob,'bounding_box_image', None)
                                             for blob, prediction in zip(test_set.test, predictions)]

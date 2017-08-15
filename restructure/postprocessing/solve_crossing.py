@@ -7,6 +7,8 @@ sys.path.append('../')
 sys.path.append('../preprocessing')
 sys.path.append('../utils')
 sys.path.append('../network')
+sys.path.append('../network/crossings_detector_model')
+sys.path.append('../network/identification_model')
 import numpy as np
 from tqdm import tqdm
 import collections
@@ -20,6 +22,11 @@ from py_utils import get_spaced_colors_util
 from assigner import assign
 from id_CNN import ConvNetwork
 from network_params import NetworkParams
+from network_params_crossings import NetworkParams_crossings
+from cnn_architectures import cnn_model_crossing_detector
+from crossings_detector_model import ConvNetwork_crossings
+from train_crossings_detector import TrainDeepCrossing
+from get_predictions_crossings import GetPredictionCrossigns
 from blob import Blob
 from video_utils import segmentVideo, filterContoursBySize, getPixelsList, getBoundigBox
 
@@ -140,7 +147,7 @@ def get_crossing_and_statistics(list_of_blobs, max_crossing_identifier):
     return crossings, len(crossings), number_of_crossing_frames, crossings_lengths
 
 class Crossing(object):
-    def __init__(self, crossing_blob, video, image_size):
+    def __init__(self, crossing_blob, video):
         """Assigns identities to individual in crossing based on simple erosion
         algorithm
         parameters
@@ -161,7 +168,10 @@ class Crossing(object):
         self.bounding_box = self.blob.bounding_box_in_frame_coordinates
         self.original_image = self.blob.bounding_box_image
         self.video = video
-        self.image_size = image_size
+        if self.video.crossing_discriminator_images_shape[0] == self.video.crossing_discriminator_images_shape[1]:
+            self.image_size = self.video.crossing_discriminator_images_shape[0]
+        else:
+            raise ValueError("This part of the code deals with square images. The one in input is ", self.video.crossing_discriminator_images_shape)
         # print("start solving crossing in frame: " , self.blob.frame_number)
 
     def get_binary_image_from_pixels(self):
@@ -290,21 +300,68 @@ class Crossing(object):
         self.separate_blobs()
         self.images = self.get_images_from_list_of_blobs(self.new_blobs)
 
+def discriminate_crossing_and_fish_images(images):
+    if len(images.shape) == 3:
+        images = np.expand_dims(images, axis = 3)
+    crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
+                                                                learning_rate = 0.001,
+                                                                architecture = cnn_model_crossing_detector,
+                                                                keep_prob = 1.0,
+                                                                save_folder = video._crossings_detector_folder,
+                                                                restore_folder = video._crossings_detector_folder,
+                                                                image_size = video.crossing_discriminator_images_shape)
+    net = ConvNetwork_crossings(crossings_detector_network_params)
+    net.restore()
+    crossings_predictor = GetPredictionCrossigns(net)
+    predictions = crossings_predictor.get_predictions_from_images(images)
+    return predictions
 
+def assign_fish_images(images, video):
+    """Restore the network associated to the model used to assign video.
+    parameters
+    ------
+    images: ndarray (num_images, height, width)
+        "images" collection of images to be assigned
+    video: object
+        "video" object associated to the tracked video. It contains information
+        about the video, the animals tracked, and the status of the tracking.
+    return
+    -----
+    assigner: object
+        contains predictions (ndarray of shape [number of images]) of the network, the values in the last fully
+        conencted layer (ndarray of shape [number of images, 100]), and the values of the softmax layer
+        (ndarray of shape [number of images, number of animals in the tracked video])
+    """
+    net_params = NetworkParams(video.number_of_animals,
+                    learning_rate = 0.005,
+                    keep_prob = 1.0,
+                    use_adam_optimiser = False,
+                    restore_folder = video._accumulation_folder,
+                    save_folder = video._accumulation_folder,
+                    image_size = video.portrait_size)
+    net = ConvNetwork(net_params)
+    net.restore()
+    return assign(net, video, images, print_flag = True)
 
+def get_frequencies_P1(video, blob):
+    if not np.any(blob._P1_vector != 0):
+        blob._frequencies = np.zeros(video.number_of_animals)
+        blob._frequencies[blob.prediction-1] += 1
+        blob._P1_vector = compute_P1_individual_fragment_from_frequencies(blob._frequencies)
 
-
-
+def compute_P2(blob, blobs):
+    if not np.any(blob._P2_vector != 0):
+        blob._P2_vector = compute_P2_of_individual_fragment_from_blob(blob, blobs)
 
 if __name__ == "__main__":
     from GUI_utils import frame_by_frame_identity_inspector
     NUM_CHUNKS_BLOB_SAVING = 10
 
     #load video and list of blobs
-    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_body_blob/video_object.npy').item()
+    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_test_solve_crossings/video_object.npy').item()
     # video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_1/video_object.npy').item()
     number_of_animals = video.number_of_animals
-    list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_body_blob/preprocessing/blobs_collection.npy'
+    list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_test_solve_crossings/preprocessing/blobs_collection.npy'
     # list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_1/preprocessing/blobs_collection.npy'
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
@@ -317,14 +374,33 @@ if __name__ == "__main__":
 
     for unsolved_crossing in tqdm(crossings.values(), desc = "Solving crossings"):
         for blob in unsolved_crossing:
-            crossing = Crossing(blob, video, 294)
+            crossing = Crossing(blob, video)
             crossing.generate_crossing_images()
             crossing_blobs.append(crossing)
             images_from_crossings.extend(crossing.images)
 
-    # discriminate_crossing_and_fish_images()
-    #
-    # assign_fish_images()
+    images_from_crossings = np.asarray(images_from_crossings)
+    predictions = discriminate_crossing_and_fish_images(images_from_crossings)
+
+    fish_images = images_from_crossings[np.where(np.asarray(predictions) == 0)[0]]
+
+    assigner = assign_fish_images(fish_images, video)
+
+    counter = 0
+
+    for unsolved_crossing in tqdm(crossings.values(), desc = "Updating crossing blobs"):
+        print("counter", counter)
+        print("len unsolved_crossing ", len(unsolved_crossing))
+        if len(unsolved_crossing) > 0:
+            for blob in unsolved_crossing:
+                print("crossing_fragment ", blob.crossing_fragment)
+                print("frame number ", blob.frame_number)
+                if counter in np.where(np.asarray(predictions) == 0)[0]:
+                    blob._softmax_probs = assigner._softmax_probs[counter]
+                    blob._prediction = assigner._predictions[counter]
+                    counter += 1
+                else:
+                    blob._portrait = None
 
 
     # for unsolved_crossing in tqdm(crossings.values(), desc = "Solving crossings"):
