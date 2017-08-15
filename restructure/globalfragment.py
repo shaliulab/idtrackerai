@@ -114,7 +114,7 @@ class GlobalFragment(object):
 
     def check_uniqueness(self):
         all_identities = range(self.number_of_animals)
-        if set(all_identities).difference(set(self._temporary_ids)):
+        if len(set(all_identities) - set(self._temporary_ids)) > 0:
             self._is_unique = False
             self.compute_repeated_and_missing_ids(all_identities)
         else:
