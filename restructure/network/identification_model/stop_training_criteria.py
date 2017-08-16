@@ -8,7 +8,7 @@ LEARNING_PERCENTAGE_DIFFERENCE_1 = .005
 OVERFITTING_COUNTER_THRESHOLD = 5
 MAXIMUM_NUMBER_OF_EPOCHS = 10000
 
-class Stop_Training():
+class Stop_Training(object):
     """Stops the training of the network according to the conditions specified
     in __call__
     """

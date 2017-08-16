@@ -106,6 +106,9 @@ class Duplication(object):
                         # print("P2 matrix ", P2_matrix)
                     elif len(self.available_identities) == 1:
                         #print("is the last missing identity")
+                        # print("missing identities ", self.missing_identities)
+                        # print("available identities ", self.available_identities)
+                        # print("candidate_id ", candidate_id)
                         self.missing_identities.remove(candidate_id)
                         self.blobs_to_reassign[index_blob]._identity = candidate_id
                         assigned_identities.append(candidate_id)
@@ -168,6 +171,7 @@ def solve_duplications(blobs, group_size):
         missing_identities = list(possible_identities.difference(identities_in_frame))
         if len(duplicated_identities) > 0:
             # print("\n*******solving frame with duplications...")
+            # print("frame ", blobs_in_frame[0].frame_number)
             # print("identities in frame: ", identities_in_frame)
             # print("duplicated identities: ", duplicated_identities)
             # print("missing identities: ", missing_identities)
@@ -183,6 +187,8 @@ def solve_duplications(blobs, group_size):
 
         identities_in_frame = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
         duplicated_identities = set([x for x in identities_in_frame if identities_in_frame.count(x) > 1])
+        # print("identities in frame: ", identities_in_frame)
+        # print("duplicated identities: ", duplicated_identities)
         if len(duplicated_identities) > 0:
             print("identities_in_frame, ",  identities_in_frame)
             raise ValueError("I have not remove all the duplications")
