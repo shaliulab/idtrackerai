@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 
-BATCH_SIZE = 100
+BATCH_SIZE = 50
 class EpochRunner(object):
     def __init__(self, data_set,
                 starting_epoch = 0,
