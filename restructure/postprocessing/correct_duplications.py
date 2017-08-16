@@ -187,6 +187,8 @@ def solve_duplications(blobs, group_size):
 
         identities_in_frame = [blob.identity for blob in blobs_in_frame if blob.identity != 0]
         duplicated_identities = set([x for x in identities_in_frame if identities_in_frame.count(x) > 1])
+        # print("identities in frame: ", identities_in_frame)
+        # print("duplicated identities: ", duplicated_identities)
         if len(duplicated_identities) > 0:
             print("identities_in_frame, ",  identities_in_frame)
             raise ValueError("I have not remove all the duplications")

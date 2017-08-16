@@ -558,7 +558,6 @@ if __name__ == '__main__':
                 np.save(os.path.join(trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
             video._has_trajectories = True
 
-
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         video = old_video
         list_of_blobs = ListOfBlobs.load(video.blobs_path)

@@ -41,8 +41,11 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
                     print("corrected")
                     count_crossings_corrected_by_network += 1
 
+    if total_wrongly_assigned_crossings != 0:
+        return count_errors_identities_dict_assigned, count_errors_identities_dict_all, count_crossings_corrected_by_network/total_wrongly_assigned_crossings
+    else:
+        return count_errors_identities_dict_assigned, count_errors_identities_dict_all, 1
 
-    return count_errors_identities_dict_assigned, count_errors_identities_dict_all, count_crossings_corrected_by_network/total_wrongly_assigned_crossings
 
 def get_statistics_against_groundtruth(groundtruth, blobs_list_tracked):
     number_of_animals = groundtruth.video_object.number_of_animals
