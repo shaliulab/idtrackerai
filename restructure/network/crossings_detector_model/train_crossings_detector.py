@@ -18,7 +18,7 @@ from store_accuracy_and_loss_crossings import Store_Accuracy_and_Loss
 from epoch_runner_crossings import EpochRunner
 
 class TrainDeepCrossing(object):
-    def __init__(self, session_folder, training_dataset, validation_dataset, num_epochs = 50, plot_flag = True):
+    def __init__(self, net, training_dataset, validation_dataset, num_epochs = 50, plot_flag = True):
         """Build the dataset and trains the model
         The dataset is built according to
         Taken from tensorflow/contrib/learn/datasets/mnist.
@@ -27,22 +27,8 @@ class TrainDeepCrossing(object):
         self.validation_dataset = validation_dataset
         self.num_epochs = num_epochs
         self.plot_flag = plot_flag
-        self.save_path(session_folder)
-        network_params = NetworkParams_crossings(number_of_classes = 2,
-                                    learning_rate = 0.001,
-                                    architecture = cnn_model_crossing_detector,
-                                    keep_prob = 1.0,
-                                    save_folder = self.crossing_detector_path,
-                                    image_size = training_dataset.images.shape[1:])
-        self.net = ConvNetwork_crossings(network_params, training_dataset.weight_positive)
+        self.net = net
         self.train_model()
-
-    def save_path(self, session_folder):
-        print('setting path to save crossing detector model')
-        self.crossing_detector_path = os.path.join(session_folder, 'crossing_detector')
-        if not os.path.isdir(self.crossing_detector_path):
-            print('creating folder to store checkpoints for the crossing_detector')
-            os.makedirs(self.crossing_detector_path)
 
     def train_model(self, global_step = 0,
                             check_for_loss_plateau = None,
@@ -58,6 +44,7 @@ class TrainDeepCrossing(object):
             fig, ax_arr = plt.subplots(3)
             fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 
+        self.net.compute_loss_weights(self.training_dataset.labels)
         trainer = EpochRunner(self.training_dataset,
                             starting_epoch = global_step,
                             print_flag = print_flag)
@@ -98,41 +85,41 @@ class TrainDeepCrossing(object):
         if self.plot_flag:
             fig.savefig(os.path.join(self.net.params.save_folder,'crossing_detector.pdf'))
 
-    def next_batch_test(self, batch_size):
-        """Return the next `batch_size` examples from this data set."""
-        start = self.number_of_image_predicted
-        self.number_of_image_predicted += batch_size
-        end = self.number_of_image_predicted
-        return self.test_images[start:end]
-
-    def predict(self, test_images):
-        self.test_images = test_images
-        self.number_of_image_predicted = 0
-        predictions = []
-        while self.number_of_image_predicted < len(test_images):
-            predictions.extend(self.net.prediction(self.next_batch_test(batch_size = 100)))
-
-        return predictions
-
-    def get_all_predictions(self, test_set):
-        # compute maximum number of images given the available RAM
-        image_size_bytes = np.prod(test_set.image_size**2)*4
-        number_of_images_to_be_fitted_in_RAM = len(test_set.test)
-        num_images_that_can_fit_in_RAM = int(psutil.virtual_memory().available*.9/image_size_bytes)
-        if number_of_images_to_be_fitted_in_RAM > num_images_that_can_fit_in_RAM:
-            print("There is NOT enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
-            number_of_predictions_retrieved = 0
-            predictions = []
-            i = 0
-            while number_of_predictions_retrieved < number_of_images_to_be_fitted_in_RAM:
-                images = test_set.generate_test_images(interval = (i*num_images_that_can_fit_in_RAM, (i+1)*num_images_that_can_fit_in_RAM))
-                predictions.extend(self.predict(images))
-                number_of_predictions_retrieved = len(predictions)
-                i += 1
-        else:
-            test_images = test_set.generate_test_images()
-            predictions = self.predict(test_images)
-        return predictions
+    # def next_batch_test(self, batch_size):
+    #     """Return the next `batch_size` examples from this data set."""
+    #     start = self.number_of_image_predicted
+    #     self.number_of_image_predicted += batch_size
+    #     end = self.number_of_image_predicted
+    #     return self.test_images[start:end]
+    #
+    # def predict(self, test_images):
+    #     self.test_images = test_images
+    #     self.number_of_image_predicted = 0
+    #     predictions = []
+    #     while self.number_of_image_predicted < len(test_images):
+    #         predictions.extend(self.net.prediction(self.next_batch_test(batch_size = 100)))
+    #
+    #     return predictions
+    #
+    # def get_all_predictions(self, test_set):
+    #     # compute maximum number of images given the available RAM
+    #     image_size_bytes = np.prod(test_set.image_size**2)*4
+    #     number_of_images_to_be_fitted_in_RAM = len(test_set.test)
+    #     num_images_that_can_fit_in_RAM = int(psutil.virtual_memory().available*.9/image_size_bytes)
+    #     if number_of_images_to_be_fitted_in_RAM > num_images_that_can_fit_in_RAM:
+    #         print("There is NOT enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
+    #         number_of_predictions_retrieved = 0
+    #         predictions = []
+    #         i = 0
+    #         while number_of_predictions_retrieved < number_of_images_to_be_fitted_in_RAM:
+    #             images = test_set.generate_test_images(interval = (i*num_images_that_can_fit_in_RAM, (i+1)*num_images_that_can_fit_in_RAM))
+    #             predictions.extend(self.predict(images))
+    #             number_of_predictions_retrieved = len(predictions)
+    #             i += 1
+    #     else:
+    #         test_images = test_set.generate_test_images()
+    #         predictions = self.predict(test_images)
+    #     return predictions
 
 if __name__ == "__main__":
     from os import listdir
