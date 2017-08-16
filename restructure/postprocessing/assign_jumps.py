@@ -115,11 +115,11 @@ class Jump(object):
                     # this case cannot be solved here and it will be solved by interpolation
                     return
 
-        if len(list(available_identities)) == 1:
+        if len(available_identities) == 1:
             self.jumping_blob._identity = list(available_identities)[0]
-        elif len(list(available_identities)) > 1 and self.prediction in available_identities:
+        elif len(available_identities) > 1 and self.prediction in available_identities:
             self.jumping_blob._identity = self.prediction
-        elif len(list(available_identities)) > 1 and self.prediction not in available_identities:
+        elif len(available_identities) > 1 and self.prediction not in available_identities:
             not_assigned = True
             sorted_assignments_indices = np.argsort(np.array(self._P2_vector))[::-1]
             new_identities = [sorted_assignments_index for sorted_assignments_index in sorted_assignments_indices
@@ -130,6 +130,10 @@ class Jump(object):
                 print("pass")
                 new_identity = -1
             self.jumping_blob._identity = new_identity + 1
+        elif len(available_identities) == 0:
+            print("There are no more available identities ---------------------------------------")
+            print(self.jumping_blob.frame_number)
+            new_identity = -1
         else:
             raise ValueError('condition not considered')
 
