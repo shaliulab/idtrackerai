@@ -247,7 +247,7 @@ if __name__ == '__main__':
         if not loadPreviousDict['pretraining']:
 
             # pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
-            pretrain_flag = 'n'
+            pretrain_flag = 'y'
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
                 text_global_fragments_for_pretraining = 'Choose the ratio (0 -> None ,1 -> All] of global fragments to be used for pretraining. Default ' + str(PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING)
@@ -429,13 +429,13 @@ if __name__ == '__main__':
 
                         print("\nGetting images from candidate global fragments for predictions...")
                         # compute maximum number of images given the available RAM and SWAP
-                        image_size_bytes = np.prod(video.portrait_size)*4
+                        image_size_bytes = np.prod(video.portrait_size)*4 #assuming images are float32
                         if psutil.virtual_memory().available > 2 * video.maximum_number_of_portraits_in_global_fragments * image_size_bytes:
-                            num_images = psutil.virtual_memory().available//image_size_bytes
-                            print("There is enough RAM to host %i images" %num_images)
+                            num_images_that_can_fit_in_RAM = psutil.virtual_memory().available//image_size_bytes
+                            print("There is enough available RAM to host %i images " %num_images_that_can_fit_in_RAM)
                         elif psutil.swap_memory().free > 2 * video.maximum_number_of_portraits_in_global_fragments * image_size_bytes:
-                            num_images = psutil.swap_memory().free * .8 // image_size_bytes
-                            print("There is enough Swap to host %i images" %num_images)
+                            num_images_that_can_fit_in_SWAP = psutil.swap_memory().free * .8 // image_size_bytes
+                            print("There is enough Swap to host %i images" %num_images_that_can_fit_in_SWAP)
                             print("WARNING: using swap memory, performance reduced")
                         else:
                             print("Virtual memory")
@@ -537,6 +537,7 @@ if __name__ == '__main__':
             compute_P1_for_blobs_in_video(video, blobs)
             # assign identities based on individual fragments
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
+            video._has_been_assigned = True
             # assign identity to individual fragments' extremes
             assing_identity_to_individual_fragments_extremes(blobs)
             # solve jumps
@@ -547,7 +548,7 @@ if __name__ == '__main__':
             ### NOTE: to be coded
 
             # finish and save
-            video._has_been_assigned = True
+
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
@@ -571,7 +572,7 @@ if __name__ == '__main__':
         ####
         #############################################################
         print("\n**** Assign crossings ****")
-        if not loadPreviousDict['assign-crossings']:
+        if not loadPreviousDict['crossings']:
             video._has_crossings_solved = False
             pass
 
