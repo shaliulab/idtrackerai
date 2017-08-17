@@ -29,7 +29,8 @@ from blob import compute_fragment_identifier_and_blob_index,\
                 ListOfBlobs,\
                 get_images_from_blobs_in_video,\
                 reset_blobs_fragmentation_parameters,\
-                compute_portrait_size
+                compute_portrait_size,\
+                check_number_of_blobs
 from globalfragment import compute_model_area_and_body_length,\
                             give_me_list_of_global_fragments,\
                             ModelArea,\
@@ -173,6 +174,9 @@ if __name__ == '__main__':
                 blobs = blobs_list.blobs_in_video
                 reset_blobs_fragmentation_parameters(blobs)
             video.save()
+
+            # check number of blobs in frame
+            frames_with_more_blobs_than_animals = check_number_of_blobs(video, blobs)
 
             # compute a model of the area of the animals (considering frames in which
             # all the animals are visible)
