@@ -456,6 +456,20 @@ def reset_blobs_fragmentation_parameters(blobs_in_video, recovering_from = 'frag
         for blob in blobs_in_frame:
             blob.reset_before_fragmentation(recovering_from)
 
+def check_number_of_blobs(video, blobs):
+    frames_with_more_blobs_than_animals = []
+    for frame_number, blobs_in_frame in enumerate(blobs):
+        if len(blobs_in_frame) > video.number_of_animals:
+            frames_with_more_blobs_than_animals.append(frame_number)
+
+    if len(frames_with_more_blobs_than_animals) > 0:
+        print('There are frames with more blobs than animals, this can be detrimental for the proper functioning of the system.')
+        print("Frames with more blobs than animals: ")
+        print(frames_with_more_blobs_than_animals)
+        raise ValueError('Please check your segmentaion')
+
+    return frames_with_more_blobs_than_animals
+
 class ListOfBlobs(object):
     def __init__(self, blobs_in_video = None, path_to_save = None):
         self.blobs_in_video = blobs_in_video
