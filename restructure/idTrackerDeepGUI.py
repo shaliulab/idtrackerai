@@ -37,7 +37,8 @@ from globalfragment import compute_model_area_and_body_length,\
                             get_images_and_labels_from_global_fragments,\
                             subsample_images_for_last_training,\
                             order_global_fragments_by_distance_travelled,\
-                            filter_global_fragments_by_minimum_number_of_frames
+                            filter_global_fragments_by_minimum_number_of_frames,\
+                            compute_and_plot_global_fragments_statistics
 from get_portraits import get_body
 from segmentation import segment
 from get_crossings_data_set import CrossingDataset
@@ -181,7 +182,6 @@ if __name__ == '__main__':
             compute_portrait_size(video, maximum_body_length)
             # discard blobs that do not respect such model
             apply_model_area_to_video(video, blobs, model_area, video.portrait_size[0])
-
             # get fish and crossings data sets
             training_set = CrossingDataset(blobs, video, scope = 'training')
             training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)
@@ -231,6 +231,7 @@ if __name__ == '__main__':
             #with a single blob in the consecutive frame + the blobs respect the area model)
             global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
             global_fragments = filter_global_fragments_by_minimum_number_of_frames(global_fragments, minimum_number_of_frames = 3)
+            compute_and_plot_global_fragments_statistics(video, blobs, global_fragments)
             video.maximum_number_of_portraits_in_global_fragments = np.max([global_fragment._total_number_of_portraits for global_fragment in global_fragments])
             np.save(video.global_fragments_path, global_fragments)
             saved = False
