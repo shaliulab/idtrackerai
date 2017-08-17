@@ -136,10 +136,10 @@ def full2BoundingBox(point, boundingBox):
 def cntBB2Full(cnt,boundingBox):
     return cnt + np.asarray([boundingBox[0][0],boundingBox[0][1]])
 
-def getBoundigBox(cnt, width, height):
+def getBoundigBox(cnt, width, height, crossing_detector = False):
     x,y,w,h = cv2.boundingRect(cnt)
     original_diagonal = int(np.ceil(np.sqrt(w**2 + h**2)))
-    n = 45
+    n = 45 if not crossing_detector else 55
     if x - n > 0: # We only expand the
         x = x - n
     else:

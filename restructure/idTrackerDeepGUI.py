@@ -17,6 +17,9 @@ import psutil
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
 sys.path.append('./postprocessing')
+sys.path.append('./network')
+sys.path.append('./network/crossings_detector_model')
+sys.path.append('./network/identification_model')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
@@ -25,7 +28,8 @@ from blob import compute_fragment_identifier_and_blob_index,\
                 apply_model_area_to_video,\
                 ListOfBlobs,\
                 get_images_from_blobs_in_video,\
-                reset_blobs_fragmentation_parameters
+                reset_blobs_fragmentation_parameters,\
+                compute_portrait_size
 from globalfragment import compute_model_area_and_body_length,\
                             give_me_list_of_global_fragments,\
                             ModelArea,\
@@ -33,8 +37,16 @@ from globalfragment import compute_model_area_and_body_length,\
                             get_images_and_labels_from_global_fragments,\
                             subsample_images_for_last_training,\
                             order_global_fragments_by_distance_travelled,\
-                            filter_global_fragments_by_minimum_number_of_frames
+                            filter_global_fragments_by_minimum_number_of_frames,\
+                            compute_and_plot_global_fragments_statistics
+from get_portraits import get_body
 from segmentation import segment
+from get_crossings_data_set import CrossingDataset
+from network_params_crossings import NetworkParams_crossings
+from cnn_architectures import cnn_model_crossing_detector
+from crossings_detector_model import ConvNetwork_crossings
+from train_crossings_detector import TrainDeepCrossing
+from get_predictions_crossings import GetPredictionCrossigns
 from GUI_utils import selectFile,\
                     getInput,\
                     selectOptions,\
@@ -46,7 +58,7 @@ from GUI_utils import selectFile,\
 from py_utils import getExistentFiles
 from video_utils import checkBkg
 from pre_trainer import pre_train
-from accumulation_manager import AccumulationManager
+from accumulation_manager import AccumulationManager, get_predictions_of_candidates_global_fragments
 from network_params import NetworkParams
 from trainer import train
 from assigner import assign,\
@@ -58,8 +70,7 @@ from id_CNN import ConvNetwork
 from assign_individual_fragment_extremes import assing_identity_to_individual_fragments_extremes
 from assign_jumps import assign_identity_to_jumps
 from correct_duplications import solve_duplications
-
-
+from get_trajectories import produce_trajectories, smooth_trajectories
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
@@ -162,27 +173,55 @@ if __name__ == '__main__':
                 video._maximum_number_of_blobs = old_video.maximum_number_of_blobs
                 blobs = blobs_list.blobs_in_video
                 reset_blobs_fragmentation_parameters(blobs)
+            video.save()
 
             # compute a model of the area of the animals (considering frames in which
             # all the animals are visible)
             model_area, maximum_body_length = compute_model_area_and_body_length(blobs, video.number_of_animals)
-            if video.preprocessing_type == 'portrait':
-                portrait_size = int(maximum_body_length/2)
-                portrait_size =  portrait_size + portrait_size%2 #this is to make the portrait_size even
-                video.portrait_size = (portrait_size, portrait_size, 1)
-            elif video.preprocessing_type == 'body' or video.preprocessing_type == 'body_blob':
-                portrait_size = int(np.sqrt(maximum_body_length ** 2 / 2))
-                portrait_size = portrait_size + portrait_size%2  #this is to make the portrait_size
-                video.portrait_size = (portrait_size, portrait_size, 1)
-            #discard blobs that do not respect such model
+            # compute portrait size
+            compute_portrait_size(video, maximum_body_length)
+            # discard blobs that do not respect such model
             apply_model_area_to_video(video, blobs, model_area, video.portrait_size[0])
+            # get fish and crossings data sets
+            training_set = CrossingDataset(blobs, video, scope = 'training')
+            training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)
+            validation_set = CrossingDataset(blobs, video, scope = 'validation',
+                                                            crossings = training_set.crossings,
+                                                            fish = training_set.fish,
+                                                            image_size = training_set.image_size)
+            validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1.)
+            # train crossing detector model
+            video.create_crossings_detector_folder()
+            crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
+                                                                        learning_rate = 0.001,
+                                                                        architecture = cnn_model_crossing_detector,
+                                                                        keep_prob = 1.0,
+                                                                        save_folder = video._crossings_detector_folder,
+                                                                        restore_folder = video._crossings_detector_folder,
+                                                                        image_size = training_set.images.shape[1:])
+            net = ConvNetwork_crossings(crossings_detector_network_params)
+            TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
+            # detect crossings
+            # net.restore()
+            test_set = CrossingDataset(blobs, video, scope = 'test',
+                                                    image_size = training_set.image_size)
+            # get predictions of individual blobs outside of global fragments
+            crossings_predictor = GetPredictionCrossigns(net)
+            predictions = crossings_predictor.get_all_predictions(test_set)
+            # set blobs as crossings by deleting the portrait
+            [setattr(blob,'_portrait',None) if prediction == 1 else setattr(blob,'bounding_box_image', None)
+                                            for blob, prediction in zip(test_set.test, predictions)]
+            # delete bounding_box_image from blobs that have portraits
+            [setattr(blob,'bounding_box_image', None) for blobs_in_frame in blobs
+                                                        for blob in blobs_in_frame
+                                                        if blob.is_a_fish
+                                                        and blob.bounding_box_image is not None]
             #connect blobs that overlap in consecutive frames
             connect_blob_list(blobs)
             #assign an identifier to each blob belonging to an individual fragment
             compute_fragment_identifier_and_blob_index(blobs, video.maximum_number_of_blobs)
             #save connected blobs in video (organized frame-wise) and list of global fragments
             video._has_been_preprocessed = True
-
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
@@ -192,6 +231,7 @@ if __name__ == '__main__':
             #with a single blob in the consecutive frame + the blobs respect the area model)
             global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
             global_fragments = filter_global_fragments_by_minimum_number_of_frames(global_fragments, minimum_number_of_frames = 3)
+            compute_and_plot_global_fragments_statistics(video, blobs, global_fragments)
             video.maximum_number_of_portraits_in_global_fragments = np.max([global_fragment._total_number_of_portraits for global_fragment in global_fragments])
             np.save(video.global_fragments_path, global_fragments)
             saved = False
@@ -246,8 +286,8 @@ if __name__ == '__main__':
         print("\n**** Pretraining ****\n")
         if not loadPreviousDict['pretraining']:
 
-            # pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
-            pretrain_flag = 'y'
+            pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
+            # pretrain_flag = 'n'
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
                 text_global_fragments_for_pretraining = 'Choose the ratio (0 -> None ,1 -> All] of global fragments to be used for pretraining. Default ' + str(PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING)
@@ -394,88 +434,13 @@ if __name__ == '__main__':
                         print("global_fragment ids ", global_fragment._temporary_ids)
                         print("global_fragment assigned ids, ", global_fragment._ids_assigned)
                         raise ValueError("This global Fragment is not unique")
-                    elif global_fragment._used_for_training == True:
-                        print("this global fragment used for training is unique ", global_fragment.is_unique)
+                    # elif global_fragment._used_for_training == True:
+                        # print("this global fragment used for training is unique ", global_fragment.is_unique)
                 # Set accumulation params for rest of the accumulation
                 #take images from global fragments not used in training (in the remainder test global fragments)
                 candidates_next_global_fragments = [global_fragment for global_fragment in global_fragments if not global_fragment.used_for_training]
                 print("number of candidate global fragments, ", len(candidates_next_global_fragments))
                 if any([not global_fragment.used_for_training for global_fragment in global_fragments]):
-
-                    def get_predictions_of_candidates_global_fragments(net,video,candidates_next_global_fragments,individual_fragments_identifiers_already_used = []):
-
-                        def get_images_and_labels_from_global_fragment(video, global_fragment, individual_fragments_identifiers_already_used = []):
-                            images = np.ones((video.maximum_number_of_portraits_in_global_fragments, video.portrait_size[0], video.portrait_size[1]))
-                            labels = np.ones((video.maximum_number_of_portraits_in_global_fragments, 1))
-                            lengths = []
-                            individual_fragments_identifiers = []
-                            num_images = 0
-                            for i, portraits in enumerate(global_fragment.portraits):
-                                if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_identifiers_already_used :
-                                    # print("This individual fragment has not been used, we take images")
-                                    images[num_images : len(portraits) + num_images] = np.asarray(portraits)
-                                    labels[num_images : len(portraits) + num_images] = np.asarray(global_fragment._temporary_ids[i] * len(portraits))
-                                    lengths.append(len(portraits))
-                                    individual_fragments_identifiers.append(global_fragment.individual_fragments_identifiers[i])
-                                    num_images += len(portraits)
-                            images = images[:num_images]
-                            labels = labels[:num_images]
-                            return images, labels, lengths, individual_fragments_identifiers
-
-                        predictions = []
-                        softmax_probs = []
-                        lengths = []
-                        candidate_individual_fragments_identifiers = []
-
-                        print("\nGetting images from candidate global fragments for predictions...")
-                        # compute maximum number of images given the available RAM and SWAP
-                        image_size_bytes = np.prod(video.portrait_size)*4 #assuming images are float32
-                        if psutil.virtual_memory().available > 2 * video.maximum_number_of_portraits_in_global_fragments * image_size_bytes:
-                            num_images_that_can_fit_in_RAM = psutil.virtual_memory().available//image_size_bytes
-                            print("There is enough available RAM to host %i images " %num_images_that_can_fit_in_RAM)
-                        elif psutil.swap_memory().free > 2 * video.maximum_number_of_portraits_in_global_fragments * image_size_bytes:
-                            num_images_that_can_fit_in_SWAP = psutil.swap_memory().free * .8 // image_size_bytes
-                            print("There is enough Swap to host %i images" %num_images_that_can_fit_in_SWAP)
-                            print("WARNING: using swap memory, performance reduced")
-                        else:
-                            print("Virtual memory")
-                            print(psutil.virtual_memory())
-                            print("Swap memory")
-                            print(psutil.swap_memory())
-                            raise MemoryError('There is not enough free RAM and swap to continue with the process')
-
-                        while len(candidates_next_global_fragments) > 0:
-                            images = np.ones((2 * video.maximum_number_of_portraits_in_global_fragments, video.portrait_size[0], video.portrait_size[1])) * np.nan
-                            individual_fragments_identifiers_already_used = list(individual_fragments_identifiers_already_used)
-                            num_images = 0
-                            for global_fragment in candidates_next_global_fragments:
-                                images_global_fragment, \
-                                _, \
-                                lengths_global_fragment, \
-                                individual_fragments_identifiers = get_images_and_labels_from_global_fragment(video, global_fragment,
-                                                                                                                individual_fragments_identifiers_already_used)
-
-
-                                if len(images_global_fragment) != 0 and len(images_global_fragment) < 2 * video.maximum_number_of_portraits_in_global_fragments - num_images:
-                                    images[num_images : num_images + len(images_global_fragment)] = images_global_fragment
-                                    lengths.extend(lengths_global_fragment)
-                                    candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
-                                    individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
-                                    num_images += len(images_global_fragment)
-                                    # update list of candidates global fragments
-                                    candidates_next_global_fragments = candidates_next_global_fragments[1:]
-                                elif len(images_global_fragment) > 2 * video.maximum_number_of_portraits_in_global_fragments - num_images:
-                                    break
-                                elif len(images_global_fragment) == 0:
-                                    candidates_next_global_fragments = candidates_next_global_fragments[1:]
-
-                            if num_images != 0:
-                                images = images[:num_images]
-                                assigner = assign(net, video, images, print_flag = True)
-                                predictions.extend(assigner._predictions)
-                                softmax_probs.extend(assigner._softmax_probs)
-
-                        return predictions, softmax_probs, np.cumsum(lengths)[:-1], candidate_individual_fragments_identifiers
 
                     predictions,\
                     softmax_probs,\
@@ -517,6 +482,7 @@ if __name__ == '__main__':
             # Set preprocessed flag to True
             video._accumulation_finished = True
             video.save()
+
         #############################################################
         ###################     Assigner      ######################
         ####
@@ -548,7 +514,6 @@ if __name__ == '__main__':
             ### NOTE: to be coded
 
             # finish and save
-
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
@@ -582,8 +547,17 @@ if __name__ == '__main__':
         #############################################################
         print("\n**** Generate trajectories ****")
         if not loadPreviousDict['trajectories']:
-            video._has_trajectories = False
-            pass
+            trajectories_folder = os.path.join(video._session_folder,'trajectories')
+            if not os.path.isdir(trajectories_folder):
+                print("Creating trajectories folder...")
+                os.makedirs(trajectories_folder)
+            trajectories = produce_trajectories(video._blobs_path)
+            for name in trajectories:
+                np.save(os.path.join(trajectories_folder, name + '_trajectories.npy'), trajectories[name])
+                np.save(os.path.join(trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
+                np.save(os.path.join(trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
+                np.save(os.path.join(trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
+            video._has_trajectories = True
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         video = old_video
