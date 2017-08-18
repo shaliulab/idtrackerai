@@ -47,6 +47,8 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
         blobs_in_frame = []
         #Get frame from video file
         ret, frame = cap.read()
+        if video.resolution_reduction != 1 and ret:
+            frame = cv2.resize(frame, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
         try:
             #Color to gray scale
             frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
