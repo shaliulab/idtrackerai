@@ -33,6 +33,7 @@ class Blob(object):
             self._assigned_during_accumulation = False
             self._user_generated_identity = None #in the validation part users can correct manually the identities
             self._identity = None
+            self._identity_corrected_solving_duplication = None
             self._user_generated_centroids = []
             self._user_generated_identities = []
         if recovering_from == 'fragmentation':
@@ -51,6 +52,13 @@ class Blob(object):
                 self._frequencies_in_fragment = np.zeros(self.number_of_animals).astype('int')
                 self._P1_vector = np.zeros(self.number_of_animals)
                 self._P2_vector = np.zeros(self.number_of_animals)
+            else:
+                self._identity = int(np.argmax(self._P1_vector)) + 1
+            if self._user_generated_identity is not None:
+                self._user_generated_identity = None #in the validation part users can correct manually the identities
+                self._user_generated_centroids = []
+                self._user_generated_identities = []
+        self._identity_corrected_solving_duplication = None
 
     @property
     def user_generated_identity(self):
@@ -300,9 +308,12 @@ class Blob(object):
                         fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
         return np.asarray(P1_vectors)
 
-    def update_identity_in_fragment(self, identity_in_fragment, assigned_during_accumulation = False):
+    def update_identity_in_fragment(self, identity_in_fragment, assigned_during_accumulation = False, duplication_solved = False):
         if self.is_a_fish_in_a_fragment:
-            self._identity = identity_in_fragment
+            if not duplication_solved:
+                self._identity = identity_in_fragment
+            elif duplication_solved:
+                self._identity_corrected_solving_duplication = identity_in_fragment
             if assigned_during_accumulation:
                 self._assigned_during_accumulation = True
                 self._P1_vector[identity_in_fragment-1] = 0.99999999999999
@@ -311,7 +322,10 @@ class Blob(object):
 
             while current.next[0].is_a_fish_in_a_fragment:
                 current = current.next[0]
-                current._identity = identity_in_fragment
+                if not duplication_solved:
+                    current._identity = identity_in_fragment
+                elif duplication_solved:
+                    current._identity_corrected_solving_duplication = identity_in_fragment
                 if assigned_during_accumulation:
                     current._assigned_during_accumulation = True
                     current._P1_vector[identity_in_fragment-1] = 0.99999999999999
@@ -322,7 +336,10 @@ class Blob(object):
 
             while current.previous[0].is_a_fish_in_a_fragment:
                 current = current.previous[0]
-                current._identity = identity_in_fragment
+                if not duplication_solved:
+                    current._identity = identity_in_fragment
+                elif duplication_solved:
+                    current._identity_corrected_solving_duplication = identity_in_fragment
                 if assigned_during_accumulation:
                     current._assigned_during_accumulation = True
                     current._P1_vector[identity_in_fragment-1] = 0.99999999999999

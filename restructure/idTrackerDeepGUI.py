@@ -96,7 +96,7 @@ if __name__ == '__main__':
     #############################################################
     #Asking user whether to reuse preprocessing steps...'
     reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previous preprocessing? ([y]/n)')
-    processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'assignment', 'crossings', 'trajectories']
+    processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'assignment', 'solving_duplications', 'crossings', 'trajectories']
     #get existent files and paths to load them
     existentFiles, old_video = getExistentFiles(video, processes_list)
     if reUseAll == 'n':
@@ -507,15 +507,12 @@ if __name__ == '__main__':
             compute_P1_for_blobs_in_video(video, blobs)
             # assign identities based on individual fragments
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
-            video._has_been_assigned = True
             # assign identity to individual fragments' extremes
             assing_identity_to_individual_fragments_extremes(blobs)
             # solve jumps
             assign_identity_to_jumps(video, blobs)
-            # solve duplications
-            solve_duplications(blobs, video.number_of_animals)
-            # solve impossible jumps
-            ### NOTE: to be coded
+            video._has_been_assigned = True
+
 
             # finish and save
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
@@ -530,11 +527,47 @@ if __name__ == '__main__':
             video._has_been_assigned = True
             video.save()
             # Load blobs and global fragments
-            list_of_blobs = ListOfBlobs.load(video.blobs_path)
-            blobs = list_of_blobs.blobs_in_video
-            global_fragments = np.load(video.global_fragments_path)
+            # list_of_blobs = ListOfBlobs.load(video.blobs_path)
+            # blobs = list_of_blobs.blobs_in_video
+            # global_fragments = np.load(video.global_fragments_path)
             # visualise proposed tracking
             # frame_by_frame_identity_inspector(video, blobs)
+
+        #############################################################
+        ###################   Solve duplications      ###############
+        ####
+        #############################################################
+        if not loadPreviousDict['solving_duplications']:
+            reset_blobs_fragmentation_parameters(blobs, recovering_from = 'solving_duplications')
+            # solve duplications
+            solve_duplications(video, blobs, global_fragments, video.number_of_animals)
+            video._has_duplications_solved = True
+
+            # finish and save
+            blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+            blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
+            blobs_list.cut_in_chunks()
+            blobs_list.save()
+            video.save()
+            # visualise proposed tracking
+            # frame_by_frame_identity_inspector(video, blobs)
+        else:
+            # Set preprocessed flag to True
+            video._has_duplications_solved = True
+            video.save()
+            # Load blobs and global fragments
+            # list_of_blobs = ListOfBlobs.load(video.blobs_path)
+            # blobs = list_of_blobs.blobs_in_video
+            # global_fragments = np.load(video.global_fragments_path)
+            # visualise proposed tracking
+            # frame_by_frame_identity_inspector(video, blobs)
+
+        #############################################################
+        ###################     Assigner      ######################
+        ####
+
+        # solve impossible jumps
+        ### NOTE: to be coded
 
         #############################################################
         ##############   Solve crossigns   ##########################
@@ -549,19 +582,19 @@ if __name__ == '__main__':
         ##############   Create trajectories    #####################
         ####
         #############################################################
-        print("\n**** Generate trajectories ****")
-        if not loadPreviousDict['trajectories']:
-            trajectories_folder = os.path.join(video._session_folder,'trajectories')
-            if not os.path.isdir(trajectories_folder):
-                print("Creating trajectories folder...")
-                os.makedirs(trajectories_folder)
-            trajectories = produce_trajectories(video._blobs_path)
-            for name in trajectories:
-                np.save(os.path.join(trajectories_folder, name + '_trajectories.npy'), trajectories[name])
-                np.save(os.path.join(trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
-                np.save(os.path.join(trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
-                np.save(os.path.join(trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
-            video._has_trajectories = True
+        # print("\n**** Generate trajectories ****")
+        # if not loadPreviousDict['trajectories']:
+        #     trajectories_folder = os.path.join(video._session_folder,'trajectories')
+        #     if not os.path.isdir(trajectories_folder):
+        #         print("Creating trajectories folder...")
+        #         os.makedirs(trajectories_folder)
+        #     trajectories = produce_trajectories(video._blobs_path)
+        #     for name in trajectories:
+        #         np.save(os.path.join(trajectories_folder, name + '_trajectories.npy'), trajectories[name])
+        #         np.save(os.path.join(trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
+        #         np.save(os.path.join(trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
+        #         np.save(os.path.join(trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
+        #     video._has_trajectories = True
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         video = old_video
