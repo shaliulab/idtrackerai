@@ -71,6 +71,22 @@ class Chosen_Video(EventDispatcher):
             processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
             #get existent files and paths to load them
             self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
+            if self.old_video._has_been_assigned: self.video._has_been_assigned
+            if hasattr(self.old_video, 'resolution_reduction'):
+                self.video.resolution_reduction = self.old_video.resolution_reduction
+                self.video.bkg = self.old_video.bkg
+                self.video.ROI = self.old_video.ROI
+                print(self.video.resolution_reduction, self.video.ROI.shape)
+            if CHOSEN_VIDEO.video.video_path is not None:
+                if CHOSEN_VIDEO.old_video.preprocessing_type is None or CHOSEN_VIDEO.old_video.number_of_animals is None:
+                    self.create_preprocessing_type_and_number_popup()
+                    self.preprocessing_type_input.bind(on_text_validate = self.on_enter)
+                    self.animal_number_input.bind(on_text_validate = self.on_enter)
+                    self.popup.open()
+                else:
+                    CHOSEN_VIDEO.video._preprocessing_type = CHOSEN_VIDEO.old_video.preprocessing_type
+                    CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
+                self.enable_ROI_and_preprocessing_tabs = True
         except:
             print("Choose a video to proceed")
 
@@ -105,18 +121,9 @@ class SelectFile(BoxLayout):
     def open(self, path, filename):
         print("opening video file")
         print("filename  ", filename)
-        if filename:
+        if len(filename) > 0:
             CHOSEN_VIDEO.set_chosen_item(filename[0])
-            if CHOSEN_VIDEO.video.video_path is not None:
-                if CHOSEN_VIDEO.old_video.preprocessing_type is None and CHOSEN_VIDEO.old_video.number_of_animals is None:
-                    self.create_preprocessing_type_and_number_popup()
-                    self.preprocessing_type_input.bind(on_text_validate = self.on_enter)
-                    self.animal_number_input.bind(on_text_validate = self.on_enter)
-                    self.popup.open()
-                else:
-                    CHOSEN_VIDEO.video._preprocessing_type = CHOSEN_VIDEO.old_video.preprocessing_type
-                    CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
-                self.enable_ROI_and_preprocessing_tabs = True
+
         return not hasattr(self, 'enable_ROI_and_preprocessing_tabs')
 
     def enable_validation(self, path, filename):
@@ -209,6 +216,8 @@ class VisualiseVideo(BoxLayout):
             self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbar_value)
         ret, self.frame = self.cap.read()
         if ret == True:
+            if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction'):
+                self.frame = cv2.resize(self.frame, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
             if self.func is None:
                 self.func = self.simple_visualisation
             self.func(self.frame)

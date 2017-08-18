@@ -140,6 +140,22 @@ def getMultipleInputs(winTitle, inputTexts):
     window.mainloop()
     return inputs
 
+'''****************************************************************************
+Resolution reduction
+****************************************************************************'''
+def check_resolution_reduction(video, old_video, usePreviousRR):
+    if video.reduce_resolution:
+        if usePreviousRR and old_video.resolution_reduction is not None:
+            if hasattr(old_video, 'resolution_reduction'):
+                return old_video.resolution_reduction
+            else:
+                return float(getInput('Resolution reduction', 'Resolution reduction parameter not found in previous video. \nInput the resolution reduction factor (.5 would reduce by half): '))
+        else:
+            return float(getInput('Resolution reduction', 'Input the resolution reduction factor (.5 would reduce by half): '))
+    else:
+        return 1
+
+
 ''' ****************************************************************************
 ROI selector GUI
 *****************************************************************************'''
@@ -282,6 +298,12 @@ def SegmentationPreview(video):
     numFrames = video._num_frames
     bkg = video.bkg
     mask = video.ROI
+    if video.resolution_reduction != 1:
+        if bkg is not None:
+            bkg = cv2.resize(bkg,None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+            video.bkg = bkg
+        mask = cv2.resize(mask,None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+        video.ROI = mask
     subtract_bkg = video.subtract_bkg
     height = video._height
     width = video._width
@@ -362,6 +384,8 @@ def SegmentationPreview(video):
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         ret, frame = cap.read()
+        if video.resolution_reduction != 1:
+            frame = cv2.resize(frame,None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         avIntensity = np.float32(np.mean(frameGray))
         avFrame = np.divide(frameGray,avIntensity)
@@ -675,6 +699,7 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         video._min_area = old_video._min_area
         video._max_area = old_video._max_area
         video._resize = old_video._resize
+        video.resolution_reduction = old_video.resolution_reduction
         video.preprocessing_type = old_video.preprocessing_type
         video._number_of_animals = old_video._number_of_animals
         video._has_preprocessing_parameters = True
@@ -943,6 +968,10 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
         ret, frame = cap.read()
         if ret:
+            if hasattr(video, 'resolution_reduction'):
+                if video.resolution_reduction != 1:
+                    frame = cv2.resize(frame, None, fx = video.resolution_reduction, fy = video.resolution_reduction)
+
             frameCopy = frame.copy()
             blobs_in_frame = blobs_in_video[trackbarValue]
 

@@ -53,7 +53,8 @@ from GUI_utils import selectFile,\
                     selectPreprocParams,\
                     fragmentation_inspector,\
                     frame_by_frame_identity_inspector,\
-                    selectDir
+                    selectDir,\
+                    check_resolution_reduction
 from py_utils import getExistentFiles
 from video_utils import checkBkg
 from pre_trainer import pre_train
@@ -94,7 +95,7 @@ if __name__ == '__main__':
     #############################################################
     #Asking user whether to reuse preprocessing steps...'
     reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previous preprocessing? ([y]/n)')
-    processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'assignment', 'crossings', 'trajectories']
+    processes_list = ['bkg', 'ROI', 'resolution_reduction', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'assignment', 'crossings', 'trajectories']
     #get existent files and paths to load them
     existentFiles, old_video = getExistentFiles(video, processes_list)
     if reUseAll == 'n':
@@ -102,15 +103,17 @@ if __name__ == '__main__':
         ############ Select preprocessing parameters   ##############
         ####                                                     ####
         #############################################################
-        prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to do BKG or select a ROI?  ')
+        prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?  ')
         video.subtract_bkg = bool(prepOpts['bkg'])
         video.apply_ROI =  bool(prepOpts['ROI'])
+        video.reduce_resolution = bool(prepOpts['resolution_reduction'])
         print('\nLooking for finished steps in previous session...')
         #selecting files to load from previous session...'
         loadPreviousDict = selectOptions(processes_list, existentFiles, text='Steps already processed in this video \n (loaded from ' + video._video_folder + ')')
         #use previous values and parameters (bkg, roi, preprocessing parameters)?
         usePreviousROI = loadPreviousDict['ROI']
         usePreviousBkg = loadPreviousDict['bkg']
+        usePreviousRR = loadPreviousDict['resolution_reduction']
         usePreviousPrecParams = loadPreviousDict['preprocparams']
         print("video session folder, ", video._session_folder)
         #ROI selection/loading
@@ -119,6 +122,8 @@ if __name__ == '__main__':
         #BKG computation/loading
         video.bkg = checkBkg(video, old_video, usePreviousBkg)
         print("video session folder, ", video._session_folder)
+        # Resolution reduction
+        video.resolution_reduction = check_resolution_reduction(video, old_video, usePreviousRR)
         #Selection/loading preprocessing parameters
         selectPreprocParams(video, old_video, usePreviousPrecParams)
         print("video session folder, ", video._session_folder)
