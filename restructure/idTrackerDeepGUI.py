@@ -187,9 +187,10 @@ if __name__ == '__main__':
 
             # compute a model of the area of the animals (considering frames in which
             # all the animals are visible)
-            model_area, maximum_body_length = compute_model_area_and_body_length(blobs, video.number_of_animals)
+            model_area, median_body_length = compute_model_area_and_body_length(blobs, video.number_of_animals)
+            video.median_body_length = median_body_length
             # compute portrait size
-            compute_portrait_size(video, maximum_body_length)
+            compute_portrait_size(video, median_body_length)
             # discard blobs that do not respect such model
             apply_model_area_to_video(video, blobs, model_area, video.portrait_size[0])
             # get fish and crossings data sets
@@ -590,17 +591,15 @@ if __name__ == '__main__':
         #############################################################
         print("\n**** Generate trajectories ****")
         if not loadPreviousDict['trajectories']:
-            trajectories_folder = os.path.join(video._session_folder,'trajectories')
-            if not os.path.isdir(trajectories_folder):
-                print("Creating trajectories folder...")
-                os.makedirs(trajectories_folder)
+            video.create_trajectories_folder()
             trajectories = produce_trajectories(video._blobs_path)
             for name in trajectories:
-                np.save(os.path.join(trajectories_folder, name + '_trajectories.npy'), trajectories[name])
-                np.save(os.path.join(trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
-                np.save(os.path.join(trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
-                np.save(os.path.join(trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
+                np.save(os.path.join(video.trajectories_folder, name + '_trajectories.npy'), trajectories[name])
+                np.save(os.path.join(video.trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
+                np.save(os.path.join(video.trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
+                np.save(os.path.join(video.trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
             video._has_trajectories = True
+            video.save()
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         video = old_video

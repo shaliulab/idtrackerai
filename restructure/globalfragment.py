@@ -22,7 +22,7 @@ def detect_beginnings(boolean_array):
 
 def compute_model_area_and_body_length(blobs_in_video, number_of_animals, std_tolerance = STD_TOLERANCE):
     """computes the median and standard deviation of all the blobs of the video
-    and the maximum_body_length estimated from the diagonal of the bounding box.
+    and the median_body_length estimated from the diagonal of the bounding box.
     These values are later used to discard blobs that are not fish and potentially
     belong to a crossing.
     """
@@ -34,8 +34,8 @@ def compute_model_area_and_body_length(blobs_in_video, number_of_animals, std_to
     median_area = np.median(areas_and_body_length[:,0])
     mean_area = np.mean(areas_and_body_length[:,0])
     std_area = np.std(areas_and_body_length[:,0])
-    maximum_body_length = np.median(areas_and_body_length[:,1])
-    return ModelArea(mean_area, median_area, std_area), maximum_body_length
+    median_body_length = np.median(areas_and_body_length[:,1])
+    return ModelArea(mean_area, median_area, std_area), median_body_length
 
 class ModelArea(object):
   def __init__(self, mean, median, std):
