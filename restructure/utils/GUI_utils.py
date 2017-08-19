@@ -699,7 +699,8 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         video._min_area = old_video._min_area
         video._max_area = old_video._max_area
         video._resize = old_video._resize
-        video.resolution_reduction = old_video.resolution_reduction
+        if hasattr(old_video, 'resolution_reduction'):
+            video.resolution_reduction = old_video.resolution_reduction
         video.preprocessing_type = old_video.preprocessing_type
         video._number_of_animals = old_video._number_of_animals
         video._has_preprocessing_parameters = True
