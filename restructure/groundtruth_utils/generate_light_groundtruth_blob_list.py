@@ -21,7 +21,12 @@ class GroundTruthBlob(object):
     def get_attribute(self, blob):
         for attribute in self.attributes:
             if attribute == 'identity':
-                self.identity = blob.identity if blob.user_generated_identity == None else blob.user_generated_identity
+                if blob.user_generated_identity is not None:
+                    self.identity = blob.user_generated_identity
+                elif blob._identity_corrected_solving_duplication is not None:
+                    self.identity = blob._identity_corrected_solving_duplication
+                else:
+                    self.identity = blob.identity
             else:
                 setattr(self, attribute, getattr(blob, attribute))
 
@@ -60,18 +65,22 @@ def generate_groundtruth_files(video_object, start = None, end = None):
             gt_blob = GroundTruthBlob()
             gt_blob.get_attribute(blob)
             groundtruth_blobs_in_frame.append(gt_blob)
+            if blob._identity_corrected_solving_duplication is not None:
+                blob_identity = blob._identity_corrected_solving_duplication
+            elif blob._identity_corrected_solving_duplication is None:
+                blob_identity = blob.identity
             if (blob.is_a_fish_in_a_fragment or\
                     blob.is_a_jump or\
                     blob.is_a_jumping_fragment or\
                     hasattr(blob,'is_an_extreme_of_individual_fragment')) and\
                     blob.user_generated_identity != -1: # we are not considering crossing or failures of the model area
-                if blob.user_generated_identity is not None and blob.user_generated_identity != blob.identity:
+                if blob.user_generated_identity is not None and blob.user_generated_identity != blob_identity:
                     count_number_assignment_per_individual_all[blob.user_generated_identity] += 1
-                    if blob.identity != 0:
+                    if blob_identity != 0:
                         count_number_assignment_per_individual_assigned[blob.user_generated_identity] += 1
-                elif blob.identity != 0:
-                    count_number_assignment_per_individual_all[blob.identity] += 1
-                    count_number_assignment_per_individual_assigned[blob.identity] += 1
+                elif blob_identity != 0:
+                    count_number_assignment_per_individual_all[blob_identity] += 1
+                    count_number_assignment_per_individual_assigned[blob_identity] += 1
             else:
                 count_number_of_crossings += 1
                 if blob.user_generated_identity == -1:
