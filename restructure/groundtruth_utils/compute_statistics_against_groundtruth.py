@@ -23,6 +23,11 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
     for groundtruth_blobs_in_frame, tracked_blobs_in_frame in zip(blobs_list_groundtruth, blobs_list_tracked):
 
         for groundtruth_blob, tracked_blob in zip(groundtruth_blobs_in_frame,tracked_blobs_in_frame):
+            if tracked_blob._identity_corrected_solving_duplication is not None:
+                tracked_blob_identity = tracked_blob._identity_corrected_solving_duplication
+            elif tracked_blob._identity_corrected_solving_duplication is None:
+                tracked_blob_identity = tracked_blob.identity
+
             if (tracked_blob.is_a_fish_in_a_fragment or\
                 tracked_blob.is_a_jump or\
                 tracked_blob.is_a_jumping_fragment or\
@@ -30,19 +35,22 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
                 groundtruth_blob.identity != -1: # we are not considering crossing or failures of the model area
                 # print("gt blob id ", groundtruth_blob.identity)
                 # print(tracked_blob.frame_number)
-                if groundtruth_blob.identity != tracked_blob.identity:
+                if groundtruth_blob.identity != tracked_blob_identity:
                     count_errors_identities_dict_all[groundtruth_blob.identity] += 1
-                    if tracked_blob.identity != 0:
+                    if tracked_blob_identity != 0:
                         count_errors_identities_dict_assigned[groundtruth_blob.identity] += 1
             elif groundtruth_blob.identity == -1:
                 print("frame number ", tracked_blob.frame_number)
                 total_wrongly_assigned_crossings += 1
-                if tracked_blob.identity == 0 or tracked_blob.identity is None:
+                if tracked_blob_identity == 0 or tracked_blob_identity is None:
                     print("corrected")
                     count_crossings_corrected_by_network += 1
 
+    if total_wrongly_assigned_crossings != 0:
+        return count_errors_identities_dict_assigned, count_errors_identities_dict_all, count_crossings_corrected_by_network/total_wrongly_assigned_crossings
+    else:
+        return count_errors_identities_dict_assigned, count_errors_identities_dict_all, 1
 
-    return count_errors_identities_dict_assigned, count_errors_identities_dict_all, count_crossings_corrected_by_network/total_wrongly_assigned_crossings
 
 def get_statistics_against_groundtruth(groundtruth, blobs_list_tracked):
     number_of_animals = groundtruth.video_object.number_of_animals

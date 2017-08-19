@@ -161,6 +161,14 @@ class Video(object):
         if not os.path.isdir(self._final_training_folder):
             os.makedirs(self._final_training_folder)
 
+    def create_trajectories_folder(self):
+        """Folder in which trajectories files are stored
+        """
+        self.trajectories_folder = os.path.join(self._session_folder,'trajectories')
+        if not os.path.isdir(self.trajectories_folder):
+            print("Creating trajectories folder...")
+            os.makedirs(self.trajectories_folder)
+
     def create_embeddings_folder(self):
         """If it does not exist creates a folder called embedding
         in the video folder"""

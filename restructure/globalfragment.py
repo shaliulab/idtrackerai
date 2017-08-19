@@ -1,6 +1,10 @@
 from __future__ import absolute_import, division, print_function
+import os
 import numpy as np
 import random
+from matplotlib import pyplot as plt
+import matplotlib.lines as mlines
+import seaborn as sns
 
 from blob import is_a_global_fragment, check_global_fragments
 
@@ -18,7 +22,7 @@ def detect_beginnings(boolean_array):
 
 def compute_model_area_and_body_length(blobs_in_video, number_of_animals, std_tolerance = STD_TOLERANCE):
     """computes the median and standard deviation of all the blobs of the video
-    and the maximum_body_length estimated from the diagonal of the bounding box.
+    and the median_body_length estimated from the diagonal of the bounding box.
     These values are later used to discard blobs that are not fish and potentially
     belong to a crossing.
     """
@@ -30,8 +34,8 @@ def compute_model_area_and_body_length(blobs_in_video, number_of_animals, std_to
     median_area = np.median(areas_and_body_length[:,0])
     mean_area = np.mean(areas_and_body_length[:,0])
     std_area = np.std(areas_and_body_length[:,0])
-    maximum_body_length = np.median(areas_and_body_length[:,1])
-    return ModelArea(mean_area, median_area, std_area), maximum_body_length
+    median_body_length = np.median(areas_and_body_length[:,1])
+    return ModelArea(mean_area, median_area, std_area), median_body_length
 
 class ModelArea(object):
   def __init__(self, mean, median, std):
@@ -114,7 +118,7 @@ class GlobalFragment(object):
 
     def check_uniqueness(self):
         all_identities = range(self.number_of_animals)
-        if set(all_identities).difference(set(self._temporary_ids)):
+        if len(set(all_identities) - set(self._temporary_ids)) > 0:
             self._is_unique = False
             self.compute_repeated_and_missing_ids(all_identities)
         else:
@@ -208,3 +212,129 @@ def subsample_images_for_last_training(images, labels, number_of_animals, number
         subsampled_images.append(random.sample(images[np.where(labels == i)[0]],number_of_samples))
         subsampled_labels.append([i] * number_of_samples)
     return np.concatenate(subsampled_images, axis = 0), np.concatenate(subsampled_labels, axis = 0)
+
+""" plotter """
+def compute_and_plot_global_fragments_statistics(video, blobs, global_fragments):
+    # individual fragments statistics
+    individual_fragments_added = []
+    number_of_frames_in_individual_fragments = []
+    distance_travelled_individual_fragments = []
+    # global fragments statistics
+    number_of_frames_in_longest_individual_fragment = [] #longest in terms of frames
+    number_of_frames_in_shortest_individual_fragment = [] # shortest in terms of frames
+    median_number_of_frames = []
+    # minimum_number_of_frames_in_shortest_distance_travelled_individual_fragment = []
+    distance_travelled_by_longest_distance_travelled_individual_fragment = []
+    distance_travelled_by_shortes_distance_travelled_individual_fragment = []
+    min_distance_travelled = []
+    number_of_portraits_per_individual_fragment = []
+    for global_fragment in global_fragments:
+        # number_of_frames
+        number_of_portraits_per_individual_fragment.append(global_fragment._number_of_portraits_per_individual_fragment)
+        # maximum number of frames in global fragment
+        number_of_frames_in_longest_individual_fragment.append(np.max(global_fragment._number_of_portraits_per_individual_fragment))
+        # minimum number of images in global fragment
+        number_of_frames_in_shortest_individual_fragment.append(np.min(global_fragment._number_of_portraits_per_individual_fragment))
+        median_number_of_frames.append(np.median(global_fragment._number_of_portraits_per_individual_fragment))
+        # compute minimum_distance_travelled for every blob in the individual fragment
+        distance_travelled = [blob.distance_travelled_in_fragment()
+                                        for blob in blobs[global_fragment.index_beginning_of_fragment]]
+        min_distance_travelled.append(np.min(distance_travelled))
+        # maximum distance travelled in global fragment
+        distance_travelled_by_longest_distance_travelled_individual_fragment.append(np.max(distance_travelled))
+        # minimum distance travelled in global fragment
+        distance_travelled_by_shortes_distance_travelled_individual_fragment.append(np.min(distance_travelled))
+        # number of images for the minimum distance travelled global fragment
+        # index = np.argsort(distance_travelled)[0]
+        # minimum_number_of_frames_in_shortest_distance_travelled_individual_fragment.append(number_of_frames_in_shortest_individual_fragment[index])
+
+        for i, individual_fragment_identifier in enumerate(global_fragment.individual_fragments_identifiers):
+            if individual_fragment_identifier not in individual_fragments_added:
+
+                individual_fragments_added.append(individual_fragment_identifier)
+                number_of_frames_in_individual_fragments.append(global_fragment._number_of_portraits_per_individual_fragment[i])
+                distance_travelled_individual_fragments.append(distance_travelled[i])
+
+    ''' plotting '''
+    plt.ion()
+    sns.set_style("ticks")
+    window = plt.get_current_fig_manager().window
+    screen_y = window.winfo_screenheight()
+    screen_x = window.winfo_screenwidth()
+    fig, ax_arr = plt.subplots(2,4)
+    fig.set_size_inches((screen_x/100,screen_y/100))
+    plt.subplots_adjust(hspace = .3, wspace = .5)
+
+    # remove global fragments that are lenght 0
+    number_of_frames_in_individual_fragments_0 = np.asarray(filter(lambda x: x != 0, number_of_frames_in_individual_fragments))
+    number_of_frames_in_shortest_individual_fragment_0 = np.asarray(filter(lambda x: x != 0, number_of_frames_in_shortest_individual_fragment))
+    distance_travelled_individual_fragments_0 = np.asarray(filter(lambda x: x != 0, distance_travelled_individual_fragments))
+    # scale to match frame rate
+    current_frame_rate = 25
+    new_frame_rate = 32
+    number_of_frames_in_individual_fragments_0 = number_of_frames_in_individual_fragments_0 * new_frame_rate / current_frame_rate
+    number_of_frames_in_shortest_individual_fragment_0 = number_of_frames_in_shortest_individual_fragment_0 * new_frame_rate / current_frame_rate
+
+    # number of frames in individual fragments
+    nbins = 25
+    ax = ax_arr[0,0]
+    MIN = np.min(number_of_frames_in_individual_fragments_0)
+    MAX = np.max(number_of_frames_in_individual_fragments_0)
+    hist, bin_edges = np.histogram(number_of_frames_in_individual_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
+    ax.semilogx(bin_edges[:-1], hist, '-ob' ,markersize = 5)
+    # ax.plot(bin_edges[:-1], hist, '-ob' ,markersize = 5)
+    ax.set_xlabel('num frames')
+    ax.set_ylabel('num indiv fragments')
+
+    # number of frames in shortest individual fragment
+    ax = ax_arr[0,1]
+    MIN = np.min(number_of_frames_in_shortest_individual_fragment_0)
+    MAX = np.max(number_of_frames_in_shortest_individual_fragment_0)
+    hist, bin_edges = np.histogram(number_of_frames_in_shortest_individual_fragment, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
+    ax.semilogx(bin_edges[:-1],hist, 'ro-', markersize = 5)
+    # ax.plot(bin_edges[:-1],hist, 'ro-', markersize = 5)
+    ax.text(.5,.95,'only individual fragments \nwith minimum \nnumber of frames \nin global fragment',
+        horizontalalignment='center',
+        transform=ax.transAxes,
+        verticalalignment = 'top')
+    ax.set_xlabel('num frames')
+
+    # distance travelled in individual fragments
+    ax = ax_arr[0,2]
+    MIN = np.min(distance_travelled_individual_fragments_0)
+    MAX = np.max(distance_travelled_individual_fragments_0)
+    hist, bin_edges = np.histogram(distance_travelled_individual_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
+    ax.semilogx(bin_edges[:-1], hist, '-ob' ,markersize = 5)
+    # ax.plot(bin_edges[:-1], hist, '-ob' ,markersize = 5)
+    ax.set_xlabel('distance travelled (pixels)')
+
+    # number of frames vs distance travelled
+    ax = ax_arr[0,3]
+    ax.plot(number_of_frames_in_individual_fragments, distance_travelled_individual_fragments, 'bo', alpha = .1, label = 'individual fragment', markersize = 5)
+    ax.set_xlabel('num frames')
+    ax.set_ylabel('distance travelled (pixels)')
+    ax.set_xscale("log", nonposx='clip')
+    ax.set_yscale("log", nonposy='clip')
+
+
+    ax = plt.subplot2grid((2, 4), (1, 0), colspan=4)
+    index_order_by_max_num_frames = np.argsort(min_distance_travelled)[::-1]
+    number_of_frames_in_longest_individual_fragment_ordered = np.asarray(number_of_frames_in_longest_individual_fragment)[index_order_by_max_num_frames]
+    number_of_frames_in_shortest_individual_fragment_ordered = np.asarray(number_of_frames_in_shortest_individual_fragment)[index_order_by_max_num_frames]
+    number_of_portraits_per_individual_fragment_ordered = np.asarray(number_of_portraits_per_individual_fragment)[index_order_by_max_num_frames]
+    median_number_of_frames_ordered = np.asarray(median_number_of_frames)[index_order_by_max_num_frames]
+
+    # ax.semilogy(range(len(global_fragments)), number_of_frames_in_longest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5)
+    a = ax.semilogy(range(len(global_fragments)), median_number_of_frames_ordered, color = 'b', linewidth= 2, label = 'median')
+    # ax.semilogy(range(len(global_fragments)), number_of_frames_in_shortest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5)
+    for i in range(len(global_fragments)):
+        a = ax.semilogy(i*np.ones(video.number_of_animals),number_of_portraits_per_individual_fragment_ordered[i],'o',alpha = .05,color = 'b',markersize=5,label='individual fragment')
+    b = ax.semilogy(range(len(global_fragments)), number_of_frames_in_longest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5, label = 'max')
+    c = ax.semilogy(range(len(global_fragments)), median_number_of_frames_ordered, color = 'r', linewidth= 2, label = 'median')
+    d = ax.semilogy(range(len(global_fragments)), number_of_frames_in_shortest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5, label = 'min')
+    ax.set_xlabel('global fragments ordered by minimum distance travelled (from max to min)')
+    ax.set_ylabel('num of frames')
+    ax.legend(handles = [c[0],d[0],b[0],a[0]])
+
+    plt.show()
+    fig.savefig(os.path.join(video._preprocessing_folder,'global_fragments_summary.pdf'), transparent=True)

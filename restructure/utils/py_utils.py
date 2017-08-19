@@ -273,6 +273,11 @@ def getExistentFiles(video, listNames):
             print('has roi')
             existentFile['ROI'] = '1'
 
+        if hasattr(old_video, 'resolution_reduction'):
+            if old_video.resolution_reduction is not None:
+                print('has resolution_reduction')
+                existentFile['resolution_reduction'] = '1'
+
         if old_video._has_preprocessing_parameters == True:
             print('has preprocessing params')
             existentFile['preprocparams'] = '1'
@@ -296,6 +301,11 @@ def getExistentFiles(video, listNames):
         if old_video._has_been_assigned == True:
             print('assignment done')
             existentFile['assignment'] = '1'
+
+        if hasattr(old_video, '_has_duplications_solved'): #old video objects do not have this property
+            if old_video._has_duplications_solved == True:
+                print('duplications solved')
+                existentFile['solving_duplications'] = '1'
 
         if hasattr(old_video, '_has_crossings_solved'): #old video objects do not have this property
             if old_video._has_crossings_solved == True:

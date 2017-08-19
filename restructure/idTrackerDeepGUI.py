@@ -30,7 +30,8 @@ from blob import compute_fragment_identifier_and_blob_index,\
                 ListOfBlobs,\
                 get_images_from_blobs_in_video,\
                 reset_blobs_fragmentation_parameters,\
-                compute_portrait_size
+                compute_portrait_size,\
+                check_number_of_blobs
 from globalfragment import compute_model_area_and_body_length,\
                             give_me_list_of_global_fragments,\
                             ModelArea,\
@@ -38,7 +39,8 @@ from globalfragment import compute_model_area_and_body_length,\
                             get_images_and_labels_from_global_fragments,\
                             subsample_images_for_last_training,\
                             order_global_fragments_by_distance_travelled,\
-                            filter_global_fragments_by_minimum_number_of_frames
+                            filter_global_fragments_by_minimum_number_of_frames,\
+                            compute_and_plot_global_fragments_statistics
 from get_portraits import get_body
 from segmentation import segment
 from get_crossings_data_set import CrossingDataset
@@ -54,7 +56,8 @@ from GUI_utils import selectFile,\
                     selectPreprocParams,\
                     fragmentation_inspector,\
                     frame_by_frame_identity_inspector,\
-                    selectDir
+                    selectDir,\
+                    check_resolution_reduction
 from py_utils import getExistentFiles
 from video_utils import checkBkg
 from pre_trainer import pre_train
@@ -95,7 +98,8 @@ if __name__ == '__main__':
     #############################################################
     #Asking user whether to reuse preprocessing steps...'
     reUseAll = getInput('Reuse all preprocessing, ', 'Do you wanna reuse all previous preprocessing? ([y]/n)')
-    processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'assignment', 'crossings', 'trajectories']
+
+    processes_list = ['bkg', 'ROI', 'resolution_reduction', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'assignment', 'solving_duplications', 'crossings', 'trajectories']
     #get existent files and paths to load them
     existentFiles, old_video = getExistentFiles(video, processes_list)
     if reUseAll == 'n':
@@ -103,15 +107,17 @@ if __name__ == '__main__':
         ############ Select preprocessing parameters   ##############
         ####                                                     ####
         #############################################################
-        prepOpts = selectOptions(['bkg', 'ROI'], None, text = 'Do you want to do BKG or select a ROI?  ')
+        prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?  ')
         video.subtract_bkg = bool(prepOpts['bkg'])
         video.apply_ROI =  bool(prepOpts['ROI'])
+        video.reduce_resolution = bool(prepOpts['resolution_reduction'])
         print('\nLooking for finished steps in previous session...')
         #selecting files to load from previous session...'
         loadPreviousDict = selectOptions(processes_list, existentFiles, text='Steps already processed in this video \n (loaded from ' + video._video_folder + ')')
         #use previous values and parameters (bkg, roi, preprocessing parameters)?
         usePreviousROI = loadPreviousDict['ROI']
         usePreviousBkg = loadPreviousDict['bkg']
+        usePreviousRR = loadPreviousDict['resolution_reduction']
         usePreviousPrecParams = loadPreviousDict['preprocparams']
         print("video session folder, ", video._session_folder)
         #ROI selection/loading
@@ -120,6 +126,8 @@ if __name__ == '__main__':
         #BKG computation/loading
         video.bkg = checkBkg(video, old_video, usePreviousBkg)
         print("video session folder, ", video._session_folder)
+        # Resolution reduction
+        video.resolution_reduction = check_resolution_reduction(video, old_video, usePreviousRR)
         #Selection/loading preprocessing parameters
         selectPreprocParams(video, old_video, usePreviousPrecParams)
         print("video session folder, ", video._session_folder)
@@ -175,14 +183,17 @@ if __name__ == '__main__':
                 reset_blobs_fragmentation_parameters(blobs)
             video.save()
 
+            # check number of blobs in frame
+            frames_with_more_blobs_than_animals = check_number_of_blobs(video, blobs)
+
             # compute a model of the area of the animals (considering frames in which
             # all the animals are visible)
-            model_area, maximum_body_length = compute_model_area_and_body_length(blobs, video.number_of_animals)
+            model_area, median_body_length = compute_model_area_and_body_length(blobs, video.number_of_animals)
+            video.median_body_length = median_body_length
             # compute portrait size
-            compute_portrait_size(video, maximum_body_length)
+            compute_portrait_size(video, median_body_length)
             # discard blobs that do not respect such model
             apply_model_area_to_video(video, blobs, model_area, video.portrait_size[0])
-
             # get fish and crossings data sets
             training_set = CrossingDataset(blobs, video, scope = 'training')
             training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)
@@ -235,6 +246,7 @@ if __name__ == '__main__':
             #with a single blob in the consecutive frame + the blobs respect the area model)
             global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
             global_fragments = filter_global_fragments_by_minimum_number_of_frames(global_fragments, minimum_number_of_frames = 3)
+            compute_and_plot_global_fragments_statistics(video, blobs, global_fragments)
             video.maximum_number_of_portraits_in_global_fragments = np.max([global_fragment._total_number_of_portraits for global_fragment in global_fragments])
             np.save(video.global_fragments_path, global_fragments)
             saved = False
@@ -289,8 +301,8 @@ if __name__ == '__main__':
         print("\n**** Pretraining ****\n")
         if not loadPreviousDict['pretraining']:
 
-            # pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
-            pretrain_flag = 'n'
+            pretrain_flag = getInput('Pretraining','Do you want to perform pretraining? [y]/n')
+            # pretrain_flag = 'n'
             if pretrain_flag == 'y' or pretrain_flag == '':
                 #set pretraining parameters
                 text_global_fragments_for_pretraining = 'Choose the ratio (0 -> None ,1 -> All] of global fragments to be used for pretraining. Default ' + str(PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING)
@@ -506,15 +518,12 @@ if __name__ == '__main__':
             compute_P1_for_blobs_in_video(video, blobs)
             # assign identities based on individual fragments
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
-            video._has_been_assigned = True
             # assign identity to individual fragments' extremes
             assing_identity_to_individual_fragments_extremes(blobs)
             # solve jumps
             assign_identity_to_jumps(video, blobs)
-            # solve duplications
-            solve_duplications(blobs, video.number_of_animals)
-            # solve impossible jumps
-            ### NOTE: to be coded
+            video._has_been_assigned = True
+
 
             # finish and save
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
@@ -529,11 +538,47 @@ if __name__ == '__main__':
             video._has_been_assigned = True
             video.save()
             # Load blobs and global fragments
-            list_of_blobs = ListOfBlobs.load(video.blobs_path)
-            blobs = list_of_blobs.blobs_in_video
-            global_fragments = np.load(video.global_fragments_path)
+            # list_of_blobs = ListOfBlobs.load(video.blobs_path)
+            # blobs = list_of_blobs.blobs_in_video
+            # global_fragments = np.load(video.global_fragments_path)
             # visualise proposed tracking
             # frame_by_frame_identity_inspector(video, blobs)
+
+        #############################################################
+        ###################   Solve duplications      ###############
+        ####
+        #############################################################
+        if not loadPreviousDict['solving_duplications']:
+            reset_blobs_fragmentation_parameters(blobs, recovering_from = 'solving_duplications')
+            # solve duplications
+            solve_duplications(video, blobs, global_fragments, video.number_of_animals)
+            video._has_duplications_solved = True
+
+            # finish and save
+            blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+            blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
+            blobs_list.cut_in_chunks()
+            blobs_list.save()
+            video.save()
+            # visualise proposed tracking
+            # frame_by_frame_identity_inspector(video, blobs)
+        else:
+            # Set preprocessed flag to True
+            video._has_duplications_solved = True
+            video.save()
+            # Load blobs and global fragments
+            # list_of_blobs = ListOfBlobs.load(video.blobs_path)
+            # blobs = list_of_blobs.blobs_in_video
+            # global_fragments = np.load(video.global_fragments_path)
+            # visualise proposed tracking
+            # frame_by_frame_identity_inspector(video, blobs)
+
+        #############################################################
+        ###################     Assigner      ######################
+        ####
+
+        # solve impossible jumps
+        ### NOTE: to be coded
 
         #############################################################
         ##############   Solve crossigns   ##########################
@@ -550,18 +595,15 @@ if __name__ == '__main__':
         #############################################################
         print("\n**** Generate trajectories ****")
         if not loadPreviousDict['trajectories']:
-            trajectories_folder = os.path.join(video._session_folder,'trajectories')
-            if not os.path.isdir(trajectories_folder):
-                print("Creating trajectories folder...")
-                os.makedirs(trajectories_folder)
+            video.create_trajectories_folder()
             trajectories = produce_trajectories(video._blobs_path)
             for name in trajectories:
-                np.save(os.path.join(trajectories_folder, name + '_trajectories.npy'), trajectories[name])
-                np.save(os.path.join(trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
-                np.save(os.path.join(trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
-                np.save(os.path.join(trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
+                np.save(os.path.join(video.trajectories_folder, name + '_trajectories.npy'), trajectories[name])
+                np.save(os.path.join(video.trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
+                np.save(os.path.join(video.trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
+                np.save(os.path.join(video.trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
             video._has_trajectories = True
-
+            video.save()
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         video = old_video

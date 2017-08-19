@@ -52,11 +52,18 @@ def produce_trajectories(blob_file):
     missing_head = False
     for frame_number, blobs_in_frame in enumerate(tqdm(list_of_blobs.blobs_in_video)):
         for blob in blobs_in_frame:
-            if (blob.identity is not None) and (blob.identity != 0): #If blob is not a jump and it is not a crossing
-                centroid_trajectories[blob.identity-1, frame_number, :] = blob.centroid
+            if blob.user_generated_identity is not None:
+                blob_identity = blob.user_generated_identity
+            elif blob._identity_corrected_solving_duplication is not None:
+                blob_identity = blob._identity_corrected_solving_duplication
+            else:
+                blob_identity = blob.identity
+
+            if (blob_identity is not None) and (blob_identity != 0): #If blob is not a jump and it is not a crossing
+                centroid_trajectories[blob_identity-1, frame_number, :] = blob.centroid
                 try:
-                    head_trajectories[blob.identity-1, frame_number, :] = blob.head_coordinates
-                    nose_trajectories[blob.identity-1, frame_number, :] = blob.nose_coordinates
+                    head_trajectories[blob_identity-1, frame_number, :] = blob.head_coordinates
+                    nose_trajectories[blob_identity-1, frame_number, :] = blob.nose_coordinates
                 except:
                     missing_head = True
     if not missing_head:
