@@ -950,6 +950,7 @@ class Validator(BoxLayout):
         frame = self.visualiser.frame
         # cv2.putText(frame, str(self.visualiser.video_slider.value),(50,50), font, 1, [0, 0, 0], 3)
         for blob in blobs_in_frame:
+            print("8<-------------------------------------------------------------")
             if not blob.is_a_crossing:
                 # print("______________________user generated id ", blob.user_generated_identity)
                 int_centroid = blob.centroid.astype('int')
@@ -1026,6 +1027,7 @@ class Validator(BoxLayout):
             print("is_a_crossing: ", blob.is_a_crossing)
             print("next: ", blob.next)
             print("previous: ", blob.previous)
+        print("8<-------------------------------------------------------------")
 
 
 

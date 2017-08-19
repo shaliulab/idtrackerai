@@ -229,7 +229,7 @@ def check_for_duplications(blobs_in_frame, possible_identities):
     # print("identities in frame: ", identities_in_frame)
     # print("duplicated identities: ", duplicated_identities)
     # print("missing identities: ", missing_identities)
-    print([(blob.identity, blob._identity_corrected_solving_duplication, blob.assigned_during_accumulation) for blob in blobs_in_frame])
+    # print([(blob.identity, blob._identity_corrected_solving_duplication, blob.assigned_during_accumulation) for blob in blobs_in_frame])
     return duplicated_identities, identities_in_frame, missing_identities
 
 def solve_duplications_loop(video, blobs, group_size, scope = None):
@@ -242,11 +242,12 @@ def solve_duplications_loop(video, blobs, group_size, scope = None):
     for blobs_in_frame in tqdm(blobs, desc = 'Solving duplications'):
         # print("\n*******solving frame with duplications...")
         # print("frame ", blobs_in_frame[0].frame_number)
-        print([(blob.identity, blob._identity_corrected_solving_duplication, blob.assigned_during_accumulation) for blob in blobs_in_frame])
+        # print([(blob.identity, blob._identity_corrected_solving_duplication, blob.assigned_during_accumulation) for blob in blobs_in_frame])
         duplicated_identities, identities_in_frame, missing_identities = check_for_duplications(blobs_in_frame, possible_identities)
         missing_identities = assign_single_unidentified_blob(missing_identities, blobs_in_frame)
         assign_duplicated_identities_in_frame(blobs_in_frame, duplicated_identities, missing_identities)
 
+    frames_with_duplications = []
     for blobs_in_frame in tqdm(blobs, desc = 'Checking that there are no more duplication'):
         # print("\n*******checking that there are no more duplications...")
         # print("frame ", blobs_in_frame[0].frame_number)
@@ -254,8 +255,13 @@ def solve_duplications_loop(video, blobs, group_size, scope = None):
         # missing_identities = assign_single_unidentified_blob(missing_identities, blobs_in_frame)
         duplicated_identities, identities_in_frame, _ = check_for_duplications(blobs_in_frame, possible_identities)
         if len(duplicated_identities) > 0:
+            print("frame ", blobs_in_frame[0].frame_number)
+            print("duplicated_identities, ", duplicated_identities)
             print("identities_in_frame, ",  identities_in_frame)
-            raise ValueError("Not all the duplications have been removed")
+            frames_with_duplications.append(blobs_in_frame[0].frame_number)
+    if len(frames_with_duplications) != 0:
+        print('frames with duplications, ', frames_with_duplications)
+        # raise ValueError("Not all the duplications have been removed")
 
 def solve_duplications(video, blobs, global_fragments, group_size):
 

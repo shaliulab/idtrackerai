@@ -32,6 +32,7 @@ class AccumulationManager(object):
         self.certainty_threshold = certainty_threshold
         self.individual_fragments_used = [] # list with the individual_fragments_identifiers of the individual fragments used for training
         self.identities_of_individual_fragments_used = [] # identities of the individual fragments used for training
+        self.P1_vector_of_individual_fragments_used = []
         self.used_images = None # images used for training the network
         self.used_labels = None # labels for the images used for training
         self.new_images = None # set of images that will be added to the new training
@@ -157,12 +158,15 @@ class AccumulationManager(object):
         print("Assigning identities to global fragments and blobs used in this accumulation step...")
         for global_fragment in self.next_global_fragments:
             assert global_fragment.used_for_training == True
-            self.check_consistency_of_assignation(global_fragment)
+            self.check_consistency_of_assignment(global_fragment)
             global_fragment._ids_assigned = np.asarray(global_fragment._temporary_ids) + 1
-            [blob.update_identity_in_fragment(identity_in_fragment, assigned_during_accumulation = True)
-                for blob, identity_in_fragment in zip(blobs_in_video[global_fragment.index_beginning_of_fragment], global_fragment._ids_assigned)]
+            [blob.update_identity_in_fragment(identity_in_fragment, assigned_during_accumulation = True, number_of_images_in_fragment = number_of_images_in_fragment)
+                for blob, identity_in_fragment, number_of_images_in_fragment in zip(blobs_in_video[global_fragment.index_beginning_of_fragment],
+                                                        global_fragment._ids_assigned,
+                                                        global_fragment._number_of_portraits_per_individual_fragment)]
+            global_fragment._P1_vector = [blob._P1_vector for blob in blobs_in_video[global_fragment.index_beginning_of_fragment]]
 
-    def check_consistency_of_assignation(self,global_fragment):
+    def check_consistency_of_assignment(self,global_fragment):
         """ this function checks that the identities of the individual fragments in the global
         fragment that is going to be assigned is consistent with the identities of the individual
         fragments that have already been used for training """
@@ -176,14 +180,17 @@ class AccumulationManager(object):
         If a individual fragment was added before is not added again.
         """
         print("Updating list of individual fragments used for training")
-        new_individual_fragments_and_id = set([(individual_fragment_identifier, temporal_identity)
+        new_individual_fragments_identifiers_and_id = set([(individual_fragment_identifier, temporal_identity, tuple(P1_vector))
                                                 for global_fragment in self.next_global_fragments
-                                                for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids)
-                                                if global_fragment.used_for_training and individual_fragment_identifier not in self.individual_fragments_used])
-        new_individual_fragments = list(np.asarray(list(new_individual_fragments_and_id))[:,0])
-        new_ids = list(np.asarray(list(new_individual_fragments_and_id))[:,1])
-        self.individual_fragments_used.extend(new_individual_fragments)
+                                                for individual_fragment_identifier, temporal_identity, P1_vector in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids, global_fragment._P1_vector)
+                                                    if global_fragment.used_for_training and individual_fragment_identifier not in self.individual_fragments_used])
+
+        new_individual_fragments_identifiers = [out[0] for out in new_individual_fragments_identifiers_and_id]
+        new_ids = [out[1] for out in new_individual_fragments_identifiers_and_id]
+        new_P1_vectors = [list(out[2]) for out in new_individual_fragments_identifiers_and_id]
+        self.individual_fragments_used.extend(new_individual_fragments_identifiers)
         self.identities_of_individual_fragments_used.extend(new_ids)
+        self.P1_vector_of_individual_fragments_used.extend(new_P1_vectors)
         print("number of individual fragments used for training:", len(self.individual_fragments_used))
         print("number of ids of individual fragments used for training:", len(self.identities_of_individual_fragments_used))
 
@@ -253,16 +260,15 @@ class AccumulationManager(object):
                 # if the individual fragment is no in the list of candidates is because it has been assigned
                 # and it is in the list of individual_fragments_used. We set the certainty to 1. And we
                 global_fragment._certainties.append(1.)
-                individual_fragment_P1_vector = np.zeros(self.number_of_animals)
                 individual_fragment_identifier_index = list(self.individual_fragments_used).index(individual_fragment_identifier)
                 individual_fragment_id = self.identities_of_individual_fragments_used[individual_fragment_identifier_index]
-                individual_fragment_P1_vector[individual_fragment_id] = 0.99999999999999
+                individual_fragment_P1_vector = self.P1_vector_of_individual_fragments_used[individual_fragment_identifier_index]
                 global_fragment._P1_vector.append(individual_fragment_P1_vector)
                 global_fragment._is_certain = True
             else:
                 raise ValueError("Individual fragment not in candidates or in used, this should not happen")
 
-        # Compute identities if the global_fragment is still acceptable for training
+        # Compute identities if the global_fragment is certain
         if global_fragment._acceptable_for_training:
             # print("it is certain enough")
             global_fragment._temporary_ids = np.nan * np.ones(self.number_of_animals)

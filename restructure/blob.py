@@ -8,6 +8,8 @@ import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
+from statistics_for_assignment import compute_P1_individual_fragment_from_frequencies
+
 # STD_TOLERANCE = 1 # tolerance to select a blob as being a single fish according to the area model
 ### NOTE set to 1 because we changed the model area to work with the median.
 
@@ -308,72 +310,87 @@ class Blob(object):
                         fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
         return np.asarray(P1_vectors)
 
-    def update_identity_in_fragment(self, identity_in_fragment, assigned_during_accumulation = False, duplication_solved = False):
+    def number_of_extremes_in_fragment(self):
+        number_of_extremes = 0
         if self.is_a_fish_in_a_fragment:
-            if not duplication_solved:
-                self._identity = identity_in_fragment
-            elif duplication_solved:
-                self._identity_corrected_solving_duplication = identity_in_fragment
-            if assigned_during_accumulation:
-                self._assigned_during_accumulation = True
-                self._P1_vector[identity_in_fragment-1] = 0.99999999999999
-                self._P2_vector[identity_in_fragment-1] = 0.99999999999999
             current = self
 
             while current.next[0].is_a_fish_in_a_fragment:
                 current = current.next[0]
-                if not duplication_solved:
-                    current._identity = identity_in_fragment
-                elif duplication_solved:
-                    current._identity_corrected_solving_duplication = identity_in_fragment
-                if assigned_during_accumulation:
-                    current._assigned_during_accumulation = True
-                    current._P1_vector[identity_in_fragment-1] = 0.99999999999999
-                    current._P2_vector[identity_in_fragment-1] = 0.99999999999999
-                else:
-                    current._P2_vector = self.P2_vector
+            if len(current.next) == 1: number_of_extremes += 1
+
             current = self
 
             while current.previous[0].is_a_fish_in_a_fragment:
                 current = current.previous[0]
-                if not duplication_solved:
-                    current._identity = identity_in_fragment
-                elif duplication_solved:
-                    current._identity_corrected_solving_duplication = identity_in_fragment
-                if assigned_during_accumulation:
-                    current._assigned_during_accumulation = True
-                    current._P1_vector[identity_in_fragment-1] = 0.99999999999999
-                    current._P2_vector[identity_in_fragment-1] = 0.99999999999999
-                else:
-                    current._P2_vector = self.P2_vector
+            if len(current.previous) == 1: number_of_extremes += 1
+        return number_of_extremes
 
-    def update_P1_in_fragment(self):
+    def set_identity_blob_in_fragment(self, identity_in_fragment, duplication_solved):
+        if not duplication_solved:
+            self._identity = identity_in_fragment
+        elif duplication_solved:
+            self._identity_corrected_solving_duplication = identity_in_fragment
+
+    def update_blob_assigned_during_accumulation(self, P1_vector, frequencies_in_fragment):
+            self._assigned_during_accumulation = True
+            self._frequencies_in_fragment = frequencies_in_fragment
+            self._P1_vector = P1_vector
+
+    @staticmethod
+    def update_identity_in_fragment_in_direction(current, identity_in_fragment, assigned_during_accumulation, P1_vector, frequencies_in_fragment, duplication_solved, direction = None):
+
+        while getattr(getattr(current,direction)[0],'is_a_fish_in_a_fragment'):
+            current = getattr(current,direction)[0]
+            current.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved)
+            if assigned_during_accumulation:
+                current.update_blob_assigned_during_accumulation(P1_vector, frequencies_in_fragment)
+
+        if len(getattr(current,direction)) == 1:
+            current = getattr(current,direction)[0]
+            current.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved)
+            if assigned_during_accumulation:
+                current.update_blob_assigned_during_accumulation(P1_vector, frequencies_in_fragment)
+
+    def update_identity_in_fragment(self, identity_in_fragment, assigned_during_accumulation = False, duplication_solved = False, number_of_images_in_fragment = None):
+        if self.is_a_fish_in_a_fragment:
+            self.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved)
+            if assigned_during_accumulation:
+                self._assigned_during_accumulation = True
+                self._frequencies_in_fragment = np.zeros(self.number_of_animals)
+                self._frequencies_in_fragment[identity_in_fragment-1] = number_of_images_in_fragment + self.number_of_extremes_in_fragment()
+                self._P1_vector = compute_P1_individual_fragment_from_frequencies(self._frequencies_in_fragment)
+
+            self.update_identity_in_fragment_in_direction(self, identity_in_fragment,
+                                                            assigned_during_accumulation,
+                                                            self._P1_vector,
+                                                            self._frequencies_in_fragment,
+                                                            duplication_solved,
+                                                            direction = 'next')
+            self.update_identity_in_fragment_in_direction(self, identity_in_fragment,
+                                                            assigned_during_accumulation,
+                                                            self._P1_vector,
+                                                            self._frequencies_in_fragment,
+                                                            duplication_solved,
+                                                            direction = 'previous')
+
+    def update_attributes_in_fragment(self, attributes, values):
+        assert len(attributes) == len(values)
         current = self
-
         while current.next[0].is_a_fish_in_a_fragment:
             current = current.next[0]
-            current._P1_vector = self.P1_vector
-            current._frequencies_in_fragment = self.frequencies_in_fragment
+            [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
+        if len(current.next) == 1:
+            current = current.next[0]
+            [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
 
         current = self
-
         while current.previous[0].is_a_fish_in_a_fragment:
             current = current.previous[0]
-            current._P1_vector = self.P1_vector
-            current._frequencies_in_fragment = self.frequencies_in_fragment
-
-# def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of_blobs):
-#     counter = 1
-#     for frame in tqdm(blobs_in_video, desc = 'assigning fragment identifier'):
-#         for blob in frame:
-#             if not blob.is_a_fish_in_a_fragment:
-#                 blob.fragment_identifier = -1
-#             elif blob.fragment_identifier is None:
-#                 blob.fragment_identifier = counter
-#                 while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
-#                     blob = blob.next[0]
-#                     blob.fragment_identifier = counter
-#                 counter += 1
+            [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
+        if len(current.previous) == 1:
+            current = current.previous[0]
+            [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
 
 def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of_blobs):
     counter = 1
@@ -403,7 +420,7 @@ def compute_crossing_fragment_identifier(list_of_blobs):
     for blobs_in_frame in list_of_blobs:
         for blob in blobs_in_frame:
             if blob.is_a_crossing and not hasattr(blob, 'crossing_identifier'):
-                print(crossing_identifier)
+                # print(crossing_identifier)
                 propagate_crossing_identifier(blob, crossing_identifier)
                 crossing_identifier += 1
             elif blob.is_a_crossing and hasattr(blob, 'crossing_identifier'):
@@ -415,7 +432,7 @@ def compute_crossing_fragment_identifier(list_of_blobs):
 def propagate_crossing_identifier(blob, crossing_identifier):
     blob.is_a_crossing_in_a_fragment = True
     blob.crossing_identifier = crossing_identifier
-    print(crossing_identifier)
+    # print(crossing_identifier)
     cur_blob = blob
 
     while len(cur_blob.next) == 1:

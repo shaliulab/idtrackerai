@@ -39,7 +39,7 @@ def compute_model_velocity(blobs_in_video, number_of_animals, percentile = None)
 
 def compute_velocity_from_list_of_blobs(list_of_blobs):
     centroids = [blob.centroid for blob in list_of_blobs]
-    print(centroids)
+    # print(centroids)
     velocity = [np.linalg.norm(centroids[i+1] - centroid) for i, centroid in enumerate(centroids[:-1])]
-    print(velocity)
+    # print(velocity)
     return np.mean(velocity)

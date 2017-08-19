@@ -67,6 +67,7 @@ from trainer import train
 from assigner import assign,\
                     assign_identity_to_blobs_in_video,\
                     compute_P1_for_blobs_in_video,\
+                    compute_P2_for_blobs_in_video,\
                     assign_identity_to_blobs_in_video_by_fragment
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
@@ -516,10 +517,10 @@ if __name__ == '__main__':
             assign_identity_to_blobs_in_video(blobs, assigner)
             # compute P1 vector for individual fragmets
             compute_P1_for_blobs_in_video(video, blobs)
+            # compute P2 for all the individual fragments (including the already accumulated)
+            compute_P2_for_blobs_in_video(video, blobs)
             # assign identities based on individual fragments
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
-            # assign identity to individual fragments' extremes
-            assing_identity_to_individual_fragments_extremes(blobs)
             # solve jumps
             assign_identity_to_jumps(video, blobs)
             video._has_been_assigned = True

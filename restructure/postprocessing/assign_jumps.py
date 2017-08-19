@@ -137,7 +137,7 @@ class Jump(object):
         else:
             raise ValueError('condition not considered')
 
-        print("prediciton", self.prediction)
+        # print("prediciton", self.prediction)
         if self.jumping_blob.frame_number >= 1 and self.jumping_blob.identity != 0:
             sorted_assignments_indices = np.argsort(np.array(self._P2_vector))[::-1]
             self.check_assigned_identity(blobs_in_video, available_identities, sorted_assignments_indices)
