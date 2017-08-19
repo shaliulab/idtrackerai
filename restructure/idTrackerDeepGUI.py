@@ -524,7 +524,6 @@ if __name__ == '__main__':
             assign_identity_to_jumps(video, blobs)
             video._has_been_assigned = True
 
-
             # finish and save
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
@@ -574,7 +573,7 @@ if __name__ == '__main__':
             # frame_by_frame_identity_inspector(video, blobs)
 
         #############################################################
-        ###################     Assigner      ######################
+        ###################  Solving impossible jumps    ############
         ####
 
         # solve impossible jumps
