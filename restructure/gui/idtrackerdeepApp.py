@@ -71,7 +71,8 @@ class Chosen_Video(EventDispatcher):
             processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
             #get existent files and paths to load them
             self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
-            if self.old_video._has_been_assigned: self.video._has_been_assigned
+            if self.old_video._has_been_assigned:
+                self.video._has_been_assigned
             if hasattr(self.old_video, 'resolution_reduction'):
                 self.video.resolution_reduction = self.old_video.resolution_reduction
                 self.video.bkg = self.old_video.bkg
@@ -755,8 +756,7 @@ class Validator(BoxLayout):
         self.popup.open()
 
     def get_first_frame(self):
-        if not hasattr(self, 'global_fragments'):
-            self.global_fragments = np.load(CHOSEN_VIDEO.old_video.global_fragments_path)
+        self.global_fragments = np.load(CHOSEN_VIDEO.old_video.global_fragments_path)
         max_distance_travelled_global_fragment = order_global_fragments_by_distance_travelled(self.global_fragments)[0]
         return max_distance_travelled_global_fragment.index_beginning_of_fragment
 
@@ -963,15 +963,9 @@ class Validator(BoxLayout):
                 # print("______________________user generated id ", blob.user_generated_identity)
                 int_centroid = blob.centroid.astype('int')
                 if blob.user_generated_identity is None:
-                    if blob._identity_corrected_solving_duplication is not None:
-                        cur_id = blob._identity_corrected_solving_duplication
-                        cur_id_str = 'd-' + str(cur_id)
-                    else:
-                        cur_id = blob.identity
-                        cur_id_str = str(cur_id)
+                    cur_id = blob.identity
                 else:
                     cur_id = blob.user_generated_identity
-                    cur_id_str = 'u-' + str(cur_id)
 
                 if type(cur_id) is 'int':
                     cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
@@ -979,26 +973,26 @@ class Validator(BoxLayout):
                     cv2.circle(frame, tuple(int_centroid), 2, [255, 255, 255], -1)
                 if blob._assigned_during_accumulation:
                     # we draw a circle in the centroid if the blob has been assigned during accumulation
-                    cv2.putText(frame, 'a-' + cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
+                    cv2.putText(frame, str(cur_id),tuple(int_centroid), font, 1, self.colors[cur_id], 3)
                 elif not blob._assigned_during_accumulation:
                     # we draw a cross in the centroid if the blob has been assigned during assignation
                     # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[cur_id], 1)
                     if blob.is_a_fish_in_a_fragment:
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, self.colors[cur_id], 2)
                     elif not blob.is_a_fish:
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, [255,255,255], 2)
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, [255,255,255], 3)
                     elif blob.is_a_jump:
                         bounding_box = blob.bounding_box_in_frame_coordinates
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, self.colors[cur_id], 2)
                         cv2.rectangle(frame, bounding_box[0], bounding_box[1], (0, 255, 0) , 2)
                     elif blob.is_a_ghost_crossing:
                         bounding_box = blob.bounding_box_in_frame_coordinates
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, self.colors[cur_id], 2)
                         cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 255, 255) , 2)
                     elif hasattr(blob , 'is_an_extreme_of_individual_fragment'):
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, self.colors[cur_id], 2)
                     else:
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, [0, 0, 0], 2)
+                        cv2.putText(frame, str(cur_id), tuple(int_centroid), font, 1, [0, 0, 0], 2)
             elif blob.is_a_crossing:
                 print("writing crossing ids")
                 if blob.user_generated_identity is not None:
@@ -1012,30 +1006,6 @@ class Validator(BoxLayout):
 
                 self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
-
-            print("\nidentity: ", blob._identity)
-            print("corrected identity in duplications: ", blob._identity_corrected_solving_duplication)
-            if hasattr(blob,"identities_before_crossing"):
-                print("identity_before_crossing: ", blob.identities_before_crossing)
-            if hasattr(blob,"identities_after_crossing"):
-                print("identity_after_crossing: ", blob.identities_after_crossing)
-            print("assigned during accumulation: ", blob.assigned_during_accumulation)
-            if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
-                try:
-                    print("frequencies in fragment: ", blob.frequencies_in_fragment)
-                except:
-                    print("this blob does not have frequencies in fragment")
-            print("P1_vector: ", blob.P1_vector)
-            print("P2_vector: ", blob.P2_vector)
-            print("is_a_fish: ", blob.is_a_fish)
-            print("is_in_a_fragment: ", blob.is_in_a_fragment)
-            print("is_a_fish_in_a_fragment: ", blob.is_a_fish_in_a_fragment)
-            print("is_a_jump: ", blob.is_a_jump)
-            print("is_a_ghost_crossing: ", blob.is_a_ghost_crossing)
-            print("is_a_crossing: ", blob.is_a_crossing)
-            print("next: ", blob.next)
-            print("previous: ", blob.previous)
-
 
 
         # Visualization of the process
@@ -1248,25 +1218,21 @@ class Validator(BoxLayout):
         frames_with_zeros = []
         for blobs_in_frame in blobs_in_video:
             for blob in blobs_in_frame:
-                if blob._identity_corrected_solving_duplication is None:
-                    blob_identity = blob.identity
-                elif blob._identity_corrected_solving_duplication is not None:
-                    blob_identity = blob._identity_corrected_solving_duplication
                 if (blob.is_a_fish_in_a_fragment or\
                         blob.is_a_jump or\
                         blob.is_a_jumping_fragment or\
                         hasattr(blob,'is_an_extreme_of_individual_fragment')) and\
                         blob.user_generated_identity != -1: # we are not considering crossing or failures of the model area
-                    if blob.user_generated_identity is not None and blob.user_generated_identity != blob_identity:
+                    if blob.user_generated_identity is not None and blob.user_generated_identity != blob.identity:
                         count_number_assignment_per_individual_all[blob.user_generated_identity] += 1
                         count_errors_identities_dict_all[blob.user_generated_identity] += 1
-                        if blob_identity != 0:
+                        if blob.identity != 0:
                             count_number_assignment_per_individual_assigned[blob.user_generated_identity] += 1
                             count_errors_identities_dict_assigned[blob.user_generated_identity] += 1
-                    elif blob_identity != 0:
-                        count_number_assignment_per_individual_assigned[blob_identity] += 1
-                        count_number_assignment_per_individual_all[blob_identity] += 1
-                    elif blob_identity == 0 and blob.user_generated_identity is None:
+                    elif blob.identity != 0:
+                        count_number_assignment_per_individual_assigned[blob.identity] += 1
+                        count_number_assignment_per_individual_all[blob.identity] += 1
+                    elif blob.identity == 0 and blob.user_generated_identity is None:
                         print("frame number, ", blob.frame_number)
                         frames_with_zeros.append(blob.frame_number)
                         check_ground_truth = True
