@@ -378,6 +378,39 @@ def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of
                     blob._blob_index = blob_index
                 counter += 1
 
+def compute_crossing_fragment_identifier(list_of_blobs):
+    """we define a crossing fragment as a crossing that in subsequent frames
+    involves the same individuals"""
+    crossing_identifier = 0
+
+    for blobs_in_frame in list_of_blobs:
+        for blob in blobs_in_frame:
+            if blob.is_a_crossing and not hasattr(blob, 'crossing_identifier'):
+                print(crossing_identifier)
+                propagate_crossing_identifier(blob, crossing_identifier)
+                crossing_identifier += 1
+            elif blob.is_a_crossing and hasattr(blob, 'crossing_identifier'):
+                blob.is_a_crossing_in_a_fragment = True
+            else:
+                blob.is_a_crossing_in_a_fragment = None
+    # raise ValueError("De-fucking-bug")
+
+def propagate_crossing_identifier(blob, crossing_identifier):
+    blob.is_a_crossing_in_a_fragment = True
+    blob.crossing_identifier = crossing_identifier
+    print(crossing_identifier)
+    cur_blob = blob
+
+    while len(cur_blob.next) == 1:
+        cur_blob = cur_blob.next[0]
+        cur_blob.crossing_identifier = crossing_identifier
+
+    cur_blob = blob
+
+    while len(cur_blob.previous) == 1:
+        cur_blob = cur_blob.previous[0]
+        cur_blob.crossing_identifier = crossing_identifier
+
 def connect_blob_list(blobs_in_video):
     for frame_i in tqdm(xrange(1,len(blobs_in_video)), desc = 'Connecting blobs '):
         set_frame_number_to_blobs_in_frame(blobs_in_video[frame_i-1], frame_i-1)

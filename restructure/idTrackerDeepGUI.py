@@ -24,6 +24,7 @@ sys.path.append('./network/identification_model')
 
 from video import Video
 from blob import compute_fragment_identifier_and_blob_index,\
+                compute_crossing_fragment_identifier,\
                 connect_blob_list,\
                 apply_model_area_to_video,\
                 ListOfBlobs,\
@@ -221,6 +222,8 @@ if __name__ == '__main__':
             connect_blob_list(blobs)
             #assign an identifier to each blob belonging to an individual fragment
             compute_fragment_identifier_and_blob_index(blobs, video.maximum_number_of_blobs)
+            #assign an identifier to each blob belonging to a crossing fragment
+            compute_crossing_fragment_identifier(blobs)
             #save connected blobs in video (organized frame-wise) and list of global fragments
             video._has_been_preprocessed = True
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)

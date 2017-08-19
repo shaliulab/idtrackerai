@@ -131,9 +131,9 @@ def propagate_crossing_identifier(blob, crossing_identifier):
         cur_blob = cur_blob.previous[0]
     return crossing_identifier + 1
 
-def get_crossing_and_statistics(list_of_blobs, max_crossing_identifier):
+def get_crossing_and_statistics(list_of_blobs):
     number_of_crossing_frames = 0
-    crossings = {i: [] for i in range(max_crossing_identifier)}
+    crossings = {}
 
     for blobs_in_frame in list_of_blobs:
         for blob in blobs_in_frame:
@@ -141,7 +141,12 @@ def get_crossing_and_statistics(list_of_blobs, max_crossing_identifier):
             if blob.is_a_crossing:
                 print("frame number ", blob.frame_number)
                 number_of_crossing_frames += 1
-                crossings[blob.crossing_identifier].append(blob)
+                try:
+                    crossings[blob.crossing_identifier].append(blob)
+                except:
+                    crossings[blob.crossing_identifier] = []
+                    crossings[blob.crossing_identifier].append(blob)
+
 
     crossings_lengths = [len(crossings[c]) for c in crossings]
     return crossings, len(crossings), number_of_crossing_frames, crossings_lengths
@@ -255,6 +260,7 @@ class Crossing(object):
                         pixels = pixels,
                         number_of_animals = number_of_animals,
                         frame_number = frame_number)
+        new_blob.crossing_identifier = self.blob.crossing_identifier
         return self.generate_fish_crossing_image(new_blob)
 
     @staticmethod
@@ -298,7 +304,8 @@ class Crossing(object):
 
     def generate_crossing_images(self, assigned_identities = []):
         self.separate_blobs()
-        self.images = self.get_images_from_list_of_blobs(self.new_blobs)
+        if len(self.new_blobs) > 0:
+            self.images = self.get_images_from_list_of_blobs(self.new_blobs)
 
 def discriminate_crossing_and_fish_images(images):
     if len(images.shape) == 3:
@@ -366,8 +373,7 @@ if __name__ == "__main__":
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
     blobs = give_me_identities_in_crossings(blobs)
-    max_crossing_identifier = assign_crossing_identifier(blobs)
-    crossings, number_of_crossings, number_of_crossing_frames, crossing_lengths = get_crossing_and_statistics(blobs, max_crossing_identifier)
+    crossings, number_of_crossings, number_of_crossing_frames, crossing_lengths = get_crossing_and_statistics(blobs)
 
     crossing_blobs = []
     images_from_crossings = []
@@ -377,7 +383,8 @@ if __name__ == "__main__":
             crossing = Crossing(blob, video)
             crossing.generate_crossing_images()
             crossing_blobs.append(crossing)
-            images_from_crossings.extend(crossing.images)
+            if hasattr(crossing, 'images'):
+                images_from_crossings.extend(crossing.images)
 
     images_from_crossings = np.asarray(images_from_crossings)
     predictions = discriminate_crossing_and_fish_images(images_from_crossings)
@@ -388,19 +395,18 @@ if __name__ == "__main__":
 
     counter = 0
 
-    for unsolved_crossing in tqdm(crossings.values(), desc = "Updating crossing blobs"):
+    for crossing in tqdm(crossing_blobs, desc = "Updating crossing blobs"):
         print("counter", counter)
-        print("len unsolved_crossing ", len(unsolved_crossing))
-        if len(unsolved_crossing) > 0:
-            for blob in unsolved_crossing:
-                print("crossing_fragment ", blob.crossing_fragment)
-                print("frame number ", blob.frame_number)
-                if counter in np.where(np.asarray(predictions) == 0)[0]:
-                    blob._softmax_probs = assigner._softmax_probs[counter]
-                    blob._prediction = assigner._predictions[counter]
-                    counter += 1
-                else:
-                    blob._portrait = None
+        print("crossing_fragment ", crossing.blob.crossing_identifier)
+        print("frame number ", crossing.blob.frame_number)
+        if counter in np.where(np.asarray(predictions) == 0)[0]:
+            crossing.blob._softmax_probs = assigner._softmax_probs[counter]
+            crossing.blob._prediction = assigner._predictions[counter]
+            counter += 1
+        else:
+            crossing.blob._portrait = None
+
+
 
 
     # for unsolved_crossing in tqdm(crossings.values(), desc = "Solving crossings"):
