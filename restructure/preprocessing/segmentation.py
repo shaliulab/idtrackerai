@@ -49,6 +49,7 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
         ret, frame = cap.read()
         if video.resolution_reduction != 1 and ret:
             frame = cv2.resize(frame, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+        
         try:
             #Color to gray scale
             frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -58,8 +59,7 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
             segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
             # Find contours in the segmented image
             bounding_boxes, miniframes, centroids, areas, pixels, contours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray,
-                                                                                                    video._min_area, video._max_area,
-                                                                                                    video._height, video._width)
+                                                                                                    video._min_area, video._max_area)
         except:
             print("frame number, ", counter)
             print("ret, ", ret)

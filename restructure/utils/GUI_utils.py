@@ -305,8 +305,13 @@ def SegmentationPreview(video):
         mask = cv2.resize(mask,None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
         video.ROI = mask
     subtract_bkg = video.subtract_bkg
-    height = video._height
-    width = video._width
+    if video.resolution_reduction == 1:
+        height = video._height
+        width = video._width
+    else:
+        height = int(video._height * video.resolution_reduction)
+        width = int(video._width * video.resolution_reduction)
+
 
     def thresholder(minTh, maxTh):
         toile = np.zeros_like(frameGray, dtype='uint8')
@@ -315,7 +320,7 @@ def SegmentationPreview(video):
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
-        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray, minArea, maxArea, height, width)
+        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray, minArea, maxArea)
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()

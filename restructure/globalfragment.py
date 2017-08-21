@@ -189,13 +189,17 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
         labels_global_fragment, \
         lengths_global_fragment, \
         individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment,
-                                                                                        individual_fragments_identifiers_already_used)
+                                                                                            individual_fragments_identifiers_already_used)
+        print("images_global_fragment[0].shape", images_global_fragment[0].shape)
+        print("length images_global_fragment", len(images_global_fragment))
+        print("individual_fragments_identifiers ", individual_fragments_identifiers)
         if len(images_global_fragment) != 0:
             images.append(images_global_fragment)
             labels.append(labels_global_fragment)
             lengths.extend(lengths_global_fragment)
             candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
             individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
+    print("================8", np.concatenate(images, axis = 0).shape)
     if len(images) != 0:
         return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
     else:
