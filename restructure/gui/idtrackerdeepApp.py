@@ -199,9 +199,9 @@ class VisualiseVideo(BoxLayout):
 
     def visualise(self, trackbar_value, func = None):
         self.func = func
-        print('trackbar_value ', trackbar_value)
+        # print('trackbar_value ', trackbar_value)
         sNumber = self.video_object.in_which_episode(int(trackbar_value))
-        print('seg number ', sNumber)
+        # print('seg number ', sNumber)
         sFrame = trackbar_value
         current_segment = sNumber
         if self.video_object._paths_to_video_segments:
@@ -275,7 +275,7 @@ class ROISelector(BoxLayout):
                 self.btn_load_roi.disabled = True
 
     def on_touch_down(self, touch):
-        print("touch down dispatch")
+        # print("touch down dispatch")
         self.touches = []
         if self.visualiser.display_layout.collide_point(*touch.pos):
             self.touches.append(touch.pos)
@@ -332,12 +332,12 @@ class ROISelector(BoxLayout):
         self.visualiser.initImW = self.cur_image_width
 
     def save_ROI(self, *args):
-        print("saving ROI")
+        # print("saving ROI")
         if len(self.ROIOut) > 0:
             self.ROIcv2 = np.zeros_like(self.visualiser.frame,dtype='uint8')
             for p in self.ROIOut:
-                print("adding rectangles to ROI")
-                print("rect ", p)
+                # print("adding rectangles to ROI")
+                # print("rect ", p)
                 cv2.rectangle(self.ROIcv2, p[0], p[1], 255, -1)
         CHOSEN_VIDEO.video.ROI = self.ROIcv2
         CHOSEN_VIDEO.video.save()
@@ -536,11 +536,11 @@ class PreprocessingPreview(BoxLayout):
             self.bkg = CHOSEN_VIDEO.video.bkg
             self.ROI = CHOSEN_VIDEO.video.ROI if CHOSEN_VIDEO.video.ROI is not None else np.ones((CHOSEN_VIDEO.video._height, CHOSEN_VIDEO.video._width) ,dtype='uint8') * 255
             CHOSEN_VIDEO.video.ROI = self.ROI
-            print("ROI in do - preprocessing", self.ROI)
+            # print("ROI in do - preprocessing", self.ROI)
             self.init_segment_zero()
 
     def apply_ROI(self, instance, active):
-        print("applying ROI")
+        # print("applying ROI")
         CHOSEN_VIDEO.video.apply_ROI = active
         if active  == True:
             num_valid_pxs_in_ROI = len(sum(np.where(CHOSEN_VIDEO.video.ROI == 255)))
@@ -671,9 +671,9 @@ class PreprocessingPreview(BoxLayout):
 
     def on_touch_down(self, touch):
         self.touches = []
-        print( 'scrollup number ', self.count_scrollup)
+        # print( 'scrollup number ', self.count_scrollup)
         if self.parent is not None and self.visualiser.display_layout.collide_point(*touch.pos):
-            print( 'i think you are on the image')
+            # print( 'i think you are on the image')
             if touch.button == 'scrollup':
                 self.count_scrollup += 1
 
@@ -757,7 +757,7 @@ class Validator(BoxLayout):
 
     def do(self, *args):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
-            print("has been assigned ", CHOSEN_VIDEO.video._has_been_assigned)
+            # print("has been assigned ", CHOSEN_VIDEO.video._has_been_assigned)
             if CHOSEN_VIDEO.video._has_been_assigned == True:
                 list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
@@ -771,7 +771,7 @@ class Validator(BoxLayout):
             #init elements in the self widget
             self.init_segmentZero()
         else:
-            print("no assignment done")
+            # print("no assignment done")
             self.warning_popup.open()
 
     def init_segmentZero(self):
@@ -883,10 +883,10 @@ class Validator(BoxLayout):
         """
         Get contour in which point is contained
         """
-        print("point ", point)
-        print("contours ", contours)
+        # print("point ", point)
+        # print("contours ", contours)
         indices = [i for i, cnt in enumerate(contours) if cv2.pointPolygonTest(cnt, tuple(point), measureDist = False) >= 0]
-        print(indices)
+        # print(indices)
         if len(indices) != 0:
             return indices[0]
         else:
@@ -919,9 +919,9 @@ class Validator(BoxLayout):
         if self.scale != 1:
             mouse_coords = self.apply_inverse_affine_transform_on_point(self.M, mouse_coords)
         # centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
-        print("contours shape, ", contours[0].shape)
+        # print("contours shape, ", contours[0].shape)
         blob_ind = self.get_clicked_blob(mouse_coords, contours)
-        print("blob index ", blob_ind)
+        # print("blob index ", blob_ind)
         if blob_ind is not None:
             blob_to_modify = blobs_in_frame[blob_ind]
             return blob_to_modify, mouse_coords
@@ -940,7 +940,7 @@ class Validator(BoxLayout):
         else:
             original_frame_width = int(CHOSEN_VIDEO.video._width * CHOSEN_VIDEO.video.resolution_reduction)
             original_frame_height = int(CHOSEN_VIDEO.video._height * CHOSEN_VIDEO.video.resolution_reduction)
-        print("--------------------------- width and height ", original_frame_width, original_frame_height)
+        # print("--------------------------- width and height ", original_frame_width, original_frame_height)
 
         actual_frame_width, actual_frame_height = self.visualiser.display_layout.size
         self.offset = self.visualiser.footer.height
@@ -960,7 +960,7 @@ class Validator(BoxLayout):
         blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
         font = cv2.FONT_HERSHEY_SIMPLEX
         frame = self.visualiser.frame
-        print("frame shape in write Ids ", frame.shape)
+        # print("frame shape in write Ids ", frame.shape)
         # cv2.putText(frame, str(self.visualiser.video_slider.value),(50,50), font, 1, [0, 0, 0], 3)
         for blob in blobs_in_frame:
             print("8<-------------------------------------------------------------")
@@ -1005,7 +1005,7 @@ class Validator(BoxLayout):
                     else:
                         cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, [0, 0, 0], 2)
             elif blob.is_a_crossing:
-                print("writing crossing ids")
+                # print("writing crossing ids")
                 if blob.user_generated_identity is not None:
                     for centroid, identity in zip(blob._user_generated_centroids, blob._user_generated_identities):
                         centroid = centroid.astype('int')
@@ -1107,9 +1107,9 @@ class Validator(BoxLayout):
         else:
             self.blob_to_modify._user_generated_centroids.append(self.user_generated_centroids)
             self.blob_to_modify._user_generated_identities.append(self.identity_update)
-            print("assigning ids and centroids to crossings:")
-            print(self.blob_to_modify._user_generated_identities)
-            print(self.blob_to_modify._user_generated_centroids)
+            # print("assigning ids and centroids to crossings:")
+            # print(self.blob_to_modify._user_generated_identities)
+            # print(self.blob_to_modify._user_generated_centroids)
         self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func=self.writeIds)
 
     def on_press_show_saving(selg, *args):
