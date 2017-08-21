@@ -207,7 +207,7 @@ def assign_identity_to_jumps(video, blobs):
     if not hasattr(video, "velocity_threshold"):
         video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals)
     jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
-                    if blob.is_a_jump or (blob.is_a_fish and blob.identity == 0)]
+                    if blob.is_a_jump or (blob.is_a_fish and (blob.identity == 0 or blob.identity is None) or (blob.is_a_ghost_crossing and blob.identity == 1))]
     jump_images = [blob.portrait for blob in jump_blobs]
     #assign jumps by restoring the network
     assigner = assign_jumps(jump_images, video)
@@ -218,7 +218,7 @@ def assign_identity_to_jumps(video, blobs):
     for blob in jump_blobs:
         get_frequencies_P1_for_jump(video, blob)
 
-    for i, blob in enumerate(jump_blobs):
+    for i, blob in tqdm(enumerate(jump_blobs), desc = 'Assigning identity to jumps'):
         compute_P2_for_jump(blob, blobs)
 
         jump = Jump(jumping_blob = blob,

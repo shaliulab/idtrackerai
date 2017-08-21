@@ -949,8 +949,10 @@ class Validator(BoxLayout):
         font = cv2.FONT_HERSHEY_SIMPLEX
         frame = self.visualiser.frame
         # cv2.putText(frame, str(self.visualiser.video_slider.value),(50,50), font, 1, [0, 0, 0], 3)
+        print("****************************************************************")
         for blob in blobs_in_frame:
             print("8<-------------------------------------------------------------")
+
             if not blob.is_a_crossing:
                 # print("______________________user generated id ", blob.user_generated_identity)
                 int_centroid = blob.centroid.astype('int')
@@ -1007,16 +1009,19 @@ class Validator(BoxLayout):
 
             print("\nidentity: ", blob._identity)
             print("corrected identity in duplications: ", blob._identity_corrected_solving_duplication)
+            if hasattr(blob,"fragment_identifier"):
+                print("fragment_identifier: ", blob.fragment_identifier)
+            else:
+                print("it does not have a fragment identifier")
             if hasattr(blob,"identities_before_crossing"):
                 print("identity_before_crossing: ", blob.identities_before_crossing)
             if hasattr(blob,"identities_after_crossing"):
                 print("identity_after_crossing: ", blob.identities_after_crossing)
             print("assigned during accumulation: ", blob.assigned_during_accumulation)
-            if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
-                try:
-                    print("frequencies in fragment: ", blob.frequencies_in_fragment)
-                except:
-                    print("this blob does not have frequencies in fragment")
+            if hasattr(blob,"frequencies_in_fragment"):
+                print("frequencies in fragment: ", blob.frequencies_in_fragment)
+            else:
+                print("this blob does not have frequencies in fragment")
             print("P1_vector: ", blob.P1_vector)
             print("P2_vector: ", blob.P2_vector)
             print("is_a_fish: ", blob.is_a_fish)

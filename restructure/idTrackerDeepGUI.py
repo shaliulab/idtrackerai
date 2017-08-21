@@ -460,12 +460,13 @@ if __name__ == '__main__':
 
                     predictions,\
                     softmax_probs,\
+                    non_shared_information,\
                     indices_to_split,\
                     candidate_individual_fragments_identifiers = get_predictions_of_candidates_global_fragments(net,
                                                                                                                 video,
                                                                                                                 candidates_next_global_fragments,
                                                                                                                 accumulation_manager.individual_fragments_used)
-                    accumulation_manager.split_predictions_after_network_assignment(predictions, softmax_probs, indices_to_split)
+                    accumulation_manager.split_predictions_after_network_assignment(predictions, softmax_probs, non_shared_information, indices_to_split)
                     # assign identities to the global fragments based on the predictions
                     accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_identifiers)
                     accumulation_manager.update_counter()
@@ -509,6 +510,7 @@ if __name__ == '__main__':
             # Get images from the blob collection
             images = get_images_from_blobs_in_video(blobs)#, video._episodes_start_end)
             print("images shape before entering to assign, ", images.shape)
+
             # get predictions
             assigner = assign(net, video, images, print_flag = True)
             print("number of predictions, ", len(assigner._predictions))
@@ -548,30 +550,30 @@ if __name__ == '__main__':
         ###################   Solve duplications      ###############
         ####
         #############################################################
-        if not loadPreviousDict['solving_duplications']:
-            reset_blobs_fragmentation_parameters(blobs, recovering_from = 'solving_duplications')
-            # solve duplications
-            solve_duplications(video, blobs, global_fragments, video.number_of_animals)
-            video._has_duplications_solved = True
-
-            # finish and save
-            blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
-            blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
-            blobs_list.cut_in_chunks()
-            blobs_list.save()
-            video.save()
-            # visualise proposed tracking
-            # frame_by_frame_identity_inspector(video, blobs)
-        else:
-            # Set preprocessed flag to True
-            video._has_duplications_solved = True
-            video.save()
-            # Load blobs and global fragments
-            # list_of_blobs = ListOfBlobs.load(video.blobs_path)
-            # blobs = list_of_blobs.blobs_in_video
-            # global_fragments = np.load(video.global_fragments_path)
-            # visualise proposed tracking
-            # frame_by_frame_identity_inspector(video, blobs)
+        # if not loadPreviousDict['solving_duplications']:
+        #     reset_blobs_fragmentation_parameters(blobs, recovering_from = 'solving_duplications')
+        #     # solve duplications
+        #     solve_duplications(video, blobs, global_fragments, video.number_of_animals)
+        #     video._has_duplications_solved = True
+        #
+        #     # finish and save
+        #     blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+        #     blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
+        #     blobs_list.cut_in_chunks()
+        #     blobs_list.save()
+        #     video.save()
+        #     # visualise proposed tracking
+        #     # frame_by_frame_identity_inspector(video, blobs)
+        # else:
+        #     # Set preprocessed flag to True
+        #     video._has_duplications_solved = True
+        #     video.save()
+        #     # Load blobs and global fragments
+        #     # list_of_blobs = ListOfBlobs.load(video.blobs_path)
+        #     # blobs = list_of_blobs.blobs_in_video
+        #     # global_fragments = np.load(video.global_fragments_path)
+        #     # visualise proposed tracking
+        #     # frame_by_frame_identity_inspector(video, blobs)
 
         #############################################################
         ###################  Solving impossible jumps    ############

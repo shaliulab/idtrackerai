@@ -30,6 +30,7 @@ def assign(net, video, images, print_flag):
     # data.standarize_images()
     # Crop images from 36x36 to 32x32 without performing data augmentation
     # print("cropping...")
+    print("images shape ", images.shape)
     data.crop_images(image_size = video.portrait_size[0])
     # Train network
     # print("getting predictions...")
@@ -37,16 +38,51 @@ def assign(net, video, images, print_flag):
     assigner.get_predictions_softmax(net.predict)
     return assigner
 
+# def assign_identity_to_blobs_in_video(blobs_in_video, assigner):
+#     counter = 0
+#     for blobs_in_frame in blobs_in_video:
+#         for blob in blobs_in_frame:
+#             if blob.is_a_fish_in_a_fragment and not blob.assigned_during_accumulation:
+#                 assert blob._identity == None
+#                 blob._identity = int(assigner._predictions[counter])
+#                 counter += 1
+#             elif not blob.is_a_fish_in_a_fragment:
+#                 blob._identity = 0
+
 def assign_identity_to_blobs_in_video(blobs_in_video, assigner):
     counter = 0
+    fragments_identifier_used = []
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
-            if blob.is_a_fish_in_a_fragment and not blob.assigned_during_accumulation:
-                assert blob._identity == None
-                blob._identity = int(assigner._predictions[counter])
-                counter += 1
-            elif not blob.is_a_fish_in_a_fragment:
-                blob._identity = 0
+            if not blob.assigned_during_accumulation and blob._fragment_identifier not in fragments_identifier_used:
+
+                if blob.is_a_fish_in_a_fragment:
+                    fragments_identifier_used.append(blob.fragment_identifier)
+                    current = blob
+                    current._identity = int(assigner._predictions[counter])
+                    counter += 1
+                    while current.next[0].is_a_fish_in_a_fragment:
+                        current = current.next[0]
+                        current._identity = int(assigner._predictions[counter])
+                        counter += 1
+                    if len(current.next) == 1 and len(current.next[0].previous) == 1 and current.next[0].is_a_fish:
+                        current.next[0]._identity = int(assigner._predictions[counter])
+                        counter += 1
+                    elif current.next[0].is_a_ghost_crossing:
+                        current.next[0]._identity = int(assigner._predictions[counter])
+                        counter += 1
+
+                    current = blob
+                    while current.previous[0].is_a_fish_in_a_fragment:
+                        current = current.previous[0]
+                        current._identity = int(assigner._predictions[counter])
+                        counter += 1
+                    if len(current.previous) == 1 and len(current.previous[0].next) == 1 and current.previous[0].is_a_fish:
+                        current.previous[0]._identity = int(assigner._predictions[counter])
+                        counter += 1
+                    # elif current.previous[0].is_a_ghost_crossing:
+                    #     current.previous[0]._identity = int(assigner._predictions[counter])
+                    #     counter += 1
 
 def compute_P1_for_blobs_in_video(video, blobs_in_video):
     """Assigns individual-fragment-based identities to all the blobs
@@ -60,7 +96,10 @@ def compute_P1_for_blobs_in_video(video, blobs_in_video):
                 and blob._fragment_identifier not in individual_fragments_identifiers_computed:
 
                 identities_in_fragment = np.asarray(blob.identities_in_fragment())
-                frequencies_in_fragment = compute_identification_frequencies_individual_fragment(identities_in_fragment, video.number_of_animals)
+                non_shared_information_in_fragment = np.asarray(blob.non_shared_information_in_fragment())
+                frequencies_in_fragment = compute_identification_frequencies_individual_fragment(non_shared_information_in_fragment,
+                                                                                                    identities_in_fragment,
+                                                                                                    video.number_of_animals)
                 blob._frequencies_in_fragment = frequencies_in_fragment
                 blob._P1_vector = compute_P1_individual_fragment_from_frequencies(frequencies_in_fragment)
                 blob.update_attributes_in_fragment(['_P1_vector', '_frequencies_in_fragment'], [blob._P1_vector, blob._frequencies_in_fragment])
@@ -95,7 +134,11 @@ def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
                 identity_in_fragment = np.argmax(blob._P2_vector) + 1
                 ambiguous_identity_in_fragment = is_assignment_ambiguous(blob.P2_vector)
                 if ambiguous_identity_in_fragment is list:
+                    print("frame", blob.frame_number)
+                    print("identity_in_fragment (ambiguous) ", ambiguous_identity_in_fragment)
                     identity_in_fragment = ambiguous_identity_in_fragment
                 # Update identity of all blobs in fragment
-                blob.update_attributes_in_fragment(['_identity'], [identity_in_fragment])
+                number_of_images_in_fragment = len(blob.identities_in_fragment())
+                blob.update_identity_in_fragment(identity_in_fragment, number_of_images_in_fragment = number_of_images_in_fragment)
+                # blob.update_attributes_in_fragment(['_identity'], [identity_in_fragment])
                 individual_fragments_identifiers_computed.append(blob._fragment_identifier)
