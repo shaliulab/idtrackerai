@@ -636,9 +636,7 @@ class PreprocessingPreview(BoxLayout):
         boundingBoxes, miniFrames, _, _, _, goodContours, _ = blobExtractor(self.segmented_frame,
                                                                         self.frame,
                                                                         int(self.min_area_slider.value),
-                                                                        int(self.max_area_slider.value),
-                                                                        self.frame.shape[0],
-                                                                        self.frame.shape[1])
+                                                                        int(self.max_area_slider.value))
         #draw the blobs on the original frame
         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)
         #display the segmentation
