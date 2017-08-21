@@ -71,6 +71,23 @@ class Chosen_Video(EventDispatcher):
             processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
             #get existent files and paths to load them
             self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
+            if self.old_video._has_been_assigned: self.video._has_been_assigned
+            if hasattr(self.old_video, 'resolution_reduction'):
+                self.video.resolution_reduction = self.old_video.resolution_reduction
+                self.video.bkg = self.old_video.bkg
+                self.video.ROI = self.old_video.ROI
+
+                print(self.video.resolution_reduction, self.video.ROI.shape)
+            if CHOSEN_VIDEO.video.video_path is not None:
+                if CHOSEN_VIDEO.old_video.preprocessing_type is None or CHOSEN_VIDEO.old_video.number_of_animals is None:
+                    self.create_preprocessing_type_and_number_popup()
+                    self.preprocessing_type_input.bind(on_text_validate = self.on_enter)
+                    self.animal_number_input.bind(on_text_validate = self.on_enter)
+                    self.popup.open()
+                else:
+                    CHOSEN_VIDEO.video._preprocessing_type = CHOSEN_VIDEO.old_video.preprocessing_type
+                    CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
+                self.enable_ROI_and_preprocessing_tabs = True
         except:
             print("Choose a video to proceed")
 
@@ -171,7 +188,6 @@ class VisualiseVideo(BoxLayout):
         self.visualise(frame_index_to_start, func = func)
 
     def add_slider(self):
-        print("------NUM FRAMES ", self.video_object._num_frames)
         self.video_slider = Slider(id='video_slider',
                                 min=0,
                                 max= int(self.video_object._num_frames) - 1,
@@ -189,14 +205,11 @@ class VisualiseVideo(BoxLayout):
         self.footer.add_widget(self.video_slider)
         self.footer.add_widget(self.video_slider_lbl)
 
-
-
     def visualise(self, trackbar_value, func = None):
         self.func = func
         print('trackbar_value ', trackbar_value)
         sNumber = self.video_object.in_which_episode(int(trackbar_value))
         print('seg number ', sNumber)
-
         sFrame = trackbar_value
         current_segment = sNumber
         if self.video_object._paths_to_video_segments:
@@ -221,8 +234,6 @@ class VisualiseVideo(BoxLayout):
         textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
         # display image from the texture
         self.display_layout.texture = textureFrame
-        self.initImW = self.width
-        self.initImH = self.height
 
     def get_value(self, instance, value):
         self.video_slider_lbl.text = "Frame number:" + str(int(value))
@@ -626,19 +637,19 @@ class PreprocessingPreview(BoxLayout):
                                                                         self.frame,
                                                                         int(self.min_area_slider.value),
                                                                         int(self.max_area_slider.value),
-                                                                        CHOSEN_VIDEO.video._height,
-                                                                        CHOSEN_VIDEO.video._width)
+                                                                        self.frame.shape[0],
+                                                                        self.frame.shape[1])
         #draw the blobs on the original frame
         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)
         #display the segmentation
         if self.count_scrollup != 0:
-            self.dst = cv2.warpAffine(self.frame, self.M, (CHOSEN_VIDEO.video._width, CHOSEN_VIDEO.video._height))
+            self.dst = cv2.warpAffine(self.frame, self.M, (self.frame.shape[1], self.frame.shape[1]))
             buf1 = cv2.flip(self.dst,0)
         else:
             buf1 = cv2.flip(self.frame, 0)
 
         buf = buf1.tostring()
-        textureFrame = Texture.create(size=(CHOSEN_VIDEO.video._width, CHOSEN_VIDEO.video._height), colorfmt='luminance')
+        textureFrame = Texture.create(size=(self.frame.shape[1], self.frame.shape[1]), colorfmt='luminance')
         textureFrame.blit_buffer(buf, colorfmt='luminance', bufferfmt='ubyte')
         # display image from the texture
         self.visualiser.display_layout.texture = textureFrame
@@ -879,9 +890,10 @@ class Validator(BoxLayout):
         """
         Get contour in which point is contained
         """
-        # print("point ", point)
-        # print("contours ", contours)
+        print("point ", point)
+        print("contours ", contours)
         indices = [i for i, cnt in enumerate(contours) if cv2.pointPolygonTest(cnt, tuple(point), measureDist = False) >= 0]
+        print(indices)
         if len(indices) != 0:
             return indices[0]
         else:
@@ -916,6 +928,7 @@ class Validator(BoxLayout):
         # centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
         print("contours shape, ", contours[0].shape)
         blob_ind = self.get_clicked_blob(mouse_coords, contours)
+        print("blob index ", blob_ind)
         if blob_ind is not None:
             blob_to_modify = blobs_in_frame[blob_ind]
             return blob_to_modify, mouse_coords
@@ -928,8 +941,13 @@ class Validator(BoxLayout):
         the coordinates of the original image
         """
         coords = np.asarray(coords)
-        original_frame_width = CHOSEN_VIDEO.video._width
-        original_frame_height = CHOSEN_VIDEO.video._height
+        if CHOSEN_VIDEO.video.resolution_reduction == 1:
+            original_frame_width = CHOSEN_VIDEO.video._width
+            original_frame_height = CHOSEN_VIDEO.video._height
+        else:
+            original_frame_width = CHOSEN_VIDEO.video._width // CHOSEN_VIDEO.video.resolution_reduction
+            original_frame_height = CHOSEN_VIDEO.video._height // CHOSEN_VIDEO.video.resolution_reduction
+
         actual_frame_width, actual_frame_height = self.visualiser.display_layout.size
         self.offset = self.visualiser.footer.height
         coords[1] = coords[1] - self.offset
