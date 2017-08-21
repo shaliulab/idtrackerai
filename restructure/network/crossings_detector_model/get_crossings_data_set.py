@@ -16,8 +16,12 @@ from get_data import duplicate_PCA_images
 class CrossingDataset(object):
     def __init__(self, blobs_list, video, crossings = [], fish = [], test = [], image_size = None, scope = ''):
         self.blobs = blobs_list
-        self.video_height = video._height
-        self.video_width = video._width
+        if video.resolution_reduction == 1:
+            self.video_height = video._height
+            self.video_width = video._width
+        else:
+            self.video_height  = int(video._height * video.resolution_reduction)
+            self.video_width  = int(video._width * video.resolution_reduction)
         self.video = video
         self.scope = scope
         if (scope == 'training' or scope == 'validation') and len(crossings) == 0 or image_size is None:

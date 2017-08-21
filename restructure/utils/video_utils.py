@@ -189,7 +189,9 @@ def sampleBkg(cntBB, miniFrame):
     bkgSample = miniFrame[np.where(miniFrame != 255)]
     return bkgSample
 
-def getMiniFrame(frame, cnt, height, width):
+def getMiniFrame(frame, cnt):
+    height = frame.shape[0]
+    width = frame.shape[1]
     boundingBox, estimated_body_length = getBoundigBox(cnt, width, height) # the estimated body length is the diagonal of the original boundingBox
     miniFrame = frame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
     cntBB = cnt2BoundingBox(cnt,boundingBox)
@@ -200,7 +202,7 @@ def getMiniFrame(frame, cnt, height, width):
     pixelsInFullFF = np.ravel_multi_index([pixelsInFullF[:,0], pixelsInFullF[:,1]],(height,width))
     return boundingBox, miniFrame, pixelsInFullFF, estimated_body_length
 
-def getBlobsInfoPerFrame(frame, contours, height, width):
+def getBlobsInfoPerFrame(frame, contours):
     boundingBoxes = []
     miniFrames = []
     centroids = []
@@ -209,7 +211,7 @@ def getBlobsInfoPerFrame(frame, contours, height, width):
     estimated_body_lengths = []
 
     for i, cnt in enumerate(contours):
-        boundingBox, miniFrame, pixelsInFullF, estimated_body_length = getMiniFrame(frame, cnt, height, width)
+        boundingBox, miniFrame, pixelsInFullF, estimated_body_length = getMiniFrame(frame, cnt)
         #bounding boxes
         boundingBoxes.append(boundingBox)
         # miniframes
@@ -225,11 +227,11 @@ def getBlobsInfoPerFrame(frame, contours, height, width):
 
     return boundingBoxes, miniFrames, centroids, areas, pixels, estimated_body_lengths
 
-def blobExtractor(segmentedFrame, frame, minArea, maxArea, height, width):
+def blobExtractor(segmentedFrame, frame, minArea, maxArea):
     contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
     # Filter contours by size
     goodContoursFull = filterContoursBySize(contours,minArea, maxArea)
     # get contours properties
-    boundingBoxes, miniFrames, centroids, areas, pixels, estimated_body_lengths = getBlobsInfoPerFrame(frame, goodContoursFull, height, width)
+    boundingBoxes, miniFrames, centroids, areas, pixels, estimated_body_lengths = getBlobsInfoPerFrame(frame, goodContoursFull)
 
     return boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, estimated_body_lengths

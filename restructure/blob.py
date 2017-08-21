@@ -468,18 +468,25 @@ def compute_portrait_size(video, maximum_body_length):
 
 def apply_model_area(video, blob, model_area, portraitSize):
     if model_area(blob.area): #Checks if area is compatible with the model area we built
+        if video.resolution_reduction == 1:
+            height = video._height
+            width = video._width
+        else:
+            height  = int(video._height * video.resolution_reduction)
+            width  = int(video._width * video.resolution_reduction)
+
         if video.preprocessing_type == 'portrait':
             portrait, blob._nose_coordinates, blob._head_coordinates = get_portrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize)
             blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
             # if not blob.in_a_global_fragment_core:
             #     blob.bounding_box_image = None
         elif video.preprocessing_type == 'body':
-            portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(video._height, video._width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
+            portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(height, width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
             blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
             # if not blob.in_a_global_fragment_core:
             #     blob.bounding_box_image = None
         elif video.preprocessing_type == 'body_blob':
-            portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(video._height, video._width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize, only_blob = True)
+            portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(height, width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize, only_blob = True)
             blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
             # if not blob.in_a_global_fragment_core:
             #     blob.bounding_box_image = None
