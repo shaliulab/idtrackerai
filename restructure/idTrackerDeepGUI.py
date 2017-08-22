@@ -343,8 +343,8 @@ if __name__ == '__main__':
         ####   trained. Works better when transfering to similar ####
         ####   conditions (light, animal type, age, ...)         ####
         #############################################################
-        # knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
-        knowledge_transfer_flag = 'n'
+        knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
+        # knowledge_transfer_flag = 'n'
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
             video.knowledge_transfer_model_folder = selectDir('', text = "Select a session folder to perform knowledge transfer from the last accumulation point") #select path to video
             video.tracking_with_knowledge_transfer = True
@@ -479,7 +479,10 @@ if __name__ == '__main__':
             net = ConvNetwork(accumulation_network_params)
             #restore variables from the pretraining
             net.restore()
-            net.reinitialize_softmax_and_fully_connected()
+            if video.tracking_with_knowledge_transfer:
+                same_animals = getInput("Same animals", "Are you tracking the same animals? y/N")
+                if same_animals.lower() == 'n' or same_animals == '':
+                    net.reinitialize_softmax_and_fully_connected()
             #instantiate accumulation manager
             logging.info("Initialising accumulation manager")
             accumulation_manager = AccumulationManager(global_fragments, video.number_of_animals)
