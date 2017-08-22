@@ -19,15 +19,7 @@ from GUI_utils import selectDir
 from py_utils import get_spaced_colors_util
 from blob import ListOfBlobs, Blob
 
-
-if __name__ == '__main__':
-    session_path = selectDir('./') #select path to video
-    video_path = os.path.join(session_path,'video_object.npy')
-    print("loading video object...")
-    video = np.load(video_path).item(0)
-    # blobs_path = video.blobs_path
-    # list_of_blobs = ListOfBlobs.load(blobs_path)
-    # blobs = list_of_blobs.blobs_in_video
+def plot_individual_trajectories_velocities_and_accelerations(video):
 
     individual_trajectories = np.load(os.path.join(video.trajectories_folder,'centroid_trajectories.npy'))
 
@@ -88,3 +80,15 @@ if __name__ == '__main__':
         ax.plot(bin_edges[:-1], hist, color = colors[i])
 
     plt.show()
+
+
+if __name__ == '__main__':
+    session_path = selectDir('./') #select path to video
+    video_path = os.path.join(session_path,'video_object.npy')
+    print("loading video object...")
+    video = np.load(video_path).item(0)
+    # blobs_path = video.blobs_path
+    # list_of_blobs = ListOfBlobs.load(blobs_path)
+    # blobs = list_of_blobs.blobs_in_video
+
+    plot_individual_trajectories_velocities_and_accelerations(video)
