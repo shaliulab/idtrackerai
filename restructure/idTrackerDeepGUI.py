@@ -604,7 +604,7 @@ if __name__ == '__main__':
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
             # assign identity to individual fragments' extremes
             logging.info("Assigning identities to individual fragments extremes")
-            assing_identity_to_individual_fragments_extremes(blobs)
+            assign_ghost_crossings(blobs)
             # solve jumps
             logging.info("Assigning identities to jumps")
             assign_identity_to_jumps(video, blobs)
@@ -627,28 +627,28 @@ if __name__ == '__main__':
         ###################   Solve duplications      ###############
         ####
         #############################################################
-        # if not loadPreviousDict['solving_duplications']:
-        #     logging.info("Start checking for and solving duplications")
-        #     reset_blobs_fragmentation_parameters(blobs, recovering_from = 'solving_duplications')
-        #     # solve duplications
-        #     solve_duplications(video, blobs, global_fragments, video.number_of_animals)
-        #     video._has_duplications_solved = True
-        #     logging.info("Done")
-        #     # finish and save
-        #     logging.info("Saving")
-        #     blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
-        #     blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
-        #     blobs_list.cut_in_chunks()
-        #     blobs_list.save()
-        #     video.save()
-        #     logging.info("Done")
-        #     # visualise proposed tracking
-        #     # frame_by_frame_identity_inspector(video, blobs)
-        # else:
-        #     # Set duplications flag to True
-        #     logging.info("Duplications have already been checked. Using previous information")
-        #     video._has_duplications_solved = True
-        #     video.save()
+        if not loadPreviousDict['solving_duplications']:
+            logging.info("Start checking for and solving duplications")
+            reset_blobs_fragmentation_parameters(blobs, recovering_from = 'solving_duplications')
+            # solve duplications
+            solve_duplications(video, blobs, global_fragments, video.number_of_animals)
+            video._has_duplications_solved = True
+            logging.info("Done")
+            # finish and save
+            logging.info("Saving")
+            blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+            blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
+            blobs_list.cut_in_chunks()
+            blobs_list.save()
+            video.save()
+            logging.info("Done")
+            # visualise proposed tracking
+            # frame_by_frame_identity_inspector(video, blobs)
+        else:
+            # Set duplications flag to True
+            logging.info("Duplications have already been checked. Using previous information")
+            video._has_duplications_solved = True
+            video.save()
         #############################################################
         ###################  Solving impossible jumps    ############
         ####

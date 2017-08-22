@@ -292,12 +292,7 @@ class Blob(object):
 
     def non_shared_information_in_fragment(self):
         def return_non_shared_information(blob):
-            # try:
             return blob.non_shared_information_with_previous
-            # except:
-            #     print(blob.is_a_fish_in_a_fragment)
-            #     print(len(blob.previous))
-            #     print(len(blob.next))
         return self._along_blobs_in_individual_fragment(return_non_shared_information)
 
     def identities_in_fragment(self):
@@ -499,7 +494,10 @@ class Blob(object):
         number_of_previous_blobs = len(self.previous)
         if number_of_previous_blobs == 1:
             self.non_shared_information_with_previous = 1. - len(np.intersect1d(self.pixels, self.previous[0].pixels)) / np.mean([len(self.pixels), len(self.previous[0].pixels)])
-
+            if self.non_shared_information_with_previous is np.nan:
+                print("intersection both blobs", len(np.intersect1d(self.pixels, self.previous[0].pixels)))
+                print("mean pixels both blobs", np.mean([len(self.pixels), len(self.previous[0].pixels)]))
+                raise ValueError("non_shared_information_with_previous is nan")
 # def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of_blobs):
 #     counter = 1
 #     possible_blob_indices = range(maximum_number_of_blobs)
@@ -548,12 +546,12 @@ def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of
                 blob.fragment_identifier = counter
                 blob_index = missing_blob_indices.pop(0)
                 blob._blob_index = blob_index
+                blob.non_shared_information_with_previous = 1.
 
                 if len(blob.next) == 1 and blob.next[0].is_a_fish:
-                    blob.non_shared_information_with_previous = 1.
-                    blob.next[0].compute_overlapping_with_previous_blob()
                     blob.next[0].fragment_identifier = counter
                     blob.next[0]._blob_index = blob_index
+                    blob.next[0].compute_overlapping_with_previous_blob()
 
                     if blob.next[0].is_a_fish_in_a_fragment:
                         blob = blob.next[0]

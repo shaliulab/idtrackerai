@@ -10,10 +10,23 @@ def compute_identification_frequencies_individual_fragment(non_shared_informatio
     network's assignment on the individual fragment.
     """
     # Compute frequencies of assignation for each identity
-    # return np.asarray([np.sum((identities_in_fragment == i) * non_shared_information_in_fragment)
+    assert len(non_shared_information_in_fragment) == len(identities_in_fragment)
+    non_shared_information_in_fragment = np.asarray(non_shared_information_in_fragment)
+    if sum(np.isnan(non_shared_information_in_fragment)):
+        index = np.where(np.isnan(non_shared_information_in_fragment))
+        non_shared_information_in_fragment[index] = np.nanmean(non_shared_information_in_fragment)
+
+    weighted_frequencies =  np.asarray([np.sum((identities_in_fragment == i) * non_shared_information_in_fragment)
+                                for i in range(1, number_of_animals+1)]) # The predictions come from 1 to number_of_animals + 1
+    if sum(np.isnan(weighted_frequencies)):
+        print("identities_in_fragment, ", identities_in_fragment)
+        print("non_shared_information_in_fragment, ", non_shared_information_in_fragment)
+        print("weighted_frequencies, ", weighted_frequencies)
+        raise ValueError("the weighted_frequencies are nan")
+
+    return weighted_frequencies
+    # return np.asarray([np.sum(identities_in_fragment == i)
     #                         for i in range(1, number_of_animals+1)]) # The predictions come from 1 to number_of_animals + 1
-    return np.asarray([np.sum(identities_in_fragment == i)
-                            for i in range(1, number_of_animals+1)]) # The predictions come from 1 to number_of_animals + 1
 
 def normalise_frequencies(frequencies):
     return frequencies / np.sum(frequencies)
