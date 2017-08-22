@@ -20,6 +20,7 @@ sys.path.append('./postprocessing')
 sys.path.append('./network')
 sys.path.append('./network/crossings_detector_model')
 sys.path.append('./network/identification_model')
+sys.path.append('./groundtruth_utils')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
@@ -71,10 +72,12 @@ from assigner import assign,\
                     assign_identity_to_blobs_in_video_by_fragment
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
-from assign_individual_fragment_extremes import assing_identity_to_individual_fragments_extremes
+from assign_ghost_crossings import assign_ghost_crossings
 from assign_jumps import assign_identity_to_jumps
 from correct_duplications import solve_duplications
 from get_trajectories import produce_trajectories, smooth_trajectories
+from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
+from compute_statistics_against_groundtruth import get_statistics_against_groundtruth
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
@@ -523,6 +526,8 @@ if __name__ == '__main__':
             compute_P2_for_blobs_in_video(video, blobs)
             # assign identities based on individual fragments
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
+            # assign identities to ghost crossings
+            assign_ghost_crossings(blobs)
             # solve jumps
             assign_identity_to_jumps(video, blobs)
             video._has_been_assigned = True
@@ -606,6 +611,20 @@ if __name__ == '__main__':
                 np.save(os.path.join(video.trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
             video._has_trajectories = True
             video.save()
+
+        #############################################################
+        ##############   Create trajectories    #####################
+        ####
+        #############################################################
+        ''' select ground truth file '''
+        groundtruth_path = os.path.join(video._video_folder,'_groundtruth.npy')
+        if os.path.isfile(groundtruth_path):
+            print("\n**** Computing accuracy wrt. groundtruth ****")
+            groundtruth = np.load(groundtruth_path).item()
+            groundtruth.list_of_blobs = groundtruth.list_of_blobs[groundtruth.start:groundtruth.end]
+            blobs_groundtruth = blobs[groundtruth.start:groundtruth.end]
+
+            accuracy, individual_accuracy, accuracy_assigned, individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs_groundtruth)
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         video = old_video

@@ -60,4 +60,4 @@ def is_assignment_ambiguous(P2_vector):
     Else return false.
     """
     maxima_indices = np.where(P2_vector == np.max(P2_vector))[0]
-    return maxima_indices + 1 if len(maxima_indices) > 1 else False
+    return maxima_indices + 1, len(maxima_indices) > 1

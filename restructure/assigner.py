@@ -68,9 +68,9 @@ def assign_identity_to_blobs_in_video(blobs_in_video, assigner):
                     if len(current.next) == 1 and len(current.next[0].previous) == 1 and current.next[0].is_a_fish:
                         current.next[0]._identity = int(assigner._predictions[counter])
                         counter += 1
-                    elif current.next[0].is_a_ghost_crossing:
-                        current.next[0]._identity = int(assigner._predictions[counter])
-                        counter += 1
+                    # elif current.next[0].is_a_ghost_crossing:
+                    #     current.next[0]._identity = int(assigner._predictions[counter])
+                    #     counter += 1
 
                     current = blob
                     while current.previous[0].is_a_fish_in_a_fragment:
@@ -120,29 +120,6 @@ def compute_P2_for_blobs_in_video(video, blobs_in_video):
                 blob.update_attributes_in_fragment(['_P2_vector'], [blob._P2_vector])
                 individual_fragments_identifiers_computed.append(blob._fragment_identifier)
 
-# def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
-#     """Assigns individual-fragment-based identities to all the blobs
-#     in the video.
-#     """
-#     individual_fragments_identifiers_computed = []
-#     for blobs_in_frame in tqdm(blobs_in_video, desc = 'Assigning identities'):
-#         for blob in blobs_in_frame:
-#             if blob.is_a_fish_in_a_fragment\
-#                 and blob._fragment_identifier not in individual_fragments_identifiers_computed\
-#                 and not blob.assigned_during_accumulation:
-#                 # Assign identity to the fragment
-#                 identity_in_fragment = np.argmax(blob._P2_vector) + 1
-#                 ambiguous_identity_in_fragment = is_assignment_ambiguous(blob.P2_vector)
-#                 if ambiguous_identity_in_fragment is list:
-#                     print("frame", blob.frame_number)
-#                     print("identity_in_fragment (ambiguous) ", ambiguous_identity_in_fragment)
-#                     identity_in_fragment = ambiguous_identity_in_fragment
-#                 # Update identity of all blobs in fragment
-#                 number_of_images_in_fragment = len(blob.identities_in_fragment())
-#                 blob.update_identity_in_fragment(identity_in_fragment, number_of_images_in_fragment = number_of_images_in_fragment)
-#                 # blob.update_attributes_in_fragment(['_identity'], [identity_in_fragment])
-#                 individual_fragments_identifiers_computed.append(blob._fragment_identifier)
-
 def get_blobs_to_assign(blobs_in_video, assigned_fragment_identifiers):
     blobs_to_assign = []
     used_fragment_identifiers = []
@@ -173,15 +150,17 @@ def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
 
     while len(list_of_blobs) > 1:
         blob = list_of_blobs[get_blob_to_assign(list_of_blobs)]
-        print("frame number ", blob.frame_number)
+        print("\nframe number ", blob.frame_number)
         print("P2 max for blob to be assigned ", max(blob.P2_vector))
         identity_in_fragment = np.argmax(blob._P2_vector) + 1
-        ambiguous_identity_in_fragment = is_assignment_ambiguous(blob.P2_vector)
-        if ambiguous_identity_in_fragment is list:
-            print("frame", blob.frame_number)
+        ambiguous_identities, is_ambiguous_identity = is_assignment_ambiguous(blob.P2_vector)
+        if is_ambiguous_identity:
+            print("******frame", blob.frame_number)
             print("assigned_during_accumulation ", blob.assigned_during_accumulation)
-            print("identity_in_fragment (ambiguous) ", ambiguous_identity_in_fragment)
-            identity_in_fragment = ambiguous_identity_in_fragment
+            print("identity_in_fragment (ambiguous) ", ambiguous_identities)
+            identity_in_fragment = 0
+            blob.ambiguous_identities = ambiguous_identities
+        print("identity_in_fragment, ", identity_in_fragment)
         # Update identity of all blobs in fragment
         number_of_images_in_fragment = len(blob.identities_in_fragment())
         print("number_of_images_in_fragment, ", number_of_images_in_fragment)

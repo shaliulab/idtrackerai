@@ -20,6 +20,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
     count_errors_identities_dict_all = {i:0 for i in range(1, number_of_animals + 1)}
     count_crossings_corrected_by_network = 0
     total_wrongly_assigned_crossings = 0
+    frames_with_errors = []
     for groundtruth_blobs_in_frame, tracked_blobs_in_frame in zip(blobs_list_groundtruth, blobs_list_tracked):
 
         for groundtruth_blob, tracked_blob in zip(groundtruth_blobs_in_frame,tracked_blobs_in_frame):
@@ -37,6 +38,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
                 # print(tracked_blob.frame_number)
                 if groundtruth_blob.identity != tracked_blob_identity:
                     count_errors_identities_dict_all[groundtruth_blob.identity] += 1
+                    frames_with_errors.append(tracked_blob.frame_number)
                     if tracked_blob_identity != 0:
                         count_errors_identities_dict_assigned[groundtruth_blob.identity] += 1
             elif groundtruth_blob.identity == -1:
@@ -47,16 +49,16 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
                     count_crossings_corrected_by_network += 1
 
     if total_wrongly_assigned_crossings != 0:
-        return count_errors_identities_dict_assigned, count_errors_identities_dict_all, count_crossings_corrected_by_network/total_wrongly_assigned_crossings
+        return count_errors_identities_dict_assigned, count_errors_identities_dict_all, count_crossings_corrected_by_network/total_wrongly_assigned_crossings, frames_with_errors
     else:
-        return count_errors_identities_dict_assigned, count_errors_identities_dict_all, 1
+        return count_errors_identities_dict_assigned, count_errors_identities_dict_all, 1, frames_with_errors
 
 
 def get_statistics_against_groundtruth(groundtruth, blobs_list_tracked):
     number_of_animals = groundtruth.video_object.number_of_animals
     blobs_list_groundtruth = groundtruth.list_of_blobs
 
-    count_errors_identities_dict_assigned, count_errors_identities_dict_all, accuracy_crossing_detector = compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtruth, blobs_list_tracked)
+    count_errors_identities_dict_assigned, count_errors_identities_dict_all, accuracy_crossing_detector, frames_with_errors = compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtruth, blobs_list_tracked)
 
     individual_accuracy_assigned = {i : 1 - count_errors_identities_dict_assigned[i] / groundtruth.count_number_assignment_per_individual_assigned[i] for i in range(1, number_of_animals + 1)}
     accuracy_assigned = np.mean(individual_accuracy_assigned.values())
@@ -71,6 +73,7 @@ def get_statistics_against_groundtruth(groundtruth, blobs_list_tracked):
     print("accuracy_assigned, ", accuracy_assigned)
     print("individual_accuracy, ", individual_accuracy)
     print("accuracy, ", accuracy)
+    print("frames with errors, ", frames_with_errors)
     return accuracy, individual_accuracy, accuracy_assigned, individual_accuracy_assigned
 
 if __name__ == '__main__':

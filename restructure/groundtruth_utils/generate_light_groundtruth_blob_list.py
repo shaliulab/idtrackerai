@@ -23,7 +23,7 @@ class GroundTruthBlob(object):
             if attribute == 'identity':
                 if blob.user_generated_identity is not None:
                     self.identity = blob.user_generated_identity
-                elif blob._identity_corrected_solving_duplication is not None:
+                elif hasattr(blob, "_identity_corrected_solving_duplication") and blob._identity_corrected_solving_duplication is not None:
                     self.identity = blob._identity_corrected_solving_duplication
                 else:
                     self.identity = blob.identity
@@ -65,9 +65,12 @@ def generate_groundtruth_files(video_object, start = None, end = None):
             gt_blob = GroundTruthBlob()
             gt_blob.get_attribute(blob)
             groundtruth_blobs_in_frame.append(gt_blob)
-            if blob._identity_corrected_solving_duplication is not None:
-                blob_identity = blob._identity_corrected_solving_duplication
-            elif blob._identity_corrected_solving_duplication is None:
+            if hasattr(blob, "_identity_corrected_solving_duplication"):
+                if blob._identity_corrected_solving_duplication is not None:
+                    blob_identity = blob._identity_corrected_solving_duplication
+                elif blob._identity_corrected_solving_duplication is None:
+                    blob_identity = blob.identity
+            else:
                 blob_identity = blob.identity
             if (blob.is_a_fish_in_a_fragment or\
                     blob.is_a_jump or\

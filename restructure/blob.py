@@ -254,8 +254,8 @@ class Blob(object):
                 output_along_fragment.append(function(current))
             if len(current.next) == 1 and len(current.next[0].previous) == 1 and current.next[0].is_a_fish:
                 output_along_fragment.append(function(current.next[0]))
-            elif current.next[0].is_a_ghost_crossing:
-                output_along_fragment.append(function(current.next[0]))
+            # elif current.next[0].is_a_ghost_crossing:
+            #     output_along_fragment.append(function(current.next[0]))
 
             current = self
             while current.previous[0].is_a_fish_in_a_fragment:
@@ -438,11 +438,11 @@ class Blob(object):
             if assigned_during_accumulation:
                 current.update_blob_assigned_during_accumulation(P1_vector, frequencies_in_fragment)
 
-        elif direction == 'next' and getattr(current,direction)[0].is_a_ghost_crossing:
-            current = getattr(current,direction)[0]
-            current.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved)
-            if assigned_during_accumulation:
-                current.update_blob_assigned_during_accumulation(P1_vector, frequencies_in_fragment)
+        # elif direction == 'next' and getattr(current,direction)[0].is_a_ghost_crossing:
+        #     current = getattr(current,direction)[0]
+        #     current.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved)
+        #     if assigned_during_accumulation:
+        #         current.update_blob_assigned_during_accumulation(P1_vector, frequencies_in_fragment)
         # else:
         #     print("frame_number ", getattr(current,direction)[0].frame_number)
         #     print("is a crossing ", getattr(current,direction)[0].is_a_crossing)
@@ -480,9 +480,9 @@ class Blob(object):
         if len(current.next) == 1 and len(current.next[0].previous) == 1 and current.next[0].is_a_fish:
             current = current.next[0]
             [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
-        elif current.next[0].is_a_ghost_crossing:
-            current = current.next[0]
-            [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
+        # elif current.next[0].is_a_ghost_crossing:
+        #     current = current.next[0]
+        #     [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
 
         current = self
         while current.previous[0].is_a_fish_in_a_fragment:
@@ -569,10 +569,10 @@ def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of
                             blob.next[0].fragment_identifier = counter
                             blob.next[0]._blob_index = blob_index
                             blob.next[0].compute_overlapping_with_previous_blob()
-                        elif blob.next[0].is_a_ghost_crossing:
-                            blob.next[0].fragment_identifier = counter
-                            blob.next[0]._blob_index = blob_index
-                            blob.next[0].compute_overlapping_with_previous_blob()
+                        # elif blob.next[0].is_a_ghost_crossing:
+                        #     blob.next[0].fragment_identifier = counter
+                        #     blob.next[0]._blob_index = blob_index
+                        #     blob.next[0].compute_overlapping_with_previous_blob()
 
                 counter += 1
 

@@ -957,9 +957,13 @@ class Validator(BoxLayout):
                 # print("______________________user generated id ", blob.user_generated_identity)
                 int_centroid = blob.centroid.astype('int')
                 if blob.user_generated_identity is None:
-                    if blob._identity_corrected_solving_duplication is not None:
-                        cur_id = blob._identity_corrected_solving_duplication
-                        cur_id_str = 'd-' + str(cur_id)
+                    if hasattr(blob, "_identity_corrected_solving_duplication"):
+                        if blob._identity_corrected_solving_duplication is not None:
+                            cur_id = blob._identity_corrected_solving_duplication
+                            cur_id_str = 'd-' + str(cur_id)
+                        else:
+                            cur_id = blob.identity
+                            cur_id_str = str(cur_id)
                     else:
                         cur_id = blob.identity
                         cur_id_str = str(cur_id)
@@ -1008,7 +1012,8 @@ class Validator(BoxLayout):
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
             print("\nidentity: ", blob._identity)
-            print("corrected identity in duplications: ", blob._identity_corrected_solving_duplication)
+            if hasattr(blob, "_identity_corrected_solving_duplication"):
+                print("corrected identity in duplications: ", blob._identity_corrected_solving_duplication)
             if hasattr(blob,"fragment_identifier"):
                 print("fragment_identifier: ", blob.fragment_identifier)
             else:
@@ -1246,10 +1251,13 @@ class Validator(BoxLayout):
         frames_with_zeros = []
         for blobs_in_frame in blobs_in_video:
             for blob in blobs_in_frame:
-                if blob._identity_corrected_solving_duplication is None:
+                if hasattr(blob, "_identity_corrected_solving_duplication"):
+                    if blob._identity_corrected_solving_duplication is None:
+                        blob_identity = blob.identity
+                    elif blob._identity_corrected_solving_duplication is not None:
+                        blob_identity = blob._identity_corrected_solving_duplication
+                else:
                     blob_identity = blob.identity
-                elif blob._identity_corrected_solving_duplication is not None:
-                    blob_identity = blob._identity_corrected_solving_duplication
                 if (blob.is_a_fish_in_a_fragment or\
                         blob.is_a_jump or\
                         blob.is_a_jumping_fragment or\
