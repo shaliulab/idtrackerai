@@ -12,14 +12,19 @@ import tensorflow as tf
 from network_params import NetworkParams
 from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
-from globalfragment import get_images_and_labels_from_global_fragment, give_me_pre_training_global_fragments
+from globalfragment import get_images_and_labels_from_global_fragment,\
+                        give_me_pre_training_global_fragments,\
+                        get_number_of_images_in_global_fragments_list
 from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
-def pre_train(video, blobs_in_video, pretraining_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
+MAX_RATIO_OF_PRETRAINED_IMAGES = .95
+
+def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretraining_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
     #initialize global epoch counter that takes into account all the steps in the pretraining
     global_epoch = 0
+    number_of_images_used_during_pretraining = 0
     #initialize network
     net = ConvNetwork(params)
     if video.tracking_with_knowledge_transfer:
@@ -104,4 +109,13 @@ def pre_train(video, blobs_in_video, pretraining_global_fragments, params, store
         net.save()
         if plot_flag:
             fig.savefig(os.path.join(net.params.save_folder,'pretraining_gf%i.pdf'%i))
+        number_of_images_used_during_pretraining += get_number_of_images_in_global_fragments_list([pretraining_global_fragment])
+        ratio_pretrained_images = number_of_images_used_during_pretraining / number_of_images_in_global_fragments
+        print("tot images in gf ", number_of_images_in_global_fragments)
+        print("images used during pretraining ", number_of_images_used_during_pretraining)
+        print("ratio ", ratio_pretrained_images)
+        if ratio_pretrained_images > MAX_RATIO_OF_PRETRAINED_IMAGES:
+            print("pretrained enough")
+            break
+
     return net
