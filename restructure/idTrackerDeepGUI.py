@@ -125,7 +125,7 @@ if __name__ == '__main__':
     video.create_session_folder(name = new_name_session_folder)
     # set log config
     setup_logging(path_to_save_logs = video._session_folder, video_object = video)
-    loggin.info("Starting working on session %s" %new_name_session_folder)
+    logging.info("Starting working on session %s" %new_name_session_folder)
     logging.info("Log files saved in %s" %video.logs_folder)
     #############################################################
     ####################   Preprocessing   ######################
