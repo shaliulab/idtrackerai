@@ -199,11 +199,13 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
             lengths.extend(lengths_global_fragment)
             candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
             individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
-    print("================8", np.concatenate(images, axis = 0).shape)
     if len(images) != 0:
         return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
     else:
         return None, None, candidate_individual_fragments_identifiers, None
+
+def get_number_of_images_in_global_fragments_list(global_fragments_list):
+    return sum([global_fragment._total_number_of_portraits for global_fragment in global_fragments_list])
 
 def check_uniquenss_of_global_fragments(global_fragments):
     [check_uniquenss_of_global_fragment(global_fragment) for global_fragment in global_fragments]
