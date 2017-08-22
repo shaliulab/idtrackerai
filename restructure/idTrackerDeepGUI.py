@@ -43,7 +43,8 @@ from globalfragment import compute_model_area_and_body_length,\
                             order_global_fragments_by_distance_travelled,\
                             filter_global_fragments_by_minimum_number_of_frames,\
                             compute_and_plot_global_fragments_statistics,\
-                            check_uniquenss_of_global_fragments
+                            check_uniquenss_of_global_fragments,\
+                            get_number_of_images_in_global_fragments_list
 from get_portraits import get_body
 from segmentation import segment
 from get_crossings_data_set import CrossingDataset
@@ -125,7 +126,7 @@ if __name__ == '__main__':
     video.create_session_folder(name = new_name_session_folder)
     # set log config
     setup_logging(path_to_save_logs = video._session_folder, video_object = video)
-    loggin.info("Starting working on session %s" %new_name_session_folder)
+    logging.info("Starting working on session %s" %new_name_session_folder)
     logging.info("Log files saved in %s" %video.logs_folder)
     #############################################################
     ####################   Preprocessing   ######################
@@ -378,17 +379,19 @@ if __name__ == '__main__':
 
                 total_number_of_global_fragments = len(global_fragments)
                 number_of_global_fragments = int(total_number_of_global_fragments * percentage_of_global_fragments_for_pretraining)
+                number_of_images_in_global_fragments = get_number_of_images_in_global_fragments_list(global_fragments)
                 #Reset used_for_training and acceptable_for_training flags
                 if old_video and old_video._accumulation_finished == True:
                     for global_fragment in global_fragments:
                         global_fragment.reset_accumulation_params()
                 try:
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_pretraining_global_fragments = number_of_global_fragments))
-                except:
+                except Exception as e:
+                    logging.exception("The global fragments ratio is non-valid. Pretraining with all global fragments")
                     number_of_global_fragments = total_number_of_global_fragments
                     pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
 
-                print("pretraining with %i" %number_of_global_fragments, ' global fragments\n')
+                logging.info("pretraining with %i global fragments" %number_of_global_fragments)
                 #create folder to store pretraining
                 video.create_pretraining_folder(number_of_global_fragments)
                 logging.info("Starting pretraining. Checkpoints will be stored in %s" %video._pretraining_folder)
@@ -405,8 +408,9 @@ if __name__ == '__main__':
                     pretrain_network_params.restore_folder = video.knowledge_transfer_model_folder
 
                 #start pretraining
-                logging.info("Start training")
+                logging.info("Start pretraining")
                 net = pre_train(video, blobs,
+                                number_of_images_in_global_fragments,
                                 pretraining_global_fragments,
                                 pretrain_network_params,
                                 store_accuracy_and_error = False,
@@ -414,7 +418,7 @@ if __name__ == '__main__':
                                 save_summaries = True,
                                 print_flag = False,
                                 plot_flag = True)
-                logging.info("Training ended")
+                logging.info("Pretraining ended")
                 #save changes
                 logging.info("Saving changes in video object")
                 video._has_been_pretrained = True
@@ -603,8 +607,8 @@ if __name__ == '__main__':
             logging.debug("Computing P2")
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
             # assign identity to individual fragments' extremes
-            logging.info("Assigning identities to individual fragments extremes")
-            assing_identity_to_individual_fragments_extremes(blobs)
+            # logging.info("Assigning identities to individual fragments extremes")
+            # assing_identity_to_individual_fragments_extremes(blobs)
             # solve jumps
             logging.info("Assigning identities to jumps")
             assign_identity_to_jumps(video, blobs)
