@@ -193,14 +193,15 @@ if __name__ == '__main__':
             cv2.namedWindow('Bars')
             video.create_preprocessing_folder()
             if not old_video or not old_video._has_been_segmented or usePreviousPrecParams == False:
+                logging.info("Starting segmentation")
                 blobs = segment(video)
+                logging.info("Segmentation finished")
                 video._has_been_segmented = True
                 blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path_segmented)
                 blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
                 blobs_list.cut_in_chunks()
                 blobs_list.save()
                 reset_blobs_fragmentation_parameters(blobs)
-                logging.info("Preprocessing finished")
                 logging.info("Saving segmented blobs")
                 blobs = blobs_list.blobs_in_video
                 logging.info("Segmented blobs saved")
@@ -218,9 +219,7 @@ if __name__ == '__main__':
                 logging.info("Segmented blobs loaded. Reset blobs for fragmentation")
                 logging.info("Blobs reset")
                 reset_blobs_fragmentation_parameters(blobs)
-                logging.info("Done")
             video.save()
-
             # check number of blobs in frame
             logging.info("Computing maximum number of blobs detected in the video")
             frames_with_more_blobs_than_animals = check_number_of_blobs(video, blobs)
@@ -278,7 +277,6 @@ if __name__ == '__main__':
                                                         for blob in blobs_in_frame
                                                         if blob.is_a_fish
                                                         and blob.bounding_box_image is not None]
-            logging.info("Done")
             #connect blobs that overlap in consecutive frames
             logging.info("Generate individual and crossing fragments")
             connect_blob_list(blobs)
@@ -288,7 +286,7 @@ if __name__ == '__main__':
             compute_crossing_fragment_identifier(blobs)
             #save connected blobs in video (organized frame-wise) and list of global fragments
             video._has_been_preprocessed = True
-            logging.info("Done. Saving individual and crossing fragments")
+            logging.info("Saving individual and crossing fragments")
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
@@ -299,7 +297,7 @@ if __name__ == '__main__':
             logging.info("Generate global fragments")
             global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
             global_fragments = filter_global_fragments_by_minimum_number_of_frames(global_fragments, minimum_number_of_frames = 3)
-            logging.info("Done")
+            logging.info("Global fragments have been generated")
             compute_and_plot_global_fragments_statistics(video, blobs, global_fragments)
             video.maximum_number_of_portraits_in_global_fragments = np.max([global_fragment._total_number_of_portraits for global_fragment in global_fragments])
             logging.info("Saving global fragments.")
@@ -417,7 +415,6 @@ if __name__ == '__main__':
                 logging.info("Saving changes in video object")
                 video._has_been_pretrained = True
                 video.save()
-                logging.info("Done")
         else:
             # Update folders and paths from previous video_object
             logging.info("Initialising network for accumulation")
@@ -433,7 +430,6 @@ if __name__ == '__main__':
             net = ConvNetwork(pretrain_network_params)
             net.restore()
             # Set preprocessed flag to True
-            logging.info("Done")
             video._has_been_pretrained = True
             video.save()
         #############################################################
@@ -451,7 +447,6 @@ if __name__ == '__main__':
                 logging.info("Cleaning data computed in previous accumulation")
                 for global_fragment in tqdm(global_fragments, desc = "Cleaning old accumulation data"):
                     global_fragment.reset_accumulation_params()
-            logging.info("Done")
             #set network params for the accumulation model
             logging.info("Set accumulation network parameters")
             accumulation_network_params = NetworkParams(video.number_of_animals,
@@ -460,7 +455,6 @@ if __name__ == '__main__':
                                         scopes_layers_to_optimize = ['fully-connected1','softmax1'],
                                         save_folder = video._accumulation_folder,
                                         image_size = video.portrait_size)
-            logging.info("Done")
             if video._has_been_pretrained:
                 logging.info("We will restore the network from a previous pretraining: %s" %video._pretraining_folder)
                 accumulation_network_params.restore_folder = video._pretraining_folder
@@ -475,14 +469,12 @@ if __name__ == '__main__':
             #instantiate network object
             logging.info("Initialising accumulation network")
             net = ConvNetwork(accumulation_network_params)
-            logging.info("Done")
             #restore variables from the pretraining
             net.restore()
             net.reinitialize_softmax_and_fully_connected()
             #instantiate accumulation manager
             logging.info("Initialising accumulation manager")
             accumulation_manager = AccumulationManager(global_fragments, video.number_of_animals)
-            logging.info("Done")
             #set global epoch counter to 0
             logging.info("Start accumulation")
             global_step = 0
@@ -512,23 +504,18 @@ if __name__ == '__main__':
                 # update used_for_training flag to True for fragments used
                 logging.info("Accumulation step completed. Updating global fragments used for training")
                 accumulation_manager.update_global_fragments_used_for_training()
-                logging.info("Done")
                 # update the set of images used for training
                 logging.info("Update images and labels used for training")
                 accumulation_manager.update_used_images_and_labels()
-                logging.info("Done")
                 # assign identities fo the global fragments that have been used for training
                 logging.info("Assigning identities to accumulated global fragments")
                 accumulation_manager.assign_identities_to_accumulated_global_fragments(blobs)
-                logging.info("Done")
                 # update the list of individual fragments that have been used for training
                 logging.info("Update individual fragments used for training")
                 accumulation_manager.update_individual_fragments_used()
-                logging.info("Done")
                 # Check uniqueness global_fragments
                 logging.info("Check uniqueness of global fragments")
                 check_uniquenss_of_global_fragments(global_fragments)
-                logging.info("Done")
                 # Set accumulation params for rest of the accumulation
                 #take images from global fragments not used in training (in the remainder test global fragments)
                 logging.info("Get new global fragments for training")
@@ -543,7 +530,6 @@ if __name__ == '__main__':
                                                                                                                 video,
                                                                                                                 candidates_next_global_fragments,
                                                                                                                 accumulation_manager.individual_fragments_used)
-                    logging.info("Done")
                     accumulation_manager.split_predictions_after_network_assignment(predictions, softmax_probs, indices_to_split)
                     # assign identities to the global fragments based on the predictions
                     logging.info("Checking eligibility criteria and generate the new list of global fragments to accumulate")
@@ -557,16 +543,13 @@ if __name__ == '__main__':
             logging.info("Saving video")
             video._accumulation_finished = True
             video.save()
-            logging.info("Done")
             logging.info("Saving blob list")
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
             blobs_list.save()
-            logging.info("Done")
             logging.info("Saving global fragments")
             np.save(video.global_fragments_path, global_fragments)
-            logging.info("Done")
         else:
             # Update folders and paths from previous video_object
             logging.info("Restoring accumulation network")
@@ -583,10 +566,8 @@ if __name__ == '__main__':
             net.restore()
             # Set preprocessed flag to True
             video._accumulation_finished = True
-            logging.info("Done")
             logging.info("Saving video")
             video.save()
-            logging.info("Done")
         #############################################################
         ###################     Assigner      ######################
         ####
@@ -596,15 +577,14 @@ if __name__ == '__main__':
             logging.info("Assigning identities to non-accumulated individual fragments")
             logging.info("Preparing blob objects")
             reset_blobs_fragmentation_parameters(blobs, recovering_from = 'assignment')
-            logging.info("Done")
             # Get images from the blob collection
             logging.info("Getting images")
             images = get_images_from_blobs_in_video(blobs)#, video._episodes_start_end)
-            logging.debug("Done. Images shape before assignment %s" %str(images.shape))
+            logging.debug("Images shape before assignment %s" %str(images.shape))
             # get predictions
             logging.info("Getting predictions")
             assigner = assign(net, video, images, print_flag = True)
-            logging.debug("Done. Number of generated predictions: %s" %str(len(assigner._predictions)))
+            logging.debug("Number of generated predictions: %s" %str(len(assigner._predictions)))
             logging.debug("Predictions range: %s" %str(np.unique(assigner._predictions)))
             # assign identities to each blob in each frame
             logging.info("Assigning identities to individual fragments")
@@ -612,28 +592,23 @@ if __name__ == '__main__':
             # compute P1 vector for individual fragmets
             logging.debug("Computing P1")
             compute_P1_for_blobs_in_video(video, blobs)
-            logging.debug("Done")
             # assign identities based on individual fragments
             logging.debug("Computing P2")
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
-            logging.debug("Done")
             # assign identity to individual fragments' extremes
             logging.info("Assigning identities to individual fragments extremes")
             assing_identity_to_individual_fragments_extremes(blobs)
-            logging.info("Done")
             # solve jumps
             logging.info("Assigning identities to jumps")
             assign_identity_to_jumps(video, blobs)
-            logging.info("Done")
             video._has_been_assigned = True
             # finish and save
-            logging.info("Saving")
+            logging.info("Saving blobs objects and video object")
             blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
             blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
             blobs_list.cut_in_chunks()
             blobs_list.save()
             video.save()
-            logging.info("Done")
             # visualise proposed tracking
             # frame_by_frame_identity_inspector(video, blobs)
         else:
@@ -692,7 +667,7 @@ if __name__ == '__main__':
             video.create_trajectories_folder()
             logging.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
             trajectories = produce_trajectories(video._blobs_path)
-            logging.info("Done. Saving trajectories")
+            logging.info("Saving trajectories")
             for name in trajectories:
                 np.save(os.path.join(video.trajectories_folder, name + '_trajectories.npy'), trajectories[name])
                 np.save(os.path.join(video.trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
