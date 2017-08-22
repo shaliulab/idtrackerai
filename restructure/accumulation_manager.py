@@ -32,6 +32,7 @@ class AccumulationManager(object):
         self.certainty_threshold = certainty_threshold
         self.individual_fragments_used = [] # list with the individual_fragments_identifiers of the individual fragments used for training
         self.identities_of_individual_fragments_used = [] # identities of the individual fragments used for training
+        self.P1_vector_of_individual_fragments_used = []
         self.used_images = None # images used for training the network
         self.used_labels = None # labels for the images used for training
         self.new_images = None # set of images that will be added to the new training
@@ -157,12 +158,15 @@ class AccumulationManager(object):
         print("Assigning identities to global fragments and blobs used in this accumulation step...")
         for global_fragment in self.next_global_fragments:
             assert global_fragment.used_for_training == True
-            self.check_consistency_of_assignation(global_fragment)
+            self.check_consistency_of_assignment(global_fragment)
             global_fragment._ids_assigned = np.asarray(global_fragment._temporary_ids) + 1
-            [blob.update_identity_in_fragment(identity_in_fragment, assigned_during_accumulation = True)
-                for blob, identity_in_fragment in zip(blobs_in_video[global_fragment.index_beginning_of_fragment], global_fragment._ids_assigned)]
+            [blob.update_identity_in_fragment(identity_in_fragment, assigned_during_accumulation = True, number_of_images_in_fragment = number_of_images_in_fragment)
+                for blob, identity_in_fragment, number_of_images_in_fragment in zip(blobs_in_video[global_fragment.index_beginning_of_fragment],
+                                                        global_fragment._ids_assigned,
+                                                        global_fragment._number_of_portraits_per_individual_fragment)]
+            global_fragment._P1_vector = [blob._P1_vector for blob in blobs_in_video[global_fragment.index_beginning_of_fragment]]
 
-    def check_consistency_of_assignation(self,global_fragment):
+    def check_consistency_of_assignment(self,global_fragment):
         """ this function checks that the identities of the individual fragments in the global
         fragment that is going to be assigned is consistent with the identities of the individual
         fragments that have already been used for training """
@@ -176,30 +180,34 @@ class AccumulationManager(object):
         If a individual fragment was added before is not added again.
         """
         print("Updating list of individual fragments used for training")
-        new_individual_fragments_and_id = set([(individual_fragment_identifier, temporal_identity)
+        new_individual_fragments_identifiers_and_id = set([(individual_fragment_identifier, temporal_identity, tuple(P1_vector))
                                                 for global_fragment in self.next_global_fragments
-                                                for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids)
-                                                if global_fragment.used_for_training and individual_fragment_identifier not in self.individual_fragments_used])
-        new_individual_fragments = list(np.asarray(list(new_individual_fragments_and_id))[:,0])
-        new_ids = list(np.asarray(list(new_individual_fragments_and_id))[:,1])
-        self.individual_fragments_used.extend(new_individual_fragments)
+                                                for individual_fragment_identifier, temporal_identity, P1_vector in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids, global_fragment._P1_vector)
+                                                    if global_fragment.used_for_training and individual_fragment_identifier not in self.individual_fragments_used])
+
+        new_individual_fragments_identifiers = [out[0] for out in new_individual_fragments_identifiers_and_id]
+        new_ids = [out[1] for out in new_individual_fragments_identifiers_and_id]
+        new_P1_vectors = [list(out[2]) for out in new_individual_fragments_identifiers_and_id]
+        self.individual_fragments_used.extend(new_individual_fragments_identifiers)
         self.identities_of_individual_fragments_used.extend(new_ids)
+        self.P1_vector_of_individual_fragments_used.extend(new_P1_vectors)
         print("number of individual fragments used for training:", len(self.individual_fragments_used))
         print("number of ids of individual fragments used for training:", len(self.identities_of_individual_fragments_used))
 
-    def split_predictions_after_network_assignment(self,predictions, softmax_probs, indices_to_split):
+    def split_predictions_after_network_assignment(self,predictions, softmax_probs, non_shared_information, indices_to_split):
         """Go back to the CPU"""
         print("Un-stacking predictions for the CPU")
         individual_fragments_predictions = np.split(predictions, indices_to_split)
         individual_fragments_softmax_probs = np.split(softmax_probs, indices_to_split)
+        individual_fragments_non_shared_information = np.split(non_shared_information, indices_to_split)
         self.frequencies_of_candidate_individual_fragments = []
         self.P1_vector_of_candidate_individual_fragments = []
         self.median_softmax_of_candidate_individual_fragments = [] #used to compute the certainty on the network's assignment
         self.certainty_of_candidate_individual_fragments = []
 
-        for individual_fragment_predictions, individual_fragment_softmax_probs in zip(individual_fragments_predictions, individual_fragments_softmax_probs):
+        for individual_fragment_predictions, individual_fragment_softmax_probs, individual_fragment_non_shared_information in zip(individual_fragments_predictions, individual_fragments_softmax_probs, individual_fragments_non_shared_information):
 
-            frequencies_of_candidate_individual_fragment = compute_identification_frequencies_individual_fragment(np.asarray(individual_fragment_predictions), self.number_of_animals)
+            frequencies_of_candidate_individual_fragment = compute_identification_frequencies_individual_fragment(np.asarray(individual_fragment_non_shared_information), np.asarray(individual_fragment_predictions), self.number_of_animals)
             self.frequencies_of_candidate_individual_fragments.append(frequencies_of_candidate_individual_fragment)
 
             P1_of_candidate_individual_fragment = compute_P1_individual_fragment_from_frequencies(frequencies_of_candidate_individual_fragment)
@@ -253,16 +261,15 @@ class AccumulationManager(object):
                 # if the individual fragment is no in the list of candidates is because it has been assigned
                 # and it is in the list of individual_fragments_used. We set the certainty to 1. And we
                 global_fragment._certainties.append(1.)
-                individual_fragment_P1_vector = np.zeros(self.number_of_animals)
                 individual_fragment_identifier_index = list(self.individual_fragments_used).index(individual_fragment_identifier)
                 individual_fragment_id = self.identities_of_individual_fragments_used[individual_fragment_identifier_index]
-                individual_fragment_P1_vector[individual_fragment_id] = 0.99999999999999
+                individual_fragment_P1_vector = self.P1_vector_of_individual_fragments_used[individual_fragment_identifier_index]
                 global_fragment._P1_vector.append(individual_fragment_P1_vector)
                 global_fragment._is_certain = True
             else:
                 raise ValueError("Individual fragment not in candidates or in used, this should not happen")
 
-        # Compute identities if the global_fragment is still acceptable for training
+        # Compute identities if the global_fragment is certain
         if global_fragment._acceptable_for_training:
             # print("it is certain enough")
             global_fragment._temporary_ids = np.nan * np.ones(self.number_of_animals)
@@ -385,36 +392,41 @@ def compute_certainty_of_individual_fragment(p1_vector_individual_fragment,media
 """ Get predictions of individual fragments in candidates global fragments"""
 def get_predictions_of_candidates_global_fragments(net,video,candidates_next_global_fragments,individual_fragments_identifiers_already_used = []):
 
-    def get_images_and_labels_from_global_fragment(video, global_fragment, individual_fragments_identifiers_already_used = []):
+    def get_images_and_labels_from_global_fragment_predictions(video, global_fragment, individual_fragments_identifiers_already_used = []):
         images = np.ones((video.maximum_number_of_portraits_in_global_fragments, video.portrait_size[0], video.portrait_size[1]))
         labels = np.ones((video.maximum_number_of_portraits_in_global_fragments, 1))
+        non_shared_information = np.ones((video.maximum_number_of_portraits_in_global_fragments))
         lengths = []
         individual_fragments_identifiers = []
         num_images = 0
         for i, portraits in enumerate(global_fragment.portraits):
             if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_identifiers_already_used :
                 # print("This individual fragment has not been used, we take images")
+                assert len(portraits) == len(global_fragment.non_shared_information[i])
                 images[num_images : len(portraits) + num_images] = np.asarray(portraits)
                 labels[num_images : len(portraits) + num_images] = np.asarray(global_fragment._temporary_ids[i] * len(portraits))
+                non_shared_information[num_images : len(portraits) + num_images] = np.asarray(global_fragment.non_shared_information[i])
                 lengths.append(len(portraits))
                 individual_fragments_identifiers.append(global_fragment.individual_fragments_identifiers[i])
                 num_images += len(portraits)
         images = images[:num_images]
         labels = labels[:num_images]
-        return images, labels, lengths, individual_fragments_identifiers
+        non_shared_information = non_shared_information[:num_images]
+        return images, labels, non_shared_information, lengths, individual_fragments_identifiers
 
     predictions = []
     softmax_probs = []
+    non_shared_information = []
     lengths = []
     candidate_individual_fragments_identifiers = []
 
     print("\nGetting images from candidate global fragments for predictions...")
     # compute maximum number of images given the available RAM and SWAP
     image_size_bytes = np.prod(video.portrait_size)*4
-    if psutil.virtual_memory().available > 2 * video.maximum_number_of_portraits_in_global_fragments * image_size_bytes:
+    if psutil.virtual_memory().available > video.maximum_number_of_portraits_in_global_fragments * image_size_bytes:
         num_images = psutil.virtual_memory().available//image_size_bytes
         print("There is enough RAM to host %i images" %num_images)
-    elif psutil.swap_memory().free > 2 * video.maximum_number_of_portraits_in_global_fragments * image_size_bytes:
+    elif psutil.swap_memory().free > video.maximum_number_of_portraits_in_global_fragments * image_size_bytes:
         num_images = psutil.swap_memory().free * .8 // image_size_bytes
         print("There is enough Swap to host %i images" %num_images)
         print("WARNING: using swap memory, performance reduced")
@@ -425,35 +437,45 @@ def get_predictions_of_candidates_global_fragments(net,video,candidates_next_glo
         print(psutil.swap_memory())
         raise MemoryError('There is not enough free RAM and swap to continue with the process')
 
+    # This loop is to get the predictions in batches so that we do not overload the RAM
     while len(candidates_next_global_fragments) > 0:
-        images = np.ones((2 * video.maximum_number_of_portraits_in_global_fragments, video.portrait_size[0], video.portrait_size[1])) * np.nan
+        images_in_batch = np.ones((video.maximum_number_of_portraits_in_global_fragments, video.portrait_size[0], video.portrait_size[1])) * np.nan
+        non_shared_information_in_batch = np.ones((video.maximum_number_of_portraits_in_global_fragments)) * np.nan
         individual_fragments_identifiers_already_used = list(individual_fragments_identifiers_already_used)
-        num_images = 0
+        num_images_to_assign = 0
         for global_fragment in candidates_next_global_fragments:
             images_global_fragment, \
             _, \
+            non_shared_information_global_fragment,\
             lengths_global_fragment, \
-            individual_fragments_identifiers = get_images_and_labels_from_global_fragment(video, global_fragment,
+            individual_fragments_identifiers = get_images_and_labels_from_global_fragment_predictions(video, global_fragment,
                                                                                             individual_fragments_identifiers_already_used)
 
-
-            if len(images_global_fragment) != 0 and len(images_global_fragment) < 2 * video.maximum_number_of_portraits_in_global_fragments - num_images:
-                images[num_images : num_images + len(images_global_fragment)] = images_global_fragment
+            if len(images_global_fragment) != 0\
+                and len(images_global_fragment) < video.maximum_number_of_portraits_in_global_fragments - num_images_to_assign:
+                # The images of this global fragment fit in this batch
+                images_in_batch[num_images_to_assign : num_images_to_assign + len(images_global_fragment)] = images_global_fragment
+                non_shared_information_in_batch[num_images_to_assign : num_images_to_assign + len(images_global_fragment)] = non_shared_information_global_fragment
                 lengths.extend(lengths_global_fragment)
                 candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
                 individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
-                num_images += len(images_global_fragment)
+                num_images_to_assign += len(images_global_fragment)
                 # update list of candidates global fragments
                 candidates_next_global_fragments = candidates_next_global_fragments[1:]
-            elif len(images_global_fragment) > 2 * video.maximum_number_of_portraits_in_global_fragments - num_images:
+            elif len(images_global_fragment) > video.maximum_number_of_portraits_in_global_fragments - num_images_to_assign:
+                # No more images fit in this batch
                 break
             elif len(images_global_fragment) == 0:
+                # I skip this global fragment because all the images have been already used
                 candidates_next_global_fragments = candidates_next_global_fragments[1:]
 
-        if num_images != 0:
-            images = images[:num_images]
-            assigner = assign(net, video, images, print_flag = True)
+        if num_images_to_assign != 0:
+            images_in_batch = images_in_batch[:num_images_to_assign]
+            print("images in batch shape, ", images_in_batch.shape)
+            non_shared_information_in_batch = non_shared_information_in_batch[:num_images_to_assign]
+            assigner = assign(net, video, images_in_batch, print_flag = True)
             predictions.extend(assigner._predictions)
             softmax_probs.extend(assigner._softmax_probs)
-
-    return predictions, softmax_probs, np.cumsum(lengths)[:-1], candidate_individual_fragments_identifiers
+            non_shared_information.extend(non_shared_information_in_batch)
+    assert len(predictions) == len(softmax_probs) == len(non_shared_information)
+    return predictions, softmax_probs, non_shared_information, np.cumsum(lengths)[:-1], candidate_individual_fragments_identifiers

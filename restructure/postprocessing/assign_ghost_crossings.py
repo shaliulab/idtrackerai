@@ -14,7 +14,7 @@ from network_params import NetworkParams
 from blob import Blob
 from video_utils import segmentVideo, filterContoursBySize, getPixelsList, getBoundigBox
 
-def assing_identity_to_individual_fragments_extremes(blobs):
+def assign_ghost_crossings(blobs):
     for blobs_in_frame in tqdm(blobs, desc = 'Assign identity to individual fragments extremes'):
         # try:
             # print("\nframe number ", blobs_in_frame[0].frame_number)

@@ -54,6 +54,8 @@ class GlobalFragment(object):
         self.individual_fragments_identifiers = [blob.fragment_identifier for blob in list_of_blobs[index_beginning_of_fragment]]
         self.portraits = [blob.portraits_in_fragment()
             for blob in list_of_blobs[index_beginning_of_fragment]]
+        self.non_shared_information = [blob.non_shared_information_in_fragment()
+            for blob in list_of_blobs[index_beginning_of_fragment]]
         self._number_of_portraits_per_individual_fragment = [len(portraits_in_individual_fragment)
                         for portraits_in_individual_fragment in self.portraits] # length of the portraits contained in each individual fragment part of the global fragment
         self._total_number_of_portraits = np.sum(self._number_of_portraits_per_individual_fragment) #overall number of portraits
@@ -184,15 +186,13 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
     lengths = []
     candidate_individual_fragments_identifiers = []
     individual_fragments_identifiers_already_used = list(individual_fragments_identifiers_already_used)
+    # print("individual_fragments_identifiers_already_used, ", individual_fragments_identifiers_already_used)
     for global_fragment in global_fragments:
         images_global_fragment, \
         labels_global_fragment, \
         lengths_global_fragment, \
         individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment,
-                                                                                            individual_fragments_identifiers_already_used)
-        print("images_global_fragment[0].shape", images_global_fragment[0].shape)
-        print("length images_global_fragment", len(images_global_fragment))
-        print("individual_fragments_identifiers ", individual_fragments_identifiers)
+                                                                                        individual_fragments_identifiers_already_used)
         if len(images_global_fragment) != 0:
             images.append(images_global_fragment)
             labels.append(labels_global_fragment)

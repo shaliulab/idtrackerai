@@ -8,6 +8,8 @@ import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
+from statistics_for_assignment import compute_P1_individual_fragment_from_frequencies
+
 # STD_TOLERANCE = 1 # tolerance to select a blob as being a single fish according to the area model
 ### NOTE set to 1 because we changed the model area to work with the median.
 
@@ -46,6 +48,9 @@ class Blob(object):
             self._P1_vector = np.zeros(self.number_of_animals)
             self._P2_vector = np.zeros(self.number_of_animals)
             self._assigned_during_accumulation = False
+            self.fragment_identifier = None
+            self._blob_index = None
+            self.non_shared_information_with_previous = None
         if recovering_from == 'assignment':
             if not self.assigned_during_accumulation:
                 self._identity = None
@@ -157,7 +162,7 @@ class Blob(object):
 
     @fragment_identifier.setter
     def fragment_identifier(self, new_fragment_identifier):
-        if self.is_a_fish_in_a_fragment:
+        if self.is_a_fish: #we only check if it is a fish because we also set fragments identifiers to the extremes of an individual fragment and to jumps and jumping fragments
             self._fragment_identifier = new_fragment_identifier
 
     @property
@@ -216,36 +221,52 @@ class Blob(object):
         '''Crawls along an individual fragment and outputs a list with
         the result of function applied to all pairs of contiguous blobs
         '''
-        output_along_segment = []
+        output_along_fragment = []
         if self.is_a_fish_in_a_fragment:
             current = self
             while current.next[0].is_a_fish_in_a_fragment:
-                output_along_segment.append(function(current, current.next[0]))
+                output_along_fragment.append(function(current, current.next[0]))
                 current = current.next[0]
+            if len(current.next) == 1 and len(current.next[0].previous) == 1 and current.next[0].is_a_fish:
+                output_along_fragment.append(function(current, current.next[0]))
+
             current = self
 
             while current.previous[0].is_a_fish_in_a_fragment:
-                output_along_segment.append(function(current, current.previous[0]))
+                output_along_fragment.append(function(current, current.previous[0]))
                 current = current.previous[0]
-        return output_along_segment
+            if len(current.previous) == 1 and len(current.previous[0].next) == 1 and current.previous[0].is_a_fish:
+                output_along_fragment.append(function(current, current.previous[0]))
 
-    def _along_blobs_in_individual_segment(self, function):
+        return output_along_fragment
+
+    def _along_blobs_in_individual_fragment(self, function):
         '''Crawls along an individual fragment and outputs a list with
         the result of function applied to each blob
         '''
-        output_along_segment = []
+        output_along_fragment = []
         if self.is_a_fish_in_a_fragment:
+
             current = self
-            output_along_segment.append(function(current))
+            output_along_fragment.append(function(current))
             while current.next[0].is_a_fish_in_a_fragment:
                 current = current.next[0]
-                output_along_segment.append(function(current))
-            current = self
+                output_along_fragment.append(function(current))
+            if len(current.next) == 1 and len(current.next[0].previous) == 1 and current.next[0].is_a_fish:
+                output_along_fragment.append(function(current.next[0]))
+            # elif current.next[0].is_a_ghost_crossing:
+            #     output_along_fragment.append(function(current.next[0]))
 
+            current = self
             while current.previous[0].is_a_fish_in_a_fragment:
                 current = current.previous[0]
-                output_along_segment.append(function(current))
-        return output_along_segment
+                output_along_fragment.append(function(current))
+            if len(current.previous) == 1 and len(current.previous[0].next) == 1 and current.previous[0].is_a_fish:
+                output_along_fragment.append(function(current.previous[0]))
+            # elif current.previous[0].is_a_ghost_crossing:
+            #     output_along_fragment.append(function(current.previous[0]))
+
+        return output_along_fragment
 
 
     def frame_by_frame_velocity(self):
@@ -261,30 +282,41 @@ class Blob(object):
     def compute_fragment_start_end(self):
         def frame_number_of_blob(blob):
             return blob.frame_number
-        frame_numbers = self._along_blobs_in_individual_segment(frame_number_of_blob)
+        frame_numbers = self._along_blobs_in_individual_fragment(frame_number_of_blob)
         return [min(frame_numbers), max(frame_numbers)]
 
     def portraits_in_fragment(self):
         def return_portrait_blob(blob):
             return blob.portrait
-        return self._along_blobs_in_individual_segment(return_portrait_blob)
+        return self._along_blobs_in_individual_fragment(return_portrait_blob)
+
+    def non_shared_information_in_fragment(self):
+        def return_non_shared_information(blob):
+            # try:
+            return blob.non_shared_information_with_previous
+            # except:
+            #     print(blob.is_a_fish_in_a_fragment)
+            #     print(len(blob.previous))
+            #     print(len(blob.next))
+        return self._along_blobs_in_individual_fragment(return_non_shared_information)
 
     def identities_in_fragment(self):
         def blob_identity(blob):
             return blob._identity
-        return self._along_blobs_in_individual_segment(blob_identity)
+        return self._along_blobs_in_individual_fragment(blob_identity)
 
     def get_P1_vectors_coexisting_fragments(self, blobs_in_video):
         P1_vectors = []
-        if self.is_a_fish_in_a_fragment:
-            fragment_identifiers_of_coexisting_fragments = []
-            for b, blob in enumerate(blobs_in_video[self.frame_number]):
-                if blob.fragment_identifier is not self.fragment_identifier and \
-                        blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
-                        blob.fragment_identifier is not None:
-                    P1_vectors.append(blob.P1_vector)
-                    fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
+        # if self.is_a_fish_in_a_fragment:
+        fragment_identifiers_of_coexisting_fragments = []
+        for b, blob in enumerate(blobs_in_video[self.frame_number]):
+            if blob.fragment_identifier is not self.fragment_identifier and \
+                    blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
+                    blob.fragment_identifier is not None:
+                P1_vectors.append(blob.P1_vector)
+                fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
 
+        if self.is_a_fish_in_a_fragment:
             current = self
 
             while current.next[0].is_a_fish_in_a_fragment:
@@ -308,71 +340,200 @@ class Blob(object):
                         fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
         return np.asarray(P1_vectors)
 
-    def update_identity_in_fragment(self, identity_in_fragment, assigned_during_accumulation = False, duplication_solved = False):
-        if self.is_a_fish_in_a_fragment:
-            if not duplication_solved:
-                self._identity = identity_in_fragment
-            elif duplication_solved:
-                self._identity_corrected_solving_duplication = identity_in_fragment
-            if assigned_during_accumulation:
-                self._assigned_during_accumulation = True
-                self._P1_vector[identity_in_fragment-1] = 0.99999999999999
-                self._P2_vector[identity_in_fragment-1] = 0.99999999999999
-            current = self
+    def get_fixed_identities_of_coexisting_fragments(self, blobs_in_video):
+        identities = []
 
-            while current.next[0].is_a_fish_in_a_fragment:
-                current = current.next[0]
-                if not duplication_solved:
-                    current._identity = identity_in_fragment
-                elif duplication_solved:
-                    current._identity_corrected_solving_duplication = identity_in_fragment
-                if assigned_during_accumulation:
-                    current._assigned_during_accumulation = True
-                    current._P1_vector[identity_in_fragment-1] = 0.99999999999999
-                    current._P2_vector[identity_in_fragment-1] = 0.99999999999999
+        fragment_identifiers_of_coexisting_fragments = []
+        for blob in blobs_in_video[self.frame_number]:
+            if blob.fragment_identifier is not self.fragment_identifier and \
+                    blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
+                    blob.fragment_identifier is not None and\
+                    (blob.assigned_during_accumulation or blob._identity_corrected_solving_duplication is not None):
+                if blob._user_generated_identity is not None:
+                    identities.append(blob._user_generated_identity)
+                elif blob._identity_corrected_solving_duplication is not None:
+                    identities.append(blob._identity_corrected_solving_duplication)
                 else:
-                    current._P2_vector = self.P2_vector
-            current = self
+                    identities.append(blob._identity)
+                fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
 
-            while current.previous[0].is_a_fish_in_a_fragment:
-                current = current.previous[0]
-                if not duplication_solved:
-                    current._identity = identity_in_fragment
-                elif duplication_solved:
-                    current._identity_corrected_solving_duplication = identity_in_fragment
-                if assigned_during_accumulation:
-                    current._assigned_during_accumulation = True
-                    current._P1_vector[identity_in_fragment-1] = 0.99999999999999
-                    current._P2_vector[identity_in_fragment-1] = 0.99999999999999
-                else:
-                    current._P2_vector = self.P2_vector
-
-    def update_P1_in_fragment(self):
         current = self
 
         while current.next[0].is_a_fish_in_a_fragment:
             current = current.next[0]
-            current._P1_vector = self.P1_vector
-            current._frequencies_in_fragment = self.frequencies_in_fragment
+            for blob in blobs_in_video[current.frame_number]:
+                if blob.fragment_identifier is not current.fragment_identifier and \
+                        blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
+                        blob.fragment_identifier is not None and\
+                        (blob.assigned_during_accumulation or blob._identity_corrected_solving_duplication is not None):
+                    if blob._user_generated_identity is not None:
+                        identities.append(blob._user_generated_identity)
+                    elif blob._identity_corrected_solving_duplication is not None:
+                        identities.append(blob._identity_corrected_solving_duplication)
+                    else:
+                        identities.append(blob._identity)
+                    fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
 
         current = self
 
         while current.previous[0].is_a_fish_in_a_fragment:
             current = current.previous[0]
-            current._P1_vector = self.P1_vector
-            current._frequencies_in_fragment = self.frequencies_in_fragment
+            for blob in blobs_in_video[current.frame_number]:
+                if blob.fragment_identifier is not current.fragment_identifier and \
+                        blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
+                        blob.fragment_identifier is not None and\
+                        (blob.assigned_during_accumulation or blob._identity_corrected_solving_duplication is not None):
+                    if blob._user_generated_identity is not None:
+                        identities.append(blob._user_generated_identity)
+                    elif blob._identity_corrected_solving_duplication is not None:
+                        identities.append(blob._identity_corrected_solving_duplication)
+                    else:
+                        identities.append(blob._identity)
+                    fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
+        return np.asarray(identities)
+
+    # def number_of_extremes_in_fragment(self):
+    #     number_of_extremes = 0
+    #     if self.is_a_fish_in_a_fragment:
+    #         current = self
+    #
+    #         while current.next[0].is_a_fish_in_a_fragment:
+    #             current = current.next[0]
+    #         if len(current.next) == 1: number_of_extremes += 1
+    #
+    #         current = self
+    #
+    #         while current.previous[0].is_a_fish_in_a_fragment:
+    #             current = current.previous[0]
+    #         if len(current.previous) == 1: number_of_extremes += 1
+    #     return number_of_extremes
+
+    def set_identity_blob_in_fragment(self, identity_in_fragment, duplication_solved):
+        if not duplication_solved:
+            self._identity = identity_in_fragment
+        elif duplication_solved:
+            self._identity_corrected_solving_duplication = identity_in_fragment
+
+    def update_blob_assigned_during_accumulation(self, P1_vector, frequencies_in_fragment):
+            self._assigned_during_accumulation = True
+            self._frequencies_in_fragment = frequencies_in_fragment
+            self._P1_vector = P1_vector
+
+    @staticmethod
+    def update_identity_in_fragment_in_direction(current, identity_in_fragment, assigned_during_accumulation, P1_vector, frequencies_in_fragment, duplication_solved, direction = None):
+        if direction == 'next':
+            opposite_direction = 'previous'
+        elif direction == 'previous':
+            opposite_direction = 'next'
+        while getattr(getattr(current,direction)[0],'is_a_fish_in_a_fragment'):
+            current = getattr(current,direction)[0]
+            current.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved)
+            if assigned_during_accumulation:
+                current.update_blob_assigned_during_accumulation(P1_vector, frequencies_in_fragment)
+
+        # print("***")
+        if len(getattr(current,direction)) == 1 and len(getattr(getattr(current,direction)[0],opposite_direction)) == 1 and getattr(current,direction)[0].is_a_fish:
+            current = getattr(current,direction)[0]
+            current.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved)
+            if assigned_during_accumulation:
+                current.update_blob_assigned_during_accumulation(P1_vector, frequencies_in_fragment)
+
+        # elif direction == 'next' and getattr(current,direction)[0].is_a_ghost_crossing:
+        #     current = getattr(current,direction)[0]
+        #     current.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved)
+        #     if assigned_during_accumulation:
+        #         current.update_blob_assigned_during_accumulation(P1_vector, frequencies_in_fragment)
+        # else:
+        #     print("frame_number ", getattr(current,direction)[0].frame_number)
+        #     print("is a crossing ", getattr(current,direction)[0].is_a_crossing)
+        #     print("id ", identity_in_fragment)
+
+    def update_identity_in_fragment(self, identity_in_fragment, assigned_during_accumulation = False, duplication_solved = False, number_of_images_in_fragment = None):
+        if self.is_a_fish_in_a_fragment:
+            self.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved)
+            if assigned_during_accumulation:
+                self._assigned_during_accumulation = True
+                self._frequencies_in_fragment = np.zeros(self.number_of_animals)
+                self._frequencies_in_fragment[identity_in_fragment-1] = number_of_images_in_fragment ### NOTE Decide whether to use weighted frequencies or raw frequencies
+                self._P1_vector = compute_P1_individual_fragment_from_frequencies(self._frequencies_in_fragment)
+
+            self.update_identity_in_fragment_in_direction(self, identity_in_fragment,
+                                                            assigned_during_accumulation,
+                                                            self._P1_vector,
+                                                            self._frequencies_in_fragment,
+                                                            duplication_solved,
+                                                            direction = 'next')
+            self.update_identity_in_fragment_in_direction(self, identity_in_fragment,
+                                                            assigned_during_accumulation,
+                                                            self._P1_vector,
+                                                            self._frequencies_in_fragment,
+                                                            duplication_solved,
+                                                            direction = 'previous')
+
+    def update_attributes_in_fragment(self, attributes, values):
+        assert len(attributes) == len(values)
+        [setattr(self, attribute, value) for attribute, value in zip(attributes, values)]
+        current = self
+        while current.next[0].is_a_fish_in_a_fragment:
+            current = current.next[0]
+            [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
+        if len(current.next) == 1 and len(current.next[0].previous) == 1 and current.next[0].is_a_fish:
+            current = current.next[0]
+            [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
+        # elif current.next[0].is_a_ghost_crossing:
+        #     current = current.next[0]
+        #     [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
+
+        current = self
+        while current.previous[0].is_a_fish_in_a_fragment:
+            current = current.previous[0]
+            [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
+        if len(current.previous) == 1 and len(current.previous[0].next) == 1 and current.previous[0].is_a_fish:
+            current = current.previous[0]
+            [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
+        # elif current.previous[0].is_a_ghost_crossing:
+        #     current = current.previous[0]
+        #     [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
+
+    def compute_overlapping_with_previous_blob(self):
+        number_of_previous_blobs = len(self.previous)
+        if number_of_previous_blobs == 1:
+            self.non_shared_information_with_previous = 1. - len(np.intersect1d(self.pixels, self.previous[0].pixels)) / np.mean([len(self.pixels), len(self.previous[0].pixels)])
 
 # def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of_blobs):
 #     counter = 1
-#     for frame in tqdm(blobs_in_video, desc = 'assigning fragment identifier'):
-#         for blob in frame:
-#             if not blob.is_a_fish_in_a_fragment:
-#                 blob.fragment_identifier = -1
-#             elif blob.fragment_identifier is None:
+#     possible_blob_indices = range(maximum_number_of_blobs)
+#     # print("possible_blob_indices ", possible_blob_indices)
+#     for blobs_in_frame in tqdm(blobs_in_video, desc = 'assigning fragment identifier'):
+#         used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]
+#         # print("used_blob_indices ", used_blob_indices)
+#         missing_blob_indices =  list(set(possible_blob_indices).difference(set(used_blob_indices)))
+#         # print("missing_blob_indices ", missing_blob_indices)
+#         for blob in blobs_in_frame:
+#             if blob.fragment_identifier is None and blob.is_a_fish_in_a_fragment:
 #                 blob.fragment_identifier = counter
+#                 blob_index = missing_blob_indices.pop(0)
+#                 blob._blob_index = blob_index
+#
+#                 # compute_overlapping_with_previous_blob
+#                 if len(blob.previous[0].next) == 1 and blob.previous[0].is_a_fish:
+#                     blob.previous[0].non_shared_information_with_previous = 1.
+#                     blob.compute_overlapping_with_previous_blob()
+#                 else:
+#                     blob.non_shared_information_with_previous = 1.
+#
 #                 while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
 #                     blob = blob.next[0]
 #                     blob.fragment_identifier = counter
+#                     blob._blob_index = blob_index
+#
+#                     # compute_overlapping_with_previous_blob
+#                     blob.compute_overlapping_with_previous_blob()
+#
+#                 # compute ompute_overlapping_with_previous_blob
+#                 if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
+#                     blob.next[0].compute_overlapping_with_previous_blob()
+#
 #                 counter += 1
 
 def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of_blobs):
@@ -381,18 +542,38 @@ def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of
     # print("possible_blob_indices ", possible_blob_indices)
     for blobs_in_frame in tqdm(blobs_in_video, desc = 'assigning fragment identifier'):
         used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]
-        # print("used_blob_indices ", used_blob_indices)
         missing_blob_indices =  list(set(possible_blob_indices).difference(set(used_blob_indices)))
-        # print("missing_blob_indices ", missing_blob_indices)
         for blob in blobs_in_frame:
-            if blob.fragment_identifier is None and blob.is_a_fish_in_a_fragment:
+            if blob.fragment_identifier is None and blob.is_a_fish:
                 blob.fragment_identifier = counter
                 blob_index = missing_blob_indices.pop(0)
                 blob._blob_index = blob_index
-                while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
-                    blob = blob.next[0]
-                    blob.fragment_identifier = counter
-                    blob._blob_index = blob_index
+
+                if len(blob.next) == 1 and blob.next[0].is_a_fish:
+                    blob.non_shared_information_with_previous = 1.
+                    blob.next[0].compute_overlapping_with_previous_blob()
+                    blob.next[0].fragment_identifier = counter
+                    blob.next[0]._blob_index = blob_index
+
+                    if blob.next[0].is_a_fish_in_a_fragment:
+                        blob = blob.next[0]
+
+                        while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
+                            blob = blob.next[0]
+                            blob.fragment_identifier = counter
+                            blob._blob_index = blob_index
+                            # compute_overlapping_with_previous_blob
+                            blob.compute_overlapping_with_previous_blob()
+
+                        if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
+                            blob.next[0].fragment_identifier = counter
+                            blob.next[0]._blob_index = blob_index
+                            blob.next[0].compute_overlapping_with_previous_blob()
+                        # elif blob.next[0].is_a_ghost_crossing:
+                        #     blob.next[0].fragment_identifier = counter
+                        #     blob.next[0]._blob_index = blob_index
+                        #     blob.next[0].compute_overlapping_with_previous_blob()
+
                 counter += 1
 
 def compute_crossing_fragment_identifier(list_of_blobs):
@@ -403,7 +584,7 @@ def compute_crossing_fragment_identifier(list_of_blobs):
     for blobs_in_frame in list_of_blobs:
         for blob in blobs_in_frame:
             if blob.is_a_crossing and not hasattr(blob, 'crossing_identifier'):
-                print(crossing_identifier)
+                # print(crossing_identifier)
                 propagate_crossing_identifier(blob, crossing_identifier)
                 crossing_identifier += 1
             elif blob.is_a_crossing and hasattr(blob, 'crossing_identifier'):
@@ -415,7 +596,7 @@ def compute_crossing_fragment_identifier(list_of_blobs):
 def propagate_crossing_identifier(blob, crossing_identifier):
     blob.is_a_crossing_in_a_fragment = True
     blob.crossing_identifier = crossing_identifier
-    print(crossing_identifier)
+    # print(crossing_identifier)
     cur_blob = blob
 
     while len(cur_blob.next) == 1:
@@ -502,11 +683,27 @@ def apply_model_area_to_video(video, blobs_in_video, model_area, portraitSize):
 
 def get_images_from_blobs_in_video(blobs_in_video):
     portraits_in_video = []
+    fragments_identifier_used = []
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
-            if blob.is_a_fish_in_a_fragment and not blob.assigned_during_accumulation:
-                portraits_in_video.append(blob.portrait)
-    return np.asarray(portraits_in_video)
+            if not blob.assigned_during_accumulation and blob.fragment_identifier not in fragments_identifier_used:
+                images_in_fragment = blob.portraits_in_fragment()
+                if len(images_in_fragment) > 0:
+                    portraits_in_video.append(images_in_fragment)
+                    fragments_identifier_used.append(blob.fragment_identifier)
+                # print("fragment identifiers ", fragments_identifier_used)
+    return np.concatenate(portraits_in_video, axis = 0)
+
+# def get_images_from_blobs_in_video(blobs_in_video):
+#     counter = 0
+#     portraits_in_video = []
+#     for blobs_in_frame in blobs_in_video:
+#         for blob in blobs_in_frame:
+#             if blob.is_a_fish_in_a_fragment and not blob.assigned_during_accumulation:
+#                 assert blob._identity == None
+#                 portraits_in_video.append(blob.portrait)
+#                 counter += 1
+#     return np.concatenate(portraits_in_video, axis = 0)
 
 def reset_blobs_fragmentation_parameters(blobs_in_video, recovering_from = 'fragmentation'):
     for blobs_in_frame in blobs_in_video:

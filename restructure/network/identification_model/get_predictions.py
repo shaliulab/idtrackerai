@@ -41,7 +41,7 @@ class GetPrediction(object):
         self._index_in_epoch = 0
         while self._index_in_epoch < self.data_set._num_images:
             fc_vectors = batch_operation(self.next_batch(self.batch_size))
-            print(fc_vectors.shape)
+            # print(fc_vectors.shape)
             self._fc_vectors.append(fc_vectors)
         self._fc_vectors = np.concatenate(self._fc_vectors, axis = 0)
         _, self._predictions = kMeansCluster(self._fc_vectors, number_of_animals, KMEANS_NUMBER_OF_STEPS)

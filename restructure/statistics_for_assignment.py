@@ -5,11 +5,13 @@ import numpy as np
 MAX_FLOAT = sys.float_info[0]
 MIN_FLOAT = sys.float_info[3]
 
-def compute_identification_frequencies_individual_fragment(identities_in_fragment, number_of_animals):
+def compute_identification_frequencies_individual_fragment(non_shared_information_in_fragment, identities_in_fragment, number_of_animals):
     """Given a list of identities computes the frequencies based on the
     network's assignment on the individual fragment.
     """
     # Compute frequencies of assignation for each identity
+    # return np.asarray([np.sum((identities_in_fragment == i) * non_shared_information_in_fragment)
+    #                         for i in range(1, number_of_animals+1)]) # The predictions come from 1 to number_of_animals + 1
     return np.asarray([np.sum(identities_in_fragment == i)
                             for i in range(1, number_of_animals+1)]) # The predictions come from 1 to number_of_animals + 1
 
@@ -34,7 +36,7 @@ def compute_P1_individual_fragment_from_frequencies(frequencies):
     else:
         P1_of_fragment[P1_of_fragment == 0.] = MIN_FLOAT
     # Change P1 that are 1. for 0.9999 so that we do not have problems when computing P2
-    P1_of_fragment[P1_of_fragment == 1.] = 0.99999999999999
+    P1_of_fragment[P1_of_fragment == 1.] = 1. - MIN_FLOAT
 
     return P1_of_fragment
 
@@ -58,4 +60,4 @@ def is_assignment_ambiguous(P2_vector):
     Else return false.
     """
     maxima_indices = np.where(P2_vector == np.max(P2_vector))[0]
-    return maxima_indices + 1 if len(maxima_indices) > 1 else False
+    return maxima_indices + 1, len(maxima_indices) > 1
