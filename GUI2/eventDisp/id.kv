@@ -1,0 +1,77 @@
+<Screen>:
+    Root:
+        id: tabs
+        size_hint: 1,1
+        pos_hint: {'center_x': .5, 'center_y': .5}
+        do_default_tab: False
+
+        TabbedPanelItem:
+            id: tab1
+            text:"Welcome"
+            SelectFile:
+                id: select_file
+                size_hint: 1.,1.
+                BoxLayout:
+                    orientation: "vertical"
+                    Image:
+                        id: logo
+                        source: "./logo.png"
+                        size: tabs.size
+                    Label:
+                        id: welcome
+                        text: "Welcome to idTrackerDeep. Select a video from the menu on the right."
+                        text_size: self.size
+                        size: self.texture_size
+                        font_size:20
+                        halign: "center"
+                        valign: "middle"
+                FileChooserListView:
+                    id: filechooser
+                    size_hint: 1.,1.
+
+        TabbedPanelItem:
+            id:tab2
+            text:"ROI"
+            disabled: select_file.open(filechooser.path, filechooser.selection)
+            ROISelector:
+                id: roi_selector
+                orientation: "vertical"
+                size_hint: 1.,1.
+        #
+        TabbedPanelItem:
+            id:tab3
+            text:'Set Preprocessing'
+            disabled: roi_selector.disable_preproc
+            PreprocessingPreview:
+                id:preprocessing_preview
+                size_hint:1.,1.
+                orientation:"horizontal"
+
+        TabbedPanelItem:
+            id:tab4
+            text:'Tracking'
+            # disabled:select_file.checkSegmentation(show_video_path.text)
+
+        TabbedPanelItem:
+            id:tab5
+            text:'Validation'
+            # disabled:select_file.checkSession(show_video_path.text)
+            Validator:
+                id: validate_video
+                orientation:"vertical"
+                Label:
+                    id: are_you_sure_val
+                    # text:'You are going to validate: ' + tabs.pathToVideo
+                    text_size: self.size
+                    size: self.texture_size
+                    font_size:18
+                    halign: "center"
+                    valign: "middle"
+                Button:
+                    id: start_validation
+                    text: 'Start validation'
+                    text_size: self.size
+                    halign: "center"
+                    valign: "middle"
+                    on_press:validate_video.showLoading()
+                    on_release:validate_video.validate(tabs.pathToVideo)

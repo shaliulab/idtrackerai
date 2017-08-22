@@ -205,6 +205,16 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
     else:
         return None, None, candidate_individual_fragments_identifiers, None
 
+def check_uniquenss_of_global_fragments(global_fragments):
+    [check_uniquenss_of_global_fragment(global_fragment) for global_fragment in global_fragments]
+
+def check_uniquenss_of_global_fragment(global_fragment):
+    if global_fragment._used_for_training == True and not global_fragment.is_unique:
+        print("is unique ", global_fragment.is_unique)
+        print("global_fragment ids ", global_fragment._temporary_ids)
+        print("global_fragment assigned ids, ", global_fragment._ids_assigned)
+        raise ValueError("This global Fragment is not unique")
+
 def subsample_images_for_last_training(images, labels, number_of_animals, number_of_samples = 3000):
     """Before assigning identities to the blobs that are not part of the training set we train the network
     a last time with uncorrelated images from the training set of references. This function subsample the

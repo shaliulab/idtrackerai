@@ -3,6 +3,8 @@
 !*/
 #except python files
 !*.py
+!*.yaml
+!*.kv
 
 #except gitignore
 !*.gitignore
