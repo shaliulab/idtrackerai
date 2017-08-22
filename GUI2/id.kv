@@ -1,0 +1,102 @@
+<Screen>:
+    Root:
+        id: tabs
+        size_hint: 1,1
+        pos_hint: {'center_x': .5, 'center_y': .5}
+        do_default_tab: False
+
+        TabbedPanelItem:
+            id: tab1
+            text:"Welcome"
+            SelectFile:
+                id: select_file
+                size_hint: 1.,1.
+                BoxLayout:
+                    orientation: "vertical"
+                    Image:
+                        id: logo
+                        # center: self.parent.center
+                        source: "./logo.png"
+                        size: tabs.size
+
+                    Label:
+                        id: welcome
+                        text: "Welcome to idTrackerDeep. Select a video from the menu on the right."
+                        text_size: self.size
+                        size: self.texture_size
+                        font_size:20
+                        halign: "center"
+                        valign: "middle"
+                    Button:
+                        id:switch_button
+                        text: "Go to ROI selection"
+                        on_press: tabs.assignPath(select_file.update)
+                        on_release: tabs.goToTab(tab2)
+                        disabled: select_file.open(filechooser.path, filechooser.selection)
+                    Button:
+                        id:switch_button
+                        text: "Go to Preprocessing"
+                        text_size: self.size
+                        halign: "center"
+                        valign: "middle"
+                        on_press: tabs.assignPath(select_file.update)
+                        on_release: tabs.goToTab(tab3)
+                        disabled: select_file.open(filechooser.path, filechooser.selection)
+                FileChooserListView:
+                    id: filechooser
+                    size_hint: 1.,1.
+                    # on_selection: select_file.selected(filechooser.selection)
+
+        TabbedPanelItem:
+            id:tab2
+            text:"ROI"
+            disabled: select_file.open(filechooser.path, filechooser.selection)
+            PreprocInterfaceManager:
+                id: preproc_interface_manager
+                orientation: "vertical"
+                size_hint: 1.,1.
+                Label:
+                    id: are_you_sure
+                    text:"Select ROIs for the video:"
+                    text_size: self.size
+                    size: self.texture_size
+                    font_size:20
+                    halign: "center"
+                    valign: "middle"
+                BoxLayout:
+                    id: roi_buttons_layout
+                    orientation: "horizontal"
+                    Button:
+                        id: show_video_path
+                        text: tabs.pathToVideo
+                        text_size: self.size
+                        halign: "center"
+                        valign: "middle"
+                        on_press: if self.text != 'You did not select a video yet': preproc_interface_manager.storePath(show_video_path.text)
+                    Button:
+                        id:roi_load
+                        text: "Load a previously selected ROI"
+                        text_size: self.size
+                        halign: "center"
+                        valign: "middle"
+                        on_press: preproc_interface_manager.loadROI()
+                        on_release: tabs.goToTab(tab3)
+                        disabled: preproc_interface_manager.checkROI(show_video_path.text)
+
+        TabbedPanelItem:
+            id:tab3
+            text:'Preprocessing'
+            disabled: select_file.open(filechooser.path, filechooser.selection)
+
+        TabbedPanelItem:
+            id:tab4
+            text:'Tracking'
+            disabled:True
+
+        TabbedPanelItem:
+            id:tab5
+            text:'Validation'
+            disabled:True
+            Button:
+                id: show_video_path
+                text: tabs.pathToVideo

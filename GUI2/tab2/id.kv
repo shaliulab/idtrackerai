@@ -1,0 +1,32 @@
+<Screen>:
+    Root:
+        id: tabs
+        size_hint: 1,1
+        pos_hint: {'center_x': .5, 'center_y': .5}
+        do_default_tab: False
+
+        TabbedPanelItem:
+            id:tab2
+            text:"ROI"
+            BoxLayout:
+                id:slider_layout
+                orientation:"vertical"
+                ROISelector:
+                    id: roi_select
+                Slider:
+                    id:video_slider
+                    min: 0
+                    max: roi_select.numFrame-1
+                    value: 1
+                    on_value: roi_select.visualiseFrame(video_slider.value)
+                    size_hint: 1.,.1
+                BoxLayout:
+                    orientation:"horizontal"
+                    size_hint:1.,.1
+                    Button:
+                        id:save_roi
+                        text:"Save ROIs"
+                    Button:
+                        id:clean_roi
+                        text:"delete last ROI"
+                        on_press: roi_select.delete_ROI()
