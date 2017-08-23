@@ -37,6 +37,8 @@ def compute_P1_individual_fragment_from_frequencies(frequencies):
         P1_of_fragment[P1_of_fragment == 0.] = MIN_FLOAT
     # Change P1 that are 1. for 0.9999 so that we do not have problems when computing P2
     P1_of_fragment[P1_of_fragment == 1.] = 1. - MIN_FLOAT
+    P1_of_fragment = P1_of_fragment / np.sum(P1_of_fragment)
+    # P1_of_fragment[P1_of_fragment == 1.] = 0.999999999999
 
     return P1_of_fragment
 
@@ -45,14 +47,23 @@ def compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video):
     coexisting_blobs_P1_vectors = blob.get_P1_vectors_coexisting_fragments(blobs_in_video)
     # print("coexisting_blobs_P1_vectors: ", coexisting_blobs_P1_vectors)
     # Compute P2
+    # for P1_vector in coexisting_blobs_P1_vectors:
+    #     print(np.argmax(P1_vector))
+    #     if np.argmax(P1_vector) == 9:
+    #         print(P1_vector)
+
     numerator = np.asarray(blob.P1_vector) * np.prod(1. - coexisting_blobs_P1_vectors, axis = 0)
+    # print("right part, ", np.prod(1. - coexisting_blobs_P1_vectors, axis = 0))
+    # print("numerator, ", numerator)
     denominator = np.sum(numerator)
     if denominator == 0:
-        print("P1 of blob, ", blob.P1_vector)
-        print("coexisting_blobs_P1_vectors, ", coexisting_blobs_P1_vectors)
-        raise ValueError('denominator of P2 is 0')
-
-    P2 = numerator / denominator
+        # print("P1 of blob, ", blob.P1_vector)
+        # print("coexisting_blobs_P1_vectors, ", coexisting_blobs_P1_vectors)
+        # raise ValueError('denominator of P2 is 0')
+        ### NOTE store error in log
+        P2 = blob.P1_vector
+    else:
+        P2 = numerator / denominator
     return P2
 
 def is_assignment_ambiguous(P2_vector):
