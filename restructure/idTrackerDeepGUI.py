@@ -699,10 +699,9 @@ if __name__ == '__main__':
 
 
         #############################################################
-        ##############   Create trajectories    #####################
+        ##############   Compute groundtruth    #####################
         ####
         #############################################################
-        ''' select ground truth file '''
         groundtruth_path = os.path.join(video._video_folder,'_groundtruth.npy')
         if os.path.isfile(groundtruth_path):
             print("\n**** Computing accuracy wrt. groundtruth ****")

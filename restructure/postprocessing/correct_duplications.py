@@ -37,17 +37,17 @@ class Duplication(object):
 
         if len(self.identities_to_be_reassigned) > 0:
             for identity in self.identities_to_be_reassigned:
-                print("\nsolving identity ", identity)
+                # print("\nsolving identity ", identity)
                 self.available_identities = list(set(self.possible_identities) - set(self.non_available_identities))
-                print("available identities: ", self.available_identities)
+                # print("available identities: ", self.available_identities)
                 self.blobs_to_reassign = self.get_blobs_with_same_identity(identity)
-                print("number of blobs with same identity: ", len(self.blobs_to_reassign))
+                # print("number of blobs with same identity: ", len(self.blobs_to_reassign))
                 self.assign()
                 all_blobs_to_reassign.extend(self.blobs_to_reassign)
         elif len(self.identities_in_frame) == len(self.possible_identities):
             blobs_that_are_duplication = [blob for blob in self.blobs_in_frame if blob._is_a_duplication]
             if len(blobs_that_are_duplication) == 1 and blobs_that_are_duplication[0]._identity_corrected_solving_duplication is None:
-                print("There are not duplicatios to be solved. Fixing the identity that it will be a duplication in the future or in the past")
+                # print("There are not duplicatios to be solved. Fixing the identity that it will be a duplication in the future or in the past")
                 self.available_identities = []
                 self.blobs_to_reassign = [blob for blob in self.blobs_in_frame if blob._is_a_duplication]
                 self.assign()
@@ -252,9 +252,9 @@ def assign_duplicated_identities_in_frame(blobs, blobs_in_frame, duplicated_iden
         for blob in blobs_in_frame:
             for duplicated_blob in blobs_to_reassign:
                 if blob is duplicated_blob and duplicated_blob._identity_corrected_solving_duplication is not None:
-                    print("I propagate the identities")
+                    # print("I propagate the identities")
                     blob.update_identity_in_fragment(duplicated_blob._identity_corrected_solving_duplication, duplication_solved = True)
-                    print(blob._identity_corrected_solving_duplication)
+                    # print(blob._identity_corrected_solving_duplication)
 
 def check_for_duplications(blobs_in_frame, possible_identities):
     identities_in_frame = get_identities_assigned_and_corrected_in_frame(blobs_in_frame)
@@ -292,7 +292,7 @@ def check_for_duplications(blobs_in_frame, possible_identities):
 
     return duplicated_identities, identities_in_frame, missing_identities, fragments_identifiers
 
-def check_for_duplications_last_pass(blobs_in_frame, group_size):
+def check_for_duplications_last_pass(blobs, group_size):
     frames_with_duplications = []
     fragments_identifiers_with_duplications = []
     possible_identities = set(range(1,group_size+1))
@@ -325,7 +325,7 @@ def solve_duplications(video, blobs, global_fragments, group_size):
     get_first_frame(video, global_fragments)
     solve_duplications_loop(video, blobs, group_size, scope = 'to_the_past')
     solve_duplications_loop(video, blobs, group_size, scope = 'to_the_future')
-    check_for_duplications_last_pass(blobs_in_frame, group_size)
+    check_for_duplications_last_pass(blobs, group_size)
 
 def mark_blobs_as_duplications(blobs, group_size):
     fragments_identifiers_that_are_duplications = []

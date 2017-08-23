@@ -47,32 +47,32 @@ class Jump(object):
         return set(self.possible_identities) - set(blobs_in_frame_sure_identities)
 
     def apply_model_velocity(self, blobs_in_video):
-        print("checking velocity model for blob ", self.jumping_blob.identity, " in frame ", self.jumping_blob.frame_number)
+        # print("checking velocity model for blob ", self.jumping_blob.identity, " in frame ", self.jumping_blob.frame_number)
         blobs_in_frame = blobs_in_video[self.jumping_blob.frame_number - 1]
         corresponding_blob_list = []
         corresponding_blob_list_past = [blob for blob in blobs_in_frame if blob.is_a_fish and blob.identity == self.jumping_blob.identity]
         if corresponding_blob_list_past:
             corresponding_blob_list.append(corresponding_blob_list_past[0])
         corresponding_blob_list.append(self.jumping_blob)
-        print("self.jumping_blob.frame_number + 1 ", self.jumping_blob.frame_number + 1)
-        print("self.number_of_frames ", self.number_of_frames)
-        print("len(blobs_in_video) ", len(blobs_in_video))
+        # print("self.jumping_blob.frame_number + 1 ", self.jumping_blob.frame_number + 1)
+        # print("self.number_of_frames ", self.number_of_frames)
+        # print("len(blobs_in_video) ", len(blobs_in_video))
         if self.jumping_blob.frame_number + 1 < self.number_of_frames:
             blobs_in_frame = blobs_in_video[self.jumping_blob.frame_number + 1]
-            for blob in blobs_in_frame:
-                print(blob.frame_number, blob.is_a_fish, blob.identity)
+            # for blob in blobs_in_frame:
+                # print(blob.frame_number, blob.is_a_fish, blob.identity)
             corresponding_blob_list_future = [blob for blob in blobs_in_frame if blob.is_a_fish and blob.identity == self.jumping_blob.identity]
-            print("corresponding_blob_list_future ", corresponding_blob_list_future)
+            # print("corresponding_blob_list_future ", corresponding_blob_list_future)
             if corresponding_blob_list_future:
                 corresponding_blob_list.append(corresponding_blob_list_future[0])
-            print("corresponding_blob_list ", corresponding_blob_list)
+            # print("corresponding_blob_list ", corresponding_blob_list)
         if len(corresponding_blob_list) > 1:
             velocity = compute_velocity_from_list_of_blobs(corresponding_blob_list)
-            print("velocity, ", velocity)
-            print("velocity_th, ", self.velocity_threshold)
+            # print("velocity, ", velocity)
+            # print("velocity_th, ", self.velocity_threshold)
             return self.velocity_threshold - velocity
         else:
-            print("it cannot compute the velocity")
+            # print("it cannot compute the velocity")
             return - 2 * self.velocity_threshold
 
     def check_id_availability(self, available_identities, sorted_assignments_indices):
@@ -81,22 +81,22 @@ class Jump(object):
 
     def check_assigned_identity(self, blobs_in_video, available_identities, sorted_assignments_indices):
         if not self.apply_model_velocity(blobs_in_video):
-            print("\navailable_identities ", available_identities)
-            print("removing ", self.jumping_blob.identity)
+            # print("\navailable_identities ", available_identities)
+            # print("removing ", self.jumping_blob.identity)
             if len(list(available_identities)) > 0:
                 available_identities.remove(self.jumping_blob.identity)
-                print("new_available_identities ", available_identities)
+                # print("new_available_identities ", available_identities)
             if len(list(available_identities)) > 0:
                 self.jumping_blob.identity = self.check_id_availability(available_identities, sorted_assignments_indices)[0]
-                print("self.check_id_availability(available_identities, sorted_assignments_indices), ", self.check_id_availability(available_identities, sorted_assignments_indices))
-                print("self.jumping_blob.identity, ", self.jumping_blob.identity)
+                # print("self.check_id_availability(available_identities, sorted_assignments_indices), ", self.check_id_availability(available_identities, sorted_assignments_indices))
+                # print("self.jumping_blob.identity, ", self.jumping_blob.identity)
                 self.check_assigned_identity(blobs_in_video, available_identities, sorted_assignments_indices)
             else:
-                print("no more available_identities")
+                # print("no more available_identities")
                 self.jumping_blob.identity = 0
-        else:
-            print("it passes the velocity model")
-            print("self.jumping_blob.identity, ", self.jumping_blob.identity)
+        # else:
+        #     print("it passes the velocity model")
+        #     print("self.jumping_blob.identity, ", self.jumping_blob.identity)
 
     def get_prediction_from_P2(self, available_identities):
         non_available_identities = np.asarray(list(set(self.possible_identities) - set(available_identities)))
@@ -110,70 +110,56 @@ class Jump(object):
     def assign_jump(self, blobs_in_video):
         available_identities = self.get_available_identities(blobs_in_video)
         prediction = self.get_prediction_from_P2(available_identities)
-        print("***** assigning jump")
-        print("prediction, ", prediction)
-        print("prediction type", type(prediction))
-        if type(prediction) is list:
-            print("prediction len", len(prediction))
-        print("available_identities, ", available_identities)
+        # print("***** assigning jump")
+        # print("prediction, ", prediction)
+        # print("prediction type", type(prediction))
+        # if type(prediction) is list:
+        #     print("prediction len", len(prediction))
+        # print("available_identities, ", available_identities)
         if type(prediction) is list and len(prediction) > 1 and len(prediction) < self.number_of_animals:
-            print("predictions is a list")
+            # print("predictions is a list")
             predictions_in_available_identities = [pred for pred in prediction if pred in available_identities]
             if len(predictions_in_available_identities) == 1:
-                print("case1")
+                # print("case1")
                 # case 1: only one prediction is in the available identities
                 prediction = predictions_in_available_identities[0]
             elif len(predictions_in_available_identities) == 0:
-                print("case2")
+                # print("case2")
                 # case 2: none of the predictions are in the available identities (the prediction has to be in the available identities)
                 prediction = prediction[0] # it is solved in the third condition below (in check_assigned_identity)
             elif len(predictions_in_available_identities) > 1:
-                print("case3")
+                # print("case3")
                 # case 3: more than two predictions are in the available identities (we choose the prediction by the model velocity)
                 passes_model_velocity = []
                 for pred in predictions_in_available_identities:
                     self.jumping_blob._identity = pred
                     passes_model_velocity.append(self.apply_model_velocity(blobs_in_video))
-                    print("passes_model_velocity ", passes_model_velocity)
+                    # print("passes_model_velocity ", passes_model_velocity)
                 passes_model_velocity = np.asarray(passes_model_velocity)
                 if np.sum(passes_model_velocity > 0) == 1:
-                    print("can decide for one of the predictions with model velocity")
-                    print("predictions_in_available_identities", predictions_in_available_identities)
+                    # print("can decide for one of the predictions with model velocity")
+                    # print("predictions_in_available_identities", predictions_in_available_identities)
                     prediction = predictions_in_available_identities[np.where(passes_model_velocity > 0)[0][0]]
-                    print("prediction ", prediction)
+                    # print("prediction ", prediction)
                 elif np.sum(passes_model_velocity > 0) > 1:
-                    print("can decide for one of the predictions with model velocity")
-                    print("predictions_in_available_identities", predictions_in_available_identities)
+                    # print("can decide for one of the predictions with model velocity")
+                    # print("predictions_in_available_identities", predictions_in_available_identities)
                     prediction = predictions_in_available_identities[np.where(passes_model_velocity == np.min(np.abs(passes_model_velocity)))[0][0]]
-                    print("prediction ", prediction)
+                    # print("prediction ", prediction)
 
                 else:
-                    print("cannot set a prediction given the velocity model")
+                    # print("cannot set a prediction given the velocity model")
                     prediction = 0
-                    print("prediction ", prediction)
+                    # print("prediction ", prediction)
 
         if len(available_identities) == 1:
-            print("there is only one available identity (%i)" %list(available_identities)[0])
+            # print("there is only one available identity (%i)" %list(available_identities)[0])
             self.jumping_blob._identity = list(available_identities)[0]
         elif len(available_identities) > 1:
-            print("there are more than one available identity")
+            # print("there are more than one available identity")
             self.jumping_blob._identity = prediction
-        # elif len(available_identities) > 1 and prediction not in available_identities:
-        #     print("there are more than one available identity but the prediction is not in the available identities")
-        #     not_assigned = True
-        #     sorted_assignments_indices = np.argsort(np.array(self._P2_vector))[::-1]
-        #     new_identities = [sorted_assignments_index for sorted_assignments_index in sorted_assignments_indices
-        #         if (sorted_assignments_index + 1) in available_identities and self._P2_vector[sorted_assignments_index] > 1 / self.number_of_animals]
-        #     if len(new_identities) > 0:
-        #         print("assing an identity following hierarchical P2")
-        #         new_identity = new_identities[0]
-        #         print("new identity ", new_identity + 1)
-        #     else:
-        #         print("cannot assign an identity following hierarchical P2")
-        #         new_identity = -1
-        #     self.jumping_blob._identity = new_identity + 1
         elif len(available_identities) == 0:
-            print("There are no more available identities ---------------------------------------")
+            # print("There are no more available identities ---------------------------------------")
             # print(self.jumping_blob.frame_number)
             new_identity = -1
         else:
@@ -251,7 +237,7 @@ def assign_identity_to_jumps(video, blobs):
     video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals, percentile = VEL_PERCENTILE)
     jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
                     if blob.is_a_jump or (blob.is_a_fish and (blob.identity == 0 or blob.identity is None))]
-    print("number of blobs to assing during jumps, ", len(jump_blobs))
+    # print("number of blobs to assing during jumps, ", len(jump_blobs))
     jump_images = [blob.portrait for blob in jump_blobs]
     #assign jumps by restoring the network
     assigner = assign_jumps(jump_images, video)
@@ -268,11 +254,11 @@ def assign_identity_to_jumps(video, blobs):
     # for blob in tqdm(enumerate(jump_blobs), desc = 'Assigning identity to jumps'):
     original_len_jump_blobs = len(jump_blobs)
     while len(jump_blobs) > 0:
-        print(len(jump_blobs), '/', original_len_jump_blobs)
+        # print(len(jump_blobs), '/', original_len_jump_blobs)
         blob = jump_blobs[get_blob_to_assign(jump_blobs)]
-        print("\n\nframe number, ", blob.frame_number)
-        print("fragment identifier, ", blob.fragment_identifier)
-        print("blob identity before assigning jump ", blob.identity)
+        # print("\n\nframe number, ", blob.frame_number)
+        # print("fragment identifier, ", blob.fragment_identifier)
+        # print("blob identity before assigning jump ", blob.identity)
         jump = Jump(jumping_blob = blob,
                     number_of_animals = video.number_of_animals,
                     _P2_vector = blob._P2_vector,
