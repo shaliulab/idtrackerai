@@ -199,11 +199,23 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
             lengths.extend(lengths_global_fragment)
             candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
             individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
-    print("================8", np.concatenate(images, axis = 0).shape)
     if len(images) != 0:
         return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
     else:
         return None, None, candidate_individual_fragments_identifiers, None
+
+def get_number_of_images_in_global_fragments_list(global_fragments_list):
+    return sum([global_fragment._total_number_of_portraits for global_fragment in global_fragments_list])
+
+def check_uniquenss_of_global_fragments(global_fragments):
+    [check_uniquenss_of_global_fragment(global_fragment) for global_fragment in global_fragments]
+
+def check_uniquenss_of_global_fragment(global_fragment):
+    if global_fragment._used_for_training == True and not global_fragment.is_unique:
+        print("is unique ", global_fragment.is_unique)
+        print("global_fragment ids ", global_fragment._temporary_ids)
+        print("global_fragment assigned ids, ", global_fragment._ids_assigned)
+        raise ValueError("This global Fragment is not unique")
 
 def subsample_images_for_last_training(images, labels, number_of_animals, number_of_samples = 3000):
     """Before assigning identities to the blobs that are not part of the training set we train the network

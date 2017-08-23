@@ -1025,7 +1025,6 @@ class Validator(BoxLayout):
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
             print("\nidentity: ", blob._identity)
-
             if hasattr(blob, "_identity_corrected_solving_duplication"):
                 print("corrected identity in duplications: ", blob._identity_corrected_solving_duplication)
             if hasattr(blob,"fragment_identifier"):
@@ -1052,7 +1051,6 @@ class Validator(BoxLayout):
             print("next: ", blob.next)
             print("previous: ", blob.previous)
         print("8<-------------------------------------------------------------")
-
         # Visualization of the process
         if self.scale != 1:
             self.dst = cv2.warpAffine(frame, self.M, (frame.shape[1], frame.shape[0]))
