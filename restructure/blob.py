@@ -64,6 +64,7 @@ class Blob(object):
                 self._user_generated_centroids = []
                 self._user_generated_identities = []
         self._identity_corrected_solving_duplication = None
+        self._is_a_duplication = False
 
     @property
     def user_generated_identity(self):
@@ -337,55 +338,67 @@ class Blob(object):
 
     def get_fixed_identities_of_coexisting_fragments(self, blobs_in_video):
         identities = []
-
+        # if self.is_a_fish_in_a_fragment:
         fragment_identifiers_of_coexisting_fragments = []
-        for blob in blobs_in_video[self.frame_number]:
+        for b, blob in enumerate(blobs_in_video[self.frame_number]):
             if blob.fragment_identifier is not self.fragment_identifier and \
                     blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
-                    blob.fragment_identifier is not None and\
-                    (blob.assigned_during_accumulation or blob._identity_corrected_solving_duplication is not None):
+                    blob.fragment_identifier is not None \
+                    and (blob.assigned_during_accumulation \
+                    or (blob._is_a_duplication and blob._identity_corrected_solving_duplication is not None and blob._identity_corrected_solving_duplication != 0)\
+                    or not blob._is_a_duplication):
                 if blob._user_generated_identity is not None:
                     identities.append(blob._user_generated_identity)
                 elif blob._identity_corrected_solving_duplication is not None:
                     identities.append(blob._identity_corrected_solving_duplication)
-                else:
-                    identities.append(blob._identity)
+                elif blob.identity is not None:
+                    identities.append(blob.identity)
                 fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
 
-        current = self
+        if self.is_a_fish_in_a_fragment:
+            current = self
 
-        while current.next[0].is_a_fish_in_a_fragment:
-            current = current.next[0]
-            for blob in blobs_in_video[current.frame_number]:
-                if blob.fragment_identifier is not current.fragment_identifier and \
-                        blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
-                        blob.fragment_identifier is not None and\
-                        (blob.assigned_during_accumulation or blob._identity_corrected_solving_duplication is not None):
-                    if blob._user_generated_identity is not None:
-                        identities.append(blob._user_generated_identity)
-                    elif blob._identity_corrected_solving_duplication is not None:
-                        identities.append(blob._identity_corrected_solving_duplication)
-                    else:
-                        identities.append(blob._identity)
-                    fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
+            while current.next[0].is_a_fish_in_a_fragment:
+                # print("looping to the future")
+                current = current.next[0]
+                # print("frame", current.frame_number)
+                # print("current identity corrected, ", current._identity_corrected_solving_duplication)
+                # print("current fragment identifier, ", current.fragment_identifier)
+                for b, blob in enumerate(blobs_in_video[current.frame_number]):
+                    # print("other fragment identifier", blob.fragment_identifier)
+                    if blob.fragment_identifier is not current.fragment_identifier and \
+                            blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
+                            blob.fragment_identifier is not None \
+                            and (blob.assigned_during_accumulation \
+                            or (blob._is_a_duplication and blob._identity_corrected_solving_duplication is not None and blob._identity_corrected_solving_duplication != 0)\
+                            or not blob._is_a_duplication):
+                        if blob._user_generated_identity is not None:
+                            identities.append(blob._user_generated_identity)
+                        elif blob._identity_corrected_solving_duplication is not None:
+                            identities.append(blob._identity_corrected_solving_duplication)
+                        elif blob.identity is not None:
+                            identities.append(blob.identity)
+                        fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
+                        # print(fragment_identifiers_of_coexisting_fragments)
 
-        current = self
-
-        while current.previous[0].is_a_fish_in_a_fragment:
-            current = current.previous[0]
-            for blob in blobs_in_video[current.frame_number]:
-                if blob.fragment_identifier is not current.fragment_identifier and \
-                        blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
-                        blob.fragment_identifier is not None and\
-                        (blob.assigned_during_accumulation or blob._identity_corrected_solving_duplication is not None):
-                    if blob._user_generated_identity is not None:
-                        identities.append(blob._user_generated_identity)
-                    elif blob._identity_corrected_solving_duplication is not None:
-                        identities.append(blob._identity_corrected_solving_duplication)
-                    else:
-                        identities.append(blob._identity)
-                    fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
-        return np.asarray(identities)
+            current = self
+            while current.previous[0].is_a_fish_in_a_fragment:
+                current = current.previous[0]
+                for blob in blobs_in_video[current.frame_number]:
+                    if blob.fragment_identifier is not current.fragment_identifier and \
+                            blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
+                            blob.fragment_identifier is not None \
+                            and (blob.assigned_during_accumulation \
+                            or (blob._is_a_duplication and blob._identity_corrected_solving_duplication is not None and blob._identity_corrected_solving_duplication != 0)\
+                            or not blob._is_a_duplication):
+                        if blob._user_generated_identity is not None:
+                            identities.append(blob._user_generated_identity)
+                        elif blob._identity_corrected_solving_duplication is not None:
+                            identities.append(blob._identity_corrected_solving_duplication)
+                        elif blob.identity is not None:
+                            identities.append(blob.identity)
+                        fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
+        return np.unique(np.asarray(identities)), fragment_identifiers_of_coexisting_fragments
 
     # def number_of_extremes_in_fragment(self):
     #     number_of_extremes = 0
@@ -470,6 +483,7 @@ class Blob(object):
         [setattr(self, attribute, value) for attribute, value in zip(attributes, values)]
         current = self
         while current.next[0].is_a_fish_in_a_fragment:
+            # print("propagating forward")
             current = current.next[0]
             [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
         if len(current.next) == 1 and len(current.next[0].previous) == 1 and current.next[0].is_a_fish:
@@ -481,6 +495,7 @@ class Blob(object):
 
         current = self
         while current.previous[0].is_a_fish_in_a_fragment:
+            # print("propagating backward")
             current = current.previous[0]
             [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
         if len(current.previous) == 1 and len(current.previous[0].next) == 1 and current.previous[0].is_a_fish:
