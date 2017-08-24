@@ -21,7 +21,11 @@ from blob import ListOfBlobs, Blob
 
 def plot_individual_trajectories_velocities_and_accelerations(video):
 
-    individual_trajectories = np.load(os.path.join(video.trajectories_folder,'centroid_trajectories.npy'))
+    try:
+        individual_trajectories = np.load(os.path.join(video.trajectories_folder,'centroid_trajectories.npy'))
+    except:
+        trajectories_folder = selectDir("./")
+        individual_trajectories = np.load(os.path.join(trajectories_folder,'centroid_trajectories.npy'))
 
     individual_velocities = np.diff(individual_trajectories, axis = 1)
     individual_velocities_magnitude = np.linalg.norm(individual_velocities, axis = 2)
