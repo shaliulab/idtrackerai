@@ -7,6 +7,8 @@ sys.path.append('../network')
 import numpy as np
 from tqdm import tqdm
 import collections
+import logging
+
 from blob import ListOfBlobs
 from blob import Blob
 from video_utils import segmentVideo, filterContoursBySize, getPixelsList, getBoundigBox
@@ -47,7 +49,7 @@ class Duplication(object):
         elif len(self.identities_in_frame) == len(self.possible_identities):
             blobs_that_are_duplication = [blob for blob in self.blobs_in_frame if blob._is_a_duplication]
             if len(blobs_that_are_duplication) == 1 and blobs_that_are_duplication[0]._identity_corrected_solving_duplication is None:
-                # print("There are not duplicatios to be solved. Fixing the identity that it will be a duplication in the future or in the past")
+                print("There are not duplicatios to be solved. Fixing the identity that it will be a duplication in the future or in the past")
                 self.available_identities = []
                 self.blobs_to_reassign = [blob for blob in self.blobs_in_frame if blob._is_a_duplication]
                 self.assign()
@@ -58,9 +60,19 @@ class Duplication(object):
     def get_blobs_with_same_identity(self, identity):
         """We do not reassign blobs used as references
         """
-        return [blob for blob in self.blobs_in_frame
-                if blob.identity == identity and not blob._assigned_during_accumulation
+        blobs_to_reassign = [blob for blob in self.blobs_in_frame
+                    if blob.identity == identity and not blob._assigned_during_accumulation
                     and blob._identity_corrected_solving_duplication is None]
+        fragment_identifiers_of_blobs_to_reassign = [blob.fragment_identifier for blob in blobs_to_reassign]
+        assigned_during_accumulation = [(blob.identity, blob._assigned_during_accumulation, blob.frame_number, blob.fragment_identifier) for blob in blobs_to_reassign]
+        if len(blobs_to_reassign) > 0:
+            return blobs_to_reassign
+        else:
+            blobs_accumulated_and_duplicated = [blob for blob in self.blobs_in_frame
+                        if blob.identity == identity and blob._assigned_during_accumulation
+                        and blob._identity_corrected_solving_duplication is None]
+            logging.error("Duplication in accumulated individual fragments")
+            raise ValueError("Duplication in accumulated individual fragments")
 
     @staticmethod
     def get_P2_matrix(blobs_list):
@@ -76,6 +88,14 @@ class Duplication(object):
         no_available_now = np.asarray(self.non_available_identities)-1
         P2_matrix[:,no_available_now.astype(int)] = 0.
         return P2_matrix
+
+    @staticmethod
+    def check_consistency_with_coexistent_individual_fragments(blob, candidate_id, blobs_in_video):
+        coexisting_identities, fragment_identifiers_of_coexisting_fragments = blob.get_fixed_identities_of_coexisting_fragments(blobs_in_video)
+        if candidate_id in coexisting_identities:
+            return False
+        else:
+            return True
 
     def assign(self):
         number_of_blobs_to_reassign = len(self.blobs_to_reassign)
@@ -93,14 +113,18 @@ class Duplication(object):
             if number_of_blobs_to_reassign == 1 and len(self.missing_identities) == 0:
                 # print("this blob will be a duplication in the future or in the past, but we can fix it now")
                 candidate_id = self.blobs_to_reassign[0].identity
-                # print("id, ", self.blobs_to_reassign[0].identity)
-                self.blobs_to_reassign[0]._identity_corrected_solving_duplication = self.blobs_to_reassign[0].identity
-                assigned_identities.append(self.blobs_to_reassign[0].identity)
+                if not self.check_consistency_with_coexistent_individual_fragments(self.blobs_to_reassign[0], candidate_id, self.blobs_in_video):
+                    candidate_id = 0
+                self.blobs_to_reassign[0]._identity_corrected_solving_duplication = candidate_id
+                assigned_identities.append(0)
             elif number_of_blobs_to_reassign == 1 and len(self.missing_identities) == 1:
                 # print("there is a unique blob to assing and only one missing identity")
                 candidate_id = self.missing_identities[0]
-                self.available_identities.remove(candidate_id)
-                self.missing_identities.remove(candidate_id)
+                if not self.check_consistency_with_coexistent_individual_fragments(self.blobs_to_reassign[0], candidate_id, self.blobs_in_video):
+                    candidate_id = 0
+                else:
+                    self.available_identities.remove(candidate_id)
+                    self.missing_identities.remove(candidate_id)
                 assigned_identities.append(candidate_id)
                 index_of_blobs_assigned.append(0)
                 self.blobs_to_reassign[0]._identity_corrected_solving_duplication = candidate_id
@@ -112,43 +136,49 @@ class Duplication(object):
                     index_blob = np.argmax(P2_max)
                     P2_max_blob = np.max(P2_max)
                     candidate_id = np.argmax(P2_matrix[index_blob,:]) + 1
-                    # print("candidate_id: ", candidate_id)
-                    # print("P2_max_blob: ", P2_max_blob)
-                    if candidate_id in self.available_identities and P2_max_blob > 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment):
-                        # print("id is available and P2 above random")
-                        # print("we assign the candidate id", candidate_id)
-                        # Assign the candidate_id if it is available and the probability is less than random
-                        self.blobs_to_reassign[index_blob]._identity_corrected_solving_duplication = candidate_id
-                        P2_matrix[:, candidate_id-1] = 0
-                        P2_matrix[index_blob, :] = 0
-                        self.available_identities.remove(candidate_id)
-                        if candidate_id in self.missing_identities:
-                            self.missing_identities.remove(candidate_id)
+                    if not self.check_consistency_with_coexistent_individual_fragments(self.blobs_to_reassign[0], candidate_id, self.blobs_in_video):
+                        candidate_id = 0
                         assigned_identities.append(candidate_id)
                         index_of_blobs_assigned.append(index_blob)
-                        # print("P2 matrix ", P2_matrix)
-                    elif candidate_id in self.available_identities and P2_max_blob < 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment):
-                        # print("id is available and P2 below random")
-                        if len(self.available_identities) > 1 :
-                            # print("there are other available")
-                            # print("we assign 0")
-                            # Assing the id to 0 because otherwise I would be assigning randomly
-                            self.blobs_to_reassign[index_blob]._identity_corrected_solving_duplication = 0
-                            assigned_identities.append(0)
-                            index_of_blobs_assigned.append(index_blob)
-                            P2_matrix[index_blob, :] = 0
-                            # print("P2 matrix ", P2_matrix)
-                        elif len(self.available_identities) == 1:
-                            # print("is the last missing identity")
-                            # print("missing identities ", self.missing_identities)
-                            # print("available identities ", self.available_identities)
+                        self.blobs_to_reassign[index_blob]._identity_corrected_solving_duplication = candidate_id
+                    else:
+                        # print("candidate_id: ", candidate_id)
+                        # print("P2_max_blob: ", P2_max_blob)
+                        if candidate_id in self.available_identities and P2_max_blob > 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment):
+                            # print("id is available and P2 above random")
+                            # print("we assign the candidate id", candidate_id)
+                            # Assign the candidate_id if it is available and the probability is less than random
                             self.blobs_to_reassign[index_blob]._identity_corrected_solving_duplication = candidate_id
+                            P2_matrix[:, candidate_id-1] = 0
+                            P2_matrix[index_blob, :] = 0
+                            self.available_identities.remove(candidate_id)
+                            if candidate_id in self.missing_identities:
+                                self.missing_identities.remove(candidate_id)
                             assigned_identities.append(candidate_id)
                             index_of_blobs_assigned.append(index_blob)
+                            # print("P2 matrix ", P2_matrix)
+                        elif candidate_id in self.available_identities and P2_max_blob < 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment):
+                            # print("id is available and P2 below random")
+                            if len(self.available_identities) > 1 :
+                                # print("there are other available")
+                                # print("we assign 0")
+                                # Assing the id to 0 because otherwise I would be assigning randomly
+                                self.blobs_to_reassign[index_blob]._identity_corrected_solving_duplication = 0
+                                assigned_identities.append(0)
+                                index_of_blobs_assigned.append(index_blob)
+                                P2_matrix[index_blob, :] = 0
+                                # print("P2 matrix ", P2_matrix)
+                            elif len(self.available_identities) == 1:
+                                # print("is the last missing identity")
+                                # print("missing identities ", self.missing_identities)
+                                # print("available identities ", self.available_identities)
+                                self.blobs_to_reassign[index_blob]._identity_corrected_solving_duplication = candidate_id
+                                assigned_identities.append(candidate_id)
+                                index_of_blobs_assigned.append(index_blob)
+                            else:
+                                raise ValueError("condition no considered")
                         else:
                             raise ValueError("condition no considered")
-                    else:
-                        raise ValueError("condition no considered")
                 elif len(max_indices) > 1 and np.any(P2_max != 0):
                     # print("P2_max is degenerated")
                     # if there are duplicated maxima, set the id of those blobs to 0 and put P2_matrix of thos ids to 0
@@ -171,8 +201,11 @@ class Duplication(object):
                     # print("missing identities ", self.missing_identities)
                     if len(index_of_blobs_to_be_assigned) == 1 and len(self.available_identities) == 1 and len(self.missing_identities) == 1:
                         # if is the last blob to be assigned, assign the missing identity to that blob
-                        self.blobs_to_reassign[index_of_blobs_to_be_assigned[0]]._identity_corrected_solving_duplication = self.missing_identities[0]
-                        assigned_identities.append(self.missing_identities[0])
+                        candidate_id = self.missing_identities[0]
+                        if not self.check_consistency_with_coexistent_individual_fragments(self.blobs_to_reassign[0], candidate_id, self.blobs_in_video):
+                            candidate_id = 0
+                        self.blobs_to_reassign[index_of_blobs_to_be_assigned[0]]._identity_corrected_solving_duplication = candidate_id
+                        assigned_identities.append(candidate_id)
                         index_of_blobs_assigned.append(index_of_blobs_to_be_assigned[0])
                     elif len(index_of_blobs_to_be_assigned) == 1 and len(self.available_identities) == 1 and len(self.missing_identities) > 1:
                         # it is the last one of this duplication but there is another duplication and there are more than one missing identities

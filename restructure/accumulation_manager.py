@@ -309,7 +309,7 @@ class AccumulationManager(object):
                         break
                     else:
                         temporal_identity = np.argmax(P1_array[index_individual_fragment,:])
-                        if not self.check_consistenct_with_coexistent_individual_fragments(global_fragment,index_individual_fragment,temporal_identity):
+                        if not self.check_consistency_with_coexistent_individual_fragments(global_fragment,index_individual_fragment,temporal_identity):
                             global_fragment._acceptable_for_training = False
                             break
                         else:
@@ -332,7 +332,7 @@ class AccumulationManager(object):
                             self.temporal_individual_fragments_used.append(individual_fragment_identifier)
                             self.temporal_identities_of_individual_fragments_used.append(temporal_identity)
 
-    def check_consistenct_with_coexistent_individual_fragments(self, global_fragment, index_individual_fragment, temporal_identity):
+    def check_consistency_with_coexistent_individual_fragments(self, global_fragment, index_individual_fragment, temporal_identity):
         individual_fragment_identifier = global_fragment.individual_fragments_identifiers[index_individual_fragment]
 
         for other_global_fragment in self.global_fragments:

@@ -388,13 +388,17 @@ class Blob(object):
             self._P1_vector = P1_vector
 
     @staticmethod
-    def update_identity_in_fragment_in_direction(current, identity_in_fragment, assigned_during_accumulation, P1_vector, frequencies_in_fragment, duplication_solved, direction = None):
+    def update_identity_in_fragment_in_direction(current, \
+                                            identity_in_fragment, \
+                                            assigned_during_accumulation, \
+                                            P1_vector, frequencies_in_fragment, \
+                                            duplication_solved, direction = None, \
+                                            fragment_identifier = None):
         if direction == 'next':
             opposite_direction = 'previous'
         elif direction == 'previous':
             opposite_direction = 'next'
-
-        while getattr(getattr(current,direction)[0],'is_a_fish_in_a_fragment'):
+        while getattr(getattr(current,direction)[0],'is_a_fish_in_a_fragment'): #NOTE maybe add this condition  #and current.fragment_identifier != fragment_identifier :
             current = getattr(current,direction)[0]
             current.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved)
             if assigned_during_accumulation:
@@ -421,13 +425,15 @@ class Blob(object):
                                                             self._P1_vector,
                                                             self._frequencies_in_fragment,
                                                             duplication_solved,
-                                                            direction = 'next')
+                                                            direction = 'next',
+                                                            fragment_identifier = self.fragment_identifier)
             self.update_identity_in_fragment_in_direction(self, identity_in_fragment,
                                                             assigned_during_accumulation,
                                                             self._P1_vector,
                                                             self._frequencies_in_fragment,
                                                             duplication_solved,
-                                                            direction = 'previous')
+                                                            direction = 'previous',
+                                                            fragment_identifier = self.fragment_identifier)
 
     def update_attributes_in_fragment(self, attributes, values):
         assert len(attributes) == len(values)
@@ -641,7 +647,7 @@ class ListOfBlobs(object):
 
     def generate_cut_points(self, num_chunks):
         n = len(self.blobs_in_video) // num_chunks
-        self.cutting_points = np.arange(0,len(self.blobs_in_video),n)
+        self.cutting_points = np.arange(0,len(self.blobs_in_video),n)[1:]
 
     def cut_in_chunks(self):
         for frame in self.cutting_points:
@@ -658,7 +664,6 @@ class ListOfBlobs(object):
         for frame_i in self.cutting_points:
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                 if blob_0.overlaps_with(blob_1):
-                    # print("Trying to reconnect")
                     blob_0.now_points_to(blob_1)
 
     def save(self):
