@@ -35,7 +35,7 @@ def assign_ghost_crossings(blobs):
                     blob._frequencies_in_fragment = blob.next[0].frequencies_in_fragment
                     blob._P1_vector = blob.next[0].P1_vector
                     blob._P2_vector = blob.next[0].P2_vector ### NOTE: this is not strictly correct as it should be recomputed
-                    blob.is_an_extreme_of_individual_fragment = True
+                    # blob.is_an_extreme_of_individual_fragment = True
                 elif len(blob.previous) == 1:
                     # print("prev is 1")
                     # print("prev id ", blob.previous[0].identity)
@@ -43,5 +43,5 @@ def assign_ghost_crossings(blobs):
                     blob._frequencies_in_fragment = blob.previous[0].frequencies_in_fragment
                     blob._P1_vector = blob.previous[0].P1_vector
                     blob._P2_vector = blob.previous[0].P2_vector ### NOTE: this is not strictly correct as it should be recomputed
-                    blob.is_an_extreme_of_individual_fragment = True
+                    # blob.is_an_extreme_of_individual_fragment = True
                 # print("new identity ", blob.identity)

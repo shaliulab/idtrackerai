@@ -751,6 +751,7 @@ class Validator(BoxLayout):
         self.popup.open()
 
     def get_first_frame(self):
+
         self.global_fragments = np.load(CHOSEN_VIDEO.old_video.global_fragments_path)
         max_distance_travelled_global_fragment = order_global_fragments_by_distance_travelled(self.global_fragments)[0]
         return max_distance_travelled_global_fragment.index_beginning_of_fragment
@@ -934,12 +935,16 @@ class Validator(BoxLayout):
         the coordinates of the original image
         """
         coords = np.asarray(coords)
-        if CHOSEN_VIDEO.video.resolution_reduction == 1:
-            original_frame_width = CHOSEN_VIDEO.video._width
-            original_frame_height = CHOSEN_VIDEO.video._height
+        if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction'):
+            if CHOSEN_VIDEO.video.resolution_reduction == 1:
+                original_frame_width = CHOSEN_VIDEO.video._width
+                original_frame_height = CHOSEN_VIDEO.video._height
+            else:
+                original_frame_width = int(CHOSEN_VIDEO.video._width * CHOSEN_VIDEO.video.resolution_reduction)
+                original_frame_height = int(CHOSEN_VIDEO.video._height * CHOSEN_VIDEO.video.resolution_reduction)
         else:
-            original_frame_width = int(CHOSEN_VIDEO.video._width * CHOSEN_VIDEO.video.resolution_reduction)
-            original_frame_height = int(CHOSEN_VIDEO.video._height * CHOSEN_VIDEO.video.resolution_reduction)
+            original_frame_width = int(CHOSEN_VIDEO.video._width)
+            original_frame_height = int(CHOSEN_VIDEO.video._height)
         # print("--------------------------- width and height ", original_frame_width, original_frame_height)
 
         actual_frame_width, actual_frame_height = self.visualiser.display_layout.size
