@@ -233,8 +233,8 @@ def assign_jumps(images, video):
     return assign(net, video, images, print_flag = True)
 
 def assign_identity_to_jumps(video, blobs):
-    # if not hasattr(video, "velocity_threshold"):
-    video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals, percentile = VEL_PERCENTILE)
+    if not hasattr(video, "velocity_threshold"):
+        video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals, percentile = VEL_PERCENTILE)
     jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
                     if blob.is_a_jump or (blob.is_a_fish and (blob.identity == 0 or blob.identity is None))]
     # print("number of blobs to assing during jumps, ", len(jump_blobs))

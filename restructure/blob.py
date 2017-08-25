@@ -477,7 +477,7 @@ def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of
                 blob._blob_index = blob_index
                 blob.non_shared_information_with_previous = 1.
 
-                if len(blob.next) == 1 and blob.next[0].is_a_fish:
+                if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
                     blob.next[0].fragment_identifier = counter
                     blob.next[0]._blob_index = blob_index
                     blob.next[0].compute_overlapping_with_previous_blob()
