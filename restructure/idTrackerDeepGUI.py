@@ -77,10 +77,11 @@ from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 from assign_ghost_crossings import assign_ghost_crossings
 from assign_jumps import assign_identity_to_jumps
-from correct_duplications import solve_duplications
+from correct_duplications import solve_duplications, mark_blobs_as_duplications
 from get_trajectories import produce_trajectories, smooth_trajectories
 from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
 from compute_statistics_against_groundtruth import get_statistics_against_groundtruth
+from solve_crossing import give_me_identities_in_crossings
 
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
@@ -637,6 +638,8 @@ if __name__ == '__main__':
         if not loadPreviousDict['solving_duplications']:
             logging.info("Start checking for and solving duplications")
             reset_blobs_fragmentation_parameters(blobs, recovering_from = 'solving_duplications')
+            # mark blobs as duplications
+            mark_blobs_as_duplications(blobs, video.number_of_animals)
             # solve duplications
             solve_duplications(video, blobs, global_fragments, video.number_of_animals)
             video._has_duplications_solved = True
@@ -690,12 +693,15 @@ if __name__ == '__main__':
             video._has_trajectories = True
             video.save()
             logging.info("Done")
+        else:
+            video._has_trajectories = True
+            video.save()
+
 
         #############################################################
-        ##############   Create trajectories    #####################
+        ##############   Compute groundtruth    #####################
         ####
         #############################################################
-        ''' select ground truth file '''
         groundtruth_path = os.path.join(video._video_folder,'_groundtruth.npy')
         if os.path.isfile(groundtruth_path):
             print("\n**** Computing accuracy wrt. groundtruth ****")

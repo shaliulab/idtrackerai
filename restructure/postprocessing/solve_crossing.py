@@ -53,7 +53,7 @@ def get_identities_in_crossing_forward(blob):
                     if previous_blob_next is not blob: # for every next of the previous that is not the current blob we remove the identities
                         if previous_blob_next.is_a_fish and previous_blob_next.identity != 0 and previous_blob_next.identity in blob._identity:
                             blob._identity.remove(previous_blob_next.identity)
-    return blob
+    # return blob
 
 def get_identities_in_crossing_backward(blob, blobs_in_frame):
     has_more_than_one_crossing = sum([blob_previous.is_a_crossing for blob_previous in blob.previous]) > 1
@@ -81,24 +81,22 @@ def get_identities_in_crossing_backward(blob, blobs_in_frame):
         blob.number_of_animals_in_crossing = None
     else:
         blob.number_of_animals_in_crossing = len(blob.identity)
-    return blob
+    # return blob
 
 def give_me_identities_in_crossings(list_of_blobs):
     """Sweep through the video frame by frame to get the identities of individuals in each crossing whenever it is possible
     """
-    for frame_number, blobs_in_frame in enumerate(tqdm(list_of_blobs, desc = "getting identities in crossing")):
+    for frame_number, blobs_in_frame in enumerate(tqdm(list_of_blobs, desc = "getting identities in crossing to future")):
         ''' from past to future '''
         for blob in blobs_in_frame:
             if blob.is_a_crossing:
-                blob = get_identities_in_crossing_forward(blob)
+                get_identities_in_crossing_forward(blob)
 
-    for frame_number, blobs_in_frame in enumerate(tqdm(blobs[::-1], desc = "getting identities in crossings")):
+    for frame_number, blobs_in_frame in enumerate(tqdm(list_of_blobs[::-1], desc = "getting identities in crossings to past")):
         ''' from future to past '''
         for blob in blobs_in_frame:
             if blob.is_a_crossing:
-                blob = get_identities_in_crossing_backward(blob, blobs_in_frame)
-
-    return list_of_blobs
+                get_identities_in_crossing_backward(blob, blobs_in_frame)
 
 def assign_crossing_identifier(list_of_blobs):
     """we define a crossing fragment as a crossing that in subsequent frames

@@ -54,7 +54,7 @@ def produce_trajectories(blob_file):
         for blob in blobs_in_frame:
             if blob.user_generated_identity is not None:
                 blob_identity = blob.user_generated_identity
-            elif blob._identity_corrected_solving_duplication is not None:
+            elif hasattr(blob, "_identity_corrected_solving_duplication") and blob._identity_corrected_solving_duplication is not None:
                 blob_identity = blob._identity_corrected_solving_duplication
             else:
                 blob_identity = blob.identity
