@@ -34,7 +34,7 @@ class Video(object):
         self._has_been_preprocessed = None #boolean: True if a video has been fragmented in a past session
         self._global_fragments_path = None #string: path to saved list of global fragments
         self._has_been_pretrained = None
-        self._pretraining_path = None
+        self._pretraining_folder = None
         self._knowledge_transfer_model_folder = None
         self.tracking_with_knowledge_transfer = False
         self._accumulation_finished = None
