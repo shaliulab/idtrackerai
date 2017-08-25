@@ -110,12 +110,12 @@ class Jump(object):
     def assign_jump(self, blobs_in_video):
         available_identities = self.get_available_identities(blobs_in_video)
         prediction = self.get_prediction_from_P2(available_identities)
-        # print("***** assigning jump")
-        # print("prediction, ", prediction)
-        # print("prediction type", type(prediction))
-        # if type(prediction) is list:
-        #     print("prediction len", len(prediction))
-        # print("available_identities, ", available_identities)
+        print("***** assigning jump")
+        print("prediction, ", prediction)
+        print("prediction type", type(prediction))
+        if type(prediction) is list:
+            print("prediction len", len(prediction))
+        print("available_identities, ", available_identities)
         if type(prediction) is list and len(prediction) > 1 and len(prediction) < self.number_of_animals:
             # print("predictions is a list")
             predictions_in_available_identities = [pred for pred in prediction if pred in available_identities]
@@ -130,22 +130,25 @@ class Jump(object):
             elif len(predictions_in_available_identities) > 1:
                 # print("case3")
                 # case 3: more than two predictions are in the available identities (we choose the prediction by the model velocity)
-                passes_model_velocity = []
+                velocities = []
                 for pred in predictions_in_available_identities:
                     self.jumping_blob._identity = pred
-                    passes_model_velocity.append(self.apply_model_velocity(blobs_in_video))
-                    # print("passes_model_velocity ", passes_model_velocity)
-                passes_model_velocity = np.asarray(passes_model_velocity)
-                if np.sum(passes_model_velocity > 0) == 1:
+                    velocities.append(self.apply_model_velocity(blobs_in_video))
+                    # print("velocities ", velocities)
+                velocities = np.asarray(velocities)
+                if np.sum(velocities > 0) == 1:
                     # print("can decide for one of the predictions with model velocity")
                     # print("predictions_in_available_identities", predictions_in_available_identities)
-                    prediction = predictions_in_available_identities[np.where(passes_model_velocity > 0)[0][0]]
+                    prediction = predictions_in_available_identities[np.where(velocities > 0)[0][0]]
                     # print("prediction ", prediction)
-                elif np.sum(passes_model_velocity > 0) > 1:
-                    # print("can decide for one of the predictions with model velocity")
-                    # print("predictions_in_available_identities", predictions_in_available_identities)
-                    prediction = predictions_in_available_identities[np.where(passes_model_velocity == np.min(np.abs(passes_model_velocity)))[0][0]]
-                    # print("prediction ", prediction)
+                elif np.sum(velocities > 0) > 1:
+                    print("can decide for one of the predictions with model velocity")
+                    print("predictions_in_available_identities", predictions_in_available_identities)
+                    print("velocities, ", velocities)
+                    print("velocity threshold, ", self.velocity_threshold)
+                    velocities[velocities < 0] = 2 * self.velocity_threshold
+                    prediction = predictions_in_available_identities[np.where(velocities == np.min(velocities))[0][0]]
+                    print("prediction ", prediction)
 
                 else:
                     # print("cannot set a prediction given the velocity model")
