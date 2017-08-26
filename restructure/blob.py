@@ -439,17 +439,19 @@ class Blob(object):
         assert len(attributes) == len(values)
         [setattr(self, attribute, value) for attribute, value in zip(attributes, values)]
         current = self
-        while current.next[0].is_a_fish_in_a_fragment:
-            current = current.next[0]
-            [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
+        if len(current.next) == 1:
+            while current.next[0].is_a_fish_in_a_fragment:
+                current = current.next[0]
+                [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
         if len(current.next) == 1 and len(current.next[0].previous) == 1 and current.next[0].is_a_fish:
             current = current.next[0]
             [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
 
         current = self
-        while current.previous[0].is_a_fish_in_a_fragment:
-            current = current.previous[0]
-            [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
+        if len(current.previous) == 1:
+            while current.previous[0].is_a_fish_in_a_fragment:
+                current = current.previous[0]
+                [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]
         if len(current.previous) == 1 and len(current.previous[0].next) == 1 and current.previous[0].is_a_fish:
             current = current.previous[0]
             [setattr(current, attribute, value) for attribute, value in zip(attributes, values)]

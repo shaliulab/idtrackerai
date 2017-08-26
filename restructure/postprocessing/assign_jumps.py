@@ -267,4 +267,6 @@ def assign_identity_to_jumps(video, blobs):
 
         jump.assign_jump(blobs)
         blob._identity = jump.jumping_blob.identity
+        if len(blob.next) == 1 and blob.next[0].is_a_fish and blob.next[0].fragment_identifier == blob.fragment_identifier:
+            blob.next[0]._identity = blob.identity
         jump_blobs.remove(blob)
