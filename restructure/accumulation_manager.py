@@ -39,7 +39,6 @@ class AccumulationManager(object):
         self.new_labels = None # labels for the set of images that will be added for training
         self._continue_accumulation = True # flag to continue_accumulation or not
 
-
     @property
     def continue_accumulation(self):
         """ We stop the accumulation when there are not more global fragments
