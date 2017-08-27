@@ -1,10 +1,10 @@
 from __future__ import absolute_import, print_function, division
 import sys
-sys.path.append('../')
-sys.path.append('../preprocessing')
-sys.path.append('../utils')
-sys.path.append('../network')
-sys.path.append('../plots')
+sys.path.append('./')
+sys.path.append('./preprocessing')
+sys.path.append('./utils')
+sys.path.append('./network')
+sys.path.append('./plots')
 import numpy as np
 from tqdm import tqdm
 import collections
