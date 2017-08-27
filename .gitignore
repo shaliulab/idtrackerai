@@ -11,3 +11,6 @@
 
 #except requirements.txt
 !requirements.txt
+
+#except idTrackerDeep logo
+!idTrackerAI/utils/loadingIdDeep.png
