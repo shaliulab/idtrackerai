@@ -78,11 +78,11 @@ from id_CNN import ConvNetwork
 from assign_ghost_crossings import assign_ghost_crossings
 from assign_jumps import assign_identity_to_jumps
 from correct_duplications import solve_duplications, mark_blobs_as_duplications
+from correct_impossible_velocity_jumps import fix_identity_of_blobs_in_video, correct_impossible_velocity_jumps
+from solve_crossing import give_me_identities_in_crossings
 from get_trajectories import produce_trajectories, smooth_trajectories
 from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
 from compute_statistics_against_groundtruth import get_statistics_against_groundtruth
-from solve_crossing import give_me_identities_in_crossings
-
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
@@ -116,6 +116,7 @@ def setup_logging(
     else:
         logging.basicConfig(level=default_level)
 
+    logging.getLogger(__name__)
 
 if __name__ == '__main__':
 
@@ -219,8 +220,13 @@ if __name__ == '__main__':
                 blobs_list = ListOfBlobs.load(old_video.blobs_path_segmented)
                 video._preprocessing_folder = old_video._preprocessing_folder
                 video._blobs_path_segmented = old_video._blobs_path_segmented
+                if hasattr(old_video, 'crossing_discriminator_images_shape'):
+                    video.crossing_discriminator_images_shape = old_video.crossing_discriminator_images_shape
+                if hasattr(old_video, 'crossing_image_size'):
+                    video.crossing_image_size = old_video.crossing_image_size
                 video._has_been_segmented = True
                 video._maximum_number_of_blobs = old_video.maximum_number_of_blobs
+                video.save()
                 blobs = blobs_list.blobs_in_video
                 logging.info("Segmented blobs loaded. Reset blobs for fragmentation")
                 logging.info("Blobs reset")
@@ -239,42 +245,65 @@ if __name__ == '__main__':
             logging.info("Discriminating blobs representing individuals from blobs associated to crossings")
             # discard blobs that do not respect such model
             apply_model_area_to_video(video, blobs, model_area, video.portrait_size[0])
-            # get fish and crossings data sets
-            logging.info("Get individual and crossing images labelled data")
-            training_set = CrossingDataset(blobs, video, scope = 'training')
-            training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)
-            validation_set = CrossingDataset(blobs, video, scope = 'validation',
-                                                            crossings = training_set.crossings,
-                                                            fish = training_set.fish,
-                                                            image_size = training_set.image_size)
-            validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1.)
-            # train crossing detector model
             video.create_crossings_detector_folder()
-            logging.info("Initialising crossing discriminator CNN. Checkpoints saved in %s", video._crossings_detector_folder)
-            crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
-                                                                        learning_rate = 0.001,
-                                                                        architecture = cnn_model_crossing_detector,
-                                                                        keep_prob = 1.0,
-                                                                        save_folder = video._crossings_detector_folder,
-                                                                        restore_folder = video._crossings_detector_folder,
-                                                                        image_size = training_set.images.shape[1:])
-            net = ConvNetwork_crossings(crossings_detector_network_params)
-            restore_crossing_detector = getInput("Restore crossing detector", "Do you want to restore the crossing detector? Y/n")
-            if restore_crossing_detector == 'n':
+            # restore_crossing_detector = getInput("Restore crossing detector", "Do you want to restore the crossing detector? Y/n")
+            if not usePreviousPrecParams:
+                # get fish and crossings data sets
+                logging.info("Get individual and crossing images labelled data")
+                training_set = CrossingDataset(blobs, video, scope = 'training')
+                training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)
+                validation_set = CrossingDataset(blobs, video, scope = 'validation',
+                                                                crossings = training_set.crossings,
+                                                                fish = training_set.fish,
+                                                                image_size = training_set.image_size)
+                validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1.)
+                # train crossing detector model
                 logging.info("Start crossing detector training")
-                TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
+
+
                 logging.info("Crossing detector training finished")
-            elif restore_crossing_detector == 'y' or restore_crossing_detector == '':
+                crossing_image_size = training_set.image_size
+                crossing_image_shape = training_set.images.shape[1:]
+                logging.info("crossing image shape ", crossing_image_shape)
+                crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
+                                                                            learning_rate = 0.001,
+                                                                            architecture = cnn_model_crossing_detector,
+                                                                            keep_prob = 1.0,
+                                                                            save_folder = video._crossings_detector_folder,
+                                                                            restore_folder = video._crossings_detector_folder,
+                                                                            image_size = crossing_image_shape)
+                net = ConvNetwork_crossings(crossings_detector_network_params)
+                TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
+                logging.info("crossing image size %s" %crossing_image_size)
+
+                video.crossing_discriminator_images_shape = crossing_image_shape
+                video.crossing_image_size = crossing_image_size
+                video.save()
+            else:
                 logging.info("Restoring crossing detector network")
-                net.restore()
+
                 logging.info("Crossing detector restored")
-            logging.info("Classify individuals and crossings")
+
+                logging.info("Initialising crossing discriminator CNN. Checkpoints saved in %s", video._crossings_detector_folder)
+                crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
+                                                                            learning_rate = 0.001,
+                                                                            architecture = cnn_model_crossing_detector,
+                                                                            keep_prob = 1.0,
+                                                                            save_folder = video._crossings_detector_folder,
+                                                                            restore_folder = video._crossings_detector_folder,
+                                                                            image_size = video.crossing_image_shape)
+                net = ConvNetwork_crossings(crossings_detector_network_params)
+                net.restore()
+            logging.info("Freeing memory. Validation and training crossings sets deleted")
+            validation_set = None
+            training_set = None
             test_set = CrossingDataset(blobs, video, scope = 'test',
-                                                    image_size = training_set.image_size)
+                                                    image_size = video.crossing_image_size)
             # get predictions of individual blobs outside of global fragments
+            logging.info("Classify individuals and crossings")
             crossings_predictor = GetPredictionCrossigns(net)
             predictions = crossings_predictor.get_all_predictions(test_set)
-            video.crossing_discriminator_images_shape = training_set.images.shape[1:]
+
             # set blobs as crossings by deleting the portrait
             [setattr(blob,'_portrait',None) if prediction == 1 else setattr(blob,'bounding_box_image', None)
                                             for blob, prediction in zip(test_set.test, predictions)]
@@ -283,6 +312,8 @@ if __name__ == '__main__':
                                                         for blob in blobs_in_frame
                                                         if blob.is_a_fish
                                                         and blob.bounding_box_image is not None]
+            logging.info("Freeing memory. Test crossings set deleted")
+            test_set = None
             #connect blobs that overlap in consecutive frames
             logging.info("Generate individual and crossing fragments")
             connect_blob_list(blobs)
@@ -614,7 +645,7 @@ if __name__ == '__main__':
             logging.info("Assigning identities to ghost crossings")
             assign_ghost_crossings(blobs)
             # solve jumps
-            logging.info("Assigning identities to jumps")
+            # logging.info("Assigning identities to jumps")
             assign_identity_to_jumps(video, blobs)
             video._has_been_assigned = True
             # finish and save
@@ -662,18 +693,28 @@ if __name__ == '__main__':
         #############################################################
         ###################  Solving impossible jumps    ############
         ####
-
-        # solve impossible jumps
-        ### NOTE: to be coded
+        print("\n**** Correct impossible velocity jump ****")
+        logging.info("Solving impossible velocity jumps")
+        fix_identity_of_blobs_in_video(blobs)
+        correct_impossible_velocity_jumps(video, blobs)
+        logging.info("Done")
+        # finish and save
+        logging.info("Saving")
+        blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+        blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
+        blobs_list.cut_in_chunks()
+        blobs_list.save()
+        video.save()
+        logging.info("Done")
 
         #############################################################
         ##############   Solve crossigns   ##########################
         ####
         #############################################################
-        print("\n**** Assign crossings ****")
-        if not loadPreviousDict['crossings']:
-            video._has_crossings_solved = False
-            pass
+        # print("\n**** Assign crossings ****")
+        # if not loadPreviousDict['crossings']:
+        #     video._has_crossings_solved = False
+        #     pass
 
         #############################################################
         ##############   Create trajectories    #####################
@@ -683,7 +724,9 @@ if __name__ == '__main__':
         if not loadPreviousDict['trajectories']:
             video.create_trajectories_folder()
             logging.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
-            trajectories = produce_trajectories(video._blobs_path)
+            number_of_animals = video.number_of_animals
+            number_of_frames = len(blobs)
+            trajectories = produce_trajectories(blobs, number_of_frames, number_of_animals)
             logging.info("Saving trajectories")
             for name in trajectories:
                 np.save(os.path.join(video.trajectories_folder, name + '_trajectories.npy'), trajectories[name])

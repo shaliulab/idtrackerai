@@ -337,10 +337,11 @@ def SegmentationPreview(video):
     mask = video.ROI
     if video.resolution_reduction != 1:
         if bkg is not None:
-            bkg = cv2.resize(bkg,None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+            bkg = cv2.resize(bkg, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
             video.bkg = bkg
-        mask = cv2.resize(mask,None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+        mask = cv2.resize(mask, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
         video.ROI = mask
+        video.save()
     subtract_bkg = video.subtract_bkg
     if video.resolution_reduction == 1:
         height = video._height

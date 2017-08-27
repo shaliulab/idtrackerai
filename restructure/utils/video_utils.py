@@ -99,6 +99,8 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, ROI, useBkg):
         frame = cv2.absdiff(bkg,frame) #only step where frame normalization is important, because the background is normalised
 
     frameSegmented = cv2.inRange(frame * (255.0/frame.max()), minThreshold, maxThreshold) #output: 255 in range, else 0
+    print("frame segmented frame ", frameSegmented.shape)
+    print("ROI shape: ", ROI.shape)
     frameSegmentedMasked = cv2.bitwise_and(frameSegmented,frameSegmented, mask=ROI) #Applying the mask
     return frameSegmentedMasked
 

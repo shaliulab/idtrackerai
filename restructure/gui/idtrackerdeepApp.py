@@ -79,6 +79,14 @@ class Chosen_Video(EventDispatcher):
                 self.video.ROI = self.old_video.ROI
 
                 print(self.video.resolution_reduction, self.video.ROI.shape)
+                if self.video.ROI.shape[0] != self.video._height * self.video.resolution_reduction:
+                    print("resizing ROI")
+                    self.video.ROI = cv2.resize(self.video.ROI, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+
+                    print("***********************resized ROI shape ", self.video.ROI.shape)
+                if self.video.bkg is not None and self.video.bkg.shape[0] != self.video._height * self.video.resolution_reduction:
+                    print("resizing BKG")
+                    self.video.bkg = cv2.resize(self.video.bkg, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
             if CHOSEN_VIDEO.video.video_path is not None:
                 if CHOSEN_VIDEO.old_video.preprocessing_type is None or CHOSEN_VIDEO.old_video.number_of_animals is None:
                     self.create_preprocessing_type_and_number_popup()
@@ -89,7 +97,8 @@ class Chosen_Video(EventDispatcher):
                     CHOSEN_VIDEO.video._preprocessing_type = CHOSEN_VIDEO.old_video.preprocessing_type
                     CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
                 self.enable_ROI_and_preprocessing_tabs = True
-        except:
+        except Exception,e:
+            print(str(e))
             print("Choose a video to proceed")
 
 class SelectFile(BoxLayout):
@@ -737,7 +746,6 @@ class Validator(BoxLayout):
         self.warning_popup.bind(size=lambda s, w: s.setter('text_size')(s, w))
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
-                                                                                                                     
     def show_saving(self, *args):
         self.popup_saving = Popup(title='Saving',
             content=Label(text='wait ...'),
@@ -751,20 +759,22 @@ class Validator(BoxLayout):
         self.popup.open()
 
     def get_first_frame(self):
-
-        self.global_fragments = np.load(CHOSEN_VIDEO.old_video.global_fragments_path)
-        max_distance_travelled_global_fragment = order_global_fragments_by_distance_travelled(self.global_fragments)[0]
-        return max_distance_travelled_global_fragment.index_beginning_of_fragment
+        if not hasattr(CHOSEN_VIDEO.video, 'first_frame_for_validation'):
+            self.global_fragments = np.load(CHOSEN_VIDEO.old_video.global_fragments_path)
+            max_distance_travelled_global_fragment = order_global_fragments_by_distance_travelled(self.global_fragments)[0]
+            return max_distance_travelled_global_fragment.index_beginning_of_fragment
+        else:
+            return CHOSEN_VIDEO.video.first_frame_for_validation
 
     def do(self, *args):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
             # print("has been assigned ", CHOSEN_VIDEO.video._has_been_assigned)
             if CHOSEN_VIDEO.video._has_been_assigned == True:
-                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
+                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_path)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             elif CHOSEN_VIDEO.old_video._has_been_assigned == True:
                 CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
-                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
+                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_path)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             #init variables used for zooming
             self.count_scrollup = 0
@@ -853,8 +863,7 @@ class Validator(BoxLayout):
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
-                                                                                                                                 
-    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):                                                              
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
 
         frame_index = int(self.visualiser.video_slider.value)
         if keycode[1] == 'left':
@@ -905,7 +914,7 @@ class Validator(BoxLayout):
     def apply_affine_transform_on_contour(self, affine_transform_matrix, contour):
         return np.expand_dims(np.asarray([self.apply_affine_transform_on_point(affine_transform_matrix, point) for point in contour]).astype(int),axis = 1)
 
-    def correctIdentity(self):
+    def get_blob_to_modify_and_mouse_coordinate(self):
         mouse_coords = self.touches[0]
         frame_index = int(self.visualiser.video_slider.value) #get the current frame from the slider
         blobs_in_frame = self.blobs_in_video[frame_index]
@@ -1032,30 +1041,30 @@ class Validator(BoxLayout):
             print("\nidentity: ", blob._identity)
             if hasattr(blob, "_identity_corrected_solving_duplication"):
                 print("corrected identity in duplications: ", blob._identity_corrected_solving_duplication)
-            if hasattr(blob,"fragment_identifier"):
-                print("fragment_identifier: ", blob.fragment_identifier)
-            else:
-                print("it does not have a fragment identifier")
-            if hasattr(blob,"identities_before_crossing"):
-                print("identity_before_crossing: ", blob.identities_before_crossing)
-            if hasattr(blob,"identities_after_crossing"):
-                print("identity_after_crossing: ", blob.identities_after_crossing)
-            print("assigned during accumulation: ", blob.assigned_during_accumulation)
-            if hasattr(blob,"frequencies_in_fragment"):
-                print("frequencies in fragment: ", blob.frequencies_in_fragment)
-            else:
-                print("this blob does not have frequencies in fragment")
-            print("P1_vector: ", blob.P1_vector)
+        #     if hasattr(blob,"fragment_identifier"):
+        #         print("fragment_identifier: ", blob.fragment_identifier)
+        #     else:
+        #         print("it does not have a fragment identifier")
+        #     if hasattr(blob,"identities_before_crossing"):
+        #         print("identity_before_crossing: ", blob.identities_before_crossing)
+        #     if hasattr(blob,"identities_after_crossing"):
+        #         print("identity_after_crossing: ", blob.identities_after_crossing)
+        #     print("assigned during accumulation: ", blob.assigned_during_accumulation)
+        #     if hasattr(blob,"frequencies_in_fragment"):
+        #         print("frequencies in fragment: ", blob.frequencies_in_fragment)
+        #     else:
+        #         print("this blob does not have frequencies in fragment")
+        #     print("P1_vector: ", blob.P1_vector)
             print("P2_vector: ", blob.P2_vector)
-            print("is_a_fish: ", blob.is_a_fish)
-            print("is_in_a_fragment: ", blob.is_in_a_fragment)
-            print("is_a_fish_in_a_fragment: ", blob.is_a_fish_in_a_fragment)
-            print("is_a_jump: ", blob.is_a_jump)
-            print("is_a_ghost_crossing: ", blob.is_a_ghost_crossing)
-            print("is_a_crossing: ", blob.is_a_crossing)
-            print("next: ", blob.next)
-            print("previous: ", blob.previous)
-        print("8<-------------------------------------------------------------")
+        #     print("is_a_fish: ", blob.is_a_fish)
+        #     print("is_in_a_fragment: ", blob.is_in_a_fragment)
+        #     print("is_a_fish_in_a_fragment: ", blob.is_a_fish_in_a_fragment)
+        #     print("is_a_jump: ", blob.is_a_jump)
+        #     print("is_a_ghost_crossing: ", blob.is_a_ghost_crossing)
+        #     print("is_a_crossing: ", blob.is_a_crossing)
+        #     print("next: ", blob.next)
+        #     print("previous: ", blob.previous)
+        # print("8<-------------------------------------------------------------")
         # Visualization of the process
         if self.scale != 1:
             self.dst = cv2.warpAffine(frame, self.M, (frame.shape[1], frame.shape[0]))
@@ -1172,12 +1181,66 @@ class Validator(BoxLayout):
         self.identityInput.bind(on_text_validate=self.on_enter)
         self.popup.open()
 
+    def show_blob_attributes(self, blob_to_explore):
+        self.container = BoxLayout()
+        self.blob_to_explore = blob_to_explore
+        self.show_attributes_box = BoxLayout(orientation="vertical")
+        #identity
+        if blob_to_explore.user_generated_identity is not None:
+            blob_to_explore_identity = blob_to_explore.user_generated_identity
+        elif blob_to_explore._identity_corrected_solving_duplication is not None:
+            blob_to_explore_identity = blob_to_explore._identity_corrected_solving_duplication
+        else:
+            blob_to_explore_identity = blob_to_explore.identity
+        self.id_label = Label(text='Assigned identity: ' + str(blob_to_explore_identity))
+        self.id_label.text_size = self.id_label.size
+        self.id_label.texture_size = self.id_label.size
+        #fragment identifier
+        self.frag_id_label = Label(text='Fragment identifier: ' + str(blob_to_explore.fragment_identifier))
+        self.frag_id_label.text_size = self.frag_id_label.size
+        self.frag_id_label.texture_size = self.frag_id_label.size
+        #is in a fragment
+        self.in_a_fragment_label = Label(text='It is in an individual fragment: ' + str(blob_to_explore.is_in_a_fragment))
+        self.in_a_fragment_label.text_size = self.in_a_fragment_label.size
+        self.in_a_fragment_label.texture_size = self.in_a_fragment_label.size
+        #is a fish
+        self.fish_label = Label(text='It is a fish: ' + str(blob_to_explore.is_a_fish))
+        self.fish_label.text_size = self.fish_label.size
+        self.fish_label.texture_size = self.fish_label.size
+        #is a ghost crossing
+        self.ghost_crossing_label = Label(text='It is a ghost crossing: ' + str(blob_to_explore.is_a_ghost_crossing))
+        self.ghost_crossing_label.text_size = self.ghost_crossing_label.size
+        self.ghost_crossing_label.texture_size = self.ghost_crossing_label.size
+        #is a jump
+        self.jump_label = Label(text='It is a jump: ' + str(blob_to_explore.is_a_jump))
+        self.jump_label.text_size = self.jump_label.size
+        self.jump_label.texture_size = self.jump_label.size
+
+        self.id_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
+        self.frag_id_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
+        self.in_a_fragment_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
+        self.ghost_crossing_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
+        self.jump_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
+
+        self.container.add_widget(self.show_attributes_box)
+        self.show_attributes_box.add_widget(self.id_label)
+        self.show_attributes_box.add_widget(self.frag_id_label)
+        self.show_attributes_box.add_widget(self.in_a_fragment_label)
+        self.show_attributes_box.add_widget(self.ghost_crossing_label)
+        self.show_attributes_box.add_widget(self.jump_label)
+
+        self.popup = Popup(title='Blob attributes',
+            content=self.container,
+            size_hint=(.4,.4))
+        self.popup.color = (0.,0.,0.,0.)
+        self.popup.open()
+
     def on_touch_down(self, touch):
         self.touches = []
         if self.visualiser.display_layout.collide_point(*touch.pos):
             if touch.button =='left':
                 self.touches.append(touch.pos)
-                self.id_to_modify, self.user_generated_centroids = self.correctIdentity()
+                self.id_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
                 if self.id_to_modify is not None:
                     self.modifyIdOpenPopup(self.id_to_modify)
 
@@ -1207,7 +1270,10 @@ class Validator(BoxLayout):
                 self.scale = 1
 
             elif touch.button == 'right':
-                pass
+                self.touches.append(touch.pos)
+                self.id_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
+                if self.id_to_modify is not None:
+                    self.show_blob_attributes(self.id_to_modify)
         else:
             self.scale = 1
             self.disable_touch_down_outside_collided_widget(touch)
@@ -1348,6 +1414,7 @@ class MainWindow(BoxLayout):
 class idtrackerdeepApp(App):
     Config.set('kivy', 'keyboard_mode', '')
     Config.set('graphics', 'fullscreen', '0')
+    Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
     Config.write()
     def build(self):
