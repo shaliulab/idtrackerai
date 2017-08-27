@@ -117,7 +117,7 @@ class ImpossibleJump(object):
         #for those blobs we check the velocity in borders
         for candidate_blob in candidate_blobs:
             blob_extreme_past, blobs_border_past, speeds_at_border_past = self.check_velocity_border_fragments_past(candidate_blob)
-            print("check border in the past of candidate blob: ", speeds_at_border_past > video.velocity_threshold)
+            print("check border in the past of candidate blob: ", speeds_at_border_past > self.video.velocity_threshold)
             if speeds_at_border_past > video.velocity_threshold:
                 return candidate_blob
             else:
@@ -129,7 +129,7 @@ class ImpossibleJump(object):
         #for those blobs we check the velocity in borders
         for candidate_blob in candidate_blobs:
             blob_extreme_future, blobs_border_future, speeds_at_border_future = self.check_velocity_border_fragments_future(candidate_blob)
-            print("check border in the future of candidate blob: ", speeds_at_border_future > video.velocity_threshold)
+            print("check border in the future of candidate blob: ", speeds_at_border_future > self.video.velocity_threshold)
             if speeds_at_border_future > video.velocity_threshold:
                 return candidate_blob
             else:
