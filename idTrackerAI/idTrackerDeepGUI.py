@@ -173,7 +173,7 @@ if __name__ == '__main__':
         preprocessing_parameters_dict = {key: getattr(video, key) for key in video.__dict__ if 'apply_ROI' in key or 'subtract_bkg' in key or 'min' in key or 'max' in key}
         logging.info('The parameters used to preprocess the video are %s', preprocessing_parameters_dict)
         #Loading logo during preprocessing
-        img = cv2.imread('../utils/loadingIdDeep.png')
+        img = cv2.imread('./utils/loadingIdDeep.png')
         cv2.imshow('Bars',img)
         cv2.waitKey(1000)
         cv2.destroyAllWindows()
