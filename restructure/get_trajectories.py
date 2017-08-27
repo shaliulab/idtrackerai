@@ -35,22 +35,18 @@ def smooth_trajectories(t, sigma = 1.5, truncate = 4.0, derivative = 0):
     t = gaussian_filter1d(t, sigma=sigma, axis=1, truncate = truncate, order = derivative)
     return t
 
-def produce_trajectories(blob_file):
+def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
     """Produce trajectories from ListOfBlobs
 
     :param blob_file: ListOfBlobs instance
     :returns: A dictionary with np.array as values
     """
-    list_of_blobs = ListOfBlobs.load(blob_file)
-    number_of_frames = len(list_of_blobs.blobs_in_video)
-    number_of_animals = list_of_blobs.blobs_in_video[0][0].number_of_animals #TODO number_of_animals should be a member of list_of_blobs
-
     centroid_trajectories = np.ones((number_of_animals,number_of_frames, 2))*np.NaN
     nose_trajectories = np.ones((number_of_animals,number_of_frames, 2))*np.NaN
     head_trajectories = np.ones((number_of_animals, number_of_frames, 2))*np.NaN
 
     missing_head = False
-    for frame_number, blobs_in_frame in enumerate(tqdm(list_of_blobs.blobs_in_video)):
+    for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video)):
         for blob in blobs_in_frame:
             if blob.user_generated_identity is not None:
                 blob_identity = blob.user_generated_identity

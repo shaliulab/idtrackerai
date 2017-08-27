@@ -78,12 +78,11 @@ from id_CNN import ConvNetwork
 from assign_ghost_crossings import assign_ghost_crossings
 from assign_jumps import assign_identity_to_jumps
 from correct_duplications import solve_duplications, mark_blobs_as_duplications
+from correct_impossible_velocity_jumps import fix_identity_of_blobs_in_video, correct_impossible_velocity_jumps
+from solve_crossing import give_me_identities_in_crossings
 from get_trajectories import produce_trajectories, smooth_trajectories
 from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
 from compute_statistics_against_groundtruth import get_statistics_against_groundtruth
-from correct_impossible_velocity_jumps import get_speed, ImpossibleJump, get_frames_with_impossible_speed
-from solve_crossing import give_me_identities_in_crossings
-
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
@@ -696,21 +695,19 @@ if __name__ == '__main__':
         #############################################################
         ###################  Solving impossible jumps    ############
         ####
-        # print("\n**** Correct impossible velocity jump ****")
-        # # solve impossible jumps
-        # individual_speeds = get_speed(blobs)
-        # jumps_identities, jumps_frame_numbers, velocities = get_frames_with_impossible_speed(video, blobs, individual_speeds)
-        #
-        # for identity, frame_number in zip(jumps_identities, jumps_frame_numbers):
-        #     print("______frame number : ", frame_number)
-        #     impossible_jump = ImpossibleJump(blobs, identity, frame_number, video.number_of_animals, velocity_threshold = video.velocity_threshold)
-        #     new_blob = impossible_jump.correct_impossible_jumps()
-        #     if new_blob is not None:
-        #         blobs_in_frame = blobs[new_blob.frame_number]
-        #         blob_to_update = [blob for blob in blobs_in_frame if blob.identity == blob.old_identity][0]
-        #         blob_to_update._identity = new_blob.identity
-
-
+        print("\n**** Correct impossible velocity jump ****")
+        logging.info("Solving impossible velocity jumps")
+        fix_identity_of_blobs_in_video(blobs)
+        correct_impossible_velocity_jumps(video, blobs)
+        logging.info("Done")
+        # finish and save
+        logging.info("Saving")
+        blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
+        blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
+        blobs_list.cut_in_chunks()
+        blobs_list.save()
+        video.save()
+        logging.info("Done")
 
         #############################################################
         ##############   Solve crossigns   ##########################
@@ -729,7 +726,9 @@ if __name__ == '__main__':
         if not loadPreviousDict['trajectories']:
             video.create_trajectories_folder()
             logging.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
-            trajectories = produce_trajectories(video._blobs_path)
+            number_of_animals = video.number_of_animals
+            number_of_frames = len(blobs)
+            trajectories = produce_trajectories(blobs, number_of_frames, number_of_animals)
             logging.info("Saving trajectories")
             for name in trajectories:
                 np.save(os.path.join(video.trajectories_folder, name + '_trajectories.npy'), trajectories[name])
