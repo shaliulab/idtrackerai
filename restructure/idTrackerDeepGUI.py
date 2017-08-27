@@ -294,7 +294,7 @@ if __name__ == '__main__':
                                                                             keep_prob = 1.0,
                                                                             save_folder = video._crossings_detector_folder,
                                                                             restore_folder = video._crossings_detector_folder,
-                                                                            image_size = video.crossing_image_shape)
+                                                                            image_size = video.crossing_discriminator_images_shape)
                 net = ConvNetwork_crossings(crossings_detector_network_params)
                 net.restore()
             logging.info("Freeing memory. Validation and training crossings sets deleted")
