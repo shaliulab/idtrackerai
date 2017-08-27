@@ -13,6 +13,8 @@ from blob import ListOfBlobs, Blob
 import matplotlib.pyplot as plt
 from get_data import duplicate_PCA_images
 
+MAX_NUMBER_OF_IMAGES = 3000
+
 class CrossingDataset(object):
     def __init__(self, blobs_list, video, crossings = [], fish = [], test = [], image_size = None, scope = ''):
         self.blobs = blobs_list
@@ -25,7 +27,19 @@ class CrossingDataset(object):
         self.video = video
         self.scope = scope
         if (scope == 'training' or scope == 'validation') and len(crossings) == 0 or image_size is None:
-            self.crossings = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_a_crossing and not blob.is_a_ghost_crossing]
+            num_crossing_images = 0
+            self.crossings = []
+            frame_number = 0
+
+            while num_crossing_images <= 3000 * self.video.number_of_animals and frame_number < self.video._num_frames - 1:
+                blobs_in_frame = self.blobs[frame_number]
+                for blob in blobs_in_frame:
+                    frame_number += 1
+                    if blob.is_a_crossing and not blob.is_a_ghost_crossing:
+                        self.crossings.append(blob)
+                        num_crossing_images += 1
+
+            # self.crossings = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_a_crossing and not blob.is_a_ghost_crossing]
             np.random.seed(0)
             np.random.shuffle(self.crossings)
             self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossings]) + 5

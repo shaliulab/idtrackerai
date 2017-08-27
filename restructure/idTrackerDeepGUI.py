@@ -223,6 +223,10 @@ if __name__ == '__main__':
                 blobs_list = ListOfBlobs.load(old_video.blobs_path_segmented)
                 video._preprocessing_folder = old_video._preprocessing_folder
                 video._blobs_path_segmented = old_video._blobs_path_segmented
+                if hasattr(old_video, 'crossing_discriminator_images_shape'):
+                    video.crossing_discriminator_images_shape = old_video.crossing_discriminator_images_shape
+                if hasattr(old_video, 'crossing_image_size'):
+                    video.crossing_image_size = old_video.crossing_image_size
                 video._has_been_segmented = True
                 video._maximum_number_of_blobs = old_video.maximum_number_of_blobs
                 video.save()
@@ -258,31 +262,42 @@ if __name__ == '__main__':
                 validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1.)
                 # train crossing detector model
                 logging.info("Start crossing detector training")
-                TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
-                logging.info("Crossing detector training finished")
 
+
+                logging.info("Crossing detector training finished")
                 crossing_image_size = training_set.image_size
-                loggin.info("crossing image size %s" %crossing_image_size)
                 crossing_image_shape = training_set.images.shape[1:]
                 logging.info("crossing image shape ", crossing_image_shape)
+                crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
+                                                                            learning_rate = 0.001,
+                                                                            architecture = cnn_model_crossing_detector,
+                                                                            keep_prob = 1.0,
+                                                                            save_folder = video._crossings_detector_folder,
+                                                                            restore_folder = video._crossings_detector_folder,
+                                                                            image_size = crossing_image_shape)
+                net = ConvNetwork_crossings(crossings_detector_network_params)
+                TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
+                logging.info("crossing image size %s" %crossing_image_size)
+
                 video.crossing_discriminator_images_shape = crossing_image_shape
                 video.crossing_image_size = crossing_image_size
                 video.save()
             else:
                 logging.info("Restoring crossing detector network")
-                net.restore()
+
                 logging.info("Crossing detector restored")
 
-            logging.info("Initialising crossing discriminator CNN. Checkpoints saved in %s", video._crossings_detector_folder)
-            crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
-                                                                        learning_rate = 0.001,
-                                                                        architecture = cnn_model_crossing_detector,
-                                                                        keep_prob = 1.0,
-                                                                        save_folder = video._crossings_detector_folder,
-                                                                        restore_folder = video._crossings_detector_folder,
-                                                                        image_size = video.crossing_image_size)
-            net = ConvNetwork_crossings(crossings_detector_network_params)
-            loggin.info("Freeing memory. Validation and training crossings sets deleted")
+                logging.info("Initialising crossing discriminator CNN. Checkpoints saved in %s", video._crossings_detector_folder)
+                crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
+                                                                            learning_rate = 0.001,
+                                                                            architecture = cnn_model_crossing_detector,
+                                                                            keep_prob = 1.0,
+                                                                            save_folder = video._crossings_detector_folder,
+                                                                            restore_folder = video._crossings_detector_folder,
+                                                                            image_size = video.crossing_image_shape)
+                net = ConvNetwork_crossings(crossings_detector_network_params)
+                net.restore()
+            logging.info("Freeing memory. Validation and training crossings sets deleted")
             validation_set = None
             training_set = None
             test_set = CrossingDataset(blobs, video, scope = 'test',
@@ -300,7 +315,7 @@ if __name__ == '__main__':
                                                         for blob in blobs_in_frame
                                                         if blob.is_a_fish
                                                         and blob.bounding_box_image is not None]
-            loggin.info("Freeing memory. Test crossings set deleted")
+            logging.info("Freeing memory. Test crossings set deleted")
             test_set = None
             #connect blobs that overlap in consecutive frames
             logging.info("Generate individual and crossing fragments")
