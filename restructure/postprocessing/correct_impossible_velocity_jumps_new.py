@@ -86,7 +86,8 @@ class ImpossibleJump(object):
         print("from get_available_identities. non_available_identities U coexisting_identities ", non_available_identities)
         available_identities = set(range(1, self.video.number_of_animals + 1)) - non_available_identities
         print("from get_available_identities. available_identities ", available_identities)
-        if blob.is_a_jump:
+        if len(available_identities) > 1:
+            # Allow the same identity to be available as we will assign by velocity
             available_identities = available_identities | set([blob.identity])
             non_available_identities.remove(blob.identity)
         return non_available_identities, available_identities
@@ -125,12 +126,12 @@ class ImpossibleJump(object):
         candidate_blobs = np.asarray([blob for blob in self.blobs_border_future if not blob.is_fixed])
         #for those blobs we check the velocity in borders
         for candidate_blob in candidate_blobs:
-            blob_extreme_future, blobs_border_future, speeds_at_border_future = self.check_velocity_border_fragments_past(candidate_blob)
-            print("check border in the past of candidate blob: ", speeds_at_border_future > video.velocity_threshold)
+            blob_extreme_future, blobs_border_future, speeds_at_border_future = self.check_velocity_border_fragments_future(candidate_blob)
+            print("check border in the future of candidate blob: ", speeds_at_border_future > video.velocity_threshold)
             if speeds_at_border_future > video.velocity_threshold:
                 return candidate_blob
             else:
-                return self.blob_extreme_past
+                return self.blob_extreme_future
 
     def get_candidate_identities_by_above_random_P2(self, blob, non_available_identities):
         P2_vector = blob._P2_vector
@@ -211,6 +212,7 @@ class ImpossibleJump(object):
                 self.reassign(self.blob_extreme_past) #we reassign the fragment (blob_extreme_future would also do)
             else:
                 print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-")
+                print("not all are fixed past or future")
                 blob_to_reassign_past = self.get_blob_to_reassign_past()
                 blob_to_reassign_future = self.get_blob_to_reassign_future()
 
@@ -220,8 +222,11 @@ class ImpossibleJump(object):
                 elif blob_to_reassign_future is self.blob_extreme_future:
                     print("The blob to reassign is the current one [future]")
                     self.reassign(self.blob_extreme_future)
+                else:
+                    print("This blob does not need to be fixed. A consecutive blob will be fixed later if needed")
 
-                print("not all are fixed past or future")
+
+
                 # blob_to_reassign = self.get_blob_to_reassing()
         elif self.jump_in_past:
             if np.all([blob.is_fixed for blob in self.blobs_border_past]):

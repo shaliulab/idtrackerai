@@ -681,19 +681,19 @@ if __name__ == '__main__':
         #############################################################
         ###################  Solving impossible jumps    ############
         ####
-        print("\n**** Correct impossible velocity jump ****")
-        # solve impossible jumps
-        individual_speeds = get_speed(blobs)
-        jumps_identities, jumps_frame_numbers, velocities = get_frames_with_impossible_speed(video, blobs, individual_speeds)
-
-        for identity, frame_number in zip(jumps_identities, jumps_frame_numbers):
-            print("______frame number : ", frame_number)
-            impossible_jump = ImpossibleJump(blobs, identity, frame_number, video.number_of_animals, velocity_threshold = video.velocity_threshold)
-            new_blob = impossible_jump.correct_impossible_jumps()
-            if new_blob is not None:
-                blobs_in_frame = blobs[new_blob.frame_number]
-                blob_to_update = [blob for blob in blobs_in_frame if blob.identity == blob.old_identity][0]
-                blob_to_update._identity = new_blob.identity
+        # print("\n**** Correct impossible velocity jump ****")
+        # # solve impossible jumps
+        # individual_speeds = get_speed(blobs)
+        # jumps_identities, jumps_frame_numbers, velocities = get_frames_with_impossible_speed(video, blobs, individual_speeds)
+        #
+        # for identity, frame_number in zip(jumps_identities, jumps_frame_numbers):
+        #     print("______frame number : ", frame_number)
+        #     impossible_jump = ImpossibleJump(blobs, identity, frame_number, video.number_of_animals, velocity_threshold = video.velocity_threshold)
+        #     new_blob = impossible_jump.correct_impossible_jumps()
+        #     if new_blob is not None:
+        #         blobs_in_frame = blobs[new_blob.frame_number]
+        #         blob_to_update = [blob for blob in blobs_in_frame if blob.identity == blob.old_identity][0]
+        #         blob_to_update._identity = new_blob.identity
 
 
 
@@ -701,10 +701,10 @@ if __name__ == '__main__':
         ##############   Solve crossigns   ##########################
         ####
         #############################################################
-        print("\n**** Assign crossings ****")
-        if not loadPreviousDict['crossings']:
-            video._has_crossings_solved = False
-            pass
+        # print("\n**** Assign crossings ****")
+        # if not loadPreviousDict['crossings']:
+        #     video._has_crossings_solved = False
+        #     pass
 
         #############################################################
         ##############   Create trajectories    #####################
