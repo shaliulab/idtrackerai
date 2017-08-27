@@ -227,7 +227,9 @@ class Duplication(object):
                         # there are more than one blobs to be assigned and al P2_max are 0. I assing them al to 0
                         for index_blob in index_of_blobs_to_be_assigned:
                             candidate_id = 0
-                            self.blobs_to_reassign[0].ambiguous_identities = np.asarray(self.available_identities)
+                            if len(self.available_identities) > 0:
+                                self.blobs_to_reassign[0].ambiguous_identities = np.asarray(self.available_identities)
+                            
                             self.blobs_to_reassign[index_blob]._identity_corrected_solving_duplication = candidate_id
                             assigned_identities.append(candidate_id)
                             index_of_blobs_assigned.append(index_blob)

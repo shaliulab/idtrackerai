@@ -119,8 +119,6 @@ def setup_logging(
 
     logging.getLogger(__name__)
 
-
-
 if __name__ == '__main__':
 
     cv2.namedWindow('Bars') #FIXME If we do not create the "Bars" window here we have the "Bad window error"...
@@ -648,7 +646,7 @@ if __name__ == '__main__':
             logging.info("Assigning identities to ghost crossings")
             assign_ghost_crossings(blobs)
             # solve jumps
-            logging.info("Assigning identities to jumps")
+            # logging.info("Assigning identities to jumps")
             assign_identity_to_jumps(video, blobs)
             video._has_been_assigned = True
             # finish and save

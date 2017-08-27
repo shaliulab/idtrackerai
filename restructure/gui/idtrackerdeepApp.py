@@ -79,6 +79,14 @@ class Chosen_Video(EventDispatcher):
                 self.video.ROI = self.old_video.ROI
 
                 print(self.video.resolution_reduction, self.video.ROI.shape)
+                if self.video.ROI.shape[0] != self.video._height * self.video.resolution_reduction:
+                    print("resizing ROI")
+                    self.video.ROI = cv2.resize(self.video.ROI, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+
+                    print("***********************resized ROI shape ", self.video.ROI.shape)
+                if self.video.bkg is not None and self.video.bkg.shape[0] != self.video._height * self.video.resolution_reduction:
+                    print("resizing BKG")
+                    self.video.bkg = cv2.resize(self.video.bkg, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
             if CHOSEN_VIDEO.video.video_path is not None:
                 if CHOSEN_VIDEO.old_video.preprocessing_type is None or CHOSEN_VIDEO.old_video.number_of_animals is None:
                     self.create_preprocessing_type_and_number_popup()
@@ -89,7 +97,8 @@ class Chosen_Video(EventDispatcher):
                     CHOSEN_VIDEO.video._preprocessing_type = CHOSEN_VIDEO.old_video.preprocessing_type
                     CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
                 self.enable_ROI_and_preprocessing_tabs = True
-        except:
+        except Exception,e:
+            print(str(e))
             print("Choose a video to proceed")
 
 class SelectFile(BoxLayout):
@@ -737,7 +746,6 @@ class Validator(BoxLayout):
         self.warning_popup.bind(size=lambda s, w: s.setter('text_size')(s, w))
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
-                                                                                                                     
     def show_saving(self, *args):
         self.popup_saving = Popup(title='Saving',
             content=Label(text='wait ...'),
@@ -762,11 +770,11 @@ class Validator(BoxLayout):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
             # print("has been assigned ", CHOSEN_VIDEO.video._has_been_assigned)
             if CHOSEN_VIDEO.video._has_been_assigned == True:
-                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
+                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_path)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             elif CHOSEN_VIDEO.old_video._has_been_assigned == True:
                 CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
-                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
+                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_path)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             #init variables used for zooming
             self.count_scrollup = 0
@@ -855,8 +863,7 @@ class Validator(BoxLayout):
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
-                                                                                                                                 
-    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):                                                              
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
 
         frame_index = int(self.visualiser.video_slider.value)
         if keycode[1] == 'left':

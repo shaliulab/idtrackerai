@@ -33,8 +33,8 @@ class CrossingDataset(object):
 
             while num_crossing_images <= 3000 * self.video.number_of_animals and frame_number < self.video._num_frames - 1:
                 blobs_in_frame = self.blobs[frame_number]
+                frame_number += 1
                 for blob in blobs_in_frame:
-                    frame_number += 1
                     if blob.is_a_crossing and not blob.is_a_ghost_crossing:
                         self.crossings.append(blob)
                         num_crossing_images += 1
