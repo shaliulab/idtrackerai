@@ -92,7 +92,6 @@ class ImpossibleJump(object):
         else:
             return None
 
-
     def get_identities_assigned_and_corrected_in_frame(self, blobs_in_frame):
         identities_in_frame = []
         for blob in blobs_in_frame:
