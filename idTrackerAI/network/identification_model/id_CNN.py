@@ -3,8 +3,11 @@ import os
 
 import tensorflow as tf
 import numpy as np
+import logging
 
 from cnn_architectures import cnn_model_0, cnn_model_1, cnn_model_2, cnn_model_3, cnn_model_4, cnn_model_5
+
+
 CNN_MODELS_DICT = {0: cnn_model_0,
                     1: cnn_model_1,
                     2: cnn_model_2,
@@ -13,6 +16,8 @@ CNN_MODELS_DICT = {0: cnn_model_0,
                     5: cnn_model_5}
 
 IMAGE_SIZE = (32,32,1)
+
+logger = logging.getLogger("__main__.id_CNN")
 
 class ConvNetwork():
     def __init__(self, params, training_flag = True):
@@ -37,12 +42,12 @@ class ConvNetwork():
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
         if self.is_restoring:
-            print('\nRestoring...')
+            logger.debug('Restoring...')
             # Get subfolders from where we will load the network from previous checkpoints
             [self.restore_folder_conv,self.restore_folder_fc_softmax] = get_checkpoint_subfolders( self.params._restore_folder, ['conv', 'softmax'])
         elif self.is_knowledge_transfer:
             # Get subfolders from where we will load the convolutional filters to perform knowledge transfer
-            print('\nPerforming knowledge transfer...')
+            logger.debug('Performing knowledge transfer...')
             [self.restore_folder_conv] = get_checkpoint_subfolders(self.params._knowledge_transfer_folder,['conv'])
             self.session.run(self.global_step.assign(0))
         # self.restore()
@@ -53,7 +58,7 @@ class ConvNetwork():
     def is_knowledge_transfer(self):
         if self.params._knowledge_transfer_folder is not None:
             self.restore_folder_fc_softmax = None
-            print("restore_folder_fc_softmax:", self.restore_folder_fc_softmax)
+            logger.debug("restore_folder_fc_softmax:", self.restore_folder_fc_softmax)
         return self.params._knowledge_transfer_folder is not None
 
     @property
@@ -78,7 +83,7 @@ class ConvNetwork():
         # self.y_logits, self.conv_vector = cnn_model(self.x_pl,self.params.number_of_animals)
         # self.y_logits, self.fc_vector, (self.W1, self.W2, self.W3, self.WFC, self.WSoft) = cnn_model_0(self.x_pl,self.params.number_of_animals)
         # self.y_logits = cnn_model_0(self.x_pl,self.params.number_of_animals)
-        print('training model %i' %self.params.cnn_model)
+        logger.debug('training model %i' %self.params.cnn_model)
         self.y_logits = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals, self.image_width, self.image_height, self.image_channels)
 
         self.softmax_probs = tf.nn.softmax(self.y_logits)
@@ -118,18 +123,18 @@ class ConvNetwork():
 
     def set_optimizer(self):
         if not self.params.use_adam_optimiser:
-            print('\nTraining with SGD')
+            logger.debug('Training with SGD')
             optimizer = tf.train.GradientDescentOptimizer(self.params.learning_rate)
         elif self.params.use_adam_optimiser:
-            print('\nTraining with ADAM')
+            logger.debug('Training with ADAM')
             optimizer = tf.train.AdamOptimizer(learning_rate = self.params.learning_rate, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam')
         global_step = tf.Variable(0, name='global_step', trainable=False)
         if self.params.scopes_layers_to_optimize is not None:
-            print('Optimizing ', self.params.scopes_layers_to_optimize, '\n')
+            logger.debug('Optimizing %s' %self.params.scopes_layers_to_optimize)
             self.get_layers_to_optimize()
             train_op = optimizer.minimize(self.loss, var_list = self.layers_to_optimise)
         else:
-            print('Optimizing the whole network\n')
+            logger.debug('Optimizing the whole network')
             train_op = optimizer.minimize(loss=self.loss)
         return train_op, global_step
 
@@ -139,7 +144,7 @@ class ConvNetwork():
         return accuracy, individual_accuracy
 
     def reinitialize_softmax_and_fully_connected(self):
-        print('\nReinitializing softmax and fully connected')
+        logger.debug('Reinitializing softmax and fully connected')
         self.session.run(tf.variables_initializer([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name]))
 
     def restore(self):
@@ -147,16 +152,16 @@ class ConvNetwork():
         try:
             ckpt = tf.train.get_checkpoint_state(self.restore_folder_conv)
             self.saver_conv.restore(self.session, ckpt.model_checkpoint_path) # restore convolutional variables
-            print('\nRestoring convolutional part from ', ckpt.model_checkpoint_path)
+            logger.debug('Restoring convolutional part from %s' %ckpt.model_checkpoint_path)
         except:
-            print('\nWarning: no checkpoints found for the convolutional part')
+            logger.debug('Warning: no checkpoints found for the convolutional part')
         if self.is_restoring:
             try:
                 ckpt = tf.train.get_checkpoint_state(self.restore_folder_fc_softmax)
                 self.saver_fc_softmax.restore(self.session, ckpt.model_checkpoint_path) # restore fully-conected and softmax variables
-                print('\nRestoring fully-connected and softmax part from ', ckpt.model_checkpoint_path)
+                logger.debug('Restoring fully-connected and softmax part from %s' %ckpt.model_checkpoint_path)
             except:
-                print('\nWarning: no checkpoints found for the fully-connected and softmax parts')
+                logger.debug('Warning: no checkpoints found for the fully-connected and softmax parts')
 
     def compute_batch_weights(self, batch_labels):
         # if self.weighted_flag:
@@ -246,9 +251,9 @@ def get_checkpoint_subfolders(folderName, subfoldersNameList):
         subPath = folderName + '/' + name
         if not os.path.exists(subPath):
             os.makedirs(subPath)
-            print(subPath + ' has been created')
+            logger.debug('%s has been created' %subPath)
         else:
-            print(subPath + ' already exists')
+            logger.debug('%s already exists' %subPath)
         subPaths.append(subPath)
     return subPaths
 

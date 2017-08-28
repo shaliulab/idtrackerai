@@ -5,8 +5,12 @@ sys.path.append('../')
 sys.path.append('../preprocessing')
 sys.path.append('../utils')
 import numpy as np
+import logging
+
 from blob import ListOfBlobs, Blob
 from GUI_utils import selectDir, getInput
+
+logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")
 
 class GroundTruthBlob(object):
     """Lighter blob objects.
@@ -41,8 +45,9 @@ class GroundTruth(object):
 
     def save(self):
         path_to_save_groundtruth = os.path.join(os.path.split(self.video_object.video_path)[0], '_groundtruth.npy')
-        print("saving groundtruth at ", path_to_save_groundtruth)
+        logger.info("saving ground truth at %s" %path_to_save_groundtruth)
         np.save(path_to_save_groundtruth, self)
+        logger.info("done")
 
 def generate_groundtruth_files(video_object, start = None, end = None):
     """Generates a list of light blobs, given a video object corresponding to a
@@ -91,7 +96,7 @@ def generate_groundtruth_files(video_object, start = None, end = None):
 
         groundtruth_blobs_list.append(groundtruth_blobs_in_frame)
 
-    print("proportion of crossings that we miss: ", 1-count_number_of_model_area_failures/count_number_of_crossings)
+    logger.debug("proportion of badly classified crossings (failure of the crossing detector): %s" %str(1-count_number_of_model_area_failures/count_number_of_crossings))
     groundtruth = GroundTruth(video_object = video_object,
                             list_of_blobs = groundtruth_blobs_list,
                             count_number_assignment_per_individual_assigned = count_number_assignment_per_individual_assigned,
