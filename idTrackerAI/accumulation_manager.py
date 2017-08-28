@@ -2,9 +2,12 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import random
 import psutil
+import logging
+
 from globalfragment import get_images_and_labels_from_global_fragments, order_global_fragments_by_distance_travelled, order_global_fragments_by_distance_to_the_first_global_fragment
 from statistics_for_assignment import compute_P1_individual_fragment_from_frequencies, compute_identification_frequencies_individual_fragment
 from assigner import assign
+
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
@@ -266,7 +269,7 @@ class AccumulationManager(object):
                 global_fragment._P1_vector.append(individual_fragment_P1_vector)
                 global_fragment._is_certain = True
             else:
-                raise ValueError("Individual fragment not in candidates or in used, this should not happen")
+                logging.warn("Individual fragment not in candidates or in used, this should not happen")
 
         # Compute identities if the global_fragment is certain
         if global_fragment._acceptable_for_training:
@@ -276,6 +279,9 @@ class AccumulationManager(object):
             index_individual_fragments_sorted_by_certanity_max_to_min = np.argsort(np.squeeze(np.asarray(global_fragment._certainties)))[::-1]
             # get array of P1 values for the global fragment
             P1_array = np.asarray(global_fragment._P1_vector)
+            print("P1_array_shape: ", P1_array.shape)
+            if P1_array.shape[0] != self.number_of_animals:
+                print("global_fragment individual fragment identifiers, ", global_fragment.individual_fragments_identifiers)
             # get the maximum P1 of each individual fragment
             P1_max = np.max(P1_array,axis=1)
             # get the index position of the individual fragments ordered by P1_max from max to min
