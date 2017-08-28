@@ -6,8 +6,10 @@ import os
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
+import logging
 
 BATCH_SIZE = 50
+logger = logging.getLogger("__main__.epoch_runner")
 
 class EpochRunner(object):
     def __init__(self, data_set,
@@ -50,8 +52,7 @@ class EpochRunner(object):
         accuracy_epoch = np.mean(np.vstack(accuracy_epoch))
         individual_accuracy_epoch = np.nanmean(np.vstack(individual_accuracy_epoch),axis=0)
         if self.print_flag:
-            print(name, ' (epoch %i)' %(self.starting_epoch + self._epochs_completed), ': loss, ', loss_epoch, ', accuracy, ', accuracy_epoch, ', individual accuray, ')
-            print(individual_accuracy_epoch)
+            logger.info('%s (epoch %i). Loss: %f, accuracy %f, individual accuracy: %s' %(name, self.starting_epoch + self._epochs_completed, loss_epoch, accuracy_epoch , individual_accuracy_epoch))
         # self._index_in_epoch_train = 0
         store_loss_and_accuracy.append_data(loss_epoch, accuracy_epoch, individual_accuracy_epoch)
         return feed_dict

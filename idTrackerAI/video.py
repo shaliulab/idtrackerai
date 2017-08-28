@@ -8,13 +8,15 @@ try:
     import cPickle as pickle
 except:
     import pickle
-
 from natsort import natsorted
 import cv2
+import logging
 
 AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4']
 SUPPORTED_PREPROCESSING_TYPES = ['portrait', 'body', 'body_blob']
 FRAMES_PER_EPISODE = 500 #long videos are divided into chunks. This is the number of frame per chunk
+
+logger = logging.getLogger("__main__.video")
 
 class Video(object):
     def __init__(self, video_path = None, preprocessing_type = None, number_of_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
@@ -122,7 +124,7 @@ class Video(object):
 
         #give a unique name (wrt the video)
         self._path_to_video_object = os.path.join(self._session_folder, 'video_object.npy')
-        print("the folder " + self._session_folder + " has been created")
+        logger.info("the folder %s has been created" %self._session_folder)
 
     def create_preprocessing_folder(self):
         """If it does not exist creates a folder called preprocessing
@@ -130,13 +132,13 @@ class Video(object):
         self._preprocessing_folder = os.path.join(self._session_folder, 'preprocessing')
         if not os.path.isdir(self._preprocessing_folder):
             os.makedirs(self._preprocessing_folder)
-            print("the folder " + self._preprocessing_folder + " has been created")
+            logger.info("the folder %s has been created" %self._preprocessing_folder)
 
     def create_crossings_detector_folder(self):
-        print('setting path to save crossing detector model')
+        logger.info('setting path to save crossing detector model')
         self._crossings_detector_folder = os.path.join(self._session_folder, 'crossings_detector')
         if not os.path.isdir(self._crossings_detector_folder):
-            print("the folder " + self._crossings_detector_folder + " has been created")
+            logger.info("the folder %s has been created" %self._crossings_detector_folder)
             os.makedirs(self._crossings_detector_folder)
 
     def create_pretraining_folder(self, number_of_global_fragments_used_to_pretrain):
@@ -166,7 +168,7 @@ class Video(object):
         """
         self.trajectories_folder = os.path.join(self._session_folder,'trajectories')
         if not os.path.isdir(self.trajectories_folder):
-            print("Creating trajectories folder...")
+            logger.info("Creating trajectories folder...")
             os.makedirs(self.trajectories_folder)
 
     def create_embeddings_folder(self):
@@ -175,7 +177,7 @@ class Video(object):
         self._embeddings_folder = os.path.join(self._session_folder, 'embeddings')
         if not os.path.isdir(self._embeddings_folder):
             os.makedirs(self._embeddings_folder)
-            print("the folder " + self._embeddings_folder + " has been created")
+            logger.info("the folder %s has been created" %self._embeddings_folder)
 
     def get_episodes(self):
         """Split video in episodes (chunks) of 500 frames
@@ -239,7 +241,7 @@ class Video(object):
 
     def save(self):
         """save class"""
-        print("saving video object in %s" %self._path_to_video_object)
+        logger.info("saving video object in %s" %self._path_to_video_object)
         np.save(self._path_to_video_object, self)
 
     @property
@@ -250,7 +252,6 @@ class Video(object):
     def knowledge_transfer_model_folder(self, new_kt_model_path):
         if new_kt_model_path:
             subfolders = glob.glob(os.path.join(new_kt_model_path, "*"))
-            print(subfolders)
             if os.path.join(new_kt_model_path, "conv") in subfolders and os.path.join(new_kt_model_path, "softmax") in subfolders:
                 self._knowledge_transfer_model_folder = new_kt_model_path
             else:

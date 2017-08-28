@@ -8,6 +8,7 @@ import itertools
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import logging
 
 from network_params import NetworkParams
 from get_data import DataSet, split_data_train_and_validation
@@ -20,6 +21,8 @@ from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
 MAX_RATIO_OF_PRETRAINED_IMAGES = .95
+
+logger = logging.getLogger("__main__.pre_trainer")
 
 def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretraining_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
     #initialize global epoch counter that takes into account all the steps in the pretraining
@@ -49,9 +52,7 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
         # training_dataset.standarize_images()
         # validation_dataset.standarize_images()
         # Crop images from 36x36 to 32x32 without performing data augmentation
-        # print("\ntraining images shape, ", training_dataset.images.shape)
         training_dataset.crop_images(image_size = video.portrait_size[0])
-        # print("validation images shape, ", validation_dataset.images.shape)
         validation_dataset.crop_images(image_size = video.portrait_size[0])
         # Convert labels to one hot vectors
         training_dataset.convert_labels_to_one_hot()
@@ -111,11 +112,11 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
             fig.savefig(os.path.join(net.params.save_folder,'pretraining_gf%i.pdf'%i))
         number_of_images_used_during_pretraining += get_number_of_images_in_global_fragments_list([pretraining_global_fragment])
         ratio_pretrained_images = number_of_images_used_during_pretraining / number_of_images_in_global_fragments
-        print("tot images in gf ", number_of_images_in_global_fragments)
-        print("images used during pretraining ", number_of_images_used_during_pretraining)
-        print("ratio ", ratio_pretrained_images)
+        logger.info("total number of images in global fragments:  %i" %number_of_images_in_global_fragments)
+        logger.info("number of images used during pretraining %i"  %number_of_images_used_during_pretraining)
+        logger.debug("limit ratio of images to be used during pretraining: %.2f (if higher than %.2f we stop)" %(ratio_pretrained_images, MAX_RATIO_OF_PRETRAINED_IMAGES))
         if ratio_pretrained_images > MAX_RATIO_OF_PRETRAINED_IMAGES:
-            print("pretrained enough")
+            logger.info("pre-training ended: The network has been pre-trained on more than %.2f of the images in global fragment" %MAX_RATIO_OF_PRETRAINED_IMAGES)
             break
 
     return net

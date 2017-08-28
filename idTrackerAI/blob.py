@@ -7,11 +7,13 @@ import itertools
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
+import logging
 
 from statistics_for_assignment import compute_P1_individual_fragment_from_frequencies
 
 # STD_TOLERANCE = 1 # tolerance to select a blob as being a single fish according to the area model
 ### NOTE set to 1 because we changed the model area to work with the median.
+logger = logging.getLogger("__main__.blob")
 
 class Blob(object):
     def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, estimated_body_length = None, portrait = None, pixels = None, number_of_animals = None, frame_number = None):
@@ -472,14 +474,14 @@ class Blob(object):
         if number_of_previous_blobs == 1:
             self.non_shared_information_with_previous = 1. - len(np.intersect1d(self.pixels, self.previous[0].pixels)) / np.mean([len(self.pixels), len(self.previous[0].pixels)])
             if self.non_shared_information_with_previous is np.nan:
-                print("intersection both blobs", len(np.intersect1d(self.pixels, self.previous[0].pixels)))
-                print("mean pixels both blobs", np.mean([len(self.pixels), len(self.previous[0].pixels)]))
+                logger.debug("intersection both blobs %s" %str(len(np.intersect1d(self.pixels, self.previous[0].pixels))))
+                logger.debug("mean pixels both blobs %s" %str(np.mean([len(self.pixels), len(self.previous[0].pixels)])))
                 raise ValueError("non_shared_information_with_previous is nan")
 
 def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of_blobs):
     counter = 1
     possible_blob_indices = range(maximum_number_of_blobs)
-    # print("possible_blob_indices ", possible_blob_indices)
+
     for blobs_in_frame in tqdm(blobs_in_video, desc = 'assigning fragment identifier'):
         used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]
         missing_blob_indices =  list(set(possible_blob_indices).difference(set(used_blob_indices)))
@@ -524,19 +526,16 @@ def compute_crossing_fragment_identifier(list_of_blobs):
     for blobs_in_frame in list_of_blobs:
         for blob in blobs_in_frame:
             if blob.is_a_crossing and not hasattr(blob, 'crossing_identifier'):
-                # print(crossing_identifier)
                 propagate_crossing_identifier(blob, crossing_identifier)
                 crossing_identifier += 1
             elif blob.is_a_crossing and hasattr(blob, 'crossing_identifier'):
                 blob.is_a_crossing_in_a_fragment = True
             else:
                 blob.is_a_crossing_in_a_fragment = None
-    # raise ValueError("De-fucking-bug")
 
 def propagate_crossing_identifier(blob, crossing_identifier):
     blob.is_a_crossing_in_a_fragment = True
     blob.crossing_identifier = crossing_identifier
-    # print(crossing_identifier)
     cur_blob = blob
 
     while len(cur_blob.next) == 1:
@@ -624,14 +623,16 @@ def apply_model_area_to_video(video, blobs_in_video, model_area, portraitSize):
 def get_images_from_blobs_in_video(blobs_in_video):
     portraits_in_video = []
     fragments_identifier_used = []
+
     for blobs_in_frame in blobs_in_video:
+
         for blob in blobs_in_frame:
             if not blob.assigned_during_accumulation and blob.fragment_identifier not in fragments_identifier_used:
                 images_in_fragment = blob.portraits_in_fragment()
                 if len(images_in_fragment) > 0:
                     portraits_in_video.append(images_in_fragment)
                     fragments_identifier_used.append(blob.fragment_identifier)
-                # print("fragment identifiers ", fragments_identifier_used)
+
     return np.concatenate(portraits_in_video, axis = 0)
 
 def reset_blobs_fragmentation_parameters(blobs_in_video, recovering_from = 'fragmentation'):
@@ -642,15 +643,14 @@ def reset_blobs_fragmentation_parameters(blobs_in_video, recovering_from = 'frag
 def check_number_of_blobs(video, blobs):
     frames_with_more_blobs_than_animals = []
     for frame_number, blobs_in_frame in enumerate(blobs):
+
         if len(blobs_in_frame) > video.number_of_animals:
             frames_with_more_blobs_than_animals.append(frame_number)
 
     if len(frames_with_more_blobs_than_animals) > 0:
-        print('There are frames with more blobs than animals, this can be detrimental for the proper functioning of the system.')
-        print("Frames with more blobs than animals: ")
-        print(frames_with_more_blobs_than_animals)
+        logger.error('There are frames with more blobs than animals, this can be detrimental for the proper functioning of the system.')
+        logger.error("Frames with more blobs than animals: %s" %str(frames_with_more_blobs_than_animals))
         raise ValueError('Please check your segmentaion')
-
     return frames_with_more_blobs_than_animals
 
 class ListOfBlobs(object):
@@ -673,7 +673,7 @@ class ListOfBlobs(object):
             blob.previous = []
 
     def reconnect(self):
-        # print("cutting points from reconnect ", self.cutting_points)
+        logger.info("Reconnecting list of blob objects")
         for frame_i in self.cutting_points:
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                 if blob_0.overlaps_with(blob_1):
@@ -681,15 +681,15 @@ class ListOfBlobs(object):
 
     def save(self):
         """save instance"""
-        print("saving blobs list at ", self.path_to_save)
+        logger.info("saving blobs list at %s" %self.path_to_save)
         np.save(self.path_to_save, self)
         self.reconnect()
 
     @classmethod
     def load(cls, path_to_load_blob_list_file):
-        print("loading blobs list from ", path_to_load_blob_list_file)
+        logger.info("loading blobs list from %s" %path_to_load_blob_list_file)
 
         list_of_blobs = np.load(path_to_load_blob_list_file).item()
-        # print("cutting points", list_of_blobs.cutting_points)
+        logging.debug("cutting points %s" %list_of_blobs.cutting_points)
         list_of_blobs.reconnect()
         return list_of_blobs
