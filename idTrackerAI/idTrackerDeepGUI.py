@@ -275,6 +275,7 @@ if __name__ == '__main__':
             video.crossing_image_size = crossing_image_size
             video.save()
             logger.info("Freeing memory. Validation and training crossings sets deleted")
+
             validation_set = None
             training_set = None
             test_set = CrossingDataset(blobs, video, scope = 'test',

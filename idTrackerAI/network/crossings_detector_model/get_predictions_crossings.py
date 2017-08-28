@@ -40,7 +40,7 @@ class GetPredictionCrossigns(object):
         # compute maximum number of images given the available RAM
         image_size_bytes = np.prod(test_set.image_size)*4 #XXX:Check it out!!!! np.prod(test_set.image_size**2)*4
         number_of_images_to_be_fitted_in_RAM = len(test_set.test)
-        num_images_that_can_fit_in_RAM = int(psutil.virtual_memory().available*.9/image_size_bytes)
+        num_images_that_can_fit_in_RAM = 100000#int(psutil.virtual_memory().available*.2/image_size_bytes)
         if number_of_images_to_be_fitted_in_RAM > num_images_that_can_fit_in_RAM:
             print("There is NOT enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
             number_of_predictions_retrieved = 0
