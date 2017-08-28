@@ -1,9 +1,12 @@
 from __future__ import absolute_import, print_function, division
 import sys
 import numpy as np
+import logging
 
 MAX_FLOAT = sys.float_info[0]
 MIN_FLOAT = sys.float_info[3]
+
+logger = logging.getLogger("__main__.statistics_for_assignment")
 
 def compute_identification_frequencies_individual_fragment(non_shared_information_in_fragment, identities_in_fragment, number_of_animals):
     """Given a list of identities computes the frequencies based on the
@@ -22,9 +25,9 @@ def compute_identification_frequencies_individual_fragment(non_shared_informatio
     # weighted_frequencies =  np.asarray([np.sum((identities_in_fragment == i) * non_shared_information_in_fragment)
     #                             for i in range(1, number_of_animals+1)]) # The predictions come from 1 to number_of_animals + 1
     # if sum(np.isnan(weighted_frequencies)):
-    #     print("identities_in_fragment, ", identities_in_fragment)
-    #     print("non_shared_information_in_fragment, ", non_shared_information_in_fragment)
-    #     print("weighted_frequencies, ", weighted_frequencies)
+    #     logger.debug("identities_in_fragment: %s", str(identities_in_fragment))
+    #     logger.debug("non_shared_information_in_fragment: %s", str(non_shared_information_in_fragment))
+    #     logger.debug("weighted_frequencies: %s" str(weighted_frequencies))
     #     raise ValueError("the weighted_frequencies are nan")
     #
     # return weighted_frequencies
@@ -59,24 +62,17 @@ def compute_P1_individual_fragment_from_frequencies(frequencies):
     return P1_of_fragment
 
 def compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video):
-    # print("\n****Computing P2")
+    # logger.debug("****Computing P2")
     coexisting_blobs_P1_vectors = blob.get_P1_vectors_coexisting_fragments(blobs_in_video)
-    # print("coexisting_blobs_P1_vectors: ", coexisting_blobs_P1_vectors)
-    # Compute P2
-    # for P1_vector in coexisting_blobs_P1_vectors:
-    #     print(np.argmax(P1_vector))
-    #     if np.argmax(P1_vector) == 9:
-    #         print(P1_vector)
-
+    # logger.debug("coexisting_blobs_P1_vectors: %s" %str(coexisting_blobs_P1_vectors))
     numerator = np.asarray(blob.P1_vector) * np.prod(1. - coexisting_blobs_P1_vectors, axis = 0)
-    # print("right part, ", np.prod(1. - coexisting_blobs_P1_vectors, axis = 0))
-    # print("numerator, ", numerator)
+    # logger.debug("second factor in P2: %s" %str(np.prod(1. - coexisting_blobs_P1_vectors, axis = 0)))
+    # logger.debug("numerator: %s" %str(numerator))
     denominator = np.sum(numerator)
     if denominator == 0:
-        # print("P1 of blob, ", blob.P1_vector)
-        # print("coexisting_blobs_P1_vectors, ", coexisting_blobs_P1_vectors)
+        # logger.debug("P1 of blob: %s", %str(blob.P1_vector))
+        # logger.debug("coexisting_blobs_P1_vectors: %s" %str(coexisting_blobs_P1_vectors))
         # raise ValueError('denominator of P2 is 0')
-        ### NOTE store error in log
         P2 = blob.P1_vector
     else:
         P2 = numerator / denominator

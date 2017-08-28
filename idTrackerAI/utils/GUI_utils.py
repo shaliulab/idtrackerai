@@ -7,6 +7,7 @@ import sys
 # Import application/library specifics
 sys.path.append('../preprocessing')
 import numpy as np
+import logging
 
 # Import third party libraries
 import cv2
@@ -26,6 +27,7 @@ from get_portraits import get_portrait, get_body
 # from video_utils import *
 from py_utils import get_spaced_colors_util, saveFile, loadFile
 
+logger = logging.getLogger("__main__.GUI_utils")
 """Change session folder name
 """
 def update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name):
@@ -49,7 +51,7 @@ def rename_session_folder(video_object, new_session_name):
     new_session_name = 'session_' + new_session_name
     current_session_name = os.path.split(video_object._session_folder)[1]
 
-    print("Updating checkpoint files")
+    logger.info("Updating checkpoint files")
     folders_to_check = ['_crossings_detector_folder', '_pretraining_folder', '_accumulation_folder']
     for folder in folders_to_check:
         if hasattr(video_object, folder) and getattr(video_object, folder) is not None:
@@ -58,31 +60,31 @@ def rename_session_folder(video_object, new_session_name):
                 if os.path.isfile(checkpoint_path):
                     update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name)
                 else:
-                    print('No checkpoint found in %s ' %folder)
+                    logger.warn('No checkpoint found in %s ' %folder)
             else:
                 for sub_folder in ['conv', 'softmax']:
                     checkpoint_path = os.path.join(getattr(video_object,folder),sub_folder,'checkpoint')
                     if os.path.isfile(checkpoint_path):
                         update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name)
                     else:
-                        print('No checkpoint found in %s ' %os.path.join(getattr(video_object,folder),sub_folder))
+                        logger.warn('No checkpoint found in %s ' %os.path.join(getattr(video_object,folder),sub_folder))
 
     attributes_to_modify = {key: getattr(video_object, key) for key in video_object.__dict__
     if isinstance(getattr(video_object, key), basestring)
     and current_session_name in getattr(video_object, key) }
 
-    print("Modifying folder name: ", current_session_name, " --> ", new_session_name)
+    logger.info("Modifying folder name from %s to %s "  %(current_session_name, new_session_name))
     os.rename(video_object._session_folder,
             os.path.join(video_object._video_folder, new_session_name))
-    print("Done")
-
-    print("Updating video object")
+    logger.info("Done")
+    logger.info("Updating video object")
 
     for key in attributes_to_modify:
         new_value = attributes_to_modify[key].replace(current_session_name, new_session_name)
         setattr(video_object, key, new_value)
-
+    logger.info("Saving video object")
     video_object.save()
+    logger.ingo("Done")
 
 
 """
@@ -263,15 +265,15 @@ def checkROI(video, old_video, usePreviousROI, frame):
     ''' Select ROI '''
     if video.apply_ROI:
         if usePreviousROI and old_video.ROI is not None:
-            print('\n Getting ROI from previous session')
+            logger.debug('Getting ROI from previous session')
             mask = old_video.ROI
         else:
-            print('\n Selecting ROI ...')
+            logger.debug('Selecting ROI...')
             mask, _ = getMask(frame)
             if np.count_nonzero(mask) == 0:
                 np.ones_like(frame, dtype = np.uint8)*255
     else:
-        print('\n No ROI selected ...')
+        logger.debug('No ROI selected...')
         mask = np.ones_like(frame, dtype = np.uint8)*255
     return mask
 
@@ -296,11 +298,11 @@ def checkROI_library(useROI, usePreviousROI, frame, videoPath):
             centers= loadFile(videoPath, 'centers')
             centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
         else:
-            print('\n Selecting ROI ...')
+            logger.debug('Selecting ROI...')
             mask, centers = getMask(frame)
             # mask = adaptROI(mask)
     else:
-        print('\n No ROI selected ...')
+        logger.debug('No ROI selected...')
         mask = np.ones_like(frame)*255
         centers = []
     return mask, centers
@@ -362,7 +364,6 @@ def SegmentationPreview(video):
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()
-        # print showerCopy.shape
         resUp = cv2.getTrackbarPos('ResUp', 'Bars')
         resDown = cv2.getTrackbarPos('ResDown', 'Bars')
         showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
@@ -378,9 +379,9 @@ def SegmentationPreview(video):
         portraitsMat = []
         rowPortrait = []
 
-        print("num blobs detected: ", numGoodContours)
-        print("maximum_body_length: ", maximum_body_length)
-        print("areas: ", areas)
+        logger.debug("num blobs detected: %i" %numGoodContours)
+        logger.debug("maximum_body_length %i " %maximum_body_length)
+        logger.debug("areas: %s" %str(areas))
 
         if video.preprocessing_type == 'portrait':
             portraitSize = int(maximum_body_length/2)
@@ -538,7 +539,6 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
         preprocessing_type = getInput('Preprocessing type','What kind of preprocessing do you want? portrait, body or body_blob?')
 
     if preprocessing_type != 'portrait' and preprocessing_type != 'body' and preprocessing_type != 'body_blob':
-        # print(len(preprocessing_type))
         raise ValueError('The animal you selected is not trackable yet :)')
 
     global cap, currentSegment
@@ -556,7 +556,6 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()
-        # print showerCopy.shape
         resUp = cv2.getTrackbarPos('ResUp', 'Bars')
         resDown = cv2.getTrackbarPos('ResDown', 'Bars')
         showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
@@ -572,9 +571,9 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
         portraitsMat = []
         rowPortrait = []
 
-        print("num blobs detected: ", numGoodContours)
-        print("maximum_body_length: ", maximum_body_length)
-        print("areas: ", areas)
+        logger.debug("num blobs detected: %i" %numGoodContours)
+        logger.debug("maximum_body_length: %i" %maximum_body_length)
+        logger.debug("areas: %i" %areas)
 
         if preprocessing_type == 'portrait':
             portraitSize = int(maximum_body_length/2)
@@ -613,7 +612,7 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
         sFrame = frameIndices.loc[trackbarValue,'frame']
 
         if sNumber != currentSegment: # we are changing segment
-            print('Changing segment...')
+            logger.debug('Changing segment...')
             currentSegment = sNumber
 
             if len(videoPaths) > 1:
@@ -796,42 +795,28 @@ def fragmentation_inspector(video, blobs_in_video):
 
     def resizer(sizeValue):
         global frame
-        print("sizeValue, ", sizeValue)
+        logger.debug("fragmentation visualiser, resize: %i" %sizeValue)
         real_size = sizeValue - 5
-        print("real_size, ", real_size)
+        logger.debug("fragmentation visualiser, real_size %i"  %real_size)
         if real_size > 0:
-            print("I should enlarge")
             frame = cv2.resize(frame,None,fx = real_size+1, fy = real_size+1)
-            print(frame.shape)
+            logger.debug(frame.shape)
         elif real_size < 0:
-            print("I should reduce")
+            logger.debug("I should reduce")
             frame = cv2.resize(frame,None, fx = np.true_divide(1,abs(real_size)+1), fy = np.true_divide(1,abs(real_size)+1))
-            print(frame.shape)
-        # elif real_size == 0:
-        #     print("real_size is zero")
-        #     real_size = sizeValue - previousSize
-        #     print("real_size, ", real_size)
-        #     if real_size > 0:
-        #         print("I should enlarge")
-        #         frame = cv2.resize(frame,None,fx = real_size+1, fy = real_size+1)
-        #         previousSize = sizeValue
-        #     elif real_size < 0:
-        #         print("I should reduce")
-        #         frame = cv2.resize(frame,None, fx = np.true_divide(1,abs(real_size)+1), fy = np.true_divide(1,abs(real_size)+1))
-        #         previousSize = sizeValue
-
+            logger.debug(frame.shape)
         cv2.imshow('fragmentInspection', frame)
 
     def scroll(trackbarValue):
         global frame, currentSegment, cap
         # Select segment dataframe and change cap if needed
         sNumber = video.in_which_episode(trackbarValue)
-        print('seg number ', sNumber)
-        print('trackbarValue ', trackbarValue)
+        logger.debug('seg number %i' %sNumber)
+        logger.debug('trackbarValue %i' %trackbarValue)
         sFrame = trackbarValue
 
         if sNumber != currentSegment: # we are changing segment
-            print('Changing segment...')
+            logger.debug('Changing segment...')
             currentSegment = sNumber
             if video._paths_to_video_segments:
                 cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
@@ -884,27 +869,24 @@ def playFragmentation_library(videoPaths,segmPaths,dfGlobal,visualize = False):
             global segmDf, cap, currentSegment
             segmDf,sNumber = loadFile(segmPaths[0], 'segmentation')
             currentSegment = int(sNumber)
-            print('Visualizing video %s' % path)
+            logger.debug('Visualizing video %s' % path)
             cap = cv2.VideoCapture(videoPaths[0])
             numFrames = len(frameIndices)
             # numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
             def onChange(trackbarValue):
                 global segmDf, cap, currentSegment
-
                 # Select segment dataframe and change cap if needed
                 sNumber = frameIndices.loc[trackbarValue,'segment']
                 sFrame = frameIndices.loc[trackbarValue,'frame']
-
                 if sNumber != currentSegment: # we are changing segment
-                    print('Changing segment...')
+                    logger.debug('Changing segment...')
                     prevSegmDf, _ = loadFile(segmPaths[sNumber-2], 'segmentation')
                     segmDf, _ = loadFile(segmPaths[sNumber-1], 'segmentation')
                     currentSegment = sNumber
 
                     if len(videoPaths) > 1:
                         cap = cv2.VideoCapture(videoPaths[sNumber-1])
-
                 #Get frame from video file
                 if len(videoPaths) > 1:
                     cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame)
@@ -913,24 +895,6 @@ def playFragmentation_library(videoPaths,segmPaths,dfGlobal,visualize = False):
                 ret, frame = cap.read()
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 frameCopy = frame.copy()
-
-                # print('**********************************')
-                # print('sNumber, ', sNumber)
-                # print('sFrame, ', sFrame)
-                # print('trackbarValue, ', trackbarValue)
-                #
-                # permutation = dfGlobal.loc[trackbarValue,'permutations']
-                # centroids = dfGlobal.loc[trackbarValue,'centroids']
-                # pixelsA = segmDf.loc[sFrame-1,'pixels']
-                # pixelsB = segmDf.loc[sFrame,'pixels']
-                # print('------------------------------------------------------------')
-                # print('previous frame, ', str(trackbarValue-1), ', permutation, ', dfGlobal.loc[trackbarValue-1,'permutations'])
-                # print('current frame, ', str(trackbarValue), ', permutation, ', permutation)
-                # trueFragment, s, overlapMat = computeFrameIntersection(pixelsA,pixelsB,numAnimals)
-                # print('overlapMat, ')
-                # print(overlapMat)
-                # print('permutation, ', s)
-
                 #Color to gray scale
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -994,12 +958,12 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
 
         # Select segment dataframe and change cap if needed
         sNumber = video.in_which_episode(trackbarValue)
-        print('seg number ', sNumber)
-        print('trackbarValue ', trackbarValue)
+        logger.debug('seg number %i' %sNumber)
+        logger.debug('trackbarValue %i' %trackbarValue)
         sFrame = trackbarValue
 
         if sNumber != currentSegment: # we are changing segment
-            print('Changing segment...')
+            logger.debug('Changing segment...')
             currentSegment = sNumber
             if video._paths_to_video_segments:
                 cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
@@ -1024,15 +988,11 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                 blobs_identities = get_n_previous_blobs_attribute(blob,'identity',number_of_previous)[::-1]
 
                 for i, (blob_pixels, blob_identity) in enumerate(zip(blobs_pixels,blobs_identities)):
-                    # print(i)
                     pxs = np.unravel_index(blob_pixels,(video._height,video._width))
                     if i < number_of_previous-1:
-                        # print(type(blob_identity))
                         if type(blob_identity) is not list and blob_identity is not None and blob_identity != 0:
-                            # print('adding shadows to fish')
                             frame[pxs[0], pxs[1], :] = np.multiply(colors[blob_identity], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
                         elif type(blob_identity) is list or blob_identity is None or blob_identity == 0:
-                            # print('adding shadows to crossing')
                             frame[pxs[0], pxs[1], :] = np.multiply([0, 0, 0], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
                     else:
                         frame[pxs[0], pxs[1], :] = frameCopy[pxs[0], pxs[1], :]
@@ -1046,8 +1006,8 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                 if blob._assigned_during_accumulation:
                     cv2.putText(frame, str(blob.identity),tuple(blob.centroid.astype('int')), font, 1, colors[blob.identity], 3)
                 else:
-                    print("the current blob is a fish ", blob.is_a_fish)
-                    print("id ", type(blob.identity) is int)
+                    logger.debug("the current blob is a fish %s" %blob.is_a_fish)
+                    logger.debug("blob identity is integer %s" %(type(blob.identity) is int))
                     if blob.is_a_fish and type(blob.identity) is int:
                         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
                     elif not blob.is_a_fish:
@@ -1056,31 +1016,29 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
 
                 if not save_video:
-                    print("\nblob ", b)
-                    print("identity: ", blob._identity)
+                    logger.debug("****blob %s"  %b)
+                    logger.debug("identity: %i" %blob._identity)
                     if hasattr(blob,"identities_before_crossing"):
-                        print("identity_before_crossing: ", blob.identities_before_crossing)
+                        logger.debug("identity_before_crossing: %s" %str(blob.identities_before_crossing))
                     if hasattr(blob,"identities_after_crossing"):
-                        print("identity_after_crossing: ", blob.identities_after_crossing)
-                    print("assigned during accumulation: ", blob.assigned_during_accumulation)
+                        logger.debug("identity_after_crossing: %s" %str(blob.identities_after_crossing))
+                    logger.debug("assigned during accumulation: %s" %blob.assigned_during_accumulation)
                     if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
                         try:
-                            print("frequencies in fragment: ", blob.frequencies_in_fragment)
+                            logger.debug("frequencies in fragment: %s" %str(blob.frequencies_in_fragment))
                         except:
-                            print("this blob does not have frequencies in fragment")
-                    print("P1_vector: ", blob.P1_vector)
-                    print("P2_vector: ", blob.P2_vector)
-                    print("is_a_fish: ", blob.is_a_fish)
-                    print("is_in_a_fragment: ", blob.is_in_a_fragment)
-                    print("is_a_fish_in_a_fragment: ", blob.is_a_fish_in_a_fragment)
-                    print("is_a_jump: ", blob.is_a_jump)
-                    print("is_a_ghost_crossing: ", blob.is_a_ghost_crossing)
-                    print("is_a_crossing: ", blob.is_a_crossing)
-                    # if blob.is_a_crossing:
-                    #     print("bad_crossing ", blob.bad_crossing)
-                        # print("number_of_animals_in_crossing: ", blob.number_of_animals_in_crossing)
-                    print("next: ", blob.next)
-                    print("previous: ", blob.previous)
+                            logger.debug("this blob does not have frequencies in fragment")
+                    logger.debug("P1_vector:%s " %str(blob.P1_vector))
+                    logger.debug("P2_vector: %s" %str(blob.P2_vector))
+                    logger.debug("is_a_fish: %s" %blob.is_a_fish)
+                    logger.debug("is_in_a_fragment: %s" %blob.is_in_a_fragment)
+                    logger.debug("is_a_fish_in_a_fragment: %s" %blob.is_a_fish_in_a_fragment)
+                    logger.debug("is_a_jump: %s" %blob.is_a_jump)
+                    logger.debug("is_a_ghost_crossing: %s" %blob.is_a_ghost_crossing)
+                    logger.debug("is_a_crossing: %s" %blob.is_a_crossing)
+                    logger.debug("next: %s" %blob.next)
+                    logger.debug("previous: %s" %blob.previous)
+                    logger.debug("****")
 
 
             if not save_video:
@@ -1090,26 +1048,17 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
             else:
                 out.write(frame)
         else:
-            print("Warning: unable to read frame ", scroll)
+            logger.warn("Unable to read frame number %i" %scroll)
     cv2.createTrackbar('start', 'frame_by_frame_identity_inspector', 0, numFrames-1, scroll )
-
     scroll(1)
     cv2.setTrackbarPos('start', 'frame_by_frame_identity_inspector', defFrame)
-
-    # cv2.waitKey(0)
-    # cv2.waitKey(1)
-    # cv2.destroyAllWindows()
-    # cv2.waitKey(1)
-
     if save_video:
         for i in tqdm(range(video._num_frames)):
             scroll(i)
-
     cv2.waitKey(0)
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
-
     save_video = getInput('Saver' , 'Do you want to save a copy of the tracked video? [y]/n')
     if not save_video or save_video == 'y':
         frame_by_frame_identity_inspector(video, blobs_in_video, save_video = True)
@@ -1129,7 +1078,6 @@ def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_
     cv2.namedWindow('frame_by_frame_identity_inspector')
     defFrame = 0
     colors = get_spaced_colors_util(video.number_of_animals,black=True)
-
     fourcc = cv2.cv.CV_FOURCC(*'XVID')
     if save_video:
         name = video._session_folder +'/tracked.avi'
@@ -1137,15 +1085,14 @@ def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_
 
     def scroll(trackbarValue):
         global frame, currentSegment, cap
-
         # Select segment dataframe and change cap if needed
         sNumber = video.in_which_episode(trackbarValue)
-        print('seg number ', sNumber)
-        print('trackbarValue ', trackbarValue)
+        logger.debug('seg number %i' %sNumber)
+        logger.debug('trackbarValue %i' %trackbarValue)
         sFrame = trackbarValue
 
         if sNumber != currentSegment: # we are changing segment
-            print('Changing segment...')
+            logger.debug('Changing segment...')
             currentSegment = sNumber
             if video._paths_to_video_segments:
                 cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
@@ -1167,65 +1114,12 @@ def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_
                 blobs_identities = get_n_previous_blobs_attribute(blob,'identity',number_of_previous)[::-1]
 
                 for i, (blob_pixels, blob_identity) in enumerate(zip(blobs_pixels,blobs_identities)):
-                    # print(i)
                     pxs = np.unravel_index(blob_pixels,(video._height,video._width))
                     if i < number_of_previous-1:
-                        # print(type(blob_identity))
                         if type(blob_identity) is not list and blob_identity is not None and blob_identity != 0:
-                            # print('adding shadows to fish')
                             frame[pxs[0], pxs[1], :] = np.multiply(colors[blob_identity], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
                         elif type(blob_identity) is list or blob_identity is None or blob_identity == 0:
-                            # print('adding shadows to crossing')
                             frame[pxs[0], pxs[1], :] = np.multiply([0, 0, 0], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
-                    # else:
-                    #     frame[pxs[0], pxs[1], :] = frameCopy[pxs[0], pxs[1], :]
-
-                #draw the centroid
-                # font = cv2.FONT_HERSHEY_SIMPLEX
-                # if type(blob.identity) is int:
-                #     cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, colors[blob._identity], -1)
-                # elif type(blob.identity) is list:
-                #     cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, [255, 255, 255], -1)
-                # if blob._assigned_during_accumulation:
-                #     cv2.putText(frame, str(blob.identity),tuple(blob.centroid.astype('int')), font, 1, colors[blob.identity], 3)
-                # else:
-                #     print("the current blob is a fish ", blob.is_a_fish)
-                #     print("id ", type(blob.identity) is int)
-                #     if blob.is_a_fish and type(blob.identity) is int:
-                #         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
-                #     elif not blob.is_a_fish:
-                #         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, 1, [255,255,255], 3)
-                #     else:
-                #         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
-
-                # if not save_video:
-                    # print("\nblob ", b)
-                    # print("identity: ", blob._identity)
-                    # if hasattr(blob,"identities_before_crossing"):
-                    #     print("identity_before_crossing: ", blob.identities_before_crossing)
-                    # if hasattr(blob,"identities_after_crossing"):
-                    #     print("identity_after_crossing: ", blob.identities_after_crossing)
-                    # print("assigned during accumulation: ", blob.assigned_during_accumulation)
-                    # if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
-                    #     try:
-                    #         print("frequencies in fragment: ", blob.frequencies_in_fragment)
-                    #     except:
-                    #         print("this blob does not have frequencies in fragment")
-                    # print("P1_vector: ", blob.P1_vector)
-                    # print("P2_vector: ", blob.P2_vector)
-                    # print("is_a_fish: ", blob.is_a_fish)
-                    # print("is_in_a_fragment: ", blob.is_in_a_fragment)
-                    # print("is_a_fish_in_a_fragment: ", blob.is_a_fish_in_a_fragment)
-                    # print("is_a_jump: ", blob.is_a_jump)
-                    # print("is_a_ghost_crossing: ", blob.is_a_ghost_crossing)
-                    # print("is_a_crossing: ", blob.is_a_crossing)
-                    # # if blob.is_a_crossing:
-                    # #     print("bad_crossing ", blob.bad_crossing)
-                    #     # print("number_of_animals_in_crossing: ", blob.number_of_animals_in_crossing)
-                    # print("next: ", blob.next)
-                    # print("previous: ", blob.previous)
-
-
             if not save_video:
                 # frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
                 cv2.imshow('frame_by_frame_identity_inspector', frame)
@@ -1233,7 +1127,7 @@ def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_
             else:
                 out.write(frame)
         else:
-            print("Warning: unable to read frame ", scroll)
+            logger.warn("Unable to read frame %i" %scroll)
     cv2.createTrackbar('start', 'frame_by_frame_identity_inspector', 0, numFrames-1, scroll )
 
     scroll(1)
