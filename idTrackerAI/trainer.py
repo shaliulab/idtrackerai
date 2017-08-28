@@ -5,6 +5,8 @@ sys.path.append('./network')
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import logging
+
 from network_params import NetworkParams
 from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
@@ -12,12 +14,14 @@ from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
+logger = logging.getLogger("__main__.trainer")
+
 def train(video, blobs_in_video, global_fragments, net, images, labels, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag, global_step = 0, first_accumulation_flag = False, preprocessing_type = None):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
     if preprocessing_type is None:
         preprocessing_type = video.preprocessing_type
-    print("\nTraining...")
+    logger.info("Training...")
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation')
     if plot_flag:
@@ -71,7 +75,7 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
         validator._epochs_completed += 1
 
     global_step += trainer.epochs_completed
-    print('\nvalidation losses: ', store_validation_accuracy_and_loss_data.loss)
+    logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss))
     # plot if asked
     if plot_flag:
         global_fragments_used_for_training = [global_fragment for global_fragment in global_fragments

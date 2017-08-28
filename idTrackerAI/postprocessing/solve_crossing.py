@@ -358,12 +358,17 @@ def compute_P2(blob, blobs):
     if not np.any(blob._P2_vector != 0):
         blob._P2_vector = compute_P2_of_individual_fragment_from_blob(blob, blobs)
 
+def update_blob(blobs, blob, softmax_probs, prediction):
+    blob.identity = int(prediction)
+    blobs_in_frame = blobs[blob.frame_number]
+    blobs_in_frame.append(blob)
+
 if __name__ == "__main__":
     from GUI_utils import frame_by_frame_identity_inspector
     NUM_CHUNKS_BLOB_SAVING = 10
 
     #load video and list of blobs
-    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_test_solve_crossings/video_object.npy').item()
+    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_test_solve_crossings/video_object.npy' ).item()
     # video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_1/video_object.npy').item()
     number_of_animals = video.number_of_animals
     list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_test_solve_crossings/preprocessing/blobs_collection.npy'
@@ -380,33 +385,27 @@ if __name__ == "__main__":
         for blob in unsolved_crossing:
             crossing = Crossing(blob, video)
             crossing.generate_crossing_images()
-            crossing_blobs.append(crossing)
-            if hasattr(crossing, 'images'):
+            if len(crossing.new_blobs) > 1:
+                crossing_blobs.extend(crossing.new_blobs)
                 images_from_crossings.extend(crossing.images)
 
     images_from_crossings = np.asarray(images_from_crossings)
     predictions = discriminate_crossing_and_fish_images(images_from_crossings)
 
     fish_images = images_from_crossings[np.where(np.asarray(predictions) == 0)[0]]
+    crossing_blobs = np.asarray(crossing_blobs)
+    fish_crossing_blobs = crossing_blobs[np.where(np.asarray(predictions) == 0)[0]]
 
     assigner = assign_fish_images(fish_images, video)
 
-    counter = 0
-
-    for crossing in tqdm(crossing_blobs, desc = "Updating crossing blobs"):
-        print("counter", counter)
-        print("crossing_fragment ", crossing.blob.crossing_identifier)
-        print("frame number ", crossing.blob.frame_number)
-        if counter in np.where(np.asarray(predictions) == 0)[0]:
-            crossing.blob._softmax_probs = assigner._softmax_probs[counter]
-            crossing.blob._prediction = assigner._predictions[counter]
-            counter += 1
-        else:
-            crossing.blob._portrait = None
+    for i,blob in enumerate(tqdm(fish_crossing_blobs, desc = "Updating crossing blobs")):
+        print("crossing_fragment ", blob.crossing_identifier)
+        print("frame number ", blob.frame_number)
+        update_blob(blobs, blob, assigner._softmax_probs[i], assigner._predictions[i])
+        print(blob.frame_number)
 
 
-
-
+    frame_by_frame_identity_inspector(video, blobs)
     # for unsolved_crossing in tqdm(crossings.values(), desc = "Solving crossings"):
     #     print("***************************************************************************")
     #     print("length of unsolved_crossing before forward loop ", len(unsolved_crossing))

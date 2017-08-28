@@ -5,10 +5,12 @@ import random
 from matplotlib import pyplot as plt
 import matplotlib.lines as mlines
 import seaborn as sns
+import logging
 
 from blob import is_a_global_fragment, check_global_fragments
 
 STD_TOLERANCE = 4 ### NOTE set to 1 because we changed the model area to work with the median.
+logger = logging.getLogger("__main__.globalfragment")
 
 def detect_beginnings(boolean_array):
     """ detects the frame where the core of a global fragment starts.
@@ -172,7 +174,6 @@ def get_images_and_labels_from_global_fragment(global_fragment, individual_fragm
     individual_fragments_identifiers = []
     for i, portraits in enumerate(global_fragment.portraits):
         if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_identifiers_already_used :
-            # print("This individual fragment has not been used, we take images")
             images.extend(portraits)
             labels.extend([global_fragment._temporary_ids[i]]*len(portraits))
             lengths.append(len(portraits))
@@ -180,13 +181,13 @@ def get_images_and_labels_from_global_fragment(global_fragment, individual_fragm
     return images, labels, lengths, individual_fragments_identifiers
 
 def get_images_and_labels_from_global_fragments(global_fragments, individual_fragments_identifiers_already_used = []):
-    print("\nGetting images from global fragments")
+    logger.info("Getting images from global fragments")
     images = []
     labels = []
     lengths = []
     candidate_individual_fragments_identifiers = []
     individual_fragments_identifiers_already_used = list(individual_fragments_identifiers_already_used)
-    # print("individual_fragments_identifiers_already_used, ", individual_fragments_identifiers_already_used)
+
     for global_fragment in global_fragments:
         images_global_fragment, \
         labels_global_fragment, \
@@ -212,9 +213,9 @@ def check_uniquenss_of_global_fragments(global_fragments):
 
 def check_uniquenss_of_global_fragment(global_fragment):
     if global_fragment._used_for_training == True and not global_fragment.is_unique:
-        print("is unique ", global_fragment.is_unique)
-        print("global_fragment ids ", global_fragment._temporary_ids)
-        print("global_fragment assigned ids, ", global_fragment._ids_assigned)
+        logger.debug("is unique %s" %global_fragment.is_unique)
+        logger.debug("global_fragment ids %s" %str(global_fragment._temporary_ids))
+        logger.debug("global_fragment assigned ids %s" %str(global_fragment._ids_assigned))
         raise ValueError("This global Fragment is not unique")
 
 def subsample_images_for_last_training(images, labels, number_of_animals, number_of_samples = 3000):
