@@ -13,7 +13,7 @@ from assigner import assign
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
-CERTAINTY_THRESHOLD = 0.5 # threshold to select a individual fragment as eligible for training
+CERTAINTY_THRESHOLD = 0.1 # threshold to select a individual fragment as eligible for training
 
 logger = logging.getLogger("__main__.accumulation_manager")
 
@@ -231,6 +231,10 @@ class AccumulationManager(object):
         self.temporal_identities_of_individual_fragments_used = []
         ordered_global_fragments = order_global_fragments_by_distance_to_the_first_global_fragment(self.global_fragments)
         # ordered_global_fragments = order_global_fragments_by_distance_travelled(self.global_fragments)
+        self.number_of_noncertain_global_fragments = 0
+        self.number_of_random_assigned_global_fragments = 0
+        self.number_of_nonconsistent_global_fragments = 0
+        self.number_of_nonunique_global_fragments = 0
         for i, global_fragment in enumerate(ordered_global_fragments):
             if global_fragment.used_for_training == False:
                 self.assign_identities_to_test_global_fragment(global_fragment)
@@ -241,7 +245,7 @@ class AccumulationManager(object):
         global_fragment._certainties = []
         global_fragment._P1_vector = []
         # Check certainties of the individual fragments in the global fragment
-
+        logger.debug("*******Checking new global fragment")
         for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
 
             if individual_fragment_identifier in self.candidate_individual_fragments_identifiers:
@@ -252,6 +256,9 @@ class AccumulationManager(object):
                     # if the certainty of the individual fragment is not high enough
                     # we set the global fragment not to be acceptable for training
                     global_fragment._acceptable_for_training = False
+                    global_fragment._is_certain = False
+                    self.number_of_noncertain_global_fragments += 1
+                    logger.debug("The individual fragment %i is not certain enough" %individual_fragment_identifier)
                     break
                 else:
                     # if the certainty of the individual fragment is high enough
@@ -303,11 +310,15 @@ class AccumulationManager(object):
                     # if it has not been assigned an identity
                     if np.max(P1_array[index_individual_fragment,:]) < 1./global_fragment._number_of_portraits_per_individual_fragment[index_individual_fragment]:
                         global_fragment._acceptable_for_training = False
+                        self.number_of_random_assigned_global_fragments += 1
+                        logger.debug("Individual fragment would be assigned randomly")
                         break
                     else:
                         temporal_identity = np.argmax(P1_array[index_individual_fragment,:])
                         if not self.check_consistency_with_coexistent_individual_fragments(global_fragment,index_individual_fragment,temporal_identity):
                             global_fragment._acceptable_for_training = False
+                            logger.debug("Individual fragment is not consistent")
+                            self.number_of_nonconsistent_global_fragments += 1
                             break
                         else:
                             global_fragment._temporary_ids[index_individual_fragment] = int(temporal_identity)
@@ -318,8 +329,12 @@ class AccumulationManager(object):
             if global_fragment._acceptable_for_training:
                 if not global_fragment.is_unique:
                     global_fragment._acceptable_for_training = False
+                    logger.debug("The global fragment is not unique")
+                    self.number_of_nonunique_global_fragments += 1
                 else:
                     global_fragment._temporary_ids = np.asarray(global_fragment._temporary_ids).astype('int')
+                    global_fragment._accumulation_step = self.counter
+                    logger.debug("The global fragment has been accumulated")
                     for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids):
                         if individual_fragment_identifier not in self.temporal_individual_fragments_used and individual_fragment_identifier not in self.individual_fragments_used:
                             self.temporal_individual_fragments_used.append(individual_fragment_identifier)
