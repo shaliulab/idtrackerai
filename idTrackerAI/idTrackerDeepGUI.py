@@ -82,6 +82,7 @@ from solve_crossing import give_me_identities_in_crossings
 from get_trajectories import produce_trajectories, smooth_trajectories
 from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
 from compute_statistics_against_groundtruth import get_statistics_against_groundtruth
+from compute_velocity_model import compute_model_velocity
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
@@ -676,7 +677,17 @@ if __name__ == '__main__':
         ###################  Solving impossible jumps    ############
         ####
         print("\n**** Correct impossible velocity jump ****")
-        logger.info("Solving impossible velocity jumps")
+        logging.info("Solving impossible velocity jumps")
+        if not hasattr(video,'velocity_threshold'):
+            video.velocity_threshold = old_video.velocity_threshold
+        elif not hasattr(old_video, 'velocity_threshold'):
+            video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals, percentile = VEL_PERCENTILE)
+        if not hasattr(video, 'first_frame_for_validation'):
+            video.first_frame_for_validation = old_video.first_frame_for_validation
+        elif not hasattr(old_video, 'first_frame_for_validation'):
+            max_distance_travelled_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0]
+            video.first_frame_for_validation = max_distance_travelled_global_fragment.index_beginning_of_fragment
+        video.save()
         fix_identity_of_blobs_in_video(blobs)
         correct_impossible_velocity_jumps(video, blobs)
         logger.info("Done")
