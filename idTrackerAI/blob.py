@@ -426,7 +426,9 @@ class Blob(object):
             if identity_in_fragment != 0:
                 self._frequencies_in_fragment[identity_in_fragment-1] = number_of_images_in_fragment ### NOTE Decide whether to use weighted frequencies or raw frequencies
                 self._P1_vector = compute_P1_individual_fragment_from_frequencies(self._frequencies_in_fragment)
-            elif hasattr(self,'ambiguous_identities') and self.ambiguous_identities is not None:
+            elif hasattr(self,'ambiguous_identities') and len(self.ambiguous_identities) != 0:
+                print("frame_number:", self.frame_number)
+                print("ambiguous_identities: ", self.ambiguous_identities)
                 self._frequencies_in_fragment[self.ambiguous_identities-1] = number_of_images_in_fragment // len(self.ambiguous_identities)
                 self._P1_vector = compute_P1_individual_fragment_from_frequencies(self._frequencies_in_fragment)
 

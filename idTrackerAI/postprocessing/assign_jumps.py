@@ -43,7 +43,11 @@ class Jump(object):
         self._jumping_blob = jumping_blob
 
     def get_available_identities(self, blobs_in_video):
-        blobs_in_frame_sure_identities = [blob.identity for blob in blobs_in_video[self.jumping_blob.frame_number] if blob.identity is not None or blob.identity != 0]
+        print('--- getting assigned identities')
+        blobs_in_frame_sure_identities = [blob.identity for blob in blobs_in_video[self.jumping_blob.frame_number]
+                                            if blob.is_a_fish
+                                            and (blob.identity is not None or blob.identity != 0)]
+        print("blobs_in_frame_sure_identities: ", blobs_in_frame_sure_identities)
         return set(self.possible_identities) - set(blobs_in_frame_sure_identities)
 
     def apply_model_velocity(self, blobs_in_video):
@@ -99,8 +103,13 @@ class Jump(object):
         #     print("self.jumping_blob.identity, ", self.jumping_blob.identity)
 
     def get_prediction_from_P2(self, available_identities):
+        print("--- getting P2 vector")
+        print("available_identities: ", available_identities)
+        print("possible_identities: ", self.possible_identities)
         non_available_identities = np.asarray(list(set(self.possible_identities) - set(available_identities)))
-        self._P2_vector[non_available_identities-1] = 0
+        print("non_available_identities: ", non_available_identities)
+        if len(non_available_identities) != 0:
+            self._P2_vector[non_available_identities-1] = 0
         prediction = np.where(self._P2_vector == np.max(self._P2_vector))[0] + 1
         if len(prediction) == 1:
             return prediction[0]
@@ -108,10 +117,10 @@ class Jump(object):
             return list(prediction)
 
     def assign_jump(self, blobs_in_video):
-        available_identities = self.get_available_identities(blobs_in_video)
-        prediction = self.get_prediction_from_P2(available_identities)
         print("\n***** assigning jump")
         print("frame number ", self.jumping_blob.frame_number)
+        available_identities = self.get_available_identities(blobs_in_video)
+        prediction = self.get_prediction_from_P2(available_identities)
         print("available_identities, ", available_identities)
         print("prediction, ", prediction)
         print("prediction type", type(prediction))
