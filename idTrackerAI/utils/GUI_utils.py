@@ -727,9 +727,9 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
 def selectPreprocParams(video, old_video, usePreviousPrecParams):
     if not usePreviousPrecParams:
         video._min_threshold = 0
-        video._max_threshold = 155
+        video._max_threshold = 135
         video._min_area = 150
-        video._max_area = 60000
+        video._max_area = 10000
         video._resize = 1
         preprocParams = SegmentationPreview(video)
         cv2.waitKey(1)

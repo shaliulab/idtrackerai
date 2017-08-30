@@ -558,7 +558,13 @@ if __name__ == '__main__':
                     accumulation_manager.split_predictions_after_network_assignment(predictions, softmax_probs, non_shared_information, indices_to_split)
                     # assign identities to the global fragments based on the predictions
                     logger.info("Checking eligibility criteria and generate the new list of global fragments to accumulate")
+                    logger.info("Number of candidate global fragments: %i" %len(candidates_next_global_fragments))
                     accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_identifiers)
+                    logger.info("Number of non certain global fragments: %i" %accumulation_manager.number_of_noncertain_global_fragments)
+                    logger.info("Number of randomly assigned global fragments: %i" %accumulation_manager.number_of_random_assigned_global_fragments)
+                    logger.info("Number of non consistent global fragments: %i " %accumulation_manager.number_of_nonconsistent_global_fragments)
+                    logger.info("Number of non unique global fragments: %i " %accumulation_manager.number_of_nonunique_global_fragments)
+                    logger.info("Number of acceptable global fragments: %i " %np.sum([global_fragment.acceptable_for_training for global_fragment in global_fragments]))
                     accumulation_manager.update_counter()
                 else:
                     logger.info("All the global fragments have been used for accumulation")
