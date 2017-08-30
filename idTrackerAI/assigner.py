@@ -150,11 +150,12 @@ def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
         blob.update_identity_in_fragment(identity_in_fragment, number_of_images_in_fragment = number_of_images_in_fragment)
         # blob.update_attributes_in_fragment(['_identity'], [identity_in_fragment])
         assigned_fragment_identifiers.append(blob.fragment_identifier)
-        list_of_blobs = get_blobs_to_assign(blobs_in_video, assigned_fragment_identifiers)
+        # list_of_blobs = get_blobs_to_assign(blobs_in_video, assigned_fragment_identifiers)
+        list_of_blobs.remove(blob)
         assert blob not in list_of_blobs
         logger.info("step %i of %i" %(len(list_of_blobs), len_first_list_of_blobs))
 
 
         for blob_to_assign in list_of_blobs:
-            blob._P2_vector = compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video)
-            blob.update_attributes_in_fragment(['_P2_vector'], [blob._P2_vector])
+            blob_to_assign._P2_vector = compute_P2_of_individual_fragment_from_blob(blob_to_assign, blobs_in_video)
+            blob_to_assign.update_attributes_in_fragment(['_P2_vector'], [blob_to_assign._P2_vector])
