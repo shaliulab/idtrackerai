@@ -49,7 +49,7 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
         ret, frame = cap.read()
         if video.resolution_reduction != 1 and ret:
             frame = cv2.resize(frame, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
-        
+
         try:
             #Color to gray scale
             frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -97,8 +97,8 @@ def segmentAndSave(video, path = None, segmFrameInd = None):
 
 def segment(video):
     # avoid computing with all the cores in very large videos:
-    num_cores = multiprocessing.cpu_count()
-    # num_cores = 4
+    # num_cores = multiprocessing.cpu_count()
+    num_cores = 6
     #init variables to store data
     blobs_in_video = []
     number_of_blobs = []

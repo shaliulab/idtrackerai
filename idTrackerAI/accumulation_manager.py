@@ -13,7 +13,7 @@ from assigner import assign
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
-CERTAINTY_THRESHOLD = 0.5 # threshold to select a individual fragment as eligible for training
+CERTAINTY_THRESHOLD = 0.1 # threshold to select a individual fragment as eligible for training
 
 logger = logging.getLogger("__main__.accumulation_manager")
 
