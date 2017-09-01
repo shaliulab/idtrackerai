@@ -148,7 +148,7 @@ class Duplication(object):
                     else:
                         # print("candidate_id: ", candidate_id)
                         # print("P2_max_blob: ", P2_max_blob)
-                        if candidate_id in self.available_identities and P2_max_blob > 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment):
+                        if candidate_id in self.available_identities and P2_max_blob >= 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment):
                             # print("id is available and P2 above random")
                             # print("we assign the candidate id", candidate_id)
                             # Assign the candidate_id if it is available and the probability is less than random
@@ -184,13 +184,18 @@ class Duplication(object):
                             else:
                                 raise ValueError("condition no considered")
                         else:
+                            print("P2_max_blob ", P2_max_blob)
+                            print("1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment) ", 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment))
+                            print("candidate_id ", candidate_id)
+                            print('available_identities:', self.available_identities)
                             raise ValueError("condition no considered")
                 elif len(max_indices) > 1 and np.any(P2_max != 0):
                     # print("P2_max is degenerated")
                     # if there are duplicated maxima, set the id of those blobs to 0 and put P2_matrix of thos ids to 0
                     for max_index in max_indices:
                         candidate_id = 0
-                        self.blobs_to_reassign[0].ambiguous_identities = np.asarray(self.available_identities)
+                        if len(self.available_identities) > 0:
+                            self.blobs_to_reassign[0].ambiguous_identities = np.asarray(self.available_identities)
                         P2_matrix[max_index, :] = 0
                         self.blobs_to_reassign[max_index]._identity_corrected_solving_duplication = candidate_id
                         assigned_identities.append(candidate_id)
@@ -211,7 +216,8 @@ class Duplication(object):
                         candidate_id = self.missing_identities[0]
                         if not self.check_consistency_with_coexistent_individual_fragments(self.blobs_to_reassign[0], candidate_id, self.blobs_in_video):
                             candidate_id = 0
-                            self.blobs_to_reassign[0].ambiguous_identities = np.asarray(self.available_identities)
+                            if len(self.available_identities) > 0:
+                                self.blobs_to_reassign[0].ambiguous_identities = np.asarray(self.available_identities)
                         self.blobs_to_reassign[index_of_blobs_to_be_assigned[0]]._identity_corrected_solving_duplication = candidate_id
                         assigned_identities.append(candidate_id)
                         index_of_blobs_assigned.append(index_of_blobs_to_be_assigned[0])
@@ -219,7 +225,8 @@ class Duplication(object):
                         # it is the last one of this duplication but there is another duplication and there are more than one missing identities
                         # we assing the identity to 0 because we do not know who it is
                         candidate_id = 0
-                        self.blobs_to_reassign[0].ambiguous_identities = np.asarray(self.available_identities)
+                        if len(self.available_identities) > 0:
+                            self.blobs_to_reassign[0].ambiguous_identities = np.asarray(self.available_identities)
                         self.blobs_to_reassign[index_of_blobs_to_be_assigned[0]]._identity_corrected_solving_duplication = candidate_id
                         assigned_identities.append(candidate_id)
                         index_of_blobs_assigned.append(index_of_blobs_to_be_assigned[0])
@@ -229,7 +236,7 @@ class Duplication(object):
                             candidate_id = 0
                             if len(self.available_identities) > 0:
                                 self.blobs_to_reassign[0].ambiguous_identities = np.asarray(self.available_identities)
-                            
+
                             self.blobs_to_reassign[index_blob]._identity_corrected_solving_duplication = candidate_id
                             assigned_identities.append(candidate_id)
                             index_of_blobs_assigned.append(index_blob)

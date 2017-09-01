@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
-from scipy.stats import gamma
+from scipy.stats import gamma, lognorm, exponweib
 from scipy import stats
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -39,6 +39,7 @@ if __name__ == '__main__':
     # hist_shoaling, bin_edges_shoaling = np.histogram(shoaling, bins = 10 ** np.linspace(np.log10(min_shoaling), np.log10(max_shoaling), nbins))
     hist_shoaling, bin_edges_shoaling = np.histogram(shoaling, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
 
+    # fit gamma
     a, loc, scale = gamma.fit(shoaling,loc=1)
     gamma_fitted = gamma(a, loc, scale)
     gamma_shoaling = gamma_fitted.rvs(len(shoaling))
@@ -46,6 +47,24 @@ if __name__ == '__main__':
     print("Schooling (gamma): min %.2f, max %.2f, mean %.2f, std %.2f" %(min_gamma_shoaling, max_gamma_shoaling, mean_gamma_shoaling, std_gamma_shoaling))
     # hist_gamma_shoaling, bin_edges_gamma_shoaling = np.histogram(gamma_shoaling, bins = 10 ** np.linspace(np.log10(min_gamma_shoaling), np.log10(max_gamma_shoaling), nbins))
     hist_gamma_shoaling, bin_edges_gamma_shoaling = np.histogram(gamma_shoaling, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
+
+    # fit lognormal
+    a, loc, scale = lognorm.fit(shoaling,loc=1)
+    lognorm_fitted = lognorm(a, loc, scale)
+    lognorm_shoaling = lognorm_fitted.rvs(len(shoaling))
+    min_lognorm_shoaling, max_lognorm_shoaling, mean_lognorm_shoaling, std_lognorm_shoaling = np.min(lognorm_shoaling), np.max(lognorm_shoaling), np.mean(lognorm_shoaling), np.std(lognorm_shoaling)
+    print("Schooling (lognorm): min %.2f, max %.2f, mean %.2f, std %.2f" %(min_lognorm_shoaling, max_lognorm_shoaling, mean_lognorm_shoaling, std_lognorm_shoaling))
+    # hist_lognorm_shoaling, bin_edges_lognorm_shoaling = np.histogram(lognorm_shoaling, bins = 10 ** np.linspace(np.log10(min_lognorm_shoaling), np.log10(max_lognorm_shoaling), nbins))
+    hist_lognorm_shoaling, bin_edges_lognorm_shoaling = np.histogram(lognorm_shoaling, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
+
+    # fit weibull
+    loc, scale = exponweib.fit_loc_scale(shoaling, 1, 1)
+    exponweib_fitted = exponweib(1, 1, loc, scale)
+    exponweib_shoaling = exponweib_fitted.rvs(len(shoaling))
+    min_exponweib_shoaling, max_exponweib_shoaling, mean_exponweib_shoaling, std_exponweib_shoaling = np.min(exponweib_shoaling), np.max(exponweib_shoaling), np.mean(exponweib_shoaling), np.std(exponweib_shoaling)
+    print("Schooling (exponweib): min %.2f, max %.2f, mean %.2f, std %.2f" %(min_exponweib_shoaling, max_exponweib_shoaling, mean_exponweib_shoaling, std_exponweib_shoaling))
+    # hist_exponweib_shoaling, bin_edges_exponweib_shoaling = np.histogram(exponweib_shoaling, bins = 10 ** np.linspace(np.log10(min_exponweib_shoaling), np.log10(max_exponweib_shoaling), nbins))
+    hist_exponweib_shoaling, bin_edges_exponweib_shoaling = np.histogram(exponweib_shoaling, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
 
     ''' schooling '''
     schooling = np.load('schooling_individual_fragments_distribution.npy')
@@ -55,7 +74,7 @@ if __name__ == '__main__':
     # hist_schooling, bin_edges_schooling = np.histogram(schooling, bins = 10 ** np.linspace(np.log10(min_schooling), np.log10(max_schooling), nbins))
     hist_schooling, bin_edges_schooling = np.histogram(schooling, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
 
-
+    #fit gamma
     a, loc, scale= gamma.fit(schooling,loc=1)
     gamma_fitted = gamma(a, loc, scale)
     gamma_schooling = gamma_fitted.rvs(len(schooling))
@@ -63,6 +82,24 @@ if __name__ == '__main__':
     print("Schooling (gamma): min %.2f, max %.2f, mean %.2f, std %.2f" %(min_gamma_schooling, max_gamma_schooling, mean_gamma_schooling, std_gamma_schooling))
     # hist_gamma_schooling, bin_edges_gamma_schooling = np.histogram(gamma_schooling, bins = 10 ** np.linspace(np.log10(min_gamma_schooling), np.log10(max_gamma_schooling), nbins))
     hist_gamma_schooling, bin_edges_gamma_schooling = np.histogram(gamma_schooling, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
+
+    # fit lognormal
+    a, loc, scale = lognorm.fit(schooling,loc=1)
+    lognorm_fitted = lognorm(a, loc, scale)
+    lognorm_schooling = lognorm_fitted.rvs(len(schooling))
+    min_lognorm_schooling, max_lognorm_schooling, mean_lognorm_schooling, std_lognorm_schooling = np.min(lognorm_schooling), np.max(lognorm_schooling), np.mean(lognorm_schooling), np.std(lognorm_schooling)
+    print("Schooling (lognorm): min %.2f, max %.2f, mean %.2f, std %.2f" %(min_lognorm_schooling, max_lognorm_schooling, mean_lognorm_schooling, std_lognorm_schooling))
+    # hist_lognorm_schooling, bin_edges_lognorm_schooling = np.histogram(lognorm_schooling, bins = 10 ** np.linspace(np.log10(min_lognorm_schooling), np.log10(max_lognorm_schooling), nbins))
+    hist_lognorm_schooling, bin_edges_lognorm_schooling = np.histogram(lognorm_schooling, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
+
+    # fit weibull
+    loc, scale = exponweib.fit_loc_scale(schooling, 1, 1)
+    exponweib_fitted = exponweib(1 , 1, loc, scale)
+    exponweib_schooling = exponweib_fitted.rvs(len(schooling))
+    min_exponweib_schooling, max_exponweib_schooling, mean_exponweib_schooling, std_exponweib_schooling = np.min(exponweib_schooling), np.max(exponweib_schooling), np.mean(exponweib_schooling), np.std(exponweib_schooling)
+    print("Schooling (exponweib): min %.2f, max %.2f, mean %.2f, std %.2f" %(min_exponweib_schooling, max_exponweib_schooling, mean_exponweib_schooling, std_exponweib_schooling))
+    # hist_exponweib_schooling, bin_edges_exponweib_schooling = np.histogram(exponweib_schooling, bins = 10 ** np.linspace(np.log10(min_exponweib_schooling), np.log10(max_exponweib_schooling), nbins))
+    hist_exponweib_schooling, bin_edges_exponweib_schooling = np.histogram(exponweib_schooling, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
 
     ''' superSchooling1 '''
     a, s = gamma_params(85, 168)
@@ -99,7 +136,7 @@ if __name__ == '__main__':
     hist_superSchooling2, bin_edges_superSchooling2 = np.histogram(gamma_superSchooling2, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
 
     plt.ion()
-    ''' schooling vs shoaling '''
+    ''' schooling vs shoaling (POSTER) '''
     fig, ax = plt.subplots(1,1)
 
     window = plt.get_current_fig_manager().window
@@ -118,7 +155,7 @@ if __name__ == '__main__':
 
     fig.savefig('schooling_vs_shoaling.pdf', transparent=True)
 
-    ''' simulated distributions '''
+    ''' simulated distributions (POSTER)'''
     fig, ax = plt.subplots(1,1)
 
     window = plt.get_current_fig_manager().window
@@ -155,3 +192,101 @@ if __name__ == '__main__':
 
     # plt.show()
     fig.savefig('gamma_fitting_individual_fragments_distribution_computed.pdf', transparent=True)
+
+
+    ''' fit with gamma, lognorm, weibull '''
+    fig, ax = plt.subplots(1,1)
+
+    window = plt.get_current_fig_manager().window
+    screen_y = window.winfo_screenheight()
+    screen_x = window.winfo_screenwidth()
+    fig.set_size_inches((screen_x*2/3/100,screen_y/100))
+
+    labels = ['shoaling','schooling',
+                '%.2f' %np.mean(gamma_shoaling) + '    %.2f' %np.std(gamma_shoaling)  + 'gamma',
+                '%.2f' %np.mean(gamma_schooling) + '    %.2f' %np.std(gamma_schooling) + ' gamma',
+                '%.2f' %np.mean(lognorm_shoaling) + '    %.2f' %np.std(lognorm_shoaling) + ' lognorm',
+                '%.2f' %np.mean(lognorm_schooling) + '    %.2f' %np.std(lognorm_schooling) + ' lognorm',
+                '%.2f' %np.mean(exponweib_shoaling) + '    %.2f' %np.std(exponweib_shoaling) + ' weibull',
+                '%.2f' %np.mean(exponweib_schooling) + '    %.2f' %np.std(exponweib_schooling) + ' weibull']
+    # labels = ['shoaling', 'schooling', 'shoaling-fitted', 'schooling-fitted', 'superSchooling']
+    colors = ['b', 'r', 'g', 'y']
+
+    ax.semilogx(bin_edges_gamma_shoaling[:-1], hist_gamma_shoaling, '--', markersize = 5, label = labels[2], color = colors[0], linewidth = 2)
+    #ax.axvline(np.mean(gamma_shoaling), linestyle =  '--', color = colors[0])
+
+    ax.semilogx(bin_edges_gamma_schooling[:-1], hist_gamma_schooling, '--', markersize = 5, label = labels[3], color = colors[1], linewidth = 2)
+    #ax.axvline(np.mean(gamma_schooling), linestyle = '--', color = colors[1])
+
+    ax.semilogx(bin_edges_lognorm_shoaling[:-1], hist_lognorm_shoaling, '-.', markersize = 5, label = labels[4], color = colors[0], linewidth = 2)
+    #ax.axvline(np.mean(lognorm_shoaling), linestyle =  '--', color = colors[0])
+
+    ax.semilogx(bin_edges_lognorm_schooling[:-1], hist_lognorm_schooling, '-.', markersize = 5, label = labels[5], color = colors[1], linewidth = 2)
+    #ax.axvline(np.mean(lognorm_schooling), linestyle = '--', color = colors[1])
+
+    ax.semilogx(bin_edges_exponweib_shoaling[:-1], hist_exponweib_shoaling, ':', markersize = 5, label = labels[6], color = colors[0], linewidth = 2)
+    #ax.axvline(np.mean(exponweib_shoaling), linestyle =  '--', color = colors[0])
+
+    ax.semilogx(bin_edges_exponweib_schooling[:-1], hist_exponweib_schooling, ':', markersize = 5, label = labels[7], color = colors[1], linewidth = 2)
+    #ax.axvline(np.mean(exponweib_schooling), linestyle = '--', color = colors[1])
+
+    ax.semilogx(bin_edges_shoaling[:-1], hist_shoaling, markersize = 5, label = labels[0], color = colors[0], linewidth = 2)
+    ax.semilogx(bin_edges_schooling[:-1], hist_schooling, markersize = 5, label = labels[1], color = colors[1], linewidth = 2)
+
+    ax.legend(title="        E[nf]      Var[nf]", fancybox=True)
+    ax.set_xlabel('number of frames (nf)')
+    ax.set_ylabel('number of individual fragments')
+
+    # ''' fit with lognorm '''
+    # fig, ax = plt.subplots(1,1)
+    #
+    # window = plt.get_current_fig_manager().window
+    # screen_y = window.winfo_screenheight()
+    # screen_x = window.winfo_screenwidth()
+    # fig.set_size_inches((screen_x*2/3/100,screen_y/100))
+    #
+    # labels = ['shoaling','schooling',
+    #             '%.2f' %np.mean(lognorm_shoaling) + '    %.2f' %np.std(lognorm_shoaling),
+    #             '%.2f' %np.mean(lognorm_schooling) + '    %.2f' %np.std(lognorm_schooling)]
+    # # labels = ['shoaling', 'schooling', 'shoaling-fitted', 'schooling-fitted', 'superSchooling']
+    # colors = ['b', 'r', 'g', 'y']
+    #
+    # ax.semilogx(bin_edges_lognorm_shoaling[:-1], hist_lognorm_shoaling, '--', markersize = 5, label = labels[2], color = colors[0], linewidth = 2)
+    # #ax.axvline(np.mean(lognorm_shoaling), linestyle =  '--', color = colors[0])
+    #
+    # ax.semilogx(bin_edges_lognorm_schooling[:-1], hist_lognorm_schooling, '--', markersize = 5, label = labels[3], color = colors[1], linewidth = 2)
+    # #ax.axvline(np.mean(lognorm_schooling), linestyle = '--', color = colors[1])
+    #
+    # ax.semilogx(bin_edges_shoaling[:-1], hist_shoaling, markersize = 5, label = labels[0], color = colors[0], linewidth = 2)
+    # ax.semilogx(bin_edges_schooling[:-1], hist_schooling, markersize = 5, label = labels[1], color = colors[1], linewidth = 2)
+    #
+    # ax.legend(title="        E[nf]      Var[nf]", fancybox=True)
+    # ax.set_xlabel('number of frames (nf)')
+    # ax.set_ylabel('number of individual fragments')
+    #
+    # ''' fit with weibull '''
+    # fig, ax = plt.subplots(1,1)
+    #
+    # window = plt.get_current_fig_manager().window
+    # screen_y = window.winfo_screenheight()
+    # screen_x = window.winfo_screenwidth()
+    # fig.set_size_inches((screen_x*2/3/100,screen_y/100))
+    #
+    # labels = ['shoaling','schooling',
+    #             '%.2f' %np.mean(exponweib_shoaling) + '    %.2f' %np.std(exponweib_shoaling),
+    #             '%.2f' %np.mean(exponweib_schooling) + '    %.2f' %np.std(exponweib_schooling)]
+    # # labels = ['shoaling', 'schooling', 'shoaling-fitted', 'schooling-fitted', 'superSchooling']
+    # colors = ['b', 'r', 'g', 'y']
+    #
+    # ax.semilogx(bin_edges_exponweib_shoaling[:-1], hist_exponweib_shoaling, '--', markersize = 5, label = labels[2], color = colors[0], linewidth = 2)
+    # #ax.axvline(np.mean(exponweib_shoaling), linestyle =  '--', color = colors[0])
+    #
+    # ax.semilogx(bin_edges_exponweib_schooling[:-1], hist_exponweib_schooling, '--', markersize = 5, label = labels[3], color = colors[1], linewidth = 2)
+    # #ax.axvline(np.mean(exponweib_schooling), linestyle = '--', color = colors[1])
+    #
+    # ax.semilogx(bin_edges_shoaling[:-1], hist_shoaling, markersize = 5, label = labels[0], color = colors[0], linewidth = 2)
+    # ax.semilogx(bin_edges_schooling[:-1], hist_schooling, markersize = 5, label = labels[1], color = colors[1], linewidth = 2)
+    #
+    # ax.legend(title="        E[nf]      Var[nf]", fancybox=True)
+    # ax.set_xlabel('number of frames (nf)')
+    # ax.set_ylabel('number of individual fragments')

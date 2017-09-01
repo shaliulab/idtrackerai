@@ -84,7 +84,7 @@ def rename_session_folder(video_object, new_session_name):
         setattr(video_object, key, new_value)
     logger.info("Saving video object")
     video_object.save()
-    logger.ingo("Done")
+    logger.info("Done")
 
 
 """
@@ -475,7 +475,7 @@ def SegmentationPreview(video):
     cv2.createTrackbar('start', 'Bars', 0, numFrames-1, scroll )
     cv2.createTrackbar('minTh', 'Bars', 0, 255, changeMinTh)
     cv2.createTrackbar('maxTh', 'Bars', 0, 255, changeMaxTh)
-    cv2.createTrackbar('minArea', 'Bars', 0, 1000, changeMinArea)
+    cv2.createTrackbar('minArea', 'Bars', 0, 2000, changeMinArea)
     cv2.createTrackbar('maxArea', 'Bars', 0, 60000, changeMaxArea)
     cv2.createTrackbar('ResUp', 'Bars', 1, 20, resizeImageUp)
     cv2.createTrackbar('ResDown', 'Bars', 1, 20, resizeImageDown)
@@ -727,9 +727,9 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
 def selectPreprocParams(video, old_video, usePreviousPrecParams):
     if not usePreviousPrecParams:
         video._min_threshold = 0
-        video._max_threshold = 155
+        video._max_threshold = 135
         video._min_area = 150
-        video._max_area = 60000
+        video._max_area = 10000
         video._resize = 1
         preprocParams = SegmentationPreview(video)
         cv2.waitKey(1)

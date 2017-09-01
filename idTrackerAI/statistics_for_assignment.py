@@ -55,9 +55,9 @@ def compute_P1_individual_fragment_from_frequencies(frequencies):
     else:
         P1_of_fragment[P1_of_fragment == 0.] = MIN_FLOAT
     # Change P1 that are 1. for 0.9999 so that we do not have problems when computing P2
-    P1_of_fragment[P1_of_fragment == 1.] = 1. - MIN_FLOAT
-    P1_of_fragment = P1_of_fragment / np.sum(P1_of_fragment)
-    # P1_of_fragment[P1_of_fragment == 1.] = 0.999999999999
+    # P1_of_fragment[P1_of_fragment == 1.] = 1. - MIN_FLOAT
+    # P1_of_fragment = P1_of_fragment / np.sum(P1_of_fragment)
+    P1_of_fragment[P1_of_fragment == 1.] = 0.999999999999
 
     return P1_of_fragment
 
