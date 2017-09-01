@@ -90,8 +90,10 @@ class ImpossibleJump(object):
         print("from get_available_identities. non_available_identities U coexisting_identities ", non_available_identities)
         available_identities = set(range(1, self.video.number_of_animals + 1)) - non_available_identities
         print("from get_available_identities. available_identities ", available_identities)
-        available_identities = available_identities | set([blob.identity])
-        non_available_identities.remove(blob.identity)
+        blob_identity = self.get_assigned_and_corrected_identity(blob)
+        if blob_identity is not None and blob_identity != 0:
+            available_identities = available_identities | set([blob_identity])
+            non_available_identities.remove(blob_identity)
         return non_available_identities, available_identities
 
     # def get_blob_to_reassing(self):
@@ -118,7 +120,7 @@ class ImpossibleJump(object):
         for candidate_blob in candidate_blobs:
             blob_extreme_past, blobs_border_past, speeds_at_border_past = self.check_velocity_border_fragments_past(candidate_blob)
             print("check border in the past of candidate blob: ", speeds_at_border_past > self.video.velocity_threshold)
-            if speeds_at_border_past > self.video.velocity_threshold:
+            if np.any(speeds_at_border_past > self.video.velocity_threshold):
                 return candidate_blob
             else:
                 return self.blob_extreme_past
@@ -130,18 +132,19 @@ class ImpossibleJump(object):
         for candidate_blob in candidate_blobs:
             blob_extreme_future, blobs_border_future, speeds_at_border_future = self.check_velocity_border_fragments_future(candidate_blob)
             print("check border in the future of candidate blob: ", speeds_at_border_future > self.video.velocity_threshold)
-            if speeds_at_border_future > self.video.velocity_threshold:
+            if np.any(speeds_at_border_future > self.video.velocity_threshold):
                 return candidate_blob
             else:
                 return self.blob_extreme_future
 
-    def get_candidate_identities_by_above_random_P2(self, blob, non_available_identities):
+    def get_candidate_identities_by_above_random_P2(self, blob, non_available_identities, available_identities):
         P2_vector = blob._P2_vector
         # print("P2 vector ", P2_vector)
-        P2_vector[non_available_identities - 1] = 0
+        if len(non_available_identities) > 0:
+            P2_vector[non_available_identities - 1] = 0
         # print("P2 vector after removing zeros ", P2_vector)
         if np.all(P2_vector == 0):
-            candidate_identities_speed = self.get_candidate_identities_by_minimum_speed(blob)
+            candidate_identities_speed, _ = self.get_candidate_identities_by_minimum_speed(blob, available_identities)
             return candidate_identities_speed
         else:
             if np.sum(blob._frequencies_in_fragment) == 1:
@@ -153,7 +156,7 @@ class ImpossibleJump(object):
 
     def get_candidate_identities_by_minimum_speed(self, blob, available_identities):
 
-        original_identity = blob.identity
+        original_identity = self.get_assigned_and_corrected_identity(blob)
         speed_of_candidate_identities = []
         for identity in available_identities:
             speeds_of_identity = []
@@ -185,13 +188,13 @@ class ImpossibleJump(object):
             print("There are no ids available!")
             print("blob is a jump ", blob.is_a_jump)
             print("blob is a ghost crossing ", blob.is_a_ghost_crossing)
-            candidate_id = blob.identity
+            candidate_id = self.get_assigned_and_corrected_identity(blob)
             print("id = ", candidate_id)
         else:
             candidate_identities_speed, speed_of_candidate_identities = self.get_candidate_identities_by_minimum_speed(blob, available_identities)
             print("candidate_identities_speed, ", candidate_identities_speed)
             print("speed_of_candidate_identities, ", speed_of_candidate_identities)
-            candidate_identities_P2 = self.get_candidate_identities_by_above_random_P2(blob, non_available_identities)
+            candidate_identities_P2 = self.get_candidate_identities_by_above_random_P2(blob, non_available_identities, available_identities)
             print("candidate_identities_P2, ", candidate_identities_P2 )
             candidate_identities = []
             candidate_speeds = []
@@ -227,8 +230,11 @@ class ImpossibleJump(object):
                     candidate_id = 0
             print("candidate_id, ", candidate_id)
 
-        print("identity update: ", blob.identity, " --> ", candidate_id)
-        blob._identity = candidate_id
+        print("identity update: ", self.get_assigned_and_corrected_identity(blob), " --> ", candidate_id)
+        if blob._identity_corrected_solving_duplication is not None:
+            blob._identity_corrected_solving_duplication = candidate_id
+        else:
+            blob._identity = candidate_id
         number_of_images_in_fragment = len(blob.identities_in_fragment())
         print("number_of_images_in_fragment, ", number_of_images_in_fragment)
         blob.update_identity_in_fragment(candidate_id, number_of_images_in_fragment = number_of_images_in_fragment)
@@ -302,20 +308,25 @@ def check_velocity_neighbour_fragment(video, blobs_in_video, blob, direction = N
     else:
         raise ValueError("Check you direction smart goose!")
 
-    print("border frame:", frame_number)
-    blobs_border_frame_same_identity = [blob for blob in blobs_in_video[frame_number] if blob.identity == blob_extreme.identity]
-    speeds_at_border = []
-    print("blobs_border_frame_same_identity in ",direction, " :", blobs_border_frame_same_identity)
-    if len(blobs_border_frame_same_identity) > 0:
-        for boder_blob in blobs_border_frame_same_identity:
-            individual_velocities = np.diff([blob_extreme.centroid, boder_blob.centroid], axis = 0)
-            print("individual_velocities: ", individual_velocities)
-            speed_at_border = np.linalg.norm(individual_velocities)
-            print("individual speed in %s direction: %.4f. The velocity threshold is %.4f" %(direction, speed_at_border, video.velocity_threshold))
-            speeds_at_border.append(speed_at_border)
-        return blob_extreme, blobs_border_frame_same_identity, speeds_at_border
+    if frame_number < len(blobs_in_video) and frame_number > 0:
+        print("border frame:", frame_number)
+        blob_identity = ImpossibleJump.get_assigned_and_corrected_identity(blob)
+        blob_extreme_identity = ImpossibleJump.get_assigned_and_corrected_identity(blob_extreme)
+        blobs_border_frame_same_identity = [blob for blob in blobs_in_video[frame_number] if blob_identity == blob_extreme_identity]
+        speeds_at_border = []
+        print("blobs_border_frame_same_identity in ",direction, " :", blobs_border_frame_same_identity)
+        if len(blobs_border_frame_same_identity) > 0:
+            for boder_blob in blobs_border_frame_same_identity:
+                individual_velocities = np.diff([blob_extreme.centroid, boder_blob.centroid], axis = 0)
+                print("individual_velocities: ", individual_velocities)
+                speed_at_border = np.linalg.norm(individual_velocities)
+                print("individual speed in %s direction: %.4f. The velocity threshold is %.4f" %(direction, speed_at_border, video.velocity_threshold))
+                speeds_at_border.append(speed_at_border)
+            return blob_extreme, blobs_border_frame_same_identity, speeds_at_border
+        else:
+            logging.warn("There is no available %s fragment" %direction)
+            return blob_extreme, [], []
     else:
-        logging.warn("There is no available %s fragment" %direction)
         return blob_extreme, [], []
 
 
