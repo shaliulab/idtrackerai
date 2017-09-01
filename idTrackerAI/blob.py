@@ -286,6 +286,38 @@ class Blob(object):
             return blob._identity
         return self._along_blobs_in_individual_fragment(blob_identity)
 
+    @staticmethod
+    def get_coexisting_blobs(blob, blobs_in_video, fragment_identifiers_of_coexisting_fragments, coexisting_blobs):
+        """Returns the list of blobs coexisting with blob"""
+        #blob_ is the blob object in the same frame as blob
+        for blob_ in blobs_in_video[blob.frame_number]:
+            if blob_.fragment_identifier is not blob.fragment_identifier and \
+                    blob_.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
+                    blob_.fragment_identifier is not None:
+                coexisting_blobs.append(blob_)
+                fragment_identifiers_of_coexisting_fragments.append(blob_.fragment_identifier)
+
+        return coexisting_blobs, fragment_identifiers_of_coexisting_fragments
+
+    def get_coexisting_blobs_in_fragment(self, blobs_in_video):
+        coexisting_blobs = []
+        fragment_identifiers_of_coexisting_fragments = []
+        coexisting_blobs, fragment_identifiers_of_coexisting_fragments = self.get_coexisting_blobs(self, blobs_in_video, fragment_identifiers_of_coexisting_fragments, coexisting_blobs)
+        if self.is_a_fish_in_a_fragment:
+            current = self
+
+            while current.next[0].is_a_fish_in_a_fragment:
+                current = current.next[0]
+                coexisting_blobs, fragment_identifiers_of_coexisting_fragments = self.get_coexisting_blobs(current, blobs_in_video, fragment_identifiers_of_coexisting_fragments, coexisting_blobs)
+
+            current = self
+
+            while current.previous[0].is_a_fish_in_a_fragment:
+                current = current.previous[0]
+                coexisting_blobs, fragment_identifiers_of_coexisting_fragments = self.get_coexisting_blobs(current, blobs_in_video, fragment_identifiers_of_coexisting_fragments, coexisting_blobs)
+
+        return coexisting_blobs
+
     def get_P1_vectors_coexisting_fragments(self, blobs_in_video):
         P1_vectors = []
         # if self.is_a_fish_in_a_fragment:
