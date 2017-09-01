@@ -15,7 +15,7 @@ from assigner import assign
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
-CERTAINTY_THRESHOLD = 0.1 # threshold to select a individual fragment as eligible for training
+CERTAINTY_THRESHOLD = -100000 # threshold to select a individual fragment as eligible for training
 
 logger = logging.getLogger("__main__.accumulation_manager")
 
@@ -254,13 +254,14 @@ class AccumulationManager(object):
                 # if the individual fragment is in the list of candidates we check the certainty
                 index_in_candidate_individual_fragments = list(self.candidate_individual_fragments_identifiers).index(individual_fragment_identifier)
                 individual_fragment_certainty =  self.certainty_of_candidate_individual_fragments[index_in_candidate_individual_fragments]
-                if individual_fragment_certainty <= self.certainty_threshold:
+                print("individual_fragment_certainty: ", individual_fragment_certainty)
+                if individual_fragment_certainty < self.certainty_threshold:
                     # if the certainty of the individual fragment is not high enough
                     # we set the global fragment not to be acceptable for training
                     global_fragment._acceptable_for_training = False
                     global_fragment._is_certain = False
                     self.number_of_noncertain_global_fragments += 1
-                    logger.debug("The individual fragment %i is not certain enough" %individual_fragment_identifier)
+                    logger.debug("The individual fragment %i is not certain enough (certainty %.4f)" %(individual_fragment_identifier, individual_fragment_certainty))
                     break
                 else:
                     # if the certainty of the individual fragment is high enough
@@ -397,7 +398,9 @@ def compute_certainty_of_individual_fragment(p1_vector_individual_fragment,media
     argsort_p1_vector = np.argsort(p1_vector_individual_fragment)
     sorted_p1_vector = p1_vector_individual_fragment[argsort_p1_vector]
     sorted_softmax_probs = median_softmax_of_candidate_individual_fragment[argsort_p1_vector]
+    print("two best P1_vector values: ", np.multiply(sorted_p1_vector,sorted_softmax_probs)[-2:])
     certainty = np.diff(np.multiply(sorted_p1_vector,sorted_softmax_probs)[-2:])/np.sum(sorted_p1_vector[-2:])
+    print("certainty: ", certainty)
     return certainty
 
 """ Get predictions of individual fragments in candidates global fragments"""
