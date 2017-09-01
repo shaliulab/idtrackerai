@@ -40,6 +40,10 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
                 hasattr(tracked_blob,'is_an_extreme_of_individual_fragment')) and\
                 groundtruth_blob.identity != -1: # we are not considering crossing or failures of the model area
                 if groundtruth_blob.identity != tracked_blob_identity:
+                    # print("\ntracked_blob.frame_number", tracked_blob.frame_number)
+                    # print("tracked_blob_identity", tracked_blob_identity)
+                    # print("groundtruth_blob.identity", groundtruth_blob.identity)
+                    # print("groundtruth_blob.frame_number", groundtruth_blob.frame_number)
                     count_errors_identities_dict_all[groundtruth_blob.identity] += 1
                     if tracked_blob.fragment_identifier not in fragments_identifiers_with_errors:
                         frames_with_errors.append(tracked_blob.frame_number)
@@ -56,7 +60,6 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
         return count_errors_identities_dict_assigned, count_errors_identities_dict_all, count_crossings_corrected_by_network/total_wrongly_assigned_crossings, frames_with_errors, fragments_identifiers_with_errors
     else:
         return count_errors_identities_dict_assigned, count_errors_identities_dict_all, 1, frames_with_errors, fragments_identifiers_with_errors
-
 
 def get_statistics_against_groundtruth(groundtruth, blobs_list_tracked):
     number_of_animals = groundtruth.video_object.number_of_animals

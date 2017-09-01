@@ -1353,7 +1353,7 @@ class Validator(BoxLayout):
                     elif blob.identity != 0:
                         count_number_assignment_per_individual_assigned[blob.identity] += 1
                         count_number_assignment_per_individual_all[blob.identity] += 1
-                    elif blob.identity == 0 and blob.user_generated_identity is None:
+                    elif (blob.identity == 0 or blob._identity_corrected_solving_duplication == 0) and blob.user_generated_identity is None:
                         print("frame number, ", blob.frame_number)
                         frames_with_zeros.append(blob.frame_number)
                         check_ground_truth = True

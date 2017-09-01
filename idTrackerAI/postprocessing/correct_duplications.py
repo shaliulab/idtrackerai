@@ -148,7 +148,7 @@ class Duplication(object):
                     else:
                         # print("candidate_id: ", candidate_id)
                         # print("P2_max_blob: ", P2_max_blob)
-                        if candidate_id in self.available_identities and P2_max_blob > 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment):
+                        if candidate_id in self.available_identities and P2_max_blob >= 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment):
                             # print("id is available and P2 above random")
                             # print("we assign the candidate id", candidate_id)
                             # Assign the candidate_id if it is available and the probability is less than random
@@ -184,6 +184,10 @@ class Duplication(object):
                             else:
                                 raise ValueError("condition no considered")
                         else:
+                            print("P2_max_blob ", P2_max_blob)
+                            print("1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment) ", 1/np.sum(self.blobs_to_reassign[index_blob]._frequencies_in_fragment))
+                            print("candidate_id ", candidate_id)
+                            print('available_identities:', self.available_identities)
                             raise ValueError("condition no considered")
                 elif len(max_indices) > 1 and np.any(P2_max != 0):
                     # print("P2_max is degenerated")
