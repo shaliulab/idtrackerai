@@ -4,6 +4,7 @@ sys.path.append('../')
 import numpy as np
 from tqdm import tqdm
 import collections
+import logging
 
 
 from blob import ListOfBlobs
@@ -15,6 +16,8 @@ from blob import Blob
 from compute_velocity_model import compute_velocity_from_list_of_blobs, compute_model_velocity
 
 VEL_PERCENTILE = 99 #percentile used to model velocity
+
+logger = logging.getLogger('__main__.assign_jumps')
 
 class Jump(object):
     def __init__(self, jumping_blob = None, number_of_animals = None, _P2_vector = None, velocity_threshold = None, number_of_frames = None):
