@@ -11,11 +11,13 @@ from globalfragment import get_images_and_labels_from_global_fragments, \
 from statistics_for_assignment import compute_P1_individual_fragment_from_frequencies, \
                                         compute_identification_frequencies_individual_fragment
 from assigner import assign
+from trainer import train
+from globalfragment import check_uniquenss_of_global_fragments
 
 RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
-CERTAINTY_THRESHOLD = -100000 # threshold to select a individual fragment as eligible for training
+CERTAINTY_THRESHOLD = .1 # threshold to select a individual fragment as eligible for training
 
 logger = logging.getLogger("__main__.accumulation_manager")
 
@@ -91,6 +93,7 @@ class AccumulationManager(object):
         random.seed(0)
         images = []
         labels = []
+
         for i in range(self.number_of_animals):
             new_images_indices = np.where(self.new_labels == i)[0]
             used_images_indices = np.where(self.used_labels == i)[0]
@@ -293,6 +296,7 @@ class AccumulationManager(object):
                 print("global_fragment individual fragment identifiers, ", global_fragment.individual_fragments_identifiers)
             # get the maximum P1 of each individual fragment
             P1_max = np.max(P1_array,axis=1)
+            logger.debug("P1 max: %s" %str(P1_max))
             # get the index position of the individual fragments ordered by P1_max from max to min
             index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
             # first we set the identities of the individual fragments that have been already used
@@ -310,10 +314,13 @@ class AccumulationManager(object):
                     P1_array[index_individual_fragment,:] = 0.
                     P1_array[:,identity] = 0.
 
-            assigning_at_random = False
             for index_individual_fragment in index_individual_fragments_sorted_by_P1_max_to_min:
                 if np.isnan(global_fragment._temporary_ids[index_individual_fragment]):
                     # if it has not been assigned an identity
+                    logger.debug("-----------------------------------")
+                    logger.debug("index individual fragment")
+                    logger.debug("max of P1 %s" %str(np.max(P1_array[index_individual_fragment,:])))
+                    logger.debug("threshold %s" %str(1./global_fragment._number_of_portraits_per_individual_fragment[index_individual_fragment]))
                     if np.max(P1_array[index_individual_fragment,:]) < 1./global_fragment._number_of_portraits_per_individual_fragment[index_individual_fragment]:
                         global_fragment._acceptable_for_training = False
                         self.number_of_random_assigned_global_fragments += 1
@@ -340,7 +347,7 @@ class AccumulationManager(object):
                 else:
                     global_fragment._temporary_ids = np.asarray(global_fragment._temporary_ids).astype('int')
                     global_fragment._accumulation_step = self.counter
-                    logger.debug("The global fragment has been accumulated")
+                    logger.debug("The global fragment will be accumulated")
                     for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids):
                         if individual_fragment_identifier not in self.temporal_individual_fragments_used and individual_fragment_identifier not in self.individual_fragments_used:
                             self.temporal_individual_fragments_used.append(individual_fragment_identifier)
@@ -353,20 +360,97 @@ class AccumulationManager(object):
             if individual_fragment_identifier in other_global_fragment.individual_fragments_identifiers:
 
                 for other_individual_fragment_identifier in other_global_fragment.individual_fragments_identifiers:
+
                     if other_individual_fragment_identifier in self.individual_fragments_used:
                         index = list(self.individual_fragments_used).index(other_individual_fragment_identifier)
                         identity = int(self.identities_of_individual_fragments_used[index])
-
                         if identity == temporal_identity:
                             return False
-
                     elif other_individual_fragment_identifier in self.temporal_individual_fragments_used:
                         index = list(self.temporal_individual_fragments_used).index(other_individual_fragment_identifier)
                         identity = int(self.temporal_identities_of_individual_fragments_used[index])
-
                         if identity == temporal_identity:
                             return False
         return True
+
+    def accumulate(self, video, blobs, global_fragments, global_step, net, number_of_unique_images_in_global_fragments, knowledge_transfer_from_same_animals):
+        number_of_accumulated_images = 0
+
+        while self.continue_accumulation:
+            logger.info("accumulation step %s" %self.counter)
+            #get next fragments for accumulation
+            self.get_next_global_fragments()
+            #get images from the new global fragments
+            #(we do not take images from individual fragments already used)
+            self.get_new_images_and_labels()
+            number_of_accumulated_images += int(self.new_images.shape[0])
+            logger.debug('%i new images accumulated' %number_of_accumulated_images)
+            #get images for training
+            #(we mix images already used with new images)
+            images, labels = self.get_images_and_labels_for_training()
+            logger.info("the %f of the images has been accumulated" %(number_of_accumulated_images / number_of_unique_images_in_global_fragments * 100))
+            logger.debug("images: %s" %str(images.shape))
+            logger.debug("labels: %s" %str(labels.shape))
+            #start training
+            global_step, net, _ = train(video, blobs,
+                                    global_fragments,
+                                    net, images, labels,
+                                    store_accuracy_and_error = False,
+                                    check_for_loss_plateau = True,
+                                    save_summaries = True,
+                                    print_flag = False,
+                                    plot_flag = True,
+                                    global_step = global_step,
+                                    first_accumulation_flag = self.counter == 0,
+                                    knowledge_transfer_from_same_animals = knowledge_transfer_from_same_animals)
+            # update used_for_training flag to True for fragments used
+            logger.info("Accumulation step completed. Updating global fragments used for training")
+            self.update_global_fragments_used_for_training()
+            # update the set of images used for training
+            logger.info("Update images and labels used for training")
+            self.update_used_images_and_labels()
+            # assign identities fo the global fragments that have been used for training
+            logger.info("Assigning identities to accumulated global fragments")
+            self.assign_identities_to_accumulated_global_fragments(blobs)
+            # update the list of individual fragments that have been used for training
+            logger.info("Update individual fragments used for training")
+            self.update_individual_fragments_used()
+            # Check uniqueness global_fragments
+            logger.info("Check uniqueness of global fragments")
+            check_uniquenss_of_global_fragments(global_fragments)
+            # Set accumulation params for rest of the accumulation
+            #take images from global fragments not used in training (in the remainder test global fragments)
+            logger.info("Get new global fragments for training")
+            candidates_next_global_fragments = [global_fragment for global_fragment in global_fragments
+                                    if not global_fragment.used_for_training]
+            logger.info("There are %s candidate global fragments left for accumulation" %str(len(candidates_next_global_fragments)))
+            if any([not global_fragment.used_for_training for global_fragment in global_fragments]):
+                logger.info("Generate predictions on candidate global fragments")
+                predictions,\
+                softmax_probs,\
+                non_shared_information,\
+                indices_to_split,\
+                candidate_individual_fragments_identifiers = get_predictions_of_candidates_global_fragments(net,
+                                                                                                            video,
+                                                                                                            candidates_next_global_fragments,
+                                                                                                            self.individual_fragments_used)
+                self.split_predictions_after_network_assignment(predictions, softmax_probs, non_shared_information, indices_to_split)
+                # assign identities to the global fragments based on the predictions
+                logger.info("Checking eligibility criteria and generate the new list of global fragments to accumulate")
+                logger.info("Number of candidate global fragments: %i" %len(candidates_next_global_fragments))
+                self.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_identifiers)
+                logger.info("Number of non certain global fragments: %i" %self.number_of_noncertain_global_fragments)
+                logger.info("Number of randomly assigned global fragments: %i" %self.number_of_random_assigned_global_fragments)
+                logger.info("Number of non consistent global fragments: %i " %self.number_of_nonconsistent_global_fragments)
+                logger.info("Number of non unique global fragments: %i " %self.number_of_nonunique_global_fragments)
+                logger.info("Number of acceptable global fragments: %i " %np.sum([global_fragment.acceptable_for_training for global_fragment in global_fragments]))
+                self.update_counter()
+            else:
+                logger.info("All the global fragments have been used for accumulation")
+                break
+
+            ratio_accumulated_images_over_all_unique_images_in_global_fragments = number_of_accumulated_images / number_of_unique_images_in_global_fragments
+            return ratio_accumulated_images_over_all_unique_images_in_global_fragments
 
 def sample_images_and_labels(images, labels, ratio):
     subsampled_images = []

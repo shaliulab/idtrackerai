@@ -14,9 +14,6 @@ CNN_MODELS_DICT = {0: cnn_model_0,
                     3: cnn_model_3,
                     4: cnn_model_4,
                     5: cnn_model_5}
-
-IMAGE_SIZE = (32,32,1)
-
 logger = logging.getLogger("__main__.id_CNN")
 
 class ConvNetwork():
@@ -34,11 +31,9 @@ class ConvNetwork():
         tf.reset_default_graph()
         self._build_graph()
         self.set_savers()
-
         # Create list of operations to run during training and validation
         if self.training:
             self.ops_list = [self.loss, self.accuracy, self.individual_accuracy]
-
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
         if self.is_restoring:
@@ -93,9 +88,7 @@ class ConvNetwork():
             self.y_target_pl = tf.placeholder(tf.float32, [None, self.params.number_of_animals], name = 'labels')
             self.keep_prob_pl = tf.placeholder(tf.float32, name = 'keep_prob')
             self.loss_weights_pl = tf.placeholder(tf.float32, [None], name = 'loss_weights')
-
             self.loss = self.weighted_loss()
-
             self.optimisation_step, self.global_step = self.set_optimizer()
             # self.accuracy = tf.accuracy()
             self.accuracy, self.individual_accuracy = self.evaluation()
@@ -216,19 +209,14 @@ def compute_individual_accuracy(labels,logits,classes):
     labels = tf.cast(tf.add(tf.where(tf.equal(labels,1))[:,1],1),tf.float32)
     predictions = tf.cast(tf.add(tf.argmax(logits,1),1),tf.float32)
     labelsRep = tf.reshape(tf.tile(labels, [classes]), [classes,tf.shape(labels)[0]])
-
     correct = tf.cast(tf.equal(labels,predictions),tf.float32)
     indivCorrect = tf.multiply(predictions,correct)
-
     indivRep = tf.cast(tf.transpose(tf.reshape(tf.tile(tf.range(1,classes+1), [tf.shape(labels)[0]]), [tf.shape(labels)[0],classes])),tf.float32)
     indivCorrectRep = tf.reshape(tf.tile(indivCorrect, [classes]), [classes,tf.shape(labels)[0]])
     correctPerIndiv = tf.cast(tf.equal(indivRep,indivCorrectRep),tf.float32)
-
     countCorrect = tf.reduce_sum(correctPerIndiv,1)
     numImagesPerIndiv = tf.reduce_sum(tf.cast(tf.equal(labelsRep,indivRep),tf.float32),1)
-
     indivAcc = tf.div(countCorrect,numImagesPerIndiv)
-
     return indivAcc
 
 def compute_accuracy(labels, logits):

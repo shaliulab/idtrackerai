@@ -119,7 +119,7 @@ def get_blobs_to_assign(blobs_in_video, assigned_fragment_identifiers):
 
     return blobs_to_assign
 
-def get_blob_to_assign(list_of_blobs):
+def get_blob_to_assign_by_max_P2(list_of_blobs):
     return np.argmax(np.asarray([max(blob.P2_vector) for blob in list_of_blobs]))
 
 
@@ -132,7 +132,7 @@ def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
     len_first_list_of_blobs = len(list_of_blobs)
 
     while len(list_of_blobs) > 1:
-        blob = list_of_blobs[get_blob_to_assign(list_of_blobs)]
+        blob = list_of_blobs[get_blob_to_assign_by_max_P2(list_of_blobs)]
         logger.info("frame number: %i" %blob.frame_number)
         logger.info("certainty of the asssignment (P2): %s" %str(max(blob.P2_vector)))
         identity_in_fragment = np.argmax(blob._P2_vector) + 1

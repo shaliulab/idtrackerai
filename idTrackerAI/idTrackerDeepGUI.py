@@ -43,7 +43,8 @@ from globalfragment import compute_model_area_and_body_length,\
                             filter_global_fragments_by_minimum_number_of_frames,\
                             compute_and_plot_global_fragments_statistics,\
                             check_uniquenss_of_global_fragments,\
-                            get_number_of_images_in_global_fragments_list
+                            get_number_of_images_in_global_fragments_list,\
+                            give_me_number_of_unique_images_in_global_fragments
 from get_portraits import get_body
 from segmentation import segment
 from get_crossings_data_set import CrossingDataset
@@ -484,7 +485,7 @@ if __name__ == '__main__':
                     logger.info("We will restore the network from a previous model (knowledge transfer): %s" %video.knowledge_transfer_model_folder)
                     accumulation_network_params.restore_folder = video.knowledge_transfer_model_folder
                 else:
-                    logger.info("The network will be trained from scracth during accumulation")
+                    logger.info("The network will be trained from scratch during accumulation")
                     accumulation_network_params.scopes_layers_to_optimize = None
 
             #instantiate network object
@@ -492,16 +493,31 @@ if __name__ == '__main__':
             net = ConvNetwork(accumulation_network_params)
             #restore variables from the pretraining
             net.restore()
+            #if knowledge transfer is performed on the same animals we don't reinitialise the classification part of the net
+            knowledge_transfer_from_same_animals = False
             if video.tracking_with_knowledge_transfer:
                 same_animals = getInput("Same animals", "Are you tracking the same animals? y/N")
                 if same_animals.lower() == 'n' or same_animals == '':
                     net.reinitialize_softmax_and_fully_connected()
+                else:
+                    knowledge_transfer_from_same_animals = True
             #instantiate accumulation manager
             logger.info("Initialising accumulation manager")
             accumulation_manager = AccumulationManager(global_fragments, video.number_of_animals)
             #set global epoch counter to 0
             logger.info("Start accumulation")
+            number_of_unique_images_in_global_fragments = give_me_number_of_unique_images_in_global_fragments(global_fragments)
             global_step = 0
+            # accumulated_images_ratio = accumulation_manager.accumulate(video,
+            #                                                             blobs,
+            #                                                             global_fragments,
+            #                                                             global_step,
+            #                                                             net,
+            #                                                             number_of_unique_images_in_global_fragments,
+            #                                                             knowledge_transfer_from_same_animals)
+
+            number_of_accumulated_images = 0
+
             while accumulation_manager.continue_accumulation:
                 logger.info("accumulation step %s" %accumulation_manager.counter)
                 #get next fragments for accumulation
@@ -509,9 +525,12 @@ if __name__ == '__main__':
                 #get images from the new global fragments
                 #(we do not take images from individual fragments already used)
                 accumulation_manager.get_new_images_and_labels()
+                number_of_accumulated_images += int(accumulation_manager.new_images.shape[0])
+                logger.debug('%i new images accumulated' %number_of_accumulated_images)
                 #get images for training
                 #(we mix images already used with new images)
                 images, labels = accumulation_manager.get_images_and_labels_for_training()
+                logger.info("the %f of the images has been accumulated" %(number_of_accumulated_images / number_of_unique_images_in_global_fragments * 100))
                 logger.debug("images: %s" %str(images.shape))
                 logger.debug("labels: %s" %str(labels.shape))
                 #start training
@@ -524,7 +543,8 @@ if __name__ == '__main__':
                                         print_flag = False,
                                         plot_flag = True,
                                         global_step = global_step,
-                                        first_accumulation_flag = accumulation_manager == 0)
+                                        first_accumulation_flag = accumulation_manager.counter == 0,
+                                        knowledge_transfer_from_same_animals = knowledge_transfer_from_same_animals)
                 # update used_for_training flag to True for fragments used
                 logger.info("Accumulation step completed. Updating global fragments used for training")
                 accumulation_manager.update_global_fragments_used_for_training()
@@ -543,7 +563,8 @@ if __name__ == '__main__':
                 # Set accumulation params for rest of the accumulation
                 #take images from global fragments not used in training (in the remainder test global fragments)
                 logger.info("Get new global fragments for training")
-                candidates_next_global_fragments = [global_fragment for global_fragment in global_fragments if not global_fragment.used_for_training]
+                candidates_next_global_fragments = [global_fragment for global_fragment in global_fragments
+                                        if not global_fragment.used_for_training]
                 logger.info("There are %s candidate global fragments left for accumulation" %str(len(candidates_next_global_fragments)))
                 if any([not global_fragment.used_for_training for global_fragment in global_fragments]):
                     logger.info("Generate predictions on candidate global fragments")
@@ -570,6 +591,7 @@ if __name__ == '__main__':
                     logger.info("All the global fragments have been used for accumulation")
                     break
 
+                ratio_accumulated_images_over_all_unique_images_in_global_fragments = number_of_accumulated_images / number_of_unique_images_in_global_fragments
             logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
             logger.info("Saving video")
             video._accumulation_finished = True

@@ -16,7 +16,7 @@ from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
 logger = logging.getLogger("__main__.trainer")
 
-def train(video, blobs_in_video, global_fragments, net, images, labels, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag, global_step = 0, first_accumulation_flag = False, preprocessing_type = None):
+def train(video, blobs_in_video, global_fragments, net, images, labels, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag, global_step = 0, first_accumulation_flag = False, preprocessing_type = None, knowledge_transfer_from_same_animals = False):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
     if preprocessing_type is None:
@@ -42,7 +42,7 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
     training_dataset.convert_labels_to_one_hot()
     validation_dataset.convert_labels_to_one_hot()
     # Reinitialize softmax and fully connected
-    if first_accumulation_flag == True:
+    if first_accumulation_flag == True and not knowledge_transfer_from_same_animals:
         net.reinitialize_softmax_and_fully_connected()
     # Train network
     #compute weights to be fed to the loss function (weighted cross entropy)

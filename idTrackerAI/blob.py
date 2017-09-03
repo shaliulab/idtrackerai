@@ -629,19 +629,17 @@ def apply_model_area(video, blob, model_area, portraitSize):
 
         if video.preprocessing_type == 'portrait':
             portrait, blob._nose_coordinates, blob._head_coordinates = get_portrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize)
-            blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
             # if not blob.in_a_global_fragment_core:
             #     blob.bounding_box_image = None
         elif video.preprocessing_type == 'body':
             portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(height, width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
-            blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
             # if not blob.in_a_global_fragment_core:
             #     blob.bounding_box_image = None
         elif video.preprocessing_type == 'body_blob':
             portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(height, width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize, only_blob = True)
-            blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
             # if not blob.in_a_global_fragment_core:
             #     blob.bounding_box_image = None
+        blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
 
 def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portraitSize):
     for blob in blobs_in_frame:

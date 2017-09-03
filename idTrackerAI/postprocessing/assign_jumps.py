@@ -8,8 +8,10 @@ import logging
 
 
 from blob import ListOfBlobs
-from assigner import assign, get_blob_to_assign
-from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob, is_assignment_ambiguous, compute_P1_individual_fragment_from_frequencies
+from assigner import assign, get_blob_to_assign_by_max_P2
+from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob,\
+                                    is_assignment_ambiguous,\
+                                    compute_P1_individual_fragment_from_frequencies
 from id_CNN import ConvNetwork
 from network_params import NetworkParams
 from blob import Blob
@@ -264,7 +266,7 @@ def assign_identity_to_jumps(video, blobs):
     original_len_jump_blobs = len(jump_blobs)
     while len(jump_blobs) > 0:
         # print(len(jump_blobs), '/', original_len_jump_blobs)
-        blob = jump_blobs[get_blob_to_assign(jump_blobs)]
+        blob = jump_blobs[get_blob_to_assign_by_max_P2(jump_blobs)]
         # print("\n\nframe number, ", blob.frame_number)
         # print("fragment identifier, ", blob.fragment_identifier)
         # print("blob identity before assigning jump ", blob.identity)

@@ -145,6 +145,21 @@ def order_global_fragments_by_distance_to_the_first_global_fragment(global_fragm
     global_fragments = sorted(global_fragments, key = lambda x: np.abs(x.index_beginning_of_fragment - index_beginning_of_first_global_fragment), reverse = False)
     return global_fragments
 
+def give_me_number_of_unique_images_in_global_fragments(global_fragments):
+    individual_fragments_used = []
+    number_of_images_in_global_fragments = 0
+
+    for global_fragment in global_fragments:
+
+        for i, individual_fragment_identifier in enumerate(global_fragment.individual_fragments_identifiers):
+
+            if individual_fragment_identifier not in individual_fragments_used:
+                number_of_images_in_global_fragments += global_fragment._number_of_portraits_per_individual_fragment[i]
+                individual_fragments_used.append(individual_fragment_identifier)
+
+    return number_of_images_in_global_fragments
+
+
 def give_me_identities_of_global_fragment(global_fragment, blobs_in_video):
     global_fragment._ids_assigned = [blob.identity
         for blob in blobs_in_video[global_fragment.index_beginning_of_fragment]]
