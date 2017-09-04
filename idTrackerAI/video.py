@@ -149,10 +149,11 @@ class Video(object):
         if not os.path.isdir(self._pretraining_folder):
             os.makedirs(self._pretraining_folder)
 
-    def create_accumulation_folder(self):
+    def create_accumulation_folder(self, iteration_number = 0):
         """Folder in which the model generated while accumulating is stored (after pretraining)
         """
-        self._accumulation_folder = os.path.join(self._session_folder, 'accumulation')
+        accumulation_folder_name = 'accumulation_' + str(iteration_number)
+        self._accumulation_folder = os.path.join(self._session_folder, accumulation_folder_name)
         if not os.path.isdir(self._accumulation_folder):
             os.makedirs(self._accumulation_folder)
 

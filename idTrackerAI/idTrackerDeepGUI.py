@@ -464,10 +464,11 @@ if __name__ == '__main__':
         #############################################################
         print("\n**** Accumulation ****")
         if not loadPreviousDict['accumulation']:
+            percentage_of_accumulated_images = []
             for i in range(3):
                 logger.info("Starting accumulation")
                 #create folder to store accumulation models
-                video.create_accumulation_folder()
+                video.create_accumulation_folder(iteration_number = i)
                 reset_blobs_fragmentation_parameters(blobs, recovering_from = 'accumulation')
                 #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
                 [global_fragment.reset_accumulation_params() for global_fragment in global_fragments]
@@ -589,13 +590,18 @@ if __name__ == '__main__':
                         logger.info("All the global fragments have been used for accumulation")
                         break
 
-                    ratio_accumulated_images_over_all_unique_images_in_global_fragments = number_of_accumulated_images / number_of_unique_images_in_global_fragments
+                    percentage_accumulated_images_over_all_unique_images_in_global_fragments = number_of_accumulated_images / number_of_unique_images_in_global_fragments
                     logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
-                if ratio_accumulated_images_over_all_unique_images_in_global_fragments > 90:
+                if percentage_accumulated_images_over_all_unique_images_in_global_fragments > 90:
                     break
                 else:
+                    percentage_of_accumulated_images.append(percentage_accumulated_images_over_all_unique_images_in_global_fragments)
                     logger.info("This accumulation was not satisfactory. Try to start from a different global fragment")
 
+            if len(percentage_of_accumulated_images) == 3 and np.argmax(percentage_of_images_accumulated) != 2:
+                accumulation_folder_name = 'accumulation_' + str(np.argmax(percentage_of_accumulated_images))
+                video._accumulation_folder = os.path.join(video._session_folder, accumulation_folder_name)
+                
             logger.info("Saving video")
             video._accumulation_finished = True
             video.save()
