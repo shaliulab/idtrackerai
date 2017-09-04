@@ -5,6 +5,8 @@
 !*.py
 !*.yaml
 !*.kv
+!*.js
+!*.html
 
 #except gitignore
 !*.gitignore
