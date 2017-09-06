@@ -12,7 +12,7 @@ from natsort import natsorted
 import cv2
 import logging
 
-AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4']
+AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg']
 SUPPORTED_PREPROCESSING_TYPES = ['portrait', 'body', 'body_blob']
 FRAMES_PER_EPISODE = 500 #long videos are divided into chunks. This is the number of frame per chunk
 
@@ -95,7 +95,10 @@ class Video(object):
         cap = cv2.VideoCapture(self._video_path)
         self._width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         self._height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-        self._frames_per_second = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
+        try:
+            self._frames_per_second = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
+        except:
+            logger.info("Cannot read frame per second")
         if self._paths_to_video_segments is None:
             self._num_frames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
             self.get_episodes()

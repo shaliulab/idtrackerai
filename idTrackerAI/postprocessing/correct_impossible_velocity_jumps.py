@@ -365,8 +365,9 @@ def correct_impossible_velocity_jumps_loop(video, blobs_in_video, direction = No
 
     individual_fragments_checked = []
     for blobs_in_frame in tqdm(blobs_in_direction, desc = 'Correcting impossible velocity jumps ' + direction):
-        print('\n *** frame, ', blobs_in_frame[0].frame_number)
-        individual_fragments_checked = solve_impossible_jumps_for_blobs_in_frame(video, blobs_in_video, blobs_in_frame, individual_fragments_checked, direction)
+        if len(blobs_in_frame) > 1:
+            print('\n *** frame, ', blobs_in_frame[0].frame_number)
+            individual_fragments_checked = solve_impossible_jumps_for_blobs_in_frame(video, blobs_in_video, blobs_in_frame, individual_fragments_checked, direction)
 
 def correct_impossible_velocity_jumps(video, blobs):
     correct_impossible_velocity_jumps_loop(video, blobs, direction = 'previous')

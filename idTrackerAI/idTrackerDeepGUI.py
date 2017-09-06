@@ -90,6 +90,7 @@ NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blo
 NUMBER_OF_SAMPLES = 30000
 PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING = .25
 VEL_PERCENTILE = 99
+THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
 ###
 # seed numpy
 np.random.seed(0)
@@ -592,16 +593,16 @@ if __name__ == '__main__':
 
                     percentage_accumulated_images_over_all_unique_images_in_global_fragments = number_of_accumulated_images / number_of_unique_images_in_global_fragments
                     logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
-                if percentage_accumulated_images_over_all_unique_images_in_global_fragments > 90:
+                if percentage_accumulated_images_over_all_unique_images_in_global_fragments > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                     break
                 else:
                     percentage_of_accumulated_images.append(percentage_accumulated_images_over_all_unique_images_in_global_fragments)
                     logger.info("This accumulation was not satisfactory. Try to start from a different global fragment")
 
-            if len(percentage_of_accumulated_images) == 3 and np.argmax(percentage_of_images_accumulated) != 2:
+            if len(percentage_of_accumulated_images) > 1 and np.argmax(percentage_of_accumulated_images) != 2:
                 accumulation_folder_name = 'accumulation_' + str(np.argmax(percentage_of_accumulated_images))
                 video._accumulation_folder = os.path.join(video._session_folder, accumulation_folder_name)
-                
+
             logger.info("Saving video")
             video._accumulation_finished = True
             video.save()
