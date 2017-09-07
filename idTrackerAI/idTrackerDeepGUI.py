@@ -656,9 +656,10 @@ if __name__ == '__main__':
             logger.debug("Computing P1")
             compute_P1_for_blobs_in_video(video, blobs)
             # compute P2 for all the individual fragments (including the already accumulated)
+            logger.debug("Computing P2")
             compute_P2_for_blobs_in_video(video, blobs)
             # assign identities based on individual fragments
-            logger.debug("Computing P2")
+            logger.debug("Assigning identities on an individual fragment basis")
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
             # assign identity to individual fragments' extremes
             logger.info("Assigning identities to ghost crossings")

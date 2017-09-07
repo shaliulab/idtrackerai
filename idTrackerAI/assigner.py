@@ -21,6 +21,8 @@ from statistics_for_assignment import compute_P2_of_individual_fragment_from_blo
                                     compute_identification_frequencies_individual_fragment,\
                                     is_assignment_ambiguous
 
+FIXED_IDENTITY_THRESHOLD = .9
+
 logger = logging.getLogger("__main__.assigner")
 
 def assign(net, video, images, print_flag):
@@ -133,8 +135,9 @@ def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
 
     while len(list_of_blobs) > 1:
         blob = list_of_blobs[get_blob_to_assign_by_max_P2(list_of_blobs)]
+
         logger.info("frame number: %i" %blob.frame_number)
-        logger.info("certainty of the asssignment (P2): %s" %str(max(blob.P2_vector)))
+        logger.info("certainty of the assignment (P2): %s" %str(max(blob.P2_vector)))
         identity_in_fragment = np.argmax(blob._P2_vector) + 1
         ambiguous_identities, is_ambiguous_identity = is_assignment_ambiguous(blob.P2_vector)
         if is_ambiguous_identity:
@@ -155,7 +158,7 @@ def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
         assert blob not in list_of_blobs
         logger.info("step %i of %i" %(len(list_of_blobs), len_first_list_of_blobs))
         coexisting_blobs = blob.get_coexisting_blobs_in_fragment(blobs_in_video)
-
-        for blob_to_assign in tqdm(coexisting_blobs, desc = "Updating P2 of coexisting blobs"):
-            blob_to_assign._P2_vector = compute_P2_of_individual_fragment_from_blob(blob_to_assign, blobs_in_video)
-            blob_to_assign.update_attributes_in_fragment(['_P2_vector'], [blob_to_assign._P2_vector])
+        if np.max(blob._P2_vector) < FIXED_IDENTITY_THRESHOLD:
+            for blob_to_assign in tqdm(coexisting_blobs, desc = "Updating P2 of coexisting blobs"):
+                blob_to_assign._P2_vector = compute_P2_of_individual_fragment_from_blob(blob_to_assign, blobs_in_video)
+                blob_to_assign.update_attributes_in_fragment(['_P2_vector'], [blob_to_assign._P2_vector])
