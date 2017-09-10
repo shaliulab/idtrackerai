@@ -5,6 +5,7 @@ sys.path.append('./network')
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import numpy as np
 import logging
 
 from network_params import NetworkParams
@@ -87,6 +88,10 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
     if store_accuracy_and_error:
         store_training_accuracy_and_loss_data.save()
         store_validation_accuracy_and_loss_data.save()
+    # Get best checkpoint
+    net.restore_index = np.argmin(store_validation_accuracy_and_loss_data.loss)
+    logger.debug("next restore index: %s" %str(net.restore_index))
+    logger.debug("corresponding loss value %f" %store_training_accuracy_and_loss_data.loss[net.restore_index])
     # Save network model
     net.save()
     if plot_flag:

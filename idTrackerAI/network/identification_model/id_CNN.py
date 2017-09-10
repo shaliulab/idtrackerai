@@ -17,12 +17,20 @@ CNN_MODELS_DICT = {0: cnn_model_0,
 logger = logging.getLogger("__main__.id_CNN")
 
 class ConvNetwork():
-    def __init__(self, params, training_flag = True):
+    def __init__(self, params, training_flag = True, restore_index = None):
+        """CNN
+        params (NetworkParams object)
+        training_flag (bool)
+            True to backpropagate
+        restore_index (integer)
+            checkpoint to be used in restoring the network
+        """
         # Set main attibutes of the class
         self.image_width = params.image_size[0]
         self.image_height = params.image_size[1]
         self.image_channels = params.image_size[2]
         self.params = params
+        self.restore_index = restore_index
         # Initialize layers to optimize to be empty. This means tha we will
         # optimize all the layers of our network
         self.layers_to_optimise = None
@@ -144,7 +152,10 @@ class ConvNetwork():
         self.session.run(tf.global_variables_initializer())
         try:
             ckpt = tf.train.get_checkpoint_state(self.restore_folder_conv)
-            self.saver_conv.restore(self.session, ckpt.model_checkpoint_path) # restore convolutional variables
+            if self.restore_index is None:
+                self.saver_conv.restore(self.session, ckpt.model_checkpoint_path) # restore convolutional variables
+            else:
+                self.saver_conv.restore(self.session, ckpt.all_checkpoint_paths[self.restore_index])
             logger.debug('Restoring convolutional part from %s' %ckpt.model_checkpoint_path)
         except:
             logger.debug('Warning: no checkpoints found for the convolutional part')
