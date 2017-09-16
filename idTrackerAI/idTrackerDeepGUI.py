@@ -21,6 +21,7 @@ sys.path.append('./network')
 sys.path.append('./network/crossings_detector_model')
 sys.path.append('./network/identification_model')
 sys.path.append('./groundtruth_utils')
+sys.path.append('./tf_cnnvis')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
@@ -85,6 +86,7 @@ from get_trajectories import produce_trajectories, smooth_trajectories
 from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
 from compute_statistics_against_groundtruth import get_statistics_against_groundtruth
 from compute_velocity_model import compute_model_velocity
+from visualise_cnn import visualise
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 NUMBER_OF_SAMPLES = 30000
@@ -478,7 +480,7 @@ if __name__ == '__main__':
                 accumulation_network_params = NetworkParams(video.number_of_animals,
                                             learning_rate = 0.005,
                                             keep_prob = 1.0,
-                                            scopes_layers_to_optimize = ['fully-connected1','softmax1'],
+                                            scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax'],
                                             save_folder = video._accumulation_folder,
                                             image_size = video.portrait_size)
                 if video._has_been_pretrained:
@@ -621,7 +623,7 @@ if __name__ == '__main__':
                                                         learning_rate = 0.005,
                                                         keep_prob = 1.0,
                                                         use_adam_optimiser = False,
-                                                        scopes_layers_to_optimize = ['fully-connected1','softmax1'],
+                                                        scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax'],
                                                         restore_folder = video._accumulation_folder,
                                                         save_folder = video._accumulation_folder,
                                                         image_size = video.portrait_size)
@@ -631,6 +633,8 @@ if __name__ == '__main__':
             video._accumulation_finished = True
             logger.info("Saving video")
             video.save()
+
+
         #############################################################
         ###################     Assigner      ######################
         ####
@@ -682,6 +686,16 @@ if __name__ == '__main__':
             logger.info("The video has already been assigned. Using previous information")
             video._has_been_assigned = True
             video.save()
+
+        accumulated_global_fragments = [global_fragment for global_fragment in global_fragments
+                                        if global_fragment.used_for_training]
+        for i in range(10):
+            image = accumulated_global_fragments[0].portraits[0][i]
+            image = np.expand_dims(image, 2)
+            image = np.expand_dims(image, 0)
+            label = accumulated_global_fragments[0]._temporary_ids[0]
+
+            visualise(video, net, image, label)
         #############################################################
         ###################   Solve duplications      ###############
         ####

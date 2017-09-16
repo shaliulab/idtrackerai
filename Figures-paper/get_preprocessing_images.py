@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import cm
 import matplotlib.pyplot as plt
 import cv2
 import seaborn
@@ -37,10 +38,10 @@ if __name__ == "__main__":
         segmented_blobs_in_frame = segmented_blobs[i]
         for blob, segmented_blob in zip(blobs_in_frame, segmented_blobs_in_frame):
             if not blob.is_a_crossing:
-                ax1.imshow(blob.portrait)
+                ax1.imshow(blob.portrait, cmap = cm.gray)
                 ax1.set_yticks([])
                 ax1.set_xticks([])
-                ax2.imshow(segmented_blob.bounding_box_image)
+                ax2.imshow(segmented_blob.bounding_box_image, cmap = cm.gray, vmin = 0, vmax = 255)
                 ax2.set_yticks([])
                 ax2.set_xticks([])
                 # plt.show()

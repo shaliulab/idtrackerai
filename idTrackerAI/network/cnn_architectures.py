@@ -68,8 +68,8 @@ def cnn_model_0(images, classes, width, height, channels):
     # fully-connected 1
     n_fc = 100
     fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
-    relu = reLU('relu1', fc_drop)
-    y_logits, WSoft = buildSoftMax('softmax1', relu, n_fc, classes)
+    relu = reLU('relu4', fc_drop)
+    y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
     return y_logits
     # return y_logits, relu, (W1, W3, W5, WFC, WSoft)
@@ -96,7 +96,7 @@ def cnn_model_1(images, classes):
     n_fc = 100
     fc_drop, WFC = buildFc('fully-connected1', conv1_flat, w1, h1, n_filter1, n_fc, keep_prob)
     relu = reLU('relu1', fc_drop)
-    y_logits, WSoft = buildSoftMax('softmax1', relu, n_fc, classes)
+    y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
     return y_logits
     # return y_logits, relu, (W1, W3, W5, WFC, WSoft)
@@ -137,7 +137,7 @@ def cnn_model_2(images, classes):
     n_fc = 100
     fc_drop, WFC = buildFc('fully-connected1', conv3_flat, w3, h3, n_filter3, n_fc, keep_prob)
     relu = reLU('relu1', fc_drop)
-    y_logits, WSoft = buildSoftMax('softmax1', relu, n_fc, classes)
+    y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
     return y_logits
     # return y_logits, relu, (W1, W3, W5, WFC, WSoft)
@@ -208,7 +208,7 @@ def cnn_model_3(images, classes):
     n_fc = 100
     fc_drop, WFC = buildFc('fully-connected1', conv7_flat, w7, h7, d7, n_fc, keep_prob)
     relu = reLU('relu1', fc_drop)
-    y_logits, WSoft = buildSoftMax('softmax1', relu, n_fc, classes)
+    y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
     return y_logits
     # return y_logits, relu, (W1, W3, W5, WFC, WSoft)
@@ -264,7 +264,7 @@ def cnn_model_4(images, classes):
     n_fc = 100
     fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
     relu = reLU('relu1', fc_drop)
-    y_logits, WSoft = buildSoftMax('softmax1', relu, n_fc, classes)
+    y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
     return y_logits
     # return y_logits, relu, (W1, W3, W5, WFC, WSoft)
@@ -314,7 +314,7 @@ def cnn_model_5(images, classes):
     n_fc = 100
     fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
     relu = reLU('relu1', fc_drop)
-    y_logits, WSoft = buildSoftMax('softmax1', relu, n_fc, classes)
+    y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
     return y_logits
     # return y_logits, relu, (W1, W3, W5, WFC, WSoft)
@@ -353,5 +353,5 @@ def cnn_model_crossing_detector(images, classes, width, height, channels):
     n_fc = 100
     fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w3, h3, n_filter3, n_fc, keep_prob)
     relu = reLU('relu1', fc_drop)
-    y_logits, WSoft = buildSoftMax('softmax1', relu, n_fc, classes)
+    y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
     return y_logits

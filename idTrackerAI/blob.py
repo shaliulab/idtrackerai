@@ -439,7 +439,10 @@ class Blob(object):
             if assigned_during_accumulation:
                 current.update_blob_assigned_during_accumulation()
 
-        if len(getattr(current,direction)) == 1 and len(getattr(getattr(current,direction)[0],opposite_direction)) == 1 and getattr(current,direction)[0].is_a_fish:
+        # if len(getattr(current,direction)) == 1 and \
+        #     len(getattr(getattr(current,direction)[0],opposite_direction)) == 1\
+        #     and getattr(current,direction)[0].is_a_fish:
+        if current.fragment_identifier == getattr(current,direction)[0].fragment_identifier:
             current = getattr(current,direction)[0]
             current.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved, P1_vector, frequencies_in_fragment)
             if assigned_during_accumulation:

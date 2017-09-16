@@ -91,7 +91,7 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
     # Get best checkpoint
     net.restore_index = np.argmin(store_validation_accuracy_and_loss_data.loss)
     logger.debug("next restore index: %s" %str(net.restore_index))
-    logger.debug("corresponding loss value %f" %store_training_accuracy_and_loss_data.loss[net.restore_index])
+    logger.debug("corresponding loss value %f" %store_validation_accuracy_and_loss_data.loss[net.restore_index])
     # Save network model
     net.save()
     if plot_flag:
