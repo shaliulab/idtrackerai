@@ -7,6 +7,8 @@
 !*.kv
 !*.js
 !*.html
+!*.sh
+!./idTrackerAI/utils/loadingIdDeep.png
 
 #except gitignore
 !*.gitignore
