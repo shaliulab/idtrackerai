@@ -306,17 +306,19 @@ class Blob(object):
         if self.is_a_fish_in_a_fragment:
             current = self
 
-            while current.next[0].is_a_fish_in_a_fragment:
+            # while current.next[0].is_a_fish_in_a_fragment:
+            while len(current.next) > 0 and current.next[0].fragment_identifier == self.fragment_identifier:
                 current = current.next[0]
                 coexisting_blobs, fragment_identifiers_of_coexisting_fragments = self.get_coexisting_blobs(current, blobs_in_video, fragment_identifiers_of_coexisting_fragments, coexisting_blobs)
 
             current = self
 
-            while current.previous[0].is_a_fish_in_a_fragment:
+            # while current.previous[0].is_a_fish_in_a_fragment:
+            while len(current.previous) > 0 and current.previous[0].fragment_identifier == self.fragment_identifier:
                 current = current.previous[0]
                 coexisting_blobs, fragment_identifiers_of_coexisting_fragments = self.get_coexisting_blobs(current, blobs_in_video, fragment_identifiers_of_coexisting_fragments, coexisting_blobs)
 
-        return coexisting_blobs
+        return coexisting_blobs, fragment_identifiers_of_coexisting_fragments
 
     def get_P1_vectors_coexisting_fragments(self, blobs_in_video):
         P1_vectors = []
@@ -439,7 +441,10 @@ class Blob(object):
             if assigned_during_accumulation:
                 current.update_blob_assigned_during_accumulation()
 
-        if len(getattr(current,direction)) == 1 and len(getattr(getattr(current,direction)[0],opposite_direction)) == 1 and getattr(current,direction)[0].is_a_fish:
+        # if len(getattr(current,direction)) == 1 and \
+        #     len(getattr(getattr(current,direction)[0],opposite_direction)) == 1\
+        #     and getattr(current,direction)[0].is_a_fish:
+        if current.fragment_identifier == getattr(current,direction)[0].fragment_identifier:
             current = getattr(current,direction)[0]
             current.set_identity_blob_in_fragment(identity_in_fragment, duplication_solved, P1_vector, frequencies_in_fragment)
             if assigned_during_accumulation:

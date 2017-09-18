@@ -2,9 +2,11 @@ from __future__ import absolute_import, division, print_function
 import os
 import sys
 sys.path.append('./network')
+sys.path.append('./network/identification_model')
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import numpy as np
 import logging
 
 from network_params import NetworkParams
@@ -16,7 +18,21 @@ from store_accuracy_and_loss import Store_Accuracy_and_Loss
 
 logger = logging.getLogger("__main__.trainer")
 
-def train(video, blobs_in_video, global_fragments, net, images, labels, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag, global_step = 0, first_accumulation_flag = False, preprocessing_type = None, knowledge_transfer_from_same_animals = False):
+def train(video,
+            blobs_in_video,
+            global_fragments,
+            net,
+            images,
+            labels,
+            store_accuracy_and_error,
+            check_for_loss_plateau,
+            save_summaries,
+            print_flag,
+            plot_flag,
+            global_step = 0,
+            first_accumulation_flag = False,
+            preprocessing_type = None,
+            knowledge_transfer_from_same_animals = False):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
     if preprocessing_type is None:
@@ -33,8 +49,8 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
     # Instantiate data_set
     training_dataset, validation_dataset = split_data_train_and_validation(preprocessing_type, net.params.number_of_animals, images, labels)
     # Crop images from 36x36 to 32x32 without performing data augmentation
-    training_dataset.crop_images(image_size = video.portrait_size[0])
-    validation_dataset.crop_images(image_size = video.portrait_size[0])
+    training_dataset.crop_images(image_size = net.params.image_size[0])
+    validation_dataset.crop_images(image_size = net.params.image_size[0])
     # Standarize images
     # training_dataset.standarize_images()
     # validation_dataset.standarize_images()
@@ -87,6 +103,10 @@ def train(video, blobs_in_video, global_fragments, net, images, labels, store_ac
     if store_accuracy_and_error:
         store_training_accuracy_and_loss_data.save()
         store_validation_accuracy_and_loss_data.save()
+    # Get best checkpoint
+    net.restore_index = np.argmin(store_validation_accuracy_and_loss_data.loss)
+    logger.debug("next restore index: %s" %str(net.restore_index))
+    logger.debug("corresponding loss value %f" %store_validation_accuracy_and_loss_data.loss[net.restore_index])
     # Save network model
     net.save()
     if plot_flag:

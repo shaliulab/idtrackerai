@@ -72,8 +72,12 @@ class Duplication(object):
             blobs_accumulated_and_duplicated = [blob for blob in self.blobs_in_frame
                         if blob.identity == identity and blob._assigned_during_accumulation
                         and blob._identity_corrected_solving_duplication is None]
-            logging.error("Duplication in accumulated individual fragments")
-            raise ValueError("Duplication in accumulated individual fragments")
+            if len(blobs_accumulated_and_duplicated) > 0:
+                print([blob.frame_number for blob in blobs_accumulated_and_duplicated])
+                logging.error("Duplication in accumulated individual fragments")
+                raise ValueError("Duplication in accumulated individual fragments")
+            else:
+                raise ValueError("condition not considered")
 
     @staticmethod
     def get_P2_matrix(blobs_list):

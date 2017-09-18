@@ -194,15 +194,17 @@ def get_frequencies_P1_for_jump(video, blob):
     if not np.any(blob._P1_vector != 0):
         blob._frequencies_in_fragment = np.zeros(video.number_of_animals)
         blob._frequencies_in_fragment[blob.prediction-1] += 1
-        if blob.is_a_jumping_fragment and len(blob.next) != 0:
-            # print("next", blob.next)
-            # print("previous ", blob.previous)
-            # print("next is jumping fragment", blob.next[0].is_a_jumping_fragment)
-            # print("cur blob identity", blob.identity)
-            # print(len(blob.next))
-            # print(len(blob.next[0].next))
-            # print(len(blob.next[0].previous))
-            # print(len(blob.previous))
+        if blob.is_a_jumping_fragment and len(blob.next) != 0 and blob.next[0].is_a_jumping_fragment:
+            print("next", blob.next)
+            print("previous ", blob.previous)
+            print("next is jumping fragment", blob.next[0].is_a_jumping_fragment)
+            print("cur blob identity", blob.identity)
+            print(len(blob.next))
+            print(len(blob.next[0].next))
+            print(len(blob.next[0].previous))
+            print(len(blob.previous))
+            # from pprint import pprint
+            # pprint(blob.__dict__)
             blob._frequencies_in_fragment[blob.next[0].prediction-1] += 1
             blob._P1_vector = compute_P1_individual_fragment_from_frequencies(blob._frequencies_in_fragment)
             blob.next[0]._frequencies_in_fragment = blob._frequencies_in_fragment
