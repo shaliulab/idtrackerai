@@ -5,7 +5,17 @@ import tensorflow as tf
 import numpy as np
 import logging
 
-from cnn_architectures import cnn_model_0, cnn_model_1, cnn_model_2, cnn_model_3, cnn_model_4, cnn_model_5
+from cnn_architectures import cnn_model_0, \
+                                cnn_model_1, \
+                                cnn_model_2, \
+                                cnn_model_3, \
+                                cnn_model_4, \
+                                cnn_model_5, \
+                                cnn_model_6, \
+                                cnn_model_7, \
+                                cnn_model_8, \
+                                cnn_model_9, \
+                                cnn_model_10
 
 
 CNN_MODELS_DICT = {0: cnn_model_0,
@@ -13,7 +23,12 @@ CNN_MODELS_DICT = {0: cnn_model_0,
                     2: cnn_model_2,
                     3: cnn_model_3,
                     4: cnn_model_4,
-                    5: cnn_model_5}
+                    5: cnn_model_5,
+                    6: cnn_model_6,
+                    7: cnn_model_7,
+                    8: cnn_model_8,
+                    9: cnn_model_9,
+                    10: cnn_model_10}
 logger = logging.getLogger("__main__.id_CNN")
 
 class ConvNetwork():

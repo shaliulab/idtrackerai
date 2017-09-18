@@ -24,7 +24,8 @@ class Stop_Training(object):
         #check that the model did not diverged (nan loss).
 
         if epochs_completed > 0 and np.isnan(loss_accuracy_training.loss[-1]):
-            raise ValueError("The model diverged.")
+            print('loss, ', loss_accuracy_training.loss)
+            print("*********************** The model diverged.")
             return True
         #check if it did not reached the epochs limit
         if epochs_completed > self.num_epochs-1:
