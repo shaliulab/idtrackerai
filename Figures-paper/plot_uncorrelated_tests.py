@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function
 import os
 import sys
-sys.path.append('../')
-sys.path.append('./utils')
+sys.path.append('../idTrackerAI/')
+sys.path.append('../idTrackerAI/utils')
 
 import numpy as np
 import collections
@@ -60,16 +60,16 @@ def get_repetition_averaged_data_frame(results_data_frame):
 if __name__ == '__main__':
 
     ### load global results data frame
-    if os.path.isfile('./library/results_data_frame.pkl'):
+    if os.path.isfile('../idTrackerAI/library/results_data_frame.pkl'):
         print("loading results_data_frame.pkl...")
-        results_data_frame = pd.read_pickle('./library/results_data_frame_0.pkl')
+        results_data_frame = pd.read_pickle('../idTrackerAI/library/results_data_frame_0.pkl')
         print("results_data_frame.pkl loaded \n")
     else:
         print("results_data_frame.pkl does not exist \n")
 
     # get tests_data_frame and test to plot
     print("loading tests data frame")
-    tests_data_frame = pd.read_pickle('./library/tests_data_frame.pkl')
+    tests_data_frame = pd.read_pickle('../idTrackerAI/library/tests_data_frame.pkl')
     test_names = [test_name for test_name in results_data_frame['test_name'].unique() if 'uncorrelated' in test_name]
     print("test_names: ", test_names)
     cnn_model_names_dict = {0: 'our network',
