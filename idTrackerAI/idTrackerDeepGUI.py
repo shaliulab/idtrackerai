@@ -509,7 +509,7 @@ if __name__ == '__main__':
                         knowledge_transfer_from_same_animals = True
                 #instantiate accumulation manager
                 logger.info("Initialising accumulation manager")
-                accumulation_manager = AccumulationManager(global_fragments, video.number_of_animals)
+                accumulation_manager = AccumulationManager(blobs, global_fragments, video.number_of_animals)
                 #set global epoch counter to 0
                 logger.info("Start accumulation")
                 number_of_unique_images_in_global_fragments = give_me_number_of_unique_images_in_global_fragments(global_fragments)
@@ -552,7 +552,7 @@ if __name__ == '__main__':
                     accumulation_manager.update_used_images_and_labels()
                     # assign identities fo the global fragments that have been used for training
                     logger.info("Assigning identities to accumulated global fragments")
-                    accumulation_manager.assign_identities_to_accumulated_global_fragments(blobs)
+                    accumulation_manager.assign_identities_to_accumulated_global_fragments()
                     # update the list of individual fragments that have been used for training
                     logger.info("Update individual fragments used for training")
                     accumulation_manager.update_individual_fragments_used()

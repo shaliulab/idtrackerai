@@ -22,7 +22,7 @@ CERTAINTY_THRESHOLD = .1 # threshold to select a individual fragment as eligible
 logger = logging.getLogger("__main__.accumulation_manager")
 
 class AccumulationManager(object):
-    def __init__(self,global_fragments, number_of_animals, certainty_threshold = CERTAINTY_THRESHOLD):
+    def __init__(self, blobs_in_video, global_fragments, number_of_animals, certainty_threshold = CERTAINTY_THRESHOLD):
         """ This class manages the selection of global fragments for accumulation,
         the retrieval of images from the new global fragments, the selection of
         of images for training, the final assignment of identities to the global fragments
@@ -36,6 +36,7 @@ class AccumulationManager(object):
         """
         self.number_of_animals = number_of_animals
         self.global_fragments = global_fragments
+        self.blobs_in_video = blobs_in_video
         self.counter = 0
         self.certainty_threshold = certainty_threshold
         self.individual_fragments_used = [] # list with the individual_fragments_identifiers of the individual fragments used for training
@@ -158,7 +159,7 @@ class AccumulationManager(object):
             self.used_labels = np.concatenate([self.used_labels, self.new_labels], axis = 0)
         logger.info("number of images used for training: %s %s" %(str(self.used_images.shape), str(self.used_labels.shape)))
 
-    def assign_identities_to_accumulated_global_fragments(self, blobs_in_video):
+    def assign_identities_to_accumulated_global_fragments(self):
         """ assign the identities to the global fragments used for training and
         to the blobs that belong to these global fragments. This function checks
         that the identities of the individual fragments in the global fragment
@@ -169,10 +170,10 @@ class AccumulationManager(object):
             self.check_consistency_of_assignment(global_fragment)
             global_fragment._ids_assigned = np.asarray(global_fragment._temporary_ids) + 1
             [blob.update_identity_in_fragment(identity_in_fragment, assigned_during_accumulation = True, number_of_images_in_fragment = number_of_images_in_fragment)
-                for blob, identity_in_fragment, number_of_images_in_fragment in zip(blobs_in_video[global_fragment.index_beginning_of_fragment],
+                for blob, identity_in_fragment, number_of_images_in_fragment in zip(self.blobs_in_video[global_fragment.index_beginning_of_fragment],
                                                         global_fragment._ids_assigned,
                                                         global_fragment._number_of_portraits_per_individual_fragment)]
-            global_fragment._P1_vector = [blob._P1_vector for blob in blobs_in_video[global_fragment.index_beginning_of_fragment]]
+            global_fragment._P1_vector = [blob._P1_vector for blob in self.blobs_in_video[global_fragment.index_beginning_of_fragment]]
 
     def check_consistency_of_assignment(self,global_fragment):
         """ this function checks that the identities of the individual fragments in the global
@@ -353,24 +354,54 @@ class AccumulationManager(object):
                             self.temporary_individual_fragments_used.append(individual_fragment_identifier)
                             self.temporary_identities_of_individual_fragments_used.append(temporary_identity)
 
+    # def check_consistency_with_coexistent_individual_fragments(self, global_fragment, index_individual_fragment, temporary_identity):
+    #     individual_fragment_identifier = global_fragment.individual_fragments_identifiers[index_individual_fragment]
+    #
+    #     for other_global_fragment in self.global_fragments:
+    #         if individual_fragment_identifier in other_global_fragment.individual_fragments_identifiers:
+    #
+    #             for other_individual_fragment_identifier in other_global_fragment.individual_fragments_identifiers:
+    #
+    #                 if other_individual_fragment_identifier in self.individual_fragments_used:
+    #                     index = list(self.individual_fragments_used).index(other_individual_fragment_identifier)
+    #                     identity = int(self.identities_of_individual_fragments_used[index])
+    #                     if identity == temporary_identity:
+    #                         return False
+    #                 elif other_individual_fragment_identifier in self.temporary_individual_fragments_used:
+    #                     index = list(self.temporary_individual_fragments_used).index(other_individual_fragment_identifier)
+    #                     identity = int(self.temporary_identities_of_individual_fragments_used[index])
+    #                     if identity == temporary_identity:
+    #                         return False
+    #     return True
+
+    def get_blob_from_global_fragment_and_individual_fragment_identifier(self, global_fragment, individual_fragment_identifier):
+        frame_number = global_fragment.index_beginning_of_fragment
+        blobs_in_frame = self.blobs_in_video[frame_number]
+        return [blob for blob in blobs_in_frame if blob.fragment_identifier == individual_fragment_identifier][0]
+
+
     def check_consistency_with_coexistent_individual_fragments(self, global_fragment, index_individual_fragment, temporary_identity):
         individual_fragment_identifier = global_fragment.individual_fragments_identifiers[index_individual_fragment]
+        if individual_fragment_identifier == 7469 or individual_fragment_identifier == 7496:
+            logger.debug("******************** individual_fragment_identifier: %s, temp_id: %s " %(str(individual_fragment_identifier), str(temporary_identity)))
+        blob_to_check = self.get_blob_from_global_fragment_and_individual_fragment_identifier(global_fragment,individual_fragment_identifier)
+        _, fragment_identifiers_of_coexisting_fragments = blob_to_check.get_coexisting_blobs_in_fragment(self.blobs_in_video)
 
-        for other_global_fragment in self.global_fragments:
-            if individual_fragment_identifier in other_global_fragment.individual_fragments_identifiers:
-
-                for other_individual_fragment_identifier in other_global_fragment.individual_fragments_identifiers:
-
-                    if other_individual_fragment_identifier in self.individual_fragments_used:
-                        index = list(self.individual_fragments_used).index(other_individual_fragment_identifier)
-                        identity = int(self.identities_of_individual_fragments_used[index])
-                        if identity == temporary_identity:
-                            return False
-                    elif other_individual_fragment_identifier in self.temporary_individual_fragments_used:
-                        index = list(self.temporary_individual_fragments_used).index(other_individual_fragment_identifier)
-                        identity = int(self.temporary_identities_of_individual_fragments_used[index])
-                        if identity == temporary_identity:
-                            return False
+        for fragment_identifier in fragment_identifiers_of_coexisting_fragments:
+            if fragment_identifier in self.individual_fragments_used:
+                index = list(self.individual_fragments_used).index(fragment_identifier)
+                identity = int(self.identities_of_individual_fragments_used[index])
+                if identity == temporary_identity:
+                    if individual_fragment_identifier == 7469 or individual_fragment_identifier == 7496:
+                        logger.debug("No consistent")
+                    return False
+            elif fragment_identifier in self.temporary_individual_fragments_used:
+                index = list(self.temporary_individual_fragments_used).index(fragment_identifier)
+                identity = int(self.temporary_identities_of_individual_fragments_used[index])
+                if identity == temporary_identity:
+                    if individual_fragment_identifier == 7469 or individual_fragment_identifier == 7496:
+                        logger.debug("No consistent")
+                    return False
         return True
 
 def sample_images_and_labels(images, labels, ratio):

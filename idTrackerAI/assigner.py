@@ -157,7 +157,7 @@ def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
         list_of_blobs.remove(blob)
         assert blob not in list_of_blobs
         logger.info("step %i of %i" %(len(list_of_blobs), len_first_list_of_blobs))
-        coexisting_blobs = blob.get_coexisting_blobs_in_fragment(blobs_in_video)
+        coexisting_blobs, _ = blob.get_coexisting_blobs_in_fragment(blobs_in_video)
         if np.max(blob._P2_vector) < FIXED_IDENTITY_THRESHOLD:
             for blob_to_assign in tqdm(coexisting_blobs, desc = "Updating P2 of coexisting blobs"):
                 if np.max(blob_to_assign._P2_vector) < FIXED_IDENTITY_THRESHOLD:
