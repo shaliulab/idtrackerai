@@ -4,15 +4,15 @@ import numpy as np
 import tensorflow as tf
 import os
 import logging
-from tf_cnnvis import *
 import sys
 sys.path.append('./utils')
 sys.path.append('./network')
 sys.path.append('./network/identification_model')
-sys.path.append('./tf_cnnvis')
+sys.path.append('./tf_cnnvisualisation')
 
 from video import Video
 from globalfragment import GlobalFragment
+from tf_cnnvis import *
 
 logger = logging.getLogger("__main__.visualise_cnn")
 

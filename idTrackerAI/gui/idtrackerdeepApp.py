@@ -45,7 +45,7 @@ from video_utils import computeBkg, blobExtractor
 from segmentation import segmentVideo
 from blob import ListOfBlobs
 from globalfragment import order_global_fragments_by_distance_travelled
-# from validator import Validator
+
 """
 Start kivy classes
 """
@@ -56,7 +56,7 @@ class Chosen_Video(EventDispatcher):
         super(Chosen_Video,self).__init__(**kwargs)
         self.chosen = 'Default String'
         self.video = Video()
-        self.bind(chosen=self.on_modified)
+        self.bind(chosen=self.choose_session)
 
     def set_chosen_item(self, chosen_string):
         self.chosen = chosen_string
@@ -64,7 +64,7 @@ class Chosen_Video(EventDispatcher):
     def set_session_popup(self):
         self.popup_container = BoxLayout()
         self.session_box = BoxLayout(orientation="vertical")
-        self.session_label = Label(text='Choose a preprocessing type (portraits, blob, body_blob):\n')
+        self.session_label = Label(text='Create a new session, or choose an existing one.\n')
         self.session_label.text_size = self.session_label.size
         self.session_label.texture_size = self.session_label.size
         self.session_box.add_widget(self.session_label)
@@ -72,7 +72,7 @@ class Chosen_Video(EventDispatcher):
         self.session_box.add_widget(self.session_input)
         self.popup_container.add_widget(self.session_box)
 
-        self.popup_session = Popup(title='Choose a session to ',
+        self.popup_session = Popup(title='Choose a session',
                     content=self.popup_container,
                     size_hint=(.4,.4))
 
@@ -111,12 +111,9 @@ class Chosen_Video(EventDispatcher):
 
         if self.old_video._has_been_assigned: self.video._has_been_assigned
         if hasattr(self.old_video, 'resolution_reduction'):
-            print("--------------------------------------------------------")
             self.video.resolution_reduction = self.old_video.resolution_reduction
             self.video.bkg = self.old_video.bkg
             self.video.ROI = self.old_video.ROI
-
-            print(self.video.resolution_reduction, self.video.ROI.shape)
             if self.video.ROI.shape[0] != self.video._height * self.video.resolution_reduction:
                 self.video.ROI = cv2.resize(self.video.ROI, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
             if self.video.bkg is not None and self.video.bkg.shape[0] != self.video._height * self.video.resolution_reduction:
@@ -132,21 +129,36 @@ class Chosen_Video(EventDispatcher):
                 CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
             self.enable_ROI_and_preprocessing_tabs = True
 
-    def on_modified(self, instance, value):
-        print("Chosen item in ", instance, " was modified to :",value)
+    def choose_session(self, instance, value):
         try:
-            print("you choose ----------->", value)
             self.video.video_path = value
+            self.set_session_popup()
+            self.session_input.bind(on_text_validate = self.on_enter_session)
+            self.popup_session.open()
             # new_name_session_folder = raw_input('Session name: ')
             processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
             #get existent files and paths to load them
             self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
-            self.session_input.bind(on_text_validate = self.on_enter)
-            self.popup_session.open()
 
         except Exception,e:
             print(str(e))
             print("Choose a video to proceed")
+
+    # def on_modified(self, instance, value):
+    #     print("Chosen item in ", instance, " was modified to :",value)
+    #     try:
+    #         print("you choose ----------->", value)
+    #         self.video.video_path = value
+    #         # new_name_session_folder = raw_input('Session name: ')
+    #         processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
+    #         #get existent files and paths to load them
+    #         self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
+    #         self.session_input.bind(on_text_validate = self.on_enter)
+    #         self.popup_session.open()
+    #
+    #     except Exception,e:
+    #         print(str(e))
+    #         print("Choose a video to proceed")
 
 class SelectFile(BoxLayout):
     def __init__(self,**kwargs):
