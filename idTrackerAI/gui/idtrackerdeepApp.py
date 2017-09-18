@@ -1038,9 +1038,9 @@ class Validator(BoxLayout):
                 self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
-            print("\nidentity: ", blob._identity)
-            if hasattr(blob, "_identity_corrected_solving_duplication"):
-                print("corrected identity in duplications: ", blob._identity_corrected_solving_duplication)
+            # print("\nidentity: ", blob._identity)
+            # if hasattr(blob, "_identity_corrected_solving_duplication"):
+            #     print("corrected identity in duplications: ", blob._identity_corrected_solving_duplication)
         #     if hasattr(blob,"fragment_identifier"):
         #         print("fragment_identifier: ", blob.fragment_identifier)
         #     else:
@@ -1055,7 +1055,7 @@ class Validator(BoxLayout):
         #     else:
         #         print("this blob does not have frequencies in fragment")
         #     print("P1_vector: ", blob.P1_vector)
-            print("P2_vector: ", blob.P2_vector)
+            # print("P2_vector: ", blob.P2_vector)
         #     print("is_a_fish: ", blob.is_a_fish)
         #     print("is_in_a_fragment: ", blob.is_in_a_fragment)
         #     print("is_a_fish_in_a_fragment: ", blob.is_a_fish_in_a_fragment)
