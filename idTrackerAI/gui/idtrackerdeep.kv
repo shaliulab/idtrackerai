@@ -16,32 +16,32 @@
                     size_hint: 1.,1.
                     path: './'
                     on_selection: select_file.open(filechooser.path,filechooser.selection)
-                    on_selection: select_file.enable_validation(filechooser.path,filechooser.selection)
-        TabbedPanelItem:
-            id: tab2
-            text:"ROI selection"
-            disabled: select_file.open(filechooser.path,filechooser.selection)
-            ROISelector:
-                id:roi_selector
-        TabbedPanelItem:
-            id:tab4
-            text: "Preprocessing"
-            disabled: select_file.open(filechooser.path,filechooser.selection)
-            PreprocessingPreview:
-                id:preprocessing_preview
-        TabbedPanelItem:
-            id: tab5
-            text:"Pre-training"
-            disabled: True
-        TabbedPanelItem:
-            id: tab6
-            text:"Accumulation"
-            disabled: True
-            Accumulator
-                id: accumulator
-        TabbedPanelItem:
-            id: tab7
-            text:"Validation"
-            disabled: select_file.enable_validation(filechooser.path,filechooser.selection)
-            Validator:
-                id: validator
+                    # on_selection: select_file.enable_validation(filechooser.path,filechooser.selection)
+        # TabbedPanelItem:
+        #     id: tab2
+        #     text:"ROI selection"
+        #     disabled: select_file.open(filechooser.path,filechooser.selection)
+        #     ROISelector:
+        #         id:roi_selector
+        # TabbedPanelItem:
+        #     id:tab4
+        #     text: "Preprocessing"
+        #     disabled: select_file.open(filechooser.path,filechooser.selection)
+        #     PreprocessingPreview:
+        #         id:preprocessing_preview
+        # TabbedPanelItem:
+        #     id: tab5
+        #     text:"Pre-training"
+        #     disabled: True
+        # TabbedPanelItem:
+        #     id: tab6
+        #     text:"Accumulation"
+        #     disabled: True
+        #     Accumulator
+        #         id: accumulator
+        # TabbedPanelItem:
+        #     id: tab7
+        #     text:"Validation"
+        #     disabled: select_file.enable_validation(filechooser.path,filechooser.selection)
+        #     Validator:
+        #         id: validator
