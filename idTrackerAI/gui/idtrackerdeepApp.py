@@ -45,7 +45,7 @@ from video_utils import computeBkg, blobExtractor
 from segmentation import segmentVideo
 from blob import ListOfBlobs
 from globalfragment import order_global_fragments_by_distance_travelled
-
+# from validator import Validator
 """
 Start kivy classes
 """
@@ -56,109 +56,50 @@ class Chosen_Video(EventDispatcher):
         super(Chosen_Video,self).__init__(**kwargs)
         self.chosen = 'Default String'
         self.video = Video()
-        self.bind(chosen=self.choose_session)
+        self.bind(chosen=self.on_modified)
 
     def set_chosen_item(self, chosen_string):
         self.chosen = chosen_string
 
-    def set_session_popup(self):
-        self.popup_container = BoxLayout()
-        self.session_box = BoxLayout(orientation="vertical")
-        self.session_label = Label(text='Create a new session, or choose an existing one.\n')
-        self.session_label.text_size = self.session_label.size
-        self.session_label.texture_size = self.session_label.size
-        self.session_box.add_widget(self.session_label)
-        self.session_input = TextInput(text ='', multiline=False)
-        self.session_box.add_widget(self.session_input)
-        self.popup_container.add_widget(self.session_box)
-
-        self.popup_session = Popup(title='Choose a session',
-                    content=self.popup_container,
-                    size_hint=(.4,.4))
-
-    def create_preprocessing_type_and_number_popup(self):
-        self.popup_container = BoxLayout()
-        self.preprocessing_type_box = BoxLayout(orientation="vertical")
-        self.preprocessing_type_label = Label(text='Choose a preprocessing tye (portraits, blob, body_blob):\n')
-        self.preprocessing_type_label.text_size = self.preprocessing_type_label.size
-        self.preprocessing_type_label.texture_size = self.preprocessing_type_label.size
-        self.preprocessing_type_box.add_widget(self.preprocessing_type_label)
-        self.preprocessing_type_input = TextInput(text ='', multiline=False)
-        self.preprocessing_type_box.add_widget(self.preprocessing_type_input)
-        self.popup_container.add_widget(self.preprocessing_type_box)
-
-        self.animal_number_box = BoxLayout(orientation="vertical")
-        self.animal_number_label = Label(text='How many animals are you going to track:\n')
-        self.animal_number_label.text_size = self.animal_number_label.size
-        self.animal_number_label.texture_size = self.animal_number_label.size
-        self.animal_number_box.add_widget(self.animal_number_label)
-        self.animal_number_input = TextInput(text ='', multiline=False)
-        self.animal_number_box.add_widget(self.animal_number_input)
-        self.popup_container.add_widget(self.animal_number_box)
-        self.popup = Popup(title='Animal model and number of animals',
-                    content=self.popup_container,
-                    size_hint=(.4,.4))
-
-    def on_enter_number_of_animals_and_preprocessing(self,value):
-        CHOSEN_VIDEO.video._preprocessing_type = self.preprocessing_type_input.text
-        CHOSEN_VIDEO.video._number_of_animals = int(self.animal_number_input.text)
-        self.popup.dismiss()
-
-    def on_enter_session(self,value):
-        self.new_name_session_folder = value
-        self.popup.dismiss()
-        self.video.create_session_folder(name = self.new_name_session_folder)
-
-        if self.old_video._has_been_assigned: self.video._has_been_assigned
-        if hasattr(self.old_video, 'resolution_reduction'):
-            self.video.resolution_reduction = self.old_video.resolution_reduction
-            self.video.bkg = self.old_video.bkg
-            self.video.ROI = self.old_video.ROI
-            if self.video.ROI.shape[0] != self.video._height * self.video.resolution_reduction:
-                self.video.ROI = cv2.resize(self.video.ROI, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
-            if self.video.bkg is not None and self.video.bkg.shape[0] != self.video._height * self.video.resolution_reduction:
-                self.video.bkg = cv2.resize(self.video.bkg, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
-        if CHOSEN_VIDEO.video.video_path is not None:
-            if CHOSEN_VIDEO.old_video.preprocessing_type is None or CHOSEN_VIDEO.old_video.number_of_animals is None:
-                self.create_preprocessing_type_and_number_popup()
-                self.preprocessing_type_input.bind(on_text_validate = self.on_enter_number_of_animals_and_preprocessing)
-                self.animal_number_input.bind(on_text_validate = self.on_enter_number_of_animals_and_preprocessing)
-                self.popup.open()
-            else:
-                CHOSEN_VIDEO.video._preprocessing_type = CHOSEN_VIDEO.old_video.preprocessing_type
-                CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
-            self.enable_ROI_and_preprocessing_tabs = True
-
-    def choose_session(self, instance, value):
+    def on_modified(self, instance, value):
+        print("Chosen item in ", instance, " was modified to :",value)
         try:
+            print("you choose ----------->", value)
             self.video.video_path = value
-            self.set_session_popup()
-            self.session_input.bind(on_text_validate = self.on_enter_session)
-            self.popup_session.open()
-            # new_name_session_folder = raw_input('Session name: ')
+            new_name_session_folder = raw_input('Session name: ')
+            self.video.create_session_folder(name = new_name_session_folder)
             processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
             #get existent files and paths to load them
             self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
+            if self.old_video._has_been_assigned: self.video._has_been_assigned
+            if hasattr(self.old_video, 'resolution_reduction'):
+                print("--------------------------------------------------------")
+                self.video.resolution_reduction = self.old_video.resolution_reduction
+                self.video.bkg = self.old_video.bkg
+                self.video.ROI = self.old_video.ROI
 
+                print(self.video.resolution_reduction, self.video.ROI.shape)
+                if self.video.ROI.shape[0] != self.video._height * self.video.resolution_reduction:
+                    print("resizing ROI")
+                    self.video.ROI = cv2.resize(self.video.ROI, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+
+                    print("***********************resized ROI shape ", self.video.ROI.shape)
+                if self.video.bkg is not None and self.video.bkg.shape[0] != self.video._height * self.video.resolution_reduction:
+                    print("resizing BKG")
+                    self.video.bkg = cv2.resize(self.video.bkg, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+            if CHOSEN_VIDEO.video.video_path is not None:
+                if CHOSEN_VIDEO.old_video.preprocessing_type is None or CHOSEN_VIDEO.old_video.number_of_animals is None:
+                    self.create_preprocessing_type_and_number_popup()
+                    self.preprocessing_type_input.bind(on_text_validate = self.on_enter)
+                    self.animal_number_input.bind(on_text_validate = self.on_enter)
+                    self.popup.open()
+                else:
+                    CHOSEN_VIDEO.video._preprocessing_type = CHOSEN_VIDEO.old_video.preprocessing_type
+                    CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
+                self.enable_ROI_and_preprocessing_tabs = True
         except Exception,e:
             print(str(e))
             print("Choose a video to proceed")
-
-    # def on_modified(self, instance, value):
-    #     print("Chosen item in ", instance, " was modified to :",value)
-    #     try:
-    #         print("you choose ----------->", value)
-    #         self.video.video_path = value
-    #         # new_name_session_folder = raw_input('Session name: ')
-    #         processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
-    #         #get existent files and paths to load them
-    #         self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
-    #         self.session_input.bind(on_text_validate = self.on_enter)
-    #         self.popup_session.open()
-    #
-    #     except Exception,e:
-    #         print(str(e))
-    #         print("Choose a video to proceed")
 
 class SelectFile(BoxLayout):
     def __init__(self,**kwargs):
@@ -183,8 +124,14 @@ class SelectFile(BoxLayout):
     global CHOSEN_VIDEO
     CHOSEN_VIDEO = Chosen_Video()
 
+    def on_enter(self,value):
+        CHOSEN_VIDEO.video._preprocessing_type = self.preprocessing_type_input.text
+        CHOSEN_VIDEO.video._number_of_animals = int(self.animal_number_input.text)
+        self.popup.dismiss()
 
     def open(self, path, filename):
+        print("opening video file")
+        print("filename  ", filename)
         if len(filename) > 0:
             CHOSEN_VIDEO.set_chosen_item(filename[0])
 
@@ -198,7 +145,28 @@ class SelectFile(BoxLayout):
                 self.old_video = CHOSEN_VIDEO.old_video
         return not (hasattr(self.video, '_has_been_assigned') or hasattr(self.old_video, "_has_been_assigned"))
 
+    def create_preprocessing_type_and_number_popup(self):
+        self.popup_container = BoxLayout()
+        self.preprocessing_type_box = BoxLayout(orientation="vertical")
+        self.preprocessing_type_label = Label(text='What animal are you tracking? [fish/flies]:\n')
+        self.preprocessing_type_label.text_size = self.preprocessing_type_label.size
+        self.preprocessing_type_label.texture_size = self.preprocessing_type_label.size
+        self.preprocessing_type_box.add_widget(self.preprocessing_type_label)
+        self.preprocessing_type_input = TextInput(text ='', multiline=False)
+        self.preprocessing_type_box.add_widget(self.preprocessing_type_input)
+        self.popup_container.add_widget(self.preprocessing_type_box)
 
+        self.animal_number_box = BoxLayout(orientation="vertical")
+        self.animal_number_label = Label(text='How many animals are you going to track:\n')
+        self.animal_number_label.text_size = self.animal_number_label.size
+        self.animal_number_label.texture_size = self.animal_number_label.size
+        self.animal_number_box.add_widget(self.animal_number_label)
+        self.animal_number_input = TextInput(text ='', multiline=False)
+        self.animal_number_box.add_widget(self.animal_number_input)
+        self.popup_container.add_widget(self.animal_number_box)
+        self.popup = Popup(title='Animal model and number of animals',
+                    content=self.popup_container,
+                    size_hint=(.4,.4))
 
 class VisualiseVideo(BoxLayout):
     def __init__(self, **kwargs):
@@ -771,7 +739,13 @@ class Validator(BoxLayout):
         super(Validator, self).__init__(**kwargs)
         global CHOSEN_VIDEO
         CHOSEN_VIDEO.bind(chosen=self.do)
-
+        #it should not happen, but a warning just in case
+        self.warning_popup = Popup(title = 'Warning',
+                            content = Label(text = 'The video has not been tracked yet. Track it before performing validation.'),
+                            size_hint = (.3,.3))
+        self.warning_popup.bind(size=lambda s, w: s.setter('text_size')(s, w))
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
     def show_saving(self, *args):
         self.popup_saving = Popup(title='Saving',
             content=Label(text='wait ...'),
@@ -793,9 +767,7 @@ class Validator(BoxLayout):
             return CHOSEN_VIDEO.video.first_frame_for_validation
 
     def do(self, *args):
-        if hasattr(CHOSEN_VIDEO.video, "video_path") and \
-            CHOSEN_VIDEO.video.video_path is not None and \
-            CHOSEN_VIDEO.video._has_been_assigned == True:
+        if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
             # print("has been assigned ", CHOSEN_VIDEO.video._has_been_assigned)
             if CHOSEN_VIDEO.video._has_been_assigned == True:
                 list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_path)
@@ -810,8 +782,8 @@ class Validator(BoxLayout):
             #init elements in the self widget
             self.init_segmentZero()
         else:
-            self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
-            self._keyboard.bind(on_key_down=self._on_keyboard_down)
+            # print("no assignment done")
+            self.warning_popup.open()
 
     def init_segmentZero(self):
         #create and add widget to visualise the tracked video
@@ -1391,14 +1363,14 @@ class Validator(BoxLayout):
             self.accuracy_assigned = np.mean(self.individual_accuracy_assigned.values())
             self.individual_accuracy = {i : 1 - count_errors_identities_dict_all[i] / count_number_assignment_per_individual_all[i] for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
             self.accuracy = np.mean(self.individual_accuracy.values())
-            # print("count_errors_identities_dict_assigned, ", count_errors_identities_dict_assigned)
-            # print("count_errors_identities_dict_all, ", count_errors_identities_dict_all)
-            # print("count_number_assignment_per_individual_assigned, ", count_number_assignment_per_individual_assigned)
-            # print("count_number_assignment_per_individual_all, ", count_number_assignment_per_individual_all)
-            # print("individual_accuracy_assigned, ", self.individual_accuracy_assigned)
-            # print("accuracy_assigned, ", self.accuracy_assigned)
-            # print("individual_accuracy, ", self.individual_accuracy)
-            # print("accuracy, ", self.accuracy)
+            print("count_errors_identities_dict_assigned, ", count_errors_identities_dict_assigned)
+            print("count_errors_identities_dict_all, ", count_errors_identities_dict_all)
+            print("count_number_assignment_per_individual_assigned, ", count_number_assignment_per_individual_assigned)
+            print("count_number_assignment_per_individual_all, ", count_number_assignment_per_individual_all)
+            print("individual_accuracy_assigned, ", self.individual_accuracy_assigned)
+            print("accuracy_assigned, ", self.accuracy_assigned)
+            print("individual_accuracy, ", self.individual_accuracy)
+            print("accuracy, ", self.accuracy)
 
             self.plot_final_statistics()
             self.statistics_popup.open()

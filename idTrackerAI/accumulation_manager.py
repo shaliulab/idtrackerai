@@ -26,7 +26,7 @@ class AccumulationManager(object):
         """ This class manages the selection of global fragments for accumulation,
         the retrieval of images from the new global fragments, the selection of
         of images for training, the final assignment of identities to the global fragments
-        used for training, the temporal assignment of identities to the candidates global fragments
+        used for training, the temporary assignment of identities to the candidates global fragments
         and the computation of the certainty levels of the individual fragments to check the
         eligability of the candidates global fragments for accumulation.
 
@@ -178,19 +178,19 @@ class AccumulationManager(object):
         """ this function checks that the identities of the individual fragments in the global
         fragment that is going to be assigned is consistent with the identities of the individual
         fragments that have already been used for training """
-        for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids):
+        for individual_fragment_identifier, temporary_identity in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids):
             if individual_fragment_identifier in self.individual_fragments_used:
                 index = self.individual_fragments_used.index(individual_fragment_identifier)
-                assert self.identities_of_individual_fragments_used[index] == temporal_identity
+                assert self.identities_of_individual_fragments_used[index] == temporary_identity
 
     def update_individual_fragments_used(self):
         """ Updates the list of individual fragments used in training and their identities.
         If a individual fragment was added before is not added again.
         """
         logging.info("Updating list of individual fragments used for training")
-        new_individual_fragments_identifiers_and_id = set([(individual_fragment_identifier, temporal_identity, tuple(P1_vector))
+        new_individual_fragments_identifiers_and_id = set([(individual_fragment_identifier, temporary_identity, tuple(P1_vector))
                                                 for global_fragment in self.next_global_fragments
-                                                for individual_fragment_identifier, temporal_identity, P1_vector in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids, global_fragment._P1_vector)
+                                                for individual_fragment_identifier, temporary_identity, P1_vector in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids, global_fragment._P1_vector)
                                                     if global_fragment.used_for_training and individual_fragment_identifier not in self.individual_fragments_used])
 
         new_individual_fragments_identifiers = [out[0] for out in new_individual_fragments_identifiers_and_id]
@@ -232,8 +232,8 @@ class AccumulationManager(object):
         according to the score computed from the certainty of identification and the
         minimum distance travelled"""
         self.candidate_individual_fragments_identifiers = candidate_individual_fragments_identifiers
-        self.temporal_individual_fragments_used = []
-        self.temporal_identities_of_individual_fragments_used = []
+        self.temporary_individual_fragments_used = []
+        self.temporary_identities_of_individual_fragments_used = []
         ordered_global_fragments = order_global_fragments_by_distance_to_the_first_global_fragment(self.global_fragments)
         # ordered_global_fragments = order_global_fragments_by_distance_travelled(self.global_fragments)
         self.number_of_noncertain_global_fragments = 0
@@ -307,9 +307,9 @@ class AccumulationManager(object):
                     global_fragment._temporary_ids[index_individual_fragment] = identity
                     P1_array[index_individual_fragment,:] = 0.
                     P1_array[:,identity] = 0.
-                elif individual_fragment_identifier in self.temporal_individual_fragments_used:
-                    index = list(self.temporal_individual_fragments_used).index(individual_fragment_identifier)
-                    identity = int(self.temporal_identities_of_individual_fragments_used[index])
+                elif individual_fragment_identifier in self.temporary_individual_fragments_used:
+                    index = list(self.temporary_individual_fragments_used).index(individual_fragment_identifier)
+                    identity = int(self.temporary_identities_of_individual_fragments_used[index])
                     global_fragment._temporary_ids[index_individual_fragment] = identity
                     P1_array[index_individual_fragment,:] = 0.
                     P1_array[:,identity] = 0.
@@ -327,16 +327,16 @@ class AccumulationManager(object):
                         logger.debug("Individual fragment would be assigned randomly")
                         break
                     else:
-                        temporal_identity = np.argmax(P1_array[index_individual_fragment,:])
-                        if not self.check_consistency_with_coexistent_individual_fragments(global_fragment,index_individual_fragment,temporal_identity):
+                        temporary_identity = np.argmax(P1_array[index_individual_fragment,:])
+                        if not self.check_consistency_with_coexistent_individual_fragments(global_fragment,index_individual_fragment,temporary_identity):
                             global_fragment._acceptable_for_training = False
                             logger.debug("Individual fragment is not consistent")
                             self.number_of_nonconsistent_global_fragments += 1
                             break
                         else:
-                            global_fragment._temporary_ids[index_individual_fragment] = int(temporal_identity)
+                            global_fragment._temporary_ids[index_individual_fragment] = int(temporary_identity)
                             P1_array[index_individual_fragment,:] = 0.
-                            P1_array[:,temporal_identity] = 0.
+                            P1_array[:,temporary_identity] = 0.
 
             # Check if the global fragment is unique after assigning the identities
             if global_fragment._acceptable_for_training:
@@ -348,12 +348,12 @@ class AccumulationManager(object):
                     global_fragment._temporary_ids = np.asarray(global_fragment._temporary_ids).astype('int')
                     global_fragment._accumulation_step = self.counter
                     logger.debug("The global fragment will be accumulated")
-                    for individual_fragment_identifier, temporal_identity in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids):
-                        if individual_fragment_identifier not in self.temporal_individual_fragments_used and individual_fragment_identifier not in self.individual_fragments_used:
-                            self.temporal_individual_fragments_used.append(individual_fragment_identifier)
-                            self.temporal_identities_of_individual_fragments_used.append(temporal_identity)
+                    for individual_fragment_identifier, temporary_identity in zip(global_fragment.individual_fragments_identifiers, global_fragment._temporary_ids):
+                        if individual_fragment_identifier not in self.temporary_individual_fragments_used and individual_fragment_identifier not in self.individual_fragments_used:
+                            self.temporary_individual_fragments_used.append(individual_fragment_identifier)
+                            self.temporary_identities_of_individual_fragments_used.append(temporary_identity)
 
-    def check_consistency_with_coexistent_individual_fragments(self, global_fragment, index_individual_fragment, temporal_identity):
+    def check_consistency_with_coexistent_individual_fragments(self, global_fragment, index_individual_fragment, temporary_identity):
         individual_fragment_identifier = global_fragment.individual_fragments_identifiers[index_individual_fragment]
 
         for other_global_fragment in self.global_fragments:
@@ -364,12 +364,12 @@ class AccumulationManager(object):
                     if other_individual_fragment_identifier in self.individual_fragments_used:
                         index = list(self.individual_fragments_used).index(other_individual_fragment_identifier)
                         identity = int(self.identities_of_individual_fragments_used[index])
-                        if identity == temporal_identity:
+                        if identity == temporary_identity:
                             return False
-                    elif other_individual_fragment_identifier in self.temporal_individual_fragments_used:
-                        index = list(self.temporal_individual_fragments_used).index(other_individual_fragment_identifier)
-                        identity = int(self.temporal_identities_of_individual_fragments_used[index])
-                        if identity == temporal_identity:
+                    elif other_individual_fragment_identifier in self.temporary_individual_fragments_used:
+                        index = list(self.temporary_individual_fragments_used).index(other_individual_fragment_identifier)
+                        identity = int(self.temporary_identities_of_individual_fragments_used[index])
+                        if identity == temporary_identity:
                             return False
         return True
 
