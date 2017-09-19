@@ -665,12 +665,13 @@ if __name__ == '__main__':
             # assign identities based on individual fragments
             logger.debug("Assigning identities on an individual fragment basis")
             assign_identity_to_blobs_in_video_by_fragment(video, blobs)
-            # assign identity to individual fragments' extremes
-            logger.info("Assigning identities to ghost crossings")
+            # assign identity to ghost crossings
+            logger.debug("Assigning identities to ghost crossings")
             assign_ghost_crossings(blobs)
             # solve jumps
-            # logger.info("Assigning identities to jumps")
+            logger.debug("Assigning identities to jumps")
             assign_identity_to_jumps(video, blobs)
+
             video._has_been_assigned = True
             # finish and save
             logger.info("Saving blobs objects and video object")
@@ -689,13 +690,13 @@ if __name__ == '__main__':
 
         accumulated_global_fragments = [global_fragment for global_fragment in global_fragments
                                         if global_fragment.used_for_training]
-        for i in range(10):
-            image = accumulated_global_fragments[0].portraits[0][i]
-            image = np.expand_dims(image, 2)
-            image = np.expand_dims(image, 0)
-            label = accumulated_global_fragments[0]._temporary_ids[0]
-
-            visualise(video, net, image, label)
+        # for i in range(10):
+        #     image = accumulated_global_fragments[0].portraits[0][i]
+        #     image = np.expand_dims(image, 2)
+        #     image = np.expand_dims(image, 0)
+        #     label = accumulated_global_fragments[0]._temporary_ids[0]
+        #
+        #     visualise(video, net, image, label)
         #############################################################
         ###################   Solve duplications      ###############
         ####
@@ -793,10 +794,12 @@ if __name__ == '__main__':
         if os.path.isfile(groundtruth_path):
             print("\n**** Computing accuracy wrt. groundtruth ****")
             groundtruth = np.load(groundtruth_path).item()
+            print(len(groundtruth.list_of_blobs))
+            print(len(blobs))
             groundtruth.list_of_blobs = groundtruth.list_of_blobs[groundtruth.start:groundtruth.end]
-            blobs_groundtruth = blobs[groundtruth.start:groundtruth.end]
+            blobs_to_compare_with_groundtruth = blobs[groundtruth.start:groundtruth.end]
 
-            accuracy, individual_accuracy, accuracy_assigned, individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs_groundtruth)
+            accuracy, individual_accuracy, accuracy_assigned, individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs_to_compare_with_groundtruth)
 
     elif reUseAll == '' or reUseAll.lower() == 'y' :
         video = old_video

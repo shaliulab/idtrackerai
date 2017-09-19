@@ -34,16 +34,20 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
             elif tracked_blob._identity_corrected_solving_duplication is None:
                 tracked_blob_identity = tracked_blob.identity
 
+
             if (tracked_blob.is_a_fish_in_a_fragment or\
                 tracked_blob.is_a_jump or\
                 tracked_blob.is_a_jumping_fragment or\
                 hasattr(tracked_blob,'is_an_extreme_of_individual_fragment')) and\
                 groundtruth_blob.identity != -1: # we are not considering crossing or failures of the model area
                 if groundtruth_blob.identity != tracked_blob_identity:
-                    # print("\ntracked_blob.frame_number", tracked_blob.frame_number)
-                    # print("tracked_blob_identity", tracked_blob_identity)
-                    # print("groundtruth_blob.identity", groundtruth_blob.identity)
-                    # print("groundtruth_blob.frame_number", groundtruth_blob.frame_number)
+                    print("\ntracked_blob.frame_number", tracked_blob.frame_number)
+                    print("tracked_blob_identity", tracked_blob_identity)
+                    print("groundtruth_blob.identity", groundtruth_blob.identity)
+                    print("groundtruth_blob.frame_number", groundtruth_blob.frame_number)
+                    if groundtruth_blob.identity == 0:
+                        print(groundtruth_blob.frame_number)
+                        print(tracked_blob.frame_number)
                     count_errors_identities_dict_all[groundtruth_blob.identity] += 1
                     if tracked_blob.fragment_identifier not in fragments_identifiers_with_errors:
                         frames_with_errors.append(tracked_blob.frame_number)

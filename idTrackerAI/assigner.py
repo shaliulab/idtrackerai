@@ -51,21 +51,15 @@ def assign_identity_to_blobs_in_video(blobs_in_video, assigner):
                     current = blob
                     current._identity = int(assigner._predictions[counter])
                     counter += 1
-                    while current.next[0].is_a_fish_in_a_fragment:
+                    while len(current.next) > 0 and current.next[0].fragment_identifier == blob.fragment_identifier:
                         current = current.next[0]
                         current._identity = int(assigner._predictions[counter])
                         counter += 1
-                    if len(current.next) == 1 and len(current.next[0].previous) == 1 and current.next[0].is_a_fish:
-                        current.next[0]._identity = int(assigner._predictions[counter])
-                        counter += 1
 
                     current = blob
-                    while current.previous[0].is_a_fish_in_a_fragment:
+                    while len(current.previous) > 0 and current.previous[0].fragment_identifier == blob.fragment_identifier:
                         current = current.previous[0]
                         current._identity = int(assigner._predictions[counter])
-                        counter += 1
-                    if len(current.previous) == 1 and len(current.previous[0].next) == 1 and current.previous[0].is_a_fish:
-                        current.previous[0]._identity = int(assigner._predictions[counter])
                         counter += 1
 
 def compute_P1_for_blobs_in_video(video, blobs_in_video):
