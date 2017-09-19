@@ -57,7 +57,7 @@ def assign_identity_to_blobs_in_video(blobs_in_video, assigner):
                         counter += 1
 
                     current = blob
-                    
+
                     while len(current.previous) > 0 and current.previous[0].fragment_identifier == blob.fragment_identifier:
                         current = current.previous[0]
                         current._identity = int(assigner._predictions[counter])

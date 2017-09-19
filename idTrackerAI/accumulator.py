@@ -17,13 +17,22 @@ from accumulation_manager import AccumulationManager, get_predictions_of_candida
 
 logger = logging.getLogger('main._accumulator')
 
-def accumulate(accumulation_manager, video, blobs, global_fragments, global_step, net, number_of_unique_images_in_global_fragments, knowledge_transfer_from_same_animals):
-    number_of_accumulated_images = 0
+def accumulate(accumulation_manager,
+                video,
+                blobs,
+                global_fragments,
+                global_step,
+                net,
+                number_of_unique_images_in_global_fragments,
+                knowledge_transfer_from_same_animals,
+                get_ith_global_fragment = 0):
 
+    number_of_accumulated_images = 0
     while accumulation_manager.continue_accumulation:
         logger.info("accumulation step %s" %accumulation_manager.counter)
         #get next fragments for accumulation
-        accumulation_manager.get_next_global_fragments()
+        accumulation_manager.get_next_global_fragments(get_ith_global_fragment = get_ith_global_fragment)
+        logger.debug("Getting %ith global fragment with respect to the distance travelled ordering")
         #get images from the new global fragments
         #(we do not take images from individual fragments already used)
         accumulation_manager.get_new_images_and_labels()
@@ -55,7 +64,7 @@ def accumulate(accumulation_manager, video, blobs, global_fragments, global_step
         accumulation_manager.update_used_images_and_labels()
         # assign identities fo the global fragments that have been used for training
         logger.info("Assigning identities to accumulated global fragments")
-        accumulation_manager.assign_identities_to_accumulated_global_fragments(blobs)
+        accumulation_manager.assign_identities_to_accumulated_global_fragments()
         # update the list of individual fragments that have been used for training
         logger.info("Update individual fragments used for training")
         accumulation_manager.update_individual_fragments_used()
@@ -78,9 +87,10 @@ def accumulate(accumulation_manager, video, blobs, global_fragments, global_step
                                                                                                         video,
                                                                                                         candidates_next_global_fragments,
                                                                                                         accumulation_manager.individual_fragments_used)
-            from pprint import pprint
-            pprint(predictions)
-            accumulation_manager.split_predictions_after_network_assignment(predictions, softmax_probs, non_shared_information, indices_to_split)
+            accumulation_manager.split_predictions_after_network_assignment(predictions,
+                                                                            softmax_probs,
+                                                                            non_shared_information,
+                                                                            indices_to_split)
             # assign identities to the global fragments based on the predictions
             logger.info("Checking eligibility criteria and generate the new list of global fragments to accumulate")
             logger.info("Number of candidate global fragments: %i" %len(candidates_next_global_fragments))
@@ -91,10 +101,12 @@ def accumulate(accumulation_manager, video, blobs, global_fragments, global_step
             logger.info("Number of non unique global fragments: %i " %accumulation_manager.number_of_nonunique_global_fragments)
             logger.info("Number of acceptable global fragments: %i " %np.sum([global_fragment.acceptable_for_training for global_fragment in global_fragments]))
             accumulation_manager.update_counter()
+            print("****************** should I continue: ", accumulation_manager.continue_accumulation)
         else:
+            print("I am breaking")
             logger.info("All the global fragments have been used for accumulation")
             break
 
         ratio_accumulated_images_over_all_unique_images_in_global_fragments = number_of_accumulated_images / number_of_unique_images_in_global_fragments
-
-        return ratio_accumulated_images_over_all_unique_images_in_global_fragments
+    print("I am going out of the function")
+    return ratio_accumulated_images_over_all_unique_images_in_global_fragments
