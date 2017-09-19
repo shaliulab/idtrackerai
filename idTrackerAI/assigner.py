@@ -45,18 +45,19 @@ def assign_identity_to_blobs_in_video(blobs_in_video, assigner):
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
             if not blob.assigned_during_accumulation and blob._fragment_identifier not in fragments_identifier_used:
-
                 if blob.is_a_fish_in_a_fragment:
                     fragments_identifier_used.append(blob.fragment_identifier)
                     current = blob
                     current._identity = int(assigner._predictions[counter])
                     counter += 1
+
                     while len(current.next) > 0 and current.next[0].fragment_identifier == blob.fragment_identifier:
                         current = current.next[0]
                         current._identity = int(assigner._predictions[counter])
                         counter += 1
 
                     current = blob
+                    
                     while len(current.previous) > 0 and current.previous[0].fragment_identifier == blob.fragment_identifier:
                         current = current.previous[0]
                         current._identity = int(assigner._predictions[counter])
