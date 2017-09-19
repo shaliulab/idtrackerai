@@ -41,10 +41,10 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
                 hasattr(tracked_blob,'is_an_extreme_of_individual_fragment')) and\
                 groundtruth_blob.identity != -1: # we are not considering crossing or failures of the model area
                 if groundtruth_blob.identity != tracked_blob_identity:
-                    print("\ntracked_blob.frame_number", tracked_blob.frame_number)
-                    print("tracked_blob_identity", tracked_blob_identity)
-                    print("groundtruth_blob.identity", groundtruth_blob.identity)
-                    print("groundtruth_blob.frame_number", groundtruth_blob.frame_number)
+                    # print("\ntracked_blob.frame_number", tracked_blob.frame_number)
+                    # print("tracked_blob_identity", tracked_blob_identity)
+                    # print("groundtruth_blob.identity", groundtruth_blob.identity)
+                    # print("groundtruth_blob.frame_number", groundtruth_blob.frame_number)
                     if groundtruth_blob.identity == 0:
                         print(groundtruth_blob.frame_number)
                         print(tracked_blob.frame_number)
@@ -81,17 +81,17 @@ def get_statistics_against_groundtruth(groundtruth, blobs_list_tracked):
     accuracy_assigned = np.mean(individual_accuracy_assigned.values())
     individual_accuracy = {i : 1 - count_errors_identities_dict_all[i] / groundtruth.count_number_assignment_per_individual_all[i] for i in range(1, number_of_animals + 1)}
     accuracy = np.mean(individual_accuracy.values())
-    logger.info("count_errors_identities_dict_assigned: %s" %str(count_errors_identities_dict_assigned))
-    logger.info("count_errors_identities_dict_all: %s" %str(count_errors_identities_dict_all))
-    logger.info("count_number_assignment_per_individual_assigned: %s" %str(groundtruth.count_number_assignment_per_individual_assigned))
-    logger.info("count_number_assignment_per_individual_all: %s" %str(groundtruth.count_number_assignment_per_individual_all))
-    logger.info("accuracy_crossing_detector: %s" %str(accuracy_crossing_detector))
-    logger.info("individual_accuracy_assigned: %s" %str(individual_accuracy_assigned))
-    logger.info("accuracy_assigned: %s" %str(accuracy_assigned))
-    logger.info("individual_accuracy: %s" %str(individual_accuracy))
-    logger.info("accuracy: %s" %str(accuracy))
-    logger.info("frames with errors: %s" %str(frames_with_errors))
-    logger.info("fragments identifiers with errors: %s" %str(fragments_identifiers_with_errors))
+    print("count_errors_identities_dict_assigned: %s" %str(count_errors_identities_dict_assigned))
+    print("count_errors_identities_dict_all: %s" %str(count_errors_identities_dict_all))
+    print("count_number_assignment_per_individual_assigned: %s" %str(groundtruth.count_number_assignment_per_individual_assigned))
+    print("count_number_assignment_per_individual_all: %s" %str(groundtruth.count_number_assignment_per_individual_all))
+    print("accuracy_crossing_detector: %s" %str(accuracy_crossing_detector))
+    print("individual_accuracy_assigned: %s" %str(individual_accuracy_assigned))
+    print("accuracy_assigned: %s" %str(accuracy_assigned))
+    print("individual_accuracy: %s" %str(individual_accuracy))
+    print("accuracy: %s" %str(accuracy))
+    print("frames with errors: %s" %str(frames_with_errors))
+    print("fragments identifiers with errors: %s" %str(fragments_identifiers_with_errors))
     return accuracy, individual_accuracy, accuracy_assigned, individual_accuracy_assigned
 
 if __name__ == '__main__':

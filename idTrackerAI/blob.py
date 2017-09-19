@@ -312,41 +312,6 @@ class Blob(object):
 
         return coexisting_blobs, fragment_identifiers_of_coexisting_fragments
 
-    def get_P1_vectors_coexisting_fragments(self, blobs_in_video):
-        P1_vectors = []
-        
-        fragment_identifiers_of_coexisting_fragments = []
-        for b, blob in enumerate(blobs_in_video[self.frame_number]):
-            if blob.fragment_identifier is not self.fragment_identifier and \
-                    blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
-                    blob.fragment_identifier is not None:
-                P1_vectors.append(blob.P1_vector)
-                fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
-
-        if self.is_a_fish_in_a_fragment:
-            current = self
-
-            while len(current.next) > 0 and current.next[0].fragment_identifier == self.fragment_identifier:
-                current = current.next[0]
-                for b, blob in enumerate(blobs_in_video[current.frame_number]):
-                    if blob.fragment_identifier is not current.fragment_identifier and \
-                            blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
-                            blob.fragment_identifier is not None:
-                        P1_vectors.append(blob.P1_vector)
-                        fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
-
-            current = self
-
-            while len(current.previous) > 0 and current.previous[0].fragment_identifier == self.fragment_identifier:
-                current = current.previous[0]
-                for blob in blobs_in_video[current.frame_number]:
-                    if blob.fragment_identifier is not current.fragment_identifier and \
-                            blob.fragment_identifier not in fragment_identifiers_of_coexisting_fragments and \
-                            blob.fragment_identifier is not None:
-                        P1_vectors.append(blob.P1_vector)
-                        fragment_identifiers_of_coexisting_fragments.append(blob.fragment_identifier)
-        return np.asarray(P1_vectors)
-
     def get_fixed_identities_of_coexisting_fragments(self, blobs_in_video):
         identities = []
         fragment_identifiers_of_coexisting_fragments = []

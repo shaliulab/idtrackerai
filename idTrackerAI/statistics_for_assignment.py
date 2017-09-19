@@ -63,7 +63,8 @@ def compute_P1_individual_fragment_from_frequencies(frequencies):
 
 def compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video):
     # logger.debug("****Computing P2")
-    coexisting_blobs_P1_vectors = blob.get_P1_vectors_coexisting_fragments(blobs_in_video)
+    coexisting_blobs, _ = blob.get_coexisting_blobs_in_fragment(blobs_in_video)
+    coexisting_blobs_P1_vectors = np.asarray([coexisting_blob.P1_vector for coexisting_blob in coexisting_blobs])
     # logger.debug("coexisting_blobs_P1_vectors: %s" %str(coexisting_blobs_P1_vectors))
     numerator = np.asarray(blob.P1_vector) * np.prod(1. - coexisting_blobs_P1_vectors, axis = 0)
     # logger.debug("second factor in P2: %s" %str(np.prod(1. - coexisting_blobs_P1_vectors, axis = 0)))
