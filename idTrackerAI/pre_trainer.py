@@ -15,7 +15,9 @@ from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
 from globalfragment import get_images_and_labels_from_global_fragment,\
                         give_me_pre_training_global_fragments,\
-                        get_number_of_images_in_global_fragments_list
+                        get_number_of_images_in_global_fragments_list,\
+                        order_global_fragments_by_distance_travelled,\
+                        give_me_number_of_unique_images_in_global_fragments
 from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
@@ -110,7 +112,7 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
         net.save()
         if plot_flag:
             fig.savefig(os.path.join(net.params.save_folder,'pretraining_gf%i.pdf'%i))
-        number_of_images_used_during_pretraining += get_number_of_images_in_global_fragments_list([pretraining_global_fragment])
+        number_of_images_used_during_pretraining += give_me_number_of_unique_images_in_global_fragments([pretraining_global_fragment])
         ratio_pretrained_images = number_of_images_used_during_pretraining / number_of_images_in_global_fragments
         logger.info("total number of images in global fragments:  %i" %number_of_images_in_global_fragments)
         logger.info("number of images used during pretraining %i"  %number_of_images_used_during_pretraining)
@@ -120,3 +122,41 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
             break
 
     return net
+
+def pre_trainer(old_video, video, blobs, global_fragments):
+
+    number_of_images_in_global_fragments = video.number_of_unique_images_in_global_fragments
+    #Reset used_for_training and acceptable_for_training flags
+    if old_video and old_video._accumulation_finished == True:
+        for global_fragment in global_fragments:
+            global_fragment.reset_accumulation_params()
+
+    pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
+    number_of_global_fragments = len(pretraining_global_fragments)
+    logger.info("pretraining with %i global fragments" %number_of_global_fragments)
+    #create folder to store pretraining
+    video.create_pretraining_folder(number_of_global_fragments)
+    logger.info("Starting pretraining. Checkpoints will be stored in %s" %video._pretraining_folder)
+    #pretraining network parameters
+    logger.info("Initialising network for pretraining")
+    pretrain_network_params = NetworkParams(video.number_of_animals,
+                                            learning_rate = 0.01,
+                                            keep_prob = 1.0,
+                                            save_folder = video._pretraining_folder,
+                                            image_size = video.portrait_size)
+    logger.info("Done")
+    if video.tracking_with_knowledge_transfer:
+        logger.info("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
+        pretrain_network_params.restore_folder = video.knowledge_transfer_model_folder
+
+    #start pretraining
+    logger.info("Start pretraining")
+    net = pre_train(video, blobs,
+                    number_of_images_in_global_fragments,
+                    pretraining_global_fragments,
+                    pretrain_network_params,
+                    store_accuracy_and_error = False,
+                    check_for_loss_plateau = True,
+                    save_summaries = False,
+                    print_flag = False,
+                    plot_flag = True)

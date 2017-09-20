@@ -745,6 +745,7 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
             video.resolution_reduction = old_video.resolution_reduction
         video.preprocessing_type = old_video.preprocessing_type
         video._number_of_animals = old_video._number_of_animals
+        video.number_of_unique_images_in_global_fragments = old_video.number_of_unique_images_in_global_fragments
         video._has_preprocessing_parameters = True
 
 def selectPreprocParams_library(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg, frameIndices):
