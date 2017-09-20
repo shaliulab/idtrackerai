@@ -24,8 +24,8 @@ from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
 from segmentation import segmentVideo, blobExtractor
 from get_portraits import get_portrait, get_body
-# from video_utils import *
-from py_utils import get_spaced_colors_util, saveFile, loadFile
+from video_utils import checkBkg
+from py_utils import get_spaced_colors_util, saveFile, loadFile, get_existent_preprocessing_steps
 
 logger = logging.getLogger("__main__.GUI_utils")
 """Change session folder name
@@ -326,24 +326,17 @@ def ROISelectorPreview_library(videoPaths, useROI, usePreviousROI, numSegment=0)
 First preview numAnimals, inspect parameters for segmentation and portraying
 **************************************************************************** '''
 def SegmentationPreview(video):
-    if video.number_of_animals == None:
-        video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
-    if not video.preprocessing_type:
-        video.preprocessing_type = getInput('Preprocessing type','What preprocessing do you want to apply? portrait, body or body_blob?')
-        #exception for unsupported animal is managed in the class Video
     global cap, currentSegment
     currentSegment = 0
     cap = cv2.VideoCapture(video.video_path)
     numFrames = video._num_frames
     bkg = video.bkg
     mask = video.ROI
+    print("***********", bkg.shape, mask.shape)
     if video.resolution_reduction != 1:
         if bkg is not None:
             bkg = cv2.resize(bkg, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
-            video.bkg = bkg
         mask = cv2.resize(mask, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
-        video.ROI = mask
-        video.save()
     subtract_bkg = video.subtract_bkg
     if video.resolution_reduction == 1:
         height = video._height
@@ -433,6 +426,7 @@ def SegmentationPreview(video):
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         avIntensity = np.float32(np.mean(frameGray))
         avFrame = np.divide(frameGray,avIntensity)
+        print(frame.shape, frameGray.shape, avFrame.shape, bkg.shape, mask.shape)
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
@@ -726,6 +720,36 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
 
 def selectPreprocParams(video, old_video, usePreviousPrecParams):
     if not usePreviousPrecParams:
+        prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?')
+        video.subtract_bkg = bool(prepOpts['bkg'])
+        video.apply_ROI =  bool(prepOpts['ROI'])
+        video.reduce_resolution = bool(prepOpts['resolution_reduction'])
+        if old_video is not None:
+            preprocessing_steps = ['bkg', 'ROI', 'resolution_reduction']
+            existentFiles = get_existent_preprocessing_steps(old_video, preprocessing_steps)
+            load_previous_preprocessing_steps = selectOptions(preprocessing_steps, existentFiles, text='Restore existing preprocessing steps?')
+            if old_video.number_of_animals == None:
+                video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
+            else:
+                video._number_of_animals = old_video.number_of_animals
+            if old_video.preprocessing_type == None:
+                video._preprocessing_type = getInput('Preprocessing type','What preprocessing do you want to apply? portrait, body or body_blob?')
+            else:
+                video._preprocessing_type = old_video.preprocessing_type
+            usePreviousROI = bool(load_previous_preprocessing_steps['ROI'])
+            usePreviousBkg = bool(load_previous_preprocessing_steps['bkg'])
+            usePreviousRR = bool(load_previous_preprocessing_steps['resolution_reduction'])
+        else:
+            usePreviousROI, usePreviousBkg, usePreviousRR = False, False, False
+            video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
+            video._preprocessing_type = getInput('Preprocessing type','What preprocessing do you want to apply? portrait, body or body_blob?')
+        #ROI selection/loading
+        video.ROI = ROISelectorPreview(video, old_video, usePreviousROI)
+        #BKG computation/loading
+        video.bkg = checkBkg(video, old_video, usePreviousBkg)
+        # Resolution reduction
+        video.resolution_reduction = check_resolution_reduction(video, old_video, usePreviousRR)
+
         video._min_threshold = 0
         video._max_threshold = 135
         video._min_area = 150
@@ -736,6 +760,7 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         cv2.destroyAllWindows()
         cv2.waitKey(1)
     else:
+        #preprocessing parameters
         video._min_threshold = old_video._min_threshold
         video._max_threshold = old_video._max_threshold
         video._min_area = old_video._min_area
@@ -745,6 +770,10 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
             video.resolution_reduction = old_video.resolution_reduction
         video.preprocessing_type = old_video.preprocessing_type
         video._number_of_animals = old_video._number_of_animals
+        video.ROI = old_video.ROI
+        video.bkg = old_video.bkg
+        video.resolution_reduction = old_video.resolution_reduction
+        #preprocessing results
         video.number_of_unique_images_in_global_fragments = old_video.number_of_unique_images_in_global_fragments
         video._has_preprocessing_parameters = True
 

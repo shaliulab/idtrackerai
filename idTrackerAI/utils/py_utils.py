@@ -265,19 +265,6 @@ def getExistentFiles(video, listNames):
 
         old_video = check_and_change_video_path(video,old_video)
 
-        if old_video.bkg is not None:
-            print('has bkg')
-            existentFile['bkg'] = '1'
-
-        if old_video.ROI is not None:
-            print('has roi')
-            existentFile['ROI'] = '1'
-
-        if hasattr(old_video, 'resolution_reduction'):
-            if old_video.resolution_reduction is not None:
-                print('has resolution_reduction')
-                existentFile['resolution_reduction'] = '1'
-
         if old_video._has_preprocessing_parameters == True:
             print('has preprocessing params')
             existentFile['preprocparams'] = '1'
@@ -318,6 +305,24 @@ def getExistentFiles(video, listNames):
                 existentFile['trajectories'] = '1'
 
     return existentFile, old_video
+
+
+def get_existent_preprocessing_steps(old_video, listNames):
+    """
+    get processes already computed in a previous session
+    """
+    existentFile = {name:'0' for name in listNames}
+    if old_video.bkg is not None:
+        print('has bkg')
+        existentFile['bkg'] = '1'
+    if old_video.ROI is not None:
+        print('has roi')
+        existentFile['ROI'] = '1'
+    if hasattr(old_video, 'resolution_reduction'):
+        if old_video.resolution_reduction is not None:
+            print('has resolution_reduction')
+            existentFile['resolution_reduction'] = '1'
+    return existentFile
 
 def getExistentFiles_library(path, listNames, segmPaths):
     """
