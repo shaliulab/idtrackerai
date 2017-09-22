@@ -90,10 +90,21 @@ def rename_session_folder(video_object, new_session_name):
 """
 Display messages and errors
 """
-def selectOptions(optionsList, optionsDict=None, text="Select preprocessing options:  "):
+def load_previous_dict_check(processes, loadPreviousDict):
+    zero_key_indices = [ind for ind, key in enumerate(processes)
+                        if loadPreviousDict[key] == 0]
+    if len(zero_key_indices) > 0:
+        for i, p in enumerate(processes):
+            if i > zero_key_indices[0]: loadPreviousDict[p] = 0
+
+    for key in loadPreviousDict:
+        if loadPreviousDict[key] == -1: loadPreviousDict[key] = 0
+    return loadPreviousDict
+
+def selectOptions(optionsList, loadPreviousDict=None, text="Select preprocessing options:  "):
     master = Tk()
-    if optionsDict==None:
-        optionsDict = {el:'1' for el in optionsList}
+    if loadPreviousDict==None:
+        loadPreviousDict = {el:'1' for el in optionsList}
 
     def createCheckBox(name,i):
         var = IntVar()
@@ -104,14 +115,18 @@ def selectOptions(optionsList, optionsDict=None, text="Select preprocessing opti
     variables = []
 
     for i, opt in enumerate(optionsList):
-        if optionsDict[opt] == '1':
+        if loadPreviousDict[opt] == '1':
             var = createCheckBox(opt,i)
             variables.append(var)
-            var.set(optionsDict[opt])
+            var.set(loadPreviousDict[opt])
+        elif loadPreviousDict[opt] == '0':
+            var = createCheckBox(opt,i)
+            variables.append(var)
+            var.set(loadPreviousDict[opt])
         else:
             Label(master, text= '     ' + opt).grid(row=i+1, sticky=W)
             var = IntVar()
-            var.set(0)
+            var.set('-1')
             variables.append(var)
 
     Button(master, text='Ok', command=master.quit).grid(row=i+2, sticky=W, pady=4)
@@ -119,9 +134,9 @@ def selectOptions(optionsList, optionsDict=None, text="Select preprocessing opti
     varValues = []
     for var in variables:
         varValues.append(var.get())
-    optionsDict = dict((key, value) for (key, value) in zip(optionsList, varValues))
+    loadPreviousDict = load_previous_dict_check(optionsList, dict((key, value) for (key, value) in zip(optionsList, varValues)))
     master.destroy()
-    return optionsDict
+    return loadPreviousDict
 
 def selectFile():
     root = Tk()
@@ -332,7 +347,6 @@ def SegmentationPreview(video):
     numFrames = video._num_frames
     bkg = video.bkg
     mask = video.ROI
-    print("***********", bkg.shape, mask.shape)
     if video.resolution_reduction != 1:
         if bkg is not None:
             bkg = cv2.resize(bkg, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
@@ -426,7 +440,6 @@ def SegmentationPreview(video):
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         avIntensity = np.float32(np.mean(frameGray))
         avFrame = np.divide(frameGray,avIntensity)
-        print(frame.shape, frameGray.shape, avFrame.shape, bkg.shape, mask.shape)
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
@@ -760,21 +773,18 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         cv2.destroyAllWindows()
         cv2.waitKey(1)
     else:
-        #preprocessing parameters
-        video._min_threshold = old_video._min_threshold
-        video._max_threshold = old_video._max_threshold
-        video._min_area = old_video._min_area
-        video._max_area = old_video._max_area
-        video._resize = old_video._resize
-        if hasattr(old_video, 'resolution_reduction'):
-            video.resolution_reduction = old_video.resolution_reduction
-        video.preprocessing_type = old_video.preprocessing_type
-        video._number_of_animals = old_video._number_of_animals
-        video.ROI = old_video.ROI
-        video.bkg = old_video.bkg
-        video.resolution_reduction = old_video.resolution_reduction
-        #preprocessing results
-        video.number_of_unique_images_in_global_fragments = old_video.number_of_unique_images_in_global_fragments
+        preprocessing_attributes = ['apply_ROI','subtract_bkg',
+                                    '_preprocessing_type','_maximum_number_of_blobs',
+                                    'median_body_length','portrait_size',
+                                    '_blobs_path_segmented','maximum_number_of_portraits_in_global_fragments',
+                                    '_min_threshold','_max_threshold',
+                                    '_min_area','_max_area',
+                                    '_resize','resolution_reduction',
+                                    'preprocessing_type','_number_of_animals',
+                                    'ROI','bkg',
+                                    'resolution_reduction','number_of_unique_images_in_global_fragments'
+                                    ]
+        video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_preprocessing_parameters = True
 
 def selectPreprocParams_library(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg, frameIndices):

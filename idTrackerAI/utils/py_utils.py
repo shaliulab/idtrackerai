@@ -10,8 +10,10 @@ import shutil
 import cPickle as pickle
 import sys
 from pprint import pprint
+import logging
 # sys.path.append('../utils')
 
+logger = logging.getLogger("__main__.py_utils")
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):
     ''' get variables from a standard python dictionary '''
@@ -250,59 +252,46 @@ def check_and_change_video_path(video,old_video):
         pprint(old_video.__dict__)
     return old_video
 
-def getExistentFiles(video, listNames):
+def set_load_previous_dict(old_video, processes, existentFile):
+    attributes = ['_has_been_preprocessed', 'tracking_with_knowledge_transfer',
+                    '_first_accumulation_finished',
+                    '_has_been_pretrained', '_second_accumulation_finished',
+                    '_has_been_assigned', '_has_duplications_solved',
+                    '_has_crossings_solved', '_has_trajectories']
+    for i, attribute in enumerate(attributes):
+        attr_value = getattr(old_video, attribute)
+        if attr_value == True:
+            logger.debug(attribute)
+            existentFile[processes[i]] = '1'
+        elif attr_value is False:
+            existentFile[processes[i]] = '0'
+        elif attr_value is None:
+            existentFile[processes[i]] = '-1'
+    return existentFile
+
+def getExistentFiles(video, processes):
+    """get processes already computed in a previous session
+    preprocessing: segmentation, fragmentation and creation of blobs and individual/global fragments
+    knowledge_transfer: knowledge transferred from a model trained on a different video
+    first_accumulation: first accumulation attempt
+    pretraining: building the filters in a global-identity-agnostic way
+    second_accumulation: accumulation by transferring knowledge from pre-training
+    assignment: assignment of the idenitity to each individual fragment
+    solving_duplications: solve eventual identity duplications
+    crossings: assign identity to single animals during occlusions
+    trajectories: compute the individual trajectories
     """
-    get processes already computed in a previous session
-    """
-    existentFile = {name:'0' for name in listNames}
+    existentFile = {name:'-1' for name in processes}
     old_video = None
     if os.path.isdir(video._previous_session_folder):
-        print("loading old video object from get existent files")
+        logger.debug("loading old video object from get existent files")
         if os.path.isfile(os.path.join(video._previous_session_folder, 'video_object.npy')):
             old_video = np.load(os.path.join(video._previous_session_folder, 'video_object.npy')).item()
         else:
-            raise ValueError("The folder %s is empty. The tracking cannot be restored." %video._previous_session_folder)
-
+            logger.info("The folder %s is empty. The tracking cannot be restored." %video._previous_session_folder)
+            return existentFile
         old_video = check_and_change_video_path(video,old_video)
-
-        if old_video._has_preprocessing_parameters == True:
-            print('has preprocessing params')
-            existentFile['preprocparams'] = '1'
-
-        if old_video._has_been_preprocessed == True:
-            print('preprocessing done')
-            existentFile['preprocessing'] = '1'
-
-        if old_video._has_been_pretrained == True:
-            print('pretraining done')
-            existentFile['pretraining'] = '1'
-
-        if old_video._accumulation_finished == True:
-            print('accumulation done')
-            existentFile['accumulation'] = '1'
-
-        if old_video._training_finished == True:
-            print('training done')
-            existentFile['training'] = '1'
-
-        if old_video._has_been_assigned == True:
-            print('assignment done')
-            existentFile['assignment'] = '1'
-
-        if hasattr(old_video, '_has_duplications_solved'): #old video objects do not have this property
-            if old_video._has_duplications_solved == True:
-                print('duplications solved')
-                existentFile['solving_duplications'] = '1'
-
-        if hasattr(old_video, '_has_crossings_solved'): #old video objects do not have this property
-            if old_video._has_crossings_solved == True:
-                print('crossings done')
-                existentFile['crossings'] = '1'
-
-        if hasattr(old_video, '_has_trajectories'): #old video objects do not have this property
-            if old_video._has_trajectories == True:
-                print('trajectories done')
-                existentFile['trajectories'] = '1'
+        existentFile = set_load_previous_dict(old_video, processes, existentFile)
 
     return existentFile, old_video
 

@@ -76,25 +76,17 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
         #set criteria to stop the training
         stop_training = Stop_Training(params.number_of_animals,
                                     check_for_loss_plateau = check_for_loss_plateau)
-        #enter epochs loop
+
         while not stop_training(store_training_accuracy_and_loss_data,
                                 store_validation_accuracy_and_loss_data,
                                 trainer._epochs_completed):
-            # --- Training
             feed_dict_train = trainer.run_epoch('Training', store_training_accuracy_and_loss_data, net.train)
-            # --- Validation
             feed_dict_val = validator.run_epoch('Validation', store_validation_accuracy_and_loss_data, net.validate)
-            # update global step
             net.session.run(net.global_step.assign(trainer.starting_epoch + trainer._epochs_completed))
-            # write summaries if asked
             if save_summaries:
                 net.write_summaries(trainer.starting_epoch + trainer._epochs_completed,feed_dict_train, feed_dict_val)
-            # Update counter
             trainer._epochs_completed += 1
             validator._epochs_completed += 1
-
-
-        # plot if asked
         if plot_flag:
             pretrained_global_fragments = pretraining_global_fragments[:i + 1]
             store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, blobs_in_video, pretrained_global_fragments, black = False)
@@ -102,13 +94,10 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
             store_training_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'r')
             store_validation_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'b')
             epoch_index_to_plot += trainer._epochs_completed
-        # store training and validation losses and accuracies
         if store_accuracy_and_error:
             store_training_accuracy_and_loss_data.save()
             store_validation_accuracy_and_loss_data.save()
-        # Update global_epoch counter
         global_epoch += trainer._epochs_completed
-        # Save network model
         net.save()
         if plot_flag:
             fig.savefig(os.path.join(net.params.save_folder,'pretraining_gf%i.pdf'%i))
@@ -120,11 +109,9 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
         if ratio_pretrained_images > MAX_RATIO_OF_PRETRAINED_IMAGES:
             logger.info("pre-training ended: The network has been pre-trained on more than %.2f of the images in global fragment" %MAX_RATIO_OF_PRETRAINED_IMAGES)
             break
-
     return net
 
-def pre_trainer(old_video, video, blobs, global_fragments):
-
+def pre_trainer(old_video, video, blobs, global_fragments, pretrain_network_params):
     number_of_images_in_global_fragments = video.number_of_unique_images_in_global_fragments
     #Reset used_for_training and acceptable_for_training flags
     if old_video and old_video._accumulation_finished == True:
@@ -134,21 +121,10 @@ def pre_trainer(old_video, video, blobs, global_fragments):
     pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
     number_of_global_fragments = len(pretraining_global_fragments)
     logger.info("pretraining with %i global fragments" %number_of_global_fragments)
-    #create folder to store pretraining
-    video.create_pretraining_folder(number_of_global_fragments)
     logger.info("Starting pretraining. Checkpoints will be stored in %s" %video._pretraining_folder)
-    #pretraining network parameters
-    logger.info("Initialising network for pretraining")
-    pretrain_network_params = NetworkParams(video.number_of_animals,
-                                            learning_rate = 0.01,
-                                            keep_prob = 1.0,
-                                            save_folder = video._pretraining_folder,
-                                            image_size = video.portrait_size)
-    logger.info("Done")
     if video.tracking_with_knowledge_transfer:
         logger.info("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
         pretrain_network_params.restore_folder = video.knowledge_transfer_model_folder
-
     #start pretraining
     logger.info("Start pretraining")
     net = pre_train(video, blobs,
