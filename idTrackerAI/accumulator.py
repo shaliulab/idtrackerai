@@ -15,7 +15,12 @@ from trainer import train
 from globalfragment import check_uniquenss_of_global_fragments
 from accumulation_manager import AccumulationManager, get_predictions_of_candidates_global_fragments
 
+
+THRESHOLD_EARLY_STOP_ACCUMULATION = .9995
 logger = logging.getLogger('main._accumulator')
+
+def early_stop_criteria_for_accumulation(number_of_accumulated_images, number_of_unique_images_in_global_fragments):
+    return number_of_accumulated_images / number_of_unique_images_in_global_fragments
 
 def accumulate(accumulation_manager,
                 video,
@@ -23,7 +28,6 @@ def accumulate(accumulation_manager,
                 global_fragments,
                 global_step,
                 net,
-                number_of_unique_images_in_global_fragments,
                 knowledge_transfer_from_same_animals,
                 get_ith_global_fragment = 0):
 
@@ -36,26 +40,6 @@ def accumulate(accumulation_manager,
         #get images from the new global fragments
         #(we do not take images from individual fragments already used)
         accumulation_manager.get_new_images_and_labels()
-        number_of_accumulated_images += int(accumulation_manager.new_images.shape[0])
-        logger.debug('%i new images accumulated' %number_of_accumulated_images)
-        #get images for training
-        #(we mix images already used with new images)
-        images, labels = accumulation_manager.get_images_and_labels_for_training()
-        logger.info("the %f percent of the images has been accumulated" %(number_of_accumulated_images / number_of_unique_images_in_global_fragments * 100))
-        logger.debug("images: %s" %str(images.shape))
-        logger.debug("labels: %s" %str(labels.shape))
-        #start training
-        global_step, net, _ = train(video, blobs,
-                                global_fragments,
-                                net, images, labels,
-                                store_accuracy_and_error = False,
-                                check_for_loss_plateau = True,
-                                save_summaries = True,
-                                print_flag = False,
-                                plot_flag = True,
-                                global_step = global_step,
-                                first_accumulation_flag = accumulation_manager.counter == 0,
-                                knowledge_transfer_from_same_animals = knowledge_transfer_from_same_animals)
         # update used_for_training flag to True for fragments used
         logger.info("Accumulation step completed. Updating global fragments used for training")
         accumulation_manager.update_global_fragments_used_for_training()
@@ -71,6 +55,33 @@ def accumulate(accumulation_manager,
         # Check uniqueness global_fragments
         logger.info("Check uniqueness of global fragments")
         check_uniquenss_of_global_fragments(global_fragments)
+        number_of_accumulated_images += int(accumulation_manager.new_images.shape[0])
+        print("\n*******************************************************************************\n")
+        ratio_accumulated_images = early_stop_criteria_for_accumulation(number_of_accumulated_images, video.number_of_unique_images_in_global_fragments)
+        if ratio_accumulated_images > THRESHOLD_EARLY_STOP_ACCUMULATION:
+            logger.debug("Stopping accumulation by early stopping criteria")
+            print("\n*******************************************************************************\n")
+            return ratio_accumulated_images
+        logger.debug('%i new images accumulated' %number_of_accumulated_images)
+        #get images for training
+        #(we mix images already used with new images)
+        images, labels = accumulation_manager.get_images_and_labels_for_training()
+        logger.info("the %f percent of the images has been accumulated" %(number_of_accumulated_images / video.number_of_unique_images_in_global_fragments * 100))
+        logger.debug("images: %s" %str(images.shape))
+        logger.debug("labels: %s" %str(labels.shape))
+        #start training
+        global_step, net, _ = train(video, blobs,
+                                global_fragments,
+                                net, images, labels,
+                                store_accuracy_and_error = False,
+                                check_for_loss_plateau = True,
+                                save_summaries = True,
+                                print_flag = False,
+                                plot_flag = True,
+                                global_step = global_step,
+                                first_accumulation_flag = accumulation_manager.counter == 0,
+                                knowledge_transfer_from_same_animals = knowledge_transfer_from_same_animals)
+
         # Set accumulation params for rest of the accumulation
         #take images from global fragments not used in training (in the remainder test global fragments)
         logger.info("Get new global fragments for training")
@@ -101,12 +112,9 @@ def accumulate(accumulation_manager,
             logger.info("Number of non unique global fragments: %i " %accumulation_manager.number_of_nonunique_global_fragments)
             logger.info("Number of acceptable global fragments: %i " %np.sum([global_fragment.acceptable_for_training for global_fragment in global_fragments]))
             accumulation_manager.update_counter()
-            print("****************** should I continue: ", accumulation_manager.continue_accumulation)
         else:
-            print("I am breaking")
             logger.info("All the global fragments have been used for accumulation")
             break
 
-        ratio_accumulated_images_over_all_unique_images_in_global_fragments = number_of_accumulated_images / number_of_unique_images_in_global_fragments
-    print("I am going out of the function")
+        ratio_accumulated_images_over_all_unique_images_in_global_fragments = number_of_accumulated_images / video.number_of_unique_images_in_global_fragments
     return ratio_accumulated_images_over_all_unique_images_in_global_fragments

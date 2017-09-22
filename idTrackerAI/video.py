@@ -41,9 +41,10 @@ class Video(object):
         self._pretraining_folder = None
         self._knowledge_transfer_model_folder = None
         self.tracking_with_knowledge_transfer = False
-        self._accumulation_finished = None
-        self._training_finished = None
+        self._first_accumulation_finished = None
+        self._second_accumulation_finished = None
         self._has_been_assigned = None
+        self._has_duplications_solved = None
         self._has_crossings_solved = None
         self._has_trajectories = None
         self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
@@ -250,11 +251,11 @@ class Video(object):
             logger.info("the folder %s has been created" %self._crossings_detector_folder)
             os.makedirs(self._crossings_detector_folder)
 
-    def create_pretraining_folder(self, number_of_global_fragments_used_to_pretrain):
+    def create_pretraining_folder(self):
         """Creates a folder named pretraining in video_folder where the model
         trained during the pretraining is stored
         """
-        self._pretraining_folder = os.path.join(self._session_folder, 'pretraining' + str(number_of_global_fragments_used_to_pretrain))
+        self._pretraining_folder = os.path.join(self._session_folder, 'pretraining')
         if not os.path.isdir(self._pretraining_folder):
             os.makedirs(self._pretraining_folder)
 
@@ -368,6 +369,11 @@ class Video(object):
                 raise ValueError("The model folders " + os.path.join(new_kt_model_path, "conv") + " and " + os.path.join(new_kt_model_path, "softmax") + " are missing")
         else:
             self._knowledge_transfer_model_folder = None
+
+    def copy_attributes_between_two_video_objects(self, video_object_source, list_of_attributes):
+        for attribute in list_of_attributes:
+            assert hasattr(video_object_source, attribute)
+            setattr(self, attribute, getattr(video_object_source, attribute))
 
 def get_num_frame(path):
     cap = cv2.VideoCapture(path)
