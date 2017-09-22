@@ -30,8 +30,9 @@ def accumulate(accumulation_manager,
                 net,
                 knowledge_transfer_from_same_animals,
                 get_ith_global_fragment = 0):
-
+    video.init_accumulation_statistics_attributes(index = get_ith_global_fragment)
     number_of_accumulated_images = 0
+
     while accumulation_manager.continue_accumulation:
         logger.info("accumulation step %s" %accumulation_manager.counter)
         #get next fragments for accumulation
@@ -70,7 +71,7 @@ def accumulate(accumulation_manager,
         logger.debug("images: %s" %str(images.shape))
         logger.debug("labels: %s" %str(labels.shape))
         #start training
-        global_step, net, _ = train(video, blobs,
+        global_step, net, store_validation_accuracy_and_loss_data = train(video, blobs,
                                 global_fragments,
                                 net, images, labels,
                                 store_accuracy_and_error = False,
@@ -111,6 +112,16 @@ def accumulate(accumulation_manager,
             logger.info("Number of non consistent global fragments: %i " %accumulation_manager.number_of_nonconsistent_global_fragments)
             logger.info("Number of non unique global fragments: %i " %accumulation_manager.number_of_nonunique_global_fragments)
             logger.info("Number of acceptable global fragments: %i " %np.sum([global_fragment.acceptable_for_training for global_fragment in global_fragments]))
+            new_values = [len([global_fragment for global_fragment in global_fragments if global_fragment.used_for_training]),
+                            accumulation_manager.number_of_noncertain_global_fragments,
+                            accumulation_manager.number_of_random_assigned_global_fragments,
+                            accumulation_manager.number_of_nonconsistent_global_fragments,
+                            accumulation_manager.number_of_nonunique_global_fragments,
+                            np.sum([global_fragment.acceptable_for_training for global_fragment in global_fragments]),
+                            store_validation_accuracy_and_loss_data.accuracy[-1],
+                            store_validation_accuracy_and_loss_data.individual_accuracy[-1],
+                            ratio_accumulated_images]
+            video.store_accumulation_statistics_data(new_values)
             accumulation_manager.update_counter()
         else:
             logger.info("All the global fragments have been used for accumulation")

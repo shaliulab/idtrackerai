@@ -12,6 +12,7 @@ except:
     import pickle
 from natsort import natsorted
 import cv2
+import time
 import logging
 
 AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg']
@@ -166,6 +167,7 @@ class Video(object):
             self._video_folder = os.path.dirname(self._video_path)
             #collect some info on the video (resolution, number of frames, ..)
             self.get_info()
+            self.modified = time.strftime("%c")
         else:
             raise ValueError("Supported video extensions are ", AVAILABLE_VIDEO_EXTENSION)
 
@@ -215,6 +217,17 @@ class Video(object):
             self._num_frames = np.sum(chunks_lengths)
             self._num_episodes = len(self._paths_to_video_segments)
         cap.release()
+
+    def init_processes_time_attributes(self):
+        self.generate_trajectories_time = 0
+        self.solve_impossible_jumps_time = 0
+        self.solve_duplications_time = 0
+        self.assignment_time = 0
+        self.second_accumulation_time = 0
+        self.pretraining_time = 0
+        self.assignment_time = 0
+        self.first_accumulation_time = 0
+        self.preprocessing_time = 0
 
     def create_session_folder(self, name = ''):
         """Creates a folder named training in video_folder and a folder session_num
@@ -266,6 +279,23 @@ class Video(object):
         self._accumulation_folder = os.path.join(self._session_folder, accumulation_folder_name)
         if not os.path.isdir(self._accumulation_folder):
             os.makedirs(self._accumulation_folder)
+
+    def init_accumulation_statistics_attributes(self, attributes = None, index = 0):
+        if attributes is None:
+            attributes = ['number_of_accumulated_global_fragments',
+                        'number_of_non_certain_global_fragments',
+                        'number_of_randomly_assigned_global_fragments',
+                        'number_of_nonconsistent_global_fragments',
+                        'number_of_nonunique_global_fragments',
+                        'number_of_acceptable_global_fragments',
+                        'validation_accuracy',
+                        'validation_individual_accuracies',
+                        'ratio_of_accumulated_images']
+        self.accumulation_statistics_attributes_list = [attribute + '_' + str(index) for attribute in attributes]
+        [setattr(self, attribute, []) for attribute in self.accumulation_statistics_attributes_list]
+
+    def store_accumulation_statistics_data(self, new_values):
+        [getattr(self, attr).append(value) for attr, value in zip(self.accumulation_statistics_attributes_list, new_values)]
 
     def create_training_folder(self):
         """Folder in which the last model is stored (after accumulation)
@@ -375,6 +405,19 @@ class Video(object):
             assert hasattr(video_object_source, attribute)
             setattr(self, attribute, getattr(video_object_source, attribute))
 
+    def compute_overall_P2(self, blobs_in_video):
+        P2_sum = 0
+        counter = 0
+
+        for blobs_in_frame in blobs_in_video:
+            for blob in blobs_in_frame:
+                if hasattr(blob, '_P2_vector'):
+                    P2_sum += np.max(blob._P2_vector)
+                    counter += 1
+
+        self.overlall_P2 = P2_sum / counter
+
+
 def get_num_frame(path):
     cap = cv2.VideoCapture(path)
     num_frame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
@@ -401,3 +444,12 @@ if __name__ == "__main__":
 
     video = Video()
     video.video_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi'
+
+# 'time_preprocessing': None,
+# 'time_accumulation_before_pretraining': None,
+# 'time_pretraining': None,
+# 'time_accumulation_after_pretraining': None,
+# 'time_assignment': None,
+# 'time_postprocessing': None,
+# 'total_time': None,
+#  }, ignore_index=True)

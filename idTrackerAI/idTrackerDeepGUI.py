@@ -8,6 +8,7 @@ import glob
 import numpy as np
 import cPickle as pickle
 from tqdm import tqdm
+import time
 # Import third party libraries
 import cv2
 import psutil
@@ -33,7 +34,8 @@ from blob import compute_fragment_identifier_and_blob_index,\
                 get_images_from_blobs_in_video,\
                 reset_blobs_fragmentation_parameters,\
                 compute_portrait_size,\
-                check_number_of_blobs
+                check_number_of_blobs,\
+                get_crossing_and_statistics
 from globalfragment import compute_model_area_and_body_length,\
                             give_me_list_of_global_fragments,\
                             ModelArea,\
@@ -127,6 +129,7 @@ if __name__ == '__main__':
     video.video_path = video_path #set path
     new_name_session_folder = getInput('Session name, ', 'Input session name. Use an old session name to load and overwrite files')
     video.create_session_folder(name = new_name_session_folder)
+    video.init_processes_time_attributes()
     # set log config
     logger = setup_logging(path_to_save_logs = video._session_folder, video_object = video)
     logger.info("Starting working on session %s" %new_name_session_folder)
@@ -134,7 +137,7 @@ if __name__ == '__main__':
     #Asking user whether to reuse preprocessing steps...'
     # processes_list = ['preprocessing', 'pretraining', 'accumulation', 'assignment', 'solving_duplications', 'crossings', 'trajectories']
     processes_list = ['preprocessing',
-                    'tracking_with_knowledge_transfer',
+                    'use_previous_knowledge_transfer_decision',
                     'first_accumulation',
                     'pretraining',
                     'second_accumulation',
@@ -148,7 +151,6 @@ if __name__ == '__main__':
     #selecting files to load from previous session...'
     loadPreviousDict = selectOptions(processes_list, existentFiles, text='Steps already processed in this video \n (loaded from ' + video._video_folder + ')')
     print("loadPreviousDict ", loadPreviousDict)
-
     #use previous values and parameters (bkg, roi, preprocessing parameters)?
     logger.debug("Video session folder: %s " %video._session_folder)
     video.save()
@@ -178,6 +180,7 @@ if __name__ == '__main__':
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
+    video.preprocessing_time = time.time()
     if not loadPreviousDict['preprocessing']:
         logger.info("Starting preprocessing")
         cv2.namedWindow('Bars')
@@ -274,6 +277,7 @@ if __name__ == '__main__':
         compute_fragment_identifier_and_blob_index(blobs, video.maximum_number_of_blobs)
         #assign an identifier to each blob belonging to a crossing fragment
         compute_crossing_fragment_identifier(blobs)
+        _, video.number_of_crossings, video.number_of_crossing_frames, video.crossings_lengths = get_crossing_and_statistics(blobs)
         #save connected blobs in video (organized frame-wise) and list of global fragments
         video._has_been_preprocessed = True
         logger.debug("Saving individual and crossing fragments")
@@ -286,9 +290,12 @@ if __name__ == '__main__':
         #with a single blob in the consecutive frame + the blobs respect the area model)
         logger.info("Generate global fragments")
         global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
+        video.individual_fragments_lenghts, video.individual_fragments_distance_travelled = compute_and_plot_global_fragments_statistics(video, blobs, global_fragments)
+        video.number_of_non_filtered_global_fragments = len(global_fragments)
         global_fragments = filter_global_fragments_by_minimum_number_of_frames(global_fragments, minimum_number_of_frames = 3)
+        video.number_of_global_fragments = len(global_fragments)
         logger.info("Global fragments have been generated")
-        compute_and_plot_global_fragments_statistics(video, blobs, global_fragments)
+        # video.individual_fragments_lenghts, video.individual_fragments_distance_travelled = compute_and_plot_global_fragments_statistics(video, blobs, global_fragments)
         video.number_of_unique_images_in_global_fragments = give_me_number_of_unique_images_in_global_fragments(global_fragments)
         video.maximum_number_of_portraits_in_global_fragments = np.max([global_fragment._total_number_of_portraits for global_fragment in global_fragments])
         logger.info("Saving global fragments.")
@@ -310,6 +317,7 @@ if __name__ == '__main__':
         logger.info("Loading global fragments")
         global_fragments = np.load(video.global_fragments_path)
         logger.info("Done")
+    video.preprocessing_time = time.time() - video.preprocessing_time
     #take a look to the resulting fragmentation
     # fragmentation_inspector(video, blobs)
     #destroy windows to prevent openCV errors
@@ -322,7 +330,7 @@ if __name__ == '__main__':
     ####   trained. Works better when transfering to similar ####
     ####   conditions (light, animal type, age, ...)         ####
     #############################################################
-    if not bool(loadPreviousDict['tracking_with_knowledge_transfer']):
+    if not bool(loadPreviousDict['use_previous_knowledge_transfer_decision']):
         knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
         # knowledge_transfer_flag = 'n'
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
@@ -333,11 +341,13 @@ if __name__ == '__main__':
         else:
             raise ValueError("Invalid value, type either 'y' or 'n'")
     else:
-        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder', 'tracking_with_knowledge_transfer'])
+        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder','tracking_with_knowledge_transfer',])
+        video.use_previous_knowledge_transfer_decision = True
     #############################################################
     ##################   Protocols cascade   ####################
     #############################################################
     #### Accumulation ####
+    video.first_accumulation_time = time.time()
     video.create_accumulation_folder(iteration_number = 0)
     logger.info("Set accumulation network parameters")
     accumulation_network_params = NetworkParams(video.number_of_animals,
@@ -401,8 +411,9 @@ if __name__ == '__main__':
         net.restore()
         logger.info("Saving video")
         video.save()
-
+    video.first_accumulation_time = time.time() - video.first_accumulation_time
     if video.ratio_accumulated_images_over_all_unique_images_in_global_fragments > THRESHOLD_ACCEPTABLE_ACCUMULATION:
+        video.assignment_time = time.time()
         if not loadPreviousDict['assignment']:
             #### Assigner ####
             assigner(blobs, video, net)
@@ -411,7 +422,9 @@ if __name__ == '__main__':
         else:
             ### NOTE: load all the assigner statistics
             video._has_been_assigned = True
+        video.assignment_time = time.time() - video.assignment_time
     else:
+        video.pretraining_time = time.time()
         #create folder to store pretraining
         video.create_pretraining_folder()
         #pretraining if first accumulation trial does not cover 90% of the images in global fragments
@@ -440,8 +453,10 @@ if __name__ == '__main__':
             # Set preprocessed flag to True
             video.save()
             ### NOTE: load pre-training statistics
+        video.pretraining_time = time.time() - video.pretraining_time
         #### Accumulation ####
         #Last accumulation after pretraining
+        video.second_accumulation_time = time.time()
         if not loadPreviousDict['second_accumulation']:
             percentage_of_accumulated_images = []
             for i in range(1,4):
@@ -492,7 +507,8 @@ if __name__ == '__main__':
         else:
             video.copy_attributes_between_two_video_objects(old_video, ['_accumulation_folder', '_second_accumulation_finished'])
             ### NOTE: load pre-training statistics
-
+        video.second_accumulation_time = time.time() - video.second_accumulation_time
+        video.assignment_time = time.time()
         if not loadPreviousDict['assignment']:
             #### Assigner ####
             assigner(blobs, video, net)
@@ -501,6 +517,7 @@ if __name__ == '__main__':
         else:
             ### NOTE: load all the assigner statistics
             video._has_been_assigned = True
+        video.assignment_time = time.time() - video.assignment_time
 
     # finish and save
     logger.info("Saving blobs objects and video object")
@@ -530,6 +547,7 @@ if __name__ == '__main__':
     ###################   Solve duplications      ###############
     ####
     #############################################################
+    video.solve_duplications_time = time.time()
     if not loadPreviousDict['solving_duplications']:
         logger.info("Start checking for and solving duplications")
         reset_blobs_fragmentation_parameters(blobs, recovering_from = 'solving_duplications')
@@ -554,9 +572,10 @@ if __name__ == '__main__':
         logger.info("Duplications have already been checked. Using previous information")
         video._has_duplications_solved = True
         video.save()
+    video.solve_duplications_time = time.time() - video.solve_duplications_time
     #############################################################
     ###################  Solving impossible jumps    ############
-    ####
+    video.solve_impossible_jumps_time = time.time()
     print("\n**** Correct impossible velocity jump ****")
     logging.info("Solving impossible velocity jumps")
     if hasattr(old_video,'velocity_threshold') and not hasattr(video,'velocity_threshold'):
@@ -578,9 +597,10 @@ if __name__ == '__main__':
     blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
     blobs_list.cut_in_chunks()
     blobs_list.save()
+    video.compute_overall_P2(blobs)
     video.save()
     logger.info("Done")
-
+    video.solve_impossible_jumps_time = time.time() - video.solve_impossible_jumps_time
     #############################################################
     ##############   Solve crossigns   ##########################
     ####
@@ -594,7 +614,7 @@ if __name__ == '__main__':
     ##############   Create trajectories    #####################
     ####
     #############################################################
-    print("\n**** Generate trajectories ****")
+    video.generate_trajectories_time = time.time()
     if not loadPreviousDict['trajectories']:
         video.create_trajectories_folder()
         logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
@@ -613,8 +633,7 @@ if __name__ == '__main__':
     else:
         video._has_trajectories = True
         video.save()
-
-
+    video.generate_trajectories_time = time.time() - video.generate_trajectories_time
     #############################################################
     ##############   Compute groundtruth    #####################
     ####
@@ -628,4 +647,16 @@ if __name__ == '__main__':
         groundtruth.list_of_blobs = groundtruth.list_of_blobs[groundtruth.start:groundtruth.end]
         blobs_to_compare_with_groundtruth = blobs[groundtruth.start:groundtruth.end]
 
-        accuracy, individual_accuracy, accuracy_assigned, individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs_to_compare_with_groundtruth)
+        video.gt_accuracy, video.gt_individual_accuracy, video.gt_accuracy_assigned, video.gt_individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs_to_compare_with_groundtruth)
+        video.gt_start_end = (groundtruth.start, groundtruth.end)
+        video.save()
+    video.total_time = sum([video.generate_trajectories_time,
+                            video.solve_impossible_jumps_time,
+                            video.solve_duplications_time,
+                            video.assignment_time,
+                            video.second_accumulation_time,
+                            video.pretraining_time,
+                            video.assignment_time,
+                            video.first_accumulation_time,
+                            video.preprocessing_time])
+    video.save()

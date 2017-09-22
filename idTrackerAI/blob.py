@@ -524,6 +524,25 @@ def propagate_crossing_identifier(blob, crossing_identifier):
         cur_blob = cur_blob.previous[0]
         cur_blob.crossing_identifier = crossing_identifier
 
+def get_crossing_and_statistics(list_of_blobs):
+    number_of_crossing_frames = 0
+    crossings = {}
+
+    for blobs_in_frame in list_of_blobs:
+        for blob in blobs_in_frame:
+            local_crossing = []
+            if blob.is_a_crossing:
+                # print("frame number ", blob.frame_number)
+                number_of_crossing_frames += 1
+                try:
+                    crossings[blob.crossing_identifier].append(blob)
+                except:
+                    crossings[blob.crossing_identifier] = []
+                    crossings[blob.crossing_identifier].append(blob)
+
+    crossings_lengths = [len(crossings[c]) for c in crossings]
+    return crossings, len(crossings), number_of_crossing_frames, crossings_lengths
+
 def connect_blob_list(blobs_in_video):
     for frame_i in tqdm(xrange(1,len(blobs_in_video)), desc = 'Connecting blobs '):
         set_frame_number_to_blobs_in_frame(blobs_in_video[frame_i-1], frame_i-1)

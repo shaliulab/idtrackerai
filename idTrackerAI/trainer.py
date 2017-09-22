@@ -41,7 +41,6 @@ def train(video,
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation')
     if plot_flag:
-        # Initialize pre-trainer plot
         plt.ion()
         fig, ax_arr = plt.subplots(4)
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
