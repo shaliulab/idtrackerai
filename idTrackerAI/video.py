@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function
 import itertools
 import numpy as np
 import os
+from tempfile import mkstemp
+from shutil import move
 import glob
 try:
     import cPickle as pickle
@@ -45,6 +47,110 @@ class Video(object):
         self._has_crossings_solved = None
         self._has_trajectories = None
         self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
+
+    def check_paths_consistency_with_video_path(self,new_video_path):
+
+        if self.video_path != new_video_path:
+            self.update_paths(new_video_path)
+
+    def update_paths(self,new_video_object_path):
+        if new_video_object_path == '': raise ValueError("The path to the video object is an empty string")
+
+        new_session_path = os.path.split(new_video_object_path)[0]
+        old_session_path = self._session_folder
+
+        video_name = os.path.split(self._video_path)[1]
+        self._video_folder = os.path.split(new_session_path)[0]
+        self.video_path = os.path.join(self._video_folder,video_name)
+
+        attributes_to_modify = {key: getattr(self, key) for key in self.__dict__
+        if isinstance(getattr(self, key), basestring)
+        and old_session_path in getattr(self, key) }
+
+        for key in attributes_to_modify:
+            new_value = attributes_to_modify[key].replace(old_session_path, new_session_path)
+            setattr(self, key, new_value)
+
+        logger.info("Updating checkpoint files")
+        folders_to_check = ['_crossings_detector_folder', '_pretraining_folder', '_accumulation_folder']
+        for folder in folders_to_check:
+            if hasattr(self, folder) and getattr(self, folder) is not None:
+                if folder == folders_to_check[0]:
+                    checkpoint_path = os.path.join(self._crossings_detector_folder,'checkpoint')
+                    if os.path.isfile(checkpoint_path):
+                        self.update_tensorflow_checkpoints_file(checkpoint_path, old_session_path, new_session_path)
+                    else:
+                        logger.warn('No checkpoint found in %s ' %folder)
+                else:
+                    for sub_folder in ['conv', 'softmax']:
+                        checkpoint_path = os.path.join(getattr(self,folder),sub_folder,'checkpoint')
+                        if os.path.isfile(checkpoint_path):
+                            self.update_tensorflow_checkpoints_file(checkpoint_path, old_session_path, new_session_path)
+                        else:
+                            logger.warn('No checkpoint found in %s ' %os.path.join(getattr(self,folder),sub_folder))
+
+
+        logger.info("Saving video object")
+        self.save()
+        logger.info("Done")
+
+    @staticmethod
+    def update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name):
+        checkpoint_file = open(checkpoint_path, "r")
+        fh, abs_path = mkstemp()
+        with os.fdopen(fh,'w') as new_file:
+            with open(checkpoint_path) as old_file:
+                for line in old_file:
+                    splitted_line = line.split('"')
+                    string_to_replace = splitted_line[1]
+                    new_string = string_to_replace.replace(current_session_name, new_session_name)
+                    splitted_line[1] = new_string
+                    new_line = '"'.join(splitted_line)
+                    new_file.write(new_line)
+
+        os.remove(checkpoint_path)
+        move(abs_path, checkpoint_path)
+
+    def rename_session_folder(self, new_session_name):
+        assert new_session_name != ''
+        new_session_name = 'session_' + new_session_name
+        current_session_name = os.path.split(self._session_folder)[1]
+
+        logger.info("Updating checkpoint files")
+        folders_to_check = ['_crossings_detector_folder', '_pretraining_folder', '_accumulation_folder']
+        for folder in folders_to_check:
+            if hasattr(self, folder) and getattr(self, folder) is not None:
+                if folder == folders_to_check[0]:
+                    checkpoint_path = os.path.join(self._crossings_detector_folder,'checkpoint')
+                    if os.path.isfile(checkpoint_path):
+                        self.update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name)
+                    else:
+                        logger.warn('No checkpoint found in %s ' %folder)
+                else:
+                    for sub_folder in ['conv', 'softmax']:
+                        checkpoint_path = os.path.join(getattr(self,folder),sub_folder,'checkpoint')
+                        if os.path.isfile(checkpoint_path):
+                            self.update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name)
+                        else:
+                            logger.warn('No checkpoint found in %s ' %os.path.join(getattr(self,folder),sub_folder))
+
+        attributes_to_modify = {key: getattr(self, key) for key in self.__dict__
+        if isinstance(getattr(self, key), basestring)
+        and current_session_name in getattr(self, key) }
+
+        logger.info("Modifying folder name from %s to %s "  %(current_session_name, new_session_name))
+        os.rename(self._session_folder,
+                os.path.join(self._video_folder, new_session_name))
+        logger.info("Done")
+        logger.info("Updating video object")
+
+        for key in attributes_to_modify:
+            new_value = attributes_to_modify[key].replace(current_session_name, new_session_name)
+            setattr(self, key, new_value)
+        logger.info("Saving video object")
+        self.save()
+        logger.info("Done")
+
 
     @property
     def video_path(self):

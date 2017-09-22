@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 # Import standard libraries
 import os
-from tempfile import mkstemp
 from shutil import move
 import sys
 # Import application/library specifics
@@ -28,63 +27,6 @@ from get_portraits import get_portrait, get_body
 from py_utils import get_spaced_colors_util, saveFile, loadFile
 
 logger = logging.getLogger("__main__.GUI_utils")
-"""Change session folder name
-"""
-def update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name):
-    checkpoint_file = open(checkpoint_path, "r")
-    fh, abs_path = mkstemp()
-    with os.fdopen(fh,'w') as new_file:
-        with open(checkpoint_path) as old_file:
-            for line in old_file:
-                splitted_line = line.split('"')
-                string_to_replace = splitted_line[1]
-                new_string = string_to_replace.replace(current_session_name, new_session_name)
-                splitted_line[1] = new_string
-                new_line = '"'.join(splitted_line)
-                new_file.write(new_line)
-
-    os.remove(checkpoint_path)
-    move(abs_path, checkpoint_path)
-
-def rename_session_folder(video_object, new_session_name):
-    assert new_session_name != ''
-    new_session_name = 'session_' + new_session_name
-    current_session_name = os.path.split(video_object._session_folder)[1]
-
-    logger.info("Updating checkpoint files")
-    folders_to_check = ['_crossings_detector_folder', '_pretraining_folder', '_accumulation_folder']
-    for folder in folders_to_check:
-        if hasattr(video_object, folder) and getattr(video_object, folder) is not None:
-            if folder == folders_to_check[0]:
-                checkpoint_path = os.path.join(video_object._crossings_detector_folder,'checkpoint')
-                if os.path.isfile(checkpoint_path):
-                    update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name)
-                else:
-                    logger.warn('No checkpoint found in %s ' %folder)
-            else:
-                for sub_folder in ['conv', 'softmax']:
-                    checkpoint_path = os.path.join(getattr(video_object,folder),sub_folder,'checkpoint')
-                    if os.path.isfile(checkpoint_path):
-                        update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name)
-                    else:
-                        logger.warn('No checkpoint found in %s ' %os.path.join(getattr(video_object,folder),sub_folder))
-
-    attributes_to_modify = {key: getattr(video_object, key) for key in video_object.__dict__
-    if isinstance(getattr(video_object, key), basestring)
-    and current_session_name in getattr(video_object, key) }
-
-    logger.info("Modifying folder name from %s to %s "  %(current_session_name, new_session_name))
-    os.rename(video_object._session_folder,
-            os.path.join(video_object._video_folder, new_session_name))
-    logger.info("Done")
-    logger.info("Updating video object")
-
-    for key in attributes_to_modify:
-        new_value = attributes_to_modify[key].replace(current_session_name, new_session_name)
-        setattr(video_object, key, new_value)
-    logger.info("Saving video object")
-    video_object.save()
-    logger.info("Done")
 
 
 """
