@@ -114,7 +114,7 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
 def pre_trainer(old_video, video, blobs, global_fragments, pretrain_network_params):
     number_of_images_in_global_fragments = video.number_of_unique_images_in_global_fragments
     #Reset used_for_training and acceptable_for_training flags
-    if old_video and old_video._accumulation_finished == True:
+    if old_video and old_video._first_accumulation_finished == True:
         for global_fragment in global_fragments:
             global_fragment.reset_accumulation_params()
 

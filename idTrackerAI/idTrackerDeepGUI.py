@@ -363,13 +363,13 @@ if __name__ == '__main__':
         #restore variables from the pretraining
         net.restore()
         #if knowledge transfer is performed on the same animals we don't reinitialise the classification part of the net
-        knowledge_transfer_from_same_animals = False
+        video.knowledge_transfer_from_same_animals = False
         if video.tracking_with_knowledge_transfer:
             same_animals = getInput("Same animals", "Are you tracking the same animals? y/N")
             if same_animals.lower() == 'n' or same_animals == '':
                 net.reinitialize_softmax_and_fully_connected()
             else:
-                knowledge_transfer_from_same_animals = True
+                video.knowledge_transfer_from_same_animals = True
         #instantiate accumulation manager
         logger.info("Initialising accumulation manager")
         accumulation_manager = AccumulationManager(blobs, global_fragments, video.number_of_animals)
@@ -382,7 +382,7 @@ if __name__ == '__main__':
                                                                                             global_fragments,
                                                                                             global_step,
                                                                                             net,
-                                                                                            knowledge_transfer_from_same_animals,
+                                                                                            video.knowledge_transfer_from_same_animals,
                                                                                             get_ith_global_fragment = 0)
         logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
         video.ratio_accumulated_images_over_all_unique_images_in_global_fragments = ratio_accumulated_images_over_all_unique_images_in_global_fragments
@@ -394,7 +394,8 @@ if __name__ == '__main__':
         logger.info("Restoring accumulation network")
         video.copy_attributes_between_two_video_objects(old_video, ['_accumulation_folder',\
                                                                     'ratio_accumulated_images_over_all_unique_images_in_global_fragments',\
-                                                                    '_first_accumulation_finished'])
+                                                                    '_first_accumulation_finished',\
+                                                                    'knowledge_transfer_from_same_animals'])
         accumulation_network_params.restore_folder = video._accumulation_folder
         net = ConvNetwork(accumulation_network_params)
         net.restore()
@@ -471,7 +472,7 @@ if __name__ == '__main__':
                                                                                                     global_fragments,
                                                                                                     global_step,
                                                                                                     net,
-                                                                                                    knowledge_transfer_from_same_animals,
+                                                                                                    video.knowledge_transfer_from_same_animals,
                                                                                                     get_ith_global_fragment = i)
                 logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
                 if ratio_accumulated_images_over_all_unique_images_in_global_fragments > THRESHOLD_ACCEPTABLE_ACCUMULATION:
