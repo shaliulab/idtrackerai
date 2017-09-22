@@ -253,7 +253,7 @@ def check_and_change_video_path(video,old_video):
     return old_video
 
 def set_load_previous_dict(old_video, processes, existentFile):
-    attributes = ['_has_been_preprocessed', 'tracking_with_knowledge_transfer',
+    attributes = ['_has_been_preprocessed', 'use_previous_knowledge_transfer_decision',
                     '_first_accumulation_finished',
                     '_has_been_pretrained', '_second_accumulation_finished',
                     '_has_been_assigned', '_has_duplications_solved',
@@ -287,11 +287,15 @@ def getExistentFiles(video, processes):
         logger.debug("loading old video object from get existent files")
         if os.path.isfile(os.path.join(video._previous_session_folder, 'video_object.npy')):
             old_video = np.load(os.path.join(video._previous_session_folder, 'video_object.npy')).item()
+            video.use_previous_knowledge_transfer_decision = old_video.use_previous_knowledge_transfer_decision
         else:
             logger.info("The folder %s is empty. The tracking cannot be restored." %video._previous_session_folder)
+            video.use_previous_knowledge_transfer_decision = False
             return existentFile
         old_video = check_and_change_video_path(video,old_video)
         existentFile = set_load_previous_dict(old_video, processes, existentFile)
+    else:
+        video.use_previous_knowledge_transfer_decision = False
 
     return existentFile, old_video
 

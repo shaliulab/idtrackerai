@@ -137,7 +137,7 @@ if __name__ == '__main__':
     #Asking user whether to reuse preprocessing steps...'
     # processes_list = ['preprocessing', 'pretraining', 'accumulation', 'assignment', 'solving_duplications', 'crossings', 'trajectories']
     processes_list = ['preprocessing',
-                    'tracking_with_knowledge_transfer',
+                    'use_previous_knowledge_transfer_decision',
                     'first_accumulation',
                     'pretraining',
                     'second_accumulation',
@@ -151,7 +151,6 @@ if __name__ == '__main__':
     #selecting files to load from previous session...'
     loadPreviousDict = selectOptions(processes_list, existentFiles, text='Steps already processed in this video \n (loaded from ' + video._video_folder + ')')
     print("loadPreviousDict ", loadPreviousDict)
-
     #use previous values and parameters (bkg, roi, preprocessing parameters)?
     logger.debug("Video session folder: %s " %video._session_folder)
     video.save()
@@ -331,7 +330,7 @@ if __name__ == '__main__':
     ####   trained. Works better when transfering to similar ####
     ####   conditions (light, animal type, age, ...)         ####
     #############################################################
-    if not bool(loadPreviousDict['tracking_with_knowledge_transfer']):
+    if not bool(loadPreviousDict['use_previous_knowledge_transfer_decision']):
         knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
         # knowledge_transfer_flag = 'n'
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
@@ -342,7 +341,8 @@ if __name__ == '__main__':
         else:
             raise ValueError("Invalid value, type either 'y' or 'n'")
     else:
-        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder', 'tracking_with_knowledge_transfer'])
+        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder','tracking_with_knowledge_transfer',])
+        video.use_previous_knowledge_transfer_decision = True
     #############################################################
     ##################   Protocols cascade   ####################
     #############################################################
