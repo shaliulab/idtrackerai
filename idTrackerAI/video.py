@@ -227,7 +227,7 @@ class Video(object):
         self.pretraining_time = 0
         self.assignment_time = 0
         self.first_accumulation_time = 0
-        self.preprocessing_time = 0 
+        self.preprocessing_time = 0
 
     def create_session_folder(self, name = ''):
         """Creates a folder named training in video_folder and a folder session_num
@@ -295,7 +295,7 @@ class Video(object):
         [setattr(self, attribute, []) for attribute in self.accumulation_statistics_attributes_list]
 
     def store_accumulation_statistics_data(self, new_values):
-        [setattr(self, attr, value) for attr, value in zip(self.accumulation_statistics_attributes_list, new_values)]
+        [getattr(self, attr).append(value) for attr, value in zip(self.accumulation_statistics_attributes_list, new_values)]
 
     def create_training_folder(self):
         """Folder in which the last model is stored (after accumulation)
