@@ -734,10 +734,10 @@ if __name__ == "__main__":
                     blob.number_of_animals_in_crossing = None
                 else:
                     blob.number_of_animals_in_crossing = len(blob.identity)
-            print("blob.identity: ", blob.identity)
-            print("frame number ", blob.frame_number)
-            if blob.is_a_crossing:
-                print("num animals ", blob.number_of_animals_in_crossing)
+            # print("blob.identity: ", blob.identity)
+            # print("frame number ", blob.frame_number)
+            # if blob.is_a_crossing:
+            #     print("num animals ", blob.number_of_animals_in_crossing)
 
     for blobs_in_frame in blobs:
         for blob in blobs_in_frame:

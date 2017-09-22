@@ -41,9 +41,9 @@ def get_jumps_and_crossing_frames_arrays(blobs_in_video):
     jumps = [] # array of non assigned portrait to be sent to the network for one-shot recognition [to be conditioned wrt 2 * 99perc[velocity]]
 
     for frame_num, blobs_in_frame in tqdm(enumerate(blobs_in_video), desc = "detect jumps and crossing"):
-        print("frame number ", frame_num)
+        # print("frame number ", frame_num)
         for blob_num, blob in enumerate(blobs_in_frame):
-            print("blob number ", blob_num)
+            # print("blob number ", blob_num)
             if blob.identity == 0:
                 # if it is a fish, than it has a portrait and can be assigned
                 if blob.is_a_fish:

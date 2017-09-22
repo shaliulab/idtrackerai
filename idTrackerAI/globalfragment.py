@@ -370,3 +370,4 @@ def compute_and_plot_global_fragments_statistics(video, blobs, global_fragments)
 
     plt.show()
     fig.savefig(os.path.join(video._preprocessing_folder,'global_fragments_summary.pdf'), transparent=True)
+    return number_of_frames_in_individual_fragments, distance_travelled_individual_fragments
