@@ -52,6 +52,7 @@ class GlobalFragment(object):
     def __init__(self, list_of_blobs, list_of_fragments, index_beginning_of_fragment, number_of_animals):
         self.index_beginning_of_fragment = index_beginning_of_fragment
         self.individual_fragments_identifiers = [blob.fragment_identifier for blob in list_of_blobs[index_beginning_of_fragment]]
+        self.individual_fragments = [fragment for fragment in list_of_fragments if fragment.identifier in self.individual_fragments_identifiers]
         self.get_list_of_attributes_from_individual_fragments(list_of_fragments)
         self.total_number_of_images = sum(self.number_of_images_per_individual_fragment)
         self.set_minimum_distance_travelled()
@@ -61,8 +62,6 @@ class GlobalFragment(object):
         self._is_certain = False
 
     def reset_accumulation_params(self):
-        self._used_for_training = False
-        self._acceptable_for_training = True
         self._ids_assigned = np.nan * np.ones(self.number_of_animals)
         self._temporary_ids = np.arange(self.number_of_animals) # I initialize the _temporary_ids like this so that I can use the same function to extract images in pretraining and training
         self._score = None
@@ -87,10 +86,6 @@ class GlobalFragment(object):
     @property
     def used_for_training(self):
         return self._used_for_training
-
-    @property
-    def acceptable_for_training(self):
-        return self._acceptable_for_training
 
     @property
     def uniqueness_score(self):
@@ -118,7 +113,15 @@ class GlobalFragment(object):
     def compute_score(self, P1_individual_fragments, max_distance_travelled):
         if not self._used_for_training and self.is_unique:
             self.compute_uniqueness_score(P1_individual_fragments)
-            self._score = self.uniqueness_score**2 + (max_distance_travelled - self.min_distance_travelled)**2
+            self._score = self.uniqueness_score**2 + (max_distance_travelled - self.minimum_distance_travelled)**2
+
+    @property
+    def used_for_training(self):
+        return all([fragment.used_for_training for fragment in self.individual_fragments])
+
+    @property
+    def acceptable_for_training(self):
+        return all([fragment.acceptable_for_training for fragment in self.individual_fragments])
 
     @property
     def is_unique(self):
@@ -142,7 +145,7 @@ class GlobalFragment(object):
             for blob in blobs_in_video[self.index_beginning_of_fragment]]
 
 def order_global_fragments_by_distance_travelled(global_fragments):
-    global_fragments = sorted(global_fragments, key = lambda x: x.min_distance_travelled, reverse = True)
+    global_fragments = sorted(global_fragments, key = lambda x: x.minimum_distance_travelled, reverse = True)
     return global_fragments
 
 def order_global_fragments_by_distance_to_the_first_global_fragment(global_fragments):
@@ -185,22 +188,22 @@ def give_me_pre_training_global_fragments(global_fragments, number_of_pretrainin
                                     for global_fragments_in_split in split_global_fragments]
     return ordered_split_global_fragments
 
-def get_images_and_labels_from_global_fragment(global_fragment, individual_fragments_identifiers_already_used = []):
-    if not np.isnan(global_fragment._ids_assigned).any() and list(global_fragment._temporary_ids) != list(global_fragment._ids_assigned -1):
-        raise ValueError("Temporary ids and assigned ids should match in global fragments used for training")
+def get_images_and_labels_from_global_fragment(list_of_fragments, global_fragment, individual_fragments_identifiers_already_used = []):
     images = []
     labels = []
     lengths = []
     individual_fragments_identifiers = []
-    for i, portraits in enumerate(global_fragment.portraits):
-        if global_fragment.individual_fragments_identifiers[i] not in individual_fragments_identifiers_already_used :
-            images.extend(portraits)
-            labels.extend([global_fragment._temporary_ids[i]]*len(portraits))
-            lengths.append(len(portraits))
-            individual_fragments_identifiers.append(global_fragment.individual_fragments_identifiers[i])
+
+    for fragment in global_fragment.individual_fragments:
+        if fragment.identifier not in individual_fragments_identifiers_already_used :
+            images.extend(fragment.images)
+            labels.extend([fragment.temporary_id] * fragment.number_of_images)
+            lengths.append(fragment.number_of_images)
+            individual_fragments_identifiers.append(fragment.identifier)
+
     return images, labels, lengths, individual_fragments_identifiers
 
-def get_images_and_labels_from_global_fragments(global_fragments, individual_fragments_identifiers_already_used = []):
+def get_images_and_labels_from_global_fragments(list_of_fragments, global_fragments, individual_fragments_identifiers_already_used = []):
     logger.info("Getting images from global fragments")
     images = []
     labels = []
@@ -212,7 +215,7 @@ def get_images_and_labels_from_global_fragments(global_fragments, individual_fra
         images_global_fragment, \
         labels_global_fragment, \
         lengths_global_fragment, \
-        individual_fragments_identifiers = get_images_and_labels_from_global_fragment(global_fragment,
+        individual_fragments_identifiers = get_images_and_labels_from_global_fragment(list_of_fragments, global_fragment,
                                                                                         individual_fragments_identifiers_already_used)
         if len(images_global_fragment) != 0:
             images.append(images_global_fragment)
@@ -288,7 +291,7 @@ def compute_and_plot_global_fragments_statistics(video, list_of_fragments, globa
     number_of_images_in_individual_fragments, \
     distance_travelled_individual_fragments, \
     number_of_images_in_crossing_fragments =  get_data_plot_individual_fragments(list_of_fragments)
-    
+
     number_of_images_in_shortest_individual_fragment,\
     number_of_images_in_longest_individual_fragment,\
     number_of_images_per_individual_fragment_in_global_fragment,\

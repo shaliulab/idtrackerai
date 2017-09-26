@@ -101,7 +101,7 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
         net.save()
         if plot_flag:
             fig.savefig(os.path.join(net.params.save_folder,'pretraining_gf%i.pdf'%i))
-        number_of_images_used_during_pretraining += give_me_number_of_unique_images_in_global_fragments([pretraining_global_fragment])
+        number_of_images_used_during_pretraining = give_me_number_of_unique_images_in_global_fragments([pretraining_global_fragment])
         ratio_pretrained_images = number_of_images_used_during_pretraining / number_of_images_in_global_fragments
         logger.info("total number of images in global fragments:  %i" %number_of_images_in_global_fragments)
         logger.info("number of images used during pretraining %i"  %number_of_images_used_during_pretraining)

@@ -274,7 +274,7 @@ if __name__ == '__main__':
         #assign an identifier to each blob belonging to a crossing fragment
         compute_crossing_fragment_identifier(blobs, next_fragment_identifier)
         #create list of fragments
-        list_of_fragments = create_list_of_fragments(blobs, video.number_of_animals)
+        list_of_fragments, video.fragment_identifier_to_index = create_list_of_fragments(blobs, video.number_of_animals)
         #save connected blobs in video (organized frame-wise) and list of global fragments
         video._has_been_preprocessed = True
         logger.debug("Saving individual and crossing fragments")
@@ -355,7 +355,8 @@ if __name__ == '__main__':
                                 image_size = video.portrait_size)
     if not bool(loadPreviousDict['first_accumulation']):
         logger.info("Starting accumulation")
-        reset_blobs_fragmentation_parameters(blobs, recovering_from = 'accumulation')
+        # reset_blobs_fragmentation_parameters(blobs, recovering_from = 'accumulation')
+        reset_fragments(list_of_fragments, recovering_from = 'fragmentation')
         #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
         [global_fragment.reset_accumulation_params() for global_fragment in global_fragments]
         if video.tracking_with_knowledge_transfer:
@@ -379,7 +380,7 @@ if __name__ == '__main__':
                 video.knowledge_transfer_from_same_animals = True
         #instantiate accumulation manager
         logger.info("Initialising accumulation manager")
-        accumulation_manager = AccumulationManager(blobs, global_fragments, video.number_of_animals)
+        accumulation_manager = AccumulationManager(list_of_fragments, global_fragments, video.number_of_animals)
         #set global epoch counter to 0
         logger.info("Start accumulation")
         global_step = 0

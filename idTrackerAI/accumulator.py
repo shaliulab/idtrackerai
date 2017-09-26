@@ -93,7 +93,6 @@ def accumulate(accumulation_manager,
             logger.info("Generate predictions on candidate global fragments")
             predictions,\
             softmax_probs,\
-            non_shared_information,\
             indices_to_split,\
             candidate_individual_fragments_identifiers = get_predictions_of_candidates_global_fragments(net,
                                                                                                         video,
@@ -101,8 +100,8 @@ def accumulate(accumulation_manager,
                                                                                                         accumulation_manager.individual_fragments_used)
             accumulation_manager.split_predictions_after_network_assignment(predictions,
                                                                             softmax_probs,
-                                                                            non_shared_information,
-                                                                            indices_to_split)
+                                                                            indices_to_split,
+                                                                            candidate_individual_fragments_identifiers)
             # assign identities to the global fragments based on the predictions
             logger.info("Checking eligibility criteria and generate the new list of global fragments to accumulate")
             logger.info("Number of candidate global fragments: %i" %len(candidates_next_global_fragments))
