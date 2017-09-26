@@ -160,15 +160,6 @@ class Blob(object):
         return self._extreme2_coordinates
 
     @property
-    def fragment_identifier(self):
-        return self._fragment_identifier
-
-    @fragment_identifier.setter
-    def fragment_identifier(self, new_fragment_identifier):
-        if self.is_a_fish: #we only check if it is a fish because we also set fragments identifiers to the extremes of an individual fragment and to jumps and jumping fragments
-            self._fragment_identifier = new_fragment_identifier
-
-    @property
     def assigned_during_accumulation(self):
         return self._assigned_during_accumulation
 
@@ -404,7 +395,6 @@ class Blob(object):
                                     duplication_solved = False, \
                                     number_of_images_in_fragment = None):
         if self.is_a_fish_in_a_fragment:
-
             if assigned_during_accumulation:
                 self.update_blob_assigned_during_accumulation()
             self._frequencies_in_fragment = np.zeros(self.number_of_animals)
@@ -412,8 +402,6 @@ class Blob(object):
                 self._frequencies_in_fragment[identity_in_fragment-1] = number_of_images_in_fragment ### NOTE Decide whether to use weighted frequencies or raw frequencies
                 self._P1_vector = compute_P1_individual_fragment_from_frequencies(self._frequencies_in_fragment)
             elif hasattr(self,'ambiguous_identities') and len(self.ambiguous_identities) != 0:
-                print("frame_number:", self.frame_number)
-                print("ambiguous_identities: ", self.ambiguous_identities)
                 self._frequencies_in_fragment[self.ambiguous_identities-1] = number_of_images_in_fragment // len(self.ambiguous_identities)
                 self._P1_vector = compute_P1_individual_fragment_from_frequencies(self._frequencies_in_fragment)
 
@@ -467,12 +455,10 @@ def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of
                 blob_index = missing_blob_indices.pop(0)
                 blob._blob_index = blob_index
                 blob.non_shared_information_with_previous = 1.
-
                 if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
                     blob.next[0].fragment_identifier = counter
                     blob.next[0]._blob_index = blob_index
                     blob.next[0].compute_overlapping_with_previous_blob()
-
                     if blob.next[0].is_a_fish_in_a_fragment:
                         blob = blob.next[0]
 
@@ -493,55 +479,35 @@ def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of
                         #     blob.next[0].compute_overlapping_with_previous_blob()
 
                 counter += 1
+    return counter
 
-def compute_crossing_fragment_identifier(list_of_blobs):
+def compute_crossing_fragment_identifier(list_of_blobs, next_fragment_identifier):
     """we define a crossing fragment as a crossing that in subsequent frames
     involves the same individuals"""
-    crossing_identifier = 0
+    fragment_identifier = next_fragment_identifier
 
     for blobs_in_frame in list_of_blobs:
         for blob in blobs_in_frame:
-            if blob.is_a_crossing and not hasattr(blob, 'crossing_identifier'):
-                propagate_crossing_identifier(blob, crossing_identifier)
-                crossing_identifier += 1
-            elif blob.is_a_crossing and hasattr(blob, 'crossing_identifier'):
+            if blob.is_a_crossing and blob.fragment_identifier is None:
+                propagate_crossing_identifier(blob, fragment_identifier)
+                fragment_identifier += 1
+            elif blob.is_a_crossing and blob.fragment_identifier is not None:
                 blob.is_a_crossing_in_a_fragment = True
-            else:
-                blob.is_a_crossing_in_a_fragment = None
 
-def propagate_crossing_identifier(blob, crossing_identifier):
+def propagate_crossing_identifier(blob, fragment_identifier):
     blob.is_a_crossing_in_a_fragment = True
-    blob.crossing_identifier = crossing_identifier
+    blob.fragment_identifier = fragment_identifier
     cur_blob = blob
 
-    while len(cur_blob.next) == 1:
+    while len(cur_blob.next) == 1 and cur_blob.next[0].is_a_crossing:
         cur_blob = cur_blob.next[0]
-        cur_blob.crossing_identifier = crossing_identifier
+        cur_blob.fragment_identifier = fragment_identifier
 
     cur_blob = blob
 
-    while len(cur_blob.previous) == 1:
+    while len(cur_blob.previous) == 1 and cur_blob.previous[0].is_a_crossing:
         cur_blob = cur_blob.previous[0]
-        cur_blob.crossing_identifier = crossing_identifier
-
-def get_crossing_and_statistics(list_of_blobs):
-    number_of_crossing_frames = 0
-    crossings = {}
-
-    for blobs_in_frame in list_of_blobs:
-        for blob in blobs_in_frame:
-            local_crossing = []
-            if blob.is_a_crossing:
-                # print("frame number ", blob.frame_number)
-                number_of_crossing_frames += 1
-                try:
-                    crossings[blob.crossing_identifier].append(blob)
-                except:
-                    crossings[blob.crossing_identifier] = []
-                    crossings[blob.crossing_identifier].append(blob)
-
-    crossings_lengths = [len(crossings[c]) for c in crossings]
-    return crossings, len(crossings), number_of_crossing_frames, crossings_lengths
+        cur_blob.fragment_identifier = fragment_identifier
 
 def connect_blob_list(blobs_in_video):
     for frame_i in tqdm(xrange(1,len(blobs_in_video)), desc = 'Connecting blobs '):
@@ -592,16 +558,10 @@ def apply_model_area(video, blob, model_area, portraitSize):
 
         if video.preprocessing_type == 'portrait':
             portrait, blob._nose_coordinates, blob._head_coordinates = get_portrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize)
-            # if not blob.in_a_global_fragment_core:
-            #     blob.bounding_box_image = None
         elif video.preprocessing_type == 'body':
             portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(height, width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
-            # if not blob.in_a_global_fragment_core:
-            #     blob.bounding_box_image = None
         elif video.preprocessing_type == 'body_blob':
             portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(height, width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize, only_blob = True)
-            # if not blob.in_a_global_fragment_core:
-            #     blob.bounding_box_image = None
         blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
 
 def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portraitSize):

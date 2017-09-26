@@ -34,8 +34,8 @@ from blob import compute_fragment_identifier_and_blob_index,\
                 get_images_from_blobs_in_video,\
                 reset_blobs_fragmentation_parameters,\
                 compute_portrait_size,\
-                check_number_of_blobs,\
-                get_crossing_and_statistics
+                check_number_of_blobs
+from fragment import create_list_of_fragments
 from globalfragment import compute_model_area_and_body_length,\
                             give_me_list_of_global_fragments,\
                             ModelArea,\
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     #############################################################
     #Selection/loading preprocessing parameters
     usePreviousPrecParams = bool(loadPreviousDict['preprocessing'])
-    selectPreprocParams(video, old_video, usePreviousPrecParams)
+    restore_segmentation = selectPreprocParams(video, old_video, usePreviousPrecParams)
     video.save()
     preprocessing_parameters_dict = {key: getattr(video, key) for key in video.__dict__ if 'apply_ROI' in key or 'subtract_bkg' in key or 'min' in key or 'max' in key}
     logger.info('The parameters used to preprocess the video are %s', preprocessing_parameters_dict)
@@ -185,7 +185,7 @@ if __name__ == '__main__':
         logger.info("Starting preprocessing")
         cv2.namedWindow('Bars')
         video.create_preprocessing_folder()
-        if not old_video or not old_video._has_been_segmented or usePreviousPrecParams == False:
+        if not old_video or not old_video._has_been_segmented or restore_segmentation == 'n':
             logger.debug("Starting segmentation")
             blobs = segment(video)
             logger.debug("Segmentation finished")
@@ -204,10 +204,6 @@ if __name__ == '__main__':
             preprocessing_parameters_dict = {key: getattr(video, key) for key in video.__dict__ if 'apply_ROI' in key or 'subtract_bkg' in key or 'min_' in key or 'max_' in key}
             logger.debug('The parameters used to preprocess the video are %s', preprocessing_parameters_dict)
             blobs_list = ListOfBlobs.load(old_video.blobs_path_segmented)
-            video._preprocessing_folder = old_video._preprocessing_folder
-            video._blobs_path_segmented = old_video._blobs_path_segmented
-            video._has_been_segmented = True
-            video._maximum_number_of_blobs = old_video.maximum_number_of_blobs
             video.save()
             blobs = blobs_list.blobs_in_video
             logger.debug("Segmented blobs loaded. Reset blobs for fragmentation")
@@ -223,61 +219,62 @@ if __name__ == '__main__':
         compute_portrait_size(video, median_body_length)
         logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
         apply_model_area_to_video(video, blobs, model_area, video.portrait_size[0])
-        use_crossings_detector = getInput('Crossings detector', 'Do you want to you the crossings detector? y/N')
-        if use_crossings_detector == 'y':
-            video.create_crossings_detector_folder()
-            logger.info("Get individual and crossing images labelled data")
-            training_set = CrossingDataset(blobs, video, scope = 'training')
-            training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)
-            validation_set = CrossingDataset(blobs, video, scope = 'validation',
-                                                            crossings = training_set.crossings,
-                                                            fish = training_set.fish,
-                                                            image_size = training_set.image_size)
-            validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1.)
-            logger.info("Start crossing detector training")
-            logger.info("Crossing detector training finished")
-            crossing_image_size = training_set.image_size
-            crossing_image_shape = training_set.images.shape[1:]
-            logger.info("crossing image shape %s" %str(crossing_image_shape))
-            crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
-                                                                        learning_rate = 0.001,
-                                                                        architecture = cnn_model_crossing_detector,
-                                                                        keep_prob = 1.0,
-                                                                        save_folder = video._crossings_detector_folder,
-                                                                        image_size = crossing_image_shape)
-            net = ConvNetwork_crossings(crossings_detector_network_params)
-            TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
-            logger.debug("crossing image size %s" %str(crossing_image_size))
-            video.crossing_image_shape = crossing_image_shape
-            video.crossing_image_size = crossing_image_size
-            video.save()
-            logger.debug("Freeing memory. Validation and training crossings sets deleted")
-            validation_set = None
-            training_set = None
-            test_set = CrossingDataset(blobs, video, scope = 'test',
-                                                    image_size = video.crossing_image_size)
-            # get predictions of individual blobs outside of global fragments
-            logger.debug("Classify individuals and crossings")
-            crossings_predictor = GetPredictionCrossigns(net)
-            predictions = crossings_predictor.get_all_predictions(test_set)
-            # set blobs as crossings by deleting the portrait
-            [setattr(blob,'_portrait',None) if prediction == 1 else setattr(blob,'bounding_box_image', None)
-                                            for blob, prediction in zip(test_set.test, predictions)]
-            # delete bounding_box_image from blobs that have portraits
-            [setattr(blob,'bounding_box_image', None) for blobs_in_frame in blobs
-                                                        for blob in blobs_in_frame
-                                                        if blob.is_a_fish
-                                                        and blob.bounding_box_image is not None]
-            logger.debug("Freeing memory. Test crossings set deleted")
-            test_set = None
+        # use_crossings_detector = getInput('Crossings detector', 'Do you want to you the crossings detector? y/N')
+        # if use_crossings_detector == 'y':
+        #     video.create_crossings_detector_folder()
+        #     logger.info("Get individual and crossing images labelled data")
+        #     training_set = CrossingDataset(blobs, video, scope = 'training')
+        #     training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)
+        #     validation_set = CrossingDataset(blobs, video, scope = 'validation',
+        #                                                     crossings = training_set.crossings,
+        #                                                     fish = training_set.fish,
+        #                                                     image_size = training_set.image_size)
+        #     validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1.)
+        #     logger.info("Start crossing detector training")
+        #     logger.info("Crossing detector training finished")
+        #     crossing_image_size = training_set.image_size
+        #     crossing_image_shape = training_set.images.shape[1:]
+        #     logger.info("crossing image shape %s" %str(crossing_image_shape))
+        #     crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
+        #                                                                 learning_rate = 0.001,
+        #                                                                 architecture = cnn_model_crossing_detector,
+        #                                                                 keep_prob = 1.0,
+        #                                                                 save_folder = video._crossings_detector_folder,
+        #                                                                 image_size = crossing_image_shape)
+        #     net = ConvNetwork_crossings(crossings_detector_network_params)
+        #     TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
+        #     logger.debug("crossing image size %s" %str(crossing_image_size))
+        #     video.crossing_image_shape = crossing_image_shape
+        #     video.crossing_image_size = crossing_image_size
+        #     video.save()
+        #     logger.debug("Freeing memory. Validation and training crossings sets deleted")
+        #     validation_set = None
+        #     training_set = None
+        #     test_set = CrossingDataset(blobs, video, scope = 'test',
+        #                                             image_size = video.crossing_image_size)
+        #     # get predictions of individual blobs outside of global fragments
+        #     logger.debug("Classify individuals and crossings")
+        #     crossings_predictor = GetPredictionCrossigns(net)
+        #     predictions = crossings_predictor.get_all_predictions(test_set)
+        #     # set blobs as crossings by deleting the portrait
+        #     [setattr(blob,'_portrait',None) if prediction == 1 else setattr(blob,'bounding_box_image', None)
+        #                                     for blob, prediction in zip(test_set.test, predictions)]
+        #     # delete bounding_box_image from blobs that have portraits
+        #     [setattr(blob,'bounding_box_image', None) for blobs_in_frame in blobs
+        #                                                 for blob in blobs_in_frame
+        #                                                 if blob.is_a_fish
+        #                                                 and blob.bounding_box_image is not None]
+        #     logger.debug("Freeing memory. Test crossings set deleted")
+        #     test_set = None
         #connect blobs that overlap in consecutive frames
         logger.debug("Generate individual and crossing fragments")
         connect_blob_list(blobs)
         #assign an identifier to each blob belonging to an individual fragment
-        compute_fragment_identifier_and_blob_index(blobs, video.maximum_number_of_blobs)
+        next_fragment_identifier = compute_fragment_identifier_and_blob_index(blobs, video.maximum_number_of_blobs)
         #assign an identifier to each blob belonging to a crossing fragment
-        compute_crossing_fragment_identifier(blobs)
-        _, video.number_of_crossings, video.number_of_crossing_frames, video.crossings_lengths = get_crossing_and_statistics(blobs)
+        compute_crossing_fragment_identifier(blobs, next_fragment_identifier)
+        #create list of fragments
+        list_of_fragments = create_list_of_fragments(blobs, video.number_of_animals)
         #save connected blobs in video (organized frame-wise) and list of global fragments
         video._has_been_preprocessed = True
         logger.debug("Saving individual and crossing fragments")
@@ -289,15 +286,15 @@ if __name__ == '__main__':
         #compute the global fragments (all animals are visible + each animals overlaps
         #with a single blob in the consecutive frame + the blobs respect the area model)
         logger.info("Generate global fragments")
-        global_fragments = give_me_list_of_global_fragments(blobs, video.number_of_animals)
-        video.individual_fragments_lenghts, video.individual_fragments_distance_travelled = compute_and_plot_global_fragments_statistics(video, blobs, global_fragments)
+        global_fragments = give_me_list_of_global_fragments(blobs, list_of_fragments, video.number_of_animals)
+        video.individual_fragments_lenghts, video.individual_fragments_distance_travelled = compute_and_plot_global_fragments_statistics(video, list_of_fragments, global_fragments)
         video.number_of_non_filtered_global_fragments = len(global_fragments)
         global_fragments = filter_global_fragments_by_minimum_number_of_frames(global_fragments, minimum_number_of_frames = 3)
         video.number_of_global_fragments = len(global_fragments)
         logger.info("Global fragments have been generated")
         # video.individual_fragments_lenghts, video.individual_fragments_distance_travelled = compute_and_plot_global_fragments_statistics(video, blobs, global_fragments)
         video.number_of_unique_images_in_global_fragments = give_me_number_of_unique_images_in_global_fragments(global_fragments)
-        video.maximum_number_of_portraits_in_global_fragments = np.max([global_fragment._total_number_of_portraits for global_fragment in global_fragments])
+        video.maximum_number_of_portraits_in_global_fragments = np.max([global_fragment.total_number_of_images for global_fragment in global_fragments])
         logger.info("Saving global fragments.")
         np.save(video.global_fragments_path, global_fragments)
         saved = False

@@ -674,7 +674,11 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
     return preprocParams
 
 def selectPreprocParams(video, old_video, usePreviousPrecParams):
-    if not usePreviousPrecParams:
+    if old_video and old_video._has_been_segmented:
+        restore_segmentation = getInput("Load segmentation", "Load the previous segmentation? Y/n")
+    else:
+        restore_segmentation = 'n'
+    if not usePreviousPrecParams and restore_segmentation == 'n':
         prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?')
         video.subtract_bkg = bool(prepOpts['bkg'])
         video.apply_ROI =  bool(prepOpts['ROI'])
@@ -714,6 +718,16 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         cv2.waitKey(1)
         cv2.destroyAllWindows()
         cv2.waitKey(1)
+    elif restore_segmentation == 'y' or restore_segmentation == '':
+        preprocessing_attributes = ['apply_ROI','subtract_bkg',
+                                    '_preprocessing_type','_maximum_number_of_blobs',
+                                    '_blobs_path_segmented', '_min_threshold','_max_threshold',
+                                    '_min_area','_max_area', '_resize','resolution_reduction',
+                                    'preprocessing_type','_number_of_animals',
+                                    'ROI','bkg', 'resolution_reduction',
+                                    '_preprocessing_folder']
+        video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
+        video._has_been_segmented = True
     else:
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
                                     '_preprocessing_type','_maximum_number_of_blobs',
@@ -728,6 +742,7 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
                                     ]
         video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_preprocessing_parameters = True
+    return restore_segmentation
 
 def selectPreprocParams_library(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg, frameIndices):
     if not usePreviousPrecParams:
@@ -815,7 +830,13 @@ def fragmentation_inspector(video, blobs_in_video):
             #draw the centroid
             cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, (255,0,0),1)
             font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(frame, str(blob.fragment_identifier),tuple(blob.centroid.astype('int')), font, 1,255, 5)
+            fragment_identifier = blob.fragment_identifier
+            # if blob.is_a_fish:
+            #     fragment_identifier = blob.fragment_identifier
+            # elif blob.is_a_crossing:
+            #     fragment_identifier = blob.crossing_identifier
+            cv2.putText(frame, str(fragment_identifier),tuple(blob.centroid.astype('int')), font, 1,255, 5)
+
 
         sizeValue = cv2.getTrackbarPos('frameSize', 'Bars')
         resizer(sizeValue)
