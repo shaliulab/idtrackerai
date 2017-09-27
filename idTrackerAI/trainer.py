@@ -41,7 +41,6 @@ def train(video,
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation')
     if plot_flag:
-        # Initialize pre-trainer plot
         plt.ion()
         fig, ax_arr = plt.subplots(4)
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
@@ -104,9 +103,9 @@ def train(video,
         store_training_accuracy_and_loss_data.save()
         store_validation_accuracy_and_loss_data.save()
     # Get best checkpoint
-    net.restore_index = np.argmin(store_validation_accuracy_and_loss_data.loss)
+    net.restore_index = np.argmax(store_validation_accuracy_and_loss_data.accuracy)
     logger.debug("next restore index: %s" %str(net.restore_index))
-    logger.debug("corresponding loss value %f" %store_validation_accuracy_and_loss_data.loss[net.restore_index])
+    logger.debug("corresponding accuracy value %f" %store_validation_accuracy_and_loss_data.accuracy[net.restore_index])
     # Save network model
     net.save()
     if plot_flag:

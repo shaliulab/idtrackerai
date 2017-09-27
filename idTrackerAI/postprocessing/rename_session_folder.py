@@ -13,4 +13,4 @@ print("loading video object...")
 video_object = np.load(video_path).item(0)
 
 new_session_name = getInput("Rename sessions", "Select a new session name")
-rename_session_folder(video_object, new_session_name)
+video_object.rename_session_folder(new_session_name)
