@@ -129,25 +129,7 @@ def propagate_crossing_identifier(blob, crossing_identifier):
         cur_blob = cur_blob.previous[0]
     return crossing_identifier + 1
 
-def get_crossing_and_statistics(list_of_blobs):
-    number_of_crossing_frames = 0
-    crossings = {}
 
-    for blobs_in_frame in list_of_blobs:
-        for blob in blobs_in_frame:
-            local_crossing = []
-            if blob.is_a_crossing:
-                print("frame number ", blob.frame_number)
-                number_of_crossing_frames += 1
-                try:
-                    crossings[blob.crossing_identifier].append(blob)
-                except:
-                    crossings[blob.crossing_identifier] = []
-                    crossings[blob.crossing_identifier].append(blob)
-
-
-    crossings_lengths = [len(crossings[c]) for c in crossings]
-    return crossings, len(crossings), number_of_crossing_frames, crossings_lengths
 
 class Crossing(object):
     def __init__(self, crossing_blob, video):

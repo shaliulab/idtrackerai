@@ -64,7 +64,7 @@ class Chosen_Video(EventDispatcher):
     def on_modified(self, instance, value):
         print("Chosen item in ", instance, " was modified to :",value)
         try:
-            print("you choose ----------->", value)
+            # print("you choose ----------->", value)
             self.video.video_path = value
             new_name_session_folder = raw_input('Session name: ')
             self.video.create_session_folder(name = new_name_session_folder)
@@ -73,19 +73,19 @@ class Chosen_Video(EventDispatcher):
             self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
             if self.old_video._has_been_assigned: self.video._has_been_assigned
             if hasattr(self.old_video, 'resolution_reduction'):
-                print("--------------------------------------------------------")
+                # print("--------------------------------------------------------")
                 self.video.resolution_reduction = self.old_video.resolution_reduction
                 self.video.bkg = self.old_video.bkg
                 self.video.ROI = self.old_video.ROI
 
-                print(self.video.resolution_reduction, self.video.ROI.shape)
+                # print(self.video.resolution_reduction, self.video.ROI.shape)
                 if self.video.ROI.shape[0] != self.video._height * self.video.resolution_reduction:
-                    print("resizing ROI")
+                    # print("resizing ROI")
                     self.video.ROI = cv2.resize(self.video.ROI, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
 
-                    print("***********************resized ROI shape ", self.video.ROI.shape)
+                    # print("***********************resized ROI shape ", self.video.ROI.shape)
                 if self.video.bkg is not None and self.video.bkg.shape[0] != self.video._height * self.video.resolution_reduction:
-                    print("resizing BKG")
+                    # print("resizing BKG")
                     self.video.bkg = cv2.resize(self.video.bkg, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
             if CHOSEN_VIDEO.video.video_path is not None:
                 if CHOSEN_VIDEO.old_video.preprocessing_type is None or CHOSEN_VIDEO.old_video.number_of_animals is None:
@@ -130,8 +130,8 @@ class SelectFile(BoxLayout):
         self.popup.dismiss()
 
     def open(self, path, filename):
-        print("opening video file")
-        print("filename  ", filename)
+        # print("opening video file")
+        # print("filename  ", filename)
         if len(filename) > 0:
             CHOSEN_VIDEO.set_chosen_item(filename[0])
 
@@ -630,7 +630,7 @@ class PreprocessingPreview(BoxLayout):
         # generate a averaged frame for segmentation
         self.av_frame = self.frame / avIntensity
         # threshold the frame according to the sliders' values
-        print('this is the current background ', self.bkg)
+        # print('this is the current background ', self.bkg)
         self.segmented_frame = segmentVideo(self.av_frame,
                                             int(self.min_threshold_slider.value),
                                             int(self.max_threshold_slider.value),
@@ -976,9 +976,9 @@ class Validator(BoxLayout):
         frame = self.visualiser.frame
         # print("frame shape in write Ids ", frame.shape)
         # cv2.putText(frame, str(self.visualiser.video_slider.value),(50,50), font, 1, [0, 0, 0], 3)
-        print("****************************************************************")
+        # print("****************************************************************")
         for blob in blobs_in_frame:
-            print("8<-------------------------------------------------------------")
+            # print("8<-------------------------------------------------------------")
 
             if not blob.is_a_crossing:
                 # print("______________________user generated id ", blob.user_generated_identity)
@@ -1038,9 +1038,9 @@ class Validator(BoxLayout):
                 self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
-            print("\nidentity: ", blob._identity)
-            if hasattr(blob, "_identity_corrected_solving_duplication"):
-                print("corrected identity in duplications: ", blob._identity_corrected_solving_duplication)
+            # print("\nidentity: ", blob._identity)
+            # if hasattr(blob, "_identity_corrected_solving_duplication"):
+            #     print("corrected identity in duplications: ", blob._identity_corrected_solving_duplication)
         #     if hasattr(blob,"fragment_identifier"):
         #         print("fragment_identifier: ", blob.fragment_identifier)
         #     else:
@@ -1055,7 +1055,7 @@ class Validator(BoxLayout):
         #     else:
         #         print("this blob does not have frequencies in fragment")
         #     print("P1_vector: ", blob.P1_vector)
-            print("P2_vector: ", blob.P2_vector)
+            # print("P2_vector: ", blob.P2_vector)
         #     print("is_a_fish: ", blob.is_a_fish)
         #     print("is_in_a_fragment: ", blob.is_in_a_fragment)
         #     print("is_a_fish_in_a_fragment: ", blob.is_a_fish_in_a_fragment)
@@ -1282,7 +1282,7 @@ class Validator(BoxLayout):
         return super(Validator, self).on_touch_down(touch)
 
     def frame_interval_popup(self):
-        print("-----------------------------------------------------")
+        # print("-----------------------------------------------------")
         self.popup_container = BoxLayout(orientation = "vertical")
         # self.popup_container_lbl = Label(text = "Input start and ending frame to compute accuracy against groundtruth")
         # self.popup_container_lbl.text_size = self.popup_container_lbl.size
@@ -1354,7 +1354,7 @@ class Validator(BoxLayout):
                         count_number_assignment_per_individual_assigned[blob.identity] += 1
                         count_number_assignment_per_individual_all[blob.identity] += 1
                     elif (blob.identity == 0 or blob._identity_corrected_solving_duplication == 0) and blob.user_generated_identity is None:
-                        print("frame number, ", blob.frame_number)
+                        # print("frame number, ", blob.frame_number)
                         frames_with_zeros.append(blob.frame_number)
                         check_ground_truth = True
 

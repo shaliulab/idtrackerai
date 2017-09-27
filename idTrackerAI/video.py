@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function
 import itertools
 import numpy as np
 import os
+from tempfile import mkstemp
+from shutil import move
 import glob
 try:
     import cPickle as pickle
@@ -10,6 +12,7 @@ except:
     import pickle
 from natsort import natsorted
 import cv2
+import time
 import logging
 
 AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg']
@@ -39,12 +42,117 @@ class Video(object):
         self._pretraining_folder = None
         self._knowledge_transfer_model_folder = None
         self.tracking_with_knowledge_transfer = False
-        self._accumulation_finished = None
-        self._training_finished = None
+        self._first_accumulation_finished = None
+        self._second_accumulation_finished = None
         self._has_been_assigned = None
+        self._has_duplications_solved = None
         self._has_crossings_solved = None
         self._has_trajectories = None
         self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
+
+    def check_paths_consistency_with_video_path(self,new_video_path):
+
+        if self.video_path != new_video_path:
+            self.update_paths(new_video_path)
+
+    def update_paths(self,new_video_object_path):
+        if new_video_object_path == '': raise ValueError("The path to the video object is an empty string")
+
+        new_session_path = os.path.split(new_video_object_path)[0]
+        old_session_path = self._session_folder
+
+        video_name = os.path.split(self._video_path)[1]
+        self._video_folder = os.path.split(new_session_path)[0]
+        self.video_path = os.path.join(self._video_folder,video_name)
+
+        attributes_to_modify = {key: getattr(self, key) for key in self.__dict__
+        if isinstance(getattr(self, key), basestring)
+        and old_session_path in getattr(self, key) }
+
+        for key in attributes_to_modify:
+            new_value = attributes_to_modify[key].replace(old_session_path, new_session_path)
+            setattr(self, key, new_value)
+
+        logger.info("Updating checkpoint files")
+        folders_to_check = ['_crossings_detector_folder', '_pretraining_folder', '_accumulation_folder']
+        for folder in folders_to_check:
+            if hasattr(self, folder) and getattr(self, folder) is not None:
+                if folder == folders_to_check[0]:
+                    checkpoint_path = os.path.join(self._crossings_detector_folder,'checkpoint')
+                    if os.path.isfile(checkpoint_path):
+                        self.update_tensorflow_checkpoints_file(checkpoint_path, old_session_path, new_session_path)
+                    else:
+                        logger.warn('No checkpoint found in %s ' %folder)
+                else:
+                    for sub_folder in ['conv', 'softmax']:
+                        checkpoint_path = os.path.join(getattr(self,folder),sub_folder,'checkpoint')
+                        if os.path.isfile(checkpoint_path):
+                            self.update_tensorflow_checkpoints_file(checkpoint_path, old_session_path, new_session_path)
+                        else:
+                            logger.warn('No checkpoint found in %s ' %os.path.join(getattr(self,folder),sub_folder))
+
+
+        logger.info("Saving video object")
+        self.save()
+        logger.info("Done")
+
+    @staticmethod
+    def update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name):
+        checkpoint_file = open(checkpoint_path, "r")
+        fh, abs_path = mkstemp()
+        with os.fdopen(fh,'w') as new_file:
+            with open(checkpoint_path) as old_file:
+                for line in old_file:
+                    splitted_line = line.split('"')
+                    string_to_replace = splitted_line[1]
+                    new_string = string_to_replace.replace(current_session_name, new_session_name)
+                    splitted_line[1] = new_string
+                    new_line = '"'.join(splitted_line)
+                    new_file.write(new_line)
+
+        os.remove(checkpoint_path)
+        move(abs_path, checkpoint_path)
+
+    def rename_session_folder(self, new_session_name):
+        assert new_session_name != ''
+        new_session_name = 'session_' + new_session_name
+        current_session_name = os.path.split(self._session_folder)[1]
+
+        logger.info("Updating checkpoint files")
+        folders_to_check = ['_crossings_detector_folder', '_pretraining_folder', '_accumulation_folder']
+        for folder in folders_to_check:
+            if hasattr(self, folder) and getattr(self, folder) is not None:
+                if folder == folders_to_check[0]:
+                    checkpoint_path = os.path.join(self._crossings_detector_folder,'checkpoint')
+                    if os.path.isfile(checkpoint_path):
+                        self.update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name)
+                    else:
+                        logger.warn('No checkpoint found in %s ' %folder)
+                else:
+                    for sub_folder in ['conv', 'softmax']:
+                        checkpoint_path = os.path.join(getattr(self,folder),sub_folder,'checkpoint')
+                        if os.path.isfile(checkpoint_path):
+                            self.update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name)
+                        else:
+                            logger.warn('No checkpoint found in %s ' %os.path.join(getattr(self,folder),sub_folder))
+
+        attributes_to_modify = {key: getattr(self, key) for key in self.__dict__
+        if isinstance(getattr(self, key), basestring)
+        and current_session_name in getattr(self, key) }
+
+        logger.info("Modifying folder name from %s to %s "  %(current_session_name, new_session_name))
+        os.rename(self._session_folder,
+                os.path.join(self._video_folder, new_session_name))
+        logger.info("Done")
+        logger.info("Updating video object")
+
+        for key in attributes_to_modify:
+            new_value = attributes_to_modify[key].replace(current_session_name, new_session_name)
+            setattr(self, key, new_value)
+        logger.info("Saving video object")
+        self.save()
+        logger.info("Done")
+
 
     @property
     def video_path(self):
@@ -59,6 +167,7 @@ class Video(object):
             self._video_folder = os.path.dirname(self._video_path)
             #collect some info on the video (resolution, number of frames, ..)
             self.get_info()
+            self.modified = time.strftime("%c")
         else:
             raise ValueError("Supported video extensions are ", AVAILABLE_VIDEO_EXTENSION)
 
@@ -109,6 +218,17 @@ class Video(object):
             self._num_episodes = len(self._paths_to_video_segments)
         cap.release()
 
+    def init_processes_time_attributes(self):
+        self.generate_trajectories_time = 0
+        self.solve_impossible_jumps_time = 0
+        self.solve_duplications_time = 0
+        self.assignment_time = 0
+        self.second_accumulation_time = 0
+        self.pretraining_time = 0
+        self.assignment_time = 0
+        self.first_accumulation_time = 0
+        self.preprocessing_time = 0
+
     def create_session_folder(self, name = ''):
         """Creates a folder named training in video_folder and a folder session_num
         where num is the session number and it is created everytime one starts
@@ -144,11 +264,11 @@ class Video(object):
             logger.info("the folder %s has been created" %self._crossings_detector_folder)
             os.makedirs(self._crossings_detector_folder)
 
-    def create_pretraining_folder(self, number_of_global_fragments_used_to_pretrain):
+    def create_pretraining_folder(self):
         """Creates a folder named pretraining in video_folder where the model
         trained during the pretraining is stored
         """
-        self._pretraining_folder = os.path.join(self._session_folder, 'pretraining' + str(number_of_global_fragments_used_to_pretrain))
+        self._pretraining_folder = os.path.join(self._session_folder, 'pretraining')
         if not os.path.isdir(self._pretraining_folder):
             os.makedirs(self._pretraining_folder)
 
@@ -159,6 +279,23 @@ class Video(object):
         self._accumulation_folder = os.path.join(self._session_folder, accumulation_folder_name)
         if not os.path.isdir(self._accumulation_folder):
             os.makedirs(self._accumulation_folder)
+
+    def init_accumulation_statistics_attributes(self, attributes = None, index = 0):
+        if attributes is None:
+            attributes = ['number_of_accumulated_global_fragments',
+                        'number_of_non_certain_global_fragments',
+                        'number_of_randomly_assigned_global_fragments',
+                        'number_of_nonconsistent_global_fragments',
+                        'number_of_nonunique_global_fragments',
+                        'number_of_acceptable_global_fragments',
+                        'validation_accuracy',
+                        'validation_individual_accuracies',
+                        'ratio_of_accumulated_images']
+        self.accumulation_statistics_attributes_list = [attribute + '_' + str(index) for attribute in attributes]
+        [setattr(self, attribute, []) for attribute in self.accumulation_statistics_attributes_list]
+
+    def store_accumulation_statistics_data(self, new_values):
+        [getattr(self, attr).append(value) for attr, value in zip(self.accumulation_statistics_attributes_list, new_values)]
 
     def create_training_folder(self):
         """Folder in which the last model is stored (after accumulation)
@@ -263,6 +400,24 @@ class Video(object):
         else:
             self._knowledge_transfer_model_folder = None
 
+    def copy_attributes_between_two_video_objects(self, video_object_source, list_of_attributes):
+        for attribute in list_of_attributes:
+            assert hasattr(video_object_source, attribute)
+            setattr(self, attribute, getattr(video_object_source, attribute))
+
+    def compute_overall_P2(self, blobs_in_video):
+        P2_sum = 0
+        counter = 0
+
+        for blobs_in_frame in blobs_in_video:
+            for blob in blobs_in_frame:
+                if hasattr(blob, '_P2_vector'):
+                    P2_sum += np.max(blob._P2_vector)
+                    counter += 1
+
+        self.overlall_P2 = P2_sum / counter
+
+
 def get_num_frame(path):
     cap = cv2.VideoCapture(path)
     num_frame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
@@ -289,3 +444,12 @@ if __name__ == "__main__":
 
     video = Video()
     video.video_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi'
+
+# 'time_preprocessing': None,
+# 'time_accumulation_before_pretraining': None,
+# 'time_pretraining': None,
+# 'time_accumulation_after_pretraining': None,
+# 'time_assignment': None,
+# 'time_postprocessing': None,
+# 'total_time': None,
+#  }, ignore_index=True)
