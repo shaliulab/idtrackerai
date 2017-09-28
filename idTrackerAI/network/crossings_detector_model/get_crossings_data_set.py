@@ -9,7 +9,8 @@ import cv2
 import numpy as np
 from GUI_utils import selectDir
 from get_portraits import get_body
-from blob import ListOfBlobs, Blob
+from blob import Blob
+from list_of_blobs import ListOfBlobs
 import matplotlib.pyplot as plt
 from get_data import duplicate_PCA_images
 
@@ -31,7 +32,7 @@ class CrossingDataset(object):
             self.crossings = []
             frame_number = 0
 
-            while num_crossing_images <= MAX_NUMBER_OF_IMAGES * self.video.number_of_animals and frame_number < self.video._num_frames - 1:
+            while num_crossing_images <= MAX_NUMBER_OF_IMAGES * self.video.number_of_animals and frame_number < self.video.number_of_frames - 1:
                 blobs_in_frame = self.blobs[frame_number]
                 frame_number += 1
                 for blob in blobs_in_frame:

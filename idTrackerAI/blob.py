@@ -2,17 +2,15 @@ from __future__ import absolute_import, division, print_function
 import sys
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
-from get_portraits import get_portrait, get_body
+
 import itertools
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
 import logging
 
-from statistics_for_assignment import compute_P1_individual_fragment_from_frequencies
+from get_portraits import get_portrait, get_body
 
-# STD_TOLERANCE = 1 # tolerance to select a blob as being a single fish according to the area model
-### NOTE set to 1 because we changed the model area to work with the median.
 logger = logging.getLogger("__main__.blob")
 
 class Blob(object):
@@ -30,43 +28,11 @@ class Blob(object):
         self.reset_before_fragmentation('fragmentation')
 
     def reset_before_fragmentation(self, recovering_from):
-        if recovering_from == 'accumulation' or recovering_from == 'fragmentation':
-            self._frequencies_in_fragment = np.zeros(self.number_of_animals).astype('int')
-            self._P1_vector = np.zeros(self.number_of_animals)
-            self._P2_vector = np.zeros(self.number_of_animals)
-            self._assigned_during_accumulation = False
-            self._user_generated_identity = None #in the validation part users can correct manually the identities
-            self._identity = None
-            self._identity_corrected_solving_duplication = None
-            self._user_generated_centroids = []
-            self._user_generated_identities = []
         if recovering_from == 'fragmentation':
             self.next = [] # next blob object overlapping in pixels with current blob object
             self.previous = [] # previous blob object overlapping in pixels with the current blob object
             self._fragment_identifier = None # identity in individual fragment after fragmentation
             self._blob_index = None # index of the blob to plot the individual fragments
-            self._identity = None # identity assigned by the algorithm
-            self._frequencies_in_fragment = np.zeros(self.number_of_animals).astype('int')
-            self._P1_vector = np.zeros(self.number_of_animals)
-            self._P2_vector = np.zeros(self.number_of_animals)
-            self._assigned_during_accumulation = False
-            self.fragment_identifier = None
-            self._blob_index = None
-            self.non_shared_information_with_previous = None
-        if recovering_from == 'assignment':
-            if not self.assigned_during_accumulation:
-                self._identity = None
-                self._frequencies_in_fragment = np.zeros(self.number_of_animals).astype('int')
-                self._P1_vector = np.zeros(self.number_of_animals)
-                self._P2_vector = np.zeros(self.number_of_animals)
-            else:
-                self._identity = int(np.argmax(self._P1_vector)) + 1
-            if self._user_generated_identity is not None:
-                self._user_generated_identity = None #in the validation part users can correct manually the identities
-                self._user_generated_centroids = []
-                self._user_generated_identities = []
-        self._identity_corrected_solving_duplication = None
-        self._is_a_duplication = False
 
     @property
     def user_generated_identity(self):
@@ -442,136 +408,39 @@ class Blob(object):
                 logger.debug("mean pixels both blobs %s" %str(np.mean([len(self.pixels), len(self.previous[0].pixels)])))
                 raise ValueError("non_shared_information_with_previous is nan")
 
-def compute_fragment_identifier_and_blob_index(blobs_in_video, maximum_number_of_blobs):
-    counter = 1
-    possible_blob_indices = range(maximum_number_of_blobs)
+    def apply_model_area(self, video, model_area, portraitSize):
+        if model_area(self.area): #Checks if area is compatible with the model area we built
+            if video.resolution_reduction == 1:
+                height = video._height
+                width = video._width
+            else:
+                height  = int(video._height * video.resolution_reduction)
+                width  = int(video._width * video.resolution_reduction)
 
-    for blobs_in_frame in tqdm(blobs_in_video, desc = 'assigning fragment identifier'):
-        used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]
-        missing_blob_indices =  list(set(possible_blob_indices).difference(set(used_blob_indices)))
-        for blob in blobs_in_frame:
-            if blob.fragment_identifier is None and blob.is_a_fish:
-                blob.fragment_identifier = counter
-                blob_index = missing_blob_indices.pop(0)
-                blob._blob_index = blob_index
-                blob.non_shared_information_with_previous = 1.
-                if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
-                    blob.next[0].fragment_identifier = counter
-                    blob.next[0]._blob_index = blob_index
-                    blob.next[0].compute_overlapping_with_previous_blob()
-                    if blob.next[0].is_a_fish_in_a_fragment:
-                        blob = blob.next[0]
-
-                        while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
-                            blob = blob.next[0]
-                            blob.fragment_identifier = counter
-                            blob._blob_index = blob_index
-                            # compute_overlapping_with_previous_blob
-                            blob.compute_overlapping_with_previous_blob()
-
-                        if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
-                            blob.next[0].fragment_identifier = counter
-                            blob.next[0]._blob_index = blob_index
-                            blob.next[0].compute_overlapping_with_previous_blob()
-                        # elif blob.next[0].is_a_ghost_crossing:
-                        #     blob.next[0].fragment_identifier = counter
-                        #     blob.next[0]._blob_index = blob_index
-                        #     blob.next[0].compute_overlapping_with_previous_blob()
-
-                counter += 1
-    return counter
-
-def compute_crossing_fragment_identifier(list_of_blobs, next_fragment_identifier):
-    """we define a crossing fragment as a crossing that in subsequent frames
-    involves the same individuals"""
-    fragment_identifier = next_fragment_identifier
-
-    for blobs_in_frame in list_of_blobs:
-        for blob in blobs_in_frame:
-            if blob.is_a_crossing and blob.fragment_identifier is None:
-                propagate_crossing_identifier(blob, fragment_identifier)
-                fragment_identifier += 1
-            elif blob.is_a_crossing and blob.fragment_identifier is not None:
-                blob.is_a_crossing_in_a_fragment = True
-
-def propagate_crossing_identifier(blob, fragment_identifier):
-    blob.is_a_crossing_in_a_fragment = True
-    blob.fragment_identifier = fragment_identifier
-    cur_blob = blob
-
-    while len(cur_blob.next) == 1 and cur_blob.next[0].is_a_crossing:
-        cur_blob = cur_blob.next[0]
-        cur_blob.fragment_identifier = fragment_identifier
-
-    cur_blob = blob
-
-    while len(cur_blob.previous) == 1 and cur_blob.previous[0].is_a_crossing:
-        cur_blob = cur_blob.previous[0]
-        cur_blob.fragment_identifier = fragment_identifier
-
-def connect_blob_list(blobs_in_video):
-    for frame_i in tqdm(xrange(1,len(blobs_in_video)), desc = 'Connecting blobs '):
-        set_frame_number_to_blobs_in_frame(blobs_in_video[frame_i-1], frame_i-1)
-        for (blob_0, blob_1) in itertools.product(blobs_in_video[frame_i-1], blobs_in_video[frame_i]):
-            if blob_0.overlaps_with(blob_1):
-                blob_0.now_points_to(blob_1)
-    set_frame_number_to_blobs_in_frame(blobs_in_video[frame_i], frame_i)
-
-def set_frame_number_to_blobs_in_frame(blobs_in_frame, frame_number):
-    for blob in blobs_in_frame:
-        blob.frame_number = frame_number
-
-def all_blobs_in_a_fragment(blobs_in_frame):
-    return all([blob.is_in_a_fragment for blob in blobs_in_frame])
-
-def is_a_global_fragment(blobs_in_frame, num_animals):
-    """Returns True iff:
-    * number of blobs equals num_animals
-    """
-    return len(blobs_in_frame) == num_animals
-
-def check_global_fragments(blobs_in_video, num_animals):
-    """Returns an array with True iff:
-    * each blob has a unique blob intersecting in the past and future
-    * number of blobs equals num_animals
-    """
-    return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame) == num_animals for blobs_in_frame in blobs_in_video]
-
-def compute_portrait_size(video, maximum_body_length):
-    if video.preprocessing_type == 'portrait':
-        portrait_size = int(maximum_body_length/2)
-        portrait_size =  portrait_size + portrait_size%2 #this is to make the portrait_size even
-        video.portrait_size = (portrait_size, portrait_size, 1)
-    elif video.preprocessing_type == 'body' or video.preprocessing_type == 'body_blob':
-        portrait_size = int(np.sqrt(maximum_body_length ** 2 / 2))
-        portrait_size = portrait_size + portrait_size%2  #this is to make the portrait_size
-        video.portrait_size = (portrait_size, portrait_size, 1)
-
-def apply_model_area(video, blob, model_area, portraitSize):
-    if model_area(blob.area): #Checks if area is compatible with the model area we built
-        if video.resolution_reduction == 1:
-            height = video._height
-            width = video._width
-        else:
-            height  = int(video._height * video.resolution_reduction)
-            width  = int(video._width * video.resolution_reduction)
-
-        if video.preprocessing_type == 'portrait':
-            portrait, blob._nose_coordinates, blob._head_coordinates = get_portrait(blob.bounding_box_image, blob.contour, blob.bounding_box_in_frame_coordinates, portraitSize)
-        elif video.preprocessing_type == 'body':
-            portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(height, width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize)
-        elif video.preprocessing_type == 'body_blob':
-            portrait, blob._extreme1_coordinates, blob._extreme2_coordinates = get_body(height, width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, portraitSize, only_blob = True)
-        blob._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
-
-def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portraitSize):
-    for blob in blobs_in_frame:
-        apply_model_area(video, blob, model_area, portraitSize)
-
-def apply_model_area_to_video(video, blobs_in_video, model_area, portraitSize):
-    # Parallel(n_jobs=-1)(delayed(apply_model_area_to_blobs_in_frame)(frame, model_area) for frame in tqdm(blobs_in_video, desc = 'Fragmentation progress'))
-    for blobs_in_frame in tqdm(blobs_in_video, desc = 'Applying model area'):
-        apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portraitSize)
+            if video.preprocessing_type == 'portrait':
+                portrait, \
+                self._nose_coordinates, \
+                self._head_coordinates = get_portrait(self.bounding_box_image,
+                                                    self.contour,
+                                                    self.bounding_box_in_frame_coordinates,
+                                                    portraitSize)
+            elif video.preprocessing_type == 'body':
+                portrait, \
+                self._extreme1_coordinates, \
+                self._extreme2_coordinates = get_body(height, width,
+                                                    self.bounding_box_image,
+                                                    self.pixels,
+                                                    self.bounding_box_in_frame_coordinates,
+                                                    portraitSize)
+            elif video.preprocessing_type == 'body_blob':
+                portrait, \
+                self._extreme1_coordinates, \
+                self._extreme2_coordinates = get_body(height, width,
+                                                    self.bounding_box_image,
+                                                    self.pixels,
+                                                    self.bounding_box_in_frame_coordinates,
+                                                    portraitSize, only_blob = True)
+            self._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
 
 def get_images_from_blobs_in_video(blobs_in_video):
     portraits_in_video = []
@@ -592,57 +461,3 @@ def reset_blobs_fragmentation_parameters(blobs_in_video, recovering_from = 'frag
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
             blob.reset_before_fragmentation(recovering_from)
-
-def check_number_of_blobs(video, blobs):
-    frames_with_more_blobs_than_animals = []
-    for frame_number, blobs_in_frame in enumerate(blobs):
-
-        if len(blobs_in_frame) > video.number_of_animals:
-            frames_with_more_blobs_than_animals.append(frame_number)
-
-    if len(frames_with_more_blobs_than_animals) > 0:
-        logger.error('There are frames with more blobs than animals, this can be detrimental for the proper functioning of the system.')
-        logger.error("Frames with more blobs than animals: %s" %str(frames_with_more_blobs_than_animals))
-        raise ValueError('Please check your segmentaion')
-    return frames_with_more_blobs_than_animals
-
-class ListOfBlobs(object):
-    def __init__(self, blobs_in_video = None, path_to_save = None):
-        self.blobs_in_video = blobs_in_video
-        self.path_to_save = path_to_save
-
-    def generate_cut_points(self, num_chunks):
-        n = len(self.blobs_in_video) // num_chunks
-        self.cutting_points = np.arange(0,len(self.blobs_in_video),n)[1:]
-
-    def cut_in_chunks(self):
-        for frame in self.cutting_points:
-            self.cut_at_frame(frame)
-
-    def cut_at_frame(self, frame_number):
-        for blob in self.blobs_in_video[frame_number-1]:
-            blob.next = []
-        for blob in self.blobs_in_video[frame_number]:
-            blob.previous = []
-
-    def reconnect(self):
-        logger.info("Reconnecting list of blob objects")
-        for frame_i in self.cutting_points:
-            for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
-                if blob_0.overlaps_with(blob_1):
-                    blob_0.now_points_to(blob_1)
-
-    def save(self):
-        """save instance"""
-        logger.info("saving blobs list at %s" %self.path_to_save)
-        np.save(self.path_to_save, self)
-        self.reconnect()
-
-    @classmethod
-    def load(cls, path_to_load_blob_list_file):
-        logger.info("loading blobs list from %s" %path_to_load_blob_list_file)
-
-        list_of_blobs = np.load(path_to_load_blob_list_file).item()
-        logging.debug("cutting points %s" %list_of_blobs.cutting_points)
-        list_of_blobs.reconnect()
-        return list_of_blobs

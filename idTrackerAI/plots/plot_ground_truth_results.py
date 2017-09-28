@@ -17,7 +17,8 @@ import pandas as pd
 from pprint import pprint
 import time
 
-from blob import ListOfBlobs, Blob
+from list_of_blobs import ListOfBlobs
+from blob import Blob
 from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
 from compute_statistics_against_groundtruth import get_statistics_against_groundtruth, \
                                                     compute_and_save_gt_accuracy
@@ -69,7 +70,7 @@ if __name__ == '__main__':
                                                                 'video_name': video.video_path,
                                                                 'height': video._height,
                                                                 'width': video._width,
-                                                                'num_frames': video._num_frames,
+                                                                'num_frames': video.number_of_frames,
                                                                 'frames_per_second': video._frames_per_second,
                                                                 'number_of_animals': video._number_of_animals,
                                                                 'preprocessing_type': video._preprocessing_type,

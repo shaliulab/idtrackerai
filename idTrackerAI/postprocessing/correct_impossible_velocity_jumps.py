@@ -10,7 +10,7 @@ from tqdm import tqdm
 import collections
 import logging
 
-from blob import ListOfBlobs
+from list_of_blobs import ListOfBlobs
 from assigner import assign
 from id_CNN import ConvNetwork
 from network_params import NetworkParams

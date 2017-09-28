@@ -23,32 +23,14 @@ sys.path.append('./network/crossings_detector_model')
 sys.path.append('./network/identification_model')
 sys.path.append('./groundtruth_utils')
 sys.path.append('./tf_cnnvis')
+sys.path.append('./plots')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
-from blob import compute_fragment_identifier_and_blob_index,\
-                compute_crossing_fragment_identifier,\
-                connect_blob_list,\
-                apply_model_area_to_video,\
-                ListOfBlobs,\
-                get_images_from_blobs_in_video,\
-                reset_blobs_fragmentation_parameters,\
-                compute_portrait_size,\
-                check_number_of_blobs
-from fragment import create_list_of_fragments
-from globalfragment import compute_model_area_and_body_length,\
-                            give_me_list_of_global_fragments,\
-                            ModelArea,\
-                            give_me_pre_training_global_fragments,\
-                            get_images_and_labels_from_global_fragments,\
-                            subsample_images_for_last_training,\
-                            order_global_fragments_by_distance_travelled,\
-                            filter_global_fragments_by_minimum_number_of_frames,\
-                            compute_and_plot_global_fragments_statistics,\
-                            check_uniquenss_of_global_fragments,\
-                            get_number_of_images_in_global_fragments_list,\
-                            give_me_number_of_unique_images_in_global_fragments
-from get_portraits import get_body
+from list_of_blobs import ListOfBlobs
+from list_of_fragments import ListOfFragments, create_list_of_fragments
+from list_of_global_fragments import ListOfGlobalFragments, create_list_of_global_fragments
+from global_fragments_statistics import compute_and_plot_fragments_statistics
 from segmentation import segment
 from get_crossings_data_set import CrossingDataset
 from network_params_crossings import NetworkParams_crossings
@@ -87,7 +69,7 @@ from compute_velocity_model import compute_model_velocity
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING = .25
 VEL_PERCENTILE = 99
-THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
+THRESHOLD_ACCEPTABLE_ACCUMULATION = 1.
 ###
 # seed numpy
 np.random.seed(0)
@@ -190,35 +172,31 @@ if __name__ == '__main__':
             blobs = segment(video)
             logger.debug("Segmentation finished")
             video._has_been_segmented = True
-            blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path_segmented)
-            blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
-            blobs_list.cut_in_chunks()
-            blobs_list.save()
-            reset_blobs_fragmentation_parameters(blobs)
-            logger.debug("Saving segmented blobs")
-            blobs = blobs_list.blobs_in_video
+            list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
+            list_of_blobs.save(video.blobs_path_segmented, NUM_CHUNKS_BLOB_SAVING)
             logger.debug("Segmented blobs saved")
         else:
             # Load blobs and global fragments
             logger.debug("Loading previously segmented blobs")
-            preprocessing_parameters_dict = {key: getattr(video, key) for key in video.__dict__ if 'apply_ROI' in key or 'subtract_bkg' in key or 'min_' in key or 'max_' in key}
+            preprocessing_parameters_dict = {key: getattr(video, key)
+                                            for key in video.__dict__
+                                            if 'apply_ROI' in key
+                                            or 'subtract_bkg' in key
+                                            or 'min_' in key
+                                            or 'max_' in key}
             logger.debug('The parameters used to preprocess the video are %s', preprocessing_parameters_dict)
-            blobs_list = ListOfBlobs.load(old_video.blobs_path_segmented)
+            list_of_blobs = ListOfBlobs.load(old_video.blobs_path_segmented)
+            video._has_been_segmented = True
             video.save()
-            blobs = blobs_list.blobs_in_video
-            logger.debug("Segmented blobs loaded. Reset blobs for fragmentation")
-            logger.debug("Blobs reset")
-            reset_blobs_fragmentation_parameters(blobs)
+            logger.debug("Segmented blobs loaded")
         video.save()
         logger.info("Computing maximum number of blobs detected in the video")
-        frames_with_more_blobs_than_animals = check_number_of_blobs(video, blobs)
+        list_of_blobs.check_maximal_number_of_blob()
         logger.info("Computing a model of the area of the individuals")
-        model_area, median_body_length = compute_model_area_and_body_length(blobs, video.number_of_animals)
-        video.median_body_length = median_body_length
-        # compute portrait size
-        compute_portrait_size(video, median_body_length)
+        model_area, video.median_body_length = list_of_blobs.compute_model_area_and_body_length()
+        video.compute_portrait_size(video.median_body_length)
         logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
-        apply_model_area_to_video(video, blobs, model_area, video.portrait_size[0])
+        list_of_blobs.apply_model_area_to_video(model_area, video.portrait_size[0])
         # use_crossings_detector = getInput('Crossings detector', 'Do you want to you the crossings detector? y/N')
         # if use_crossings_detector == 'y':
         #     video.create_crossings_detector_folder()
@@ -267,53 +245,57 @@ if __name__ == '__main__':
         #     logger.debug("Freeing memory. Test crossings set deleted")
         #     test_set = None
         #connect blobs that overlap in consecutive frames
-        logger.debug("Generate individual and crossing fragments")
-        connect_blob_list(blobs)
+        list_of_blobs.compute_overlapping_between_subsequent_frames()
         #assign an identifier to each blob belonging to an individual fragment
-        next_fragment_identifier = compute_fragment_identifier_and_blob_index(blobs, video.maximum_number_of_blobs)
+        list_of_blobs.compute_fragment_identifier_and_blob_index()
         #assign an identifier to each blob belonging to a crossing fragment
-        compute_crossing_fragment_identifier(blobs, next_fragment_identifier)
+        list_of_blobs.compute_crossing_fragment_identifier()
         #create list of fragments
-        list_of_fragments, video.fragment_identifier_to_index = create_list_of_fragments(blobs, video.number_of_animals)
-        #save connected blobs in video (organized frame-wise) and list of global fragments
-        video._has_been_preprocessed = True
-        logger.debug("Saving individual and crossing fragments")
-        blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
-        blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
-        blobs_list.cut_in_chunks()
-        blobs_list.save()
-        blobs = blobs_list.blobs_in_video
+        fragments = create_list_of_fragments(list_of_blobs.blobs_in_video,
+                                            video.number_of_animals)
+        list_of_fragments = ListOfFragments(video, fragments)
+        video.fragment_identifier_to_index = list_of_fragments.get_fragment_identifier_to_index_list()
         #compute the global fragments (all animals are visible + each animals overlaps
         #with a single blob in the consecutive frame + the blobs respect the area model)
-        logger.info("Generate global fragments")
-        global_fragments = give_me_list_of_global_fragments(blobs, list_of_fragments, video.number_of_animals)
-        video.individual_fragments_lenghts, video.individual_fragments_distance_travelled = compute_and_plot_global_fragments_statistics(video, list_of_fragments, global_fragments)
-        video.number_of_non_filtered_global_fragments = len(global_fragments)
-        global_fragments = filter_global_fragments_by_minimum_number_of_frames(global_fragments, minimum_number_of_frames = 3)
-        video.number_of_global_fragments = len(global_fragments)
-        logger.info("Global fragments have been generated")
-        # video.individual_fragments_lenghts, video.individual_fragments_distance_travelled = compute_and_plot_global_fragments_statistics(video, blobs, global_fragments)
-        video.number_of_unique_images_in_global_fragments = give_me_number_of_unique_images_in_global_fragments(global_fragments)
-        video.maximum_number_of_portraits_in_global_fragments = np.max([global_fragment.total_number_of_images for global_fragment in global_fragments])
-        logger.info("Saving global fragments.")
-        np.save(video.global_fragments_path, global_fragments)
-        saved = False
+        global_fragments = create_list_of_global_fragments(list_of_blobs.blobs_in_video,
+                                                            list_of_fragments.fragments,
+                                                            video.number_of_animals)
+        list_of_global_fragments = ListOfGlobalFragments(video, global_fragments)
+        video.individual_fragments_lenghts, \
+        video.individual_fragments_distance_travelled = compute_and_plot_fragments_statistics(video,
+                                                                                            list_of_fragments,
+                                                                                            list_of_global_fragments)
+        video.number_of_non_filtered_global_fragments = list_of_global_fragments.number_of_global_fragments
+        list_of_global_fragments.filter_by_minimum_number_of_frames(minimum_number_of_frames = 3)
+        video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
+        list_of_global_fragments.compute_number_of_unique_images()
+        video.number_of_unique_images_in_global_fragments = list_of_global_fragments.number_of_images
+        list_of_global_fragments.compute_maximum_number_of_images()
+        video.maximum_number_of_portraits_in_global_fragments = list_of_global_fragments.maximum_number_of_images
+        list_of_global_fragments.order_global_fragments_by_distance_travelled()
+        video.first_frame_first_global_fragment = list_of_global_fragments.global_fragments[0].index_beginning_of_fragment
+        #save connected blobs in video (organized frame-wise)
+
+        list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
+        list_of_fragments.save(video.fragments_path)
+        list_of_global_fragments.save(video.global_fragments_path)
+        video._has_been_preprocessed = True
         video.save()
-        logger.info("Done.")
+        logger.info("Blobs detection and fragmentation finished succesfully.")
     else:
         cv2.namedWindow('Bars')
         logger.info("Loading preprocessed video")
-        path_attributes = ['_preprocessing_folder', '_blobs_path', '_global_fragments_path']
+        path_attributes = ['_preprocessing_folder', '_blobs_path', '_global_fragments_path', '_fragments_path']
         video.copy_attributes_between_two_video_objects(old_video, path_attributes)
         video._has_been_preprocessed = True
         video.save()
         # Load blobs and global fragments
         logger.info("Loading blob objects")
         list_of_blobs = ListOfBlobs.load(video.blobs_path)
-        blobs = list_of_blobs.blobs_in_video
-        logger.info("Loading global fragments")
-        global_fragments = np.load(video.global_fragments_path)
-        logger.info("Done")
+        logger.info("Loading list of fragments")
+        list_of_fragments = ListOfFragments.load(video.fragments_path)
+        logger.info("Loading list of global fragments")
+        list_of_global_fragments = ListOfGlobalFragments.load(video.global_fragments_path, list_of_fragments.fragments)
     video.preprocessing_time = time.time() - video.preprocessing_time
     #take a look to the resulting fragmentation
     # fragmentation_inspector(video, blobs)
@@ -344,6 +326,7 @@ if __name__ == '__main__':
     ##################   Protocols cascade   ####################
     #############################################################
     #### Accumulation ####
+    print('\n---------------------------------------------------------')
     video.first_accumulation_time = time.time()
     video.create_accumulation_folder(iteration_number = 0)
     logger.info("Set accumulation network parameters")
@@ -355,10 +338,8 @@ if __name__ == '__main__':
                                 image_size = video.portrait_size)
     if not bool(loadPreviousDict['first_accumulation']):
         logger.info("Starting accumulation")
-        # reset_blobs_fragmentation_parameters(blobs, recovering_from = 'accumulation')
-        reset_fragments(list_of_fragments, recovering_from = 'fragmentation')
-        #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
-        [global_fragment.reset_accumulation_params() for global_fragment in global_fragments]
+        list_of_fragments.reset(roll_back_to = 'fragmentation')
+        list_of_global_fragments.reset(roll_back_to = 'fragmentation')
         if video.tracking_with_knowledge_transfer:
             logger.info("We will restore the network from a previous model (knowledge transfer): %s" %video.knowledge_transfer_model_folder)
             accumulation_network_params.restore_folder = video.knowledge_transfer_model_folder
@@ -380,28 +361,30 @@ if __name__ == '__main__':
                 video.knowledge_transfer_from_same_animals = True
         #instantiate accumulation manager
         logger.info("Initialising accumulation manager")
-        accumulation_manager = AccumulationManager(list_of_fragments, global_fragments, video.number_of_animals)
+        # the list of global fragments is ordered in place from the distance (in frames) wrt
+        # the core of the first global fragment that will be accumulated
+        list_of_global_fragments.order_by_distance_to_the_first_global_fragment()
+        accumulation_manager = AccumulationManager(video, list_of_fragments.fragments, list_of_global_fragments.global_fragments)
         #set global epoch counter to 0
         logger.info("Start accumulation")
         global_step = 0
-        ratio_accumulated_images_over_all_unique_images_in_global_fragments = accumulate(accumulation_manager,
-                                                                                            video,
-                                                                                            blobs,
-                                                                                            global_fragments,
-                                                                                            global_step,
-                                                                                            net,
-                                                                                            video.knowledge_transfer_from_same_animals,
-                                                                                            get_ith_global_fragment = 0)
+        video.ratio_accumulated_images = accumulate(accumulation_manager,
+                                            video,
+                                            global_step,
+                                            net,
+                                            video.knowledge_transfer_from_same_animals,
+                                            get_ith_global_fragment = 0)
         logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
-        video.ratio_accumulated_images_over_all_unique_images_in_global_fragments = ratio_accumulated_images_over_all_unique_images_in_global_fragments
         video._first_accumulation_finished = True
         ### NOTE: save all the accumulation statistics
         video.save()
+        logger.info("Saving fragments")
+        np.save(video.fragments_path, list_of_fragments)
     else:
         ### NOTE: load all the accumulation statistics
         logger.info("Restoring accumulation network")
         video.copy_attributes_between_two_video_objects(old_video, ['_accumulation_folder',\
-                                                                    'ratio_accumulated_images_over_all_unique_images_in_global_fragments',\
+                                                                    'ratio_accumulated_images',\
                                                                     '_first_accumulation_finished',\
                                                                     'knowledge_transfer_from_same_animals'])
         accumulation_network_params.restore_folder = video._accumulation_folder
@@ -410,10 +393,11 @@ if __name__ == '__main__':
         logger.info("Saving video")
         video.save()
     video.first_accumulation_time = time.time() - video.first_accumulation_time
-    if video.ratio_accumulated_images_over_all_unique_images_in_global_fragments > THRESHOLD_ACCEPTABLE_ACCUMULATION:
+    if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
         video.assignment_time = time.time()
         if not loadPreviousDict['assignment']:
             #### Assigner ####
+            print('\n---------------------------------------------------------')
             assigner(blobs, video, net)
             video._has_been_assigned = True
             ### NOTE: save all the assigner statistics
@@ -422,6 +406,7 @@ if __name__ == '__main__':
             video._has_been_assigned = True
         video.assignment_time = time.time() - video.assignment_time
     else:
+        print('\n---------------------------------------------------------')
         video.pretraining_time = time.time()
         #create folder to store pretraining
         video.create_pretraining_folder()
@@ -435,7 +420,8 @@ if __name__ == '__main__':
                                                 image_size = video.portrait_size)
         if not loadPreviousDict['pretraining']:
             #### Pre-trainer ####
-            pre_trainer(old_video, video, blobs, global_fragments, pretrain_network_params)
+            list_of_global_fragments.order_global_fragments_by_distance_travelled()
+            pre_trainer(old_video, video, list_of_fragments, global_fragments, pretrain_network_params)
             logger.info("Pretraining ended")
             #save changes
             logger.info("Saving changes in video object")
@@ -454,6 +440,7 @@ if __name__ == '__main__':
         video.pretraining_time = time.time() - video.pretraining_time
         #### Accumulation ####
         #Last accumulation after pretraining
+        print('\n---------------------------------------------------------')
         video.second_accumulation_time = time.time()
         if not loadPreviousDict['second_accumulation']:
             percentage_of_accumulated_images = []
@@ -475,23 +462,22 @@ if __name__ == '__main__':
                 net.reinitialize_softmax_and_fully_connected()
                 #instantiate accumulation manager
                 logger.info("Initialising accumulation manager")
-                accumulation_manager = AccumulationManager(blobs, global_fragments, video.number_of_animals)
+                list_of_global_fragments.order_by_distance_to_the_first_global_fragment()
+                accumulation_manager = AccumulationManager(video, list_of_fragments.fragments, list_of_global_fragments.global_fragments)
                 #set global epoch counter to 0
                 logger.info("Start accumulation")
                 global_step = 0
-                ratio_accumulated_images_over_all_unique_images_in_global_fragments = accumulate(accumulation_manager,
-                                                                                                    video,
-                                                                                                    blobs,
-                                                                                                    global_fragments,
-                                                                                                    global_step,
-                                                                                                    net,
-                                                                                                    video.knowledge_transfer_from_same_animals,
-                                                                                                    get_ith_global_fragment = i)
+                video.ratio_accumulated_images = accumulate(accumulation_manager,
+                                                            video,
+                                                            global_step,
+                                                            net,
+                                                            video.knowledge_transfer_from_same_animals,
+                                                            get_ith_global_fragment = i)
                 logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
-                if ratio_accumulated_images_over_all_unique_images_in_global_fragments > THRESHOLD_ACCEPTABLE_ACCUMULATION:
+                if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                     break
                 else:
-                    percentage_of_accumulated_images.append(ratio_accumulated_images_over_all_unique_images_in_global_fragments)
+                    percentage_of_accumulated_images.append(video.ratio_accumulated_images)
                     logger.info("This accumulation was not satisfactory. Try to start from a different global fragment")
 
             if len(percentage_of_accumulated_images) > 1 and np.argmax(percentage_of_accumulated_images) != 2:
@@ -509,6 +495,7 @@ if __name__ == '__main__':
         video.assignment_time = time.time()
         if not loadPreviousDict['assignment']:
             #### Assigner ####
+            print('\n---------------------------------------------------------')
             assigner(blobs, video, net)
             video._has_been_assigned = True
             ### NOTE: save all the assigner statistics
@@ -519,11 +506,9 @@ if __name__ == '__main__':
 
     # finish and save
     logger.info("Saving blobs objects and video object")
-    blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
-    blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
-    blobs_list.cut_in_chunks()
+    list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
     logger.info("Saving list of blobs")
-    blobs_list.save()
+    list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
     logger.info("Saving global fragments")
     np.save(video.global_fragments_path, global_fragments)
     logger.info("Saving video")
@@ -557,10 +542,8 @@ if __name__ == '__main__':
         logger.info("Done")
         # finish and save
         logger.info("Saving")
-        blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
-        blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
-        blobs_list.cut_in_chunks()
-        blobs_list.save()
+        list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
+        list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
         video.save()
         logger.info("Done")
         # visualise proposed tracking
@@ -591,10 +574,8 @@ if __name__ == '__main__':
     logger.info("Done")
     # finish and save
     logger.info("Saving")
-    blobs_list = ListOfBlobs(blobs_in_video = blobs, path_to_save = video.blobs_path)
-    blobs_list.generate_cut_points(NUM_CHUNKS_BLOB_SAVING)
-    blobs_list.cut_in_chunks()
-    blobs_list.save()
+    list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
+    list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
     video.compute_overall_P2(blobs)
     video.save()
     logger.info("Done")

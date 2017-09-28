@@ -10,7 +10,8 @@ import cv2
 import numpy as np
 from GUI_utils import selectDir
 from get_portraits import get_body
-from blob import ListOfBlobs, Blob
+from list_of_blobs import ListOfBlobs
+from blob import Blob
 import matplotlib.pyplot as plt
 from get_data import duplicate_PCA_images
 

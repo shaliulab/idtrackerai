@@ -190,6 +190,14 @@ class Video(object):
     def maximum_number_of_blobs(self):
         return self._maximum_number_of_blobs
 
+    @property
+    def number_of_frames(self):
+        return self._number_of_frames
+
+    @property
+    def number_of_episodes(self):
+        return self._number_of_episodes
+
     def check_split_video(self):
         """If the video is divided in chunks retrieves the path to each chunk"""
         paths_to_video_segments = scanFolder(self.video_path)
@@ -209,14 +217,24 @@ class Video(object):
         except:
             logger.info("Cannot read frame per second")
         if self._paths_to_video_segments is None:
-            self._num_frames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+            self._number_of_frames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
             self.get_episodes()
         else:
             chunks_lengths = [int(cv2.VideoCapture(chunk).get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) for chunk in self._paths_to_video_segments]
             self._episodes_start_end = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])) for i in range(1,len(chunks_lengths)+1)]
-            self._num_frames = np.sum(chunks_lengths)
-            self._num_episodes = len(self._paths_to_video_segments)
+            self.number_of_frames = np.sum(chunks_lengths)
+            self._number_of_episodes = len(self._paths_to_video_segments)
         cap.release()
+
+    def compute_portrait_size(self, maximum_body_length):
+        if self.preprocessing_type == 'portrait':
+            portrait_size = int(maximum_body_length/2)
+            portrait_size =  portrait_size + portrait_size%2 #this is to make the portrait_size even
+            self.portrait_size = (portrait_size, portrait_size, 1)
+        elif self.preprocessing_type == 'body' or self.preprocessing_type == 'body_blob':
+            portrait_size = int(np.sqrt(maximum_body_length ** 2 / 2))
+            portrait_size = portrait_size + portrait_size%2  #this is to make the portrait_size
+            self.portrait_size = (portrait_size, portrait_size, 1)
 
     def init_processes_time_attributes(self):
         self.generate_trajectories_time = 0
@@ -323,10 +341,10 @@ class Video(object):
     def get_episodes(self):
         """Split video in episodes (chunks) of 500 frames
         for parallelisation"""
-        starting_frames = np.arange(0, self._num_frames, FRAMES_PER_EPISODE)
-        ending_frames = np.hstack((starting_frames[1:]-1, self._num_frames))
+        starting_frames = np.arange(0, self.number_of_frames, FRAMES_PER_EPISODE)
+        ending_frames = np.hstack((starting_frames[1:]-1, self.number_of_frames))
         self._episodes_start_end =zip(starting_frames, ending_frames)
-        self._num_episodes = len(starting_frames)
+        self._number_of_episodes = len(starting_frames)
 
     def in_which_episode(self, frame_index):
         """Check to which episode a frame index belongs in time"""
@@ -379,6 +397,14 @@ class Video(object):
         if self._has_been_preprocessed:
             self._global_fragments_path = os.path.join(self._preprocessing_folder, 'global_fragments.npy')
         return self._global_fragments_path
+
+    @property
+    def fragments_path(self):
+        """get the path to save the list of global fragments after
+        fragmentation"""
+        if self._has_been_preprocessed:
+            self._fragments_path = os.path.join(self._preprocessing_folder, 'fragments.npy')
+        return self._fragments_path
 
     def save(self):
         """save class"""

@@ -130,7 +130,8 @@ if __name__ == "__main__":
     sys.path.append('../utils')
 
     from GUI_utils import selectDir
-    from blob import ListOfBlobs, Blob
+    from list_of_blobs import ListOfBlobs
+    from blob import Blob
     from deep_crossings import CrossingDataset
 
     ''' select blobs list tracked to compare against ground truth '''

@@ -7,7 +7,7 @@ sys.path.append('../network')
 import numpy as np
 from tqdm import tqdm
 import collections
-from blob import ListOfBlobs
+from list_of_blobs import ListOfBlobs
 from blob import Blob
 
 def compute_model_velocity(blobs_in_video, number_of_animals, percentile = None):

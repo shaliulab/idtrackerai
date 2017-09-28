@@ -9,10 +9,9 @@ from tqdm import tqdm
 import collections
 import logging
 
-from blob import ListOfBlobs
+from list_of_blobs import ListOfBlobs
 from blob import Blob
 from video_utils import segmentVideo, filterContoursBySize, getPixelsList, getBoundigBox
-from globalfragment import order_global_fragments_by_distance_travelled
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob
 
 class Duplication(object):
@@ -252,12 +251,6 @@ class Duplication(object):
             if counter > 10000:
                 raise ValueError('Got trapped in the loop')
 
-def get_first_frame(video, global_fragments):
-    if not hasattr(video, 'first_frame_for_validation'):
-        max_distance_travelled_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0]
-        video.first_frame_for_validation = max_distance_travelled_global_fragment.index_beginning_of_fragment
-        video.save()
-
 def get_assigned_and_corrected_identity(blob):
     if blob._user_generated_identity is not None:
         return blob._user_generated_identity
@@ -373,9 +366,9 @@ def check_for_duplications_last_pass(blobs, group_size):
 
 def solve_duplications_loop(video, blobs_in_video, group_size, scope = None):
     if scope == 'to_the_past':
-        blobs_in_direction = blobs_in_video[:video.first_frame_for_validation][::-1]
+        blobs_in_direction = blobs_in_video[:video.first_frame_first_global_fragment][::-1]
     elif scope == 'to_the_future':
-        blobs_in_direction = blobs_in_video[video.first_frame_for_validation:-1]
+        blobs_in_direction = blobs_in_video[video.first_frame_first_global_fragment:-1]
     possible_identities = set(range(1,group_size+1))
 
     for blobs_in_frame in tqdm(blobs_in_direction, desc = 'Solving duplications ' + scope):
@@ -385,7 +378,7 @@ def solve_duplications_loop(video, blobs_in_video, group_size, scope = None):
         missing_identities = assign_single_unidentified_blob(missing_identities, blobs_in_frame, blobs_in_video)
 
 def solve_duplications(video, blobs, global_fragments, group_size):
-    get_first_frame(video, global_fragments)
+    # get_first_frame(video, global_fragments)
     solve_duplications_loop(video, blobs, group_size, scope = 'to_the_past')
     solve_duplications_loop(video, blobs, group_size, scope = 'to_the_future')
     check_for_duplications_last_pass(blobs, group_size)

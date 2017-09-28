@@ -14,6 +14,23 @@ import logging
 # sys.path.append('../utils')
 
 logger = logging.getLogger("__main__.py_utils")
+
+### Object utils ###
+def append_values_to_lists(values, list_of_lists):
+    list_of_lists_updated = []
+
+    for l, value in zip(list_of_lists, values):
+        l.append(value)
+        list_of_lists_updated.append(l)
+
+    return list_of_lists_updated
+
+def set_attributes_of_object_to_value(object_to_modify, attributes_list, value = None):
+    [setattr(object_to_modify, attribute, value) for attribute in attributes_list]
+
+def delete_attributes_from_object(object_to_modify, list_of_attributes):
+    [delattr(object_to_modify, attribute) for attribute in list_of_attributes]
+
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):
     ''' get variables from a standard python dictionary '''

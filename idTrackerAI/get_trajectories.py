@@ -20,7 +20,7 @@ sys.path.append('IdTrackerDeep/utils')
 from tqdm import tqdm
 import logging
 
-from blob import ListOfBlobs
+from list_of_blobs import ListOfBlobs
 from GUI_utils import selectDir
 
 logger = logging.getLogger("__main__.get_trajectories")
@@ -59,7 +59,7 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
             else:
                 blob_identity = blob.identity
 
-            if blob_identity is not None and blob_identity != 0: 
+            if blob_identity is not None and blob_identity != 0:
                 centroid_trajectories[blob_identity-1, frame_number, :] = blob.centroid
                 try:
                     head_trajectories[blob_identity-1, frame_number, :] = blob.head_coordinates
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         print("Creating trajectories folder...")
         os.makedirs(trajectories_folder)
 
-    trajectories = produce_trajectories(blobs_list.blobs_in_video, video._num_frames, video.number_of_animals)
+    trajectories = produce_trajectories(blobs_list.blobs_in_video, video.number_of_frames, video.number_of_animals)
     for name in trajectories:
         np.save(os.path.join(trajectories_folder, name + '_trajectories.npy'), trajectories[name])
         np.save(os.path.join(trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))

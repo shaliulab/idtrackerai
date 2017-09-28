@@ -19,8 +19,7 @@ from store_accuracy_and_loss import Store_Accuracy_and_Loss
 logger = logging.getLogger("__main__.trainer")
 
 def train(video,
-            blobs_in_video,
-            global_fragments,
+            fragments,
             net,
             images,
             labels,
@@ -93,9 +92,7 @@ def train(video,
     logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss))
     # plot if asked
     if plot_flag:
-        global_fragments_used_for_training = [global_fragment for global_fragment in global_fragments
-                                                if global_fragment._used_for_training == True]
-        store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, blobs_in_video, global_fragments_used_for_training, black = True)
+        store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, fragments, black = False)
         store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r')
         store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b')
     # store training and validation losses and accuracies

@@ -4,14 +4,14 @@ sys.path.append('../')
 import numpy as np
 from tqdm import tqdm
 import collections
-from blob import ListOfBlobs
+from list_of_blobs import ListOfBlobs
+from blob import Blob
 
 import matplotlib.pyplot as plt
 from py_utils import get_spaced_colors_util
 from assigner import assign
 from id_CNN import ConvNetwork
 from network_params import NetworkParams
-from blob import Blob
 from video_utils import segmentVideo, filterContoursBySize, getPixelsList, getBoundigBox
 
 # def assign_ghost_crossings(blobs):

@@ -286,7 +286,7 @@ def SegmentationPreview(video):
     global cap, currentSegment
     currentSegment = 0
     cap = cv2.VideoCapture(video.video_path)
-    numFrames = video._num_frames
+    numFrames = video.number_of_frames
     bkg = video.bkg
     mask = video.ROI
     if video.resolution_reduction != 1:
@@ -674,8 +674,11 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
     return preprocParams
 
 def selectPreprocParams(video, old_video, usePreviousPrecParams):
-    if old_video and old_video._has_been_segmented:
-        restore_segmentation = getInput("Load segmentation", "Load the previous segmentation? Y/n")
+    if not usePreviousPrecParams:
+        if old_video and old_video._has_been_segmented:
+            restore_segmentation = getInput("Load segmentation", "Load the previous segmentation? Y/n")
+        else:
+            restore_segmentation = 'n'
     else:
         restore_segmentation = 'n'
     if not usePreviousPrecParams and restore_segmentation == 'n':
@@ -718,7 +721,7 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         cv2.waitKey(1)
         cv2.destroyAllWindows()
         cv2.waitKey(1)
-    elif restore_segmentation == 'y' or restore_segmentation == '':
+    elif not usePreviousPrecParams and restore_segmentation == 'y':
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
                                     '_preprocessing_type','_maximum_number_of_blobs',
                                     '_blobs_path_segmented', '_min_threshold','_max_threshold',
@@ -732,14 +735,17 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
                                     '_preprocessing_type','_maximum_number_of_blobs',
                                     'median_body_length','portrait_size',
-                                    '_blobs_path_segmented','maximum_number_of_portraits_in_global_fragments',
+                                    '_blobs_path_segmented',
                                     '_min_threshold','_max_threshold',
                                     '_min_area','_max_area',
                                     '_resize','resolution_reduction',
                                     'preprocessing_type','_number_of_animals',
                                     'ROI','bkg',
-                                    'resolution_reduction','number_of_unique_images_in_global_fragments'
-                                    ]
+                                    'resolution_reduction',
+                                    'fragment_identifier_to_index',
+                                    'number_of_unique_images_in_global_fragments',
+                                    'maximum_number_of_portraits_in_global_fragments',
+                                    'first_frame_first_global_fragment']
         video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_preprocessing_parameters = True
     return restore_segmentation
@@ -778,7 +784,7 @@ def fragmentation_inspector(video, blobs_in_video):
     belonging to the same fragment with a unique identifier.
     """
     cap = cv2.VideoCapture(video.video_path)
-    numFrames = video._num_frames
+    numFrames = video.number_of_frames
     bkg = video.bkg
     mask = video.ROI
     subtract_bkg = video.subtract_bkg
@@ -940,7 +946,7 @@ def get_n_previous_blobs_attribute(blob,attribute_name,number_of_previous):
 
 def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous = 10, save_video = False):
     cap = cv2.VideoCapture(video.video_path)
-    numFrames = video._num_frames
+    numFrames = video.number_of_frames
     bkg = video.bkg
     mask = video.ROI
     subtract_bkg = video.subtract_bkg
@@ -1056,7 +1062,7 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
     scroll(1)
     cv2.setTrackbarPos('start', 'frame_by_frame_identity_inspector', defFrame)
     if save_video:
-        for i in tqdm(range(video._num_frames)):
+        for i in tqdm(range(video.number_of_frames)):
             scroll(i)
     cv2.waitKey(0)
     cv2.waitKey(1)
@@ -1070,7 +1076,7 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
 
 def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_previous = 100, save_video = False):
     cap = cv2.VideoCapture(video.video_path)
-    numFrames = video._num_frames
+    numFrames = video.number_of_frames
     bkg = video.bkg
     mask = video.ROI
     subtract_bkg = video.subtract_bkg
@@ -1142,7 +1148,7 @@ def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_
     # cv2.waitKey(1)
 
     if save_video:
-        for i in tqdm(range(video._num_frames)):
+        for i in tqdm(range(video.number_of_frames)):
             scroll(i)
 
     cv2.waitKey(0)

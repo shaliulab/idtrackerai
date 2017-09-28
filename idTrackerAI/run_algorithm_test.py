@@ -25,7 +25,7 @@ from video import Video
 from blob import reset_blobs_fragmentation_parameters, compute_fragment_identifier_and_blob_index, connect_blob_list, apply_model_area_to_video, ListOfBlobs, get_images_from_blobs_in_video
 from globalfragment import give_me_list_of_global_fragments, ModelArea, give_me_pre_training_global_fragments
 from globalfragment import get_images_and_labels_from_global_fragments
-from globalfragment import subsample_images_for_last_training, order_global_fragments_by_distance_travelled
+from globalfragment import order_global_fragments_by_distance_travelled
 from segmentation import segment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview, selectPreprocParams, fragmentation_inspector, frame_by_frame_identity_inspector
 from py_utils import getExistentFiles
@@ -110,7 +110,7 @@ if __name__ == '__main__':
                         video._animal_type = 'fish' #string: type of animals to be tracked in the video
                         video._number_of_animals = group_size #int: number of animals in the video
                         video._maximum_number_of_blobs = group_size #int: the maximum number of blobs detected in the video
-                        video._num_frames = frames_in_video
+                        video.number_of_frames = frames_in_video
                         video.tracking_with_knowledge_transfer = job_config.knowledge_transfer_flag
                         video.knowledge_transfer_model_folder = job_config.knowledge_transfer_folder
                         video.portrait_size = (imsize, imsize, 1) #NOTE: this can change if the library changes. BUILD next library with new preprocessing.

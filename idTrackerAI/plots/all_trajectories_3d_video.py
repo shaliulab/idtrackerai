@@ -35,7 +35,6 @@ from globalfragment import  give_me_list_of_global_fragments,\
                             ModelArea,\
                             give_me_pre_training_global_fragments,\
                             get_images_and_labels_from_global_fragments,\
-                            subsample_images_for_last_training,\
                             order_global_fragments_by_distance_travelled
 from segmentation import segment
 from GUI_utils import selectFile,\
@@ -112,16 +111,16 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111, projection='3d')
     colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=True)
 
-    centroid_trajectories = np.ones((video._num_frames, video.number_of_animals, 2))*np.NaN
+    centroid_trajectories = np.ones((video.number_of_frames, video.number_of_animals, 2))*np.NaN
 
-    for frame_number in range(video._num_frames):
+    for frame_number in range(video.number_of_frames):
         blobs_in_frame = blobs[frame_number]
         for j, blob in enumerate(blobs_in_frame):
             if blob.is_a_fish:
                 centroid_trajectories[frame_number, blob.identity-1, :] = blob.centroid
 
     for individual in range(video.number_of_animals):
-        ax.plot(range(video._num_frames-500),centroid_trajectories[500:,individual,0], centroid_trajectories[500:,individual,1],color = colors[individual + 1] )
+        ax.plot(range(video.number_of_frames-500),centroid_trajectories[500:,individual,0], centroid_trajectories[500:,individual,1],color = colors[individual + 1] )
         # ax.plot(centroid_trajectories[:,individual,0], np.ones(number_of_frames)*650, range(number_of_frames),color = colors[individual + 1], alpha = 1 , linewidth = 1)
         # ax.plot(np.ones(number_of_frames)*950, centroid_trajectories[:,individual,1], range(number_of_frames),color = colors[individual + 1], alpha = 1, linewidth = 1)
 

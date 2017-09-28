@@ -6,16 +6,15 @@ sys.path.append('./preprocessing')
 import itertools
 import numpy as np
 from tqdm import tqdm
-from joblib import Parallel, delayed
 import logging
 from math import sqrt
 
-from statistics_for_assignment import compute_P1_individual_fragment_from_frequencies
-from get_portraits import get_portrait, get_body
+from py_utils import append_values_to_lists, delete_attributes_from_object
 
-# STD_TOLERANCE = 1 # tolerance to select a blob as being a single fish according to the area model
-### NOTE set to 1 because we changed the model area to work with the median.
 logger = logging.getLogger("__main__.fragment")
+
+MAX_FLOAT = sys.float_info[0]
+MIN_FLOAT = sys.float_info[3]
 
 class Fragment(object):
     def __init__(self, fragment_identifier = None,\
@@ -47,13 +46,17 @@ class Fragment(object):
         self.is_a_ghost_crossing = is_a_ghost_crossing
         self.number_of_animals = number_of_animals
         self._used_for_training = False
+        self._used_for_pretraining = False
         self._acceptable_for_training = True
-        self._is_certain = False
-        self._temporary_id = None
+
 
     @property
     def used_for_training(self):
         return self._used_for_training
+
+    @property
+    def used_for_pretraining(self):
+        return self._used_for_pretraining
 
     @property
     def acceptable_for_training(self):
@@ -79,17 +82,30 @@ class Fragment(object):
     def temporary_id(self):
         return self._temporary_id
 
-    # def reset(self):
-    #     self._frequencies_in_fragment = np.zeros(self.number_of_animals).astype('int')
-    #     self.P1_vector = np.zeros(self.number_of_animals)
-    #     self.P2_vector = np.zeros(self.number_of_animals)
-    #     self.assigned_during_accumulation = False
-    #     self.used_for_training = False
-    #     self.user_generated_identity = None #in the validation part users can correct manually the identities
-    #     self.identity = None
-    #     self.identity_corrected_solving_duplication = None
-    #     self.user_generated_centroids = []
-    #     self.user_generated_identities = []
+    @property
+    def identity(self):
+        return self._identity
+
+    @property
+    def potentially_randomly_assigned(self):
+        return self._potentially_randomly_assigned
+
+    @property
+    def non_consistent(self):
+        return self._non_consistent
+
+    def reset(self, roll_back_to = None):
+        if roll_back_to == 'fragmentation':
+            self._used_for_training = False
+            self._used_for_pretraining = False
+            self._acceptable_for_training = True
+            attributes_to_delete = ['_frequencies_in_fragment',
+                                    '_P1_vector', '_certainty',
+                                    '_temporary_id', '_identity',
+                                    '_is_certain', '_P1_below_random',
+                                    '_non_consistent',
+                                    'assigned_during_accumulation']
+            delete_attributes_from_object(self, attributes_to_delete)
 
     @property
     def number_of_images(self):
@@ -103,18 +119,22 @@ class Fragment(object):
 
     def are_overlapping(self, other):
         (s1,e1), (s2,e2) = self.start_end, other.start_end
-        # print("**********")
-        # print((s1,e1), (s2,e2))
-        # print(s1 < e2 and e1 > s2)
         return s1 < e2 and e1 > s2
 
     def get_coexisting_individual_fragments_indices(self, list_of_fragments):
-        self.coexisting_individual_fragments = [fragment.identifier for fragment in list_of_fragments
+        self.coexisting_individual_fragments = [fragment for fragment in list_of_fragments
                                             if fragment.is_a_fish and self.are_overlapping(fragment)
                                             and fragment is not self
                                             and self.is_a_fish]
 
+    def check_consistency_with_coexistent_individual_fragments(self, temporary_id):
+        for coexisting_fragment in self.coexisting_individual_fragments:
+            if coexisting_fragment.temporary_id == temporary_id:
+                return False
+        return True
+
     def compute_identification_statistics(self, predictions, softmax_probs):
+        assert self.is_a_fish
         self._frequencies = self.compute_identification_frequencies_individual_fragment(predictions, self.number_of_animals)
         self._P1_vector = self.compute_P1_individual_fragment_from_frequencies(self.frequencies)
         median_softmax = self.compute_median_softmax(softmax_probs, self.number_of_animals)
@@ -165,71 +185,5 @@ class Fragment(object):
         sorted_p1_vector = P1_vector[argsort_p1_vector]
         sorted_softmax_probs = median_softmax[argsort_p1_vector]
         certainty = np.diff(np.multiply(sorted_p1_vector,sorted_softmax_probs)[-2:])/np.sum(sorted_p1_vector[-2:])
-        return certainty
-
-def append_values_to_lists(values, list_of_lists):
-    list_of_lists_updated = []
-
-    for l, value in zip(list_of_lists, values):
-        l.append(value)
-        list_of_lists_updated.append(l)
-
-    return list_of_lists_updated
-
-def delete_attributes(blob, attributes_list):
-    for attribute in attributes_list:
-        setattr(blob, attribute, None)
-
-def create_list_of_fragments(blobs_in_video, number_of_animals):
-    attributes_to_delete_from_blob = ['_portrait', 'bounding_box_image', 'bounding_box_in_frame_coordinates'
-                                        '_area', '_next', '_previous',]
-    list_of_fragments = []
-    used_fragment_identifiers = []
-
-    for blobs_in_frame in blobs_in_video:
-        for blob in blobs_in_frame:
-            current_fragment_identifier = blob.fragment_identifier
-            if current_fragment_identifier not in used_fragment_identifiers:
-                images = [blob.portrait]
-                centroids = [blob.centroid]
-                areas = [blob.area]
-                pixels = [blob.pixels]
-                start = blob.frame_number
-                current = blob
-
-                while len(current.next) > 0 and current.next[0].fragment_identifier == current_fragment_identifier:
-                    current = current.next[0]
-                    images, centroids, areas, pixels = append_values_to_lists([current.portrait,
-                                                                current.centroid,
-                                                                current.area,
-                                                                current.pixels],
-                                                                [images,
-                                                                centroids,
-                                                                areas,
-                                                                pixels])
-
-                end = current.frame_number
-                fragment = Fragment(current_fragment_identifier,
-                                    (start, end+1), # it is not inclusive to follow Python convention
-                                    blob.blob_index,
-                                    images,
-                                    centroids,
-                                    areas,
-                                    pixels,
-                                    blob.is_a_fish,
-                                    blob.is_a_crossing,
-                                    blob.is_a_jump,
-                                    blob.is_a_jumping_fragment,
-                                    blob.is_a_ghost_crossing,
-                                    number_of_animals)
-                used_fragment_identifiers.append(current_fragment_identifier)
-                list_of_fragments.append(fragment)
-
-            delete_attributes(blob,attributes_to_delete_from_blob)
-
-    [fragment.get_coexisting_individual_fragments_indices(list_of_fragments) for fragment in list_of_fragments]
-    fragment_identifier_to_index = np.argsort([fragment.identifier for fragment in list_of_fragments])
-    return list_of_fragments, fragment_identifier_to_index
-
-def reset_fragments(list_of_fragments, recovering_from = 'accumulation'):
-    [fragment.reset(recovering_from) for fragment in list_of_fragments]
+        print("********************* certainty ", certainty)
+        return certainty[0]

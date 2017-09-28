@@ -7,7 +7,8 @@ sys.path.append('../utils')
 import numpy as np
 import logging
 
-from blob import ListOfBlobs, Blob
+from list_of_blobs import ListOfBlobs
+from blob import Blob
 from GUI_utils import selectDir, getInput
 
 logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")

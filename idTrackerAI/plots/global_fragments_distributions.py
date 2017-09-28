@@ -30,7 +30,6 @@ from globalfragment import  give_me_list_of_global_fragments,\
                             ModelArea,\
                             give_me_pre_training_global_fragments,\
                             get_images_and_labels_from_global_fragments,\
-                            subsample_images_for_last_training,\
                             order_global_fragments_by_distance_travelled
 
 if __name__ == '__main__':

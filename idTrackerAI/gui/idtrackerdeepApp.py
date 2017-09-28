@@ -43,7 +43,7 @@ from video import Video
 from py_utils import getExistentFiles, get_spaced_colors_util
 from video_utils import computeBkg, blobExtractor
 from segmentation import segmentVideo
-from blob import ListOfBlobs
+from list_of_blobs import ListOfBlobs
 from globalfragment import order_global_fragments_by_distance_travelled
 # from validator import Validator
 """
@@ -191,7 +191,7 @@ class VisualiseVideo(BoxLayout):
     def add_slider(self):
         self.video_slider = Slider(id='video_slider',
                                 min=0,
-                                max= int(self.video_object._num_frames) - 1,
+                                max= int(self.video_object.number_of_frames) - 1,
                                 step=1,
                                 value=0,
                                 size_hint=(.8,1.))
@@ -828,7 +828,7 @@ class Validator(BoxLayout):
         frame_index = int(self.visualiser.video_slider.value)
         #for every subsequent frame check the blobs and stop if a crossing (or a jump) occurs
         while non_crossing == True:
-            if frame_index < CHOSEN_VIDEO.video._num_frames:
+            if frame_index < CHOSEN_VIDEO.video.number_of_frames:
                 frame_index = frame_index + 1
                 blobs_in_frame = self.blobs_in_video[frame_index]
                 for blob in blobs_in_frame:
@@ -1312,7 +1312,7 @@ class Validator(BoxLayout):
         if self.end_frame_input.text != '':
             end = int(self.end_frame_input.text)
         else:
-            end = self.CHOSEN_VIDEO.video_object._num_frames
+            end = self.CHOSEN_VIDEO.video_object.number_of_frames
         self.groundtruth_interval = [start, end]
         self.popup_start_end_groundtruth.dismiss()
 

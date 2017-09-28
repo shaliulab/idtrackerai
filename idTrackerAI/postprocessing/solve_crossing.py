@@ -12,12 +12,12 @@ sys.path.append('../network/identification_model')
 import numpy as np
 from tqdm import tqdm
 import collections
-from blob import ListOfBlobs
-from get_portraits import get_body
-
 import matplotlib.pyplot as plt
 import cv2
 from pprint import pprint
+
+from list_of_blobs import ListOfBlobs
+from get_portraits import get_body
 from py_utils import get_spaced_colors_util
 from assigner import assign
 from id_CNN import ConvNetwork
@@ -418,7 +418,7 @@ if __name__ == "__main__":
     # for unsolved_crossing in tqdm(crossings.values(), desc = "Solving crossings"):
     #     for blob in unsolved_crossing[::-1]:
     #         print("blob next ", blob)
-    #         if blob.frame_number != video._num_frames:
+    #         if blob.frame_number != video.number_of_frames:
     #             crossing = Crossing(blob, video)
     #             crossing.separate_blobs()
     #             uncrossed_blobs = crossing.assign_blobs(next_or_previous_attribute = 'next')

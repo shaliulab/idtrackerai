@@ -16,11 +16,11 @@ from id_CNN import ConvNetwork
 from get_predictions import GetPrediction
 from blob import get_images_from_blobs_in_video, reset_blobs_fragmentation_parameters
 from visualize_embeddings import EmbeddingVisualiser
-from globalfragment import get_images_and_labels_from_global_fragment
-from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob,\
-                                    compute_P1_individual_fragment_from_frequencies,\
-                                    compute_identification_frequencies_individual_fragment,\
-                                    is_assignment_ambiguous
+from list_of_global_fragments import get_images_and_labels_from_global_fragment
+from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob
+                                    # compute_P1_individual_fragment_from_frequencies,\
+                                    # compute_identification_frequencies_individual_fragment,\
+                                    # is_assignment_ambiguous
 
 FIXED_IDENTITY_THRESHOLD = .9
 
@@ -323,7 +323,7 @@ def assign_identity_to_jumps(video, blobs):
                     number_of_animals = video.number_of_animals,
                     _P2_vector = blob._P2_vector,
                     velocity_threshold = video.velocity_threshold,
-                    number_of_frames = video._num_frames)
+                    number_of_frames = video.number_of_frames)
 
         jump.assign_jump(blobs)
         blob._identity = jump.jumping_blob.identity

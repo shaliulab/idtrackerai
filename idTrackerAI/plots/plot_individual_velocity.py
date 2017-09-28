@@ -17,7 +17,8 @@ sys.path.append('./')
 from video import Video
 from GUI_utils import selectDir
 from py_utils import get_spaced_colors_util
-from blob import ListOfBlobs, Blob
+from blob import Blob
+from list_of_blobs import ListOfBlobs
 
 def plot_individual_trajectories_velocities_and_accelerations(individual_trajectories):
 

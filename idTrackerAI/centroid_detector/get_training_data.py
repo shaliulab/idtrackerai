@@ -6,7 +6,7 @@ sys.path.append('../utils')
 import numpy as np
 from tqdm import tqdm
 
-from blob import ListOfBlobs
+from list_of_blobs import ListOfBlobs
 
 #load list of blobs
 list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/conflict8Short/session_12/preprocessing/blobs_collection.npy'

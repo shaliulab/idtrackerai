@@ -201,7 +201,7 @@ def assign_identity_to_jumps(video, blobs):
                     net_prediction = assigner._predictions[i],
                     softmax_probs = assigner._softmax_probs[i],
                     velocity_threshold = video.velocity_threshold,
-                    number_of_frames = video._num_frames)
+                    number_of_frames = video.number_of_frames)
         jump.assign_jump(blobs)
         blob._identity = jump.jumping_blob.identity
         blob._P1_vector = assigner._softmax_probs[i]

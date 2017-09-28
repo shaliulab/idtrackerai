@@ -49,22 +49,16 @@ class Store_Accuracy_and_Loss(object):
         plt.draw()
         plt.pause(1e-8)
 
-    def plot_global_fragments(self, ax_handles, video, blobs_in_video, global_fragments, black = False):
+    def plot_global_fragments(self, ax_handles, video, fragments, black = False):
         import matplotlib.patches as patches
         ax4 = ax_handles[3]
         ax4.cla()
         colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=black)
 
-        for global_fragment in global_fragments:
-            global_fragment.compute_start_end_frame_indices_of_individual_fragments(blobs_in_video)
-            # print("individual fragments starts and ends: ", global_fragment.starts_ends_individual_fragments)
-            for i, (start, end) in enumerate(global_fragment.starts_ends_individual_fragments):
-                blob_index = blobs_in_video[global_fragment.index_beginning_of_fragment][i].blob_index
-
-                if global_fragment._used_for_training:
-                    print("id ", int(global_fragment._ids_assigned[i]))
-                else:
-                    print("blob index ", int(blob_index))
+        for fragment in fragments:
+            if fragment.used_for_training or fragment.used_for_pretraining:
+                blob_index = fragment.blob_hierarchy_in_starting_frame
+                (start, end) = fragment.start_end
                 ax4.add_patch(
                     patches.Rectangle(
                         (start, blob_index - 0.5),   # (x,y)
@@ -72,7 +66,7 @@ class Store_Accuracy_and_Loss(object):
                         1.,          # height
                         fill=True,
                         edgecolor=None,
-                        facecolor=colors[int(global_fragment._ids_assigned[i]) if global_fragment._used_for_training else int(blob_index)],
+                        facecolor=colors[fragment.temporary_id if fragment.used_for_training else int(blob_index)],
                         alpha = 1.
                     )
                 )
@@ -82,7 +76,7 @@ class Store_Accuracy_and_Loss(object):
         ax4.set_ylabel('Blob index')
         ax4.set_yticks(range(0,video.number_of_animals,4))
         ax4.set_yticklabels(range(1,video.number_of_animals+1,4))
-        ax4.set_xlim([0., video._num_frames])
+        ax4.set_xlim([0., video.number_of_frames])
         ax4.set_ylim([-.5, .5 + video.number_of_animals])
 
     def save(self):

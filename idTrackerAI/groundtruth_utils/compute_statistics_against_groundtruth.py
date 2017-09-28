@@ -8,7 +8,8 @@ import numpy as np
 import logging
 
 from GUI_utils import selectDir
-from blob import ListOfBlobs, Blob
+from list_of_blobs import ListOfBlobs
+from blob import Blob
 from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
 
 """Given two list of blobs, one deduced from human groundtruth and the other

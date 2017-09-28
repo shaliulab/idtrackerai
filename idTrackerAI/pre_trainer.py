@@ -13,11 +13,7 @@ import logging
 from network_params import NetworkParams
 from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
-from globalfragment import get_images_and_labels_from_global_fragment,\
-                        give_me_pre_training_global_fragments,\
-                        get_number_of_images_in_global_fragments_list,\
-                        order_global_fragments_by_distance_travelled,\
-                        give_me_number_of_unique_images_in_global_fragments
+from list_of_global_fragments import ListOfGlobalFragments, get_images_and_labels_from_global_fragment
 from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
@@ -26,7 +22,7 @@ MAX_RATIO_OF_PRETRAINED_IMAGES = .95
 
 logger = logging.getLogger("__main__.pre_trainer")
 
-def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretraining_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
+def pre_train(video, list_of_fragments, number_of_images_in_global_fragments, pretraining_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
     #initialize global epoch counter that takes into account all the steps in the pretraining
     global_epoch = 0
     number_of_images_used_during_pretraining = 0
@@ -47,7 +43,7 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
     #start loop for pre training in the global fragments selected
     for i, pretraining_global_fragment in enumerate(tqdm(pretraining_global_fragments, desc = '\nPretraining network')):
         # Get images and labels from the current global fragment
-        images, labels, _, _ = get_images_and_labels_from_global_fragment(pretraining_global_fragment)
+        images, labels, _, _ = get_images_and_labels_from_global_fragment(list_of_fragments, pretraining_global_fragment)
         # Instantiate data_set
         training_dataset, validation_dataset = split_data_train_and_validation(video.preprocessing_type, params.number_of_animals,images,labels)
         # Standarize images
@@ -87,9 +83,9 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
                 net.write_summaries(trainer.starting_epoch + trainer._epochs_completed,feed_dict_train, feed_dict_val)
             trainer._epochs_completed += 1
             validator._epochs_completed += 1
+        pretraining_global_fragment.update_individual_fragments_attribute('_used_for_pretraining', True)
         if plot_flag:
-            pretrained_global_fragments = pretraining_global_fragments[:i + 1]
-            store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, blobs_in_video, pretrained_global_fragments, black = False)
+            store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, list_of_fragments, black = False)
             ax_arr[2].cla() # clear bars
             store_training_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'r')
             store_validation_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'b')
@@ -110,6 +106,7 @@ def pre_train(video, blobs_in_video, number_of_images_in_global_fragments, pretr
             logger.info("pre-training ended: The network has been pre-trained on more than %.2f of the images in global fragment" %MAX_RATIO_OF_PRETRAINED_IMAGES)
             break
     return net
+
 
 def pre_trainer(old_video, video, blobs, global_fragments, pretrain_network_params):
     number_of_images_in_global_fragments = video.number_of_unique_images_in_global_fragments

@@ -7,7 +7,7 @@ import collections
 import logging
 
 
-from blob import ListOfBlobs
+from list_of_blobs import ListOfBlobs
 from assigner import assign, get_blob_to_assign_by_max_P2
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob,\
                                     is_assignment_ambiguous,\
@@ -276,7 +276,7 @@ from blob import Blob
 #                     number_of_animals = video.number_of_animals,
 #                     _P2_vector = blob._P2_vector,
 #                     velocity_threshold = video.velocity_threshold,
-#                     number_of_frames = video._num_frames)
+#                     number_of_frames = video.number_of_frames)
 #
 #         jump.assign_jump(blobs)
 #         blob._identity = jump.jumping_blob.identity
