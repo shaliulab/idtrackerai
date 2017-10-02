@@ -41,14 +41,17 @@ class ListOfBlobs(object):
             blob.previous = []
 
     def reconnect(self):
-        logger.info("Reconnecting list of blob objects")
-        for frame_i in self.cutting_points:
-            for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
-                if blob_0.overlaps_with(blob_1):
-                    blob_0.now_points_to(blob_1)
+        if self.video._has_been_segmented:
+            logger.info("Reconnecting list of blob objects")
+            for frame_i in self.cutting_points:
+                for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
+                    if blob_0.overlaps_with(blob_1):
+                        blob_0.now_points_to(blob_1)
 
-    def save(self, path_to_save, number_of_chunks):
+    def save(self, path_to_save = None, number_of_chunks = 1):
         """save instance"""
+        if path_to_save is None:
+            path_to_save = self.video.blobs_path
         self.generate_cut_points(number_of_chunks)
         self.cut_in_chunks()
         logger.info("saving blobs list at %s" %path_to_save)
@@ -73,12 +76,12 @@ class ListOfBlobs(object):
             missing_blob_indices =  list(set(possible_blob_indices).difference(set(used_blob_indices)))
             for blob in blobs_in_frame:
                 if blob.fragment_identifier is None and blob.is_a_fish:
-                    blob.fragment_identifier = counter
+                    blob._fragment_identifier = counter
                     blob_index = missing_blob_indices.pop(0)
                     blob._blob_index = blob_index
                     blob.non_shared_information_with_previous = 1.
                     if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
-                        blob.next[0].fragment_identifier = counter
+                        blob.next[0]._fragment_identifier = counter
                         blob.next[0]._blob_index = blob_index
                         blob.next[0].compute_overlapping_with_previous_blob()
                         if blob.next[0].is_a_fish_in_a_fragment:
@@ -86,13 +89,13 @@ class ListOfBlobs(object):
 
                             while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
                                 blob = blob.next[0]
-                                blob.fragment_identifier = counter
+                                blob._fragment_identifier = counter
                                 blob._blob_index = blob_index
                                 # compute_overlapping_with_previous_blob
                                 blob.compute_overlapping_with_previous_blob()
 
                             if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
-                                blob.next[0].fragment_identifier = counter
+                                blob.next[0]._fragment_identifier = counter
                                 blob.next[0]._blob_index = blob_index
                                 blob.next[0].compute_overlapping_with_previous_blob()
                     counter += 1
@@ -104,18 +107,18 @@ class ListOfBlobs(object):
         involves the same individuals"""
         def propagate_crossing_identifier(blob, fragment_identifier):
             blob.is_a_crossing_in_a_fragment = True
-            blob.fragment_identifier = fragment_identifier
+            blob._fragment_identifier = fragment_identifier
             cur_blob = blob
 
             while len(cur_blob.next) == 1 and cur_blob.next[0].is_a_crossing:
                 cur_blob = cur_blob.next[0]
-                cur_blob.fragment_identifier = fragment_identifier
+                cur_blob._fragment_identifier = fragment_identifier
 
             cur_blob = blob
 
             while len(cur_blob.previous) == 1 and cur_blob.previous[0].is_a_crossing:
                 cur_blob = cur_blob.previous[0]
-                cur_blob.fragment_identifier = fragment_identifier
+                cur_blob._fragment_identifier = fragment_identifier
 
         fragment_identifier = self.number_of_individual_fragments + 1
 
@@ -161,7 +164,7 @@ class ListOfBlobs(object):
             for blob in blobs_in_frame:
                 blob.apply_model_area(video, model_area, portrait_size)
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'Applying model area'):
-            apply_model_area_to_blobs_in_frame(self.video, self.blobs_in_frame, model_area, portrait_size)
+            apply_model_area_to_blobs_in_frame(self.video, blobs_in_frame, model_area, portrait_size)
 
     def check_maximal_number_of_blob(self):
         frames_with_more_blobs_than_animals = []

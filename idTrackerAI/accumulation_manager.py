@@ -60,10 +60,10 @@ class AccumulationManager(object):
         self.counter += 1
 
     @staticmethod
-    def give_me_P1_vector_first_fragment_accumualted(i, number_of_animals):
-        P1_vector = np.zeros(number_of_animals)
-        P1_vector[i] = 1.
-        return P1_vector
+    def give_me_frequencies_first_fragment_accumulated(i, number_of_animals, fragment):
+        frequencies = np.zeros(number_of_animals)
+        frequencies[i] = fragment.number_of_images
+        return frequencies
 
     def get_next_global_fragments(self, get_ith_global_fragment = None):
         """ get the global fragments that are going to be added to the current
@@ -71,10 +71,14 @@ class AccumulationManager(object):
 
         if self.counter == 0:
             logger.info("Getting global fragment for the first accumulation...")
-            self.next_global_fragments = [order_global_fragments_by_distance_travelled(self.global_fragments)[get_ith_global_fragment]]
+            # At this point global fragments are already ordered according to minmax distance travelled
+            self.next_global_fragments = [self.global_fragments[get_ith_global_fragment]]
             [(setattr(fragment, '_temporary_id', i),
+                setattr(fragment, '_frequencies', self.give_me_frequencies_first_fragment_accumulated(i, self.number_of_animals, fragment)),
+                setattr(fragment, '_is_certain', True),
                 setattr(fragment, '_certainty', 1.),
-                setattr(fragment, '_P1_vector', self.give_me_P1_vector_first_fragment_accumualted(i, self.number_of_animals))) for i, fragment in enumerate(self.next_global_fragments[0].individual_fragments)]
+                setattr(fragment, '_P1_vector', fragment.compute_P1_from_frequencies(fragment.frequencies)))
+                for i, fragment in enumerate(self.next_global_fragments[0].individual_fragments)]
         else:
             logger.info("Getting global fragments...")
             self.next_global_fragments = [global_fragment for global_fragment in self.global_fragments

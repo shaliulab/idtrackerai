@@ -378,32 +378,28 @@ class Video(object):
     def blobs_path(self):
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
-        if self._has_been_preprocessed:
-            self._blobs_path = os.path.join(self._preprocessing_folder, 'blobs_collection.npy')
+        self._blobs_path = os.path.join(self._preprocessing_folder, 'blobs_collection.npy')
         return self._blobs_path
 
     @property
     def blobs_path_segmented(self):
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
-        if self._has_been_segmented:
-            self._blobs_path_segmented = os.path.join(self._preprocessing_folder, 'blobs_collection_segmented.npy')
+        self._blobs_path_segmented = os.path.join(self._preprocessing_folder, 'blobs_collection_segmented.npy')
         return self._blobs_path_segmented
 
     @property
     def global_fragments_path(self):
         """get the path to save the list of global fragments after
         fragmentation"""
-        if self._has_been_preprocessed:
-            self._global_fragments_path = os.path.join(self._preprocessing_folder, 'global_fragments.npy')
+        self._global_fragments_path = os.path.join(self._preprocessing_folder, 'global_fragments.npy')
         return self._global_fragments_path
 
     @property
     def fragments_path(self):
         """get the path to save the list of global fragments after
         fragmentation"""
-        if self._has_been_preprocessed:
-            self._fragments_path = os.path.join(self._preprocessing_folder, 'fragments.npy')
+        self._fragments_path = os.path.join(self._preprocessing_folder, 'fragments.npy')
         return self._fragments_path
 
     def save(self):

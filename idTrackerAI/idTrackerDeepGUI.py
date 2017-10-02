@@ -69,7 +69,7 @@ from compute_velocity_model import compute_model_velocity
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING = .25
 VEL_PERCENTILE = 99
-THRESHOLD_ACCEPTABLE_ACCUMULATION = 1.
+THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
 ###
 # seed numpy
 np.random.seed(0)
@@ -171,10 +171,10 @@ if __name__ == '__main__':
             logger.debug("Starting segmentation")
             blobs = segment(video)
             logger.debug("Segmentation finished")
-            video._has_been_segmented = True
             list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
             list_of_blobs.save(video.blobs_path_segmented, NUM_CHUNKS_BLOB_SAVING)
             logger.debug("Segmented blobs saved")
+            video._has_been_segmented = True
         else:
             # Load blobs and global fragments
             logger.debug("Loading previously segmented blobs")
@@ -187,7 +187,6 @@ if __name__ == '__main__':
             logger.debug('The parameters used to preprocess the video are %s', preprocessing_parameters_dict)
             list_of_blobs = ListOfBlobs.load(old_video.blobs_path_segmented)
             video._has_been_segmented = True
-            video.save()
             logger.debug("Segmented blobs loaded")
         video.save()
         logger.info("Computing maximum number of blobs detected in the video")
@@ -268,17 +267,17 @@ if __name__ == '__main__':
         video.number_of_non_filtered_global_fragments = list_of_global_fragments.number_of_global_fragments
         list_of_global_fragments.filter_by_minimum_number_of_frames(minimum_number_of_frames = 3)
         video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
+        list_of_global_fragments.relink_fragments_to_global_fragments(list_of_fragments.fragments)
         list_of_global_fragments.compute_number_of_unique_images()
         video.number_of_unique_images_in_global_fragments = list_of_global_fragments.number_of_images
         list_of_global_fragments.compute_maximum_number_of_images()
         video.maximum_number_of_portraits_in_global_fragments = list_of_global_fragments.maximum_number_of_images
-        list_of_global_fragments.order_global_fragments_by_distance_travelled()
+        list_of_global_fragments.order_by_distance_travelled()
         video.first_frame_first_global_fragment = list_of_global_fragments.global_fragments[0].index_beginning_of_fragment
         #save connected blobs in video (organized frame-wise)
-
-        list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
-        list_of_fragments.save(video.fragments_path)
-        list_of_global_fragments.save(video.global_fragments_path)
+        list_of_blobs.save(number_of_chunks = NUM_CHUNKS_BLOB_SAVING)
+        list_of_fragments.save()
+        list_of_global_fragments.save(list_of_fragments.fragments)
         video._has_been_preprocessed = True
         video.save()
         logger.info("Blobs detection and fragmentation finished succesfully.")
@@ -287,6 +286,7 @@ if __name__ == '__main__':
         logger.info("Loading preprocessed video")
         path_attributes = ['_preprocessing_folder', '_blobs_path', '_global_fragments_path', '_fragments_path']
         video.copy_attributes_between_two_video_objects(old_video, path_attributes)
+        video._has_been_segmented = True
         video._has_been_preprocessed = True
         video.save()
         # Load blobs and global fragments
@@ -379,7 +379,8 @@ if __name__ == '__main__':
         ### NOTE: save all the accumulation statistics
         video.save()
         logger.info("Saving fragments")
-        np.save(video.fragments_path, list_of_fragments)
+        list_of_fragments.save()
+        list_of_global_fragments.save(list_of_fragments.fragments)
     else:
         ### NOTE: load all the accumulation statistics
         logger.info("Restoring accumulation network")
@@ -398,7 +399,7 @@ if __name__ == '__main__':
         if not loadPreviousDict['assignment']:
             #### Assigner ####
             print('\n---------------------------------------------------------')
-            assigner(blobs, video, net)
+            assigner(list_of_fragments, video, net)
             video._has_been_assigned = True
             ### NOTE: save all the assigner statistics
         else:

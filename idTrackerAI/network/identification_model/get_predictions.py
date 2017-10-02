@@ -20,6 +20,13 @@ class GetPrediction(object):
         self._fc_vectors = []
         self.batch_size = BATCH_SIZE
 
+    @property
+    def softmax_probs(self):
+        return self._softmax_probs
+
+    @property
+    def predictions(self):
+        return self._predictions
 
     def next_batch(self, batch_size):
         """Return the next `batch_size` examples from this data set."""

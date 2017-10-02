@@ -3,17 +3,17 @@ from __future__ import absolute_import, division, print_function
 import os
 from os.path import isdir, isfile
 import sys
-
-# Import third party libraries
-from matplotlib import pyplot as plt
-import matplotlib.lines as mlines
-import seaborn as sns
-
 # Import application/library specifics
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
 sys.path.append('./')
 # sys.path.append('IdTrackerDeep/tracker')
+
+# Import third party libraries
+from matplotlib import pyplot as plt
+import matplotlib.lines as mlines
+import seaborn as sns
+import numpy as np
 
 from video import Video
 from list_of_fragments import ListOfFragments
@@ -25,13 +25,23 @@ def compute_and_plot_fragments_statistics(video, list_of_fragments, list_of_glob
 
     number_of_images_in_individual_fragments, \
     distance_travelled_individual_fragments, \
-    number_of_images_in_crossing_fragments =  list_of_fragments.get_data_plot(list_of_fragments)
+    number_of_images_in_crossing_fragments =  list_of_fragments.get_data_plot()
 
     number_of_images_in_shortest_individual_fragment,\
     number_of_images_in_longest_individual_fragment,\
     number_of_images_per_individual_fragment_in_global_fragment,\
     median_number_of_images,\
     minimum_distance_travelled = list_of_global_fragments.get_data_plot()
+    # print(number_of_images_in_individual_fragments, \
+    # distance_travelled_individual_fragments, \
+    # number_of_images_in_crossing_fragments)
+    # print("--------------------------------------------------------")
+    # print(number_of_images_in_shortest_individual_fragment,\
+    # number_of_images_in_longest_individual_fragment,\
+    # number_of_images_per_individual_fragment_in_global_fragment,\
+    # median_number_of_images,\
+    # minimum_distance_travelled)
+
 
     ''' plotting '''
     plt.ion()

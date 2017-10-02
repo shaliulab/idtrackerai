@@ -35,6 +35,10 @@ class Blob(object):
             self._blob_index = None # index of the blob to plot the individual fragments
 
     @property
+    def fragment_identifier(self):
+        return self._fragment_identifier
+
+    @property
     def user_generated_identity(self):
         return self._user_generated_identity
 

@@ -12,7 +12,7 @@ import matplotlib.lines as mlines
 import seaborn as sns
 
 from fragment import Fragment
-from py_utils import set_attributes_of_object_to_value
+from py_utils import set_attributes_of_object_to_value, append_values_to_lists
 
 logger = logging.getLogger("__main__.list_of_fragments")
 
@@ -28,8 +28,12 @@ class ListOfFragments(object):
         fragments_identifiers_argsort = np.argsort(fragments_identifiers)
         return fragment_identifier_to_index[fragments_identifiers_argsort]
 
-    def reset_fragments(list_of_fragments, roll_back_to = None):
+    def reset(self, roll_back_to = None):
         [fragment.reset(roll_back_to) for fragment in self.fragments]
+
+    def get_images_from_fragments_to_assign(self):
+        return np.concatenate([np.asarray(fragment.images) for fragment in self.fragments
+                                if not fragment.used_for_training and fragment.is_a_fish], axis = 0)
 
     def get_data_plot(self):
         number_of_images_in_individual_fragments = []

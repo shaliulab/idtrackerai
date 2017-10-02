@@ -105,7 +105,9 @@ def accumulate(accumulation_manager,
             logger.info("Number of randomly assigned global fragments: %i" %accumulation_manager.number_of_random_assigned_global_fragments)
             logger.info("Number of non consistent global fragments: %i " %accumulation_manager.number_of_nonconsistent_global_fragments)
             logger.info("Number of non unique global fragments: %i " %accumulation_manager.number_of_nonunique_global_fragments)
-            logger.info("Number of acceptable global fragments: %i " %np.sum([global_fragment.acceptable_for_training and not global_fragment.used_for_training for global_fragment in global_fragments]))
+            logger.info("Number of acceptable global fragments: %i " %np.sum([global_fragment.acceptable_for_training
+                                                                        and not global_fragment.used_for_training
+                                                                        for global_fragment in accumulation_manager.global_fragments]))
             new_values = [len([global_fragment for global_fragment in accumulation_manager.global_fragments if global_fragment.used_for_training]),
                             accumulation_manager.number_of_noncertain_global_fragments,
                             accumulation_manager.number_of_random_assigned_global_fragments,

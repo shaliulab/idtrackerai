@@ -22,8 +22,6 @@ from statistics_for_assignment import compute_P2_of_individual_fragment_from_blo
                                     # compute_identification_frequencies_individual_fragment,\
                                     # is_assignment_ambiguous
 
-FIXED_IDENTITY_THRESHOLD = .9
-
 logger = logging.getLogger("__main__.assigner")
 
 """
@@ -51,16 +49,15 @@ def assign(net, video, images, print_flag):
 assign ghost crossings
 ********************************************************************************
 """
+# def assign_ghost_crossings(fragments):
+#     for fragment in fragments:
+#         if (fragment.identity == 0 or fragment.identity is None) and (fragment.is_a_fish or fragment.is_a_ghost_crossing):
+#
+#             
 
 def assign_ghost_crossings(blobs):
     for blobs_in_frame in tqdm(blobs, desc = 'Assign identity to individual fragments extremes'):
-        # try:
-            # print("\nframe number ", blobs_in_frame[0].frame_number)
-        # except:
-            # print("last frame")
         for blob in blobs_in_frame:
-            #if a blob has not been assigned but it is a fish and overlaps with one fragment
-            #assign it!
             if blob.is_a_ghost_crossing:
                 print("ghost crossing identity: ", blob.identity)
                 print("ghost crossing frame: ", blob.frame_number)
@@ -338,111 +335,19 @@ def assign_identity_to_jumps(video, blobs):
 assign blobs in video
 ********************************************************************************
 """
-
-def assign_identity_to_blobs_in_video(blobs_in_video, assigner):
+def compute_identification_statistics_for_non_accumulated_fragments(fragments, assigner):
     counter = 0
-    fragments_identifier_used = []
-    for blobs_in_frame in blobs_in_video:
-        for blob in blobs_in_frame:
-            if not blob.assigned_during_accumulation and blob._fragment_identifier not in fragments_identifier_used:
-                if blob.is_a_fish_in_a_fragment:
-                    fragments_identifier_used.append(blob.fragment_identifier)
-                    current = blob
-                    current._identity = int(assigner._predictions[counter])
-                    counter += 1
 
-                    while len(current.next) > 0 and current.next[0].fragment_identifier == blob.fragment_identifier:
-                        current = current.next[0]
-                        current._identity = int(assigner._predictions[counter])
-                        counter += 1
+    for fragment in fragments:
+        if not fragment.used_for_training and fragment.is_a_fish:
+            next_counter_value = counter + fragment.number_of_images
+            predictions = assigner.predictions[counter : next_counter_value]
+            softmax_probs = assigner.softmax_probs[counter : next_counter_value]
+            fragment.compute_identification_statistics(predictions, softmax_probs)
+            counter = next_counter_value
 
-                    current = blob
-
-                    while len(current.previous) > 0 and current.previous[0].fragment_identifier == blob.fragment_identifier:
-                        current = current.previous[0]
-                        current._identity = int(assigner._predictions[counter])
-                        counter += 1
-
-def assign_identity_to_blobs_in_video_by_fragment(video, blobs_in_video):
-    """Assigns individual-fragment-based identities to all the blobs
-    in the video.
-    """
-    assigned_fragment_identifiers = []
-    list_of_blobs = get_blobs_to_assign(blobs_in_video, assigned_fragment_identifiers)
-    len_first_list_of_blobs = len(list_of_blobs)
-
-    while len(list_of_blobs) > 1:
-        blob = list_of_blobs[get_blob_to_assign_by_max_P2(list_of_blobs)]
-
-        logger.info("frame number: %i" %blob.frame_number)
-        logger.info("certainty of the assignment (P2): %s" %str(max(blob.P2_vector)))
-        identity_in_fragment = np.argmax(blob._P2_vector) + 1
-        ambiguous_identities, is_ambiguous_identity = is_assignment_ambiguous(blob.P2_vector)
-        if is_ambiguous_identity:
-            logger.debug("******frame number: %i" %blob.frame_number)
-            logger.debug("assigned_during_accumulation: %s" %blob.assigned_during_accumulation)
-            logger.debug("identity_in_fragment (ambiguous): %s" %str(ambiguous_identities))
-            identity_in_fragment = 0
-            blob.ambiguous_identities = ambiguous_identities
-        logger.debug("identity_in_fragment: %i" %identity_in_fragment)
-        # Update identity of all blobs in fragment
-        number_of_images_in_fragment = len(blob.identities_in_fragment())
-        logger.debug("number_of_images_in_fragment: %i" %number_of_images_in_fragment)
-        blob.update_identity_in_fragment(identity_in_fragment, number_of_images_in_fragment = number_of_images_in_fragment)
-        # blob.update_attributes_in_fragment(['_identity'], [identity_in_fragment])
-        assigned_fragment_identifiers.append(blob.fragment_identifier)
-        # list_of_blobs = get_blobs_to_assign(blobs_in_video, assigned_fragment_identifiers)
-        list_of_blobs.remove(blob)
-        assert blob not in list_of_blobs
-        logger.info("step %i of %i" %(len(list_of_blobs), len_first_list_of_blobs))
-        coexisting_blobs, _ = blob.get_coexisting_blobs_in_fragment(blobs_in_video)
-        if np.max(blob._P2_vector) < FIXED_IDENTITY_THRESHOLD:
-            for blob_to_assign in tqdm(coexisting_blobs, desc = "Updating P2 of coexisting blobs"):
-                if np.max(blob_to_assign._P2_vector) < FIXED_IDENTITY_THRESHOLD:
-                    blob_to_assign._P2_vector = compute_P2_of_individual_fragment_from_blob(blob_to_assign, blobs_in_video)
-                    blob_to_assign.update_attributes_in_fragment(['_P2_vector'], [blob_to_assign._P2_vector])
-
-"""
-********************************************************************************
-P1 and P2
-********************************************************************************
-"""
-
-def compute_P1_for_blobs_in_video(video, blobs_in_video):
-    """Assigns individual-fragment-based identities to all the blobs
-    in the video. It uses P1
-    """
-    individual_fragments_identifiers_computed = []
-    for blobs_in_frame in tqdm(blobs_in_video, desc = 'Computing P1 vectors'):
-        for blob in blobs_in_frame:
-            if blob.is_a_fish_in_a_fragment\
-                and not blob.assigned_during_accumulation\
-                and blob._fragment_identifier not in individual_fragments_identifiers_computed:
-
-                identities_in_fragment = np.asarray(blob.identities_in_fragment())
-                non_shared_information_in_fragment = np.asarray(blob.non_shared_information_in_fragment())
-                frequencies_in_fragment = compute_identification_frequencies_individual_fragment(non_shared_information_in_fragment,
-                                                                                                    identities_in_fragment,
-                                                                                                    video.number_of_animals)
-                blob._frequencies_in_fragment = frequencies_in_fragment
-                blob._P1_vector = compute_P1_individual_fragment_from_frequencies(frequencies_in_fragment)
-                blob.update_attributes_in_fragment(['_P1_vector', '_frequencies_in_fragment'], [blob._P1_vector, blob._frequencies_in_fragment])
-                individual_fragments_identifiers_computed.append(blob._fragment_identifier)
-
-def compute_P2_for_blobs_in_video(video, blobs_in_video):
-    """compute P2 for all the blobs in the video.
-    """
-    individual_fragments_identifiers_computed = []
-
-    for blobs_in_frame in tqdm(blobs_in_video, desc = 'Computing P2 vectors'):
-        for blob in blobs_in_frame:
-            if blob.is_a_fish_in_a_fragment\
-                and blob._fragment_identifier not in individual_fragments_identifiers_computed:
-                # Get per blob identities in the fragment
-                blob._P2_vector = compute_P2_of_individual_fragment_from_blob(blob, blobs_in_video)
-                # update P2 for the blobs part of the current individual fragment
-                blob.update_attributes_in_fragment(['_P2_vector'], [blob._P2_vector])
-                individual_fragments_identifiers_computed.append(blob._fragment_identifier)
+def assign_identity(fragments):
+    [fragment.assign_identity() for fragment in fragments if fragment.is_a_fish]
 
 """
 ********************************************************************************
@@ -476,32 +381,24 @@ main assigner
 ********************************************************************************
 """
 
-def assigner(blobs, video, net):
+def assigner(list_of_fragments, video, net):
 
     logger.info("Assigning identities to non-accumulated individual fragments")
-    logger.info("Preparing blob objects")
-    reset_blobs_fragmentation_parameters(blobs, recovering_from = 'assignment')
+    logger.debug("Resetting list of fragments for assignment")
+    list_of_fragments.reset(roll_back_to = 'accumulation')
     # Get images from the blob collection
     logger.info("Getting images")
-    images = get_images_from_blobs_in_video(blobs)#, video._episodes_start_end)
+    images = list_of_fragments.get_images_from_fragments_to_assign()
     logger.debug("Images shape before assignment %s" %str(images.shape))
     # get predictions
     logger.info("Getting predictions")
     assigner = assign(net, video, images, print_flag = True)
     logger.debug("Number of generated predictions: %s" %str(len(assigner._predictions)))
     logger.debug("Predictions range: %s" %str(np.unique(assigner._predictions)))
-    # assign identities to each blob in each frame
-    logger.info("Assigning identities to individual fragments")
-    assign_identity_to_blobs_in_video(blobs, assigner)
-    # compute P1 vector for individual fragmets
-    logger.debug("Computing P1")
-    compute_P1_for_blobs_in_video(video, blobs)
+    compute_identification_statistics_for_non_accumulated_fragments(list_of_fragments.fragments, assigner)
     # compute P2 for all the individual fragments (including the already accumulated)
-    logger.debug("Computing P2")
-    compute_P2_for_blobs_in_video(video, blobs)
-    # assign identities based on individual fragments
-    logger.debug("Assigning identities on an individual fragment basis")
-    assign_identity_to_blobs_in_video_by_fragment(video, blobs)
+    logger.info("Assigning identities")
+    assign_identity(list_of_fragments.fragments)
     # assign identity to ghost crossings
     logger.debug("Assigning identities to ghost crossings")
     assign_ghost_crossings(blobs)

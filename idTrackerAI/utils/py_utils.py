@@ -26,10 +26,10 @@ def append_values_to_lists(values, list_of_lists):
     return list_of_lists_updated
 
 def set_attributes_of_object_to_value(object_to_modify, attributes_list, value = None):
-    [setattr(object_to_modify, attribute, value) for attribute in attributes_list]
+    [setattr(object_to_modify, attribute, value) for attribute in attributes_list if hasattr(object_to_modify, attribute)]
 
 def delete_attributes_from_object(object_to_modify, list_of_attributes):
-    [delattr(object_to_modify, attribute) for attribute in list_of_attributes]
+    [delattr(object_to_modify, attribute) for attribute in list_of_attributes if hasattr(object_to_modify, attribute)]
 
 ### Dict utils ###
 def getVarFromDict(dictVar,variableNames):

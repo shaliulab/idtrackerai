@@ -674,14 +674,14 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
     return preprocParams
 
 def selectPreprocParams(video, old_video, usePreviousPrecParams):
+    restore_segmentation = False
     if not usePreviousPrecParams:
         if old_video and old_video._has_been_segmented:
             restore_segmentation = getInput("Load segmentation", "Load the previous segmentation? Y/n")
-        else:
-            restore_segmentation = 'n'
-    else:
-        restore_segmentation = 'n'
-    if not usePreviousPrecParams and restore_segmentation == 'n':
+            if restore_segmentation == 'y' or restore_segmentation == '':
+                restore_segmentation = True
+
+    if not usePreviousPrecParams and not restore_segmentation:
         prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?')
         video.subtract_bkg = bool(prepOpts['bkg'])
         video.apply_ROI =  bool(prepOpts['ROI'])
@@ -721,13 +721,13 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         cv2.waitKey(1)
         cv2.destroyAllWindows()
         cv2.waitKey(1)
-    elif not usePreviousPrecParams and restore_segmentation == 'y':
+    elif not usePreviousPrecParams and restore_segmentation:
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
                                     '_preprocessing_type','_maximum_number_of_blobs',
                                     '_blobs_path_segmented', '_min_threshold','_max_threshold',
                                     '_min_area','_max_area', '_resize','resolution_reduction',
                                     'preprocessing_type','_number_of_animals',
-                                    'ROI','bkg', 'resolution_reduction',
+                                    'ROI','bkg',
                                     '_preprocessing_folder']
         video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_been_segmented = True

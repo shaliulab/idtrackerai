@@ -42,7 +42,7 @@ class ListOfGlobalFragments(object):
                     number_of_images += fragment.number_of_images
                     individual_fragments_used.append(fragment.identifier)
 
-        self.number_of_images
+        self.number_of_images = number_of_images
 
     def compute_maximum_number_of_images(self):
         self.maximum_number_of_images = np.max([global_fragment.get_total_number_of_images() for global_fragment in self.global_fragments])
@@ -77,10 +77,12 @@ class ListOfGlobalFragments(object):
     def relink_fragments_to_global_fragments(self, fragments):
         [global_fragment.get_individual_fragments_of_global_fragment(fragments) for global_fragment in self.global_fragments]
 
-    def save(self):
+    def save(self, fragments):
         logger.info("saving list of global fragments at %s" %self.video.global_fragments_path)
         self.delete_fragments_from_global_fragments()
         np.save(self.video.global_fragments_path,self)
+        # After saving the list of globa fragments the individual fragments are deleted and we need to relink them again
+        self.relink_fragments_to_global_fragments(fragments)
 
     @classmethod
     def load(self, path_to_load, fragments):
