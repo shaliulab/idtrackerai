@@ -49,40 +49,24 @@ def assign(net, video, images, print_flag):
 assign ghost crossings
 ********************************************************************************
 """
-# def assign_ghost_crossings(fragments):
-#     for fragment in fragments:
-#         if (fragment.identity == 0 or fragment.identity is None) and (fragment.is_a_fish or fragment.is_a_ghost_crossing):
-#
-#             
+def get_attributes_for_ghost_crossing_assignment(fragment_to_assign, fragments, target_fragment_identifier):
+    if target_fragment_identifier is not None:
+        attributes = ['identity', 'P1_vector', 'P2_vector']
+        for fragment in fragments:
+            if fragment.identifier == target_fragment_identifier:
+                [setattr(fragment_to_assign, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes
+                    if fragment.is_a_fish and hasattr(fragment, 'identity')]
 
-def assign_ghost_crossings(blobs):
-    for blobs_in_frame in tqdm(blobs, desc = 'Assign identity to individual fragments extremes'):
-        for blob in blobs_in_frame:
-            if blob.is_a_ghost_crossing:
-                print("ghost crossing identity: ", blob.identity)
-                print("ghost crossing frame: ", blob.frame_number)
-            if (blob.identity == 0 or blob.identity is None) and (blob.is_a_fish or blob.is_a_ghost_crossing):
-                print("is a ghost crossing ", blob.is_a_ghost_crossing)
-                print("num next ", len(blob.next))
-                print("num prev ", len(blob.previous))
-                print("identity ", blob.identity)
-                if len(blob.next) == 1:
-                    print("next is 1")
-                    print("next id ", blob.next[0].identity)
-                    blob._identity = blob.next[0].identity
-                    blob._frequencies_in_fragment = blob.next[0].frequencies_in_fragment
-                    blob._P1_vector = blob.next[0].P1_vector
-                    blob._P2_vector = blob.next[0].P2_vector ### NOTE: this is not strictly correct as it should be recomputed
-                    # blob.is_an_extreme_of_individual_fragment = True
-                elif len(blob.previous) == 1:
-                    print("prev is 1")
-                    print("prev id ", blob.previous[0].identity)
-                    blob._identity = blob.previous[0].identity
-                    blob._frequencies_in_fragment = blob.previous[0].frequencies_in_fragment
-                    blob._P1_vector = blob.previous[0].P1_vector
-                    blob._P2_vector = blob.previous[0].P2_vector ### NOTE: this is not strictly correct as it should be recomputed
-                    # blob.is_an_extreme_of_individual_fragment = True
-                print("assigned during accumulation ----->", blob.assigned_during_accumulation)
+def assign_ghost_crossings(fragments):
+    for fragment in tqdm(fragments, desc = "Assigning ghost crossings"):
+        if fragment.is_a_ghost_crossing:
+            if len(fragment.next_blobs_fragment_identifier) == 1:
+                target_fragment_identifier = fragment.next_blobs_fragment_identifier[0]
+            elif len(fragment.previous_blobs_fragment_identifier) == 1:
+                target_fragment_identifier = fragment.previous_blobs_fragment_identifier[0]
+            else:
+                target_fragment_identifier = None
+            get_attributes_for_ghost_crossing_assignment(fragment, fragments, target_fragment_identifier)
 
 """
 ********************************************************************************
@@ -401,7 +385,7 @@ def assigner(list_of_fragments, video, net):
     assign_identity(list_of_fragments.fragments)
     # assign identity to ghost crossings
     logger.debug("Assigning identities to ghost crossings")
-    assign_ghost_crossings(blobs)
+    assign_ghost_crossings(list_of_fragments.fragments)
     # solve jumps
     logger.debug("Assigning identities to jumps")
     assign_identity_to_jumps(video, blobs)
