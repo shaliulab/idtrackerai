@@ -140,6 +140,9 @@ class Fragment(object):
         else:
             self.distance_travelled = 0.
 
+    def frame_by_frame_velocity(self):
+        return np.sqrt(np.sum(np.diff(self.centroids, axis = 0)**2, axis = 1))
+
     def are_overlapping(self, other):
         (s1,e1), (s2,e2) = self.start_end, other.start_end
         return s1 < e2 and e1 > s2
@@ -239,11 +242,14 @@ class Fragment(object):
     @staticmethod
     def compute_median_softmax(softmax_probs, number_of_animals):
         softmax_probs = np.asarray(softmax_probs)
+        #jumps are fragment composed by a single image, thus:
+        if len(softmax_probs.shape) == 1:
+            softmax_probs = np.expand_dims(softmax_probs, axis = 1)
         max_softmax_probs = np.max(softmax_probs, axis = 1)
         argmax_softmax_probs = np.argmax(softmax_probs, axis = 1)
         softmax_median = np.zeros(number_of_animals)
         for i in np.unique(argmax_softmax_probs):
-            softmax_median[i] = np.median(max_softmax_probs[argmax_softmax_probs==i])
+            softmax_median[i] = np.median(max_softmax_probs[argmax_softmax_probs == i])
         return softmax_median
 
     @staticmethod

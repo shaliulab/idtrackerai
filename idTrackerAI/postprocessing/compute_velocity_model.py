@@ -7,10 +7,9 @@ sys.path.append('../network')
 import numpy as np
 from tqdm import tqdm
 import collections
-from list_of_blobs import ListOfBlobs
-from blob import Blob
+from list_of_fragments import ListOfFragments
 
-def compute_model_velocity(blobs_in_video, number_of_animals, percentile = None):
+def compute_model_velocity(fragments, number_of_animals, percentile = None):
     """computes the 2 * (percentile) of the distribution of velocities of identified fish.
     params
     -----
@@ -26,20 +25,12 @@ def compute_model_velocity(blobs_in_video, number_of_animals, percentile = None)
     2 * percentile(velocity distribution of identified animals) otherwise
     """
     distance_travelled_in_individual_fragments = []
-    used_individual_fragments = []
 
-    for blobs_in_frame in tqdm( blobs_in_video, desc = "computing velocity model"):
-
-        for blob in blobs_in_frame:
-            if blob.is_a_fish_in_a_fragment and blob.fragment_identifier not in used_individual_fragments:
-                used_individual_fragments.extend([blob.fragment_identifier])
-                distance_travelled_in_individual_fragments.extend(blob.frame_by_frame_velocity())
+    for fragment in tqdm(fragments, desc = "computing velocity model"):
+        if fragment.is_a_fish:
+            distance_travelled_in_individual_fragments.extend(fragment.frame_by_frame_velocity())
 
     return 2 * np.max(distance_travelled_in_individual_fragments) if percentile is None else 2 * np.percentile(distance_travelled_in_individual_fragments, percentile)
 
-def compute_velocity_from_list_of_blobs(list_of_blobs):
-    centroids = [blob.centroid for blob in list_of_blobs]
-    # print(centroids)
-    velocity = [np.linalg.norm(centroids[i+1] - centroid) for i, centroid in enumerate(centroids[:-1])]
-    # print(velocity)
-    return np.mean(velocity)
+def compute_velocity_from_list_of_fragments(list_of_fragments):
+    return np.mean([fragment.frame_by_frame_velocity() for fragment in list_of_fragments])

@@ -497,7 +497,7 @@ if __name__ == '__main__':
         if not loadPreviousDict['assignment']:
             #### Assigner ####
             print('\n---------------------------------------------------------')
-            assigner(blobs, video, net)
+            assigner(list_of_fragments, video, net)
             video._has_been_assigned = True
             ### NOTE: save all the assigner statistics
         else:
@@ -506,13 +506,9 @@ if __name__ == '__main__':
         video.assignment_time = time.time() - video.assignment_time
 
     # finish and save
-    logger.info("Saving blobs objects and video object")
-    list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
-    logger.info("Saving list of blobs")
-    list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
-    logger.info("Saving global fragments")
-    np.save(video.global_fragments_path, global_fragments)
-    logger.info("Saving video")
+    logger.debug("Saving list of fragments, list of global fragments and video object")
+    list_of_fragments.save()
+    list_of_global_fragments.save(list_of_fragments.fragments)
     video.save()
     #############################################################
     ################### CNN-visualisation  ######################

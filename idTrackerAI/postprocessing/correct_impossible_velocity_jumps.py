@@ -15,7 +15,7 @@ from assigner import assign
 from id_CNN import ConvNetwork
 from network_params import NetworkParams
 from blob import Blob
-from compute_velocity_model import compute_velocity_from_list_of_blobs, compute_model_velocity
+from compute_velocity_model import compute_velocity_from_list_of_fragments, compute_model_velocity
 from get_trajectories import produce_trajectories
 from plot_individual_velocity import plot_individual_trajectories_velocities_and_accelerations
 
