@@ -246,9 +246,9 @@ class AccumulationManager(object):
                 if fragment.certainty < self.certainty_threshold:
                     # if the certainty of the individual fragment is not high enough
                     # we set the global fragment not to be acceptable for training
-                    fragment._is_certain = False
                     self.reset_identity_of_non_accumulated_individual_fragments(global_fragment)
                     self.number_of_noncertain_global_fragments += 1
+                    fragment._is_certain = False
                     print("self.number_of_noncertain_global_fragments: ", self.number_of_noncertain_global_fragments)
                     break
                 else:
@@ -260,8 +260,10 @@ class AccumulationManager(object):
                 fragment._is_certain = True
             else:
                 logging.warn("Individual fragment not in candidates or in used, this should not happen")
-        print([fragment.is_certain for fragment in global_fragment.individual_fragments])
-        print([fragment.acceptable_for_training for fragment in global_fragment.individual_fragments])
+        # from pprint import pprint
+        # pprint(fragment.__dict__)
+        # print([fragment.is_certain for fragment in global_fragment.individual_fragments])
+        # print([fragment.acceptable_for_training for fragment in global_fragment.individual_fragments])
         # Compute identities if the global_fragment is certain
         if global_fragment.acceptable_for_training:
             print("assigning identities")

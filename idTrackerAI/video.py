@@ -222,7 +222,7 @@ class Video(object):
         else:
             chunks_lengths = [int(cv2.VideoCapture(chunk).get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) for chunk in self._paths_to_video_segments]
             self._episodes_start_end = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])) for i in range(1,len(chunks_lengths)+1)]
-            self.number_of_frames = np.sum(chunks_lengths)
+            self._number_of_frames = np.sum(chunks_lengths)
             self._number_of_episodes = len(self._paths_to_video_segments)
         cap.release()
 

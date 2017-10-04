@@ -36,8 +36,8 @@ class Duplication(object):
 
     def assign_unique_identities(self):
         all_blobs_to_reassign = []
-
         if len(self.identities_to_be_reassigned) > 0:
+
             for identity in self.identities_to_be_reassigned:
                 # print("\nsolving identity ", identity)
                 self.available_identities = list(set(self.possible_identities) - set(self.non_available_identities))
@@ -115,13 +115,13 @@ class Duplication(object):
         while len(assigned_identities) < number_of_blobs_to_reassign:
             # print("ids assigned: ", len(assigned_identities), ", blobs to reasign: ", number_of_blobs_to_reassign)
             if number_of_blobs_to_reassign == 1 and len(self.missing_identities) == 0:
-                # print("this blob will be a duplication in the future or in the past, but we can fix it now")
+                # print("this blob will be a duplication in the future or in the past, but we can't fix it now")
                 candidate_id = self.blobs_to_reassign[0].identity
                 if not self.check_consistency_with_coexistent_individual_fragments(self.blobs_to_reassign[0], candidate_id, self.blobs_in_video):
                     candidate_id = 0
                     self.blobs_to_reassign[0].ambiguous_identities = np.asarray(self.available_identities)
                 self.blobs_to_reassign[0]._identity_corrected_solving_duplication = candidate_id
-                assigned_identities.append(0)
+                assigned_identities.append(candidate_id)
             elif number_of_blobs_to_reassign == 1 and len(self.missing_identities) == 1:
                 # print("there is a unique blob to assing and only one missing identity")
                 candidate_id = self.missing_identities[0]
@@ -377,26 +377,65 @@ def solve_duplications_loop(video, blobs_in_video, group_size, scope = None):
         duplicated_identities, identities_in_frame, missing_identities, _ = check_for_duplications(blobs_in_frame, possible_identities)
         missing_identities = assign_single_unidentified_blob(missing_identities, blobs_in_frame, blobs_in_video)
 
-def solve_duplications(video, blobs, global_fragments, group_size):
-    # get_first_frame(video, global_fragments)
-    solve_duplications_loop(video, blobs, group_size, scope = 'to_the_past')
-    solve_duplications_loop(video, blobs, group_size, scope = 'to_the_future')
-    check_for_duplications_last_pass(blobs, group_size)
-
-def mark_blobs_as_duplications(blobs, group_size):
-    fragments_identifiers_that_are_duplications = []
-    possible_identities = set(range(1,group_size+1))
-    for blobs_in_frame in tqdm(blobs, desc = 'Marking blobs as duplications'):
-        identities_in_frame = get_identities_assigned_and_corrected_in_frame(blobs_in_frame)
-        duplicated_identities = set([x for x in identities_in_frame if identities_in_frame.count(x) > 1 and x != 0])
-        for blob in blobs_in_frame:
-            blob_identity = get_assigned_and_corrected_identity(blob)
-            if blob_identity in duplicated_identities and blob.fragment_identifier not in fragments_identifiers_that_are_duplications:
-                blob._is_a_duplication = True
-                if blob.is_a_fish_in_a_fragment:
-                    blob.update_attributes_in_fragment(['_is_a_duplication'], [True])
-                fragments_identifiers_that_are_duplications.append(blob.fragment_identifier)
+# def solve_duplications(video, blobs, global_fragments, group_size):
+#     # get_first_frame(video, global_fragments)
+#     solve_duplications_loop(video, blobs, group_size, scope = 'to_the_past')
+#     solve_duplications_loop(video, blobs, group_size, scope = 'to_the_future')
+#     check_for_duplications_last_pass(blobs, group_size)
 
 
 
-# [(blob.identity, blob._identity_corrected_solving_duplication, blob.assigned_during_accumulation) for blob in blobs[30626]]
+
+
+
+def get_ordered_list_of_fragments(first_frame_first_global_fragment, fragments, scope = None):
+    if scope = 'to_the_past':
+        fragments_subset = [fragment for fragment in fragments if fragment.start_end[1] < first_frame_first_global_fragment]
+        fragments_subset.sort(key=lambda x: x.start_end[1], reverse=True)
+    elif scope = 'to_the_future':
+        fragments_subset = [fragment for fragment in fragments if fragment.start_end[0] > first_frame_first_global_fragment]
+        fragments_subset.sort(key=lambda x: x.start_end[0], reverse=False)
+
+def solve_duplications_loop(video, fragments, scope = None):
+    fragments_in_direction = get_ordered_list_of_fragments(video.first_frame_first_global_fragment, fragments, scope)
+
+    for fragment in fragments_in_direction:
+        if fragment.is_a_fish and fragment.identity != 0 and fragment.is_a_duplication and not fragment.used_for_training:
+            solve_duplication(fragment)
+
+def solve_duplication(fragment):
+    missing_identities = fragment.get_missing_identities_in_coexisting_fragments()
+    fixed_identities = fragment.get_fixed_identities_in_coexisting_fragments()
+
+    #case 1
+    if len(missing_identities) == 0:
+        if fragment.identity not in fixed_identities:
+            fragment._identity_corrected_solving_duplication = fragment.identity
+        else:
+            fragment._identity_corrected_solving_duplication = 0
+    #case 2
+    elif len(missing_identities) == 1:
+        fragment._identity_corrected_solving_duplication = missing_identities
+    #case 3
+    else:
+        fragments_with_duplicated_ids = [coexisting_fragment for coexisting_fragment in fragment.coexisting_individual_fragments
+                                            if coexisting_fragment.final_identity == fragment.identity]
+        
+
+
+
+
+
+
+
+
+
+
+
+def solve_duplications(video, fragments):
+    solve_duplications_loop(video, fragments, scope = 'to_the_past')
+    solve_duplications_loop(video, fragments, scope = 'to_the_future')
+    check_for_duplications_last_pass(fragments)
+
+def mark_fragments_as_duplications(fragments):
+    [fragment.set_duplication_flag() for fragment in fragments]

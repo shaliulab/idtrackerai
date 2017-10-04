@@ -46,12 +46,12 @@ class Fragment(object):
         self.is_a_jumping_fragment = is_a_jumping_fragment
         self.is_a_ghost_crossing = is_a_ghost_crossing
         self.number_of_animals = number_of_animals
+        self.possible_identities = range(1, self.number_of_animals + 1)
         self._used_for_training = False
         self._used_for_pretraining = False
         self._acceptable_for_training = True
         self._temporary_id = None
         self._identity_is_fixed = False
-
 
     @property
     def used_for_training(self):
@@ -94,6 +94,15 @@ class Fragment(object):
         return self._identity
 
     @property
+    def final_identity(self):
+        if hasattr(self, 'user_generated_identity') and self.user_generated_identity is not None:
+            return self.user_generated_identity
+        elif hasattr(self, 'identity_corrected_solving_duplication') and identity_corrected_solving_duplication is not None:
+            return self.identity_corrected_solving_duplication
+        else:
+            return self.identity
+
+    @property
     def ambiguous_identities(self):
         return self._ambiguous_identities
 
@@ -104,6 +113,33 @@ class Fragment(object):
     @property
     def non_consistent(self):
         return self._non_consistent
+
+    @property
+    def is_a_duplication(self):
+        return self._is_a_duplication
+
+    def set_duplication_flag(self):
+        if any([fragment.identity == self.identity for fragment in self.coexisting_individual_fragments
+                if fragment.is_a_fish and fragment.identity != 0])
+            self._is_a_duplication = True
+        else:
+            self._is_a_duplication = False
+
+    def get_attribute_of_coexisting_fragments(self, attribute):
+        return [getattr(fragment,attribute) for fragment in self.coexisting_individual_fragments]
+
+    def get_missing_identities_in_coexisting_fragments(self):
+        identities = [self.identity] + self.get_attribute_of_coexisting_fragments('final_identity')
+        identities = [identity for identity in identities if identity != 0]
+        return set(self.possible_identities) - set(identities)
+
+    def get_fixed_identities_of_coexisting_fragments(self):
+        return [fragment.final_identity for fragment in self.coexisting_individual_fragments
+                if fragment.used_for_training
+                or not fragment.is_a_duplication
+                or (hasattr(fragment, 'user_generated_identity'))
+                or (hasattr(fragment, 'identity_corrected_solving_duplication'
+                    and fragment.identity_corrected_solving_duplication != 0)]
 
     def reset(self, roll_back_to = None):
         if roll_back_to == 'fragmentation':
@@ -128,7 +164,11 @@ class Fragment(object):
                                         '_identity_corrected_solving_duplication',
                                         '_is_a_duplication'])
             delete_attributes_from_object(self, attributes_to_delete)
-
+        elif roll_back_to == 'assignment':
+            attributes_to_delete = ['_user_generated_identity',
+                                    '_identity_corrected_solving_duplication',
+                                    '_is_a_duplication']
+            delete_attributes_from_object(self, attributes_to_delete)
 
     @property
     def number_of_images(self):
@@ -147,8 +187,8 @@ class Fragment(object):
         (s1,e1), (s2,e2) = self.start_end, other.start_end
         return s1 < e2 and e1 > s2
 
-    def get_coexisting_individual_fragments_indices(self, list_of_fragments):
-        self.coexisting_individual_fragments = [fragment for fragment in list_of_fragments
+    def get_coexisting_individual_fragments_indices(self, fragments):
+        self.coexisting_individual_fragments = [fragment for fragment in fragments
                                             if fragment.is_a_fish and self.are_overlapping(fragment)
                                             and fragment is not self
                                             and self.is_a_fish]
