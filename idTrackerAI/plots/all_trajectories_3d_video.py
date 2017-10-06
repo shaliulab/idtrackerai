@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 import os
 from os.path import isdir, isfile
 import sys
-sys.setrecursionlimit(100000)
+
 import glob
 import numpy as np
 import cPickle as pickle
@@ -28,9 +28,7 @@ from video import Video
 from blob import compute_fragment_identifier_and_blob_index,\
                 connect_blob_list,\
                 apply_model_area_to_video,\
-                ListOfBlobs,\
-                get_images_from_blobs_in_video,\
-                reset_blobs_fragmentation_parameters
+                ListOfBlobs
 from globalfragment import  give_me_list_of_global_fragments,\
                             ModelArea,\
                             give_me_pre_training_global_fragments,\

@@ -14,7 +14,6 @@ from network_params import NetworkParams
 from get_data import DataSet
 from id_CNN import ConvNetwork
 from get_predictions import GetPrediction
-from blob import get_images_from_blobs_in_video, reset_blobs_fragmentation_parameters
 from visualize_embeddings import EmbeddingVisualiser
 from list_of_global_fragments import get_images_and_labels_from_global_fragment
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob
@@ -62,6 +61,31 @@ def assign_identity(fragments):
 
 """
 ********************************************************************************
+assign ghost crossings
+********************************************************************************
+"""
+def get_attributes_for_ghost_crossing_assignment(fragment_to_assign, fragments, target_fragment_identifier):
+    if target_fragment_identifier is not None:
+        attributes = ['identity', 'P1_vector', 'P2_vector']
+        for fragment in fragments:
+            if fragment.identifier == target_fragment_identifier:
+                [setattr(fragment_to_assign, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes
+                    if fragment.is_a_fish and hasattr(fragment, 'identity')]
+
+def assign_ghost_crossings(fragments):
+    for fragment in tqdm(fragments, desc = "Assigning ghost crossings"):
+        if fragment.is_a_ghost_crossing:
+            if len(fragment.next_blobs_fragment_identifier) == 1:
+                target_fragment_identifier = fragment.next_blobs_fragment_identifier[0]
+            elif len(fragment.previous_blobs_fragment_identifier) == 1:
+                target_fragment_identifier = fragment.previous_blobs_fragment_identifier[0]
+            else:
+                target_fragment_identifier = None
+            get_attributes_for_ghost_crossing_assignment(fragment, fragments, target_fragment_identifier)
+
+
+"""
+********************************************************************************
 main assigner
 ********************************************************************************
 """
@@ -82,3 +106,5 @@ def assigner(list_of_fragments, video, net):
     # compute P2 for all the individual fragments (including the already accumulated)
     logger.info("Assigning identities")
     assign_identity(list_of_fragments.fragments)
+    logger.info("Assigning ghost crossings")
+    assign_ghost_crossings(list_of_fragments.fragments)

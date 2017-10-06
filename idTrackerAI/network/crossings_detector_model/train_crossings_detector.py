@@ -125,7 +125,7 @@ if __name__ == "__main__":
     from os import listdir
     from os.path import isfile, join
     import sys
-    sys.setrecursionlimit(1000000)
+    
     sys.path.append('../')
     sys.path.append('../utils')
 

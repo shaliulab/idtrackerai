@@ -10,6 +10,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.lines as mlines
 import seaborn as sns
+from tqdm import tqdm
 
 from fragment import Fragment
 from py_utils import set_attributes_of_object_to_value, append_values_to_lists
@@ -49,23 +50,30 @@ class ListOfFragments(object):
                 np.asarray(distance_travelled_individual_fragments),\
                 number_of_images_in_crossing_fragments
 
+    def update_from_list_of_blobs(self, blobs_in_video):
+        [setattr(self.fragments[self.video.fragment_identifier_to_index[blob.fragment_identifier]], '_user_generated_identity', blob.user_generated_identity)
+            for blobs_in_frame in blobs_in_video for blob in blobs_in_frame if blob.user_generated_identity is not None ]
+
     def save(self):
         logger.info("saving list of fragments at %s" %self.video.fragments_path)
+        [setattr(fragment, 'coexisting_individual_fragments', None) for fragment in self.fragments]
         np.save(self.video.fragments_path,self)
+        [fragment.get_coexisting_individual_fragments_indices(self.fragments) for fragment in self.fragments]
 
     @classmethod
     def load(self, path_to_load):
         logger.info("loading list of fragments from %s" %path_to_load)
         list_of_fragments = np.load(path_to_load).item()
+        [fragment.get_coexisting_individual_fragments_indices(list_of_fragments.fragments) for fragment in list_of_fragments.fragments]
         return list_of_fragments
 
 def create_list_of_fragments(blobs_in_video, number_of_animals):
-    attributes_to_set_to_value = ['_portrait', 'bounding_box_image', 'bounding_box_in_frame_coordinates'
+    attributes_to_set = ['_portrait', 'bounding_box_image', 'bounding_box_in_frame_coordinates'
                                         '_area', '_next', '_previous',]
     fragments = []
-    used_fragment_identifiers = []
+    used_fragment_identifiers = set()
 
-    for blobs_in_frame in blobs_in_video:
+    for blobs_in_frame in tqdm(blobs_in_video, desc = 'creating list of fragments'):
         for blob in blobs_in_frame:
             current_fragment_identifier = blob.fragment_identifier
             if current_fragment_identifier not in used_fragment_identifiers:
@@ -101,10 +109,13 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                                     blob.is_a_jumping_fragment,
                                     blob.is_a_ghost_crossing,
                                     number_of_animals)
-                used_fragment_identifiers.append(current_fragment_identifier)
+                if fragment.is_a_ghost_crossing:
+                    fragment.next_blobs_fragment_identifier = [next_blob.fragment_identifier for next_blob in blob.next if len(blob.next) > 0]
+                    fragment.previous_blobs_fragment_identifier = [previous_blob.fragment_identifier for previous_blob in blob.previous if len(blob.previous) > 0]
+                used_fragment_identifiers.add(current_fragment_identifier)
                 fragments.append(fragment)
 
-            set_attributes_of_object_to_value(blob, attributes_to_set_to_value, value = None)
+            set_attributes_of_object_to_value(blob, attributes_to_set, value = None)
 
     [fragment.get_coexisting_individual_fragments_indices(fragments) for fragment in fragments]
     return fragments

@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 import os
 from os.path import isdir, isfile
 import sys
-sys.setrecursionlimit(100000)
+
 import glob
 import numpy as np
 import cPickle as pickle
@@ -57,7 +57,7 @@ from trainer import train
 from assigner import assigner
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
-from correct_duplications import solve_duplications, mark_blobs_as_duplications
+from correct_duplications import solve_duplications, mark_fragments_as_duplications
 from correct_impossible_velocity_jumps import fix_identity_of_blobs_in_video, correct_impossible_velocity_jumps
 from solve_crossing import give_me_identities_in_crossings
 from get_trajectories import produce_trajectories, smooth_trajectories
@@ -129,13 +129,30 @@ if __name__ == '__main__':
                     'trajectories']
     #get existent files and paths to load them
     existentFiles, old_video = getExistentFiles(video, processes_list)
-    print("existentFiles ", existentFiles)
     #selecting files to load from previous session...'
     loadPreviousDict = selectOptions(processes_list, existentFiles, text='Steps already processed in this video \n (loaded from ' + video._video_folder + ')')
-    print("loadPreviousDict ", loadPreviousDict)
     #use previous values and parameters (bkg, roi, preprocessing parameters)?
     logger.debug("Video session folder: %s " %video._session_folder)
     video.save()
+    #############################################################
+    ##################   Knowledge transfer  ####################
+    ####   Take the weights from a different model already   ####
+    ####   trained. Works better when transfering to similar ####
+    ####   conditions (light, animal type, age, ...)         ####
+    #############################################################
+    if not bool(loadPreviousDict['use_previous_knowledge_transfer_decision']):
+        knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
+        # knowledge_transfer_flag = 'n'
+        if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
+            video.knowledge_transfer_model_folder = selectDir('', text = "Select a session folder to perform knowledge transfer from the last accumulation point") #select path to video
+            video.tracking_with_knowledge_transfer = True
+        elif knowledge_transfer_flag.lower() == 'n':
+            video.tracking_with_knowledge_transfer = False
+        else:
+            raise ValueError("Invalid value, type either 'y' or 'n'")
+    else:
+        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder','tracking_with_knowledge_transfer',])
+        video.use_previous_knowledge_transfer_decision = True
     #############################################################
     ####################  Preprocessing   #######################
     #### 1. detect blobs in the video                        ####
@@ -275,6 +292,7 @@ if __name__ == '__main__':
         list_of_global_fragments.order_by_distance_travelled()
         video.first_frame_first_global_fragment = list_of_global_fragments.global_fragments[0].index_beginning_of_fragment
         #save connected blobs in video (organized frame-wise)
+        list_of_blobs.video = video
         list_of_blobs.save(number_of_chunks = NUM_CHUNKS_BLOB_SAVING)
         list_of_fragments.save()
         list_of_global_fragments.save(list_of_fragments.fragments)
@@ -292,36 +310,18 @@ if __name__ == '__main__':
         # Load blobs and global fragments
         logger.info("Loading blob objects")
         list_of_blobs = ListOfBlobs.load(video.blobs_path)
+        list_of_blobs.video = video
         logger.info("Loading list of fragments")
         list_of_fragments = ListOfFragments.load(video.fragments_path)
         logger.info("Loading list of global fragments")
         list_of_global_fragments = ListOfGlobalFragments.load(video.global_fragments_path, list_of_fragments.fragments)
     video.preprocessing_time = time.time() - video.preprocessing_time
     #take a look to the resulting fragmentation
-    # fragmentation_inspector(video, blobs)
+    # fragmentation_inspector(video, list_of_blobs.blobs_in_video)
     #destroy windows to prevent openCV errors
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
-    #############################################################
-    ##################   Knowledge transfer  ####################
-    ####   Take the weights from a different model already   ####
-    ####   trained. Works better when transfering to similar ####
-    ####   conditions (light, animal type, age, ...)         ####
-    #############################################################
-    if not bool(loadPreviousDict['use_previous_knowledge_transfer_decision']):
-        knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
-        # knowledge_transfer_flag = 'n'
-        if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
-            video.knowledge_transfer_model_folder = selectDir('', text = "Select a session folder to perform knowledge transfer from the last accumulation point") #select path to video
-            video.tracking_with_knowledge_transfer = True
-        elif knowledge_transfer_flag.lower() == 'n':
-            video.tracking_with_knowledge_transfer = False
-        else:
-            raise ValueError("Invalid value, type either 'y' or 'n'")
-    else:
-        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder','tracking_with_knowledge_transfer',])
-        video.use_previous_knowledge_transfer_decision = True
     #############################################################
     ##################   Protocols cascade   ####################
     #############################################################
@@ -531,15 +531,16 @@ if __name__ == '__main__':
         logger.info("Start checking for and solving duplications")
         list_of_fragments.reset(roll_back_to = 'assignment')
         # mark fragments as duplications
-        mark_fragments_as_duplications(fragments)
+        mark_fragments_as_duplications(list_of_fragments.fragments)
         # solve duplications
-        solve_duplications(video, blobs, global_fragments, video.number_of_animals)
+        solve_duplications(video, list_of_fragments.fragments)
         video._has_duplications_solved = True
         logger.info("Done")
         # finish and save
         logger.info("Saving")
-        list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
-        list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
+        # list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
+        # list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
+        list_of_fragments.save()
         video.save()
         logger.info("Done")
         # visualise proposed tracking
@@ -586,6 +587,12 @@ if __name__ == '__main__':
     #     pass
 
     #############################################################
+    ##############   Update list of blobs   #####################
+    ####
+    #############################################################
+    list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
+
+    #############################################################
     ##############   Create trajectories    #####################
     ####
     #############################################################
@@ -593,9 +600,7 @@ if __name__ == '__main__':
     # if not loadPreviousDict['trajectories']:
     #     video.create_trajectories_folder()
     #     logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
-    #     number_of_animals = video.number_of_animals
-    #     number_of_frames = len(blobs)
-    #     trajectories = produce_trajectories(blobs, number_of_frames, number_of_animals)
+    #     trajectories = produce_trajectories(list_of_blobs.blobs_in_video, video.number_of_frames, video.number_of_animals)
     #     logger.info("Saving trajectories")
     #     for name in trajectories:
     #         np.save(os.path.join(video.trajectories_folder, name + '_trajectories.npy'), trajectories[name])
@@ -617,10 +622,8 @@ if __name__ == '__main__':
     # if os.path.isfile(groundtruth_path):
     #     print("\n**** Computing accuracy wrt. groundtruth ****")
     #     groundtruth = np.load(groundtruth_path).item()
-    #     print(len(groundtruth.list_of_blobs))
-    #     print(len(blobs))
     #     groundtruth.list_of_blobs = groundtruth.list_of_blobs[groundtruth.start:groundtruth.end]
-    #     blobs_to_compare_with_groundtruth = blobs[groundtruth.start:groundtruth.end]
+    #     blobs_to_compare_with_groundtruth = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
     #
     #     video.gt_accuracy, video.gt_individual_accuracy, video.gt_accuracy_assigned, video.gt_individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs_to_compare_with_groundtruth)
     #     video.gt_start_end = (groundtruth.start, groundtruth.end)

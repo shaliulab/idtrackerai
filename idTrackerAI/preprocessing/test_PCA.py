@@ -16,11 +16,7 @@ import time
 from video import Video
 from blob import compute_fragment_identifier_and_blob_index,\
                 connect_blob_list,\
-                apply_model_area_to_video,\
-                ListOfBlobs,\
-                get_images_from_blobs_in_video,\
-                reset_blobs_fragmentation_parameters
-
+                apply_model_area_to_video
 from GUI_utils import selectFile,\
                     getInput,\
                     selectOptions,\

@@ -52,18 +52,12 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
     for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video)):
 
         for blob in blobs_in_frame:
-            if blob.user_generated_identity is not None:
-                blob_identity = blob.user_generated_identity
-            elif hasattr(blob, "_identity_corrected_solving_duplication") and blob._identity_corrected_solving_duplication is not None:
-                blob_identity = blob._identity_corrected_solving_duplication
-            else:
-                blob_identity = blob.identity
 
-            if blob_identity is not None and blob_identity != 0:
-                centroid_trajectories[blob_identity-1, frame_number, :] = blob.centroid
+            if blob.final_identity is not None and blob.final_identity != 0:
+                centroid_trajectories[blob.final_identity-1, frame_number, :] = blob.centroid
                 try:
-                    head_trajectories[blob_identity-1, frame_number, :] = blob.head_coordinates
-                    nose_trajectories[blob_identity-1, frame_number, :] = blob.nose_coordinates
+                    head_trajectories[blob.final_identity-1, frame_number, :] = blob.head_coordinates
+                    nose_trajectories[blob.final_identity-1, frame_number, :] = blob.nose_coordinates
                 except:
                     missing_head = True
 

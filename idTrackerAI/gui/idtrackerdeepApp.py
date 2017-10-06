@@ -36,7 +36,6 @@ sys.path.append('../')
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
 sys.path.append('../groundtruth_utils')
-sys.setrecursionlimit(100000)
 import cv2
 import numpy as np
 from video import Video
@@ -44,7 +43,7 @@ from py_utils import getExistentFiles, get_spaced_colors_util
 from video_utils import computeBkg, blobExtractor
 from segmentation import segmentVideo
 from list_of_blobs import ListOfBlobs
-from globalfragment import order_global_fragments_by_distance_travelled
+from list_of_fragments import ListOfFragments
 # from validator import Validator
 """
 Start kivy classes
@@ -68,9 +67,18 @@ class Chosen_Video(EventDispatcher):
             self.video.video_path = value
             new_name_session_folder = raw_input('Session name: ')
             self.video.create_session_folder(name = new_name_session_folder)
-            processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
+            processes_list = ['preprocessing',
+                            'use_previous_knowledge_transfer_decision',
+                            'first_accumulation',
+                            'pretraining',
+                            'second_accumulation',
+                            'assignment',
+                            'solving_duplications',
+                            'crossings',
+                            'trajectories']
             #get existent files and paths to load them
             self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
+            print("------- old video", self.old_video)
             if self.old_video._has_been_assigned: self.video._has_been_assigned
             if hasattr(self.old_video, 'resolution_reduction'):
                 # print("--------------------------------------------------------")
@@ -759,22 +767,23 @@ class Validator(BoxLayout):
         self.popup.open()
 
     def get_first_frame(self):
-        if not hasattr(CHOSEN_VIDEO.video, 'first_frame_for_validation'):
-            self.global_fragments = np.load(CHOSEN_VIDEO.old_video.global_fragments_path)
-            max_distance_travelled_global_fragment = order_global_fragments_by_distance_travelled(self.global_fragments)[0]
-            return max_distance_travelled_global_fragment.index_beginning_of_fragment
-        else:
-            return CHOSEN_VIDEO.video.first_frame_for_validation
+        return CHOSEN_VIDEO.video.first_frame_first_global_fragment
 
     def do(self, *args):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
             # print("has been assigned ", CHOSEN_VIDEO.video._has_been_assigned)
             if CHOSEN_VIDEO.video._has_been_assigned == True:
                 list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_path)
+                list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.old_video.fragments_path)
+                list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
+                self.list_of_fragments = list_of_fragments
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             elif CHOSEN_VIDEO.old_video._has_been_assigned == True:
                 CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
-                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_path)
+                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
+                list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
+                self.list_of_fragments = list_of_fragments
+                list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             #init variables used for zooming
             self.count_scrollup = 0
@@ -998,14 +1007,24 @@ class Validator(BoxLayout):
                     cur_id = blob.user_generated_identity
                     cur_id_str = 'u-' + str(cur_id)
 
+                cur_id = blob.final_identity
+                if blob.user_generated_identity is None:
+                    if blob._identity_corrected_solving_duplication is not None:
+                        cur_id_str = 'd-' + str(cur_id)
+                    else:
+                        cur_id_str = str(cur_id)
+                else:
+                    cur_id_str = 'u-' + str(cur_id)
+
+
                 if type(cur_id) is 'int':
                     cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
                 elif type(cur_id) is 'list':
                     cv2.circle(frame, tuple(int_centroid), 2, [255, 255, 255], -1)
-                if blob._assigned_during_accumulation:
+                if blob.used_for_training:
                     # we draw a circle in the centroid if the blob has been assigned during accumulation
                     cv2.putText(frame, 'a-' + cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
-                elif not blob._assigned_during_accumulation:
+                elif not blob.used_for_training:
                     # we draw a cross in the centroid if the blob has been assigned during assignation
                     # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[cur_id], 1)
                     if blob.is_a_fish_in_a_fragment:
@@ -1094,7 +1113,7 @@ class Validator(BoxLayout):
 
             while current.next[0].is_a_fish_in_a_fragment:
                 # print("propagating forward")
-                current.next[0].user_generated_identity = current.user_generated_identity
+                current.next[0]._user_generated_identity = current.user_generated_identity
                 current = current.next[0]
                 count_future_corrections += 1
                 # print(count_future_corrections)
@@ -1103,7 +1122,7 @@ class Validator(BoxLayout):
 
             while current.previous[0].is_a_fish_in_a_fragment:
                 # print("propagating backward")
-                current.previous[0].user_generated_identity = current.user_generated_identity
+                current.previous[0]._user_generated_identity = current.user_generated_identity
                 current = current.previous[0]
                 count_past_corrections += 1
                 # print(count_past_corrections)
@@ -1123,7 +1142,7 @@ class Validator(BoxLayout):
         self.save_groundtruth_btn.disabled = False
         self.compute_accuracy_button.disabled = False
         if not self.blob_to_modify.is_a_crossing:
-            self.blob_to_modify.user_generated_identity = self.identity_update
+            self.blob_to_modify._user_generated_identity = self.identity_update
             self.propagate_groundtruth_identity_in_individual_fragment()
         else:
             self.blob_to_modify._user_generated_centroids.append(self.user_generated_centroids)
@@ -1141,10 +1160,8 @@ class Validator(BoxLayout):
         self.popup_saving.dismiss()
 
     def go_and_save(self):
-        blobs_list = ListOfBlobs(blobs_in_video = self.blobs_in_video, path_to_save = CHOSEN_VIDEO.video.blobs_path)
-        blobs_list.generate_cut_points(100)
-        blobs_list.cut_in_chunks()
-        blobs_list.save()
+        self.list_of_fragments.update_from_list_of_blobs(self.blobs_in_video)
+        self.list_of_fragments.save()
         CHOSEN_VIDEO.video.save()
 
     def modifyIdOpenPopup(self, blob_to_modify):
@@ -1199,6 +1216,10 @@ class Validator(BoxLayout):
         self.frag_id_label = Label(text='Fragment identifier: ' + str(blob_to_explore.fragment_identifier))
         self.frag_id_label.text_size = self.frag_id_label.size
         self.frag_id_label.texture_size = self.frag_id_label.size
+        #used for training
+        self.accumulation_label = Label(text='Used for training: ' + str(blob_to_explore.used_for_training))
+        self.accumulation_label.text_size = self.accumulation_label.size
+        self.accumulation_label.texture_size = self.accumulation_label.size
         #is in a fragment
         self.in_a_fragment_label = Label(text='It is in an individual fragment: ' + str(blob_to_explore.is_in_a_fragment))
         self.in_a_fragment_label.text_size = self.in_a_fragment_label.size
@@ -1218,6 +1239,8 @@ class Validator(BoxLayout):
 
         self.id_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
         self.frag_id_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
+        self.accumulation_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
+        self.jump_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
         self.in_a_fragment_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
         self.ghost_crossing_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
         self.jump_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
@@ -1225,6 +1248,7 @@ class Validator(BoxLayout):
         self.container.add_widget(self.show_attributes_box)
         self.show_attributes_box.add_widget(self.id_label)
         self.show_attributes_box.add_widget(self.frag_id_label)
+        self.show_attributes_box.add_widget(self.accumulation_label)
         self.show_attributes_box.add_widget(self.in_a_fragment_label)
         self.show_attributes_box.add_widget(self.ghost_crossing_label)
         self.show_attributes_box.add_widget(self.jump_label)

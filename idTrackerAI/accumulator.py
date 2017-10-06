@@ -44,8 +44,6 @@ def accumulate(accumulation_manager,
         accumulation_manager.update_used_images_and_labels()
         # assign identities fo the global fragments that have been used for training
         logger.info("Assigning identities to accumulated global fragments")
-        for global_fragment in accumulation_manager.next_global_fragments:
-            print([fragment.temporary_id for fragment in global_fragment.individual_fragments])
         accumulation_manager.assign_identities_to_accumulated_global_fragments()
         # update the list of individual fragments that have been used for training
         logger.info("Update individual fragments used for training")
@@ -98,9 +96,6 @@ def accumulate(accumulation_manager,
             logger.info("Checking eligibility criteria and generate the new list of global fragments to accumulate")
             logger.info("Number of candidate global fragments: %i" %len(candidates_next_global_fragments))
             accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_identifiers)
-            for global_fragment in accumulation_manager.next_global_fragments:
-                if global_fragment.acceptable_for_training:
-                    print([fragment.temporary_id for fragment in global_fragment.individual_fragments])
             logger.info("Number of non certain global fragments: %i" %accumulation_manager.number_of_noncertain_global_fragments)
             logger.info("Number of randomly assigned global fragments: %i" %accumulation_manager.number_of_random_assigned_global_fragments)
             logger.info("Number of non consistent global fragments: %i " %accumulation_manager.number_of_nonconsistent_global_fragments)

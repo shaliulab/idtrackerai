@@ -51,6 +51,9 @@ class Fragment(object):
         self._used_for_pretraining = False
         self._acceptable_for_training = True
         self._temporary_id = None
+        self._identity = None
+        self._identity_corrected_solving_duplication = None
+        self._user_generated_identity = None
         self._identity_is_fixed = False
 
     @property
@@ -94,13 +97,21 @@ class Fragment(object):
         return self._identity
 
     @property
+    def user_generated_identity(self):
+        return self._user_generated_identity
+
+    @property
     def final_identity(self):
         if hasattr(self, 'user_generated_identity') and self.user_generated_identity is not None:
             return self.user_generated_identity
-        elif hasattr(self, 'identity_corrected_solving_duplication') and identity_corrected_solving_duplication is not None:
+        elif hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
             return self.identity_corrected_solving_duplication
         else:
             return self.identity
+
+    @property
+    def identity_corrected_solving_duplication(self):
+        return self._identity_corrected_solving_duplication
 
     @property
     def ambiguous_identities(self):
@@ -120,7 +131,7 @@ class Fragment(object):
 
     def set_duplication_flag(self):
         if any([fragment.identity == self.identity for fragment in self.coexisting_individual_fragments
-                if fragment.is_a_fish and fragment.identity != 0])
+                if (fragment.is_a_fish and fragment.identity != 0)]):
             self._is_a_duplication = True
         else:
             self._is_a_duplication = False
@@ -128,18 +139,21 @@ class Fragment(object):
     def get_attribute_of_coexisting_fragments(self, attribute):
         return [getattr(fragment,attribute) for fragment in self.coexisting_individual_fragments]
 
-    def get_missing_identities_in_coexisting_fragments(self):
-        identities = [self.identity] + self.get_attribute_of_coexisting_fragments('final_identity')
+    def get_missing_identities_in_coexisting_fragments(self, fixed_identities):
+        identities = self.get_attribute_of_coexisting_fragments('final_identity')
         identities = [identity for identity in identities if identity != 0]
-        return set(self.possible_identities) - set(identities)
+        if not self.identity in fixed_identities:
+            return list((set(self.possible_identities) - set(identities)) | set([self.identity]))
+        else:
+            return list(set(self.possible_identities) - set(identities))
 
     def get_fixed_identities_of_coexisting_fragments(self):
         return [fragment.final_identity for fragment in self.coexisting_individual_fragments
                 if fragment.used_for_training
                 or not fragment.is_a_duplication
-                or (hasattr(fragment, 'user_generated_identity'))
-                or (hasattr(fragment, 'identity_corrected_solving_duplication'
-                    and fragment.identity_corrected_solving_duplication != 0)]
+                or fragment.user_generated_identity is not None
+                or (fragment.identity_corrected_solving_duplication is not None
+                and fragment.identity_corrected_solving_duplication != 0)]
 
     def reset(self, roll_back_to = None):
         if roll_back_to == 'fragmentation':
@@ -147,10 +161,13 @@ class Fragment(object):
             self._used_for_pretraining = False
             self._acceptable_for_training = True
             self._temporary_id = None
+            self._identity = None
+            self._user_generated_identity = None
+            self._identity_corrected_solving_duplication = None
             self._identity_is_fixed = False
             attributes_to_delete = ['_frequencies',
                                     '_P1_vector', '_certainty',
-                                    '_identity', '_is_certain',
+                                    '_is_certain',
                                     '_P1_below_random', '_non_consistent',
                                     'assigned_during_accumulation']
             delete_attributes_from_object(self, attributes_to_delete)
@@ -158,16 +175,17 @@ class Fragment(object):
             self._identity_is_fixed = False
             attributes_to_delete = []
             if not self.used_for_training:
-                attributes_to_delete = ['_frequencies', '_P1_vector', '_identity']
+                self._identity = None
+                self._user_generated_identity = None
+                self._identity_corrected_solving_duplication = None
+                attributes_to_delete = ['_frequencies', '_P1_vector']
             attributes_to_delete.extend(['_P2_vector', '_ambiguous_identities',
-                                        '_user_generated_identity',
-                                        '_identity_corrected_solving_duplication',
                                         '_is_a_duplication'])
             delete_attributes_from_object(self, attributes_to_delete)
         elif roll_back_to == 'assignment':
-            attributes_to_delete = ['_user_generated_identity',
-                                    '_identity_corrected_solving_duplication',
-                                    '_is_a_duplication']
+            self._user_generated_identity = None
+            self._identity_corrected_solving_duplication = None
+            attributes_to_delete = ['_is_a_duplication']
             delete_attributes_from_object(self, attributes_to_delete)
 
     @property

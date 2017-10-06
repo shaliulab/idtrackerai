@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 import os
 from os.path import isdir, isfile
 import sys
-sys.setrecursionlimit(100000)
+
 import glob
 import numpy as np
 import pandas as pd

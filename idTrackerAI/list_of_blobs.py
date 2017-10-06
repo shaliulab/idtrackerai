@@ -100,35 +100,33 @@ class ListOfBlobs(object):
                                 blob.next[0].compute_overlapping_with_previous_blob()
                     counter += 1
 
-        self.number_of_individual_fragments = counter - 1
+        self.number_of_individual_fragments = counter
 
     def compute_crossing_fragment_identifier(self):
         """we define a crossing fragment as a crossing that in subsequent frames
         involves the same individuals"""
         def propagate_crossing_identifier(blob, fragment_identifier):
-            blob.is_a_crossing_in_a_fragment = True
+            assert blob.fragment_identifier is None
             blob._fragment_identifier = fragment_identifier
             cur_blob = blob
 
-            while len(cur_blob.next) == 1 and cur_blob.next[0].is_a_crossing:
+            while len(cur_blob.next) == 1 and len(cur_blob.next[0].previous) == 1 and cur_blob.next[0].is_a_crossing:
                 cur_blob = cur_blob.next[0]
                 cur_blob._fragment_identifier = fragment_identifier
 
             cur_blob = blob
 
-            while len(cur_blob.previous) == 1 and cur_blob.previous[0].is_a_crossing:
+            while len(cur_blob.previous) == 1 and len(cur_blob.previous[0].next) == 1 and cur_blob.previous[0].is_a_crossing:
                 cur_blob = cur_blob.previous[0]
                 cur_blob._fragment_identifier = fragment_identifier
 
-        fragment_identifier = self.number_of_individual_fragments + 1
+        fragment_identifier = self.number_of_individual_fragments
 
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
                 if blob.is_a_crossing and blob.fragment_identifier is None:
                     propagate_crossing_identifier(blob, fragment_identifier)
                     fragment_identifier += 1
-                elif blob.is_a_crossing and blob.fragment_identifier is not None:
-                    blob.is_a_crossing_in_a_fragment = True
 
     def compute_overlapping_between_subsequent_frames(self):
         def set_frame_number_to_blobs_in_frame(blobs_in_frame, frame_number):
@@ -178,3 +176,17 @@ class ListOfBlobs(object):
             logger.error("Frames with more blobs than animals: %s" %str(frames_with_more_blobs_than_animals))
             raise ValueError('Please check your segmentaion')
         return frames_with_more_blobs_than_animals
+
+    def update_from_list_of_fragments(self, fragments):
+        attributes = ['_identity',
+                        '_identity_corrected_solving_duplication',
+                        '_user_generated_identity', '_used_for_training']
+
+        for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'updating list of blobs from list of fragments'):
+            for blob in blobs_in_frame:
+                fragment = fragments[self.video.fragment_identifier_to_index[blob.fragment_identifier]]
+                values = [fragment.identity,
+                            fragment.identity_corrected_solving_duplication,
+                            fragment.user_generated_identity,
+                            fragment.used_for_training]
+                [setattr(blob, attribute, value) for attribute, value in zip(attributes, values)]

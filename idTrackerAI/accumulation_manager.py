@@ -237,19 +237,15 @@ class AccumulationManager(object):
     def assign_identities_to_test_global_fragment(self, global_fragment):
         # Check certainties of the individual fragments in the global fragment
         # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
-        print("\n************ checking new global fragment")
         [setattr(fragment,'_acceptable_for_training', True) for fragment in global_fragment.individual_fragments]
         for fragment in global_fragment.individual_fragments:
-            print("fragment ", fragment.identifier, ' is candidate ', fragment.identifier in self.candidate_individual_fragments_identifiers)
             if fragment.identifier in self.candidate_individual_fragments_identifiers:
-                print("certainty ", fragment.certainty, self.certainty_threshold, fragment.certainty < self.certainty_threshold)
                 if fragment.certainty < self.certainty_threshold:
                     # if the certainty of the individual fragment is not high enough
                     # we set the global fragment not to be acceptable for training
                     self.reset_identity_of_non_accumulated_individual_fragments(global_fragment)
                     self.number_of_noncertain_global_fragments += 1
                     fragment._is_certain = False
-                    print("self.number_of_noncertain_global_fragments: ", self.number_of_noncertain_global_fragments)
                     break
                 else:
                     # if the certainty of the individual fragment is high enough
@@ -260,13 +256,8 @@ class AccumulationManager(object):
                 fragment._is_certain = True
             else:
                 logging.warn("Individual fragment not in candidates or in used, this should not happen")
-        # from pprint import pprint
-        # pprint(fragment.__dict__)
-        # print([fragment.is_certain for fragment in global_fragment.individual_fragments])
-        # print([fragment.acceptable_for_training for fragment in global_fragment.individual_fragments])
         # Compute identities if the global_fragment is certain
         if global_fragment.acceptable_for_training:
-            print("assigning identities")
             # get array of P1 values for the global fragment
             P1_array = np.asarray([fragment.P1_vector for fragment in global_fragment.individual_fragments])
             # get the maximum P1 of each individual fragment
@@ -282,23 +273,18 @@ class AccumulationManager(object):
             # assign temporal identity to individual fragments by hierarchical P1
             for index_individual_fragment in index_individual_fragments_sorted_by_P1_max_to_min:
                 fragment = global_fragment.individual_fragments[index_individual_fragment]
-                print("temporary_id: ", fragment.temporary_id, fragment.temporary_id is None)
                 if fragment.temporary_id is None:
-                    print("number_of_images: ", fragment.number_of_images)
                     if np.max(P1_array[index_individual_fragment,:]) < 1./fragment.number_of_images:
                         fragment._P1_below_random = True
                         self.number_of_random_assigned_global_fragments += 1
                         self.reset_identity_of_non_accumulated_individual_fragments(global_fragment)
-                        print("self.number_of_random_assigned_global_fragments: ", self.number_of_random_assigned_global_fragments)
                         break
                     else:
                         temporary_id = np.argmax(P1_array[index_individual_fragment,:])
-                        print("is consistent: ", fragment.check_consistency_with_coexistent_individual_fragments(temporary_id))
                         if not fragment.check_consistency_with_coexistent_individual_fragments(temporary_id):
                             self.reset_identity_of_non_accumulated_individual_fragments(global_fragment)
                             fragment._non_consistent = True
                             self.number_of_nonconsistent_global_fragments += 1
-                            print("self.number_of_nonconsistent_global_fragments: ", self.number_of_nonconsistent_global_fragments)
                             break
                         else:
                             fragment._temporary_id = int(temporary_id)
@@ -312,12 +298,10 @@ class AccumulationManager(object):
                     # that had not been accumulated before (i.e. not in temporary_individual_fragments_used or individual_fragments_used)
                     self.reset_identity_of_non_accumulated_individual_fragments(global_fragment)
                     self.number_of_nonunique_global_fragments += 1
-                    print("self.number_of_nonunique_global_fragments: ", self.number_of_nonunique_global_fragments)
                 else:
                     global_fragment._accumulation_step = self.counter
 
                     for fragment in global_fragment.individual_fragments:
-                        print(fragment.temporary_id)
                         if fragment.identifier not in self.temporary_individual_fragments_used \
                         and fragment.identifier not in self.individual_fragments_used:
                             self.temporary_individual_fragments_used.append(fragment.identifier)
@@ -334,19 +318,6 @@ def sample_images_and_labels(images, labels, ratio):
             subsampled_labels.append([i] * len(images[np.where(labels == i)[0]]))
 
     return np.concatenate(subsampled_images, axis = 0), np.concatenate(subsampled_labels, axis = 0)
-
-
-"""functions used during accumulation
-but belong to the assign part of the accumulation that's why are here
-"""
-# def compute_certainty_of_individual_fragment(p1_vector_individual_fragment,median_softmax_of_candidate_individual_fragment):
-#     argsort_p1_vector = np.argsort(p1_vector_individual_fragment)
-#     sorted_p1_vector = p1_vector_individual_fragment[argsort_p1_vector]
-#     sorted_softmax_probs = median_softmax_of_candidate_individual_fragment[argsort_p1_vector]
-#     # print("two best P1_vector values: ", np.multiply(sorted_p1_vector,sorted_softmax_probs)[-2:])
-#     certainty = np.diff(np.multiply(sorted_p1_vector,sorted_softmax_probs)[-2:])/np.sum(sorted_p1_vector[-2:])
-#     # print("certainty: ", certainty)
-#     return certainty
 
 """ Get predictions of individual fragments in candidates global fragments"""
 def get_predictions_of_candidates_global_fragments(net,video,candidates_next_global_fragments,individual_fragments_identifiers_already_used = []):
