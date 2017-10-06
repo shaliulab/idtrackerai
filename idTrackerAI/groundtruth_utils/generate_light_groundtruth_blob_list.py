@@ -8,6 +8,7 @@ import numpy as np
 import logging
 
 from list_of_blobs import ListOfBlobs
+from list_of_fragments import ListOfFragments
 from blob import Blob
 from GUI_utils import selectDir, getInput
 
@@ -57,8 +58,10 @@ def generate_groundtruth_files(video_object, start = None, end = None):
     #make sure the video has been succesfully tracked
     assert video_object._has_been_assigned == True
     #read blob list from video
-    blobs_list = ListOfBlobs.load(video_object.blobs_path)
-    blobs = blobs_list.blobs_in_video
+    list_of_fragments = ListOfFragments.load(video_object.fragments_path)
+    list_of_blobs = ListOfBlobs.load(video_object.blobs_path)
+    list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
+    blobs = list_of_blobs.blobs_in_video
     count_number_assignment_per_individual_assigned = {i: 0 for i in range(1,video_object.number_of_animals+1)}
     count_number_assignment_per_individual_all = {i: 0 for i in range(1,video_object.number_of_animals+1)}
     count_number_of_model_area_failures = 0

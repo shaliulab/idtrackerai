@@ -28,17 +28,8 @@ def solve_duplications_loop(video, blobs_in_video, group_size, scope = None):
         duplicated_identities, identities_in_frame, missing_identities, _ = check_for_duplications(blobs_in_frame, possible_identities)
         missing_identities = assign_single_unidentified_blob(missing_identities, blobs_in_frame, blobs_in_video)
 
-def get_ordered_list_of_fragments(first_frame_first_global_fragment, fragments, scope = None):
-    if scope == 'to_the_past':
-        fragments_subset = [fragment for fragment in fragments if fragment.start_end[1] < first_frame_first_global_fragment]
-        fragments_subset.sort(key=lambda x: x.start_end[1], reverse=True)
-    elif scope == 'to_the_future':
-        fragments_subset = [fragment for fragment in fragments if fragment.start_end[0] > first_frame_first_global_fragment]
-        fragments_subset.sort(key=lambda x: x.start_end[0], reverse=False)
-    return fragments_subset
-
-def solve_duplications_loop(video, fragments, scope = None):
-    fragments_in_direction = get_ordered_list_of_fragments(video.first_frame_first_global_fragment, fragments, scope)
+def solve_duplications_loop(list_of_fragments, scope = None):
+    fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(scope)
 
     for fragment in fragments_in_direction:
         # print(fragment.is_a_fish, fragment.identity != 0, fragment.is_a_duplication, not fragment.used_for_training, not hasattr(fragment, 'identity_corrected_solving_duplication'))
@@ -138,10 +129,10 @@ def solve_duplication(fragment):
                 print("final identity: ", fragment.final_identity)
                 break
 
-def solve_duplications(video, fragments):
-    solve_duplications_loop(video, fragments, scope = 'to_the_past')
-    solve_duplications_loop(video, fragments, scope = 'to_the_future')
-    check_for_duplications_last_pass(fragments)
+def solve_duplications(list_of_fragments):
+    solve_duplications_loop(list_of_fragments, scope = 'to_the_past')
+    solve_duplications_loop(list_of_fragments, scope = 'to_the_future')
+    check_for_duplications_last_pass(list_of_fragments.fragments)
 
 def mark_fragments_as_duplications(fragments):
     [fragment.set_duplication_flag() for fragment in fragments]

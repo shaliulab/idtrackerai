@@ -97,6 +97,10 @@ class Fragment(object):
         return self._identity
 
     @property
+    def identity_is_fixed(self):
+        return self._identity_is_fixed
+
+    @property
     def user_generated_identity(self):
         return self._user_generated_identity
 
@@ -200,6 +204,12 @@ class Fragment(object):
 
     def frame_by_frame_velocity(self):
         return np.sqrt(np.sum(np.diff(self.centroids, axis = 0)**2, axis = 1))
+
+    def compute_border_velocity(self, other):
+        centroids = np.asarray([self.centroids[0], other.centroids[-1]])
+        if not self.start_end[0] > other.start_end[1]:
+            centroids = np.asarray([self.centroids[-1],other.centroids[0]])
+        return np.sqrt(np.sum(np.diff(centroids, axis = 0)**2, axis = 1))[0]
 
     def are_overlapping(self, other):
         (s1,e1), (s2,e2) = self.start_end, other.start_end
@@ -317,3 +327,15 @@ class Fragment(object):
         sorted_softmax_probs = median_softmax[argsort_p1_vector]
         certainty = np.diff(np.multiply(sorted_p1_vector,sorted_softmax_probs)[-2:])/np.sum(sorted_p1_vector[-2:])
         return certainty[0]
+
+    def get_neighbour_fragment(self, fragments, scope):
+        if scope == 'to_the_past':
+            neighbour = [fragment for fragment in fragments
+                            if fragment.final_identity == self.final_identity
+                            and self.start_end[0] - fragment.start_end[1] == 1]
+        elif scope == 'to_the_future':
+            neighbour = [fragment for fragment in fragments
+                            if fragment.final_identity == self.final_identity
+                            and fragment.start_end[0] - self.start_end[1] == 1]
+        assert len(neighbour) < 2
+        return neighbour[0] if len(neighbour) == 1 else None

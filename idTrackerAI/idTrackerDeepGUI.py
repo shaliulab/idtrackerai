@@ -58,7 +58,7 @@ from assigner import assigner
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 from correct_duplications import solve_duplications, mark_fragments_as_duplications
-from correct_impossible_velocity_jumps import fix_identity_of_blobs_in_video, correct_impossible_velocity_jumps
+from correct_impossible_velocity_jumps import correct_impossible_velocity_jumps
 from solve_crossing import give_me_identities_in_crossings
 from get_trajectories import produce_trajectories, smooth_trajectories
 from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
@@ -533,7 +533,7 @@ if __name__ == '__main__':
         # mark fragments as duplications
         mark_fragments_as_duplications(list_of_fragments.fragments)
         # solve duplications
-        solve_duplications(video, list_of_fragments.fragments)
+        solve_duplications(list_of_fragments)
         video._has_duplications_solved = True
         logger.info("Done")
         # finish and save
@@ -553,30 +553,24 @@ if __name__ == '__main__':
     video.solve_duplications_time = time.time() - video.solve_duplications_time
     #############################################################
     ###################  Solving impossible jumps    ############
-    # video.solve_impossible_jumps_time = time.time()
-    # print("\n**** Correct impossible velocity jump ****")
-    # logging.info("Solving impossible velocity jumps")
-    # if hasattr(old_video,'velocity_threshold') and not hasattr(video,'velocity_threshold'):
-    #     video.velocity_threshold = old_video.velocity_threshold
-    # elif not hasattr(old_video, 'velocity_threshold') and not hasattr(video,'velocity_threshold'):
-    #     video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals, percentile = VEL_PERCENTILE)
-    # if hasattr(old_video, 'first_frame_for_validation'):
-    #     video.first_frame_for_validation = old_video.first_frame_for_validation
-    # elif not hasattr(old_video, 'first_frame_for_validation'):
-    #     max_distance_travelled_global_fragment = order_global_fragments_by_distance_travelled(global_fragments)[0]
-    #     video.first_frame_for_validation = max_distance_travelled_global_fragment.index_beginning_of_fragment
-    # video.save()
+    list_of_fragments.video = video
+    video.solve_impossible_jumps_time = time.time()
+    print("\n**** Correct impossible velocity jump ****")
+    logging.info("Solving impossible velocity jumps")
+    if hasattr(old_video,'velocity_threshold') and not hasattr(video,'velocity_threshold'):
+        video.velocity_threshold = old_video.velocity_threshold
+    elif not hasattr(old_video, 'velocity_threshold') and not hasattr(video,'velocity_threshold'):
+        video.velocity_threshold = compute_model_velocity(list_of_fragments.fragments, video.number_of_animals, percentile = VEL_PERCENTILE)
     # fix_identity_of_blobs_in_video(blobs)
-    # correct_impossible_velocity_jumps(video, blobs)
-    # logger.info("Done")
-    # # finish and save
-    # logger.info("Saving")
-    # list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
-    # list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
+    correct_impossible_velocity_jumps(list_of_fragments)
+    logger.info("Done")
+    # finish and save
+    logger.info("Saving")
+    list_of_fragments.save()
     # video.compute_overall_P2(blobs)
-    # video.save()
-    # logger.info("Done")
-    # video.solve_impossible_jumps_time = time.time() - video.solve_impossible_jumps_time
+    video.save()
+    logger.info("Done")
+    video.solve_impossible_jumps_time = time.time() - video.solve_impossible_jumps_time
     #############################################################
     ##############   Solve crossigns   ##########################
     ####
@@ -596,45 +590,45 @@ if __name__ == '__main__':
     ##############   Create trajectories    #####################
     ####
     #############################################################
-    # video.generate_trajectories_time = time.time()
-    # if not loadPreviousDict['trajectories']:
-    #     video.create_trajectories_folder()
-    #     logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
-    #     trajectories = produce_trajectories(list_of_blobs.blobs_in_video, video.number_of_frames, video.number_of_animals)
-    #     logger.info("Saving trajectories")
-    #     for name in trajectories:
-    #         np.save(os.path.join(video.trajectories_folder, name + '_trajectories.npy'), trajectories[name])
-    #         np.save(os.path.join(video.trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
-    #         np.save(os.path.join(video.trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
-    #         np.save(os.path.join(video.trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
-    #     video._has_trajectories = True
-    #     video.save()
-    #     logger.info("Done")
-    # else:
-    #     video._has_trajectories = True
-    #     video.save()
-    # video.generate_trajectories_time = time.time() - video.generate_trajectories_time
+    video.generate_trajectories_time = time.time()
+    if not loadPreviousDict['trajectories']:
+        video.create_trajectories_folder()
+        logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
+        trajectories = produce_trajectories(list_of_blobs.blobs_in_video, video.number_of_frames, video.number_of_animals)
+        logger.info("Saving trajectories")
+        for name in trajectories:
+            np.save(os.path.join(video.trajectories_folder, name + '_trajectories.npy'), trajectories[name])
+            np.save(os.path.join(video.trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
+            np.save(os.path.join(video.trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
+            np.save(os.path.join(video.trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
+        video._has_trajectories = True
+        video.save()
+        logger.info("Done")
+    else:
+        video._has_trajectories = True
+        video.save()
+    video.generate_trajectories_time = time.time() - video.generate_trajectories_time
     #############################################################
     ##############   Compute groundtruth    #####################
     ####
     #############################################################
-    # groundtruth_path = os.path.join(video._video_folder,'_groundtruth.npy')
-    # if os.path.isfile(groundtruth_path):
-    #     print("\n**** Computing accuracy wrt. groundtruth ****")
-    #     groundtruth = np.load(groundtruth_path).item()
-    #     groundtruth.list_of_blobs = groundtruth.list_of_blobs[groundtruth.start:groundtruth.end]
-    #     blobs_to_compare_with_groundtruth = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
-    #
-    #     video.gt_accuracy, video.gt_individual_accuracy, video.gt_accuracy_assigned, video.gt_individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs_to_compare_with_groundtruth)
-    #     video.gt_start_end = (groundtruth.start, groundtruth.end)
-    #     video.save()
-    # video.total_time = sum([video.generate_trajectories_time,
-    #                         video.solve_impossible_jumps_time,
-    #                         video.solve_duplications_time,
-    #                         video.assignment_time,
-    #                         video.second_accumulation_time,
-    #                         video.pretraining_time,
-    #                         video.assignment_time,
-    #                         video.first_accumulation_time,
-    #                         video.preprocessing_time])
+    groundtruth_path = os.path.join(video._video_folder,'_groundtruth.npy')
+    if os.path.isfile(groundtruth_path):
+        print("\n**** Computing accuracy wrt. groundtruth ****")
+        groundtruth = np.load(groundtruth_path).item()
+        groundtruth.list_of_blobs = groundtruth.list_of_blobs[groundtruth.start:groundtruth.end]
+        blobs_to_compare_with_groundtruth = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
+
+        video.gt_accuracy, video.gt_individual_accuracy, video.gt_accuracy_assigned, video.gt_individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs_to_compare_with_groundtruth)
+        video.gt_start_end = (groundtruth.start, groundtruth.end)
+        video.save()
+    video.total_time = sum([video.generate_trajectories_time,
+                            video.solve_impossible_jumps_time,
+                            video.solve_duplications_time,
+                            video.assignment_time,
+                            video.second_accumulation_time,
+                            video.pretraining_time,
+                            video.assignment_time,
+                            video.first_accumulation_time,
+                            video.preprocessing_time])
     video.save()

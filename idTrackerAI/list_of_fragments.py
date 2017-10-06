@@ -54,6 +54,15 @@ class ListOfFragments(object):
         [setattr(self.fragments[self.video.fragment_identifier_to_index[blob.fragment_identifier]], '_user_generated_identity', blob.user_generated_identity)
             for blobs_in_frame in blobs_in_video for blob in blobs_in_frame if blob.user_generated_identity is not None ]
 
+    def get_ordered_list_of_fragments(self, scope = None):
+        if scope == 'to_the_past':
+            fragments_subset = [fragment for fragment in self.fragments if fragment.start_end[1] <= self.video.first_frame_first_global_fragment]
+            fragments_subset.sort(key=lambda x: x.start_end[1], reverse=True)
+        elif scope == 'to_the_future':
+            fragments_subset = [fragment for fragment in self.fragments if fragment.start_end[0] >= self.video.first_frame_first_global_fragment]
+            fragments_subset.sort(key=lambda x: x.start_end[0], reverse=False)
+        return fragments_subset
+
     def save(self):
         logger.info("saving list of fragments at %s" %self.video.fragments_path)
         [setattr(fragment, 'coexisting_individual_fragments', None) for fragment in self.fragments]
@@ -66,6 +75,8 @@ class ListOfFragments(object):
         list_of_fragments = np.load(path_to_load).item()
         [fragment.get_coexisting_individual_fragments_indices(list_of_fragments.fragments) for fragment in list_of_fragments.fragments]
         return list_of_fragments
+
+
 
 def create_list_of_fragments(blobs_in_video, number_of_animals):
     attributes_to_set = ['_portrait', 'bounding_box_image', 'bounding_box_in_frame_coordinates'
