@@ -291,7 +291,7 @@ def getExistentFiles(video, processes):
         else:
             logger.info("The folder %s is empty. The tracking cannot be restored." %video._previous_session_folder)
             video.use_previous_knowledge_transfer_decision = False
-            return existentFile
+            return existentFile, old_video
         old_video = check_and_change_video_path(video,old_video)
         existentFile = set_load_previous_dict(old_video, processes, existentFile)
     else:

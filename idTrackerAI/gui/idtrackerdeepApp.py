@@ -68,9 +68,18 @@ class Chosen_Video(EventDispatcher):
             self.video.video_path = value
             new_name_session_folder = raw_input('Session name: ')
             self.video.create_session_folder(name = new_name_session_folder)
-            processes_list = ['bkg', 'ROI', 'preprocparams', 'preprocessing', 'pretraining', 'accumulation', 'training', 'assignment']
+            processes_list = ['preprocessing',
+                            'use_previous_knowledge_transfer_decision',
+                            'first_accumulation',
+                            'pretraining',
+                            'second_accumulation',
+                            'assignment',
+                            'solving_duplications',
+                            'crossings',
+                            'trajectories']
             #get existent files and paths to load them
             self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
+            print('**************', self.old_video)
             if self.old_video._has_been_assigned: self.video._has_been_assigned
             if hasattr(self.old_video, 'resolution_reduction'):
                 # print("--------------------------------------------------------")

@@ -43,7 +43,7 @@ def load_previous_dict_check(processes, loadPreviousDict):
         if loadPreviousDict[key] == -1: loadPreviousDict[key] = 0
     return loadPreviousDict
 
-def selectOptions(optionsList, loadPreviousDict=None, text="Select preprocessing options:  "):
+def selectOptions(optionsList, loadPreviousDict=None, text="Select preprocessing options:  ", is_processes_list = True):
     master = Tk()
     if loadPreviousDict==None:
         loadPreviousDict = {el:'1' for el in optionsList}
@@ -76,8 +76,14 @@ def selectOptions(optionsList, loadPreviousDict=None, text="Select preprocessing
     varValues = []
     for var in variables:
         varValues.append(var.get())
-    loadPreviousDict = load_previous_dict_check(optionsList, dict((key, value) for (key, value) in zip(optionsList, varValues)))
+    if is_processes_list:
+        loadPreviousDict = load_previous_dict_check(optionsList, dict((key, value) for (key, value) in zip(optionsList, varValues)))
+    else:
+        print("varvalues ", varValues)
+        loadPreviousDict = dict((key, value) for (key, value) in zip(optionsList, varValues))
+
     master.destroy()
+    print("")
     return loadPreviousDict
 
 def selectFile():
@@ -675,14 +681,15 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
 
 def selectPreprocParams(video, old_video, usePreviousPrecParams):
     if not usePreviousPrecParams:
-        prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?')
+        prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?', is_processes_list = False)
         video.subtract_bkg = bool(prepOpts['bkg'])
         video.apply_ROI =  bool(prepOpts['ROI'])
+        print("********************", video.apply_ROI, video.subtract_bkg)
         video.reduce_resolution = bool(prepOpts['resolution_reduction'])
         if old_video is not None:
             preprocessing_steps = ['bkg', 'ROI', 'resolution_reduction']
             existentFiles = get_existent_preprocessing_steps(old_video, preprocessing_steps)
-            load_previous_preprocessing_steps = selectOptions(preprocessing_steps, existentFiles, text='Restore existing preprocessing steps?')
+            load_previous_preprocessing_steps = selectOptions(preprocessing_steps, existentFiles, text='Restore existing preprocessing steps?', is_processes_list = False)
             if old_video.number_of_animals == None:
                 video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
             else:

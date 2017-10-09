@@ -4,8 +4,9 @@ sys.path.append('../utils')
 sys.path.append('../')
 import os
 import numpy as np
-from GUI_utils import rename_session_folder, getInput, selectDir
+from GUI_utils import getInput, selectDir
 from blob import Blob
+from video import Video
 
 session_path = selectDir('./') #select path to video
 video_path = os.path.join(session_path,'video_object.npy')

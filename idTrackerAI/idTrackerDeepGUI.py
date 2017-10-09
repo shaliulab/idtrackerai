@@ -423,6 +423,7 @@ if __name__ == '__main__':
             ### NOTE: load all the assigner statistics
             video._has_been_assigned = True
         video.assignment_time = time.time() - video.assignment_time
+        video.save()
     else:
         video.pretraining_time = time.time()
         #create folder to store pretraining
@@ -518,6 +519,7 @@ if __name__ == '__main__':
             ### NOTE: load all the assigner statistics
             video._has_been_assigned = True
         video.assignment_time = time.time() - video.assignment_time
+        video.save()
 
     # finish and save
     logger.info("Saving blobs objects and video object")
