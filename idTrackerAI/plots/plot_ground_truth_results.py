@@ -35,8 +35,8 @@ def compute_and_save_individual_fragments_and_distance_travelled(video_object_pa
     number_of_frames_in_individual_fragments, \
     distance_travelled_individual_fragments = compute_and_plot_global_fragments_statistics(video, blobs, global_fragments, plot_flag = False)
 
-    np.save(video._preprocessing_folder + 'number_of_frames_in_individual_fragments.npy', number_of_frames_in_individual_fragments)
-    np.save(video._preprocessing_folder + 'distance_travelled_individual_fragments.npy', distance_travelled_individual_fragments)
+    np.save(os.path.join(video._preprocessing_folder, 'number_of_frames_in_individual_fragments.npy'), number_of_frames_in_individual_fragments)
+    np.save(os.path.join(video._preprocessing_folder, 'distance_travelled_individual_fragments.npy'), distance_travelled_individual_fragments)
 
     return number_of_frames_in_individual_fragments, distance_travelled_individual_fragments
 
@@ -45,7 +45,7 @@ def compute_and_save_individual_fragments_and_distance_travelled(video_object_pa
 
 if __name__ == '__main__':
 
-    path_to_ground_truth_hard_drive = '/media/rhea/ground_truth_results'
+    path_to_ground_truth_hard_drive = '/media/themis/ground_truth_results'
     folders_prefix = 'LargeGroups'
     experimental_group_folders = glob(path_to_ground_truth_hard_drive + '/*/')
 
@@ -86,7 +86,7 @@ if __name__ == '__main__':
                     else:
                         compute_and_save_gt_accuracy(video_object_path, video)
 
-                    if not os.path.isfile(video._preprocessing_folder + 'number_of_frames_in_individual_fragments.npy'):
+                    if not os.path.isfile(os.path.join(video._preprocessing_folder, 'number_of_frames_in_individual_fragments.npy')):
                         number_of_frames_in_individual_fragments, \
                         distance_travelled_individual_fragments = compute_and_save_individual_fragments_and_distance_travelled(video_object_path, video)
 
