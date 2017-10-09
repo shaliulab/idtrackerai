@@ -165,9 +165,9 @@ class Fragment(object):
                 and fragment.identity_corrected_solving_duplication != 0)]
 
     def reset(self, roll_back_to = None):
-        if roll_back_to == 'fragmentation':
+        if roll_back_to == 'fragmentation' or roll_back_to == 'pretraining':
             self._used_for_training = False
-            self._used_for_pretraining = False
+            if roll_back_to == 'fragmentation': self._used_for_pretraining = False
             self._acceptable_for_training = True
             self._temporary_id = None
             self._identity = None

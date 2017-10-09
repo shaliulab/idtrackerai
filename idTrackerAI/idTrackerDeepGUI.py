@@ -449,7 +449,8 @@ if __name__ == '__main__':
                 #create folder to store accumulation models
                 video.create_accumulation_folder(iteration_number = i)
                 #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
-                [global_fragment.reset_accumulation_params() for global_fragment in global_fragments]
+                list_of_fragments.reset(roll_back_to = 'pretraining')
+                list_of_global_fragments.reset(roll_back_to = 'fragmentation')
                 logger.info("We will restore the network from a previous pretraining: %s" %video._pretraining_folder)
                 accumulation_network_params.save_folder = video._accumulation_folder
                 accumulation_network_params.restore_folder = video._pretraining_folder
@@ -462,7 +463,7 @@ if __name__ == '__main__':
                 #instantiate accumulation manager
                 logger.info("Initialising accumulation manager")
                 list_of_global_fragments.order_by_distance_to_the_first_global_fragment()
-                accumulation_manager = AccumulationManager(video, list_of_fragments.fragments, list_of_global_fragments.global_fragments)
+                accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments)
                 #set global epoch counter to 0
                 logger.info("Start accumulation")
                 global_step = 0
@@ -484,7 +485,8 @@ if __name__ == '__main__':
                 video._accumulation_folder = os.path.join(video._session_folder, accumulation_folder_name)
             video._second_accumulation_finished = True
             logger.info("Saving global fragments")
-            np.save(video.global_fragments_path, global_fragments)
+            list_of_fragments.save()
+            list_of_global_fragments.save(list_of_fragments.fragments)
             ### NOTE: save second_accumulation statistics
             video.save()
         else:
