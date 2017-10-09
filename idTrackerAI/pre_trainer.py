@@ -108,25 +108,22 @@ def pre_train(video, list_of_fragments, number_of_images_in_global_fragments, pr
     return net
 
 
-def pre_trainer(old_video, video, blobs, global_fragments, pretrain_network_params):
+def pre_trainer(old_video, video, list_of_fragments, global_fragments, pretrain_network_params):
     number_of_images_in_global_fragments = video.number_of_unique_images_in_global_fragments
     #Reset used_for_training and acceptable_for_training flags
     if old_video and old_video._first_accumulation_finished == True:
         for global_fragment in global_fragments:
-            global_fragment.reset_accumulation_params()
+            global_fragment.reset(roll_back_to = 'fragmentation')
 
-    pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
-    number_of_global_fragments = len(pretraining_global_fragments)
-    logger.info("pretraining with %i global fragments" %number_of_global_fragments)
     logger.info("Starting pretraining. Checkpoints will be stored in %s" %video._pretraining_folder)
     if video.tracking_with_knowledge_transfer:
         logger.info("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
         pretrain_network_params.restore_folder = video.knowledge_transfer_model_folder
     #start pretraining
     logger.info("Start pretraining")
-    net = pre_train(video, blobs,
+    net = pre_train(video, list_of_fragments,
                     number_of_images_in_global_fragments,
-                    pretraining_global_fragments,
+                    global_fragments,
                     pretrain_network_params,
                     store_accuracy_and_error = False,
                     check_for_loss_plateau = True,

@@ -172,8 +172,8 @@ class Blob(object):
                 logger.debug("mean pixels both blobs %s" %str(np.mean([len(self.pixels), len(self.previous[0].pixels)])))
                 raise ValueError("non_shared_information_with_previous is nan")
 
-    def apply_model_area(self, video, model_area, portraitSize):
-        if model_area(self.area): #Checks if area is compatible with the model area we built
+    def apply_model_area(self, video, model_area, portraitSize, number_of_blobs):
+        if model_area(self.area) or number_of_blobs == video.number_of_animals: #Checks if area is compatible with the model area we built
             if video.resolution_reduction == 1:
                 height = video._height
                 width = video._width

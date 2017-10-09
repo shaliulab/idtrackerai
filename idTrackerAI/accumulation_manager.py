@@ -330,6 +330,13 @@ def get_predictions_of_candidates_global_fragments(net,video,candidates_next_glo
 
         for fragment in global_fragment.individual_fragments:
             if fragment.identifier not in individual_fragments_identifiers_already_used:
+                if len(np.asarray(fragment.images).shape) == 1:
+                    print("fragment.images.shape: ", np.asarray(fragment.images).shape)
+                    print("is a fish ", fragment.is_a_fish)
+                    print("image shape ", fragment.images[0].shape)
+                    print(fragment.identifier)
+                    print(fragment.images)
+                print("images: ", images.shape)
                 images[num_images : fragment.number_of_images + num_images] = np.asarray(fragment.images)
                 lengths.append(fragment.number_of_images)
                 individual_fragments_identifiers.append(fragment.identifier)
@@ -364,13 +371,16 @@ def get_predictions_of_candidates_global_fragments(net,video,candidates_next_glo
         individual_fragments_identifiers_already_used = list(individual_fragments_identifiers_already_used)
         num_images_to_assign = 0
         for global_fragment in candidates_next_global_fragments:
+            logger.debug("Getting images from next candidate global fragment")
             images_global_fragment, \
             lengths_global_fragment, \
             individual_fragments_identifiers = get_images_and_labels_from_global_fragment_predictions(video, global_fragment,
                                                                                             individual_fragments_identifiers_already_used)
 
+
             if len(images_global_fragment) != 0\
                 and len(images_global_fragment) < video.maximum_number_of_portraits_in_global_fragments - num_images_to_assign:
+                logger.debug("Adding images to the batch")
                 # The images of this global fragment fit in this batch
                 images_in_batch[num_images_to_assign : num_images_to_assign + len(images_global_fragment)] = images_global_fragment
                 lengths.extend(lengths_global_fragment)
@@ -380,9 +390,11 @@ def get_predictions_of_candidates_global_fragments(net,video,candidates_next_glo
                 # update list of candidates global fragments
                 candidates_next_global_fragments = candidates_next_global_fragments[1:]
             elif len(images_global_fragment) > video.maximum_number_of_portraits_in_global_fragments - num_images_to_assign:
+                logger.debug("Enough images in the batch")
                 # No more images fit in this batch
                 break
             elif len(images_global_fragment) == 0:
+                logger.debug("No more images to assign in this global fragment")
                 # I skip this global fragment because all the images have been already used
                 candidates_next_global_fragments = candidates_next_global_fragments[1:]
 

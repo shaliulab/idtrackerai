@@ -38,8 +38,12 @@ class GlobalFragment(object):
 
     def get_list_of_attributes_from_individual_fragments(self, fragments, list_of_attributes = ['distance_travelled', 'number_of_images']):
         [setattr(self,attribute + '_per_individual_fragment',[]) for attribute in list_of_attributes]
+        print('\nIndex beginning of fragment', self.index_beginning_of_fragment)
         for fragment in fragments:
             if fragment.identifier in self.individual_fragments_identifiers:
+                print(fragment.identifier)
+                print(fragment.start_end)
+                assert fragment.is_a_fish
                 for attribute in list_of_attributes:
                     getattr(self, attribute + '_per_individual_fragment').append(getattr(fragment, attribute))
 

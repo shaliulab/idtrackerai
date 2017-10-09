@@ -101,6 +101,7 @@ class ListOfBlobs(object):
                     counter += 1
 
         self.number_of_individual_fragments = counter
+        print("number_of_individual_fragments, ", counter)
 
     def compute_crossing_fragment_identifier(self):
         """we define a crossing fragment as a crossing that in subsequent frames
@@ -127,6 +128,8 @@ class ListOfBlobs(object):
                 if blob.is_a_crossing and blob.fragment_identifier is None:
                     propagate_crossing_identifier(blob, fragment_identifier)
                     fragment_identifier += 1
+        print("number_of_crossing_fragments, ", fragment_identifier - self.number_of_individual_fragments)
+        print("total number of fragments, ", fragment_identifier)
 
     def compute_overlapping_between_subsequent_frames(self):
         def set_frame_number_to_blobs_in_frame(blobs_in_frame, frame_number):
@@ -159,8 +162,9 @@ class ListOfBlobs(object):
 
     def apply_model_area_to_video(self, model_area, portrait_size):
         def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portrait_size):
+            number_of_blobs = len(blobs_in_frame)
             for blob in blobs_in_frame:
-                blob.apply_model_area(video, model_area, portrait_size)
+                blob.apply_model_area(video, model_area, portrait_size, number_of_blobs)
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'Applying model area'):
             apply_model_area_to_blobs_in_frame(self.video, blobs_in_frame, model_area, portrait_size)
 

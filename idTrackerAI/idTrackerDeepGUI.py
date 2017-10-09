@@ -421,8 +421,8 @@ if __name__ == '__main__':
                                                 image_size = video.portrait_size)
         if not loadPreviousDict['pretraining']:
             #### Pre-trainer ####
-            list_of_global_fragments.order_global_fragments_by_distance_travelled()
-            pre_trainer(old_video, video, list_of_fragments, global_fragments, pretrain_network_params)
+            list_of_global_fragments.order_by_distance_travelled()
+            pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments.global_fragments, pretrain_network_params)
             logger.info("Pretraining ended")
             #save changes
             logger.info("Saving changes in video object")
