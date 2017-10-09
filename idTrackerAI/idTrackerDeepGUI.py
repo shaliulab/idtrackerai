@@ -285,8 +285,7 @@ if __name__ == '__main__':
         list_of_global_fragments.filter_by_minimum_number_of_frames(minimum_number_of_frames = 3)
         video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
         list_of_global_fragments.relink_fragments_to_global_fragments(list_of_fragments.fragments)
-        list_of_global_fragments.compute_number_of_unique_images()
-        video.number_of_unique_images_in_global_fragments = list_of_global_fragments.number_of_images
+        video.number_of_unique_images_in_global_fragments = list_of_fragments.compute_total_number_of_images_in_global_fragments()
         list_of_global_fragments.compute_maximum_number_of_images()
         video.maximum_number_of_portraits_in_global_fragments = list_of_global_fragments.maximum_number_of_images
         list_of_global_fragments.order_by_distance_travelled()
@@ -364,7 +363,7 @@ if __name__ == '__main__':
         # the list of global fragments is ordered in place from the distance (in frames) wrt
         # the core of the first global fragment that will be accumulated
         list_of_global_fragments.order_by_distance_to_the_first_global_fragment()
-        accumulation_manager = AccumulationManager(video, list_of_fragments.fragments, list_of_global_fragments.global_fragments)
+        accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments)
         #set global epoch counter to 0
         logger.info("Start accumulation")
         global_step = 0
@@ -422,7 +421,7 @@ if __name__ == '__main__':
         if not loadPreviousDict['pretraining']:
             #### Pre-trainer ####
             list_of_global_fragments.order_by_distance_travelled()
-            pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments.global_fragments, pretrain_network_params)
+            pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, pretrain_network_params)
             logger.info("Pretraining ended")
             #save changes
             logger.info("Saving changes in video object")

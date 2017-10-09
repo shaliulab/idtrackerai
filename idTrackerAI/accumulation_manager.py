@@ -20,7 +20,7 @@ CERTAINTY_THRESHOLD = .1 # threshold to select a individual fragment as eligible
 logger = logging.getLogger("__main__.accumulation_manager")
 
 class AccumulationManager(object):
-    def __init__(self, video, fragments, global_fragments, certainty_threshold = CERTAINTY_THRESHOLD):
+    def __init__(self, video, list_of_fragments, global_fragments, certainty_threshold = CERTAINTY_THRESHOLD):
         """ This class manages the selection of global fragments for accumulation,
         the retrieval of images from the new global fragments, the selection of
         of images for training, the final assignment of identities to the global fragments
@@ -28,14 +28,14 @@ class AccumulationManager(object):
         and the computation of the certainty levels of the individual fragments to check the
         eligability of the candidates global fragments for accumulation.
 
-        :fragments: list of individual and crossing fragments
+        :list_of_fragments: list of individual and crossing fragments
         :global_fragments list: list of global_fragments objects from the video
         :number_of_animals param: number of animals in the video
         :certainty_threshold param: threshold to set a individual fragment as certain for accumulation
         """
         self.video = video
         self.number_of_animals = video.number_of_animals
-        self.fragments = fragments
+        self.list_of_fragments = list_of_fragments
         self.global_fragments = global_fragments
         self.counter = 0
         self.certainty_threshold = certainty_threshold
@@ -89,7 +89,7 @@ class AccumulationManager(object):
         """ get the images and labels of the new global fragments that are going
         to be used for training, this function checks whether the images of a individual
         fragment have been added before"""
-        self.new_images, self.new_labels, _, _ = get_images_and_labels_from_global_fragments(self.fragments,
+        self.new_images, self.new_labels, _, _ = get_images_and_labels_from_global_fragments(self.list_of_fragments.fragments,
                                                                     self.next_global_fragments,
                                                                     list(self.individual_fragments_used))
 
@@ -190,7 +190,7 @@ class AccumulationManager(object):
                                                             if global_fragment.used_for_training
                                                             and fragment.identifier not in self.individual_fragments_used]))
         self.individual_fragments_used.extend(new_individual_fragments_identifiers)
-        logging.info("number of individual fragments used for training: %i" %sum([fragment.used_for_training for fragment in self.fragments]))
+        logging.info("number of individual fragments used for training: %i" %sum([fragment.used_for_training for fragment in self.list_of_fragments.fragments]))
 
     def split_predictions_after_network_assignment(self, predictions, softmax_probs, indices_to_split, candidate_individual_fragments_identifiers):
         """Go back to the CPU"""
@@ -209,7 +209,7 @@ class AccumulationManager(object):
                                                                 candidate_individual_fragments_identifiers):
 
             index = self.video.fragment_identifier_to_index[candidate_individual_fragment_identifier]
-            self.fragments[index].compute_identification_statistics(np.asarray(individual_fragment_predictions),\
+            self.list_of_fragments.fragments[index].compute_identification_statistics(np.asarray(individual_fragment_predictions),\
                                                                             individual_fragment_softmax_probs)
 
     def assign_identities_and_check_eligibility_for_training_global_fragments(self, candidate_individual_fragments_identifiers):

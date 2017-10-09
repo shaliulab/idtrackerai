@@ -23,7 +23,6 @@ def accumulate(accumulation_manager,
                 knowledge_transfer_from_same_animals,
                 get_ith_global_fragment = 0):
     video.init_accumulation_statistics_attributes(index = get_ith_global_fragment)
-    number_of_accumulated_images = 0
 
     while accumulation_manager.continue_accumulation:
         logger.info("accumulation step %s" %accumulation_manager.counter)
@@ -48,21 +47,19 @@ def accumulate(accumulation_manager,
         # update the list of individual fragments that have been used for training
         logger.info("Update individual fragments used for training")
         accumulation_manager.update_individual_fragments_used()
-        number_of_accumulated_images += int(accumulation_manager.new_images.shape[0])
-        ratio_accumulated_images = early_stop_criteria_for_accumulation(number_of_accumulated_images, video.number_of_unique_images_in_global_fragments)
+        ratio_accumulated_images = accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
         if ratio_accumulated_images > THRESHOLD_EARLY_STOP_ACCUMULATION:
             logger.debug("Stopping accumulation by early stopping criteria")
             return ratio_accumulated_images
-        logger.debug('%i new images accumulated' %number_of_accumulated_images)
         #get images for training
         #(we mix images already used with new images)
         images, labels = accumulation_manager.get_images_and_labels_for_training()
-        logger.info("the %f percent of the images has been accumulated" %(number_of_accumulated_images / video.number_of_unique_images_in_global_fragments * 100))
+        logger.info("the %f percent of the images has been accumulated" %(ratio_accumulated_images * 100))
         logger.debug("images: %s" %str(images.shape))
         logger.debug("labels: %s" %str(labels.shape))
         #start training
         global_step, net, store_validation_accuracy_and_loss_data = train(video,
-                                                            accumulation_manager.fragments,
+                                                            accumulation_manager.list_of_fragments.fragments,
                                                             net, images, labels,
                                                             store_accuracy_and_error = False,
                                                             check_for_loss_plateau = True,
@@ -118,5 +115,5 @@ def accumulate(accumulation_manager,
             logger.info("All the global fragments have been used for accumulation")
             break
 
-        ratio_accumulated_images_over_all_unique_images_in_global_fragments = number_of_accumulated_images / video.number_of_unique_images_in_global_fragments
-    return ratio_accumulated_images_over_all_unique_images_in_global_fragments
+        ratio_accumulated_images = accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
+    return ratio_accumulated_images

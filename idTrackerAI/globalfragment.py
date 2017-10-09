@@ -38,18 +38,19 @@ class GlobalFragment(object):
 
     def get_list_of_attributes_from_individual_fragments(self, fragments, list_of_attributes = ['distance_travelled', 'number_of_images']):
         [setattr(self,attribute + '_per_individual_fragment',[]) for attribute in list_of_attributes]
-        print('\nIndex beginning of fragment', self.index_beginning_of_fragment)
         for fragment in fragments:
             if fragment.identifier in self.individual_fragments_identifiers:
-                print(fragment.identifier)
-                print(fragment.start_end)
                 assert fragment.is_a_fish
+                setattr(fragment, '_is_in_a_global_fragment', True)
                 for attribute in list_of_attributes:
                     getattr(self, attribute + '_per_individual_fragment').append(getattr(fragment, attribute))
 
 
     def set_minimum_distance_travelled(self):
         self.minimum_distance_travelled = min(self.distance_travelled_per_individual_fragment)
+
+    def get_total_number_of_images(self):
+        return sum([fragment.number_of_images for fragment in self.individual_fragments])
 
     # @property
     # def used_for_training(self):

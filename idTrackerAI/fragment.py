@@ -47,6 +47,7 @@ class Fragment(object):
         self.is_a_ghost_crossing = is_a_ghost_crossing
         self.number_of_animals = number_of_animals
         self.possible_identities = range(1, self.number_of_animals + 1)
+        self._is_in_a_global_fragment = False
         self._used_for_training = False
         self._used_for_pretraining = False
         self._acceptable_for_training = True
@@ -55,6 +56,10 @@ class Fragment(object):
         self._identity_corrected_solving_duplication = None
         self._user_generated_identity = None
         self._identity_is_fixed = False
+
+    @property
+    def is_in_a_global_fragment(self):
+        return self._is_in_a_global_fragment
 
     @property
     def used_for_training(self):

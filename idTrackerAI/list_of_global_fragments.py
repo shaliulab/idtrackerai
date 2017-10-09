@@ -30,22 +30,8 @@ class ListOfGlobalFragments(object):
                                         key = lambda x: np.abs(x.index_beginning_of_fragment - self.video.first_frame_first_global_fragment),
                                         reverse = False)
 
-    def compute_number_of_unique_images(self):
-        individual_fragments_used = []
-        number_of_images = 0
-
-        for global_fragment in self.global_fragments:
-
-            for fragment in global_fragment.individual_fragments:
-
-                if fragment.identifier not in individual_fragments_used:
-                    number_of_images += fragment.number_of_images
-                    individual_fragments_used.append(fragment.identifier)
-
-        self.number_of_images = number_of_images
-
     def compute_maximum_number_of_images(self):
-        self.maximum_number_of_images = np.max([global_fragment.get_total_number_of_images() for global_fragment in self.global_fragments])
+        self.maximum_number_of_images = max([global_fragment.get_total_number_of_images() for global_fragment in self.global_fragments])
 
     def filter_by_minimum_number_of_frames(self, minimum_number_of_frames = 3):
         self.global_fragments = [global_fragment for global_fragment in self.global_fragments
@@ -125,7 +111,7 @@ def get_images_and_labels_from_global_fragment(list_of_fragments, global_fragmen
     for fragment in global_fragment.individual_fragments:
         if fragment.identifier not in individual_fragments_identifiers_already_used :
             images.extend(fragment.images)
-            labels.extend([fragment.temporary_id] * fragment.number_of_images)
+            labels.extend([fragment.blob_hierarchy_in_starting_frame] * fragment.number_of_images)
             lengths.append(fragment.number_of_images)
             individual_fragments_identifiers.append(fragment.identifier)
 

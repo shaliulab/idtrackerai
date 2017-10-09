@@ -36,6 +36,22 @@ class ListOfFragments(object):
         return np.concatenate([np.asarray(fragment.images) for fragment in self.fragments
                                 if not fragment.used_for_training and fragment.is_a_fish], axis = 0)
 
+    def compute_number_of_unique_images_used_for_pretraining(self):
+        return sum([fragment.number_of_images for fragment in self.fragments if fragment.used_for_pretraining])
+
+    def compute_number_of_unique_images_used_for_training(self):
+        return sum([fragment.number_of_images for fragment in self.fragments if fragment.used_for_training])
+
+    def compute_total_number_of_images_in_global_fragments(self):
+        self.number_of_images_in_global_fragments = sum([fragment.number_of_images for fragment in self.fragments if fragment.is_in_a_global_fragment])
+
+    def compute_ratio_of_images_used_for_pretraining(self):
+        return self.compute_number_of_unique_images_used_for_pretraining() / self.number_of_images_in_global_fragments
+
+    def compute_ratio_of_images_used_for_training(self):
+        return self.compute_number_of_unique_images_used_for_training() / self.number_of_images_in_global_fragments
+
+
     def get_data_plot(self):
         number_of_images_in_individual_fragments = []
         distance_travelled_individual_fragments = []
