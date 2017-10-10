@@ -26,16 +26,15 @@ class ListOfBlobs(object):
             logger.warning("%i frames do not contain blobs" %frame_diff)
         self.number_of_frames_without_blobs = frame_diff
 
-    def disconect(self):
+    def disconnect(self):
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
-                if hasattr(blob, 'next'): setattr(blob, 'next', [])
-                if hasattr(blob, 'previous'): setattr(blob, 'previous', [])
+                blob.next, blob.previous = [], []
 
     def reconnect(self):
         if self.video._has_been_segmented:
             logger.info("Reconnecting list of blob objects")
-            for frame_i in self.cutting_points:
+            for frame_i in range(1,self.video.number_of_frames):
                 for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                     if blob_0.overlaps_with(blob_1):
                         blob_0.now_points_to(blob_1)
@@ -47,15 +46,13 @@ class ListOfBlobs(object):
         self.disconnect()
         logger.info("saving blobs list at %s" %path_to_save)
         np.save(path_to_save, self)
-        self.compute_overlapping_between_subsequent_frames()
+        self.reconnect()
 
     @classmethod
     def load(cls, path_to_load_blob_list_file):
         logger.info("loading blobs list from %s" %path_to_load_blob_list_file)
-
         list_of_blobs = np.load(path_to_load_blob_list_file).item()
-        logging.debug("cutting points %s" %list_of_blobs.cutting_points)
-        list_of_blobs.compute_overlapping_between_subsequent_frames()
+        list_of_blobs.reconnect()
         return list_of_blobs
 
     def compute_fragment_identifier_and_blob_index(self):
