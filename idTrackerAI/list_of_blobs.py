@@ -26,19 +26,11 @@ class ListOfBlobs(object):
             logger.warning("%i frames do not contain blobs" %frame_diff)
         self.number_of_frames_without_blobs = frame_diff
 
-    def generate_cut_points(self, num_chunks):
-        n = len(self.blobs_in_video) // num_chunks
-        self.cutting_points = np.arange(0,len(self.blobs_in_video),n)[1:]
-
-    def cut_in_chunks(self):
-        for frame in self.cutting_points:
-            self.cut_at_frame(frame)
-
-    def cut_at_frame(self, frame_number):
-        for blob in self.blobs_in_video[frame_number-1]:
-            blob.next = []
-        for blob in self.blobs_in_video[frame_number]:
-            blob.previous = []
+    def disconect(self):
+        for blobs_in_frame in self.blobs_in_video:
+            for blob in blobs_in_frame:
+                if hasattr(blob, 'next'): setattr(blob, 'next', [])
+                if hasattr(blob, 'previous'): setattr(blob, 'previous', [])
 
     def reconnect(self):
         if self.video._has_been_segmented:
@@ -52,11 +44,10 @@ class ListOfBlobs(object):
         """save instance"""
         if path_to_save is None:
             path_to_save = self.video.blobs_path
-        self.generate_cut_points(number_of_chunks)
-        self.cut_in_chunks()
+        self.disconnect()
         logger.info("saving blobs list at %s" %path_to_save)
         np.save(path_to_save, self)
-        self.reconnect()
+        self.compute_overlapping_between_subsequent_frames()
 
     @classmethod
     def load(cls, path_to_load_blob_list_file):

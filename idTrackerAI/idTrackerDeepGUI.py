@@ -189,7 +189,7 @@ if __name__ == '__main__':
             blobs = segment(video)
             logger.debug("Segmentation finished")
             list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
-            list_of_blobs.save(video.blobs_path_segmented, NUM_CHUNKS_BLOB_SAVING)
+            list_of_blobs.save(video.blobs_path_segmented, number_of_chunks = video.number_of_frames)
             logger.debug("Segmented blobs saved")
             video._has_been_segmented = True
         else:
@@ -292,7 +292,7 @@ if __name__ == '__main__':
         video.first_frame_first_global_fragment = list_of_global_fragments.global_fragments[0].index_beginning_of_fragment
         #save connected blobs in video (organized frame-wise)
         list_of_blobs.video = video
-        list_of_blobs.save(number_of_chunks = NUM_CHUNKS_BLOB_SAVING)
+        list_of_blobs.save(number_of_chunks = video.number_of_frames)
         list_of_fragments.save()
         list_of_global_fragments.save(list_of_fragments.fragments)
         video._has_been_preprocessed = True
