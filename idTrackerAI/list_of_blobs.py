@@ -55,7 +55,7 @@ class ListOfBlobs(object):
 
         list_of_blobs = np.load(path_to_load_blob_list_file).item()
         logging.debug("cutting points %s" %list_of_blobs.cutting_points)
-        list_of_blobs.reconnect()
+        list_of_blobs.compute_overlapping_between_subsequent_frames()
         return list_of_blobs
 
     def compute_fragment_identifier_and_blob_index(self):
