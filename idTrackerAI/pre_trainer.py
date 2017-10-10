@@ -32,8 +32,8 @@ def pre_train(video, list_of_fragments, number_of_images_in_global_fragments, li
         net.restore()
     #instantiate objects to store loss and accuracy values for training and validation
     #(the loss and accuracy of the validation are saved to allow the automatic stopping of the training)
-    store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
-    store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation')
+    store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training', scope = 'pretraining')
+    store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation', scope = 'pretraining')
     #open figure for plotting
     if plot_flag:
         plt.ion()
