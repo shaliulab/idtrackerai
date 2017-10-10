@@ -43,7 +43,7 @@ def pre_train(video, list_of_fragments, number_of_images_in_global_fragments, li
     #start loop for pre training in the global fragments selected
     for i, pretraining_global_fragment in enumerate(tqdm(list_of_global_fragments.global_fragments, desc = '\nPretraining network')):
         # Get images and labels from the current global fragment
-        images, labels, _, _ = get_images_and_labels_from_global_fragment(list_of_fragments, pretraining_global_fragment)
+        images, labels, _, _ = get_images_and_labels_from_global_fragment(list_of_fragments, pretraining_global_fragment, label_from = 'blob_hierarchy_in_starting_frame')
         # Instantiate data_set
         training_dataset, validation_dataset = split_data_train_and_validation(video.preprocessing_type, params.number_of_animals,images,labels)
         # Standarize images
