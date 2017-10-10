@@ -22,10 +22,31 @@ from blob import Blob
 from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
 from compute_statistics_against_groundtruth import get_statistics_against_groundtruth, \
                                                     compute_and_save_gt_accuracy
+from globalfragment import compute_and_plot_global_fragments_statistics
+
+def compute_and_save_individual_fragments_and_distance_travelled(video_object_path, video):
+    video.check_paths_consistency_with_video_path(video_object_path)
+    # change this
+    print("loading blobs")
+    blobs_path = video.blobs_path
+    global_fragments_path = video.global_fragments_path
+    list_of_blobs = ListOfBlobs.load(blobs_path)
+    blobs = list_of_blobs.blobs_in_video
+    global_fragments = np.load(global_fragments_path)
+    number_of_frames_in_individual_fragments, \
+    distance_travelled_individual_fragments = compute_and_plot_global_fragments_statistics(video, blobs, global_fragments, plot_flag = False)
+
+    np.save(os.path.join(video._preprocessing_folder, 'number_of_frames_in_individual_fragments.npy'), number_of_frames_in_individual_fragments)
+    np.save(os.path.join(video._preprocessing_folder, 'distance_travelled_individual_fragments.npy'), distance_travelled_individual_fragments)
+
+    return number_of_frames_in_individual_fragments, distance_travelled_individual_fragments
+
+
+
 
 if __name__ == '__main__':
 
-    path_to_ground_truth_hard_drive = '/media/rhea/ground_truth_results'
+    path_to_ground_truth_hard_drive = '/media/themis/ground_truth_results'
     folders_prefix = 'LargeGroups'
     experimental_group_folders = glob(path_to_ground_truth_hard_drive + '/*/')
 
@@ -66,6 +87,10 @@ if __name__ == '__main__':
                     else:
                         compute_and_save_gt_accuracy(video_object_path, video)
 
+                    if not os.path.isfile(os.path.join(video._preprocessing_folder, 'number_of_frames_in_individual_fragments.npy')):
+                        number_of_frames_in_individual_fragments, \
+                        distance_travelled_individual_fragments = compute_and_save_individual_fragments_and_distance_travelled(video_object_path, video)
+
                 results_data_frame = results_data_frame.append({'date': time.strftime("%c"),
                                                                 'video_name': video.video_path,
                                                                 'height': video._height,
@@ -86,8 +111,8 @@ if __name__ == '__main__':
                                                                 'maximum_number_of_blobs': video._maximum_number_of_blobs,
                                                                 'median_body_length': None,
                                                                 'portrait_size': None,
-                                                                'individual_fragments_lenghts': None,
-                                                                'individual_fragments_distance_travelled': None,
+                                                                'individual_fragments_lenghts': number_of_frames_in_individual_fragments,
+                                                                'individual_fragments_distance_travelled': distance_travelled_individual_fragments,
                                                                 'crossing_fragments_lengths': None,
                                                                 'number_of_crossings': None,
                                                                 'number_of_global_fragments': None,
