@@ -12,12 +12,13 @@ class Store_Accuracy_and_Loss(object):
     """Store the loss, accuracy and individual accuracy values computed during
     training and validation
     """
-    def __init__(self, network, name):
+    def __init__(self, network, name, scope = None):
         self._path_to_accuracy_error_data = network.params.save_folder
         self.name = name
         self.loss = []
         self.accuracy = []
         self.individual_accuracy = []
+        self.scope = scope
         if network.is_restoring or network.is_knowledge_transfer:
             self.load()
 
@@ -54,9 +55,9 @@ class Store_Accuracy_and_Loss(object):
         ax4 = ax_handles[3]
         ax4.cla()
         colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=black)
-
+        attribute_to_check = 'used_for_training' if self.scope == 'training' else 'used_for_pretraining'
         for fragment in fragments:
-            if fragment.used_for_training or fragment.used_for_pretraining:
+            if getattr(fragment, attribute_to_check) or fragment.used_for_pretraining:
                 blob_index = fragment.blob_hierarchy_in_starting_frame
                 (start, end) = fragment.start_end
                 ax4.add_patch(

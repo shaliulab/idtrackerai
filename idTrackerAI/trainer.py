@@ -37,8 +37,8 @@ def train(video,
     if preprocessing_type is None:
         preprocessing_type = video.preprocessing_type
     logger.info("Training...")
-    store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training')
-    store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation')
+    store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training', scope = 'training')
+    store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation', scope = 'training')
     if plot_flag:
         plt.ion()
         fig, ax_arr = plt.subplots(4)
