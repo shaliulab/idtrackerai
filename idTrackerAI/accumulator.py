@@ -7,7 +7,7 @@ import logging
 
 from assigner import assign
 from trainer import train
-from accumulation_manager import AccumulationManager, get_predictions_of_candidates_global_fragments
+from accumulation_manager import AccumulationManager, get_predictions_of_candidates_fragments
 
 
 THRESHOLD_EARLY_STOP_ACCUMULATION = .9995
@@ -23,6 +23,7 @@ def accumulate(accumulation_manager,
                 knowledge_transfer_from_same_animals,
                 get_ith_global_fragment = 0):
     video.init_accumulation_statistics_attributes(index = get_ith_global_fragment)
+    video.accumulation_step = accumulation_manager.counter
 
     while accumulation_manager.continue_accumulation:
         logger.info("accumulation step %s" %accumulation_manager.counter)
@@ -73,18 +74,18 @@ def accumulate(accumulation_manager,
         # Set accumulation params for rest of the accumulation
         #take images from global fragments not used in training (in the remainder test global fragments)
         logger.info("Get new global fragments for training")
-        candidates_next_global_fragments = [global_fragment for global_fragment in accumulation_manager.global_fragments
-                                if not global_fragment.used_for_training]
-        logger.info("There are %s candidate global fragments left for accumulation" %str(len(candidates_next_global_fragments)))
+        # candidates_next_global_fragments = [global_fragment for global_fragment in accumulation_manager.global_fragments
+        #                         if not global_fragment.used_for_training]
+        # logger.info("There are %s candidate global fragments left for accumulation" %str(len(candidates_next_global_fragments)))
         if any([not global_fragment.used_for_training for global_fragment in accumulation_manager.global_fragments]):
             logger.info("Generate predictions on candidate global fragments")
             predictions,\
             softmax_probs,\
             indices_to_split,\
-            candidate_individual_fragments_identifiers = get_predictions_of_candidates_global_fragments(net,
-                                                                                                        video,
-                                                                                                        candidates_next_global_fragments,
-                                                                                                        accumulation_manager.individual_fragments_used)
+            candidate_individual_fragments_identifiers = get_predictions_of_candidates_fragments(net,
+                                                                                                video,
+                                                                                                accumulation_manager.list_of_fragments.fragments)
+            logger.debug('Splitting predictions by fragments...')
             accumulation_manager.split_predictions_after_network_assignment(predictions,
                                                                             softmax_probs,
                                                                             indices_to_split,
@@ -93,7 +94,7 @@ def accumulate(accumulation_manager,
             logger.info("Checking eligibility criteria and generate the new list of global fragments to accumulate")
             accumulation_manager.get_acceptable_global_fragments_for_training(candidate_individual_fragments_identifiers)
             #Million logs
-            logger.info("Number of candidate global fragments: %i" %len(candidates_next_global_fragments))
+            # logger.info("Number of candidate global fragments: %i" %len(candidates_next_global_fragments))
             logger.info("Number of non certain global fragments: %i" %accumulation_manager.number_of_noncertain_global_fragments)
             logger.info("Number of randomly assigned global fragments: %i" %accumulation_manager.number_of_random_assigned_global_fragments)
             logger.info("Number of non consistent global fragments: %i " %accumulation_manager.number_of_nonconsistent_global_fragments)

@@ -38,6 +38,7 @@ def pre_train(video, list_of_fragments, number_of_images_in_global_fragments, li
     if plot_flag:
         plt.ion()
         fig, ax_arr = plt.subplots(4)
+        fig.canvas.set_window_title('Pretraining')
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
         epoch_index_to_plot = 0
     #start loop for pre training in the global fragments selected
