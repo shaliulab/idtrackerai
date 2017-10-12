@@ -42,6 +42,7 @@ def train(video,
     if plot_flag:
         plt.ion()
         fig, ax_arr = plt.subplots(4)
+        fig.canvas.set_window_title('Accumulation ' + str(video.accumulation_trial) + '-' + str(video.accumulation_step))
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 
     # Instantiate data_set

@@ -69,7 +69,7 @@ from compute_velocity_model import compute_model_velocity
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING = .25
 VEL_PERCENTILE = 99
-THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
+THRESHOLD_ACCEPTABLE_ACCUMULATION = .9995
 ###
 # seed numpy
 np.random.seed(0)
@@ -327,6 +327,7 @@ if __name__ == '__main__':
     #### Accumulation ####
     print('\n---------------------------------------------------------')
     video.first_accumulation_time = time.time()
+    video.accumulation_trial = 0
     video.create_accumulation_folder(iteration_number = 0)
     logger.info("Set accumulation network parameters")
     accumulation_network_params = NetworkParams(video.number_of_animals,
@@ -363,7 +364,7 @@ if __name__ == '__main__':
         # the list of global fragments is ordered in place from the distance (in frames) wrt
         # the core of the first global fragment that will be accumulated
         list_of_global_fragments.order_by_distance_to_the_first_global_fragment()
-        accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments)
+        accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
         #set global epoch counter to 0
         logger.info("Start accumulation")
         global_step = 0
@@ -408,6 +409,7 @@ if __name__ == '__main__':
         video.save()
     else:
         print('\n---------------------------------------------------------')
+        list_of_fragments.save_light_list(video._accumulation_folder)
         video.pretraining_time = time.time()
         #create folder to store pretraining
         video.create_pretraining_folder()
@@ -421,6 +423,7 @@ if __name__ == '__main__':
                                                 image_size = video.portrait_size)
         if not loadPreviousDict['pretraining']:
             #### Pre-trainer ####
+            list_of_fragments.reset(roll_back_to = 'fragmentation')
             list_of_global_fragments.order_by_distance_travelled()
             pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, pretrain_network_params)
             logger.info("Pretraining ended")
@@ -449,6 +452,7 @@ if __name__ == '__main__':
                 logger.info("Starting accumulation")
                 #create folder to store accumulation models
                 video.create_accumulation_folder(iteration_number = i)
+                video.accumulation_trial = i
                 #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
                 list_of_fragments.reset(roll_back_to = 'pretraining')
                 list_of_global_fragments.reset(roll_back_to = 'fragmentation')
@@ -464,7 +468,7 @@ if __name__ == '__main__':
                 #instantiate accumulation manager
                 logger.info("Initialising accumulation manager")
                 list_of_global_fragments.order_by_distance_to_the_first_global_fragment()
-                accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments)
+                accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
                 #set global epoch counter to 0
                 logger.info("Start accumulation")
                 global_step = 0
@@ -480,10 +484,12 @@ if __name__ == '__main__':
                 else:
                     percentage_of_accumulated_images.append(video.ratio_accumulated_images)
                     logger.info("This accumulation was not satisfactory. Try to start from a different global fragment")
+                    list_of_fragments.save_light_list(video._accumulation_folder)
 
             if len(percentage_of_accumulated_images) > 1 and np.argmax(percentage_of_accumulated_images) != 2:
                 accumulation_folder_name = 'accumulation_' + str(np.argmax(percentage_of_accumulated_images))
                 video._accumulation_folder = os.path.join(video._session_folder, accumulation_folder_name)
+                list_of_fragments.load_light_list(video._accumulation_folder)
             video._second_accumulation_finished = True
             logger.info("Saving global fragments")
             list_of_fragments.save()

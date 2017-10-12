@@ -116,7 +116,7 @@ def correct_impossible_velocity_jumps_loop(list_of_fragments, scope = None):
     impossible_velocity_threshold = list_of_fragments.video.velocity_threshold * VELOCITY_TOLERANCE
 
     for fragment in tqdm(fragments_in_direction, desc = 'Correcting impossible velocity jumps ' + scope):
-        if fragment.is_a_fish:
+        if fragment.is_a_fish and fragment.final_identity != 0:
 
             neighbour_fragment_past = fragment.get_neighbour_fragment(list_of_fragments.fragments, 'to_the_past')
             neighbour_fragment_future = fragment.get_neighbour_fragment(list_of_fragments.fragments, 'to_the_future')

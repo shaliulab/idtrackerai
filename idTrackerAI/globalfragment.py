@@ -88,22 +88,37 @@ class GlobalFragment(object):
     def used_for_training(self):
         return all([fragment.used_for_training for fragment in self.individual_fragments])
 
-    @property
-    def acceptable_for_training(self):
-        return all([fragment.acceptable_for_training for fragment in self.individual_fragments])
+    def acceptable_for_training(self, accumulation_strategy):
+        if accumulation_strategy == 'global':
+            return all([fragment.acceptable_for_training for fragment in self.individual_fragments])
+        else:
+            return any([fragment.acceptable_for_training for fragment in self.individual_fragments])
 
     @property
     def is_unique(self):
-        self.check_uniqueness()
+        self.check_uniqueness(scope = 'global')
         return self._is_unique
 
-    def check_uniqueness(self):
+    @property
+    def is_partially_unique(self):
+        self.check_uniqueness(scope = 'partial')
+        return self._is_partially_unique
+
+    def check_uniqueness(self, scope):
         all_identities = range(self.number_of_animals)
-        if len(set(all_identities) - set([fragment.temporary_id for fragment in self.individual_fragments])) > 0:
-            self._is_unique = False
-            # self.compute_repeated_and_missing_ids(all_identities)
-        else:
-            self._is_unique = True
+        if scope == 'global':
+            if len(set(all_identities) - set([fragment.temporary_id for fragment in self.individual_fragments])) > 0:
+                self._is_unique = False
+            else:
+                self._is_unique = True
+        elif scope == 'partial':
+            identities_acceptable_for_training = [fragment.temporary_id for fragment in self.individual_fragments
+                                                    if fragment.acceptable_for_training]
+            self.duplicated_identities = set([x for x in identities_acceptable_for_training if identities_acceptable_for_training.count(x) > 1])
+            if len(self.duplicated_identities) > 0:
+                self._is_partially_unique = False
+            else:
+                self._is_partially_unique = True
 
     def get_total_number_of_images(self):
         if not hasattr(self,'total_number_of_images'):
