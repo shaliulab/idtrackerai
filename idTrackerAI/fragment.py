@@ -342,8 +342,6 @@ class Fragment(object):
             neighbour = [fragment for fragment in fragments
                             if fragment.final_identity == self.final_identity
                             and fragment.start_end[0] - self.start_end[1] == 1]
-        print("identity ", self.final_identity)
-        print("start_end ", self.start_end)
-        print(neighbour)
+
         assert len(neighbour) < 2
         return neighbour[0] if len(neighbour) == 1 else None

@@ -34,7 +34,7 @@ class ListOfBlobs(object):
     def reconnect(self):
         if self.video._has_been_segmented:
             logger.info("Reconnecting list of blob objects")
-            for frame_i in range(1,self.video.number_of_frames):
+            for frame_i in tqdm(range(1,self.video.number_of_frames), desc = 'reconnecting blobs'):
                 for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                     if blob_0.overlaps_with(blob_1):
                         blob_0.now_points_to(blob_1)
