@@ -23,10 +23,11 @@ def accumulate(accumulation_manager,
                 knowledge_transfer_from_same_animals,
                 get_ith_global_fragment = 0):
     video.init_accumulation_statistics_attributes(index = get_ith_global_fragment)
-    video.accumulation_step = accumulation_manager.counter
+
 
     while accumulation_manager.continue_accumulation:
         logger.info("accumulation step %s" %accumulation_manager.counter)
+        video.accumulation_step = accumulation_manager.counter
         #get next fragments for accumulation
         accumulation_manager.get_next_global_fragments(get_ith_global_fragment = get_ith_global_fragment)
         # if len(accumulation_manager.next_global_fragments) == 0:
