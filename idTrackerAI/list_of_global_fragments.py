@@ -102,14 +102,17 @@ def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
     return [GlobalFragment(blobs_in_video, fragments, i, num_animals) for i in indices_beginning_of_fragment]
 
-def get_images_and_labels_from_global_fragment(list_of_fragments, global_fragment, individual_fragments_identifiers_already_used = [], label_from = '_temporary_id'):
+def get_images_and_labels_from_global_fragment(list_of_fragments, global_fragment,
+                                                individual_fragments_identifiers_already_used = [],
+                                                label_from = '_temporary_id'):
     images = []
     labels = []
     lengths = []
     individual_fragments_identifiers = []
 
     for fragment in global_fragment.individual_fragments:
-        if fragment.identifier not in individual_fragments_identifiers_already_used :
+        if fragment.identifier not in individual_fragments_identifiers_already_used\
+            and fragment.acceptable_for_training:
             images.extend(fragment.images)
             labels.extend([getattr(fragment, label_from)] * fragment.number_of_images)
             lengths.append(fragment.number_of_images)

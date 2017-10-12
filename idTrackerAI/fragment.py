@@ -57,6 +57,39 @@ class Fragment(object):
         self._user_generated_identity = None
         self._identity_is_fixed = False
 
+    def reset(self, roll_back_to = None):
+        if roll_back_to == 'fragmentation' or roll_back_to == 'pretraining':
+            self._used_for_training = False
+            if roll_back_to == 'fragmentation': self._used_for_pretraining = False
+            self._acceptable_for_training = True
+            self._temporary_id = None
+            self._identity = None
+            self._user_generated_identity = None
+            self._identity_corrected_solving_duplication = None
+            self._identity_is_fixed = False
+            attributes_to_delete = ['_frequencies',
+                                    '_P1_vector', '_certainty',
+                                    '_is_certain',
+                                    '_P1_below_random', '_non_consistent',
+                                    'assigned_during_accumulation']
+            delete_attributes_from_object(self, attributes_to_delete)
+        elif roll_back_to == 'accumulation':
+            self._identity_is_fixed = False
+            attributes_to_delete = []
+            if not self.used_for_training:
+                self._identity = None
+                self._user_generated_identity = None
+                self._identity_corrected_solving_duplication = None
+                attributes_to_delete = ['_frequencies', '_P1_vector']
+            attributes_to_delete.extend(['_P2_vector', '_ambiguous_identities',
+                                        '_is_a_duplication'])
+            delete_attributes_from_object(self, attributes_to_delete)
+        elif roll_back_to == 'assignment':
+            self._user_generated_identity = None
+            self._identity_corrected_solving_duplication = None
+            attributes_to_delete = ['_is_a_duplication']
+            delete_attributes_from_object(self, attributes_to_delete)
+
     @property
     def is_in_a_global_fragment(self):
         return self._is_in_a_global_fragment
@@ -164,39 +197,6 @@ class Fragment(object):
                 or (fragment.identity_corrected_solving_duplication is not None
                 and fragment.identity_corrected_solving_duplication != 0)]
 
-    def reset(self, roll_back_to = None):
-        if roll_back_to == 'fragmentation' or roll_back_to == 'pretraining':
-            self._used_for_training = False
-            if roll_back_to == 'fragmentation': self._used_for_pretraining = False
-            self._acceptable_for_training = True
-            self._temporary_id = None
-            self._identity = None
-            self._user_generated_identity = None
-            self._identity_corrected_solving_duplication = None
-            self._identity_is_fixed = False
-            attributes_to_delete = ['_frequencies',
-                                    '_P1_vector', '_certainty',
-                                    '_is_certain',
-                                    '_P1_below_random', '_non_consistent',
-                                    'assigned_during_accumulation']
-            delete_attributes_from_object(self, attributes_to_delete)
-        elif roll_back_to == 'accumulation':
-            self._identity_is_fixed = False
-            attributes_to_delete = []
-            if not self.used_for_training:
-                self._identity = None
-                self._user_generated_identity = None
-                self._identity_corrected_solving_duplication = None
-                attributes_to_delete = ['_frequencies', '_P1_vector']
-            attributes_to_delete.extend(['_P2_vector', '_ambiguous_identities',
-                                        '_is_a_duplication'])
-            delete_attributes_from_object(self, attributes_to_delete)
-        elif roll_back_to == 'assignment':
-            self._user_generated_identity = None
-            self._identity_corrected_solving_duplication = None
-            attributes_to_delete = ['_is_a_duplication']
-            delete_attributes_from_object(self, attributes_to_delete)
-
     @property
     def number_of_images(self):
         return len(self.images)
@@ -225,6 +225,12 @@ class Fragment(object):
                                             if fragment.is_a_fish and self.are_overlapping(fragment)
                                             and fragment is not self
                                             and self.is_a_fish]
+        self.number_of_coexisting_individual_fragments = len(self.coexisting_individual_fragments)
+
+    @property
+    def has_enough_accumulated_coexisting_fragments(self):
+        return sum([fragment.used_for_training
+                    for fragment in self.coexisting_individual_fragments]) >= self.number_of_coexisting_individual_fragments/2
 
     def check_consistency_with_coexistent_individual_fragments(self, temporary_id):
         for coexisting_fragment in self.coexisting_individual_fragments:

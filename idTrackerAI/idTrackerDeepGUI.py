@@ -69,7 +69,7 @@ from compute_velocity_model import compute_model_velocity
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING = .25
 VEL_PERCENTILE = 99
-THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
+THRESHOLD_ACCEPTABLE_ACCUMULATION = .9995
 ###
 # seed numpy
 np.random.seed(0)
@@ -363,7 +363,7 @@ if __name__ == '__main__':
         # the list of global fragments is ordered in place from the distance (in frames) wrt
         # the core of the first global fragment that will be accumulated
         list_of_global_fragments.order_by_distance_to_the_first_global_fragment()
-        accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments)
+        accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
         #set global epoch counter to 0
         logger.info("Start accumulation")
         global_step = 0
@@ -421,6 +421,7 @@ if __name__ == '__main__':
                                                 image_size = video.portrait_size)
         if not loadPreviousDict['pretraining']:
             #### Pre-trainer ####
+            list_of_fragments.reset(roll_back_to = 'fragmentation')
             list_of_global_fragments.order_by_distance_travelled()
             pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, pretrain_network_params)
             logger.info("Pretraining ended")
@@ -464,7 +465,7 @@ if __name__ == '__main__':
                 #instantiate accumulation manager
                 logger.info("Initialising accumulation manager")
                 list_of_global_fragments.order_by_distance_to_the_first_global_fragment()
-                accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments)
+                accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
                 #set global epoch counter to 0
                 logger.info("Start accumulation")
                 global_step = 0
