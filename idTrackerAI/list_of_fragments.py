@@ -92,6 +92,29 @@ class ListOfFragments(object):
         [fragment.get_coexisting_individual_fragments_indices(list_of_fragments.fragments) for fragment in list_of_fragments.fragments]
         return list_of_fragments
 
+    def create_light_list(self, attributes = None):
+        if attributes == None:
+            attributes = ['used_for_training',
+                            'used_for_pretraining',
+                            'acceptable_for_training',
+                            'temporary_id',
+                            'identity',
+                            'identity_corrected_solving_duplication',
+                            'user_generated_identity']
+        return [{'_' + attribute : getattr(fragment, attribute) for attribute in attributes}
+                    for fragment in self.fragments]
+
+    def save_light_list(self, accumulation_folder):
+        np.save(os.path.join(accumulation_folder, 'light_list_of_fragments.npy'), self.create_light_list())
+
+    def load_light_list(self, accumulation_folder):
+        list_of_dictionaries = np.load(os.path.join(accumulation_folder, 'light_list_of_fragments.npy'))
+        self.update_fragments_dictionary(list_of_dictionaries)
+
+    def update_fragments_dictionary(self, list_of_dictionaries):
+        assert len(list_of_dictionaries) == len(self.fragments)
+        [fragment.__dict__.update(dictionary) for fragment, dictionary in zip(self.fragments, list_of_dictionaries)]
+
 
 
 def create_list_of_fragments(blobs_in_video, number_of_animals):
