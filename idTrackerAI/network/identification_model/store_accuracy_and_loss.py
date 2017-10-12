@@ -57,7 +57,7 @@ class Store_Accuracy_and_Loss(object):
         colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=black)
         attribute_to_check = 'used_for_training' if self.scope == 'training' else 'used_for_pretraining'
         for fragment in fragments:
-            if getattr(fragment, attribute_to_check) or fragment.used_for_pretraining:
+            if getattr(fragment, attribute_to_check):
                 blob_index = fragment.blob_hierarchy_in_starting_frame
                 (start, end) = fragment.start_end
                 ax4.add_patch(
@@ -67,7 +67,7 @@ class Store_Accuracy_and_Loss(object):
                         1.,          # height
                         fill=True,
                         edgecolor=None,
-                        facecolor=colors[fragment.temporary_id if fragment.used_for_training else int(blob_index)],
+                        facecolor=colors[fragment.temporary_id if attribute_to_check == 'used_for_training' else int(blob_index)],
                         alpha = 1.
                     )
                 )

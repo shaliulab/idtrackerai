@@ -143,6 +143,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                 fragments.append(fragment)
 
             set_attributes_of_object_to_value(blob, attributes_to_set, value = None)
-
+    print("getting coexisting individual fragments indices")
     [fragment.get_coexisting_individual_fragments_indices(fragments) for fragment in fragments]
+    print("coexisting fragments done")
     return fragments

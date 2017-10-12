@@ -52,10 +52,6 @@ class GlobalFragment(object):
     def get_total_number_of_images(self):
         return sum([fragment.number_of_images for fragment in self.individual_fragments])
 
-    # @property
-    # def used_for_training(self):
-    #     return self._used_for_training
-
     @property
     def uniqueness_score(self):
         return self._uniqueness_score
