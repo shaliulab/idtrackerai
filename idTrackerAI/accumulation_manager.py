@@ -453,7 +453,7 @@ class AccumulationManager(object):
                     for fragment in global_fragment.individual_fragments
                     if fragment.identifier not in self.temporary_individual_fragments_used
                     and fragment.identifier not in self.individual_fragments_used]
-                self.number_of_acceptable_fragments += len([fragment for fragment in global_fragment.individual_fragments 
+                self.number_of_acceptable_fragments += len([fragment for fragment in global_fragment.individual_fragments
                                                         if fragment.acceptable_for_training and not fragment.used_for_training])
             print([(fragment.acceptable_for_training, fragment.identifier) for fragment in global_fragment.individual_fragments])
 
@@ -471,6 +471,25 @@ def sample_images_and_labels(images, labels, ratio):
     return np.concatenate(subsampled_images, axis = 0), np.concatenate(subsampled_labels, axis = 0)
 
 """ Get predictions of individual fragments in candidates global fragments"""
+def get_predictions_of_candidates_fragments(net, video, fragments):
+    images = []
+    lengths = []
+    candidate_individual_fragments_identifiers = []
+
+    for fragment in fragments:
+        if not fragment.used_for_training:
+            images.extend(fragment.images)
+            lengths.extend(fragment.number_of_images)
+            candidate_individual_fragments_identifiers.append(fragment.identifier)
+
+    if len(images) != 0:
+        images = np.asarray(images)
+        logging.debug("shape of images in assignment batch: %s" %str(images.shape))
+        assigner = assign(net, video, images, print_flag = True)
+
+    return assigner._predictions, assigner._softmax_probs, np.cumsum(lengths)[:-1], candidate_individual_fragments_identifiers
+
+
 def get_predictions_of_candidates_global_fragments(net, video,
                                                     candidates_next_global_fragments,
                                                     individual_fragments_identifiers_already_used = []):
