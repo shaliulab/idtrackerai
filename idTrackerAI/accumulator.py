@@ -23,6 +23,7 @@ def accumulate(accumulation_manager,
                 knowledge_transfer_from_same_animals,
                 get_ith_global_fragment = 0):
     video.init_accumulation_statistics_attributes(index = get_ith_global_fragment)
+    video.accumulation_step = accumulation_manager.counter
 
     while accumulation_manager.continue_accumulation:
         logger.info("accumulation step %s" %accumulation_manager.counter)
@@ -83,7 +84,8 @@ def accumulate(accumulation_manager,
             indices_to_split,\
             candidate_individual_fragments_identifiers = get_predictions_of_candidates_fragments(net,
                                                                                                 video,
-                                                                                                list_of_fragments.fragments)
+                                                                                                accumulation_manager.list_of_fragments.fragments)
+            logger.debug('Splitting predictions by fragments...')
             accumulation_manager.split_predictions_after_network_assignment(predictions,
                                                                             softmax_probs,
                                                                             indices_to_split,

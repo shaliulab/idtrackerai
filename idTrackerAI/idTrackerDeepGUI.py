@@ -327,6 +327,7 @@ if __name__ == '__main__':
     #### Accumulation ####
     print('\n---------------------------------------------------------')
     video.first_accumulation_time = time.time()
+    video.accumulation_trial = 0
     video.create_accumulation_folder(iteration_number = 0)
     logger.info("Set accumulation network parameters")
     accumulation_network_params = NetworkParams(video.number_of_animals,
@@ -408,6 +409,7 @@ if __name__ == '__main__':
         video.save()
     else:
         print('\n---------------------------------------------------------')
+        list_of_fragments.save_light_list(video._accumulation_folder)
         video.pretraining_time = time.time()
         #create folder to store pretraining
         video.create_pretraining_folder()
@@ -450,6 +452,7 @@ if __name__ == '__main__':
                 logger.info("Starting accumulation")
                 #create folder to store accumulation models
                 video.create_accumulation_folder(iteration_number = i)
+                video.accumulation_trial = i
                 #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
                 list_of_fragments.reset(roll_back_to = 'pretraining')
                 list_of_global_fragments.reset(roll_back_to = 'fragmentation')
@@ -481,10 +484,12 @@ if __name__ == '__main__':
                 else:
                     percentage_of_accumulated_images.append(video.ratio_accumulated_images)
                     logger.info("This accumulation was not satisfactory. Try to start from a different global fragment")
+                    list_of_fragments.save_light_list(video._accumulation_folder)
 
             if len(percentage_of_accumulated_images) > 1 and np.argmax(percentage_of_accumulated_images) != 2:
                 accumulation_folder_name = 'accumulation_' + str(np.argmax(percentage_of_accumulated_images))
                 video._accumulation_folder = os.path.join(video._session_folder, accumulation_folder_name)
+                list_of_fragments.load_light_list(video._accumulation_folder)
             video._second_accumulation_finished = True
             logger.info("Saving global fragments")
             list_of_fragments.save()
