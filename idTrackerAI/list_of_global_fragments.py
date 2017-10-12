@@ -114,7 +114,9 @@ def get_images_and_labels_from_global_fragment(list_of_fragments, global_fragmen
         if fragment.identifier not in individual_fragments_identifiers_already_used\
             and fragment.acceptable_for_training:
             images.extend(fragment.images)
-            labels.extend([getattr(fragment, label_from)] * fragment.number_of_images)
+            label = getattr(fragment, label_from)
+            assert label is not None
+            labels.extend([label] * fragment.number_of_images)
             lengths.append(fragment.number_of_images)
             individual_fragments_identifiers.append(fragment.identifier)
 

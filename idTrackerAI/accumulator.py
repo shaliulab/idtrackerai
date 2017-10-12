@@ -83,7 +83,7 @@ def accumulate(accumulation_manager,
             indices_to_split,\
             candidate_individual_fragments_identifiers = get_predictions_of_candidates_fragments(net,
                                                                                                 video,
-                                                                                                list_of_fragments.fragments)
+                                                                                                accumulation_manager.list_of_fragments.fragments)
             accumulation_manager.split_predictions_after_network_assignment(predictions,
                                                                             softmax_probs,
                                                                             indices_to_split,
