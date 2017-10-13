@@ -24,8 +24,13 @@ class ListOfGlobalFragments(object):
     def order_by_distance_travelled(self):
         self.global_fragments = sorted(self.global_fragments, key = lambda x: x.minimum_distance_travelled, reverse = True)
 
-    def order_by_distance_to_the_first_global_fragment(self):
+    def set_first_global_fragment_for_accumulation(self, accumulation_trial):
         self.order_by_distance_travelled()
+        self.first_global_fragment_for_accumulation = self.global_fragments[accumulation_trial]
+        self.video.first_frame_first_global_fragment = self.first_global_fragment_for_accumulation.index_beginning_of_fragment
+        self.video.save()
+
+    def order_by_distance_to_the_first_global_fragment_for_accumulation(self):
         self.global_fragments = sorted(self.global_fragments,
                                         key = lambda x: np.abs(x.index_beginning_of_fragment - self.video.first_frame_first_global_fragment),
                                         reverse = False)
