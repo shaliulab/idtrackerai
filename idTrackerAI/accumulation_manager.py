@@ -441,6 +441,7 @@ class AccumulationManager(object):
                 self.number_of_acceptable_fragments += len([fragment for fragment in global_fragment.individual_fragments
                                                         if fragment.acceptable_for_training and not fragment.used_for_training])
             # print([(fragment.acceptable_for_training, fragment.identifier) for fragment in global_fragment.individual_fragments])
+        assert all([fragment.temporary_id is not None for fragment in global_fragment.individual_fragments if fragment.acceptable_for_training and fragment.is_a_fish])
 
 def sample_images_and_labels(images, labels, ratio):
     subsampled_images = []

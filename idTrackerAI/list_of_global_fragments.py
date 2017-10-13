@@ -98,7 +98,8 @@ def check_global_fragments(blobs_in_video, num_animals):
     * number of blobs equals num_animals
     """
     def all_blobs_in_a_fragment(blobs_in_frame):
-        return all([blob.is_in_a_fragment for blob in blobs_in_frame])
+        # return all([blob.is_in_a_fragment for blob in blobs_in_frame])
+        return all([blob.is_a_fish for blob in blobs_in_frame])
 
     return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame) == num_animals for blobs_in_frame in blobs_in_video]
 
