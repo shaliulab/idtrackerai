@@ -50,7 +50,7 @@ class Fragment(object):
         self._is_in_a_global_fragment = False
         self._used_for_training = False
         self._used_for_pretraining = False
-        self._acceptable_for_training = True
+        self._acceptable_for_training = None
         self._temporary_id = None
         self._identity = None
         self._identity_corrected_solving_duplication = None
@@ -61,7 +61,7 @@ class Fragment(object):
         if roll_back_to == 'fragmentation' or roll_back_to == 'pretraining':
             self._used_for_training = False
             if roll_back_to == 'fragmentation': self._used_for_pretraining = False
-            self._acceptable_for_training = True
+            self._acceptable_for_training = None
             self._temporary_id = None
             self._identity = None
             self._user_generated_identity = None
