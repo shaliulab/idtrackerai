@@ -115,7 +115,16 @@ def get_images_and_labels_from_global_fragment(list_of_fragments, global_fragmen
             and fragment.acceptable_for_training:
             images.extend(fragment.images)
             label = getattr(fragment, label_from)
-            assert label is not None
+            if label is None:
+                print("---------------------------------")
+                print("is a fish: ",fragment.is_a_fish)
+                print("identifier ",fragment.identifier)
+                print("start end ",fragment.start_end)
+                print("number of images ", fragment.number_of_images)
+                print("acceptable for training ", fragment.acceptable_for_training)
+                print("used for training ", fragment.used_for_training)
+                raise ValueError("None in fucking labels")
+
             labels.extend([label] * fragment.number_of_images)
             lengths.append(fragment.number_of_images)
             individual_fragments_identifiers.append(fragment.identifier)
