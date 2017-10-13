@@ -20,15 +20,15 @@ def accumulate(accumulation_manager,
                 video,
                 global_step,
                 net,
-                knowledge_transfer_from_same_animals,
-                get_ith_global_fragment = 0):
-    video.init_accumulation_statistics_attributes(index = get_ith_global_fragment)
-    video.accumulation_step = accumulation_manager.counter
+                knowledge_transfer_from_same_animals):
+    video.init_accumulation_statistics_attributes(index = video.accumulation_trial)
+    accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
 
     while accumulation_manager.continue_accumulation:
         logger.info("accumulation step %s" %accumulation_manager.counter)
+        video.accumulation_step = accumulation_manager.counter
         #get next fragments for accumulation
-        accumulation_manager.get_next_global_fragments(get_ith_global_fragment = get_ith_global_fragment)
+        accumulation_manager.get_next_global_fragments()
         # if len(accumulation_manager.next_global_fragments) == 0:
         #     logger.info("There are no more acceptable global fragments. We stop the accumulation")
         #     break
@@ -74,10 +74,10 @@ def accumulate(accumulation_manager,
         # Set accumulation params for rest of the accumulation
         #take images from global fragments not used in training (in the remainder test global fragments)
         logger.info("Get new global fragments for training")
-        # candidates_next_global_fragments = [global_fragment for global_fragment in accumulation_manager.global_fragments
+        # candidates_next_global_fragments = [global_fragment for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
         #                         if not global_fragment.used_for_training]
         # logger.info("There are %s candidate global fragments left for accumulation" %str(len(candidates_next_global_fragments)))
-        if any([not global_fragment.used_for_training for global_fragment in accumulation_manager.global_fragments]):
+        if any([not global_fragment.used_for_training for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments]):
             logger.info("Generate predictions on candidate global fragments")
             predictions,\
             softmax_probs,\
@@ -105,12 +105,12 @@ def accumulate(accumulation_manager,
             logger.info("Number of non consistent fragments: %i " %accumulation_manager.number_of_nonconsistent_fragments)
             logger.info("Number of non unique fragments: %i " %accumulation_manager.number_of_nonunique_fragments)
             logger.info("Number of acceptable fragments: %i " %accumulation_manager.number_of_acceptable_fragments)
-            new_values = [len([global_fragment for global_fragment in accumulation_manager.global_fragments if global_fragment.used_for_training]),
+            new_values = [len([global_fragment for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments if global_fragment.used_for_training]),
                             accumulation_manager.number_of_noncertain_global_fragments,
                             accumulation_manager.number_of_random_assigned_global_fragments,
                             accumulation_manager.number_of_nonconsistent_global_fragments,
                             accumulation_manager.number_of_nonunique_global_fragments,
-                            np.sum([global_fragment.acceptable_for_training(accumulation_manager.accumulation_strategy) for global_fragment in accumulation_manager.global_fragments]),
+                            np.sum([global_fragment.acceptable_for_training(accumulation_manager.accumulation_strategy) for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments]),
                             store_validation_accuracy_and_loss_data.accuracy[-1],
                             store_validation_accuracy_and_loss_data.individual_accuracy[-1],
                             accumulation_manager.ratio_accumulated_images]

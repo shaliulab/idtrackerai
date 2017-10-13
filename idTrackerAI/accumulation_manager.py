@@ -22,7 +22,7 @@ logger = logging.getLogger("__main__.accumulation_manager")
 
 class AccumulationManager(object):
     def __init__(self, video,
-                list_of_fragments, global_fragments,
+                list_of_fragments, list_of_global_fragments,
                 certainty_threshold = CERTAINTY_THRESHOLD,
                 allow_partial_accumulation = False,
                 threshold_acceptable_accumulation = None):
@@ -34,14 +34,14 @@ class AccumulationManager(object):
         eligability of the candidates global fragments for accumulation.
 
         :list_of_fragments: list of individual and crossing fragments
-        :global_fragments list: list of global_fragments objects from the video
+        :list_of_global_fragments:  object
         :number_of_animals param: number of animals in the video
         :certainty_threshold param: threshold to set a individual fragment as certain for accumulation
         """
         self.video = video
         self.number_of_animals = video.number_of_animals
         self.list_of_fragments = list_of_fragments
-        self.global_fragments = global_fragments
+        self.list_of_global_fragments = list_of_global_fragments
         self.counter = 0
         self.certainty_threshold = certainty_threshold
         self.threshold_acceptable_accumulation = threshold_acceptable_accumulation
@@ -57,7 +57,14 @@ class AccumulationManager(object):
     def continue_accumulation(self):
         """ We stop the accumulation when there are not more global fragments
         that are acceptable for training"""
-        if not any([(global_fragment.acceptable_for_training(self.accumulation_strategy) and not global_fragment.used_for_training) for global_fragment in self.global_fragments]):
+        print("******************************************")
+        print("global fragments acceptable_for_training: ", sum([global_fragment.acceptable_for_training(self.accumulation_strategy)
+                                                                for global_fragment in self.list_of_global_fragments.global_fragments]))
+        print("global fragments not used_for_training: ", sum([not global_fragment.used_for_training
+                                                                for global_fragment in self.list_of_global_fragments.global_fragments]))
+        if not any([(global_fragment.acceptable_for_training(self.accumulation_strategy)
+                    and not global_fragment.used_for_training)
+                    for global_fragment in self.list_of_global_fragments.global_fragments]):
             return False
         else:
             return True
@@ -72,14 +79,14 @@ class AccumulationManager(object):
         frequencies[i] = fragment.number_of_images
         return frequencies
 
-    def get_next_global_fragments(self, get_ith_global_fragment = None):
+    def get_next_global_fragments(self):
         """ get the global fragments that are going to be added to the current
         list of global fragments used for training"""
 
         if self.counter == 0:
             logger.info("Getting global fragment for the first accumulation...")
             # At this point global fragments are already ordered according to minmax distance travelled
-            self.next_global_fragments = [self.global_fragments[get_ith_global_fragment]]
+            self.next_global_fragments = [self.list_of_global_fragments.first_global_fragment_for_accumulation]
             [(setattr(fragment, '_temporary_id', i),
                 setattr(fragment, '_frequencies', self.give_me_frequencies_first_fragment_accumulated(i, self.number_of_animals, fragment)),
                 setattr(fragment, '_is_certain', True),
@@ -88,7 +95,7 @@ class AccumulationManager(object):
                 for i, fragment in enumerate(self.next_global_fragments[0].individual_fragments)]
         else:
             logger.info("Getting global fragments...")
-            self.next_global_fragments = [global_fragment for global_fragment in self.global_fragments
+            self.next_global_fragments = [global_fragment for global_fragment in self.list_of_global_fragments.global_fragments
                                                 if global_fragment.acceptable_for_training(self.accumulation_strategy) == True
                                                 and global_fragment.used_for_training == False]
         logger.info("Number of global fragments for training: %i" %len(self.next_global_fragments))
@@ -258,19 +265,19 @@ class AccumulationManager(object):
         self.candidate_individual_fragments_identifiers = candidate_individual_fragments_identifiers
         self.reset_accumulation_variables()
         logger.debug('Accumulating by global strategy')
-        for i, global_fragment in enumerate(self.global_fragments):
+        for i, global_fragment in enumerate(self.list_of_global_fragments.global_fragments):
             if global_fragment.used_for_training == False:
                 self.check_if_is_acceptable_for_training(global_fragment)
         self.number_of_acceptable_global_fragments = np.sum([global_fragment.acceptable_for_training(self.accumulation_strategy)
                                                                 and not global_fragment.used_for_training
-                                                                for global_fragment in self.global_fragments])
+                                                                for global_fragment in self.list_of_global_fragments.global_fragments])
         if self.number_of_acceptable_global_fragments == 0\
             and self.ratio_accumulated_images > MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY\
-            and self.ratio_accumulated_images < self.threshold_acceptable_accumulation:
+            and self.ratio_accumulated_images < self.threshold_early_stop_accumulation:
             logger.debug('Accumulating by partial strategy')
             self.accumulation_strategy = 'partial'
             self.reset_accumulation_variables()
-            for i, global_fragment in enumerate(self.global_fragments):
+            for i, global_fragment in enumerate(self.list_of_global_fragments.global_fragments):
                 if global_fragment.used_for_training == False:
                     self.check_if_is_acceptable_for_training(global_fragment)
         elif self.ratio_accumulated_images < MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY:
@@ -433,7 +440,7 @@ class AccumulationManager(object):
                     and fragment.identifier not in self.individual_fragments_used]
                 self.number_of_acceptable_fragments += len([fragment for fragment in global_fragment.individual_fragments
                                                         if fragment.acceptable_for_training and not fragment.used_for_training])
-            print([(fragment.acceptable_for_training, fragment.identifier) for fragment in global_fragment.individual_fragments])
+            # print([(fragment.acceptable_for_training, fragment.identifier) for fragment in global_fragment.individual_fragments])
 
 def sample_images_and_labels(images, labels, ratio):
     subsampled_images = []
