@@ -31,7 +31,8 @@ def train(video,
             global_step = 0,
             first_accumulation_flag = False,
             preprocessing_type = None,
-            knowledge_transfer_from_same_animals = False):
+            knowledge_transfer_from_same_animals = False,
+            accumulation_manager = None):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
     if preprocessing_type is None:
@@ -91,6 +92,9 @@ def train(video,
 
     global_step += trainer.epochs_completed
     logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss))
+    # update used_for_training flag to True for fragments used
+    logger.info("Accumulation step completed. Updating global fragments used for training")
+    accumulation_manager.update_fragments_used_for_training()
     # plot if asked
     if plot_flag:
         store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, fragments, black = False)
