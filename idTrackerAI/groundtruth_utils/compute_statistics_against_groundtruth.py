@@ -30,13 +30,12 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
     for groundtruth_blobs_in_frame, tracked_blobs_in_frame in zip(blobs_list_groundtruth, blobs_list_tracked):
 
         for groundtruth_blob, tracked_blob in zip(groundtruth_blobs_in_frame,tracked_blobs_in_frame):
-            if hasattr(tracked_blob, '_identity_corrected_solving_duplication') and tracked_blob._identity_corrected_solving_duplication is not None:
-                tracked_blob_identity = tracked_blob._identity_corrected_solving_duplication
-            elif hasattr(tracked_blob, '_identity_corrected_solving_duplication') and tracked_blob._identity_corrected_solving_duplication is None:
-                tracked_blob_identity = tracked_blob.identity
-            else:
-                tracked_blob_identity = tracked_blob.identity
-
+            try:
+                tracked_blob_identity = tracked_blob.final_identity
+            except:
+                print("*************************")
+                print(tracked_blob.is_a_fish)
+                print(tracked_blob.identity)
 
             if (tracked_blob.is_a_fish_in_a_fragment or\
                 tracked_blob.is_a_jump or\
