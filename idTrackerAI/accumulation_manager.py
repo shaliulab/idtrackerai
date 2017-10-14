@@ -5,10 +5,6 @@ import random
 import psutil
 import logging
 
-
-from list_of_global_fragments import get_images_and_labels_from_global_fragments
-# from statistics_for_assignment import compute_P1_individual_fragment_from_frequencies, \
-                                        # compute_identification_frequencies_individual_fragment
 from assigner import assign
 from trainer import train
 
@@ -73,40 +69,11 @@ class AccumulationManager(object):
         """ updates the counter of the accumulation"""
         self.counter += 1
 
-    @staticmethod
-    def give_me_frequencies_first_fragment_accumulated(i, number_of_animals, fragment):
-        frequencies = np.zeros(number_of_animals)
-        frequencies[i] = fragment.number_of_images
-        return frequencies
-
-    def get_next_global_fragments(self):
-        """ get the global fragments that are going to be added to the current
-        list of global fragments used for training"""
-
-        if self.counter == 0:
-            logger.info("Getting global fragment for the first accumulation...")
-            # At this point global fragments are already ordered according to minmax distance travelled
-            self.next_global_fragments = [self.list_of_global_fragments.first_global_fragment_for_accumulation]
-            [(setattr(fragment, '_temporary_id', i),
-                setattr(fragment, '_frequencies', self.give_me_frequencies_first_fragment_accumulated(i, self.number_of_animals, fragment)),
-                setattr(fragment, '_is_certain', True),
-                setattr(fragment, '_certainty', 1.),
-                setattr(fragment, '_P1_vector', fragment.compute_P1_from_frequencies(fragment.frequencies)))
-                for i, fragment in enumerate(self.next_global_fragments[0].individual_fragments)]
-        else:
-            logger.info("Getting global fragments...")
-            self.next_global_fragments = [global_fragment for global_fragment in self.list_of_global_fragments.global_fragments
-                                                if global_fragment.acceptable_for_training(self.accumulation_strategy) == True
-                                                and global_fragment.used_for_training == False]
-        logger.info("Number of global fragments for training: %i" %len(self.next_global_fragments))
-
     def get_new_images_and_labels(self):
         """ get the images and labels of the new global fragments that are going
         to be used for training, this function checks whether the images of a individual
         fragment have been added before"""
-        self.new_images, self.new_labels, _, _ = get_images_and_labels_from_global_fragments(self.list_of_fragments.fragments,
-                                                                    self.next_global_fragments,
-                                                                    list(self.individual_fragments_used))
+        self.new_images, self.new_labels, _, _ = self.list_of_fragments.get_new_images_and_labels_for_training()
 
         if self.new_images is not None:
             logger.info("New images for training: %s %s"  %(str(self.new_images.shape), str(self.new_labels.shape)))
@@ -119,9 +86,8 @@ class AccumulationManager(object):
         """ Once a global fragment has been used for training we set the flags
         used_for_training to TRUE and acceptable_for_training to FALSE"""
         logger.debug("Setting used_for_training to TRUE and acceptable for training to FALSE for the global fragments already used...")
-        for global_fragment in self.next_global_fragments:
-            [(setattr(fragment,'_used_for_training',True), setattr(fragment,'_acceptable_for_training',False))
-                                                for fragment in global_fragment.individual_fragments
+        [(setattr(fragment,'_used_for_training',True), setattr(fragment,'_acceptable_for_training',False))
+                                                for fragment in self.list_of_fragments.fragments
                                                 if fragment.acceptable_for_training == True]
 
     def get_images_and_labels_for_training(self):
@@ -187,27 +153,17 @@ class AccumulationManager(object):
             self.used_labels = np.concatenate([self.used_labels, self.new_labels], axis = 0)
         logger.info("number of images used for training: %s %s" %(str(self.used_images.shape), str(self.used_labels.shape)))
 
-    def assign_identities_to_accumulated_global_fragments(self):
+    def assign_identities_to_fragments_used_for_training(self):
         """ assign the identities to the global fragments used for training and
         to the blobs that belong to these global fragments. This function checks
         that the identities of the individual fragments in the global fragment
         are consistent with the previously assigned identities"""
-        for global_fragment in self.next_global_fragments:
-            if self.accumulation_strategy == 'global':
-                assert global_fragment.used_for_training == True
-            [setattr(fragment, '_identity', getattr(fragment, 'temporary_id') + 1)
-                for fragment in global_fragment.individual_fragments
-                if fragment.used_for_training]
+        [setattr(fragment, '_identity', getattr(fragment, 'temporary_id') + 1)
+            for fragment in self.list_of_fragments.fragments
+            if fragment.used_for_training]
 
-    def update_individual_fragments_used_in_global_strategy(self):
-        return list(set([fragment.identifier for global_fragment in self.next_global_fragments
-                for fragment in global_fragment.individual_fragments
-                if global_fragment.used_for_training
-                and fragment.identifier not in self.individual_fragments_used]))
-
-    def update_individual_fragments_used_in_partial_strategy(self):
-        return list(set([fragment.identifier for global_fragment in self.next_global_fragments
-                for fragment in global_fragment.individual_fragments
+    def update_individual_fragments_used_for_training(self):
+        return list(set([fragment.identifier for fragment in self.list_of_fragments.fragments
                 if fragment.used_for_training
                 and fragment.identifier not in self.individual_fragments_used]))
 
@@ -216,10 +172,7 @@ class AccumulationManager(object):
         If a individual fragment was added before is not added again.
         """
         logging.info("Updating list of individual fragments used for training")
-        if self.accumulation_strategy == 'global':
-            new_individual_fragments_identifiers = self.update_individual_fragments_used_in_global_strategy()
-        elif self.accumulation_strategy == 'partial':
-            new_individual_fragments_identifiers = self.update_individual_fragments_used_in_partial_strategy()
+        new_individual_fragments_identifiers = self.update_individual_fragments_used_for_training()
         self.individual_fragments_used.extend(new_individual_fragments_identifiers)
         logging.info("number of individual fragments used for training: %i" %sum([fragment.used_for_training for fragment in self.list_of_fragments.fragments]))
 
@@ -367,10 +320,18 @@ class AccumulationManager(object):
                             and fragment.identifier not in self.individual_fragments_used]
         elif self.accumulation_strategy == 'partial':
             [setattr(fragment,'_acceptable_for_training', False) for fragment in global_fragment.individual_fragments]
+            print("\n**** partial")
+            print("\nChecking certainty")
             for fragment in global_fragment.individual_fragments:
+                print("--fragment ", fragment.identifier)
                 # Check certainties of the individual fragme
                 if fragment.identifier in self.candidate_individual_fragments_identifiers:
+                    print('Is a candidate, id ', fragment.temporary_id)
+                    print("acceptable_for_training ", fragment.acceptable_for_training)
                     if fragment.has_enough_accumulated_coexisting_fragments:
+                        print('Enough coexisting accumulated fragments, id ', fragment.temporary_id)
+                        print("in temporary_individual_fragments_used ", fragment.identifier in self.temporary_individual_fragments_used)
+                        print("acceptable_for_training ", fragment.acceptable_for_training)
                         # Check if the more than half of the individual fragments that coexist with this one have being accumulated
                         if fragment.certainty < self.certainty_threshold:
                             # if the certainty of the individual fragment is not high enough
@@ -378,17 +339,29 @@ class AccumulationManager(object):
                             self.reset_non_acceptable_fragment(fragment)
                             self.number_of_noncertain_fragments += 1
                             fragment._is_certain = False
+                            print('Is not certain, id ', fragment.temporary_id)
+                            print("in temporary_individual_fragments_used ", fragment.identifier in self.temporary_individual_fragments_used)
+                            print("acceptable_for_training ", fragment.acceptable_for_training)
                         else:
                             # if the certainty of the individual fragment is high enough
                             fragment._is_certain = True
                             fragment._acceptable_for_training = True
+                            print('Is certain, id ', fragment.temporary_id)
+                            print("in temporary_individual_fragments_used ", fragment.identifier in self.temporary_individual_fragments_used)
+                            print("acceptable_for_training ", fragment.acceptable_for_training)
                     else:
                         self.reset_non_acceptable_fragment(fragment)
                         self.number_of_sparse_fragments += 1
+                        print('Not enough coexisting accuulated fragments, id ', fragment.temporary_id)
+                        print("in temporary_individual_fragments_used ", fragment.identifier in self.temporary_individual_fragments_used)
+                        print("acceptable_for_training ", fragment.acceptable_for_training)
                 elif fragment.identifier in self.individual_fragments_used:
                     # if the individual fragment is not in the list of candidates is because it has been assigned
                     # and it is in the list of individual_fragments_used. We set the certainty to 1. And we
                     fragment._is_certain = True
+                    print('Already used, id ', fragment.temporary_id)
+                    print("in temporary_individual_fragments_used ", fragment.identifier in self.temporary_individual_fragments_used)
+                    print("acceptable_for_training ", fragment.acceptable_for_training)
                 else:
                     logging.warn("Individual fragment not in candidates or in used, this should not happen")
 
@@ -402,46 +375,82 @@ class AccumulationManager(object):
             # get the index position of the individual fragments ordered by P1_max from max to min
             index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
             # set to zero the P1 of the the identities of the individual fragments that have been already used
+            print("\nAssigning identities")
             for index_individual_fragment, fragment in enumerate(global_fragment.individual_fragments):
+                print('--fragment ', fragment.identifier)
                 if fragment.identifier in self.individual_fragments_used or fragment.identifier in self.temporary_individual_fragments_used:
+                    print('Already used, id ', fragment.temporary_id)
                     P1_array[index_individual_fragment,:] = 0.
                     P1_array[:,fragment.temporary_id] = 0.
             # assign temporal identity to individual fragments by hierarchical P1
             for index_individual_fragment in index_individual_fragments_sorted_by_P1_max_to_min:
                 fragment = global_fragment.individual_fragments[index_individual_fragment]
+                print('--fragment ', fragment.identifier)
                 if fragment.temporary_id is None:
+                    print('Temporary id is None, id ', fragment.temporary_id)
                     if np.max(P1_array[index_individual_fragment,:]) < 1./fragment.number_of_images:
                         fragment._P1_below_random = True
                         self.number_of_random_assigned_fragments += 1
                         self.reset_non_acceptable_fragment(fragment)
+                        print('P1 below random, id ', fragment.temporary_id, ', acceptable_for_training ', fragment.acceptable_for_training)
+                        print("in temporary_individual_fragments_used ", fragment.identifier in self.temporary_individual_fragments_used)
+                        print("in individual_fragments_used ", fragment.identifier in self.individual_fragments_used)
+                        print("used for training ", fragment.used_for_training)
                     else:
                         temporary_id = np.argmax(P1_array[index_individual_fragment,:])
                         if not fragment.check_consistency_with_coexistent_individual_fragments(temporary_id):
                             self.reset_non_acceptable_fragment(fragment)
                             fragment._non_consistent = True
                             self.number_of_nonconsistent_fragments += 1
+                            print('P1 above random but no consistent, id ', fragment.temporary_id)
                         else:
                             fragment._acceptable_for_training = True
                             fragment._temporary_id = int(temporary_id)
                             P1_array[index_individual_fragment,:] = 0.
                             P1_array[:,temporary_id] = 0.
+                            print('P1 above random and consistent, id ', fragment.temporary_id)
 
             # Check if the global fragment is unique after assigning the identities
+            print("\nChecking uniqueness")
             if not global_fragment.is_partially_unique:
+                print("Global fragment not partially unique")
                 number_of_duplicated_fragments = len([self.reset_non_acceptable_fragment(fragment)
                                                     for fragment in global_fragment.individual_fragments
                                                     if fragment.temporary_id in global_fragment.duplicated_identities])
                 self.number_of_nonunique_fragments += number_of_duplicated_fragments
+                for fragment in global_fragment.individual_fragments:
+                    print("--fragment ", fragment.identifier)
+                    print("acceptable ", fragment.acceptable_for_training, ' id ', fragment.temporary_id)
+
             else:
+                print("Global fragment partially unique")
                 global_fragment._accumulation_step = self.counter
                 [self.temporary_individual_fragments_used.append(fragment.identifier)
                     for fragment in global_fragment.individual_fragments
                     if fragment.identifier not in self.temporary_individual_fragments_used
-                    and fragment.identifier not in self.individual_fragments_used]
+                    and fragment.identifier not in self.individual_fragments_used
+                    and fragment.acceptable_for_training]
                 self.number_of_acceptable_fragments += len([fragment for fragment in global_fragment.individual_fragments
                                                         if fragment.acceptable_for_training and not fragment.used_for_training])
+                for fragment in global_fragment.individual_fragments:
+                    print("--fragment ", fragment.identifier)
+                    print("acceptable ", fragment.acceptable_for_training, ", used_for_training ", fragment.used_for_training, ', id ', fragment.temporary_id)
+                    print("in temporary_individual_fragments_used ", fragment.identifier in self.temporary_individual_fragments_used)
             # print([(fragment.acceptable_for_training, fragment.identifier) for fragment in global_fragment.individual_fragments])
+        if not all([fragment.temporary_id is not None for fragment in global_fragment.individual_fragments if fragment.acceptable_for_training and fragment.is_a_fish]):
+            print("\nThere is something wrong")
+            print(self.accumulation_strategy)
+            for fragment in global_fragment.individual_fragments:
+                print('---fragment ', fragment.identifier)
+                print("acceptable_for_training ", fragment.acceptable_for_training)
+                print("is a fish ", fragment.is_a_fish)
+                print("is in a global fragment ", fragment.is_in_a_global_fragment)
+                print("temporary_id ", fragment.temporary_id)
+                print("used_for_training ", fragment.used_for_training)
+                print("in temporary_individual_fragments_used ", fragment.identifier in self.temporary_individual_fragments_used)
+
         assert all([fragment.temporary_id is not None for fragment in global_fragment.individual_fragments if fragment.acceptable_for_training and fragment.is_a_fish])
+
 
 def sample_images_and_labels(images, labels, ratio):
     subsampled_images = []

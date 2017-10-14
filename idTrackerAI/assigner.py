@@ -15,7 +15,6 @@ from get_data import DataSet
 from id_CNN import ConvNetwork
 from get_predictions import GetPrediction
 from visualize_embeddings import EmbeddingVisualiser
-from list_of_global_fragments import get_images_and_labels_from_global_fragment
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob
 
 logger = logging.getLogger("__main__.assigner")

@@ -115,7 +115,22 @@ class ListOfFragments(object):
         assert len(list_of_dictionaries) == len(self.fragments)
         [fragment.__dict__.update(dictionary) for fragment, dictionary in zip(self.fragments, list_of_dictionaries)]
 
-
+    def get_new_images_and_labels_for_training(self):
+        images = []
+        labels = []
+        lengths = []
+        candidate_individual_fragments_identifiers = []
+        for fragment in self.fragments:
+            if fragment.acceptable_for_training:
+                assert fragment.is_a_fish
+                images.append(fragment.images)
+                labels.extend([fragment.temporary_id] * fragment.number_of_images)
+                lengths.append(fragment.number_of_images)
+                candidate_individual_fragments_identifiers.append(fragment.identifier)
+        if len(images) != 0:
+            return np.concatenate(images, axis = 0), np.asarray(labels), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
+        else:
+            return None, None, candidate_individual_fragments_identifiers, None
 
 def create_list_of_fragments(blobs_in_video, number_of_animals):
     attributes_to_set = ['_portrait', 'bounding_box_image', 'bounding_box_in_frame_coordinates'
