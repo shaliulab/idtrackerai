@@ -125,6 +125,16 @@ class GlobalFragment(object):
             self.total_number_of_images = sum([fragment.number_of_images for fragment in self.individual_fragments])
         return self.total_number_of_images
 
+    def get_images_and_labels(self):
+        images = []
+        labels = []
+
+        for fragment in self.individual_fragments:
+            images.extend(fragment.images)
+            labels.extend([fragment.blob_hierarchy_in_starting_frame] * fragment.number_of_images)
+
+        return images, labels
+
     def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
         self.starts_ends_individual_fragments = [blob.compute_fragment_start_end()
             for blob in blobs_in_video[self.index_beginning_of_fragment]]

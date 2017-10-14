@@ -164,6 +164,7 @@ if __name__ == '__main__':
     #### 5. create a list of objects GlobalFragment()        ####
     #############################################################
     #Selection/loading preprocessing parameters
+    print('\nPreprocessing ---------------------------------------------------------')
     usePreviousPrecParams = bool(loadPreviousDict['preprocessing'])
     restore_segmentation = selectPreprocParams(video, old_video, usePreviousPrecParams)
     video.save()
@@ -288,8 +289,6 @@ if __name__ == '__main__':
         video.number_of_unique_images_in_global_fragments = list_of_fragments.compute_total_number_of_images_in_global_fragments()
         list_of_global_fragments.compute_maximum_number_of_images()
         video.maximum_number_of_portraits_in_global_fragments = list_of_global_fragments.maximum_number_of_images
-        list_of_global_fragments.order_by_distance_travelled()
-        video.first_frame_first_global_fragment = list_of_global_fragments.global_fragments[0].index_beginning_of_fragment
         #save connected blobs in video (organized frame-wise)
         list_of_blobs.video = video
         list_of_blobs.save(number_of_chunks = video.number_of_frames)
@@ -325,7 +324,7 @@ if __name__ == '__main__':
     ##################   Protocols cascade   ####################
     #############################################################
     #### Accumulation ####
-    print('\n---------------------------------------------------------')
+    print('\nAccumulation 0 ---------------------------------------------------------')
     video.first_accumulation_time = time.time()
     video.accumulation_trial = 0
     video.create_accumulation_folder(iteration_number = 0)
@@ -363,8 +362,9 @@ if __name__ == '__main__':
         logger.info("Initialising accumulation manager")
         # the list of global fragments is ordered in place from the distance (in frames) wrt
         # the core of the first global fragment that will be accumulated
-        list_of_global_fragments.order_by_distance_to_the_first_global_fragment()
-        accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+        list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = 0)
+        list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation()
+        accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
         #set global epoch counter to 0
         logger.info("Start accumulation")
         global_step = 0
@@ -372,8 +372,7 @@ if __name__ == '__main__':
                                             video,
                                             global_step,
                                             net,
-                                            video.knowledge_transfer_from_same_animals,
-                                            get_ith_global_fragment = 0)
+                                            video.knowledge_transfer_from_same_animals)
         logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
         video._first_accumulation_finished = True
         ### NOTE: save all the accumulation statistics
@@ -398,7 +397,7 @@ if __name__ == '__main__':
         video.assignment_time = time.time()
         if not loadPreviousDict['assignment']:
             #### Assigner ####
-            print('\n---------------------------------------------------------')
+            print('\nAssignment ---------------------------------------------------------')
             assigner(list_of_fragments, video, net)
             video._has_been_assigned = True
             ### NOTE: save all the assigner statistics
@@ -408,7 +407,7 @@ if __name__ == '__main__':
         video.assignment_time = time.time() - video.assignment_time
         video.save()
     else:
-        print('\n---------------------------------------------------------')
+        print('\nPretraining ---------------------------------------------------------')
         list_of_fragments.save_light_list(video._accumulation_folder)
         video.pretraining_time = time.time()
         #create folder to store pretraining
@@ -433,7 +432,7 @@ if __name__ == '__main__':
             video.save()
             ### NOTE: save pre-training statistics
         else:
-            logger.info("Initialising network for accumulation")
+            logger.info("Restoring pretrained network")
             video.copy_attributes_between_two_video_objects(old_video, ['_pretraining_folder', '_has_been_pretrained'])
             pretrain_network_params.restore_folder = video._pretraining_folder
             net = ConvNetwork(pretrain_network_params)
@@ -444,17 +443,17 @@ if __name__ == '__main__':
         video.pretraining_time = time.time() - video.pretraining_time
         #### Accumulation ####
         #Last accumulation after pretraining
-        print('\n---------------------------------------------------------')
         video.second_accumulation_time = time.time()
         if not loadPreviousDict['second_accumulation']:
             percentage_of_accumulated_images = []
             for i in range(1,4):
+                print('\nAccumulation %i ---------------------------------------------------------' %i)
                 logger.info("Starting accumulation")
                 #create folder to store accumulation models
                 video.create_accumulation_folder(iteration_number = i)
                 video.accumulation_trial = i
                 #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
-                list_of_fragments.reset(roll_back_to = 'pretraining')
+                list_of_fragments.reset(roll_back_to = 'fragmentation')
                 list_of_global_fragments.reset(roll_back_to = 'fragmentation')
                 logger.info("We will restore the network from a previous pretraining: %s" %video._pretraining_folder)
                 accumulation_network_params.save_folder = video._accumulation_folder
@@ -467,8 +466,9 @@ if __name__ == '__main__':
                 net.reinitialize_softmax_and_fully_connected()
                 #instantiate accumulation manager
                 logger.info("Initialising accumulation manager")
-                list_of_global_fragments.order_by_distance_to_the_first_global_fragment()
-                accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments.global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+                list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = i - 1)
+                list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation()
+                accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
                 #set global epoch counter to 0
                 logger.info("Start accumulation")
                 global_step = 0
@@ -476,8 +476,7 @@ if __name__ == '__main__':
                                                             video,
                                                             global_step,
                                                             net,
-                                                            video.knowledge_transfer_from_same_animals,
-                                                            get_ith_global_fragment = i)
+                                                            video.knowledge_transfer_from_same_animals)
                 logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
                 if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                     break
