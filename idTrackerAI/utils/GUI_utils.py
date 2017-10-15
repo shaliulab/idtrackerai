@@ -688,7 +688,7 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
                 restore_segmentation = True
 
     if not usePreviousPrecParams and not restore_segmentation:
-        prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?')
+        prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?', is_processes_list = False)
         video.subtract_bkg = bool(prepOpts['bkg'])
         video.apply_ROI =  bool(prepOpts['ROI'])
         print("********************", video.apply_ROI, video.subtract_bkg)
