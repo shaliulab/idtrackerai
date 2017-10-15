@@ -355,8 +355,8 @@ class AccumulationManager(object):
             index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
             # set to zero the P1 of the the identities of the individual fragments that have been already used
             for index_individual_fragment, fragment in enumerate(global_fragment.individual_fragments):
-                if fragment.identifier in self.individual_fragments_used
-                or fragment.identifier in self.temporary_individual_fragments_used:
+                if fragment.identifier in self.individual_fragments_used\
+                    or fragment.identifier in self.temporary_individual_fragments_used:
                     P1_array[index_individual_fragment,:] = 0.
                     P1_array[:,fragment.temporary_id] = 0.
             # assign temporal identity to individual fragments by hierarchical P1
