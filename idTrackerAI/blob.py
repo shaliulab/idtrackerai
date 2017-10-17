@@ -3,13 +3,17 @@ import sys
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
 
+import cv2
 import itertools
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
 import logging
+from sklearn.decomposition import PCA
 
-from get_portraits import get_portrait, get_body
+from get_portraits import get_body
+from fishcontour import FishContour
+
 
 logger = logging.getLogger("__main__.blob")
 
@@ -181,30 +185,25 @@ class Blob(object):
                 height  = int(video._height * video.resolution_reduction)
                 width  = int(video._width * video.resolution_reduction)
 
-            if video.preprocessing_type == 'portrait':
-                portrait, \
-                self._nose_coordinates, \
-                self._head_coordinates = get_portrait(self.bounding_box_image,
-                                                    self.contour,
-                                                    self.bounding_box_in_frame_coordinates,
-                                                    portraitSize)
-            elif video.preprocessing_type == 'body':
-                portrait, \
-                self._extreme1_coordinates, \
-                self._extreme2_coordinates = get_body(height, width,
-                                                    self.bounding_box_image,
-                                                    self.pixels,
-                                                    self.bounding_box_in_frame_coordinates,
-                                                    portraitSize)
-            elif video.preprocessing_type == 'body_blob':
-                portrait, \
-                self._extreme1_coordinates, \
-                self._extreme2_coordinates = get_body(height, width,
-                                                    self.bounding_box_image,
-                                                    self.pixels,
-                                                    self.bounding_box_in_frame_coordinates,
-                                                    portraitSize, only_blob = True)
+            portrait, \
+            self._extreme1_coordinates, \
+            self._extreme2_coordinates = get_body(height, width,
+                                                self.bounding_box_image,
+                                                self.pixels,
+                                                self.bounding_box_in_frame_coordinates,
+                                                portraitSize)
             self._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
             self._is_an_individual = True
         else:
             self._is_a_crossing = True
+
+    def get_nose_and_head_coordinates(self):
+        if self.is_an_individual:
+            # Calculating nose coordinates in the full frame reference
+            contour_cnt = FishContour.fromcv2contour(self.contour)
+            noseFull, _, head_centroid_full = contour_cnt.find_nose_and_orientation()
+            self._nose_coordinates = tuple(noseFull.astype('float32'))
+            self._head_coordinates = tuple(head_centroid_full.astype('float32'))
+        else:
+            self._nose_coordinates = None
+            self._head_coordinates = None

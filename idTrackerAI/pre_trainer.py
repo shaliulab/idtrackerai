@@ -48,8 +48,7 @@ def pre_train(video, list_of_fragments, number_of_images_in_global_fragments, li
         print("---------------", len(images), images[0].shape)
         print("---------------", len(labels), labels[0])
         # Instantiate data_set
-        training_dataset, validation_dataset = split_data_train_and_validation(video.preprocessing_type,
-                                                                                params.number_of_animals,
+        training_dataset, validation_dataset = split_data_train_and_validation(params.number_of_animals,
                                                                                 images, labels)
         # Standarize images
         training_dataset.crop_images(image_size = video.portrait_size[0])

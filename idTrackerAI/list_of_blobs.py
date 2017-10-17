@@ -182,3 +182,8 @@ class ListOfBlobs(object):
                             fragment.user_generated_identity,
                             fragment.used_for_training]
                 [setattr(blob, attribute, value) for attribute, value in zip(attributes, values)]
+
+    def compute_nose_and_head_coordinates(self):
+        for blobs_in_frame in self.blobs_in_video:
+            for blob in blobs_in_frame:
+                blob.get_nose_and_head_coordinates()

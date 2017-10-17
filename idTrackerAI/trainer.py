@@ -30,13 +30,10 @@ def train(video,
             plot_flag,
             global_step = 0,
             first_accumulation_flag = False,
-            preprocessing_type = None,
             knowledge_transfer_from_same_animals = False,
             accumulation_manager = None):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
-    if preprocessing_type is None:
-        preprocessing_type = video.preprocessing_type
     logger.info("Training...")
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training', scope = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation', scope = 'training')
@@ -47,7 +44,7 @@ def train(video,
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 
     # Instantiate data_set
-    training_dataset, validation_dataset = split_data_train_and_validation(preprocessing_type, net.params.number_of_animals, images, labels)
+    training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images, labels)
     # Crop images from 36x36 to 32x32 without performing data augmentation
     training_dataset.crop_images(image_size = net.params.image_size[0])
     validation_dataset.crop_images(image_size = net.params.image_size[0])

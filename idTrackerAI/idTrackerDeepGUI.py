@@ -604,7 +604,8 @@ if __name__ == '__main__':
     ####
     #############################################################
     list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
-
+    if False:
+        list_of_blobs.compute_nose_and_head_coordinates()
 
     #############################################################
     ##############   Create trajectories    #####################

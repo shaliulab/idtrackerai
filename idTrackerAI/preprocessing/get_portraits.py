@@ -125,15 +125,14 @@ def get_portrait(miniframe, cnt, bb, portrait_size, px_nose_above_center = 9):
 
     return portrait, tuple(noseFull.astype('float32')), tuple(head_centroid_full.astype('float32')) #output as float because it is better for analysis.
 
-def get_body(height, width, miniframe, pixels, bb, portraitSize, only_blob = False):
+def get_body(height, width, miniframe, pixels, bb, portraitSize):
     """Acquiring portraits from miniframe (for flies)
     :param miniframe: A numpy 2-dimensional array
     :param cnt: A cv2-style contour, i.e. (x,:,y)
     :param bb: Coordinates of the left-top corner of miniframe in the big frame
     :param maximum_body_length: maximum body length of the blobs. It will be the size of the width and the height of the frame feed it to the CNN
     """
-    if only_blob:
-        miniframe = only_blob_pixels(height, width, miniframe, pixels, bb)
+    miniframe = only_blob_pixels(height, width, miniframe, pixels, bb)
     pca = PCA()
     pxs = np.unravel_index(pixels,(height,width))
     pxs1 = np.asarray(zip(pxs[0],pxs[1]))
@@ -149,10 +148,8 @@ def get_body(height, width, miniframe, pixels, bb, portraitSize, only_blob = Fal
     diag = np.sqrt(np.sum(np.asarray(miniframe.shape)**2)).astype(int)
     diag = (diag, diag)
     M = cv2.getRotationMatrix2D(tuple(center), rot_ang, 1)
-    if only_blob:
-        minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_CONSTANT, flags = cv2.INTER_CUBIC)
-    else:
-        minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_WRAP, flags = cv2.INTER_CUBIC)
+    minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_CONSTANT, flags = cv2.INTER_CUBIC)
+
 
     crop_distance = int(portraitSize/2)
     x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)

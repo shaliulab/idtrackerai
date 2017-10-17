@@ -338,21 +338,12 @@ def SegmentationPreview(video):
         logger.debug("maximum_body_length %i " %maximum_body_length)
         logger.debug("areas: %s" %str(areas))
 
-        if video.preprocessing_type == 'portrait':
-            portraitSize = int(maximum_body_length/2)
-            portraitSize =  portraitSize + portraitSize%2 #this is to make the portraitSize even
-        elif video.preprocessing_type == 'body' or  video.preprocessing_type == 'body_blob':
-            portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
-            portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
+        portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
+        portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
 
         while j < numPortraits:
             if j < numGoodContours:
-                if video.preprocessing_type == 'portrait':
-                    portrait, _, _= get_portrait(miniFrames[j],goodContours[j],bbs[j],portraitSize)
-                elif video.preprocessing_type == 'body':
-                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize)
-                elif video.preprocessing_type == 'body_blob':
-                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
+                portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize)
             else:
                 portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
             rowPortrait.append(portrait)
@@ -484,17 +475,10 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
     minThreshold = preprocParams['minThreshold']
     maxThreshold = preprocParams['maxThreshold']
     numAnimals = preprocParams['numAnimals']
-    preprocessing_type = preprocParams['preprocessing_type']
 
     if numAnimals == None:
         numAnimals = getInput('Number of animals','Type the number of animals')
         numAnimals = int(numAnimals)
-
-    if preprocessing_type is None:
-        preprocessing_type = getInput('Preprocessing type','What kind of preprocessing do you want? portrait, body or body_blob?')
-
-    if preprocessing_type != 'portrait' and preprocessing_type != 'body' and preprocessing_type != 'body_blob':
-        raise ValueError('The animal you selected is not trackable yet :)')
 
     global cap, currentSegment
     currentSegment = 0
@@ -529,22 +513,12 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
         logger.debug("num blobs detected: %i" %numGoodContours)
         logger.debug("maximum_body_length: %i" %maximum_body_length)
         logger.debug("areas: %i" %areas)
-
-        if preprocessing_type == 'portrait':
-            portraitSize = int(maximum_body_length/2)
-            portraitSize =  portraitSize + portraitSize%2 #this is to make the portraitSize even
-        elif preprocessing_type == 'body' or preprocessing_type == 'body_blob':
-            portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
-            portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
+        portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
+        portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
 
         while j < numPortraits:
             if j < numGoodContours:
-                if preprocessing_type == 'portrait':
-                    portrait,_,_= get_portrait(miniFrames[j],goodContours[j],bbs[j],portraitSize)
-                elif preprocessing_type == 'body':
-                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = False)
-                elif preprocessing_type == 'body_blob':
-                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
+                portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
             else:
                 portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
             rowPortrait.append(portrait)
@@ -667,8 +641,7 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
                 'maxThreshold': cv2.getTrackbarPos('maxTh', 'Bars'),
                 'minArea': cv2.getTrackbarPos('minArea', 'Bars'),
                 'maxArea': cv2.getTrackbarPos('maxArea', 'Bars'),
-                'numAnimals': numAnimals,
-                'preprocessing_type':preprocessing_type}
+                'numAnimals': numAnimals}
 
     cap.release()
     cv2.destroyAllWindows()
@@ -703,17 +676,12 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
                 video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
             else:
                 video._number_of_animals = old_video.number_of_animals
-            if old_video.preprocessing_type == None:
-                video._preprocessing_type = getInput('Preprocessing type','What preprocessing do you want to apply? portrait, body or body_blob?')
-            else:
-                video._preprocessing_type = old_video.preprocessing_type
             usePreviousROI = bool(load_previous_preprocessing_steps['ROI'])
             usePreviousBkg = bool(load_previous_preprocessing_steps['bkg'])
             usePreviousRR = bool(load_previous_preprocessing_steps['resolution_reduction'])
         else:
             usePreviousROI, usePreviousBkg, usePreviousRR = False, False, False
             video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
-            video._preprocessing_type = getInput('Preprocessing type','What preprocessing do you want to apply? portrait, body or body_blob?')
         #ROI selection/loading
         video.ROI = ROISelectorPreview(video, old_video, usePreviousROI)
         #BKG computation/loading
@@ -732,23 +700,23 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         cv2.waitKey(1)
     elif not usePreviousPrecParams and restore_segmentation:
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
-                                    '_preprocessing_type','_maximum_number_of_blobs',
+                                    '_maximum_number_of_blobs',
                                     '_blobs_path_segmented', '_min_threshold','_max_threshold',
                                     '_min_area','_max_area', '_resize','resolution_reduction',
-                                    'preprocessing_type','_number_of_animals',
+                                    '_number_of_animals',
                                     'ROI','bkg',
                                     '_preprocessing_folder']
         video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_been_segmented = True
     else:
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
-                                    '_preprocessing_type','_maximum_number_of_blobs',
+                                    '_maximum_number_of_blobs',
                                     'median_body_length','portrait_size',
                                     '_blobs_path_segmented',
                                     '_min_threshold','_max_threshold',
                                     '_min_area','_max_area',
                                     '_resize','resolution_reduction',
-                                    'preprocessing_type','_number_of_animals',
+                                    '_number_of_animals',
                                     'ROI','bkg',
                                     'resolution_reduction',
                                     'fragment_identifier_to_index',
@@ -767,9 +735,7 @@ def selectPreprocParams_library(videoPaths, usePreviousPrecParams, width, height
                     'maxThreshold': 155,
                     'minArea': 150,
                     'maxArea': 60000,
-                    'numAnimals': None,
-                    'preprocessing_type': None
-                    }
+                    'numAnimals': None}
         preprocParams = SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, preprocParams, frameIndices)
 
         cv2.waitKey(1)
