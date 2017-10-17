@@ -13,7 +13,7 @@ import logging
 from network_params import NetworkParams
 from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
-from list_of_global_fragments import ListOfGlobalFragments, get_images_and_labels_from_global_fragment
+from list_of_global_fragments import ListOfGlobalFragments
 from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
@@ -38,18 +38,20 @@ def pre_train(video, list_of_fragments, number_of_images_in_global_fragments, li
     if plot_flag:
         plt.ion()
         fig, ax_arr = plt.subplots(4)
+        fig.canvas.set_window_title('Pretraining')
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
         epoch_index_to_plot = 0
     #start loop for pre training in the global fragments selected
     for i, pretraining_global_fragment in enumerate(tqdm(list_of_global_fragments.global_fragments, desc = '\nPretraining network')):
         # Get images and labels from the current global fragment
-        images, labels, _, _ = get_images_and_labels_from_global_fragment(list_of_fragments, pretraining_global_fragment, label_from = 'blob_hierarchy_in_starting_frame')
+        images, labels = pretraining_global_fragment.get_images_and_labels()
+        print("---------------", len(images), images[0].shape)
+        print("---------------", len(labels), labels[0])
         # Instantiate data_set
-        training_dataset, validation_dataset = split_data_train_and_validation(video.preprocessing_type, params.number_of_animals,images,labels)
+        training_dataset, validation_dataset = split_data_train_and_validation(video.preprocessing_type,
+                                                                                params.number_of_animals,
+                                                                                images, labels)
         # Standarize images
-        # training_dataset.standarize_images()
-        # validation_dataset.standarize_images()
-        # Crop images from 36x36 to 32x32 without performing data augmentation
         training_dataset.crop_images(image_size = video.portrait_size[0])
         validation_dataset.crop_images(image_size = video.portrait_size[0])
         # Convert labels to one hot vectors

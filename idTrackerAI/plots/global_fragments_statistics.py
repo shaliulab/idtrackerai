@@ -50,6 +50,7 @@ def compute_and_plot_fragments_statistics(video, list_of_fragments, list_of_glob
     screen_y = window.winfo_screenheight()
     screen_x = window.winfo_screenwidth()
     fig, ax_arr = plt.subplots(2,4)
+    fig.canvas.set_window_title('Fragments summary')
     fig.set_size_inches((screen_x/100,screen_y/100))
     plt.subplots_adjust(hspace = .3, wspace = .5)
     # number of frames in individual fragments

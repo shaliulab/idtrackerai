@@ -50,12 +50,51 @@ class Fragment(object):
         self._is_in_a_global_fragment = False
         self._used_for_training = False
         self._used_for_pretraining = False
-        self._acceptable_for_training = True
+        self._acceptable_for_training = None
         self._temporary_id = None
         self._identity = None
         self._identity_corrected_solving_duplication = None
         self._user_generated_identity = None
         self._identity_is_fixed = False
+        self._accumulated_globally = False
+        self._accumulated_partially = False
+        self._accumulation_step = None
+
+    def reset(self, roll_back_to = None):
+        if roll_back_to == 'fragmentation' or roll_back_to == 'pretraining':
+            self._used_for_training = False
+            if roll_back_to == 'fragmentation': self._used_for_pretraining = False
+            self._acceptable_for_training = None
+            self._temporary_id = None
+            self._identity = None
+            self._user_generated_identity = None
+            self._identity_corrected_solving_duplication = None
+            self._identity_is_fixed = False
+            self._accumulated_globally = False
+            self._accumulated_partially = False
+            self._accumulation_step = None
+            attributes_to_delete = ['_frequencies',
+                                    '_P1_vector', '_certainty',
+                                    '_is_certain',
+                                    '_P1_below_random', '_non_consistent',
+                                    'assigned_during_accumulation']
+            delete_attributes_from_object(self, attributes_to_delete)
+        elif roll_back_to == 'accumulation':
+            self._identity_is_fixed = False
+            attributes_to_delete = []
+            if not self.used_for_training:
+                self._identity = None
+                self._user_generated_identity = None
+                self._identity_corrected_solving_duplication = None
+                attributes_to_delete = ['_frequencies', '_P1_vector']
+            attributes_to_delete.extend(['_P2_vector', '_ambiguous_identities',
+                                        '_is_a_duplication'])
+            delete_attributes_from_object(self, attributes_to_delete)
+        elif roll_back_to == 'assignment':
+            self._user_generated_identity = None
+            self._identity_corrected_solving_duplication = None
+            attributes_to_delete = ['_is_a_duplication']
+            delete_attributes_from_object(self, attributes_to_delete)
 
     def reset(self, roll_back_to = None):
         if roll_back_to == 'fragmentation' or roll_back_to == 'pretraining':
@@ -97,6 +136,22 @@ class Fragment(object):
     @property
     def used_for_training(self):
         return self._used_for_training
+
+    @property
+    def accumulated_globally(self):
+        return self._accumulated_globally
+
+    @property
+    def accumulated_partially(self):
+        return self._accumulated_partially
+
+    @property
+    def accumulation_step(self):
+        return self._accumulation_step
+
+    @property
+    def accumulable(self):
+        return self._accumulable
 
     @property
     def used_for_pretraining(self):
@@ -225,6 +280,12 @@ class Fragment(object):
                                             if fragment.is_a_fish and self.are_overlapping(fragment)
                                             and fragment is not self
                                             and self.is_a_fish]
+        self.number_of_coexisting_individual_fragments = len(self.coexisting_individual_fragments)
+
+    @property
+    def has_enough_accumulated_coexisting_fragments(self):
+        return sum([fragment.used_for_training
+                    for fragment in self.coexisting_individual_fragments]) >= self.number_of_coexisting_individual_fragments/2
 
     def check_consistency_with_coexistent_individual_fragments(self, temporary_id):
         for coexisting_fragment in self.coexisting_individual_fragments:
@@ -249,17 +310,12 @@ class Fragment(object):
 
     def assign_identity(self, recompute = True):
         assert self.is_a_fish
-        logger.debug("Assigning identity to fragment %i " %self.identifier)
         self.compute_P2_vector()
-        logger.debug("P2 computed")
         if self.used_for_training and not self._identity_is_fixed:
             self._identity_is_fixed = True
         elif not self._identity_is_fixed:
             possible_identities, max_P2 = self.get_possible_identities(self.P2_vector)
             if len(possible_identities) > 1:
-                logger.debug("******frame number: %s" %str(self.start_end))
-                logger.debug("assigned_during_accumulation: %s" %self.used_for_training)
-                logger.debug("identities_in_fragment (ambiguous): %s" %str(possible_identities))
                 self._identity = 0
                 self._ambiguous_identities = possible_identities
             else:
@@ -345,3 +401,9 @@ class Fragment(object):
 
         assert len(neighbour) < 2
         return neighbour[0] if len(neighbour) == 1 else None
+
+    def set_partially_or_globally_accumualted(self, accumulation_strategy):
+        if accumulation_strategy == 'global':
+            self._accumulated_globally = True
+        elif accumulation_strategy == 'partial':
+            self._accumulated_partially = True

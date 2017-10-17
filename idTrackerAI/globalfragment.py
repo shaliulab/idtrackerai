@@ -9,12 +9,15 @@ import logging
 
 logger = logging.getLogger("__main__.globalfragment")
 
+MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = 3
+
 class GlobalFragment(object):
     def __init__(self, list_of_blobs, fragments, index_beginning_of_fragment, number_of_animals):
         self.index_beginning_of_fragment = index_beginning_of_fragment
         self.individual_fragments_identifiers = [blob.fragment_identifier for blob in list_of_blobs[index_beginning_of_fragment]]
         self.get_list_of_attributes_from_individual_fragments(fragments)
         self.set_minimum_distance_travelled()
+        self.set_candidate_for_accumulation()
         self.number_of_animals = number_of_animals
         self.reset(roll_back_to = 'fragmentation')
         self._is_unique = False
@@ -48,6 +51,17 @@ class GlobalFragment(object):
 
     def set_minimum_distance_travelled(self):
         self.minimum_distance_travelled = min(self.distance_travelled_per_individual_fragment)
+
+    def set_candidate_for_accumulation(self):
+        self._candidate_for_accumulation = True
+        if np.min(self.number_of_images_per_individual_fragment) < MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION:
+            self._candidate_for_accumulation = False
+
+    @property
+    def candidate_for_accumulation(self):
+        return self._candidate_for_accumulation
+
+
 
     def get_total_number_of_images(self):
         return sum([fragment.number_of_images for fragment in self.individual_fragments])
@@ -84,27 +98,52 @@ class GlobalFragment(object):
     def used_for_training(self):
         return all([fragment.used_for_training for fragment in self.individual_fragments])
 
-    @property
-    def acceptable_for_training(self):
-        return all([fragment.acceptable_for_training for fragment in self.individual_fragments])
+    def acceptable_for_training(self, accumulation_strategy):
+        if accumulation_strategy == 'global':
+            return all([fragment.acceptable_for_training for fragment in self.individual_fragments])
+        else:
+            return any([fragment.acceptable_for_training for fragment in self.individual_fragments])
 
     @property
     def is_unique(self):
-        self.check_uniqueness()
+        self.check_uniqueness(scope = 'global')
         return self._is_unique
 
-    def check_uniqueness(self):
+    @property
+    def is_partially_unique(self):
+        self.check_uniqueness(scope = 'partial')
+        return self._is_partially_unique
+
+    def check_uniqueness(self, scope):
         all_identities = range(self.number_of_animals)
-        if len(set(all_identities) - set([fragment.temporary_id for fragment in self.individual_fragments])) > 0:
-            self._is_unique = False
-            # self.compute_repeated_and_missing_ids(all_identities)
-        else:
-            self._is_unique = True
+        if scope == 'global':
+            if len(set(all_identities) - set([fragment.temporary_id for fragment in self.individual_fragments])) > 0:
+                self._is_unique = False
+            else:
+                self._is_unique = True
+        elif scope == 'partial':
+            identities_acceptable_for_training = [fragment.temporary_id for fragment in self.individual_fragments
+                                                    if fragment.acceptable_for_training]
+            self.duplicated_identities = set([x for x in identities_acceptable_for_training if identities_acceptable_for_training.count(x) > 1])
+            if len(self.duplicated_identities) > 0:
+                self._is_partially_unique = False
+            else:
+                self._is_partially_unique = True
 
     def get_total_number_of_images(self):
         if not hasattr(self,'total_number_of_images'):
             self.total_number_of_images = sum([fragment.number_of_images for fragment in self.individual_fragments])
         return self.total_number_of_images
+
+    def get_images_and_labels(self):
+        images = []
+        labels = []
+
+        for fragment in self.individual_fragments:
+            images.extend(fragment.images)
+            labels.extend([fragment.blob_hierarchy_in_starting_frame] * fragment.number_of_images)
+
+        return images, labels
 
     def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
         self.starts_ends_individual_fragments = [blob.compute_fragment_start_end()

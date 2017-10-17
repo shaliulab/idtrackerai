@@ -24,8 +24,26 @@ class ListOfGlobalFragments(object):
     def order_by_distance_travelled(self):
         self.global_fragments = sorted(self.global_fragments, key = lambda x: x.minimum_distance_travelled, reverse = True)
 
-    def order_by_distance_to_the_first_global_fragment(self):
+    @staticmethod
+    def give_me_frequencies_first_fragment_accumulated(i, number_of_animals, fragment):
+        frequencies = np.zeros(number_of_animals)
+        frequencies[i] = fragment.number_of_images
+        return frequencies
+
+    def set_first_global_fragment_for_accumulation(self, accumulation_trial):
         self.order_by_distance_travelled()
+        self.first_global_fragment_for_accumulation = self.global_fragments[accumulation_trial]
+        [(setattr(fragment, '_acceptable_for_training', True),
+            setattr(fragment, '_temporary_id', i),
+            setattr(fragment, '_frequencies', self.give_me_frequencies_first_fragment_accumulated(i, self.video.number_of_animals, fragment)),
+            setattr(fragment, '_is_certain', True),
+            setattr(fragment, '_certainty', 1.),
+            setattr(fragment, '_P1_vector', fragment.compute_P1_from_frequencies(fragment.frequencies)))
+            for i, fragment in enumerate(self.first_global_fragment_for_accumulation.individual_fragments)]
+        self.video.first_frame_first_global_fragment = self.first_global_fragment_for_accumulation.index_beginning_of_fragment
+        self.video.save()
+
+    def order_by_distance_to_the_first_global_fragment_for_accumulation(self):
         self.global_fragments = sorted(self.global_fragments,
                                         key = lambda x: np.abs(x.index_beginning_of_fragment - self.video.first_frame_first_global_fragment),
                                         reverse = False)
@@ -33,9 +51,11 @@ class ListOfGlobalFragments(object):
     def compute_maximum_number_of_images(self):
         self.maximum_number_of_images = max([global_fragment.get_total_number_of_images() for global_fragment in self.global_fragments])
 
-    def filter_by_minimum_number_of_frames(self, minimum_number_of_frames = 3):
+    def filter_candidates_global_fragments_for_accumulation(self):
+        self.non_accumulable_global_fragments = [global_fragment for global_fragment in self.global_fragments
+                    if not global_fragment.candidate_for_accumulation]
         self.global_fragments = [global_fragment for global_fragment in self.global_fragments
-                    if np.min(global_fragment.number_of_images_per_individual_fragment) >= minimum_number_of_frames]
+                    if global_fragment.candidate_for_accumulation]
         self.number_of_global_fragments = len(self.global_fragments)
 
     def get_data_plot(self):
@@ -93,7 +113,8 @@ def check_global_fragments(blobs_in_video, num_animals):
     * number of blobs equals num_animals
     """
     def all_blobs_in_a_fragment(blobs_in_frame):
-        return all([blob.is_in_a_fragment for blob in blobs_in_frame])
+        # return all([blob.is_in_a_fragment for blob in blobs_in_frame])
+        return all([blob.is_a_fish for blob in blobs_in_frame])
 
     return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame) == num_animals for blobs_in_frame in blobs_in_video]
 
@@ -101,43 +122,3 @@ def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
     global_fragments_boolean_array = check_global_fragments(blobs_in_video, num_animals)
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
     return [GlobalFragment(blobs_in_video, fragments, i, num_animals) for i in indices_beginning_of_fragment]
-
-def get_images_and_labels_from_global_fragment(list_of_fragments, global_fragment, individual_fragments_identifiers_already_used = [], label_from = '_temporary_id'):
-    images = []
-    labels = []
-    lengths = []
-    individual_fragments_identifiers = []
-
-    for fragment in global_fragment.individual_fragments:
-        if fragment.identifier not in individual_fragments_identifiers_already_used :
-            images.extend(fragment.images)
-            labels.extend([getattr(fragment, label_from)] * fragment.number_of_images)
-            lengths.append(fragment.number_of_images)
-            individual_fragments_identifiers.append(fragment.identifier)
-
-    return images, labels, lengths, individual_fragments_identifiers
-
-def get_images_and_labels_from_global_fragments(list_of_fragments, global_fragments, individual_fragments_identifiers_already_used = []):
-    logger.info("Getting images from global fragments")
-    images = []
-    labels = []
-    lengths = []
-    candidate_individual_fragments_identifiers = []
-    individual_fragments_identifiers_already_used = list(individual_fragments_identifiers_already_used)
-
-    for global_fragment in global_fragments:
-        images_global_fragment, \
-        labels_global_fragment, \
-        lengths_global_fragment, \
-        individual_fragments_identifiers = get_images_and_labels_from_global_fragment(list_of_fragments, global_fragment,
-                                                                                        individual_fragments_identifiers_already_used)
-        if len(images_global_fragment) != 0:
-            images.append(images_global_fragment)
-            labels.append(labels_global_fragment)
-            lengths.extend(lengths_global_fragment)
-            candidate_individual_fragments_identifiers.extend(individual_fragments_identifiers)
-            individual_fragments_identifiers_already_used.extend(individual_fragments_identifiers)
-    if len(images) != 0:
-        return np.concatenate(images, axis = 0), np.concatenate(labels, axis = 0), candidate_individual_fragments_identifiers, np.cumsum(lengths)[:-1]
-    else:
-        return None, None, candidate_individual_fragments_identifiers, None
