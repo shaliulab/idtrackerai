@@ -11,9 +11,7 @@ from joblib import Parallel, delayed
 import logging
 from sklearn.decomposition import PCA
 
-from get_portraits import get_body
 from fishcontour import FishContour
-
 
 logger = logging.getLogger("__main__.blob")
 
@@ -187,15 +185,48 @@ class Blob(object):
 
             portrait, \
             self._extreme1_coordinates, \
-            self._extreme2_coordinates = get_body(height, width,
-                                                self.bounding_box_image,
-                                                self.pixels,
-                                                self.bounding_box_in_frame_coordinates,
-                                                portraitSize)
+            self._extreme2_coordinates = self.get_image(height, width,
+                                                        self.bounding_box_image,
+                                                        self.pixels,
+                                                        self.bounding_box_in_frame_coordinates,
+                                                        portraitSize)
             self._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
             self._is_an_individual = True
         else:
             self._is_a_crossing = True
+
+    @staticmethod
+    def get_image(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, portraitSize):
+        bounding_box_image = remove_background_pixels(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates)
+        pca = PCA()
+        pxs = np.unravel_index(pixels,(height,width))
+        pxs1 = np.asarray(zip(pxs[0],pxs[1]))
+        pca.fit(pxs1)
+        rot_ang = 180 - np.arctan(pca.components_[0][1]/pca.components_[0][0])*180/np.pi - 45 # we substract 45 so that the fish is aligned in the diagonal. This say we have smaller frames
+        center = (pca.mean_[1], pca.mean_[0])
+        # print("PCA center before: ", center)
+        center = full2miniframe(center, bounding_box_in_frame_coordinates)
+        center = np.array([int(center[0]), int(center[1])])
+        # print("PCA center and angle: ", center, rot_ang)
+
+        #rotate
+        diag = np.sqrt(np.sum(np.asarray(bounding_box_image.shape)**2)).astype(int)
+        diag = (diag, diag)
+        M = cv2.getRotationMatrix2D(tuple(center), rot_ang, 1)
+        minif_rot = cv2.warpAffine(bounding_box_image, M, diag, borderMode=cv2.BORDER_CONSTANT, flags = cv2.INTER_CUBIC)
+
+
+        crop_distance = int(portraitSize/2)
+        x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
+        y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
+        portrait = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
+        height, width = portrait.shape
+
+        rot_ang_rad = rot_ang * np.pi / 180
+        h_or_t_1 = np.array([np.cos(rot_ang_rad), np.sin(rot_ang_rad)]) * rot_ang_rad
+        h_or_t_2 = - h_or_t_1
+        # print(h_or_t_1,h_or_t_2,portrait.shape)
+        return portrait, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int'))
 
     def get_nose_and_head_coordinates(self):
         if self.is_an_individual:
@@ -207,3 +238,22 @@ class Blob(object):
         else:
             self._nose_coordinates = None
             self._head_coordinates = None
+
+def remove_background_pixels(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates):
+    pxs = np.array(np.unravel_index(pixels,(height, width))).T
+    pxs = np.array([pxs[:, 0] - bounding_box_in_frame_coordinates[0][1], pxs[:, 1] - bounding_box_in_frame_coordinates[0][0]])
+    temp_image = np.zeros_like(bounding_box_image).astype('uint8')
+    temp_image[pxs[0,:], pxs[1,:]] = 255
+    temp_image = cv2.dilate(temp_image, np.ones((3,3)).astype('uint8'), iterations = 1)
+    rows, columns = np.where(temp_image == 255)
+    dilated_pixels = np.array([rows, columns])
+
+    temp_image[dilated_pixels[0,:], dilated_pixels[1,:]] = bounding_box_image[dilated_pixels[0,:], dilated_pixels[1,:]]
+    return temp_image
+
+def full2miniframe(point, boundingBox):
+    """
+    Push a point in the fullframe to miniframe coordinate system.
+    Here it is use for centroids
+    """
+    return tuple(np.asarray(point) - np.asarray([boundingBox[0][0],boundingBox[0][1]]))

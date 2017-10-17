@@ -22,12 +22,12 @@ import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
 from segmentation import segmentVideo, blobExtractor
-from get_portraits import get_portrait, get_body
 from video_utils import checkBkg
 from py_utils import get_spaced_colors_util, saveFile, loadFile, get_existent_preprocessing_steps
 
-logger = logging.getLogger("__main__.GUI_utils")
+from blob import Blob
 
+logger = logging.getLogger("__main__.GUI_utils")
 
 """
 Display messages and errors
@@ -343,7 +343,7 @@ def SegmentationPreview(video):
 
         while j < numPortraits:
             if j < numGoodContours:
-                portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize)
+                portrait, _, _ = Blob.get_image(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize)
             else:
                 portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
             rowPortrait.append(portrait)
@@ -518,7 +518,7 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
 
         while j < numPortraits:
             if j < numGoodContours:
-                portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
+                portrait, _, _ = Blob.get_image(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
             else:
                 portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
             rowPortrait.append(portrait)
