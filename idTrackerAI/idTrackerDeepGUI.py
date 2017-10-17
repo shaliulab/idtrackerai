@@ -69,7 +69,7 @@ from compute_velocity_model import compute_model_velocity
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 PERCENTAGE_OF_GLOBAL_FRAGMENTS_PRETRAINING = .25
 VEL_PERCENTILE = 99
-THRESHOLD_ACCEPTABLE_ACCUMULATION = .9995
+THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
 ###
 # seed numpy
 np.random.seed(0)
@@ -282,13 +282,16 @@ if __name__ == '__main__':
         video.individual_fragments_distance_travelled = compute_and_plot_fragments_statistics(video,
                                                                                             list_of_fragments,
                                                                                             list_of_global_fragments)
-        video.number_of_non_filtered_global_fragments = list_of_global_fragments.number_of_global_fragments
-        list_of_global_fragments.filter_by_minimum_number_of_frames(minimum_number_of_frames = 3)
         video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
+        list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
+        video.number_of_global_fragments_candidates_for_accumulation = list_of_global_fragments.number_of_global_fragments
         list_of_global_fragments.relink_fragments_to_global_fragments(list_of_fragments.fragments)
         video.number_of_unique_images_in_global_fragments = list_of_fragments.compute_total_number_of_images_in_global_fragments()
         list_of_global_fragments.compute_maximum_number_of_images()
         video.maximum_number_of_portraits_in_global_fragments = list_of_global_fragments.maximum_number_of_images
+        list_of_fragments.get_accumulable_individual_fragments_identifiers(list_of_global_fragments)
+        list_of_fragments.get_not_accumulable_individual_fragments_identifiers(list_of_global_fragments)
+        list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
         #save connected blobs in video (organized frame-wise)
         list_of_blobs.video = video
         list_of_blobs.save(number_of_chunks = video.number_of_frames)
@@ -393,6 +396,7 @@ if __name__ == '__main__':
         logger.info("Saving video")
         video.save()
     video.first_accumulation_time = time.time() - video.first_accumulation_time
+    list_of_fragments.save_light_list(video._accumulation_folder)
     if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
         video.assignment_time = time.time()
         if not loadPreviousDict['assignment']:
@@ -408,7 +412,6 @@ if __name__ == '__main__':
         video.save()
     else:
         print('\nPretraining ---------------------------------------------------------')
-        list_of_fragments.save_light_list(video._accumulation_folder)
         video.pretraining_time = time.time()
         #create folder to store pretraining
         video.create_pretraining_folder()
@@ -589,10 +592,19 @@ if __name__ == '__main__':
     #     pass
 
     #############################################################
+    ##############   Invididual fragments stats #################
+    ####
+    #############################################################
+    video.individual_fragments_stats = list_of_fragments.get_stats(list_of_global_fragments)
+    list_of_fragments.plot_stats()
+    video.save()
+
+    #############################################################
     ##############   Update list of blobs   #####################
     ####
     #############################################################
     list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
+
 
     #############################################################
     ##############   Create trajectories    #####################

@@ -13,7 +13,7 @@ import logging
 from network_params import NetworkParams
 from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
-from list_of_global_fragments import ListOfGlobalFragments, get_images_and_labels_from_global_fragment
+from list_of_global_fragments import ListOfGlobalFragments
 from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
@@ -44,9 +44,7 @@ def pre_train(video, list_of_fragments, number_of_images_in_global_fragments, li
     #start loop for pre training in the global fragments selected
     for i, pretraining_global_fragment in enumerate(tqdm(list_of_global_fragments.global_fragments, desc = '\nPretraining network')):
         # Get images and labels from the current global fragment
-        images, labels, _, _ = get_images_and_labels_from_global_fragment(list_of_fragments,
-                                                                            pretraining_global_fragment,
-                                                                            label_from = 'blob_hierarchy_in_starting_frame')
+        images, labels = pretraining_global_fragment.get_images_and_labels()
         print("---------------", len(images), images[0].shape)
         print("---------------", len(labels), labels[0])
         # Instantiate data_set
