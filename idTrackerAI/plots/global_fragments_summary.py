@@ -82,15 +82,15 @@ if __name__ == '__main__':
     distance_travelled_by_longest_distance_travelled_individual_fragment = []
     distance_travelled_by_shortes_distance_travelled_individual_fragment = []
     min_distance_travelled = []
-    number_of_portraits_per_individual_fragment = []
+    number_of_images_per_individual_fragment = []
     for global_fragment in global_fragments:
         # number_of_frames
-        number_of_portraits_per_individual_fragment.append(global_fragment._number_of_portraits_per_individual_fragment)
+        number_of_images_per_individual_fragment.append(global_fragment._number_of_images_per_individual_fragment)
         # maximum number of frames in global fragment
-        number_of_frames_in_longest_individual_fragment.append(np.max(global_fragment._number_of_portraits_per_individual_fragment))
+        number_of_frames_in_longest_individual_fragment.append(np.max(global_fragment._number_of_images_per_individual_fragment))
         # minimum number of images in global fragment
-        number_of_frames_in_shortest_individual_fragment.append(np.min(global_fragment._number_of_portraits_per_individual_fragment))
-        median_number_of_frames.append(np.median(global_fragment._number_of_portraits_per_individual_fragment))
+        number_of_frames_in_shortest_individual_fragment.append(np.min(global_fragment._number_of_images_per_individual_fragment))
+        median_number_of_frames.append(np.median(global_fragment._number_of_images_per_individual_fragment))
         # compute minimum_distance_travelled for every blob in the individual fragment
         distance_travelled = [blob.distance_travelled_in_fragment()
                                         for blob in blobs[global_fragment.index_beginning_of_fragment]]
@@ -107,7 +107,7 @@ if __name__ == '__main__':
             if individual_fragment_identifier not in individual_fragments_added:
 
                 individual_fragments_added.append(individual_fragment_identifier)
-                number_of_frames_in_individual_fragments.append(global_fragment._number_of_portraits_per_individual_fragment[i])
+                number_of_frames_in_individual_fragments.append(global_fragment._number_of_images_per_individual_fragment[i])
                 distance_travelled_individual_fragments.append(distance_travelled[i])
 
     ''' plotting '''
@@ -172,14 +172,14 @@ if __name__ == '__main__':
     index_order_by_max_num_frames = np.argsort(min_distance_travelled)[::-1]
     number_of_frames_in_longest_individual_fragment_ordered = np.asarray(number_of_frames_in_longest_individual_fragment)[index_order_by_max_num_frames]
     number_of_frames_in_shortest_individual_fragment_ordered = np.asarray(number_of_frames_in_shortest_individual_fragment)[index_order_by_max_num_frames]
-    number_of_portraits_per_individual_fragment_ordered = np.asarray(number_of_portraits_per_individual_fragment)[index_order_by_max_num_frames]
+    number_of_images_per_individual_fragment_ordered = np.asarray(number_of_images_per_individual_fragment)[index_order_by_max_num_frames]
     median_number_of_frames_ordered = np.asarray(median_number_of_frames)[index_order_by_max_num_frames]
 
     # ax.semilogy(range(len(global_fragments)), number_of_frames_in_longest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5)
     a = ax.semilogy(range(len(global_fragments)), median_number_of_frames_ordered, color = 'b', linewidth= 2, label = 'median')
     # ax.semilogy(range(len(global_fragments)), number_of_frames_in_shortest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5)
     for i in range(len(global_fragments)):
-        a = ax.semilogy(i*np.ones(video.number_of_animals),number_of_portraits_per_individual_fragment_ordered[i],'o',alpha = .05,color = 'b',markersize=5,label='individual fragment')
+        a = ax.semilogy(i*np.ones(video.number_of_animals),number_of_images_per_individual_fragment_ordered[i],'o',alpha = .05,color = 'b',markersize=5,label='individual fragment')
     b = ax.semilogy(range(len(global_fragments)), number_of_frames_in_longest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5, label = 'max')
     c = ax.semilogy(range(len(global_fragments)), median_number_of_frames_ordered, color = 'r', linewidth= 2, label = 'median')
     d = ax.semilogy(range(len(global_fragments)), number_of_frames_in_shortest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5, label = 'min')
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     # a = ax.plot(range(len(global_fragments)), median_number_of_frames_ordered, color = 'b', linewidth= 2, label = 'median')
     # # ax.semilogy(range(len(global_fragments)), number_of_frames_in_shortest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5)
     # for i in range(len(global_fragments)):
-    #     a = ax.plot(i*np.ones(video.number_of_animals),number_of_portraits_per_individual_fragment_ordered[i],'o',alpha = .05,color = 'b',markersize=5,label='individual fragment')
+    #     a = ax.plot(i*np.ones(video.number_of_animals),number_of_images_per_individual_fragment_ordered[i],'o',alpha = .05,color = 'b',markersize=5,label='individual fragment')
     # b = ax.plot(range(len(global_fragments)), number_of_frames_in_longest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5, label = 'max')
     # c = ax.plot(range(len(global_fragments)), median_number_of_frames_ordered, color = 'r', linewidth= 2, label = 'median')
     # d = ax.plot(range(len(global_fragments)), number_of_frames_in_shortest_individual_fragment_ordered, color = 'r', linewidth= 2 ,alpha = .5, label = 'min')

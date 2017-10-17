@@ -77,7 +77,7 @@ def assign_jumps(images, video):
                     use_adam_optimiser = False,
                     restore_folder = video._accumulation_folder,
                     save_folder = video._accumulation_folder,
-                    image_size = video.portrait_size)
+                    image_size = video.identification_image_size)
     net = ConvNetwork(net_params)
     net.restore()
     return assign(net, video, images, print_flag = True)
@@ -191,7 +191,7 @@ def assign_identity_to_jumps(video, blobs):
         video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals, percentile = VEL_PERCENTILE)
     jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
                     if blob.is_a_jump or blob.is_a_ghost_crossing]
-    jump_images = [blob.portrait for blob in jump_blobs]
+    jump_images = [blob.image_for_identification for blob in jump_blobs]
     #assign jumps by restoring the network
     assigner = assign_jumps(jump_images, video)
 
@@ -629,7 +629,7 @@ class Crossing(object):
             setattr(blob, self.next_or_previous_attribute, blobs_to_be_connected)
         else:
             setattr(blob, self.next_or_previous_attribute, getattr(self.blob, self.next_or_previous_attribute))
-        blob._portrait = 'uncrossed blob'
+        blob._image_for_identification = 'uncrossed blob'
         return blob
 
 

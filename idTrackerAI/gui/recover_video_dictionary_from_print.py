@@ -1733,7 +1733,7 @@ if __name__ == '__main__':
                                   255],
  'knowledge_transfer_from_same_animals': False,
  'logs_folder': '/home/rhea/Desktop/IdTrackerDeep/videos/22flies_Bottom/session_1/log_files',
- 'maximum_number_of_portraits_in_global_fragments': 194623,
+ 'maximum_number_of_images_in_global_fragments': 194623,
  'median_body_length': 41.0,
  'modified': 'Fri Sep 22 19:47:36 2017',
  'number_of_acceptable_global_fragments_0': [49, 138, 26, 3, 6, 3, 2, 3, 0],

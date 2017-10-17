@@ -32,7 +32,7 @@ class GlobalFragment(object):
             self._uniqueness_score = None
             self._repeated_ids = []
             self._missing_ids = []
-            self.predictions = [] #stores predictions per portrait in self, organised according to individual fragments.
+            self.predictions = [] #stores predictions per image_for_identification in self, organised according to individual fragments.
             self.softmax_probs_median = [] #stores softmax median per individual, per individual fragment
 
     def get_individual_fragments_of_global_fragment(self, fragments):

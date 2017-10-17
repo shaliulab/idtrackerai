@@ -32,7 +32,7 @@ def assign(net, video, images, print_flag):
     logger.info("generating data set")
     data = DataSet(net.params.number_of_animals, images)
     logger.debug("images shape %s" %str(images.shape))
-    data.crop_images(image_size = video.portrait_size[0])
+    data.crop_images(image_size = video.identification_image_size[0])
     logger.info("getting predictions")
     assigner = GetPrediction(data, print_flag = print_flag)
     assigner.get_predictions_softmax(net.predict)

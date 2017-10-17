@@ -325,7 +325,7 @@ def assign_fish_images(images, video):
                     use_adam_optimiser = False,
                     restore_folder = video._accumulation_folder,
                     save_folder = video._accumulation_folder,
-                    image_size = video.portrait_size)
+                    image_size = video.identification_image_size)
     net = ConvNetwork(net_params)
     net.restore()
     return assign(net, video, images, print_flag = True)

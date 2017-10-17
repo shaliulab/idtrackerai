@@ -22,7 +22,7 @@ class DataSet(object):
 
     def crop_images(self,image_size=32):
         """
-        :param image_size (int): size of the new portrait, usually 32, since the network accepts images of 32x32  pixels
+        :param image_size (int): size of the new image_for_identification, usually 32, since the network accepts images of 32x32  pixels
         :param shift (tuple): (x,y) displacement when cropping, it can only go from -max_shift to +max_shift
         """
         current_size = self.images.shape[1]

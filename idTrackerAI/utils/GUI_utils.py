@@ -325,35 +325,35 @@ def SegmentationPreview(video):
         showerCopy = cv2.resize(showerCopy,None, fx = np.true_divide(1,resDown), fy = np.true_divide(1,resDown))
         numColumns = 5
         numGoodContours = len(goodContours)
-        numBlackPortraits = numColumns - numGoodContours % numColumns
-        numPortraits = numGoodContours + numBlackPortraits
+        numBlackImages = numColumns - numGoodContours % numColumns
+        numImages = numGoodContours + numBlackImages
         j = 0
         maximum_body_length = 70
         if estimated_body_lengths:
             maximum_body_length = np.max(estimated_body_lengths)
-        portraitsMat = []
-        rowPortrait = []
+        imagesMat = []
+        rowImage = []
 
         logger.debug("num blobs detected: %i" %numGoodContours)
         logger.debug("maximum_body_length %i " %maximum_body_length)
         logger.debug("areas: %s" %str(areas))
 
-        portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
-        portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
+        identificationImageSize = int(np.sqrt(maximum_body_length ** 2 / 2))
+        identificationImageSize = identificationImageSize + identificationImageSize%2  #this is to make the identificationImageSize even
 
-        while j < numPortraits:
+        while j < numImages:
             if j < numGoodContours:
-                portrait, _, _ = Blob.get_image(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize)
+                image_for_identification, _, _ = Blob.get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize)
             else:
-                portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
-            rowPortrait.append(portrait)
+                image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
+            rowImage.append(image_for_identification)
             if (j+1) % numColumns == 0:
-                portraitsMat.append(np.hstack(rowPortrait))
-                rowPortrait = []
+                imagesMat.append(np.hstack(rowImage))
+                rowImage = []
             j += 1
 
-        portraitsMat = np.vstack(portraitsMat)
-        cv2.imshow('Bars',np.squeeze(portraitsMat))
+        imagesMat = np.vstack(imagesMat)
+        cv2.imshow('Bars',np.squeeze(imagesMat))
         cv2.imshow('IdPlayer', showerCopy)
         cv2.moveWindow('Bars', 10,10 )
         cv2.moveWindow('IdPlayer', 200, 10 )
@@ -413,7 +413,7 @@ def SegmentationPreview(video):
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
 
-    def resizePortraitDown(res):
+    def resizeImageDown(res):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
@@ -501,34 +501,34 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
         showerCopy = cv2.resize(showerCopy,None, fx = np.true_divide(1,resDown), fy = np.true_divide(1,resDown))
         numColumns = 5
         numGoodContours = len(goodContours)
-        numBlackPortraits = numColumns - numGoodContours % numColumns
-        numPortraits = numGoodContours + numBlackPortraits
+        numBlackImages = numColumns - numGoodContours % numColumns
+        numImages = numGoodContours + numBlackImages
         j = 0
         maximum_body_length = 70
         if estimated_body_lengths:
             maximum_body_length = np.max(estimated_body_lengths)
-        portraitsMat = []
-        rowPortrait = []
+        imagesMat = []
+        rowImage = []
 
         logger.debug("num blobs detected: %i" %numGoodContours)
         logger.debug("maximum_body_length: %i" %maximum_body_length)
         logger.debug("areas: %i" %areas)
-        portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
-        portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
+        identificationImageSize = int(np.sqrt(maximum_body_length ** 2 / 2))
+        identificationImageSize = identificationImageSize + identificationImageSize%2  #this is to make the identificationImageSize even
 
-        while j < numPortraits:
+        while j < numImages:
             if j < numGoodContours:
-                portrait, _, _ = Blob.get_image(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
+                image_for_identification, _, _ = Blob.get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize, only_blob = True)
             else:
-                portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
-            rowPortrait.append(portrait)
+                image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
+            rowImage.append(image_for_identification)
             if (j+1) % numColumns == 0:
-                portraitsMat.append(np.hstack(rowPortrait))
-                rowPortrait = []
+                imagesMat.append(np.hstack(rowImage))
+                rowImage = []
             j += 1
 
-        portraitsMat = np.vstack(portraitsMat)
-        cv2.imshow('Bars',np.squeeze(portraitsMat))
+        imagesMat = np.vstack(imagesMat)
+        cv2.imshow('Bars',np.squeeze(imagesMat))
         cv2.imshow('IdPlayer', showerCopy)
         cv2.moveWindow('Bars', 10,10 )
         cv2.moveWindow('IdPlayer', 200, 10 )
@@ -711,7 +711,7 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
     else:
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
                                     '_maximum_number_of_blobs',
-                                    'median_body_length','portrait_size',
+                                    'median_body_length','identification_image_size',
                                     '_blobs_path_segmented',
                                     '_min_threshold','_max_threshold',
                                     '_min_area','_max_area',
@@ -721,7 +721,7 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
                                     'resolution_reduction',
                                     'fragment_identifier_to_index',
                                     'number_of_unique_images_in_global_fragments',
-                                    'maximum_number_of_portraits_in_global_fragments',
+                                    'maximum_number_of_images_in_global_fragments',
                                     'first_frame_first_global_fragment']
         video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_preprocessing_parameters = True

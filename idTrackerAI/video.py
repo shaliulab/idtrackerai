@@ -213,10 +213,10 @@ class Video(object):
             self._number_of_episodes = len(self._paths_to_video_segments)
         cap.release()
 
-    def compute_portrait_size(self, maximum_body_length):
-        portrait_size = int(np.sqrt(maximum_body_length ** 2 / 2))
-        portrait_size = portrait_size + portrait_size%2  #this is to make the portrait_size
-        self.portrait_size = (portrait_size, portrait_size, 1)
+    def compute_identification_image_size(self, maximum_body_length):
+        identification_image_size = int(np.sqrt(maximum_body_length ** 2 / 2))
+        identification_image_size = identification_image_size + identification_image_size%2  #this is to make the identification_image_size
+        self.identification_image_size = (identification_image_size, identification_image_size, 1)
 
     def init_processes_time_attributes(self):
         self.generate_trajectories_time = 0

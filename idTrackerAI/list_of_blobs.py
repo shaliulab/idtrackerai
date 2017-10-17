@@ -148,13 +148,13 @@ class ListOfBlobs(object):
         median_body_length = np.median(areas_and_body_length[:,1])
         return ModelArea(mean_area, median_area, std_area), median_body_length
 
-    def apply_model_area_to_video(self, model_area, portrait_size):
-        def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portrait_size):
+    def apply_model_area_to_video(self, model_area, identification_image_size):
+        def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, identification_image_size):
             number_of_blobs = len(blobs_in_frame)
             for blob in blobs_in_frame:
-                blob.apply_model_area(video, model_area, portrait_size, number_of_blobs)
+                blob.apply_model_area(video, model_area, identification_image_size, number_of_blobs)
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'Applying model area'):
-            apply_model_area_to_blobs_in_frame(self.video, blobs_in_frame, model_area, portrait_size)
+            apply_model_area_to_blobs_in_frame(self.video, blobs_in_frame, model_area, identification_image_size)
 
     def check_maximal_number_of_blob(self):
         frames_with_more_blobs_than_animals = []

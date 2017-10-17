@@ -16,7 +16,7 @@ from fishcontour import FishContour
 logger = logging.getLogger("__main__.blob")
 
 class Blob(object):
-    def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, estimated_body_length = None, portrait = None, pixels = None, number_of_animals = None, frame_number = None):
+    def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, estimated_body_length = None, pixels = None, number_of_animals = None, frame_number = None):
         self.frame_number = frame_number
         self.number_of_animals = number_of_animals
         self.centroid = np.array(centroid) # numpy array (int64): coordinates of the centroid of the blob in pixels
@@ -25,7 +25,7 @@ class Blob(object):
         self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates #tuple of tuples: ((x1,y1),(x2,y2)) (top-left corner, bottom-right corner) in pixels
         self.bounding_box_image = bounding_box_image # numpy array (uint8): image of the fish cropped from the video according to the bounding_box_in_frame_coordinates
         self.estimated_body_length = estimated_body_length
-        self._portrait = portrait # numpy array (float32)
+        self._image_for_identification = None # numpy array (float32)
         self.pixels = pixels # list of int's: linearized pixels of the blob
         self._is_an_individual = False
         self._is_a_crossing = False
@@ -111,8 +111,8 @@ class Blob(object):
             self._blob_index = new_blob_index
 
     @property
-    def portrait(self):
-        return self._portrait
+    def image_for_identification(self):
+        return self._image_for_identification
 
     @property
     def nose_coordinates(self):
@@ -174,7 +174,7 @@ class Blob(object):
                 logger.debug("mean pixels both blobs %s" %str(np.mean([len(self.pixels), len(self.previous[0].pixels)])))
                 raise ValueError("non_shared_information_with_previous is nan")
 
-    def apply_model_area(self, video, model_area, portraitSize, number_of_blobs):
+    def apply_model_area(self, video, model_area, identificationImageSize, number_of_blobs):
         if model_area(self.area) or number_of_blobs == video.number_of_animals: #Checks if area is compatible with the model area we built
             if video.resolution_reduction == 1:
                 height = video._height
@@ -183,20 +183,20 @@ class Blob(object):
                 height  = int(video._height * video.resolution_reduction)
                 width  = int(video._width * video.resolution_reduction)
 
-            portrait, \
+            image_for_identification, \
             self._extreme1_coordinates, \
-            self._extreme2_coordinates = self.get_image(height, width,
+            self._extreme2_coordinates = self.get_image_for_identification(height, width,
                                                         self.bounding_box_image,
                                                         self.pixels,
                                                         self.bounding_box_in_frame_coordinates,
-                                                        portraitSize)
-            self._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
+                                                        identificationImageSize)
+            self._image_for_identification = ((image_for_identification - np.mean(image_for_identification))/np.std(image_for_identification)).astype('float32')
             self._is_an_individual = True
         else:
             self._is_a_crossing = True
 
     @staticmethod
-    def get_image(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, portraitSize):
+    def get_image_for_identification(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, identificationImageSize):
         bounding_box_image = remove_background_pixels(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates)
         pca = PCA()
         pxs = np.unravel_index(pixels,(height,width))
@@ -216,17 +216,17 @@ class Blob(object):
         minif_rot = cv2.warpAffine(bounding_box_image, M, diag, borderMode=cv2.BORDER_CONSTANT, flags = cv2.INTER_CUBIC)
 
 
-        crop_distance = int(portraitSize/2)
+        crop_distance = int(identificationImageSize/2)
         x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
         y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
-        portrait = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
-        height, width = portrait.shape
+        image_for_identification = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
+        height, width = image_for_identification.shape
 
         rot_ang_rad = rot_ang * np.pi / 180
         h_or_t_1 = np.array([np.cos(rot_ang_rad), np.sin(rot_ang_rad)]) * rot_ang_rad
         h_or_t_2 = - h_or_t_1
-        # print(h_or_t_1,h_or_t_2,portrait.shape)
-        return portrait, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int'))
+        # print(h_or_t_1,h_or_t_2,image_for_identification.shape)
+        return image_for_identification, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int'))
 
     def get_nose_and_head_coordinates(self):
         if self.is_an_individual:

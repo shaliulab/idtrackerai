@@ -240,7 +240,7 @@ from blob import Blob
 #                     use_adam_optimiser = False,
 #                     restore_folder = video._accumulation_folder,
 #                     save_folder = video._accumulation_folder,
-#                     image_size = video.portrait_size)
+#                     image_size = video.identification_image_size)
 #     net = ConvNetwork(net_params)
 #     net.restore()
 #     return assign(net, video, images, print_flag = True)
@@ -251,7 +251,7 @@ from blob import Blob
 #     jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
 #                     if blob.is_a_jump or (blob.is_an_individual and (blob.identity == 0 or blob.identity is None))]
 #     # print("number of blobs to assing during jumps, ", len(jump_blobs))
-#     jump_images = [blob.portrait for blob in jump_blobs]
+#     jump_images = [blob.image_for_identification for blob in jump_blobs]
 #     #assign jumps by restoring the network
 #     assigner = assign_jumps(jump_images, video)
 #

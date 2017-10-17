@@ -789,21 +789,20 @@ def cropImages(images,imageSize,shift=(0,0)):
     with a shift in the rows and columns given by the variable shifts. The
     size of the portait must be bigger than
     :param images: batch of images of the shape (numImages, channels, width, height)
-    :param imageSize: size of the new portrait, usually 32, since the network accepts images of 32x32  pixels
+    :param imageSize: size of the new image, usually 32, since the network accepts images of 32x32  pixels
     :param shift: (x,y) displacement when cropping, it can only go from -maxShift to +maxShift
     :return
     """
     currentSize = images.shape[2]
     if currentSize < imageSize:
-        raise ValueError('The size of the input portrait must be bigger than imageSize')
+        raise ValueError('The size of the input image must be bigger than imageSize')
     elif currentSize == imageSize:
         return images
     elif currentSize > imageSize:
         maxShift = np.divide(currentSize - imageSize,2)
         if np.max(shift) > maxShift:
-            raise ValueError('The shift when cropping the portrait cannot be bigger than (currentSize - imageSize)/2')
+            raise ValueError('The shift when cropping the image cannot be bigger than (currentSize - imageSize)/2')
         croppedImages = images[:,maxShift+shift[1]:currentSize-maxShift+shift[1],maxShift+shift[0]:currentSize-maxShift+shift[0],:]
-        # print 'Portrait cropped'
         return croppedImages
 
 def dataAugment(images,labels,dataAugment = False):

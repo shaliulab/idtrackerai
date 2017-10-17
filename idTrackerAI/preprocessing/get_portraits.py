@@ -62,30 +62,30 @@ def getMFandC(path, frameIndices):
 
     return boundingBoxes.tolist(), miniframes.tolist(), centroids.tolist(), bkgSamples.tolist(), goodFrameIndices, segmentIndices, permutations.tolist()
 
-def cropPortrait(image, portraitSize, shift=(0,0)):
-    """ Given a portait it crops it in a shape (portraitSize,portraitSize) with
+def cropPortrait(image, identificationImageSize, shift=(0,0)):
+    """ Given a portait it crops it in a shape (identificationImageSize,identificationImageSize) with
     a shift in the rows and columns given by the variable shifts. The size of
     the portait must be bigger than
 
     :param portrait: portrait to be cropped, usually of shape (36x36)
-    :param portraitSize: size of the new portrait, usually 32, since the network accepts images of 32x32  pixels
+    :param identificationImageSize: size of the new portrait, usually 32, since the network accepts images of 32x32  pixels
     :param shift: (x,y) displacement when cropping, it can only go from -maxShift to +maxShift
     :return
     """
     currentSize = image.shape[0]
-    if currentSize < portraitSize:
-        raise ValueError('The size of the input portrait must be bigger than portraitSize')
-    elif currentSize == portraitSize:
+    if currentSize < identificationImageSize:
+        raise ValueError('The size of the input portrait must be bigger than identificationImageSize')
+    elif currentSize == identificationImageSize:
         return image
-    elif currentSize > portraitSize:
-        maxShift = np.divide(currentSize - portraitSize,2)
+    elif currentSize > identificationImageSize:
+        maxShift = np.divide(currentSize - identificationImageSize,2)
         if np.max(shift) > maxShift:
-            raise ValueError('The shift when cropping the portrait cannot be bigger than (currentSize - portraitSize)/2')
+            raise ValueError('The shift when cropping the portrait cannot be bigger than (currentSize - identificationImageSize)/2')
         croppedPortrait = image[maxShift + shift[1] : currentSize - maxShift + shift[1], maxShift + shift[0] : currentSize - maxShift + shift[0]]
         # print 'Portrait cropped'
         return croppedPortrait
 
-def get_portrait(miniframe, cnt, bb, portrait_size, px_nose_above_center = 9):
+def get_portrait(miniframe, cnt, bb, identification_image_size, px_nose_above_center = 9):
     """Acquiring portraits from miniframe (for fish)
 
     Given a miniframe (i.e. a minimal rectangular image containing an animal)
@@ -94,12 +94,12 @@ def get_portrait(miniframe, cnt, bb, portrait_size, px_nose_above_center = 9):
     :param miniframe: A numpy 2-dimensional array
     :param cnt: A cv2-style contour, i.e. (x,:,y)
     :param bb: Coordinates of the left-top corner of miniframe in the big frame
-    :param portrait_size: size of the portrait (input image to cnn)
+    :param identification_image_size: size of the portrait (input image to cnn)
     :param px_nose_above_center: Number of pixels of nose above the center of portrait
     :return a smaller 2-dimensional array, and a tuple with all the nose coordinates in frame reference
     """
     # Extra parameters
-    half_side_sq = int(portrait_size/2)
+    half_side_sq = int(identification_image_size/2)
     overhead = int(np.ceil(np.sqrt(half_side_sq**2 + (half_side_sq+px_nose_above_center)**2))) # Extra pixels when performing rotation, around sqrt(half_side_sq**2 + (half_side_sq+px_nose_above_center)**2)
 
     # Calculating nose coordinates in the full frame reference
@@ -125,7 +125,7 @@ def get_portrait(miniframe, cnt, bb, portrait_size, px_nose_above_center = 9):
 
     return portrait, tuple(noseFull.astype('float32')), tuple(head_centroid_full.astype('float32')) #output as float because it is better for analysis.
 
-def get_body(height, width, miniframe, pixels, bb, portraitSize):
+def get_body(height, width, miniframe, pixels, bb, identificationImageSize):
     """Acquiring portraits from miniframe (for flies)
     :param miniframe: A numpy 2-dimensional array
     :param cnt: A cv2-style contour, i.e. (x,:,y)
@@ -151,7 +151,7 @@ def get_body(height, width, miniframe, pixels, bb, portraitSize):
     minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_CONSTANT, flags = cv2.INTER_CUBIC)
 
 
-    crop_distance = int(portraitSize/2)
+    crop_distance = int(identificationImageSize/2)
     x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
     y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
     portrait = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
@@ -219,17 +219,17 @@ def reaper(videoPath, frameIndices, height, width):
             # cv2.imshow('frame', miniframe)
             # cv2.waitKey()
 
-            portraitSize = 36
-            portrait, nose_pixels, head_centroid_pixels = get_portrait(miniframe,cnts[j],bbs[j],portraitSize)
+            identificationImageSize = 36
+            portrait, nose_pixels, head_centroid_pixels = get_portrait(miniframe,cnts[j],bbs[j],identificationImageSize)
             portraits.append(portrait)
             noses.append(nose_pixels)
             head_centroids.append(head_centroid_pixels)
 
-            portraitSize = 52
-            body, _, _ = get_body(height, width, miniframe, pxs[j], bbs[j], portraitSize, only_blob = False)
+            identificationImageSize = 52
+            body, _, _ = get_body(height, width, miniframe, pxs[j], bbs[j], identificationImageSize, only_blob = False)
             bodies.append(body)
 
-            bodyblob, _, _ = get_body(height, width, miniframe, pxs[j], bbs[j], portraitSize, only_blob = True)
+            bodyblob, _, _ = get_body(height, width, miniframe, pxs[j], bbs[j], identificationImageSize, only_blob = True)
             bodyblobs.append(bodyblob)
 
 

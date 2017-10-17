@@ -289,7 +289,7 @@ if __name__ == "__main__":
     blobs = list_of_blobs.blobs_in_video
     #get portraits for jumps and frame indices for crossings
     jumps, crossing_frames = get_jumps_and_crossing_frames_arrays(blobs)
-    jump_images = [blob.portrait for blob in jumps]
+    jump_images = [blob.image_for_identification for blob in jumps]
     #assign jumps by restoring the network
     assigner = assign_jumps(jump_images, video)
 

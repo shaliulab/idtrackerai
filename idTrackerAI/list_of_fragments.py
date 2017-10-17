@@ -284,7 +284,7 @@ class ListOfFragments(object):
 
 
 def create_list_of_fragments(blobs_in_video, number_of_animals):
-    attributes_to_set = ['_portrait', 'bounding_box_image', 'bounding_box_in_frame_coordinates'
+    attributes_to_set = ['_image_for_identification', 'bounding_box_image', 'bounding_box_in_frame_coordinates'
                                         '_area', '_next', '_previous',]
     fragments = []
     used_fragment_identifiers = set()
@@ -293,7 +293,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
         for blob in blobs_in_frame:
             current_fragment_identifier = blob.fragment_identifier
             if current_fragment_identifier not in used_fragment_identifiers:
-                images = [blob.portrait]
+                images = [blob.image_for_identification]
                 centroids = [blob.centroid]
                 areas = [blob.area]
                 pixels = [blob.pixels]
@@ -302,7 +302,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
 
                 while len(current.next) > 0 and current.next[0].fragment_identifier == current_fragment_identifier:
                     current = current.next[0]
-                    images, centroids, areas, pixels = append_values_to_lists([current.portrait,
+                    images, centroids, areas, pixels = append_values_to_lists([current.image_for_identification,
                                                                 current.centroid,
                                                                 current.area,
                                                                 current.pixels],

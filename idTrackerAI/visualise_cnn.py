@@ -41,7 +41,7 @@ def visualise(video_object, net, image, label):
     #restore variables from the pretraining
     logger.debug("restoring network from accumulation")
     # deconv visualization
-    # images = tf.placeholder(tf.float32, [None, video_object.portrait_size[0], video_object.portrait_size[1], video_object.portrait_size[2]], name = 'images')
+    # images = tf.placeholder(tf.float32, [None, video_object.identification_image_size[0], video_object.identification_image_size[1], video_object.identification_image_size[2]], name = 'images')
     # y_ = tf.placeholder(tf.float32, [None, video_object.number_of_animals])
 
     layers = ["r", "p", "c"] #r : output relu layers, p : output pooling layers, c : output convolutional layers
