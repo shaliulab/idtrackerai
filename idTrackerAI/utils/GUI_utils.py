@@ -846,7 +846,7 @@ def fragmentation_inspector(video, blobs_in_video):
             cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, (255,0,0),1)
             font = cv2.FONT_HERSHEY_SIMPLEX
             fragment_identifier = blob.fragment_identifier
-            # if blob.is_a_fish:
+            # if blob.is_an_individual:
             #     fragment_identifier = blob.fragment_identifier
             # elif blob.is_a_crossing:
             #     fragment_identifier = blob.crossing_identifier
@@ -946,7 +946,7 @@ def get_n_previous_blobs_attribute(blob,attribute_name,number_of_previous):
     blobs_attrs = []
     current_blob = blob
     for i in range(number_of_previous):
-        if current_blob.is_a_fish_in_a_fragment:
+        if current_blob.is_an_individual_in_a_fragment:
             blobs_attrs.append(getattr(current_blob,attribute_name))
             current_blob = current_blob.previous[0]
         else:
@@ -1024,11 +1024,11 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                 if blob._assigned_during_accumulation:
                     cv2.putText(frame, str(blob.identity),tuple(blob.centroid.astype('int')), font, 1, colors[blob.identity], 3)
                 else:
-                    logger.debug("the current blob is a fish %s" %blob.is_a_fish)
+                    logger.debug("the current blob is a fish %s" %blob.is_an_individual)
                     logger.debug("blob identity is integer %s" %(type(blob.identity) is int))
-                    if blob.is_a_fish and type(blob.identity) is int:
+                    if blob.is_an_individual and type(blob.identity) is int:
                         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
-                    elif not blob.is_a_fish:
+                    elif not blob.is_an_individual:
                         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, 1, [255,255,255], 3)
                     else:
                         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
@@ -1041,16 +1041,16 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                     if hasattr(blob,"identities_after_crossing"):
                         logger.debug("identity_after_crossing: %s" %str(blob.identities_after_crossing))
                     logger.debug("assigned during accumulation: %s" %blob.assigned_during_accumulation)
-                    if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
+                    if not blob.assigned_during_accumulation and blob.is_an_individual_in_a_fragment:
                         try:
                             logger.debug("frequencies in fragment: %s" %str(blob.frequencies_in_fragment))
                         except:
                             logger.debug("this blob does not have frequencies in fragment")
                     logger.debug("P1_vector:%s " %str(blob.P1_vector))
                     logger.debug("P2_vector: %s" %str(blob.P2_vector))
-                    logger.debug("is_a_fish: %s" %blob.is_a_fish)
+                    logger.debug("is_an_individual: %s" %blob.is_an_individual)
                     logger.debug("is_in_a_fragment: %s" %blob.is_in_a_fragment)
-                    logger.debug("is_a_fish_in_a_fragment: %s" %blob.is_a_fish_in_a_fragment)
+                    logger.debug("is_an_individual_in_a_fragment: %s" %blob.is_an_individual_in_a_fragment)
                     logger.debug("is_a_jump: %s" %blob.is_a_jump)
                     logger.debug("is_a_ghost_crossing: %s" %blob.is_a_ghost_crossing)
                     logger.debug("is_a_crossing: %s" %blob.is_a_crossing)

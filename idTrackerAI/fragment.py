@@ -25,7 +25,7 @@ class Fragment(object):
                         centroids = None,\
                         areas = None,\
                         pixels = None,\
-                        is_a_fish = None,\
+                        is_an_individual = None,\
                         is_a_crossing = None,\
                         is_a_jump = None,\
                         is_a_jumping_fragment = None,\
@@ -40,7 +40,7 @@ class Fragment(object):
         self.set_distance_travelled()
         self.areas = np.asarray(areas)
         self.pixels = pixels
-        self.is_a_fish = is_a_fish
+        self.is_an_individual = is_an_individual
         self.is_a_crossing = is_a_crossing
         self.is_a_jump = is_a_jump
         self.is_a_jumping_fragment = is_a_jumping_fragment
@@ -73,39 +73,6 @@ class Fragment(object):
             self._accumulated_globally = False
             self._accumulated_partially = False
             self._accumulation_step = None
-            attributes_to_delete = ['_frequencies',
-                                    '_P1_vector', '_certainty',
-                                    '_is_certain',
-                                    '_P1_below_random', '_non_consistent',
-                                    'assigned_during_accumulation']
-            delete_attributes_from_object(self, attributes_to_delete)
-        elif roll_back_to == 'accumulation':
-            self._identity_is_fixed = False
-            attributes_to_delete = []
-            if not self.used_for_training:
-                self._identity = None
-                self._user_generated_identity = None
-                self._identity_corrected_solving_duplication = None
-                attributes_to_delete = ['_frequencies', '_P1_vector']
-            attributes_to_delete.extend(['_P2_vector', '_ambiguous_identities',
-                                        '_is_a_duplication'])
-            delete_attributes_from_object(self, attributes_to_delete)
-        elif roll_back_to == 'assignment':
-            self._user_generated_identity = None
-            self._identity_corrected_solving_duplication = None
-            attributes_to_delete = ['_is_a_duplication']
-            delete_attributes_from_object(self, attributes_to_delete)
-
-    def reset(self, roll_back_to = None):
-        if roll_back_to == 'fragmentation' or roll_back_to == 'pretraining':
-            self._used_for_training = False
-            if roll_back_to == 'fragmentation': self._used_for_pretraining = False
-            self._acceptable_for_training = True
-            self._temporary_id = None
-            self._identity = None
-            self._user_generated_identity = None
-            self._identity_corrected_solving_duplication = None
-            self._identity_is_fixed = False
             attributes_to_delete = ['_frequencies',
                                     '_P1_vector', '_certainty',
                                     '_is_certain',
@@ -228,7 +195,7 @@ class Fragment(object):
 
     def set_duplication_flag(self):
         if any([fragment.identity == self.identity for fragment in self.coexisting_individual_fragments
-                if (fragment.is_a_fish and fragment.identity != 0)]):
+                if (fragment.is_an_individual and fragment.identity != 0)]):
             self._is_a_duplication = True
         else:
             self._is_a_duplication = False
@@ -277,9 +244,9 @@ class Fragment(object):
 
     def get_coexisting_individual_fragments_indices(self, fragments):
         self.coexisting_individual_fragments = [fragment for fragment in fragments
-                                            if fragment.is_a_fish and self.are_overlapping(fragment)
+                                            if fragment.is_an_individual and self.are_overlapping(fragment)
                                             and fragment is not self
-                                            and self.is_a_fish]
+                                            and self.is_an_individual]
         self.number_of_coexisting_individual_fragments = len(self.coexisting_individual_fragments)
 
     @property
@@ -294,7 +261,7 @@ class Fragment(object):
         return True
 
     def compute_identification_statistics(self, predictions, softmax_probs):
-        assert self.is_a_fish
+        assert self.is_an_individual
         self._frequencies = self.compute_identification_frequencies_individual_fragment(predictions, self.number_of_animals)
         self._P1_vector = self.compute_P1_from_frequencies(self.frequencies)
         median_softmax = self.compute_median_softmax(softmax_probs, self.number_of_animals)
@@ -309,7 +276,7 @@ class Fragment(object):
         return maxima_indices + 1, np.max(P2_vector)
 
     def assign_identity(self, recompute = True):
-        assert self.is_a_fish
+        assert self.is_an_individual
         self.compute_P2_vector()
         if self.used_for_training and not self._identity_is_fixed:
             self._identity_is_fixed = True

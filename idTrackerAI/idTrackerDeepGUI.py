@@ -257,7 +257,7 @@ if __name__ == '__main__':
         #     # delete bounding_box_image from blobs that have portraits
         #     [setattr(blob,'bounding_box_image', None) for blobs_in_frame in blobs
         #                                                 for blob in blobs_in_frame
-        #                                                 if blob.is_a_fish
+        #                                                 if blob.is_an_individual
         #                                                 and blob.bounding_box_image is not None]
         #     logger.debug("Freeing memory. Test crossings set deleted")
         #     test_set = None

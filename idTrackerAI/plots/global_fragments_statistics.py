@@ -60,7 +60,7 @@ def compute_and_plot_fragments_statistics(video, list_of_fragments, list_of_glob
     MAX = np.max(number_of_images_in_individual_fragments)
     hist, bin_edges = np.histogram(number_of_images_in_individual_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
     ax.semilogx(bin_edges[:-1], hist, '-ob' ,markersize = 5)
-    ax.set_xlabel('number of images')
+    ax.set_xlabel('number of frames')
     ax.set_ylabel('number of individual fragments')
     # distance travelled in individual fragments
     non_zero_indices = np.where(distance_travelled_individual_fragments != 0)[0]

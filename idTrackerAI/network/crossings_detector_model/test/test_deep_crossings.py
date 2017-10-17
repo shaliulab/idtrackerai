@@ -23,7 +23,7 @@ class CrossingDataset(object):
         self.video = video
         self.crossings = [blob for frame in self.blobs for blob in frame if blob.is_a_crossing and not blob.is_a_ghost_crossing]
         self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossings]) + 5
-        self.fish = [blob for frame in self.blobs for blob in frame if blob.is_a_fish and blob.user_generated_identity != -1]
+        self.fish = [blob for frame in self.blobs for blob in frame if blob.is_an_individual and blob.user_generated_identity != -1]
         ratio = 1
         if len(self.fish) > ratio * len(self.crossings):
             self.fish = self.fish[:ratio * len(self.crossings)]

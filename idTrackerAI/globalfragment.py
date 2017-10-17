@@ -43,7 +43,7 @@ class GlobalFragment(object):
         [setattr(self,attribute + '_per_individual_fragment',[]) for attribute in list_of_attributes]
         for fragment in fragments:
             if fragment.identifier in self.individual_fragments_identifiers:
-                assert fragment.is_a_fish
+                assert fragment.is_an_individual
                 setattr(fragment, '_is_in_a_global_fragment', True)
                 for attribute in list_of_attributes:
                     getattr(self, attribute + '_per_individual_fragment').append(getattr(fragment, attribute))

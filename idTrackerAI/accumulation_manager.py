@@ -398,7 +398,7 @@ class AccumulationManager(object):
                                                     if fragment.acceptable_for_training and not fragment.used_for_training])
             global_fragment._accumulation_step = self.counter
 
-        assert all([fragment.temporary_id is not None for fragment in global_fragment.individual_fragments if fragment.acceptable_for_training and fragment.is_a_fish])
+        assert all([fragment.temporary_id is not None for fragment in global_fragment.individual_fragments if fragment.acceptable_for_training and fragment.is_an_individual])
 
 
 def sample_images_and_labels(images, labels, ratio):
@@ -421,7 +421,7 @@ def get_predictions_of_candidates_fragments(net, video, fragments):
     candidate_individual_fragments_identifiers = []
 
     for fragment in fragments:
-        if fragment.is_a_fish and not fragment.used_for_training:
+        if fragment.is_an_individual and not fragment.used_for_training:
             images.extend(fragment.images)
             lengths.append(fragment.number_of_images)
             candidate_individual_fragments_identifiers.append(fragment.identifier)
@@ -449,7 +449,7 @@ def get_predictions_of_candidates_global_fragments(net, video,
             if fragment.identifier not in individual_fragments_identifiers_already_used:
                 if len(np.asarray(fragment.images).shape) == 1:
                     print("fragment.images.shape: ", np.asarray(fragment.images).shape)
-                    print("is a fish ", fragment.is_a_fish)
+                    print("is a fish ", fragment.is_an_individual)
                     print("image shape ", fragment.images[0].shape)
                     print(fragment.identifier)
                     print(fragment.images)

@@ -26,7 +26,7 @@ from video_utils import segmentVideo, filterContoursBySize, getPixelsList, getBo
 #             if blob.is_a_ghost_crossing:
 #                 print("ghost crossing identity: ", blob.identity)
 #                 print("ghost crossing frame: ", blob.frame_number)
-#             if (blob.identity == 0 or blob.identity is None) and (blob.is_a_fish or blob.is_a_ghost_crossing):
+#             if (blob.identity == 0 or blob.identity is None) and (blob.is_an_individual or blob.is_a_ghost_crossing):
 #                 print("is a ghost crossing ", blob.is_a_ghost_crossing)
 #                 print("num next ", len(blob.next))
 #                 print("num prev ", len(blob.previous))

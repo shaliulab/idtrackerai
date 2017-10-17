@@ -54,7 +54,7 @@ for frame_num, blobs_in_frame in tqdm(enumerate(blobs)):
     for blob_num, blob in enumerate(blobs_in_frame):
         print("blob number ", blob_num)
         if blob.identity == 0 and (len(blob.previous) == 0 or len(blob.next) == 0):
-            print("is it a fish? ", blob.is_a_fish)
+            print("is it a fish? ", blob.is_an_individual)
             print("is it in a fragment? ", blob.is_in_a_fragment)
             if blob.portrait is not None:
                 print("Jump!")

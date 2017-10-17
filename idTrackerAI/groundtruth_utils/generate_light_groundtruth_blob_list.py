@@ -81,7 +81,7 @@ def generate_groundtruth_files(video_object, start = None, end = None):
                     blob_identity = blob.identity
             else:
                 blob_identity = blob.identity
-            if (blob.is_a_fish_in_a_fragment or\
+            if (blob.is_an_individual_in_a_fragment or\
                     blob.is_a_jump or\
                     blob.is_a_jumping_fragment or\
                     hasattr(blob,'is_an_extreme_of_individual_fragment')) and\

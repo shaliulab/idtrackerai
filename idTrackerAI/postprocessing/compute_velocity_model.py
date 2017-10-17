@@ -27,7 +27,7 @@ def compute_model_velocity(fragments, number_of_animals, percentile = None):
     distance_travelled_in_individual_fragments = []
 
     for fragment in tqdm(fragments, desc = "computing velocity model"):
-        if fragment.is_a_fish:
+        if fragment.is_an_individual:
             distance_travelled_in_individual_fragments.extend(fragment.frame_by_frame_velocity())
 
     return 2 * np.max(distance_travelled_in_individual_fragments) if percentile is None else 2 * np.percentile(distance_travelled_in_individual_fragments, percentile)

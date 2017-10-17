@@ -63,26 +63,26 @@ class ListOfBlobs(object):
             used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]
             missing_blob_indices =  list(set(possible_blob_indices).difference(set(used_blob_indices)))
             for blob in blobs_in_frame:
-                if blob.fragment_identifier is None and blob.is_a_fish:
+                if blob.fragment_identifier is None and blob.is_an_individual:
                     blob._fragment_identifier = counter
                     blob_index = missing_blob_indices.pop(0)
                     blob._blob_index = blob_index
                     blob.non_shared_information_with_previous = 1.
-                    if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
+                    if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_an_individual:
                         blob.next[0]._fragment_identifier = counter
                         blob.next[0]._blob_index = blob_index
                         blob.next[0].compute_overlapping_with_previous_blob()
-                        if blob.next[0].is_a_fish_in_a_fragment:
+                        if blob.next[0].is_an_individual_in_a_fragment:
                             blob = blob.next[0]
 
-                            while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
+                            while len(blob.next) == 1 and blob.next[0].is_an_individual_in_a_fragment:
                                 blob = blob.next[0]
                                 blob._fragment_identifier = counter
                                 blob._blob_index = blob_index
                                 # compute_overlapping_with_previous_blob
                                 blob.compute_overlapping_with_previous_blob()
 
-                            if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
+                            if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_an_individual:
                                 blob.next[0]._fragment_identifier = counter
                                 blob.next[0]._blob_index = blob_index
                                 blob.next[0].compute_overlapping_with_previous_blob()

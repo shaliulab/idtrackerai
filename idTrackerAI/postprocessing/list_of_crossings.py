@@ -22,7 +22,7 @@ from video_utils import segmentVideo, filterContoursBySize, getPixelsList, getBo
 
 """if the blob was not assigned durign the standard procedure it could be a jump or a crossing
 these blobs are blobs that are not in a fragment. We distinguish the two cases in which
-they are single fish (blob.is_a_fish == True) or crossings (blob.is_a_fish == False)
+they are single fish (blob.is_an_individual == True) or crossings (blob.is_an_individual == False)
 """
 VEL_PERCENTILE = 99 #percentile used to compute the jump threshold [for blobs that are fish but are isolated]
 COVARIANCE_TYPE = "full" #covariance type in GMM to solve 2 animals crossings
@@ -47,7 +47,7 @@ def compute_model_velocity(blobs_in_video, number_of_animals, percentile = VEL_P
     for blobs_in_frame in tqdm( blobs_in_video, desc = "computing velocity model"):
 
         for blob in blobs_in_frame:
-            if blob.is_a_fish_in_a_fragment and current_individual_fragment_identifier != blob.fragment_identifier:
+            if blob.is_an_individual_in_a_fragment and current_individual_fragment_identifier != blob.fragment_identifier:
                 current_individual_fragment_identifier = blob.fragment_identifier
                 distance_travelled_in_individual_fragments.extend(blob.frame_by_frame_velocity())
 
@@ -107,7 +107,7 @@ class Jump(object):
     def jumping_blob(self, jumping_blob):
         """by definition, a jumping blob is a blob which satisfied the model area,
         but does not belong to an individual fragment"""
-        assert jumping_blob.is_a_fish
+        assert jumping_blob.is_an_individual
         assert not jumping_blob.is_in_a_fragment
         self._jumping_blob = jumping_blob
 
@@ -119,7 +119,7 @@ class Jump(object):
         print("checking velocity model for blob ", self.jumping_blob.identity, " in frame ", self.jumping_blob.frame_number)
         blobs_in_frame = blobs_in_video[self.jumping_blob.frame_number - 1]
         corresponding_blob_list = []
-        corresponding_blob_list_past = [blob for blob in blobs_in_frame if blob.is_a_fish and blob.identity == self.jumping_blob.identity]
+        corresponding_blob_list_past = [blob for blob in blobs_in_frame if blob.is_an_individual and blob.identity == self.jumping_blob.identity]
         if corresponding_blob_list_past:
             corresponding_blob_list.append(corresponding_blob_list_past[0])
         corresponding_blob_list.append(self.jumping_blob)
@@ -128,7 +128,7 @@ class Jump(object):
         print("len(blobs_in_video) ", len(blobs_in_video))
         if self.jumping_blob.frame_number + 1 < self.number_of_frames:
             blobs_in_frame = blobs_in_video[self.jumping_blob.frame_number + 1]
-            corresponding_blob_list_future = [blob for blob in blobs_in_frame if blob.is_a_fish and blob.identity == self.jumping_blob.identity]
+            corresponding_blob_list_future = [blob for blob in blobs_in_frame if blob.is_an_individual and blob.identity == self.jumping_blob.identity]
             if corresponding_blob_list_future:
                 corresponding_blob_list.append(corresponding_blob_list_future[0])
             print("corresponding_blob_list ", corresponding_blob_list)
@@ -212,7 +212,7 @@ def assing_identity_to_individual_fragments_extremes(blobs):
         for blob in blobs_in_frame:
             #if a blob has not been assigned but it is a fish and overlaps with one fragment
             #assign it!
-            if blob.identity == 0 and blob.is_a_fish:
+            if blob.identity == 0 and blob.is_an_individual:
                 if len(blob.next) == 1: blob.identity = blob.next[0].identity
                 elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
 
@@ -668,7 +668,7 @@ if __name__ == "__main__":
                 blob._identity = list(flatten([previous_blob.identity for previous_blob in blob.previous]))
                 blob.bad_crossing = False
                 for previous_blob in blob.previous:
-                    # print("\nprevious_blob: is_a_fish - %i, is_a_crossing - %i" %(previous_blob.is_a_fish, previous_blob.is_a_crossing))
+                    # print("\nprevious_blob: is_an_individual - %i, is_a_crossing - %i" %(previous_blob.is_an_individual, previous_blob.is_a_crossing))
                     # print("previous_blob identity: ", previous_blob.identity)
                     if previous_blob.is_a_crossing:
                         # print("previous_blob_next_crossings ", [previous_blob_next.is_a_crossing for previous_blob_next in previous_blob.next])
@@ -680,11 +680,11 @@ if __name__ == "__main__":
                             blob.bad_crossing = True
                         if len(previous_blob.next) != 1: # the previous crossing_blob is splitting
                             for previous_blob_next in previous_blob.next:
-                                # print("previous_blob_next: is_a_fish - %i, is_a_crossing - %i" %(previous_blob_next.is_a_fish, previous_blob_next.is_a_crossing))
+                                # print("previous_blob_next: is_an_individual - %i, is_a_crossing - %i" %(previous_blob_next.is_an_individual, previous_blob_next.is_a_crossing))
                                 # print("previous_blob_next identity: ", previous_blob_next.identity)
                                 if previous_blob_next is not blob: # for every next of the previous that is not the current blob we remove the identities
                                     # print(previous_blob_next.identity)
-                                    if previous_blob_next.is_a_fish and previous_blob_next.identity != 0 and previous_blob_next.identity in blob._identity:
+                                    if previous_blob_next.is_an_individual and previous_blob_next.identity != 0 and previous_blob_next.identity in blob._identity:
                                         blob._identity.remove(previous_blob_next.identity)
                                     # else:
                                     #     print('we do nothing, probably a badly solved jump')
@@ -712,22 +712,22 @@ if __name__ == "__main__":
                 blob._identity = list(np.unique(blob._identity))
 
                 for next_blob in blob.next:
-                    # print("next_blob: is_a_fish - %i, is_a_crossing - %i" %(next_blob.is_a_fish, next_blob.is_a_crossing))
+                    # print("next_blob: is_an_individual - %i, is_a_crossing - %i" %(next_blob.is_an_individual, next_blob.is_a_crossing))
                     # print("next_blob identity: ", next_blob.identity)
                     if next_blob.is_a_crossing:
                         if len(next_blob.previous) != 1: # the next crossing_blob is splitting
                             for next_blob_previous in next_blob.previous:
-                                # print("next_blob_previous: is_a_fish - %i, is_a_crossing - %i" %(next_blob_previous.is_a_fish, next_blob_previous.is_a_crossing))
+                                # print("next_blob_previous: is_an_individual - %i, is_a_crossing - %i" %(next_blob_previous.is_an_individual, next_blob_previous.is_a_crossing))
                                 if next_blob_previous is not blob:
                                     # print(next_blob_previous.identity)
-                                    if next_blob_previous.is_a_fish and next_blob_previous.identity != 0 and next_blob_previous.identity in blob._identity:
+                                    if next_blob_previous.is_an_individual and next_blob_previous.identity != 0 and next_blob_previous.identity in blob._identity:
                                         blob._identity.remove(next_blob_previous.identity)
                                     elif next_blob_previous.is_a_crossing and not next_blob_previous.bad_crossing:
                                         [blob._identity.remove(identity) for identity in next_blob_previous.identity if identity in blob._identity]
                                     # else:
                                     #     print('we do nothing, probably a badly solved jump')
 
-                identities_to_remove_from_crossing = [blob_to_remove.identity for blob_to_remove in blobs_in_frame if blob_to_remove.is_a_fish]
+                identities_to_remove_from_crossing = [blob_to_remove.identity for blob_to_remove in blobs_in_frame if blob_to_remove.is_an_individual]
                 identities_to_remove_from_crossing.extend([0])
                 [blob._identity.remove(identity) for identity in identities_to_remove_from_crossing if identity in blob._identity]
                 if blob.bad_crossing:

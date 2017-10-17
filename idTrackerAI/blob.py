@@ -25,7 +25,7 @@ class Blob(object):
         self.estimated_body_length = estimated_body_length
         self._portrait = portrait # numpy array (float32)
         self.pixels = pixels # list of int's: linearized pixels of the blob
-        self._is_a_fish = False
+        self._is_an_individual = False
         self._is_a_crossing = False
         self.reset_before_fragmentation('fragmentation')
 
@@ -42,13 +42,13 @@ class Blob(object):
         return self._fragment_identifier
 
     @property
-    def is_a_fish(self):
-        return self._is_a_fish
+    def is_an_individual(self):
+        return self._is_an_individual
 
     @property
     def is_a_jump(self):
         is_a_jump = False
-        if self.is_a_fish and len(self.next) == 0 and len(self.previous) == 0: # 1 frame jumps
+        if self.is_an_individual and len(self.next) == 0 and len(self.previous) == 0: # 1 frame jumps
             is_a_jump = True
         return is_a_jump
 
@@ -56,15 +56,15 @@ class Blob(object):
     def is_a_jumping_fragment(self):
         # this is a fragment of 2 frames that it is not considered a individual fragment but it is also not a single frame jump
         is_a_jumping_fragment = False
-        if self.is_a_fish and len(self.next) == 0 and len(self.previous) == 1 and len(self.previous[0].previous) == 0 and len(self.previous[0].next) == 1: # 2 frames jumps
+        if self.is_an_individual and len(self.next) == 0 and len(self.previous) == 1 and len(self.previous[0].previous) == 0 and len(self.previous[0].next) == 1: # 2 frames jumps
             is_a_jumping_fragment = True
-        elif self.is_a_fish and len(self.next) == 1 and len(self.previous) == 0 and len(self.next[0].next) == 0 and len(self.next[0].previous) == 1: # 2 frames jumps
+        elif self.is_an_individual and len(self.next) == 1 and len(self.previous) == 0 and len(self.next[0].next) == 0 and len(self.next[0].previous) == 1: # 2 frames jumps
             is_a_jumping_fragment = True
         return is_a_jumping_fragment
 
     @property
     def is_a_ghost_crossing(self):
-        return (self.is_a_fish and (len(self.next) != 1 or len(self.previous) != 1))
+        return (self.is_an_individual and (len(self.next) != 1 or len(self.previous) != 1))
 
     @property
     def is_a_crossing(self):
@@ -72,7 +72,7 @@ class Blob(object):
 
     @property
     def has_ambiguous_identity(self):
-        return self.is_a_fish_in_a_fragment and self.identity is list
+        return self.is_an_individual_in_a_fragment and self.identity is list
 
     def overlaps_with(self, other):
         """Checks if pixels are disjoint
@@ -96,8 +96,8 @@ class Blob(object):
         return len(self.previous) == len(self.next) == 1
 
     @property
-    def is_a_fish_in_a_fragment(self):
-        return self.is_a_fish and self.is_in_a_fragment
+    def is_an_individual_in_a_fragment(self):
+        return self.is_an_individual and self.is_in_a_fragment
 
     @property
     def blob_index(self):
@@ -105,7 +105,7 @@ class Blob(object):
 
     @blob_index.setter
     def blob_index(self, new_blob_index):
-        if self.is_a_fish_in_a_fragment:
+        if self.is_an_individual_in_a_fragment:
             self._blob_index = new_blob_index
 
     @property
@@ -205,6 +205,6 @@ class Blob(object):
                                                     self.bounding_box_in_frame_coordinates,
                                                     portraitSize, only_blob = True)
             self._portrait = ((portrait - np.mean(portrait))/np.std(portrait)).astype('float32')
-            self._is_a_fish = True
+            self._is_an_individual = True
         else:
             self._is_a_crossing = True

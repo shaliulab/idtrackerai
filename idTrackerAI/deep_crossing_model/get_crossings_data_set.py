@@ -29,7 +29,7 @@ class CrossingDataset(object):
             self.crossings = crossings
             self.image_size = image_size
         if len(fish) == 0:
-            self.fish = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_a_fish and blob.in_a_global_fragment_core(blobs_in_frame)]
+            self.fish = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_an_individual and blob.in_a_global_fragment_core(blobs_in_frame)]
             ratio = 1
             if len(self.fish) > ratio * len(self.crossings):
                 self.fish = self.fish[:ratio * len(self.crossings)]
@@ -37,7 +37,7 @@ class CrossingDataset(object):
         else:
             self.fish = fish
         if len(test) == 0:
-            self.test = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_a_fish and not blob.in_a_global_fragment_core(blobs_in_frame)]
+            self.test = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_an_individual and not blob.in_a_global_fragment_core(blobs_in_frame)]
         else:
             self.test = test
 

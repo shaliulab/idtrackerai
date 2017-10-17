@@ -34,7 +34,7 @@ class ListOfFragments(object):
 
     def get_images_from_fragments_to_assign(self):
         return np.concatenate([np.asarray(fragment.images) for fragment in self.fragments
-                                if not fragment.used_for_training and fragment.is_a_fish], axis = 0)
+                                if not fragment.used_for_training and fragment.is_an_individual], axis = 0)
 
     def compute_number_of_unique_images_used_for_pretraining(self):
         return sum([fragment.number_of_images for fragment in self.fragments if fragment.used_for_pretraining])
@@ -57,7 +57,7 @@ class ListOfFragments(object):
         distance_travelled_individual_fragments = []
         number_of_images_in_crossing_fragments = []
         for fragment in self.fragments:
-            if fragment.is_a_fish:
+            if fragment.is_an_individual:
                 number_of_images_in_individual_fragments.append(fragment.number_of_images)
                 distance_travelled_individual_fragments.append(fragment.distance_travelled)
             elif fragment.is_a_crossing:
@@ -116,7 +116,7 @@ class ListOfFragments(object):
         labels = []
         for fragment in self.fragments:
             if fragment.acceptable_for_training:
-                assert fragment.is_a_fish
+                assert fragment.is_an_individual
                 images.append(fragment.images)
                 labels.extend([fragment.temporary_id] * fragment.number_of_images)
         if len(images) != 0:
@@ -146,25 +146,25 @@ class ListOfFragments(object):
     def get_stats(self, list_of_global_fragments):
         # number of fragments per class
         self.number_of_crossing_fragments = sum([fragment.is_a_crossing for fragment in self.fragments])
-        self.number_of_individual_fragments = sum([fragment.is_a_fish for fragment in self.fragments])
+        self.number_of_individual_fragments = sum([fragment.is_an_individual for fragment in self.fragments])
         self.number_of_individual_fragments_not_in_a_global_fragment = sum([not fragment.is_in_a_global_fragment
-                                                                        and fragment.is_a_fish
+                                                                        and fragment.is_an_individual
                                                                         for fragment in self.fragments])
         self.number_of_accumulable_individual_fragments = len(self.accumulable_individual_fragments)
         self.number_of_not_accumulable_individual_fragments = len(self.not_accumulable_individual_fragments)
         fragments_not_accumualted = set([fragment.identifier for fragment in self.fragments if not fragment.used_for_training])
         self.number_of_not_accumulated_individual_fragments = len(self.accumulable_individual_fragments & fragments_not_accumualted)
         self.number_of_globally_accumulated_individual_fragments = sum([fragment.accumulated_globally
-                                                                    and fragment.is_a_fish for fragment in self.fragments])
+                                                                    and fragment.is_an_individual for fragment in self.fragments])
         self.number_of_partially_accumulated_individual_fragments = sum([fragment.accumulated_partially
-                                                                    and fragment.is_a_fish for fragment in self.fragments])
+                                                                    and fragment.is_an_individual for fragment in self.fragments])
 
         # number of blobs per class
         self.number_of_blobs = sum([fragment.number_of_images for fragment in self.fragments])
         self.number_of_crossing_blobs = sum([fragment.is_a_crossing * fragment.number_of_images for fragment in self.fragments])
-        self.number_of_individual_blobs = sum([fragment.is_a_fish * fragment.number_of_images for fragment in self.fragments])
+        self.number_of_individual_blobs = sum([fragment.is_an_individual * fragment.number_of_images for fragment in self.fragments])
         self.number_of_individual_blobs_not_in_a_global_fragment = sum([(not fragment.is_in_a_global_fragment
-                                                                        and fragment.is_a_fish) * fragment.number_of_images
+                                                                        and fragment.is_an_individual) * fragment.number_of_images
                                                                         for fragment in self.fragments])
         self.number_of_accumulable_individual_blobs = sum([fragment.accumulable * fragment.number_of_images for fragment in self.fragments
                                                                 if fragment.accumulable is not None])
@@ -173,9 +173,9 @@ class ListOfFragments(object):
         fragments_not_accumualted = self.accumulable_individual_fragments & set([fragment.identifier for fragment in self.fragments if not fragment.used_for_training])
         self.number_of_not_accumulated_individual_blobs = sum([fragment.number_of_images for fragment in self.fragments if fragment.identifier in fragments_not_accumualted])
         self.number_of_globally_accumulated_individual_blobs = sum([(fragment.accumulated_globally
-                                                                    and fragment.is_a_fish) * fragment.number_of_images for fragment in self.fragments if fragment.accumulated_globally is not None])
+                                                                    and fragment.is_an_individual) * fragment.number_of_images for fragment in self.fragments if fragment.accumulated_globally is not None])
         self.number_of_partially_accumulated_individual_blobs = sum([(fragment.accumulated_partially
-                                                                    and fragment.is_a_fish) * fragment.number_of_images for fragment in self.fragments if fragment.accumulated_partially is not None])
+                                                                    and fragment.is_an_individual) * fragment.number_of_images for fragment in self.fragments if fragment.accumulated_partially is not None])
 
 
         logger.info('number_of_fragments %i' %self.number_of_fragments)
@@ -243,7 +243,7 @@ class ListOfFragments(object):
         def get_class(fragment):
             if fragment.is_a_crossing:
                 return 0 #crossing
-            elif fragment.is_a_fish and (fragment.accumulated_globally or fragment.accumulated_partially):
+            elif fragment.is_an_individual and (fragment.accumulated_globally or fragment.accumulated_partially):
                 return 1 #assigned during accumulation
             elif fragment.identity != 0:
                 return 2 #assigned after accumulation
@@ -255,7 +255,7 @@ class ListOfFragments(object):
         fig, ax = plt.subplots(1,1)
         sns.set_style("ticks")
         for fragment in self.fragments:
-            if fragment.is_a_fish:
+            if fragment.is_an_individual:
                 blob_index = fragment.blob_hierarchy_in_starting_frame
                 type = get_class(fragment)
                 (start, end) = fragment.start_end
@@ -319,7 +319,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                                     centroids,
                                     areas,
                                     pixels,
-                                    blob.is_a_fish,
+                                    blob.is_an_individual,
                                     blob.is_a_crossing,
                                     blob.is_a_jump,
                                     blob.is_a_jumping_fragment,
