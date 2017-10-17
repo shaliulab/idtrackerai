@@ -56,6 +56,9 @@ class Fragment(object):
         self._identity_corrected_solving_duplication = None
         self._user_generated_identity = None
         self._identity_is_fixed = False
+        self._accumulated_globally = False
+        self._accumulated_partially = False
+        self._accumulation_step = None
 
     def reset(self, roll_back_to = None):
         if roll_back_to == 'fragmentation' or roll_back_to == 'pretraining':
@@ -67,6 +70,9 @@ class Fragment(object):
             self._user_generated_identity = None
             self._identity_corrected_solving_duplication = None
             self._identity_is_fixed = False
+            self._accumulated_globally = False
+            self._accumulated_partially = False
+            self._accumulation_step = None
             attributes_to_delete = ['_frequencies',
                                     '_P1_vector', '_certainty',
                                     '_is_certain',
@@ -97,6 +103,22 @@ class Fragment(object):
     @property
     def used_for_training(self):
         return self._used_for_training
+
+    @property
+    def accumulated_globally(self):
+        return self._accumulated_globally
+
+    @property
+    def accumulated_partially(self):
+        return self._accumulated_partially
+
+    @property
+    def accumulation_step(self):
+        return self._accumulation_step
+
+    @property
+    def accumulable(self):
+        return self._accumulable
 
     @property
     def used_for_pretraining(self):
@@ -345,3 +367,9 @@ class Fragment(object):
                             and fragment.start_end[0] - self.start_end[1] == 1]
         assert len(neighbour) < 2
         return neighbour[0] if len(neighbour) == 1 else None
+
+    def set_partially_or_globally_accumualted(self, accumulation_strategy):
+        if accumulation_strategy == 'global':
+            self._accumulated_globally = True
+        elif accumulation_strategy == 'partial':
+            self._accumulated_partially = True

@@ -51,9 +51,11 @@ class ListOfGlobalFragments(object):
     def compute_maximum_number_of_images(self):
         self.maximum_number_of_images = max([global_fragment.get_total_number_of_images() for global_fragment in self.global_fragments])
 
-    def filter_by_minimum_number_of_frames(self, minimum_number_of_frames = 3):
+    def filter_candidates_global_fragments_for_accumulation(self):
+        self.non_accumulable_global_fragments = [global_fragment for global_fragment in self.global_fragments
+                    if not global_fragment.candidate_for_accumulation]
         self.global_fragments = [global_fragment for global_fragment in self.global_fragments
-                    if np.min(global_fragment.number_of_images_per_individual_fragment) >= minimum_number_of_frames]
+                    if global_fragment.candidate_for_accumulation]
         self.number_of_global_fragments = len(self.global_fragments)
 
     def get_data_plot(self):

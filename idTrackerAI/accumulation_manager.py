@@ -149,9 +149,12 @@ class AccumulationManager(object):
         """ Once a global fragment has been used for training we set the flags
         used_for_training to TRUE and acceptable_for_training to FALSE"""
         logger.debug("Setting used_for_training to TRUE and acceptable for training to FALSE for the global fragments already used...")
-        [(setattr(fragment,'_used_for_training',True), setattr(fragment,'_acceptable_for_training',False))
-                                                for fragment in self.list_of_fragments.fragments
-                                                if fragment.acceptable_for_training == True]
+        [(setattr(fragment,'_used_for_training',True),
+            setattr(fragment,'_acceptable_for_training',False),
+            fragment.set_partially_or_globally_accumualted(self.accumulation_strategy),
+            setattr(fragment, '_accumulation_step', self.counter))
+            for fragment in self.list_of_fragments.fragments
+            if fragment.acceptable_for_training == True]
 
     def assign_identities_to_fragments_used_for_training(self):
         """ assign the identities to the global fragments used for training and
@@ -386,15 +389,14 @@ class AccumulationManager(object):
                                                     if fragment.temporary_id in global_fragment.duplicated_identities])
                 self.number_of_nonunique_fragments += number_of_duplicated_fragments
 
-            else:
-                global_fragment._accumulation_step = self.counter
-                [self.temporary_individual_fragments_used.append(fragment.identifier)
-                    for fragment in global_fragment.individual_fragments
-                    if fragment.identifier not in self.temporary_individual_fragments_used
-                    and fragment.identifier not in self.individual_fragments_used
-                    and fragment.acceptable_for_training]
-                self.number_of_acceptable_fragments += len([fragment for fragment in global_fragment.individual_fragments
-                                                        if fragment.acceptable_for_training and not fragment.used_for_training])
+            [self.temporary_individual_fragments_used.append(fragment.identifier)
+                for fragment in global_fragment.individual_fragments
+                if fragment.identifier not in self.temporary_individual_fragments_used
+                and fragment.identifier not in self.individual_fragments_used
+                and fragment.acceptable_for_training]
+            self.number_of_acceptable_fragments += len([fragment for fragment in global_fragment.individual_fragments
+                                                    if fragment.acceptable_for_training and not fragment.used_for_training])
+            global_fragment._accumulation_step = self.counter
 
         assert all([fragment.temporary_id is not None for fragment in global_fragment.individual_fragments if fragment.acceptable_for_training and fragment.is_a_fish])
 

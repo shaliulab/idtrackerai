@@ -111,5 +111,5 @@ def train(video,
     # Save network model
     net.save()
     if plot_flag:
-        fig.savefig(os.path.join(net.params.save_folder,'training.pdf'))
+        fig.savefig(os.path.join(net.params.save_folder,'Accumulation-' + str(video.accumulation_trial) + '-' + str(video.accumulation_step) + '.pdf'))
     return global_step, net, store_validation_accuracy_and_loss_data
