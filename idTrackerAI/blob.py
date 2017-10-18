@@ -30,7 +30,8 @@ class Blob(object):
         self._is_an_individual = False
         self._is_a_crossing = False
         self.reset_before_fragmentation('fragmentation')
-
+        self._used_for_training = None
+        self._accumulation_step = None
 
     def reset_before_fragmentation(self, recovering_from):
         if recovering_from == 'fragmentation':
@@ -92,6 +93,10 @@ class Blob(object):
     @property
     def used_for_training(self):
         return self._used_for_training
+
+    @property
+    def accumulation_step(self):
+        return self._accumulation_step
 
     @property
     def is_in_a_fragment(self):

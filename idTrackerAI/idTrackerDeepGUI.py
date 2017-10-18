@@ -597,6 +597,7 @@ if __name__ == '__main__':
     #############################################################
     video.individual_fragments_stats = list_of_fragments.get_stats(list_of_global_fragments)
     list_of_fragments.plot_stats()
+    list_of_fragments.save_light_list(video._accumulation_folder)
     video.save()
 
     #############################################################
@@ -606,6 +607,9 @@ if __name__ == '__main__':
     list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
     if False:
         list_of_blobs.compute_nose_and_head_coordinates()
+    list_of_blobs.save(number_of_chunks = video.number_of_frames)
+    for blobs_in_frame in list_of_blobs.blobs_in_video:
+        print([blob.accumulation_step for blob in blobs_in_frame])
 
     #############################################################
     ##############   Create trajectories    #####################

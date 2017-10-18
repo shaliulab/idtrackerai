@@ -170,18 +170,15 @@ class ListOfBlobs(object):
         return frames_with_more_blobs_than_animals
 
     def update_from_list_of_fragments(self, fragments):
-        attributes = ['_identity',
-                        '_identity_corrected_solving_duplication',
-                        '_user_generated_identity', '_used_for_training']
+        attributes = ['identity',
+                        'identity_corrected_solving_duplication',
+                        'user_generated_identity', 'used_for_training',
+                        'accumulation_step']
 
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'updating list of blobs from list of fragments'):
             for blob in blobs_in_frame:
                 fragment = fragments[self.video.fragment_identifier_to_index[blob.fragment_identifier]]
-                values = [fragment.identity,
-                            fragment.identity_corrected_solving_duplication,
-                            fragment.user_generated_identity,
-                            fragment.used_for_training]
-                [setattr(blob, attribute, value) for attribute, value in zip(attributes, values)]
+                [setattr(blob, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes]
 
     def compute_nose_and_head_coordinates(self):
         for blobs_in_frame in self.blobs_in_video:

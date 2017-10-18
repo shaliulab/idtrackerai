@@ -29,36 +29,15 @@ sys.path.append('./')
 # sys.path.append('IdTrackerDeep/tracker')
 
 from video import Video
-from blob import compute_fragment_identifier_and_blob_index,\
-                connect_blob_list,\
-                apply_model_area_to_video,\
-                ListOfBlobs
-from globalfragment import  give_me_list_of_global_fragments,\
-                            ModelArea,\
-                            give_me_pre_training_global_fragments,\
-                            get_images_and_labels_from_global_fragments,\
-                            order_global_fragments_by_distance_travelled
-from segmentation import segment
-from GUI_utils import selectFile,\
-                    getInput,\
-                    selectOptions,\
-                    ROISelectorPreview,\
-                    selectPreprocParams,\
-                    fragmentation_inspector,\
-                    frame_by_frame_identity_inspector,\
-                    selectDir
-from py_utils import getExistentFiles, get_spaced_colors_util
-from video_utils import checkBkg
-from pre_trainer import pre_train
-from accumulation_manager import AccumulationManager
-from network_params import NetworkParams
-from trainer import train
-from assigner import assign,\
-                    assign_identity_to_blobs_in_video,\
-                    compute_P1_for_blobs_in_video,\
-                    assign_identity_to_blobs_in_video_by_fragment
-from visualize_embeddings import visualize_embeddings_global_fragments
-from id_CNN import ConvNetwork
+from blob import Blob
+from list_of_blobs import ListOfBlobs
+from fragment import Fragment
+from list_of_fragments import ListOfFragments
+from globalfragment import GlobalFragment
+from list_of_global_fragments import ListOfGlobalFragments
+from GUI_utils import selectDir
+from py_utils import get_spaced_colors_util
+
 
 def imscatter(x, y, image, ax=None, zoom=1):
     if ax is None:
@@ -87,21 +66,19 @@ if __name__ == '__main__':
     #change this
     blobs_path = video.blobs_path
     global_fragments_path = video.global_fragments_path
-    list_of_blobs = ListOfBlobs.load(blobs_path)
+    list_of_blobs = ListOfBlobs.load(video.blobs_path)
     blobs = list_of_blobs.blobs_in_video
-    print("loading global fragments")
-    global_fragments = np.load(global_fragments_path)
+    list_of_fragments = ListOfFragments.load(video.fragments_path)
+    list_of_global_fragments = ListOfGlobalFragments.load(video.global_fragments_path, list_of_fragments.fragments)
+    global_fragments = list_of_global_fragments.global_fragments
+    global_fragment = global_fragments[1]
 
-    global_fragment = global_fragments[30]
-
-    global_fragment.compute_start_end_frame_indices_of_individual_fragments(blobs)
-    strats_ends_individual_fragments = np.asarray(global_fragment.starts_ends_individual_fragments)
-    print(strats_ends_individual_fragments)
+    strats_ends_individual_fragments = np.asarray([fragment.start_end for fragment in global_fragment.individual_fragments])
     min_start_individual_fragments = np.min(strats_ends_individual_fragments[:,0])
     max_end_individual_fragments = np.max(strats_ends_individual_fragments[:,1])
     max_start_individual_fragments = np.max(strats_ends_individual_fragments[:,0])
     min_end_individual_fragments = np.min(strats_ends_individual_fragments[:,1])
-    blob_indices_individial_fragments = np.asarray([(blob._blob_index,fragment_identifier) for blob, fragment_identifier in zip(blobs[global_fragment.index_beginning_of_fragment],global_fragment.individual_fragments_identifiers)])
+    blob_indices_individial_fragments = np.asarray([(fragment.blob_hierarchy_in_starting_frame, fragment.identifier) for fragment in global_fragment.individual_fragments])
 
     plt.ion()
     ''' global fragment sketch'''
@@ -121,16 +98,16 @@ if __name__ == '__main__':
 
                 # individual fragments and crossings
                 blob_index_next = blobs[i+1].index(next_blob) + 1
-                if blob._identity == 0:
+                if blob.final_identity == 0:
                     ax_arr[0].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = 'k', markersize = 3)
                 else:
                     ax_arr[0].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = '.75', markersize = 3)
 
                 # hightlight invidiaul fragments in globl fragment
                 if blob._fragment_identifier in global_fragment.individual_fragments_identifiers:
-                    ax_arr[1].plot([i, i+1],[j + 1, blob_index_next], 'o-' ,c = colors[blob._identity], markersize = 3)
+                    ax_arr[1].plot([i, i+1],[j + 1, blob_index_next], 'o-' ,c = colors[blob.final_identity], markersize = 3)
                 else:
-                    if blob._identity == 0:
+                    if blob.final_identity == 0:
                         ax_arr[1].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = 'k', markersize = 3)
                     else:
                         ax_arr[1].plot([i, i+1],[j + 1,blob_index_next], 'o-' ,c = '.75', markersize = 3)
@@ -138,15 +115,15 @@ if __name__ == '__main__':
                 # Extact individual fragments from global fragmtn
                 blob_index_next = blobs[i+1].index(next_blob) + 1
                 if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_an_individual:
-                    ax_arr[2].plot([i, i+1],[j + 1, blob_index_next], 'o-' ,c = colors[blob._identity], markersize = 3)
+                    ax_arr[2].plot([i, i+1],[j + 1, blob_index_next], 'o-' ,c = colors[blob.final_identity], markersize = 3)
 
                 # Unroll hierarchies
                 if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_an_individual:
                     blob_index = blob_indices_individial_fragments[np.where(blob_indices_individial_fragments[:,1] == blob._fragment_identifier)[0],:][0][0] + 1
-                    ax_arr[3].plot([i,i+1],[blob_index, blob_index], '-' ,c = colors[blob._identity], linewidth = 10, solid_capstyle ='butt')
-                    # ax_arr[3].plot([i,i+1],[blob._identity, blob._identity], 'o-' ,c = colors[blob._identity], markersize = 3, solid_capstyle ='butt')
-                    imscatter(i, blob_index, -blob.portrait, ax = ax_arr[3], zoom = .3)
-                    imscatter(i+1 ,blob_index, -blob.next[0].portrait, ax = ax_arr[3], zoom = .3)
+                    ax_arr[3].plot([i,i+1],[blob_index, blob_index], '-' ,c = colors[blob.final_identity], linewidth = 10, solid_capstyle ='butt')
+                    # ax_arr[3].plot([i,i+1],[blob.final_identity, blob.final_identity], 'o-' ,c = colors[blob.final_identity], markersize = 3, solid_capstyle ='butt')
+                    # imscatter(i, blob_index, -blob.image_for_identification, ax = ax_arr[3], zoom = .3)
+                    # imscatter(i+1 ,blob_index, -blob.next[0].portrait, ax = ax_arr[3], zoom = .3)
 
     ax_arr[0].set_yticks(range(1,video.number_of_animals+1),range(1,video.number_of_animals+1))
     ax_arr[0].set_yticks(list(range(1,video.number_of_animals+1)))
@@ -160,6 +137,7 @@ if __name__ == '__main__':
     ax_arr[3].set_xlabel('frame number')
     ax_arr[3].set_yticks(list(range(1,video.number_of_animals+1)))
     ax_arr[3].set_yticklabels(list(range(1,video.number_of_animals+1)))
+    fig.savefig('8fish_global_fragment_explanation.pdf', transparent=True)
 
 
     ''' individual fragments sketch single'''
@@ -181,7 +159,7 @@ if __name__ == '__main__':
                 # Unroll hierarchies
                 if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_an_individual_in_a_fragment:
                     blob_index = blob_indices_individial_fragments[np.where(blob_indices_individial_fragments[:,1] == blob._fragment_identifier)[0],:][0][0] + 1
-                    ax.plot([i,i+1],[blob._identity, blob._identity], 'o-' ,c = colors[blob._identity], markersize = 5, solid_capstyle ='butt',linewidth = 1)
+                    ax.plot([i,i+1],[blob.final_identity, blob.final_identity], 'o-' ,c = colors[blob.final_identity], markersize = 5, solid_capstyle ='butt',linewidth = 1)
 
 
     ax.set_ylabel('blob index')
@@ -209,9 +187,9 @@ if __name__ == '__main__':
                 # Unroll hierarchies
                 if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_an_individual:
                     blob_index = blob_indices_individial_fragments[np.where(blob_indices_individial_fragments[:,1] == blob._fragment_identifier)[0],:][0][0] + 1
-                    ax.plot([i,i+1],[blob._identity, blob._identity], '-' ,c = colors[blob._identity], linewidth = 20, solid_capstyle ='butt')
-                    imscatter(i, blob._identity, -blob.portrait, ax = ax, zoom = 1)
-                    imscatter(i+1 ,blob._identity, -blob.next[0].portrait, ax = ax, zoom = 1    )
+                    ax.plot([i,i+1],[blob.final_identity, blob.final_identity], '-' ,c = colors[blob.final_identity], linewidth = 20, solid_capstyle ='butt')
+                    # imscatter(i, blob.final_identity, -blob.image_for_identification, ax = ax, zoom = 1)
+                    # imscatter(i+1 ,blob.final_identity, -blob.next[0].portrait, ax = ax, zoom = 1    )
 
     ax.set_ylabel('blob index')
     ax.set_xlabel('frame number')
@@ -237,7 +215,7 @@ if __name__ == '__main__':
         blobs_in_frame = blobs[frame_number]
         for j, blob in enumerate(blobs_in_frame):
             if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and blob.is_an_individual:
-                centroid_trajectories[i, blob.identity-1, :] = blob.centroid
+                centroid_trajectories[i, blob.final_identity-1, :] = blob.centroid
 
     for individual in range(video.number_of_animals):
         ax.plot(centroid_trajectories[:,individual,0], centroid_trajectories[:,individual,1], range(min_start_individual_fragments, max_end_individual_fragments), color = colors[individual + 1] )
