@@ -14,7 +14,6 @@ import seaborn as sns
 import pandas as pd
 from pprint import pprint
 
-
 from py_utils import get_spaced_colors_util
 
 def flatten(l):
@@ -104,31 +103,47 @@ if __name__ == '__main__':
     tests_data_frame = pd.read_pickle('./library/tests_data_frame.pkl')
     test_names = [test_name for test_name in results_data_frame['test_name'].unique() if 'uncorrelated' in test_name]
     print("test_names: ", test_names)
-    cnn_model_names_dict = {0: 'our network',
+    cnn_model_names_dict = {0: 'idTracker.ai network',
                             1: '1 conv layer',
                             2: '2 conv layers',
                             3: '4 conv layers',
                             4: 'inverted network',
-                            5: 'no ReLu network',
+                            5: 'linear network but max-pooling',
                             6: 'fully 50',
                             7: 'fully 200',
                             8: 'fully 100 + fully 100',
                             9: 'fully 100 + fully 50',
                             10: 'fully 100 + fully 200'}
 
+    idTracker_single_image_accuracy_results = np.load('/home/chronos/Desktop/IdTrackerDeep/idTrackerAI/library/idTracker_results.npy')
+    print(idTracker_single_image_accuracy_results)
+
     # plot
     plt.ion()
-    sns.set_style("ticks")
-    fig, ax_arr = plt.subplots(2,2, sharex = True)
+    sns.set_style("ticks", {'legend.frameon':True})
+    fig1, ax_arr = plt.subplots(1,2, sharex = True)
+    fig1.subplots_adjust(left=None, bottom=.15, right=None, top=.9,
+                wspace=None, hspace=None)
     window = plt.get_current_fig_manager().window
     screen_y = window.winfo_screenheight()
     screen_x = window.winfo_screenwidth()
-    fig.set_size_inches((screen_x*2/3/100,screen_y/100))
-    fig.suptitle('Single image identification accuracy (MEAN) - libraries %s - %i repetitions' %('GHI',
-                                                    len(results_data_frame['repetition'].unique())), fontsize = 25)
+    fig1.set_size_inches((screen_x*2/3/100,screen_y/1.75/100))
+    fig1.canvas.set_window_title('Supplementary figure')
+    # fig1.suptitle('Single image identification accuracy (MEAN) - libraries %s - %i repetitions' %('GHI',
+    #                                                 len(results_data_frame['repetition'].unique())), fontsize = 25)
 
-    ax_arr[0,0].set_title('Convolutional modifications', fontsize = 20)
-    ax_arr[0,1].set_title('Classification modifications', fontsize = 20)
+    fig2, ax2 = plt.subplots(1)
+    fig2.canvas.set_window_title('Main figure')
+    fig2.subplots_adjust(left=.2, bottom=.15, right=None, top=.9,
+                wspace=None, hspace=None)
+
+
+    ax_arr[0].set_title('Convolutional modifications', fontsize = 20)
+    ax_arr[1].set_title('Classification modifications', fontsize = 20)
+
+    ax_arr[0].plot(idTracker_single_image_accuracy_results, 'k-', label = 'idTracker')
+    ax_arr[1].plot(idTracker_single_image_accuracy_results, 'k-', label = 'idTracker')
+    ax2.plot(idTracker_single_image_accuracy_results, 'k-', label = 'idTracker')
 
     # import colorsys
     N = len(cnn_model_names_dict)
@@ -158,55 +173,57 @@ if __name__ == '__main__':
         group_sizes = repetition_averaged_data_frame.group_size.astype('float32')
 
         if CNN_model == 0 or CNN_model <= 5:
-            ax = ax_arr[0,0]
+            ax = ax_arr[0]
             (_, caps, _) = ax.errorbar(group_sizes, accuracy, yerr=std_accuracy, color = RGB_tuples(CNN_model/N), label = label, marker = MARKERS[CNN_model], capsize = 5)
             for cap in caps:
                 cap.set_markeredgewidth(1)
-            ax.set_ylabel('accuracy',fontsize = 20)
-            h_legend = ax.legend()
-            h_legend.set_title('CNN model')
+
+            if CNN_model == 0:
+                (_, caps, _) = ax2.errorbar(group_sizes, accuracy, yerr=std_accuracy, color = RGB_tuples(CNN_model/N), label = label, marker = MARKERS[CNN_model], capsize = 5)
+                for cap in caps:
+                    cap.set_markeredgewidth(1)
+
         if CNN_model == 0 or CNN_model > 5:
-            ax = ax_arr[0,1]
+            ax = ax_arr[1]
             (_, caps, _) = ax.errorbar(group_sizes, accuracy, yerr=std_accuracy, color = RGB_tuples(CNN_model/N),label = label, marker = MARKERS[CNN_model], capsize = 5)
             for cap in caps:
                 cap.set_markeredgewidth(1)
-            ax.set_yticklabels([])
-            h_legend = ax.legend()
-            h_legend.set_title('CNN model')
-        ax.set_xticklabels(results_data_frame.group_size.unique().astype(int))
-        ax.set_ylim([0.84,1.])
-        ax.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'])+2])
-        ax.tick_params(axis='both', which='major', labelsize=16)
 
-        ''' time '''
-        if CNN_model == 0 or CNN_model <= 5:
-            ax = ax_arr[1,0]
-            repetition_averaged_data_frame.plot(x = 'group_size',
-                                                y = 'total_time',
-                                                c = np.asarray(RGB_tuples(CNN_model/N)),
-                                                ax = ax,
-                                                marker = MARKERS[CNN_model])
-            ax.set_ylabel('training time (sec)', fontsize = 20)
-            ax.legend_.remove()
-            ax.set_xlabel('group size', fontsize = 20)
-        if CNN_model == 0 or CNN_model > 5:
-            ax = ax_arr[1,1]
-            repetition_averaged_data_frame.plot(x = 'group_size',
-                                                y = 'total_time',
-                                                c = np.asarray(RGB_tuples(CNN_model/N)),
-                                                ax = ax,
-                                                marker = MARKERS[CNN_model])
+    ax = ax_arr[0]
+    ax.set_ylabel('accuracy',fontsize = 20)
+    h_legend = ax.legend(loc = 4)
+    h_legend.set_title('CNN model')
+    ax.set_xticks(results_data_frame.group_size.unique().astype(int))
+    ax.set_xticklabels(results_data_frame.group_size.unique().astype(int))
+    ax.set_xlabel('Group size', fontsize = 20)
+    ax.set_ylabel('Accuracy', fontsize = 20)
+    ax.set_ylim([0.75,1.])
+    ax.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'])+2])
+    ax.tick_params(axis='both', which='major', labelsize=16)
 
-            ax.legend_.remove()
-            ax.set_yticklabels([])
-            ax.set_xlabel('group size', fontsize = 20)
-        ax.set_xticks(list(this_test_info.group_sizes)[0])
-        ax.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'])+2])
-        ax.set_ylim([0,30000])
-        ax.tick_params(axis='both', which='major', labelsize=16)
+    ax = ax_arr[1]
+    ax.set_yticklabels([])
+    h_legend = ax.legend(loc = 4)
+    h_legend.set_title('CNN model')
+    ax.set_xticks(results_data_frame.group_size.unique().astype(int))
+    ax.set_xticklabels(results_data_frame.group_size.unique().astype(int))
+    ax.set_xlabel('Group size', fontsize = 20)
+    ax.set_ylim([0.75,1.])
+    ax.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'])+2])
+    ax.tick_params(axis='both', which='major', labelsize=16)
 
+    h_legend = ax2.legend(loc = 4)
+    h_legend.set_title('CNN model')
+    ax2.set_xticks(results_data_frame.group_size.unique().astype(int))
+    ax2.set_xticklabels(results_data_frame.group_size.unique().astype(int))
+    ax2.set_xlabel('Group size', fontsize = 20)
+    ax2.set_ylabel('Accuracy', fontsize = 20)
+    ax2.set_ylim([0.82,1.])
+    ax2.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'])+2])
+    ax2.tick_params(axis='both', which='major', labelsize=16)
 
     plt.minorticks_off()
 
     # plt.show()
-    fig.savefig('single_image_identification_accuracy_MEAN.pdf', transparent=True)
+    fig1.savefig('single_image_identification_accuracy_SM.pdf', transparent=True)
+    fig2.savefig('single_image_identification_accuracy.pdf', transparent=True)
