@@ -48,7 +48,7 @@ def get_repetition_averaged_data_frame(results_data_frame):
                                                                 ' & frames_per_fragment == @frames_in_fragment'+
                                                                 ' & repetition == @repetition')
 
-                    individual_accuracies.append(list(results_data_frame_rep['individual_accuracies']))
+                    individual_accuracies.append(list(results_data_frame_rep['individual_accuracies_best']))
                 individual_accuracies = list(flatten(individual_accuracies))
                 repetition_averaged_data_frame.loc[count,'individual_accuracies'] = individual_accuracies
                 repetition_averaged_data_frame.loc[count,'individual_accuracies_95'] = np.percentile(individual_accuracies,95)
@@ -57,12 +57,44 @@ def get_repetition_averaged_data_frame(results_data_frame):
                 count += 1
     return repetition_averaged_data_frame
 
+def get_repetition_std_data_frame(results_data_frame):
+
+    repetition_std_data_frame = pd.DataFrame(columns = [results_data_frame.std().to_dict().keys()])
+    count = 0
+    for group_size in results_data_frame['group_size'].unique():
+
+        for frames_in_video in results_data_frame['frames_in_video'].unique():
+
+            for frames_in_fragment in results_data_frame['frames_per_fragment'].unique():
+
+                temp_data_frame = results_data_frame.query('group_size == @group_size' +
+                                                            ' & frames_in_video == @frames_in_video' +
+                                                            ' & frames_per_fragment == @frames_in_fragment')
+                temp_dict = temp_data_frame.std().to_dict()
+                repetition_std_data_frame.loc[count,:] = temp_dict
+
+                # individual_accuracies = []
+                # for repetition in results_data_frame['repetition'].unique():
+                #     results_data_frame_rep = results_data_frame.query('group_size == @group_size' +
+                #                                                 ' & frames_in_video == @frames_in_video' +
+                #                                                 ' & frames_per_fragment == @frames_in_fragment'+
+                #                                                 ' & repetition == @repetition')
+                #
+                #     individual_accuracies.append(list(results_data_frame_rep['individual_accuracies_best']))
+                # individual_accuracies = list(flatten(individual_accuracies))
+                # repetition_std_data_frame.loc[count,'individual_accuracies'] = individual_accuracies
+                # repetition_std_data_frame.loc[count,'individual_accuracies_95'] = np.percentile(individual_accuracies,95)
+                # repetition_std_data_frame.loc[count,'individual_accuracies_05'] = np.percentile(individual_accuracies,5)
+
+                count += 1
+    return repetition_std_data_frame
+
 if __name__ == '__main__':
 
     ### load global results data frame
     if os.path.isfile('./library/results_data_frame.pkl'):
         print("loading results_data_frame.pkl...")
-        results_data_frame = pd.read_pickle('./library/results_data_frame_0.pkl')
+        results_data_frame = pd.read_pickle('./library/results_data_frame.pkl')
         print("results_data_frame.pkl loaded \n")
     else:
         print("results_data_frame.pkl does not exist \n")
@@ -92,7 +124,7 @@ if __name__ == '__main__':
     screen_y = window.winfo_screenheight()
     screen_x = window.winfo_screenwidth()
     fig.set_size_inches((screen_x*2/3/100,screen_y/100))
-    fig.suptitle('Single image identification accuracy - library %s - %i repetitions' %('G',
+    fig.suptitle('Single image identification accuracy (MEAN) - libraries %s - %i repetitions' %('GHI',
                                                     len(results_data_frame['repetition'].unique())), fontsize = 25)
 
     ax_arr[0,0].set_title('Convolutional modifications', fontsize = 20)
@@ -112,31 +144,37 @@ if __name__ == '__main__':
 
         # average the repetitions
         repetition_averaged_data_frame = get_repetition_averaged_data_frame(results_data_frame_test)
+        repetition_std_data_frame = get_repetition_std_data_frame(results_data_frame_test)
 
         CNN_model = int(this_test_info.CNN_model)
         label = cnn_model_names_dict[CNN_model]
 
         ''' accuracy '''
         repetition_averaged_data_frame = repetition_averaged_data_frame.apply(pd.to_numeric, errors='ignore')
-        accuracy = repetition_averaged_data_frame.accuracy
+        accuracy = repetition_averaged_data_frame.accuracy_best
+        std_accuracy = repetition_std_data_frame.accuracy_best
         per95_accuracy = repetition_averaged_data_frame.individual_accuracies_95
         per05_accuracy = repetition_averaged_data_frame.individual_accuracies_05
         group_sizes = repetition_averaged_data_frame.group_size.astype('float32')
 
         if CNN_model == 0 or CNN_model <= 5:
             ax = ax_arr[0,0]
-            ax.plot(group_sizes, accuracy, color = RGB_tuples(CNN_model/N),label = label, marker = MARKERS[CNN_model])
+            (_, caps, _) = ax.errorbar(group_sizes, accuracy, yerr=std_accuracy, color = RGB_tuples(CNN_model/N), label = label, marker = MARKERS[CNN_model], capsize = 5)
+            for cap in caps:
+                cap.set_markeredgewidth(1)
             ax.set_ylabel('accuracy',fontsize = 20)
             h_legend = ax.legend()
             h_legend.set_title('CNN model')
         if CNN_model == 0 or CNN_model > 5:
             ax = ax_arr[0,1]
-            ax.plot(group_sizes, accuracy, color = RGB_tuples(CNN_model/N),label = label, marker = MARKERS[CNN_model])
+            (_, caps, _) = ax.errorbar(group_sizes, accuracy, yerr=std_accuracy, color = RGB_tuples(CNN_model/N),label = label, marker = MARKERS[CNN_model], capsize = 5)
+            for cap in caps:
+                cap.set_markeredgewidth(1)
             ax.set_yticklabels([])
             h_legend = ax.legend()
             h_legend.set_title('CNN model')
         ax.set_xticklabels(results_data_frame.group_size.unique().astype(int))
-        ax.set_ylim([0.9,1.])
+        ax.set_ylim([0.84,1.])
         ax.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'])+2])
         ax.tick_params(axis='both', which='major', labelsize=16)
 
@@ -164,11 +202,11 @@ if __name__ == '__main__':
             ax.set_xlabel('group size', fontsize = 20)
         ax.set_xticks(list(this_test_info.group_sizes)[0])
         ax.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'])+2])
-        ax.set_ylim([0,2000])
+        ax.set_ylim([0,30000])
         ax.tick_params(axis='both', which='major', labelsize=16)
 
 
     plt.minorticks_off()
 
     # plt.show()
-    fig.savefig('single_image_identification_accuracy.pdf', transparent=True)
+    fig.savefig('single_image_identification_accuracy_MEAN.pdf', transparent=True)

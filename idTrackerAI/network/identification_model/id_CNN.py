@@ -15,7 +15,8 @@ from cnn_architectures import cnn_model_0, \
                                 cnn_model_7, \
                                 cnn_model_8, \
                                 cnn_model_9, \
-                                cnn_model_10
+                                cnn_model_10, \
+                                cnn_model_11
 
 
 CNN_MODELS_DICT = {0: cnn_model_0,
@@ -28,7 +29,8 @@ CNN_MODELS_DICT = {0: cnn_model_0,
                     7: cnn_model_7,
                     8: cnn_model_8,
                     9: cnn_model_9,
-                    10: cnn_model_10}
+                    10: cnn_model_10,
+                    11: cnn_model_11}
 logger = logging.getLogger("__main__.id_CNN")
 
 class ConvNetwork():
