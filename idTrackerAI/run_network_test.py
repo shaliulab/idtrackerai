@@ -176,7 +176,7 @@ if __name__ == '__main__':
                         # else:
                         #     save_summaries = False
                         #     store_accuracy_and_error = False
-                        store_accuracy_and_error = False
+                        store_accuracy_and_error = True
                         images = (images - np.expand_dims(np.expand_dims(np.mean(images,axis=(1,2)),axis=1),axis=2))/np.expand_dims(np.expand_dims(np.std(images, axis = (1,2)), axis = 1), axis = 2).astype('float32')
                         _, _, store_validation_accuracy_and_loss_data = train(None, None, None,
                                                                             net, images, labels,
@@ -195,11 +195,17 @@ if __name__ == '__main__':
                             store_validation_accuracy_and_loss_data.accuracy = store_validation_accuracy_and_loss_data.accuracy[:-1]
                             store_validation_accuracy_and_loss_data.individual_accuracy = store_validation_accuracy_and_loss_data.individual_accuracy[:-1]
 
-                        print("accuracies: ", store_validation_accuracy_and_loss_data.accuracy)
-                        print("losses: ", store_validation_accuracy_and_loss_data.loss)
-                        best_model_index = np.argmin(store_validation_accuracy_and_loss_data.loss)
-                        print("accuracy: ", store_validation_accuracy_and_loss_data.accuracy[best_model_index])
-                        print("individual_accuracies: ", store_validation_accuracy_and_loss_data.individual_accuracy[best_model_index])
+                        print("accuracies (all): ", store_validation_accuracy_and_loss_data.accuracy)
+                        print("losses (all): ", store_validation_accuracy_and_loss_data.loss)
+                        min_loss_model_index = np.argmin(store_validation_accuracy_and_loss_data.loss)
+                        print("accuracy (min loss): ", store_validation_accuracy_and_loss_data.accuracy[min_loss_model_index])
+                        print("individual_accuracies (min loss): ", store_validation_accuracy_and_loss_data.individual_accuracy[min_loss_model_index])
+                        last_model_index = -1
+                        print("accuracy (last): ", store_validation_accuracy_and_loss_data.accuracy[last_model_index])
+                        print("individual_accuracies (last): ", store_validation_accuracy_and_loss_data.individual_accuracy[last_model_index])
+                        best_accuracy_model_index = np.argmax(store_validation_accuracy_and_loss_data.accuracy)
+                        print("accuracy (best): ", store_validation_accuracy_and_loss_data.accuracy[best_accuracy_model_index])
+                        print("individual_accuracies (best): ", store_validation_accuracy_and_loss_data.individual_accuracy[best_accuracy_model_index])
 
                         #############################################################
                         ###################  Update data-frame   ####################
@@ -226,10 +232,14 @@ if __name__ == '__main__':
                                                                         'number_of_fragments': None,
                                                                         'proportion_of_accumulated_fragments': None,
                                                                         'number_of_not_assigned_blobs': None,
-                                                                        'individual_accuracies': store_validation_accuracy_and_loss_data.individual_accuracy[best_model_index],
-                                                                        'individual_accuracies(assigned)': store_validation_accuracy_and_loss_data.individual_accuracy[best_model_index],
-                                                                        'accuracy': store_validation_accuracy_and_loss_data.accuracy[best_model_index],
-                                                                        'accuracy(assigned)': store_validation_accuracy_and_loss_data.accuracy[best_model_index],
+                                                                        'individual_accuracies_min_loss': store_validation_accuracy_and_loss_data.individual_accuracy[min_loss_model_index],
+                                                                        'individual_accuracies_last': store_validation_accuracy_and_loss_data.individual_accuracy[last_model_index],
+                                                                        'individual_accuracies_best': store_validation_accuracy_and_loss_data.individual_accuracy[best_accuracy_model_index],
+                                                                        'individual_accuracies(assigned)': store_validation_accuracy_and_loss_data.individual_accuracy[best_accuracy_model_index],
+                                                                        'accuracy_min_loss': store_validation_accuracy_and_loss_data.accuracy[min_loss_model_index],
+                                                                        'accuracy_last': store_validation_accuracy_and_loss_data.accuracy[last_model_index],
+                                                                        'accuracy_best': store_validation_accuracy_and_loss_data.accuracy[best_accuracy_model_index],
+                                                                        'accuracy(assigned)': store_validation_accuracy_and_loss_data.accuracy[best_accuracy_model_index],
                                                                         'proportion_of_identity_repetitions': None,
                                                                         'proportion_of_identity_shifts_in_accumulated_frames': None,
                                                                         'pretraining_time': None,

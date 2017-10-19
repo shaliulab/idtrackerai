@@ -28,35 +28,13 @@ def tests_data_frame():
     ''' ************************************************************************
     Uncorrelated images test with different networks
     *************************************************************************'''
-    # preprocessing_types = ['body_blob'] #['portrait', 'body', 'body_blob']
-    # IMDB_codes = ['GHI'] #['ABC','DEF','GHI']
-    # CNN_models = [0,1,2,3,4,5]
-    # for preprocessing, IMBD_code in zip(preprocessing_types,IMDB_codes):
-    #     for CNN_model in CNN_models:
-    #         tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_' + IMBD_code + '_aaa_cnn_' + str(CNN_model) + '_' + preprocessing,
-    #                                                         "CNN_model": CNN_model,
-    #                                                         "knowledge_transfer_flag": False,
-    #                                                         "knowledge_transfer_folder": '',
-    #                                                         "pretraining_flag": False,
-    #                                                         "percentage_of_frames_in_pretaining": 0.,
-    #                                                         "only_accumulate_one_fragment": False,
-    #                                                         "train_filters_in_accumulation": False,
-    #                                                         "accumulation_certainty": 0.,
-    #                                                         "preprocessing_type": preprocessing,
-    #                                                         "IMDB_codes": IMBD_code,
-    #                                                         "ids_codes": 'aaa',
-    #                                                         "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
-    #                                                         "frames_in_video": [3000],
-    #                                                         "frames_per_individual_fragment": [0],
-    #                                                         "repetitions": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    #                                                          }, ignore_index=True)
-
     preprocessing_types = ['body_blob'] #['portrait', 'body', 'body_blob']
-    IMDB_codes = ['G'] #['ABC','DEF','GHI']
-    CNN_models = [0,1,2,3,4,5,6,7,8,9,10]
+    IMDB_codes = ['GHI'] #['ABC','DEF','GHI']
+    # CNN_models = [0,1,2,3,4,5,6,7,8,9,10,11]
+    CNN_models = [11]
     for preprocessing, IMBD_code in zip(preprocessing_types,IMDB_codes):
         for CNN_model in CNN_models:
-            tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_' + IMBD_code + '_a_cnn_' + str(CNN_model) + '_' + preprocessing,
+            tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_' + IMBD_code + '_aaa_cnn_' + str(CNN_model) + '_' + preprocessing,
                                                             "CNN_model": CNN_model,
                                                             "knowledge_transfer_flag": False,
                                                             "knowledge_transfer_folder": '',
@@ -65,15 +43,38 @@ def tests_data_frame():
                                                             "only_accumulate_one_fragment": False,
                                                             "train_filters_in_accumulation": False,
                                                             "accumulation_certainty": 0.,
-                                                            "solve_duplications": False,
                                                             "preprocessing_type": preprocessing,
                                                             "IMDB_codes": IMBD_code,
-                                                            "ids_codes": 'a',
-                                                            "group_sizes": [2, 5, 10],
+                                                            "ids_codes": 'aaa',
+                                                            "group_sizes": [2, 5, 10, 30, 60, 80, 100, 150],
                                                             "frames_in_video": [3000],
                                                             "frames_per_individual_fragment": [0],
-                                                            "repetitions": [1, 2, 3],
+                                                            "repetitions": [1, 2, 3, 4, 5],
                                                              }, ignore_index=True)
+
+    # preprocessing_types = ['body_blob'] #['portrait', 'body', 'body_blob']
+    # IMDB_codes = ['G'] #['ABC','DEF','GHI']
+    # CNN_models = [0,1,2,3,4,5,6,7,8,9,10]
+    # for preprocessing, IMBD_code in zip(preprocessing_types,IMDB_codes):
+    #     for CNN_model in CNN_models:
+    #         tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_' + IMBD_code + '_a_cnn_' + str(CNN_model) + '_' + preprocessing,
+    #                                                         "CNN_model": CNN_model,
+    #                                                         "knowledge_transfer_flag": False,
+    #                                                         "knowledge_transfer_folder": '',
+    #                                                         "pretraining_flag": False,
+    #                                                         "percentage_of_frames_in_pretaining": 0.,
+    #                                                         "only_accumulate_one_fragment": False,
+    #                                                         "train_filters_in_accumulation": False,
+    #                                                         "accumulation_certainty": 0.,
+    #                                                         "solve_duplications": False,
+    #                                                         "preprocessing_type": preprocessing,
+    #                                                         "IMDB_codes": IMBD_code,
+    #                                                         "ids_codes": 'a',
+    #                                                         "group_sizes": [2, 5, 10],
+    #                                                         "frames_in_video": [3000],
+    #                                                         "frames_per_individual_fragment": [0],
+    #                                                         "repetitions": [1, 2, 3],
+    #                                                          }, ignore_index=True)
 
     ''' ************************************************************************
     Tests with correlated images and the real algorithm
