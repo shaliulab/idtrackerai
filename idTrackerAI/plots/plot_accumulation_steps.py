@@ -66,7 +66,7 @@ def plot_accumulation_step_from_fragments(fragments, ax, accumulation_step, plot
     for fragment in fragments:
         _type = get_object_type(fragment)
         if (_type == 1 or plot_assignment_flag and _type >= 2) and fragment.accumulation_step <= accumulation_step:
-            blob_index = fragment.blob_hierarchy_in_starting_frame
+            blob_index = fragment.final_identity-1
             (start, end) = fragment.start_end
             ax.add_patch(
                 patches.Rectangle(
