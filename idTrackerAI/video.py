@@ -290,6 +290,8 @@ class Video(object):
                         'number_of_acceptable_global_fragments',
                         'validation_accuracy',
                         'validation_individual_accuracies',
+                        'training_accuracy',
+                        'training_individual_accuracies',
                         'ratio_of_accumulated_images']
         self.accumulation_statistics_attributes_list = [attribute + '_' + str(index) for attribute in attributes]
         [setattr(self, attribute, []) for attribute in self.accumulation_statistics_attributes_list]
@@ -409,18 +411,17 @@ class Video(object):
             assert hasattr(video_object_source, attribute)
             setattr(self, attribute, getattr(video_object_source, attribute))
 
-    def compute_overall_P2(self, blobs_in_video):
-        P2_sum = 0
-        counter = 0
+    def compute_overall_P2(self, fragments):
+        weighted_P2_per_individual = np.zeros(self.number_of_animals)
+        number_of_blobs_per_individual = np.zeros(self.number_of_animals)
 
-        for blobs_in_frame in blobs_in_video:
-            for blob in blobs_in_frame:
-                if hasattr(blob, '_P2_vector'):
-                    P2_sum += np.max(blob._P2_vector)
-                    counter += 1
+        for fragment in fragments:
+            if fragment.is_an_individual and fragment.final_identity != 0:
+                weighted_P2_per_individual[fragment.final_identity - 1] += fragment.P2_vector[fragment.final_identity - 1] * fragment.number_of_images
+                number_of_blobs_per_individual[fragment.final_identity - 1] += fragment.number_of_images
 
-        self.overlall_P2 = P2_sum / counter
-
+        self.individual_P2 = weighted_P2_per_individual / number_of_blobs_per_individual
+        self.overall_P2 = np.mean(self.individual_P2)
 
 def get_num_frame(path):
     cap = cv2.VideoCapture(path)

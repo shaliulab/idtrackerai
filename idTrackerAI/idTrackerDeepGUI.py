@@ -385,10 +385,23 @@ if __name__ == '__main__':
     else:
         ### NOTE: load all the accumulation statistics
         logger.info("Restoring accumulation network")
-        video.copy_attributes_between_two_video_objects(old_video, ['_accumulation_folder',\
-                                                                    'ratio_accumulated_images',\
-                                                                    '_first_accumulation_finished',\
-                                                                    'knowledge_transfer_from_same_animals'])
+        list_of_attributes = ['_accumulation_folder', '_second_accumulation_finished',
+                    'number_of_accumulated_global_fragments',
+                    'number_of_non_certain_global_fragments',
+                    'number_of_randomly_assigned_global_fragments',
+                    'number_of_nonconsistent_global_fragments',
+                    'number_of_nonunique_global_fragments',
+                    'number_of_acceptable_global_fragments',
+                    'validation_accuracy',
+                    'validation_individual_accuracies',
+                    'training_accuracy',
+                    'training_individual_accuracies',
+                    'ratio_of_accumulated_images',
+                    'accumulation_trial',
+                    'ratio_accumulated_images',
+                    '_first_accumulation_finished',
+                    'knowledge_transfer_from_same_animals']
+        video.copy_attributes_between_two_video_objects(old_video, list_of_attributes)
         accumulation_network_params.restore_folder = video._accumulation_folder
         net = ConvNetwork(accumulation_network_params)
         net.restore()
@@ -490,6 +503,7 @@ if __name__ == '__main__':
             if len(percentage_of_accumulated_images) > 1 and np.argmax(percentage_of_accumulated_images) != 2:
                 accumulation_folder_name = 'accumulation_' + str(np.argmax(percentage_of_accumulated_images))
                 video._accumulation_folder = os.path.join(video._session_folder, accumulation_folder_name)
+                video.accumulation_trial = np.argmax(percentage_of_accumulated_images)
                 list_of_fragments.load_light_list(video._accumulation_folder)
             video._second_accumulation_finished = True
             logger.info("Saving global fragments")
@@ -498,7 +512,20 @@ if __name__ == '__main__':
             ### NOTE: save second_accumulation statistics
             video.save()
         else:
-            video.copy_attributes_between_two_video_objects(old_video, ['_accumulation_folder', '_second_accumulation_finished'])
+            list_of_attributes = ['_accumulation_folder', '_second_accumulation_finished',
+                        'number_of_accumulated_global_fragments',
+                        'number_of_non_certain_global_fragments',
+                        'number_of_randomly_assigned_global_fragments',
+                        'number_of_nonconsistent_global_fragments',
+                        'number_of_nonunique_global_fragments',
+                        'number_of_acceptable_global_fragments',
+                        'validation_accuracy',
+                        'validation_individual_accuracies',
+                        'training_accuracy',
+                        'training_individual_accuracies',
+                        'ratio_of_accumulated_images',
+                        'accumulation_trial']
+            video.copy_attributes_between_two_video_objects(old_video, list_of_attributes)
             ### NOTE: load pre-training statistics
         video.second_accumulation_time = time.time() - video.second_accumulation_time
         video.assignment_time = time.time()
@@ -595,7 +622,11 @@ if __name__ == '__main__':
     ####
     #############################################################
     video.individual_fragments_stats = list_of_fragments.get_stats(list_of_global_fragments)
+    video.compute_overall_P2(list_of_fragments.fragments)
+    print("individual overall_P2 ", video.individual_P2)
+    print("overall_P2 ", video.overall_P2)
     list_of_fragments.plot_stats()
+    list_of_fragments.save_light_list(video._accumulation_folder)
     video.save()
 
     #############################################################
@@ -605,6 +636,7 @@ if __name__ == '__main__':
     list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
     if False:
         list_of_blobs.compute_nose_and_head_coordinates()
+    list_of_blobs.save(number_of_chunks = video.number_of_frames)
 
     #############################################################
     ##############   Create trajectories    #####################
