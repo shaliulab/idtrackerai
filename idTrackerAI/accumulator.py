@@ -9,7 +9,6 @@ from assigner import assign
 from trainer import train
 from accumulation_manager import AccumulationManager, get_predictions_of_candidates_fragments
 
-
 THRESHOLD_EARLY_STOP_ACCUMULATION = .9995
 logger = logging.getLogger('__main__.accumulator')
 
