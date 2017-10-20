@@ -17,46 +17,74 @@ from get_data import duplicate_PCA_images
 MAX_NUMBER_OF_IMAGES = 3000
 
 class CrossingDataset(object):
-    def __init__(self, blobs_list, video, crossings = [], fish = [], test = [], image_size = None, scope = ''):
-        self.blobs = blobs_list
-        if video.resolution_reduction == 1:
-            self.video_height = video._height
-            self.video_width = video._width
-        else:
-            self.video_height  = int(video._height * video.resolution_reduction)
-            self.video_width  = int(video._width * video.resolution_reduction)
+    def __init__(self, blobs_list, video,
+                crossings = [], individual_blobs = [], test = [],
+                image_size = None, scope = '', downsampling_factor = .5):
         self.video = video
         self.scope = scope
-        if (scope == 'training' or scope == 'validation') and len(crossings) == 0 or image_size is None:
+        self.downsampling_factor = downsampling_factor
+        self.blobs = blobs_list
+        self.get_video_height_and_width_according_to_resolution_reduction()
+        if (scope == 'training' or scope == 'validation'):
+            self.get_list_of_crossing_blobs_for_training(crossings, image_size)
+            self.get_list_of_individual_blobs_for_training(individual_blobs)
+        if scope == 'test':
+            self.image_size = image_size
+            self.get_list_of_blobs_for_test(test)
+
+
+    def get_video_height_and_width_according_to_resolution_reduction(self):
+        if self.video.resolution_reduction == 1:
+            self.video_height = self.video._height
+            self.video_width = self.video._width
+        else:
+            self.video_height  = int(self.video._height * self.video.resolution_reduction)
+            self.video_width  = int(self.video._width * self.video.resolution_reduction)
+
+    def get_list_of_individual_blobs_for_training(self, individual_blobs):
+        if len(individual_blobs) == 0:
+            self.individual_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
+                                    if blob.is_an_individual
+                                    and blob.in_a_global_fragment_core(blobs_in_frame)]
+            ratio = 1
+            if len(self.individual_blobs) > ratio * len(self.crossings):
+                self.individual_blobs = self.individual_blobs[:ratio * len(self.crossings)]
+            np.random.shuffle(self.individual_blobs)
+        else:
+            self.individual_blobs = individual_blobs
+
+    def get_list_of_crossing_blobs_for_training(self, crossings, image_size):
+        if len(crossings) == 0 or image_size is None:
             num_crossing_images = 0
             self.crossings = []
             frame_number = 0
 
-            while num_crossing_images <= MAX_NUMBER_OF_IMAGES * self.video.number_of_animals and frame_number < self.video.number_of_frames - 1:
+            while (num_crossing_images <= MAX_NUMBER_OF_IMAGES * self.video.number_of_animals\
+                and frame_number < self.video.number_of_frames - 1):
+
                 blobs_in_frame = self.blobs[frame_number]
                 frame_number += 1
+
                 for blob in blobs_in_frame:
-                    if blob.is_a_crossing and not blob.is_a_ghost_crossing:
+                    if (blob.is_a_crossing and blob.is_a_sure_crossing and not blob.is_a_ghost_crossing):
                         self.crossings.append(blob)
                         num_crossing_images += 1
 
-            # self.crossings = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_a_crossing and not blob.is_a_ghost_crossing]
             np.random.seed(0)
             np.random.shuffle(self.crossings)
             self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossings]) + 5
         else:
             self.crossings = crossings
             self.image_size = image_size
-        if (scope == 'training' or scope == 'validation') and len(fish) == 0:
-            self.fish = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_an_individual and blob.in_a_global_fragment_core(blobs_in_frame)]
-            ratio = 1
-            if len(self.fish) > ratio * len(self.crossings):
-                self.fish = self.fish[:ratio * len(self.crossings)]
-            np.random.shuffle(self.fish)
-        else:
-            self.fish = fish
-        if scope == 'test' and len(test) == 0:
-            self.test = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame if blob.is_an_individual and not blob.in_a_global_fragment_core(blobs_in_frame)]
+
+    def get_list_of_blobs_for_test(self, test):
+        if len(test) == 0:
+            self.test = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
+                            if (blob.is_an_individual
+                                and not blob.in_a_global_fragment_core(blobs_in_frame)
+                                and not blob.is_a_sure_individual())
+                            or (blob.is_a_crossing
+                                and not blob.is_a_sure_crossing())]
         else:
             self.test = test
 
@@ -74,22 +102,21 @@ class CrossingDataset(object):
         print("Generating single individual ", self.scope, " set")
 
 
-        self.fish_sliced = self.slice(self.fish, sampling_ratio_start, sampling_ratio_end)
-        self.fish_images = self.generate_fish_images()
-        self.fish_labels = np.zeros(len(self.fish_images))
+        self.individual_blobs_sliced = self.slice(self.individual_blobs, sampling_ratio_start, sampling_ratio_end)
+        self.individual_blobs_images = self.generate_individual_blobs_images()
+        self.individual_blobs_labels = np.zeros(len(self.individual_blobs_images))
         if self.scope == "training":
-            # self.fish_images, self.fish_images_labels = self.data_augmentation_by_rotation(self.fish_images, self.fish_labels)
-            self.fish_images, self.fish_labels = duplicate_PCA_images(self.fish_images, self.fish_labels)
-        assert len(self.fish_labels) == len(self.fish_images)
+            # self.individual_blobs_images, self.individual_blobs_images_labels = self.data_augmentation_by_rotation(self.individual_blobs_images, self.individual_blobs_labels)
+            self.individual_blobs_images, self.individual_blobs_labels = duplicate_PCA_images(self.individual_blobs_images, self.individual_blobs_labels)
+        assert len(self.individual_blobs_labels) == len(self.individual_blobs_images)
         # print("Done")
         print("Preparing images and labels")
-        self.images = np.asarray(list(self.crossings_images) + list(self.fish_images))
+        self.images = np.asarray(list(self.crossings_images) + list(self.individual_blobs_images))
         self.images = np.expand_dims(self.images, axis = 3)
-        self.labels = np.concatenate([self.crossing_labels, self.fish_labels], axis = 0)
+        self.labels = np.concatenate([self.crossing_labels, self.individual_blobs_labels], axis = 0)
         self.labels = self.dense_to_one_hot(np.expand_dims(self.labels, axis = 1))
         assert len(self.images) == len(self.labels)
         if self.scope == 'training':
-            # self.images, self.labels = duplicate_PCA_images(self.images, self.labels)
             self.weight_positive = 1 - len(self.crossing_labels)/len(self.labels)
         else:
             self.weight_positive = 1
@@ -102,18 +129,36 @@ class CrossingDataset(object):
     def generate_crossing_images(self):
         crossing_images = []
         for crossing in self.crossings_sliced:
-            crossing_image, _, _ = get_body(self.video_height, self.video_width, crossing.bounding_box_image, crossing.pixels, crossing.bounding_box_in_frame_coordinates, self.image_size , only_blob = True)
+            crossing_image, _, _ = get_body(self.video_height, self.video_width,
+                                            crossing.bounding_box_image,
+                                            crossing.pixels,
+                                            crossing.bounding_box_in_frame_coordinates,
+                                            self.image_size , only_blob = True)
+            crossing_image = cv2.resize(crossing_image, None,
+                                        fx = self.downsampling_factor,
+                                        fy = self.downsampling_factor,
+                                        interpolation = cv2.INTER_CUBIC)
             crossing_image = ((crossing_image - np.mean(crossing_image))/np.std(crossing_image)).astype('float32')
             crossing_images.append(crossing_image)
         return crossing_images
 
-    def generate_fish_images(self):
-        fish_images = []
-        for fish in self.fish_sliced:
-            fish_image, _, _ = get_body(self.video_height, self.video_width, fish.bounding_box_image, fish.pixels, fish.bounding_box_in_frame_coordinates, self.image_size , only_blob = True)
-            fish_image = ((fish_image - np.mean(fish_image))/np.std(fish_image)).astype('float32')
-            fish_images.append(fish_image)
-        return fish_images
+    def generate_individual_blobs_images(self):
+        individual_blobs_images = []
+        for individual_blobs in self.individual_blobs_sliced:
+            individual_blobs_image, _, _ = get_body(self.video_height,
+                                                    self.video_width,
+                                                    individual_blobs.bounding_box_image,
+                                                    individual_blobs.pixels,
+                                                    individual_blobs.bounding_box_in_frame_coordinates,
+                                                    self.image_size,
+                                                    only_blob = True)
+            individual_blobs_image = cv2.resize(individual_blobs_image, None,
+                                                fx = self.downsampling_factor,
+                                                fy = self.downsampling_factor,
+                                                interpolation = cv2.INTER_CUBIC)
+            individual_blobs_image = ((individual_blobs_image - np.mean(individual_blobs_image))/np.std(individual_blobs_image)).astype('float32')
+            individual_blobs_images.append(individual_blobs_image)
+        return individual_blobs_images
 
     def generate_test_images(self, interval = None):
         test_images = []
@@ -122,7 +167,14 @@ class CrossingDataset(object):
         else:
             blobs = self.test[interval[0]:interval[1]]
         for blob in blobs:
-            test_image, _, _ = get_body(self.video_height, self.video_width, blob.bounding_box_image, blob.pixels, blob.bounding_box_in_frame_coordinates, self.image_size , only_blob = True)
+            test_image, _, _ = get_body(self.video_height, self.video_width,
+                                        blob.bounding_box_image, blob.pixels,
+                                        blob.bounding_box_in_frame_coordinates,
+                                        self.image_size, only_blob = True)
+            test_image = cv2.resize(test_image, None,
+                                    fx = self.downsampling_factor,
+                                    fy = self.downsampling_factor,
+                                    interpolation = cv2.INTER_CUBIC)
             test_image = ((test_image - np.mean(test_image))/np.std(test_image)).astype('float32')
             test_images.append(test_image)
 

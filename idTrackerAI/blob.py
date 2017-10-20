@@ -70,6 +70,38 @@ class Blob(object):
     def is_a_crossing(self):
         return self._is_a_crossing
 
+    def check_for_multiple_next_or_previous(self, direction = None):
+        current = getattr(self, direction)[0]
+
+        while len(getattr(current, direction)) == 1:
+
+            current = getattr(current, direction)[0]
+            if len(getattr(self, direction)) > 1:
+                return True
+                break
+
+        return False
+
+    def is_a_sure_individual(self):
+        if self.is_an_individual and len(self.previous) > 0 and len(self.next) > 0:
+            has_multiple_previous = self.check_for_multiple_next_or_previous('previous')
+            has_multiple_next = self.check_for_multiple_next_or_previous('next')
+            if not has_multiple_previous and not has_multiple_next:
+                return True
+        else:
+            return False
+
+    def is_a_sure_crossing(self):
+        if len(self.previous) > 1 or len(self.next) > 1:
+            return True
+        elif len(self.previous) == 1 and len(self.next) == 1:
+            has_multiple_previous = self.check_for_multiple_next_or_previous('previous')
+            has_multiple_next = self.check_for_multiple_next_or_previous('next')
+            if has_multiple_previous and has_multiple_next:
+                return True
+        else:
+            return False
+
     @property
     def has_ambiguous_identity(self):
         return self.is_an_individual_in_a_fragment and self.identity is list
