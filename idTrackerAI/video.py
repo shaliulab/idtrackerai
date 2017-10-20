@@ -215,7 +215,7 @@ class Video(object):
 
     def compute_identification_image_size(self, maximum_body_length):
         identification_image_size = int(np.sqrt(maximum_body_length ** 2 / 2))
-        identification_image_size = identification_image_size + identification_image_size%2  #this is to make the identification_image_size
+        identification_image_size = identification_image_size + identification_image_size % 2  #this is to make the identification_image_size
         self.identification_image_size = (identification_image_size, identification_image_size, 1)
 
     def init_processes_time_attributes(self):

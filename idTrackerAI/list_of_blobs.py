@@ -19,6 +19,7 @@ class ListOfBlobs(object):
         self.blobs_in_video = blobs_in_video
         self.number_of_frames_with_blobs = len(self.blobs_in_video)
         self.check_consistency_number_of_frames_and_number_of_frames_with_blobs()
+        self.blobs_are_connected = False
 
     def check_consistency_number_of_frames_and_number_of_frames_with_blobs(self):
         frame_diff = int(self.video.number_of_frames - self.number_of_frames_with_blobs)
@@ -47,12 +48,14 @@ class ListOfBlobs(object):
         logger.info("saving blobs list at %s" %path_to_save)
         np.save(path_to_save, self)
         self.reconnect()
+        self.blobs_are_connected = True
 
     @classmethod
     def load(cls, path_to_load_blob_list_file):
         logger.info("loading blobs list from %s" %path_to_load_blob_list_file)
         list_of_blobs = np.load(path_to_load_blob_list_file).item()
         list_of_blobs.reconnect()
+        list_of_blobs.blobs_are_connected = True
         return list_of_blobs
 
     def compute_fragment_identifier_and_blob_index(self):

@@ -73,6 +73,38 @@ class Blob(object):
     def is_a_crossing(self):
         return self._is_a_crossing
 
+    def check_for_multiple_next_or_previous(self, direction = None):
+        current = getattr(self, direction)[0]
+
+        while len(getattr(current, direction)) == 1:
+
+            current = getattr(current, direction)[0]
+            if len(getattr(self, direction)) > 1:
+                return True
+                break
+
+        return False
+
+    def is_a_sure_individual(self):
+        if self.is_an_individual and len(self.previous) > 0 and len(self.next) > 0:
+            has_multiple_previous = self.check_for_multiple_next_or_previous('previous')
+            has_multiple_next = self.check_for_multiple_next_or_previous('next')
+            if not has_multiple_previous and not has_multiple_next:
+                return True
+        else:
+            return False
+
+    def is_a_sure_crossing(self):
+        if len(self.previous) > 1 or len(self.next) > 1:
+            return True
+        elif len(self.previous) == 1 and len(self.next) == 1:
+            has_multiple_previous = self.check_for_multiple_next_or_previous('previous')
+            has_multiple_next = self.check_for_multiple_next_or_previous('next')
+            if has_multiple_previous and has_multiple_next:
+                return True
+        else:
+            return False
+
     @property
     def has_ambiguous_identity(self):
         return self.is_an_individual_in_a_fragment and self.identity is list
@@ -179,29 +211,32 @@ class Blob(object):
                 logger.debug("mean pixels both blobs %s" %str(np.mean([len(self.pixels), len(self.previous[0].pixels)])))
                 raise ValueError("non_shared_information_with_previous is nan")
 
-    def apply_model_area(self, video, model_area, identificationImageSize, number_of_blobs):
+    def apply_model_area(self, video, model_area, identification_image_size, number_of_blobs):
         if model_area(self.area) or number_of_blobs == video.number_of_animals: #Checks if area is compatible with the model area we built
-            if video.resolution_reduction == 1:
-                height = video._height
-                width = video._width
-            else:
-                height  = int(video._height * video.resolution_reduction)
-                width  = int(video._width * video.resolution_reduction)
 
             image_for_identification, \
             self._extreme1_coordinates, \
-            self._extreme2_coordinates = self.get_image_for_identification(height, width,
-                                                        self.bounding_box_image,
-                                                        self.pixels,
-                                                        self.bounding_box_in_frame_coordinates,
-                                                        identificationImageSize)
+            self._extreme2_coordinates = self.get_image_for_identification(video)
             self._image_for_identification = ((image_for_identification - np.mean(image_for_identification))/np.std(image_for_identification)).astype('float32')
             self._is_an_individual = True
         else:
             self._is_a_crossing = True
 
+    def get_image_for_identification(self, video):
+        if video.resolution_reduction == 1:
+            height = video._height
+            width = video._width
+        else:
+            height  = int(video._height * video.resolution_reduction)
+            width  = int(video._width * video.resolution_reduction)
+
+        return self._get_image_for_identification(height, width,
+                                                self.bounding_box_image, self.pixels,
+                                                self.bounding_box_in_frame_coordinates,
+                                                video.identification_image_size[0])
+
     @staticmethod
-    def get_image_for_identification(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, identificationImageSize):
+    def _get_image_for_identification(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, identification_image_size):
         bounding_box_image = remove_background_pixels(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates)
         pca = PCA()
         pxs = np.unravel_index(pixels,(height,width))
@@ -221,7 +256,7 @@ class Blob(object):
         minif_rot = cv2.warpAffine(bounding_box_image, M, diag, borderMode=cv2.BORDER_CONSTANT, flags = cv2.INTER_CUBIC)
 
 
-        crop_distance = int(identificationImageSize/2)
+        crop_distance = int(identification_image_size/2)
         x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
         y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
         image_for_identification = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
