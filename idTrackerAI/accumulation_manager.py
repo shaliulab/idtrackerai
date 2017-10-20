@@ -12,7 +12,7 @@ RATIO_OLD = 0.6
 RATIO_NEW = 0.4
 MAXIMAL_IMAGES_PER_ANIMAL = 3000
 CERTAINTY_THRESHOLD = .1 # threshold to select a individual fragment as eligible for training
-MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY = .5
+MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION = .5
 
 logger = logging.getLogger("__main__.accumulation_manager")
 
@@ -113,7 +113,6 @@ class AccumulationManager(object):
                     # the number of used images to reac the MAXIMAL_IMAGES_PER_ANIMAL
                     number_samples_new = number_of_new_images
                     number_samples_used = MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
-
                 # we put together a random sample of the new images and the used images
                 if self.new_images is not None:
                     images.extend(random.sample(self.new_images[new_images_indices],number_samples_new))
@@ -227,8 +226,12 @@ class AccumulationManager(object):
         self.number_of_acceptable_global_fragments = np.sum([global_fragment.acceptable_for_training(self.accumulation_strategy)
                                                                 and not global_fragment.used_for_training
                                                                 for global_fragment in self.list_of_global_fragments.global_fragments])
+        if self.video.accumulation_trial == 0:
+            minimum_number_of_images_accumulated_to_start_partial_accumulation = MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
+        else:
+            minimum_number_of_images_accumulated_to_start_partial_accumulation = 0
         if self.number_of_acceptable_global_fragments == 0\
-            and self.ratio_accumulated_images > MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY\
+            and self.ratio_accumulated_images > minimum_number_of_images_accumulated_to_start_partial_accumulation\
             and self.ratio_accumulated_images < self.threshold_early_stop_accumulation:
             logger.debug('Accumulating by partial strategy')
             self.accumulation_strategy = 'partial'
@@ -236,7 +239,7 @@ class AccumulationManager(object):
             for i, global_fragment in enumerate(self.list_of_global_fragments.global_fragments):
                 if global_fragment.used_for_training == False:
                     self.check_if_is_acceptable_for_training(global_fragment)
-        elif self.ratio_accumulated_images < MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY:
+        elif self.ratio_accumulated_images < minimum_number_of_images_accumulated_to_start_partial_accumulation:
             logger.info('The ratio of accumulated images is too small and a partial accumulation might fail.')
 
     def reset_non_acceptable_fragment(self, fragment):
