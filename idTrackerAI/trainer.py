@@ -30,12 +30,10 @@ def train(video,
             plot_flag,
             global_step = 0,
             first_accumulation_flag = False,
-            preprocessing_type = None,
-            knowledge_transfer_from_same_animals = False):
+            knowledge_transfer_from_same_animals = False,
+            accumulation_manager = None):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
-    if preprocessing_type is None:
-        preprocessing_type = video.preprocessing_type
     logger.info("Training...")
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training', scope = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation', scope = 'training')
@@ -46,7 +44,7 @@ def train(video,
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 
     # Instantiate data_set
-    training_dataset, validation_dataset = split_data_train_and_validation(preprocessing_type, net.params.number_of_animals, images, labels)
+    training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images, labels)
     # Crop images from 36x36 to 32x32 without performing data augmentation
     training_dataset.crop_images(image_size = net.params.image_size[0])
     validation_dataset.crop_images(image_size = net.params.image_size[0])
@@ -91,6 +89,9 @@ def train(video,
 
     global_step += trainer.epochs_completed
     logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss))
+    # update used_for_training flag to True for fragments used
+    logger.info("Accumulation step completed. Updating global fragments used for training")
+    accumulation_manager.update_fragments_used_for_training()
     # plot if asked
     if plot_flag:
         store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, fragments, black = False)
@@ -107,5 +108,5 @@ def train(video,
     # Save network model
     net.save()
     if plot_flag:
-        fig.savefig(os.path.join(net.params.save_folder,'training.pdf'))
+        fig.savefig(os.path.join(net.params.save_folder,'Accumulation-' + str(video.accumulation_trial) + '-' + str(video.accumulation_step) + '.pdf'))
     return global_step, net, store_validation_accuracy_and_loss_data

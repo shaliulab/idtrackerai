@@ -32,7 +32,7 @@ def assign(net, video, images, print_flag):
     logger.info("generating data set")
     data = DataSet(net.params.number_of_animals, images)
     logger.debug("images shape %s" %str(images.shape))
-    data.crop_images(image_size = video.portrait_size[0])
+    data.crop_images(image_size = video.identification_image_size[0])
     logger.info("getting predictions")
     assigner = GetPrediction(data, print_flag = print_flag)
     assigner.get_predictions_softmax(net.predict)
@@ -48,7 +48,7 @@ def compute_identification_statistics_for_non_accumulated_fragments(fragments, a
     counter = 0
 
     for fragment in fragments:
-        if not fragment.used_for_training and fragment.is_a_fish:
+        if not fragment.used_for_training and fragment.is_an_individual:
             next_counter_value = counter + fragment.number_of_images
             predictions = assigner.predictions[counter : next_counter_value]
             softmax_probs = assigner.softmax_probs[counter : next_counter_value]
@@ -56,7 +56,7 @@ def compute_identification_statistics_for_non_accumulated_fragments(fragments, a
             counter = next_counter_value
 
 def assign_identity(fragments):
-    [fragment.assign_identity() for fragment in fragments if fragment.is_a_fish]
+    [fragment.assign_identity() for fragment in fragments if fragment.is_an_individual]
 
 """
 ********************************************************************************
@@ -69,7 +69,7 @@ def get_attributes_for_ghost_crossing_assignment(fragment_to_assign, fragments, 
         for fragment in fragments:
             if fragment.identifier == target_fragment_identifier:
                 [setattr(fragment_to_assign, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes
-                    if fragment.is_a_fish and hasattr(fragment, 'identity')]
+                    if fragment.is_an_individual and hasattr(fragment, 'identity')]
 
 def assign_ghost_crossings(fragments):
     for fragment in tqdm(fragments, desc = "Assigning ghost crossings"):

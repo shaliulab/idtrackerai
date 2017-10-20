@@ -37,7 +37,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_list_groundtru
                 print(tracked_blob.is_a_fish)
                 print(tracked_blob.identity)
 
-            if (tracked_blob.is_a_fish_in_a_fragment or\
+            if (tracked_blob.is_an_individual_in_a_fragment or\
                 tracked_blob.is_a_jump or\
                 tracked_blob.is_a_jumping_fragment or\
                 hasattr(tracked_blob,'is_an_extreme_of_individual_fragment')) and\

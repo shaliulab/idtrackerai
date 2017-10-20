@@ -16,15 +16,13 @@ import time
 import logging
 
 AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg']
-SUPPORTED_PREPROCESSING_TYPES = ['portrait', 'body', 'body_blob']
 FRAMES_PER_EPISODE = 500 #long videos are divided into chunks. This is the number of frame per chunk
 
 logger = logging.getLogger("__main__.video")
 
 class Video(object):
-    def __init__(self, video_path = None, preprocessing_type = None, number_of_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
+    def __init__(self, video_path = None, number_of_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
         self._video_path = video_path #string: path to the video
-        self._preprocessing_type = preprocessing_type #string: type of animals to be tracked in the video
         self._number_of_animals = number_of_animals #int: number of animals in the video
         self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split for parallel computation]
         self.bkg = bkg #matrix [shape = shape of a frame] background used to do bkg subtraction
@@ -172,17 +170,6 @@ class Video(object):
             raise ValueError("Supported video extensions are ", AVAILABLE_VIDEO_EXTENSION)
 
     @property
-    def preprocessing_type(self):
-        return self._preprocessing_type
-
-    @preprocessing_type.setter
-    def preprocessing_type(self, value):
-        if value in SUPPORTED_PREPROCESSING_TYPES:
-            self._preprocessing_type = value
-        else:
-            raise ValueError("The supported animal types are " , SUPPORTED_PREPROCESSING_TYPES)
-
-    @property
     def number_of_animals(self):
         return self._number_of_animals
 
@@ -226,15 +213,10 @@ class Video(object):
             self._number_of_episodes = len(self._paths_to_video_segments)
         cap.release()
 
-    def compute_portrait_size(self, maximum_body_length):
-        if self.preprocessing_type == 'portrait':
-            portrait_size = int(maximum_body_length/2)
-            portrait_size =  portrait_size + portrait_size%2 #this is to make the portrait_size even
-            self.portrait_size = (portrait_size, portrait_size, 1)
-        elif self.preprocessing_type == 'body' or self.preprocessing_type == 'body_blob':
-            portrait_size = int(np.sqrt(maximum_body_length ** 2 / 2))
-            portrait_size = portrait_size + portrait_size%2  #this is to make the portrait_size
-            self.portrait_size = (portrait_size, portrait_size, 1)
+    def compute_identification_image_size(self, maximum_body_length):
+        identification_image_size = int(np.sqrt(maximum_body_length ** 2 / 2))
+        identification_image_size = identification_image_size + identification_image_size%2  #this is to make the identification_image_size
+        self.identification_image_size = (identification_image_size, identification_image_size, 1)
 
     def init_processes_time_attributes(self):
         self.generate_trajectories_time = 0

@@ -841,7 +841,7 @@ class Validator(BoxLayout):
                 frame_index = frame_index + 1
                 blobs_in_frame = self.blobs_in_video[frame_index]
                 for blob in blobs_in_frame:
-                    if not blob.is_a_fish_in_a_fragment:
+                    if not blob.is_an_individual_in_a_fragment:
                         non_crossing = False
                         self.visualiser.video_slider.value = frame_index
                         self.visualiser.visualise(frame_index, func = self.writeIds)
@@ -858,7 +858,7 @@ class Validator(BoxLayout):
                 frame_index = frame_index - 1
                 blobs_in_frame = self.blobs_in_video[frame_index]
                 for blob in blobs_in_frame:
-                    if not blob.is_a_fish_in_a_fragment:
+                    if not blob.is_an_individual_in_a_fragment:
                         non_crossing = False
                         self.visualiser.video_slider.value = frame_index
                         self.visualiser.visualise(frame_index, func = self.writeIds)
@@ -1027,9 +1027,9 @@ class Validator(BoxLayout):
                 elif not blob.used_for_training:
                     # we draw a cross in the centroid if the blob has been assigned during assignation
                     # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[cur_id], 1)
-                    if blob.is_a_fish_in_a_fragment:
+                    if blob.is_an_individual_in_a_fragment:
                         cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
-                    elif not blob.is_a_fish:
+                    elif not blob.is_an_individual:
                         cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, [255,255,255], 2)
                     elif blob.is_a_jump:
                         bounding_box = blob.bounding_box_in_frame_coordinates
@@ -1075,9 +1075,9 @@ class Validator(BoxLayout):
         #         print("this blob does not have frequencies in fragment")
         #     print("P1_vector: ", blob.P1_vector)
             # print("P2_vector: ", blob.P2_vector)
-        #     print("is_a_fish: ", blob.is_a_fish)
+        #     print("is_an_individual: ", blob.is_an_individual)
         #     print("is_in_a_fragment: ", blob.is_in_a_fragment)
-        #     print("is_a_fish_in_a_fragment: ", blob.is_a_fish_in_a_fragment)
+        #     print("is_an_individual_in_a_fragment: ", blob.is_an_individual_in_a_fragment)
         #     print("is_a_jump: ", blob.is_a_jump)
         #     print("is_a_ghost_crossing: ", blob.is_a_ghost_crossing)
         #     print("is_a_crossing: ", blob.is_a_crossing)
@@ -1108,10 +1108,10 @@ class Validator(BoxLayout):
         count_past_corrections = 1 #to take into account the modification already done in the current frame
         count_future_corrections = 0
         new_blob_identity = modified_blob.user_generated_identity
-        if modified_blob.is_a_fish_in_a_fragment:
+        if modified_blob.is_an_individual_in_a_fragment:
             current = modified_blob
 
-            while current.next[0].is_a_fish_in_a_fragment:
+            while current.next[0].is_an_individual_in_a_fragment:
                 # print("propagating forward")
                 current.next[0]._user_generated_identity = current.user_generated_identity
                 current = current.next[0]
@@ -1120,7 +1120,7 @@ class Validator(BoxLayout):
 
             current = modified_blob
 
-            while current.previous[0].is_a_fish_in_a_fragment:
+            while current.previous[0].is_an_individual_in_a_fragment:
                 # print("propagating backward")
                 current.previous[0]._user_generated_identity = current.user_generated_identity
                 current = current.previous[0]
@@ -1225,7 +1225,7 @@ class Validator(BoxLayout):
         self.in_a_fragment_label.text_size = self.in_a_fragment_label.size
         self.in_a_fragment_label.texture_size = self.in_a_fragment_label.size
         #is a fish
-        self.fish_label = Label(text='It is a fish: ' + str(blob_to_explore.is_a_fish))
+        self.fish_label = Label(text='It is a fish: ' + str(blob_to_explore.is_an_individual))
         self.fish_label.text_size = self.fish_label.size
         self.fish_label.texture_size = self.fish_label.size
         #is a ghost crossing
@@ -1363,7 +1363,7 @@ class Validator(BoxLayout):
                         blob_identity = blob._identity_corrected_solving_duplication
                 else:
                     blob_identity = blob.identity
-                if (blob.is_a_fish_in_a_fragment or\
+                if (blob.is_an_individual_in_a_fragment or\
                         blob.is_a_jump or\
                         blob.is_a_jumping_fragment or\
                         hasattr(blob,'is_an_extreme_of_individual_fragment')) and\

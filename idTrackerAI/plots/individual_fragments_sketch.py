@@ -137,11 +137,11 @@ if __name__ == '__main__':
 
                 # Extact individual fragments from global fragmtn
                 blob_index_next = blobs[i+1].index(next_blob) + 1
-                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_a_fish:
+                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_an_individual:
                     ax_arr[2].plot([i, i+1],[j + 1, blob_index_next], 'o-' ,c = colors[blob._identity], markersize = 3)
 
                 # Unroll hierarchies
-                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_a_fish:
+                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_an_individual:
                     blob_index = blob_indices_individial_fragments[np.where(blob_indices_individial_fragments[:,1] == blob._fragment_identifier)[0],:][0][0] + 1
                     ax_arr[3].plot([i,i+1],[blob_index, blob_index], '-' ,c = colors[blob._identity], linewidth = 10, solid_capstyle ='butt')
                     # ax_arr[3].plot([i,i+1],[blob._identity, blob._identity], 'o-' ,c = colors[blob._identity], markersize = 3, solid_capstyle ='butt')
@@ -179,7 +179,7 @@ if __name__ == '__main__':
             for next_blob in next_blobs:
 
                 # Unroll hierarchies
-                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_a_fish_in_a_fragment:
+                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_an_individual_in_a_fragment:
                     blob_index = blob_indices_individial_fragments[np.where(blob_indices_individial_fragments[:,1] == blob._fragment_identifier)[0],:][0][0] + 1
                     ax.plot([i,i+1],[blob._identity, blob._identity], 'o-' ,c = colors[blob._identity], markersize = 5, solid_capstyle ='butt',linewidth = 1)
 
@@ -207,7 +207,7 @@ if __name__ == '__main__':
             for next_blob in next_blobs:
 
                 # Unroll hierarchies
-                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_a_fish:
+                if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and next_blob.is_an_individual:
                     blob_index = blob_indices_individial_fragments[np.where(blob_indices_individial_fragments[:,1] == blob._fragment_identifier)[0],:][0][0] + 1
                     ax.plot([i,i+1],[blob._identity, blob._identity], '-' ,c = colors[blob._identity], linewidth = 20, solid_capstyle ='butt')
                     imscatter(i, blob._identity, -blob.portrait, ax = ax, zoom = 1)
@@ -236,7 +236,7 @@ if __name__ == '__main__':
     for i, frame_number in enumerate(range(min_start_individual_fragments, max_end_individual_fragments)):
         blobs_in_frame = blobs[frame_number]
         for j, blob in enumerate(blobs_in_frame):
-            if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and blob.is_a_fish:
+            if blob._fragment_identifier in global_fragment.individual_fragments_identifiers and blob.is_an_individual:
                 centroid_trajectories[i, blob.identity-1, :] = blob.centroid
 
     for individual in range(video.number_of_animals):

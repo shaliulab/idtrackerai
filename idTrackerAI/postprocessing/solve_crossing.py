@@ -51,7 +51,7 @@ def get_identities_in_crossing_forward(blob):
 
                 for previous_blob_next in previous_blob.next:
                     if previous_blob_next is not blob: # for every next of the previous that is not the current blob we remove the identities
-                        if previous_blob_next.is_a_fish and previous_blob_next.identity != 0 and previous_blob_next.identity in blob._identity:
+                        if previous_blob_next.is_an_individual and previous_blob_next.identity != 0 and previous_blob_next.identity in blob._identity:
                             blob._identity.remove(previous_blob_next.identity)
     # return blob
 
@@ -69,12 +69,12 @@ def get_identities_in_crossing_backward(blob, blobs_in_frame):
             if len(next_blob.previous) != 1: # the next crossing_blob is splitting
                 for next_blob_previous in next_blob.previous:
                     if next_blob_previous is not blob:
-                        if next_blob_previous.is_a_fish and next_blob_previous.identity != 0 and next_blob_previous.identity in blob._identity:
+                        if next_blob_previous.is_an_individual and next_blob_previous.identity != 0 and next_blob_previous.identity in blob._identity:
                             blob._identity.remove(next_blob_previous.identity)
                         elif next_blob_previous.is_a_crossing and not next_blob_previous.bad_crossing:
                             [blob._identity.remove(identity) for identity in next_blob_previous.identity if identity in blob._identity]
 
-    identities_to_remove_from_crossing = [blob_to_remove.identity for blob_to_remove in blobs_in_frame if blob_to_remove.is_a_fish]
+    identities_to_remove_from_crossing = [blob_to_remove.identity for blob_to_remove in blobs_in_frame if blob_to_remove.is_an_individual]
     identities_to_remove_from_crossing.extend([0])
     [blob._identity.remove(identity) for identity in identities_to_remove_from_crossing if identity in blob._identity]
     if blob.bad_crossing:
@@ -325,7 +325,7 @@ def assign_fish_images(images, video):
                     use_adam_optimiser = False,
                     restore_folder = video._accumulation_folder,
                     save_folder = video._accumulation_folder,
-                    image_size = video.portrait_size)
+                    image_size = video.identification_image_size)
     net = ConvNetwork(net_params)
     net.restore()
     return assign(net, video, images, print_flag = True)

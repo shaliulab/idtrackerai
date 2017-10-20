@@ -15,7 +15,7 @@ from network_params import NetworkParams
 
 """if the blob was not assigned durign the standard procedure it could be a jump or a crossing
 these blobs are blobs that are not in a fragment. We distinguish the two cases in which
-they are single fish (blob.is_a_fish == True) or crossings (blob.is_a_fish == False)
+they are single fish (blob.is_an_individual == True) or crossings (blob.is_an_individual == False)
 """
 VEL_PERCENTILE = 99
 
@@ -46,7 +46,7 @@ def get_jumps_and_crossing_frames_arrays(blobs_in_video):
             # print("blob number ", blob_num)
             if blob.identity == 0:
                 # if it is a fish, than it has a portrait and can be assigned
-                if blob.is_a_fish:
+                if blob.is_an_individual:
                     #first we assign the exteme points of the individual fragments
                     if len(blob.next) == 1:
                         blob.identity = blob.next[0].identity
@@ -79,7 +79,7 @@ def compute_model_velocity(blobs_in_video, number_of_animals, percentile = VEL_P
     for blobs_in_frame in blobs_in_video:
 
         for blob in tqdm(blobs_in_frame, desc = "computing velocity model"):
-            if blob.is_a_fish_in_a_fragment and current_individual_fragment_identifier != blob.fragment_identifier:
+            if blob.is_an_individual_in_a_fragment and current_individual_fragment_identifier != blob.fragment_identifier:
                 current_individual_fragment_identifier = blob.fragment_identifier
                 distance_travelled_in_individual_fragments.extend(blob.frame_by_frame_velocity())
 
@@ -128,7 +128,7 @@ class Jump(object):
     def jumping_blob(self, jumping_blob):
         """by definition, a jumping blob is a blob which satisfied the model area,
         but does not belong to an individual fragment"""
-        assert jumping_blob.is_a_fish
+        assert jumping_blob.is_an_individual
         assert not jumping_blob.is_in_a_fragment
         self._jumping_blob = jumping_blob
 
@@ -139,7 +139,7 @@ class Jump(object):
     def apply_model_velocity(self, blobs_in_video):
         print("checking velocity model for blob ", self.jumping_blob.identity, " in frame ", self.jumping_blob.frame_number)
         blobs_in_frame = blobs_in_video[self.jumping_blob.frame_number - 1]
-        corresponding_blob_list = [blob for blob in blobs_in_frame if blob.is_a_fish and blob.identity == self.jumping_blob.identity]
+        corresponding_blob_list = [blob for blob in blobs_in_frame if blob.is_an_individual and blob.identity == self.jumping_blob.identity]
         if len(corresponding_blob_list) == 1:
             corresponding_blob = corresponding_blob_list[0]
             velocity = np.linalg.norm(corresponding_blob.centroid - self.jumping_blob.centroid)
@@ -211,7 +211,7 @@ class Crossing(object):
         counter = 1
 
         #the condition in the while implies that no other blob merged or left the crossing
-        while len(blob.next) == 1 and len(blob.next[0].previous) == 1 and not blob.next[0].is_a_fish:
+        while len(blob.next) == 1 and len(blob.next[0].previous) == 1 and not blob.next[0].is_an_individual:
             self.crossing_frames.append(self.starting_frame + counter)
             counter += 1
             blob = blob.next[0]
@@ -219,7 +219,7 @@ class Crossing(object):
 
         counter = 1
 
-        while len(blob.previous) == 1 and len(blob.previous[0].next) == 1 and not blob.previous[0].is_a_fish:
+        while len(blob.previous) == 1 and len(blob.previous[0].next) == 1 and not blob.previous[0].is_an_individual:
             self.crossing_frames.append(self.starting_frame - counter)
             counter += 1
             blob = blob.previous[0]
@@ -249,7 +249,7 @@ class Crossing(object):
     def get_animal_blobs_and_crossing_blobs(list_of_blobs):
         animal_blobs = []
         crossing_blobs = []
-        [animal_blobs.append(blob) if blob.identity != 0 and blob.is_a_fish else crossing_blobs.append(blob) for blob in list_of_blobs]
+        [animal_blobs.append(blob) if blob.identity != 0 and blob.is_an_individual else crossing_blobs.append(blob) for blob in list_of_blobs]
         return animal_blobs, crossing_blobs
 
     @staticmethod
@@ -289,7 +289,7 @@ if __name__ == "__main__":
     blobs = list_of_blobs.blobs_in_video
     #get portraits for jumps and frame indices for crossings
     jumps, crossing_frames = get_jumps_and_crossing_frames_arrays(blobs)
-    jump_images = [blob.portrait for blob in jumps]
+    jump_images = [blob.image_for_identification for blob in jumps]
     #assign jumps by restoring the network
     assigner = assign_jumps(jump_images, video)
 

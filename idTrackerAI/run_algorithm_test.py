@@ -295,7 +295,7 @@ if __name__ == '__main__':
                             #     for blob in blobs_in_frame:
                             #         #if a blob has not been assigned but it is a fish and overlaps with one fragment
                             #         #assign it!
-                            #         if blob.identity == 0 and blob.is_a_fish:
+                            #         if blob.identity == 0 and blob.is_an_individual:
                             #             if len(blob.next) == 1: blob.identity = blob.next[0].identity
                             #             elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
                         else:
@@ -324,7 +324,7 @@ if __name__ == '__main__':
                             for i, blob in enumerate(blobs_in_frame):
                                 if blob._fragment_identifier not in individual_fragments:
                                     individual_fragments.append(blob._fragment_identifier)
-                                if blob.is_a_fish_in_a_fragment:
+                                if blob.is_an_individual_in_a_fragment:
                                     number_of_possible_assignations += 1
                                     if blob._assigned_during_accumulation:
                                         number_of_blobs_assigned_in_accumulation += 1
@@ -410,7 +410,7 @@ if __name__ == '__main__':
                             for i, blob in enumerate(blobs_in_frame):
                                 if blob._fragment_identifier not in individual_fragments:
                                     individual_fragments.append(blob._fragment_identifier)
-                                if blob.is_a_fish_in_a_fragment:
+                                if blob.is_an_individual_in_a_fragment:
                                     number_of_possible_assignations += 1
                                     if blob._assigned_during_accumulation:
                                         number_of_blobs_assigned_in_accumulation += 1

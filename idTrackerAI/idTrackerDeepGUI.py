@@ -50,7 +50,7 @@ from GUI_utils import selectFile,\
 from py_utils import getExistentFiles
 from video_utils import checkBkg
 from pre_trainer import pre_trainer
-from accumulation_manager import AccumulationManager, get_predictions_of_candidates_global_fragments
+from accumulation_manager import AccumulationManager
 from accumulator import accumulate
 from network_params import NetworkParams
 from trainer import train
@@ -211,9 +211,9 @@ if __name__ == '__main__':
         list_of_blobs.check_maximal_number_of_blob()
         logger.info("Computing a model of the area of the individuals")
         model_area, video.median_body_length = list_of_blobs.compute_model_area_and_body_length()
-        video.compute_portrait_size(video.median_body_length)
+        video.compute_identification_image_size(video.median_body_length)
         logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
-        list_of_blobs.apply_model_area_to_video(model_area, video.portrait_size[0])
+        list_of_blobs.apply_model_area_to_video(model_area, video.identification_image_size[0])
         # use_crossings_detector = getInput('Crossings detector', 'Do you want to you the crossings detector? y/N')
         # if use_crossings_detector == 'y':
         #     video.create_crossings_detector_folder()
@@ -251,13 +251,13 @@ if __name__ == '__main__':
         #     logger.debug("Classify individuals and crossings")
         #     crossings_predictor = GetPredictionCrossigns(net)
         #     predictions = crossings_predictor.get_all_predictions(test_set)
-        #     # set blobs as crossings by deleting the portrait
+        #     # set blobs as crossings by deleting the image_for_identification
         #     [setattr(blob,'_portrait',None) if prediction == 1 else setattr(blob,'bounding_box_image', None)
         #                                     for blob, prediction in zip(test_set.test, predictions)]
         #     # delete bounding_box_image from blobs that have portraits
         #     [setattr(blob,'bounding_box_image', None) for blobs_in_frame in blobs
         #                                                 for blob in blobs_in_frame
-        #                                                 if blob.is_a_fish
+        #                                                 if blob.is_an_individual
         #                                                 and blob.bounding_box_image is not None]
         #     logger.debug("Freeing memory. Test crossings set deleted")
         #     test_set = None
@@ -282,13 +282,16 @@ if __name__ == '__main__':
         video.individual_fragments_distance_travelled = compute_and_plot_fragments_statistics(video,
                                                                                             list_of_fragments,
                                                                                             list_of_global_fragments)
-        video.number_of_non_filtered_global_fragments = list_of_global_fragments.number_of_global_fragments
-        list_of_global_fragments.filter_by_minimum_number_of_frames(minimum_number_of_frames = 3)
         video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
+        list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
+        video.number_of_global_fragments_candidates_for_accumulation = list_of_global_fragments.number_of_global_fragments
         list_of_global_fragments.relink_fragments_to_global_fragments(list_of_fragments.fragments)
         video.number_of_unique_images_in_global_fragments = list_of_fragments.compute_total_number_of_images_in_global_fragments()
         list_of_global_fragments.compute_maximum_number_of_images()
-        video.maximum_number_of_portraits_in_global_fragments = list_of_global_fragments.maximum_number_of_images
+        video.maximum_number_of_images_in_global_fragments = list_of_global_fragments.maximum_number_of_images
+        list_of_fragments.get_accumulable_individual_fragments_identifiers(list_of_global_fragments)
+        list_of_fragments.get_not_accumulable_individual_fragments_identifiers(list_of_global_fragments)
+        list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
         #save connected blobs in video (organized frame-wise)
         list_of_blobs.video = video
         list_of_blobs.save(number_of_chunks = video.number_of_frames)
@@ -334,7 +337,7 @@ if __name__ == '__main__':
                                 keep_prob = 1.0,
                                 scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax'],
                                 save_folder = video._accumulation_folder,
-                                image_size = video.portrait_size)
+                                image_size = video.identification_image_size)
     if not bool(loadPreviousDict['first_accumulation']):
         logger.info("Starting accumulation")
         list_of_fragments.reset(roll_back_to = 'fragmentation')
@@ -393,6 +396,7 @@ if __name__ == '__main__':
         logger.info("Saving video")
         video.save()
     video.first_accumulation_time = time.time() - video.first_accumulation_time
+    list_of_fragments.save_light_list(video._accumulation_folder)
     if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
         video.assignment_time = time.time()
         if not loadPreviousDict['assignment']:
@@ -408,7 +412,6 @@ if __name__ == '__main__':
         video.save()
     else:
         print('\nPretraining ---------------------------------------------------------')
-        list_of_fragments.save_light_list(video._accumulation_folder)
         video.pretraining_time = time.time()
         #create folder to store pretraining
         video.create_pretraining_folder()
@@ -419,7 +422,7 @@ if __name__ == '__main__':
                                                 use_adam_optimiser = False,
                                                 scopes_layers_to_optimize = None,
                                                 save_folder = video._pretraining_folder,
-                                                image_size = video.portrait_size)
+                                                image_size = video.identification_image_size)
         if not loadPreviousDict['pretraining']:
             #### Pre-trainer ####
             list_of_fragments.reset(roll_back_to = 'fragmentation')
@@ -589,10 +592,20 @@ if __name__ == '__main__':
     #     pass
 
     #############################################################
+    ##############   Invididual fragments stats #################
+    ####
+    #############################################################
+    video.individual_fragments_stats = list_of_fragments.get_stats(list_of_global_fragments)
+    list_of_fragments.plot_stats()
+    video.save()
+
+    #############################################################
     ##############   Update list of blobs   #####################
     ####
     #############################################################
     list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
+    if False:
+        list_of_blobs.compute_nose_and_head_coordinates()
 
     #############################################################
     ##############   Create trajectories    #####################

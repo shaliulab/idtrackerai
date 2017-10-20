@@ -59,7 +59,7 @@ if __name__ == '__main__':
             for i, individual_fragment_identifier in enumerate(global_fragment.individual_fragments_identifiers):
                 if individual_fragment_identifier not in individual_fragments_added:
                     individual_fragments_added.append(individual_fragment_identifier)
-                    number_of_frames_in_individual_fragments.append(global_fragment._number_of_portraits_per_individual_fragment[i])
+                    number_of_frames_in_individual_fragments.append(global_fragment._number_of_images_per_individual_fragment[i])
             np.save(labels[j] + '_individual_fragments_distribution.npy',number_of_frames_in_individual_fragments)
         # remove global fragments that are lenght 0
         number_of_frames_in_individual_fragments = np.asarray(filter(lambda x: x >= 3, number_of_frames_in_individual_fragments))

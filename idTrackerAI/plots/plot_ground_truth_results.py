@@ -110,7 +110,7 @@ if __name__ == '__main__':
                                                                 'crossing_detector_used': None,
                                                                 'maximum_number_of_blobs': video._maximum_number_of_blobs,
                                                                 'median_body_length': None,
-                                                                'portrait_size': None,
+                                                                'identification_image_size': None,
                                                                 'individual_fragments_lenghts': number_of_frames_in_individual_fragments,
                                                                 'individual_fragments_distance_travelled': distance_travelled_individual_fragments,
                                                                 'crossing_fragments_lengths': None,

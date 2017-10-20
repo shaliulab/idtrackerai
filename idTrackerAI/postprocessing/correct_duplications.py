@@ -32,8 +32,8 @@ def solve_duplications_loop(list_of_fragments, scope = None):
     fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(scope)
 
     for fragment in fragments_in_direction:
-        # print(fragment.is_a_fish, fragment.identity != 0, fragment.is_a_duplication, not fragment.used_for_training, not hasattr(fragment, 'identity_corrected_solving_duplication'))
-        if fragment.is_a_fish\
+        # print(fragment.is_an_individual, fragment.identity != 0, fragment.is_a_duplication, not fragment.used_for_training, not hasattr(fragment, 'identity_corrected_solving_duplication'))
+        if fragment.is_an_individual\
             and fragment.identity != 0\
             and fragment.is_a_duplication\
             and not fragment.used_for_training\

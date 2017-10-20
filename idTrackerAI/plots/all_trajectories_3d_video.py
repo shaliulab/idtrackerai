@@ -114,7 +114,7 @@ if __name__ == '__main__':
     for frame_number in range(video.number_of_frames):
         blobs_in_frame = blobs[frame_number]
         for j, blob in enumerate(blobs_in_frame):
-            if blob.is_a_fish:
+            if blob.is_an_individual:
                 centroid_trajectories[frame_number, blob.identity-1, :] = blob.centroid
 
     for individual in range(video.number_of_animals):

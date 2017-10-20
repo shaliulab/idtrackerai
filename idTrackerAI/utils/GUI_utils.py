@@ -22,12 +22,12 @@ import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
 from segmentation import segmentVideo, blobExtractor
-from get_portraits import get_portrait, get_body
 from video_utils import checkBkg
 from py_utils import get_spaced_colors_util, saveFile, loadFile, get_existent_preprocessing_steps
 
-logger = logging.getLogger("__main__.GUI_utils")
+from blob import Blob
 
+logger = logging.getLogger("__main__.GUI_utils")
 
 """
 Display messages and errors
@@ -325,44 +325,35 @@ def SegmentationPreview(video):
         showerCopy = cv2.resize(showerCopy,None, fx = np.true_divide(1,resDown), fy = np.true_divide(1,resDown))
         numColumns = 5
         numGoodContours = len(goodContours)
-        numBlackPortraits = numColumns - numGoodContours % numColumns
-        numPortraits = numGoodContours + numBlackPortraits
+        numBlackImages = numColumns - numGoodContours % numColumns
+        numImages = numGoodContours + numBlackImages
         j = 0
         maximum_body_length = 70
         if estimated_body_lengths:
             maximum_body_length = np.max(estimated_body_lengths)
-        portraitsMat = []
-        rowPortrait = []
+        imagesMat = []
+        rowImage = []
 
         logger.debug("num blobs detected: %i" %numGoodContours)
         logger.debug("maximum_body_length %i " %maximum_body_length)
         logger.debug("areas: %s" %str(areas))
 
-        if video.preprocessing_type == 'portrait':
-            portraitSize = int(maximum_body_length/2)
-            portraitSize =  portraitSize + portraitSize%2 #this is to make the portraitSize even
-        elif video.preprocessing_type == 'body' or  video.preprocessing_type == 'body_blob':
-            portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
-            portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
+        identificationImageSize = int(np.sqrt(maximum_body_length ** 2 / 2))
+        identificationImageSize = identificationImageSize + identificationImageSize%2  #this is to make the identificationImageSize even
 
-        while j < numPortraits:
+        while j < numImages:
             if j < numGoodContours:
-                if video.preprocessing_type == 'portrait':
-                    portrait, _, _= get_portrait(miniFrames[j],goodContours[j],bbs[j],portraitSize)
-                elif video.preprocessing_type == 'body':
-                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize)
-                elif video.preprocessing_type == 'body_blob':
-                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
+                image_for_identification, _, _ = Blob.get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize)
             else:
-                portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
-            rowPortrait.append(portrait)
+                image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
+            rowImage.append(image_for_identification)
             if (j+1) % numColumns == 0:
-                portraitsMat.append(np.hstack(rowPortrait))
-                rowPortrait = []
+                imagesMat.append(np.hstack(rowImage))
+                rowImage = []
             j += 1
 
-        portraitsMat = np.vstack(portraitsMat)
-        cv2.imshow('Bars',np.squeeze(portraitsMat))
+        imagesMat = np.vstack(imagesMat)
+        cv2.imshow('Bars',np.squeeze(imagesMat))
         cv2.imshow('IdPlayer', showerCopy)
         cv2.moveWindow('Bars', 10,10 )
         cv2.moveWindow('IdPlayer', 200, 10 )
@@ -422,7 +413,7 @@ def SegmentationPreview(video):
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
 
-    def resizePortraitDown(res):
+    def resizeImageDown(res):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
@@ -484,17 +475,10 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
     minThreshold = preprocParams['minThreshold']
     maxThreshold = preprocParams['maxThreshold']
     numAnimals = preprocParams['numAnimals']
-    preprocessing_type = preprocParams['preprocessing_type']
 
     if numAnimals == None:
         numAnimals = getInput('Number of animals','Type the number of animals')
         numAnimals = int(numAnimals)
-
-    if preprocessing_type is None:
-        preprocessing_type = getInput('Preprocessing type','What kind of preprocessing do you want? portrait, body or body_blob?')
-
-    if preprocessing_type != 'portrait' and preprocessing_type != 'body' and preprocessing_type != 'body_blob':
-        raise ValueError('The animal you selected is not trackable yet :)')
 
     global cap, currentSegment
     currentSegment = 0
@@ -517,44 +501,34 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
         showerCopy = cv2.resize(showerCopy,None, fx = np.true_divide(1,resDown), fy = np.true_divide(1,resDown))
         numColumns = 5
         numGoodContours = len(goodContours)
-        numBlackPortraits = numColumns - numGoodContours % numColumns
-        numPortraits = numGoodContours + numBlackPortraits
+        numBlackImages = numColumns - numGoodContours % numColumns
+        numImages = numGoodContours + numBlackImages
         j = 0
         maximum_body_length = 70
         if estimated_body_lengths:
             maximum_body_length = np.max(estimated_body_lengths)
-        portraitsMat = []
-        rowPortrait = []
+        imagesMat = []
+        rowImage = []
 
         logger.debug("num blobs detected: %i" %numGoodContours)
         logger.debug("maximum_body_length: %i" %maximum_body_length)
         logger.debug("areas: %i" %areas)
+        identificationImageSize = int(np.sqrt(maximum_body_length ** 2 / 2))
+        identificationImageSize = identificationImageSize + identificationImageSize%2  #this is to make the identificationImageSize even
 
-        if preprocessing_type == 'portrait':
-            portraitSize = int(maximum_body_length/2)
-            portraitSize =  portraitSize + portraitSize%2 #this is to make the portraitSize even
-        elif preprocessing_type == 'body' or preprocessing_type == 'body_blob':
-            portraitSize = int(np.sqrt(maximum_body_length ** 2 / 2))
-            portraitSize = portraitSize + portraitSize%2  #this is to make the portraitSize even
-
-        while j < numPortraits:
+        while j < numImages:
             if j < numGoodContours:
-                if preprocessing_type == 'portrait':
-                    portrait,_,_= get_portrait(miniFrames[j],goodContours[j],bbs[j],portraitSize)
-                elif preprocessing_type == 'body':
-                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = False)
-                elif preprocessing_type == 'body_blob':
-                    portrait, _, _ = get_body(height, width, miniFrames[j], pixels[j], bbs[j], portraitSize, only_blob = True)
+                image_for_identification, _, _ = Blob.get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize, only_blob = True)
             else:
-                portrait = np.zeros((portraitSize,portraitSize),dtype='uint8')
-            rowPortrait.append(portrait)
+                image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
+            rowImage.append(image_for_identification)
             if (j+1) % numColumns == 0:
-                portraitsMat.append(np.hstack(rowPortrait))
-                rowPortrait = []
+                imagesMat.append(np.hstack(rowImage))
+                rowImage = []
             j += 1
 
-        portraitsMat = np.vstack(portraitsMat)
-        cv2.imshow('Bars',np.squeeze(portraitsMat))
+        imagesMat = np.vstack(imagesMat)
+        cv2.imshow('Bars',np.squeeze(imagesMat))
         cv2.imshow('IdPlayer', showerCopy)
         cv2.moveWindow('Bars', 10,10 )
         cv2.moveWindow('IdPlayer', 200, 10 )
@@ -667,8 +641,7 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
                 'maxThreshold': cv2.getTrackbarPos('maxTh', 'Bars'),
                 'minArea': cv2.getTrackbarPos('minArea', 'Bars'),
                 'maxArea': cv2.getTrackbarPos('maxArea', 'Bars'),
-                'numAnimals': numAnimals,
-                'preprocessing_type':preprocessing_type}
+                'numAnimals': numAnimals}
 
     cap.release()
     cv2.destroyAllWindows()
@@ -686,9 +659,11 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
             restore_segmentation = getInput("Load segmentation", "Load the previous segmentation? Y/n")
             if restore_segmentation == 'y' or restore_segmentation == '':
                 restore_segmentation = True
+            else:
+                restore_segmentation = False
 
     if not usePreviousPrecParams and not restore_segmentation:
-        prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?')
+        prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?', is_processes_list = False)
         video.subtract_bkg = bool(prepOpts['bkg'])
         video.apply_ROI =  bool(prepOpts['ROI'])
         print("********************", video.apply_ROI, video.subtract_bkg)
@@ -701,17 +676,12 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
                 video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
             else:
                 video._number_of_animals = old_video.number_of_animals
-            if old_video.preprocessing_type == None:
-                video._preprocessing_type = getInput('Preprocessing type','What preprocessing do you want to apply? portrait, body or body_blob?')
-            else:
-                video._preprocessing_type = old_video.preprocessing_type
             usePreviousROI = bool(load_previous_preprocessing_steps['ROI'])
             usePreviousBkg = bool(load_previous_preprocessing_steps['bkg'])
             usePreviousRR = bool(load_previous_preprocessing_steps['resolution_reduction'])
         else:
             usePreviousROI, usePreviousBkg, usePreviousRR = False, False, False
             video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
-            video._preprocessing_type = getInput('Preprocessing type','What preprocessing do you want to apply? portrait, body or body_blob?')
         #ROI selection/loading
         video.ROI = ROISelectorPreview(video, old_video, usePreviousROI)
         #BKG computation/loading
@@ -730,28 +700,28 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         cv2.waitKey(1)
     elif not usePreviousPrecParams and restore_segmentation:
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
-                                    '_preprocessing_type','_maximum_number_of_blobs',
+                                    '_maximum_number_of_blobs',
                                     '_blobs_path_segmented', '_min_threshold','_max_threshold',
                                     '_min_area','_max_area', '_resize','resolution_reduction',
-                                    'preprocessing_type','_number_of_animals',
+                                    '_number_of_animals',
                                     'ROI','bkg',
                                     '_preprocessing_folder']
         video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_been_segmented = True
     else:
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
-                                    '_preprocessing_type','_maximum_number_of_blobs',
-                                    'median_body_length','portrait_size',
+                                    '_maximum_number_of_blobs',
+                                    'median_body_length','identification_image_size',
                                     '_blobs_path_segmented',
                                     '_min_threshold','_max_threshold',
                                     '_min_area','_max_area',
                                     '_resize','resolution_reduction',
-                                    'preprocessing_type','_number_of_animals',
+                                    '_number_of_animals',
                                     'ROI','bkg',
                                     'resolution_reduction',
                                     'fragment_identifier_to_index',
                                     'number_of_unique_images_in_global_fragments',
-                                    'maximum_number_of_portraits_in_global_fragments',
+                                    'maximum_number_of_images_in_global_fragments',
                                     'first_frame_first_global_fragment']
         video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_preprocessing_parameters = True
@@ -765,9 +735,7 @@ def selectPreprocParams_library(videoPaths, usePreviousPrecParams, width, height
                     'maxThreshold': 155,
                     'minArea': 150,
                     'maxArea': 60000,
-                    'numAnimals': None,
-                    'preprocessing_type': None
-                    }
+                    'numAnimals': None}
         preprocParams = SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, preprocParams, frameIndices)
 
         cv2.waitKey(1)
@@ -844,7 +812,7 @@ def fragmentation_inspector(video, blobs_in_video):
             cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, (255,0,0),1)
             font = cv2.FONT_HERSHEY_SIMPLEX
             fragment_identifier = blob.fragment_identifier
-            # if blob.is_a_fish:
+            # if blob.is_an_individual:
             #     fragment_identifier = blob.fragment_identifier
             # elif blob.is_a_crossing:
             #     fragment_identifier = blob.crossing_identifier
@@ -944,7 +912,7 @@ def get_n_previous_blobs_attribute(blob,attribute_name,number_of_previous):
     blobs_attrs = []
     current_blob = blob
     for i in range(number_of_previous):
-        if current_blob.is_a_fish_in_a_fragment:
+        if current_blob.is_an_individual_in_a_fragment:
             blobs_attrs.append(getattr(current_blob,attribute_name))
             current_blob = current_blob.previous[0]
         else:
@@ -1022,11 +990,11 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                 if blob._assigned_during_accumulation:
                     cv2.putText(frame, str(blob.identity),tuple(blob.centroid.astype('int')), font, 1, colors[blob.identity], 3)
                 else:
-                    logger.debug("the current blob is a fish %s" %blob.is_a_fish)
+                    logger.debug("the current blob is a fish %s" %blob.is_an_individual)
                     logger.debug("blob identity is integer %s" %(type(blob.identity) is int))
-                    if blob.is_a_fish and type(blob.identity) is int:
+                    if blob.is_an_individual and type(blob.identity) is int:
                         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
-                    elif not blob.is_a_fish:
+                    elif not blob.is_an_individual:
                         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, 1, [255,255,255], 3)
                     else:
                         cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
@@ -1039,16 +1007,16 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                     if hasattr(blob,"identities_after_crossing"):
                         logger.debug("identity_after_crossing: %s" %str(blob.identities_after_crossing))
                     logger.debug("assigned during accumulation: %s" %blob.assigned_during_accumulation)
-                    if not blob.assigned_during_accumulation and blob.is_a_fish_in_a_fragment:
+                    if not blob.assigned_during_accumulation and blob.is_an_individual_in_a_fragment:
                         try:
                             logger.debug("frequencies in fragment: %s" %str(blob.frequencies_in_fragment))
                         except:
                             logger.debug("this blob does not have frequencies in fragment")
                     logger.debug("P1_vector:%s " %str(blob.P1_vector))
                     logger.debug("P2_vector: %s" %str(blob.P2_vector))
-                    logger.debug("is_a_fish: %s" %blob.is_a_fish)
+                    logger.debug("is_an_individual: %s" %blob.is_an_individual)
                     logger.debug("is_in_a_fragment: %s" %blob.is_in_a_fragment)
-                    logger.debug("is_a_fish_in_a_fragment: %s" %blob.is_a_fish_in_a_fragment)
+                    logger.debug("is_an_individual_in_a_fragment: %s" %blob.is_an_individual_in_a_fragment)
                     logger.debug("is_a_jump: %s" %blob.is_a_jump)
                     logger.debug("is_a_ghost_crossing: %s" %blob.is_a_ghost_crossing)
                     logger.debug("is_a_crossing: %s" %blob.is_a_crossing)

@@ -48,12 +48,11 @@ def pre_train(video, list_of_fragments, number_of_images_in_global_fragments, li
         print("---------------", len(images), images[0].shape)
         print("---------------", len(labels), labels[0])
         # Instantiate data_set
-        training_dataset, validation_dataset = split_data_train_and_validation(video.preprocessing_type,
-                                                                                params.number_of_animals,
+        training_dataset, validation_dataset = split_data_train_and_validation(params.number_of_animals,
                                                                                 images, labels)
         # Standarize images
-        training_dataset.crop_images(image_size = video.portrait_size[0])
-        validation_dataset.crop_images(image_size = video.portrait_size[0])
+        training_dataset.crop_images(image_size = video.identification_image_size[0])
+        validation_dataset.crop_images(image_size = video.identification_image_size[0])
         # Convert labels to one hot vectors
         training_dataset.convert_labels_to_one_hot()
         validation_dataset.convert_labels_to_one_hot()

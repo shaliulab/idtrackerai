@@ -51,9 +51,11 @@ class ListOfGlobalFragments(object):
     def compute_maximum_number_of_images(self):
         self.maximum_number_of_images = max([global_fragment.get_total_number_of_images() for global_fragment in self.global_fragments])
 
-    def filter_by_minimum_number_of_frames(self, minimum_number_of_frames = 3):
+    def filter_candidates_global_fragments_for_accumulation(self):
+        self.non_accumulable_global_fragments = [global_fragment for global_fragment in self.global_fragments
+                    if not global_fragment.candidate_for_accumulation]
         self.global_fragments = [global_fragment for global_fragment in self.global_fragments
-                    if np.min(global_fragment.number_of_images_per_individual_fragment) >= minimum_number_of_frames]
+                    if global_fragment.candidate_for_accumulation]
         self.number_of_global_fragments = len(self.global_fragments)
 
     def get_data_plot(self):
@@ -112,7 +114,7 @@ def check_global_fragments(blobs_in_video, num_animals):
     """
     def all_blobs_in_a_fragment(blobs_in_frame):
         # return all([blob.is_in_a_fragment for blob in blobs_in_frame])
-        return all([blob.is_a_fish for blob in blobs_in_frame])
+        return all([blob.is_an_individual for blob in blobs_in_frame])
 
     return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame) == num_animals for blobs_in_frame in blobs_in_video]
 

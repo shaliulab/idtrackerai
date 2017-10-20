@@ -63,26 +63,26 @@ class ListOfBlobs(object):
             used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]
             missing_blob_indices =  list(set(possible_blob_indices).difference(set(used_blob_indices)))
             for blob in blobs_in_frame:
-                if blob.fragment_identifier is None and blob.is_a_fish:
+                if blob.fragment_identifier is None and blob.is_an_individual:
                     blob._fragment_identifier = counter
                     blob_index = missing_blob_indices.pop(0)
                     blob._blob_index = blob_index
                     blob.non_shared_information_with_previous = 1.
-                    if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
+                    if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_an_individual:
                         blob.next[0]._fragment_identifier = counter
                         blob.next[0]._blob_index = blob_index
                         blob.next[0].compute_overlapping_with_previous_blob()
-                        if blob.next[0].is_a_fish_in_a_fragment:
+                        if blob.next[0].is_an_individual_in_a_fragment:
                             blob = blob.next[0]
 
-                            while len(blob.next) == 1 and blob.next[0].is_a_fish_in_a_fragment:
+                            while len(blob.next) == 1 and blob.next[0].is_an_individual_in_a_fragment:
                                 blob = blob.next[0]
                                 blob._fragment_identifier = counter
                                 blob._blob_index = blob_index
                                 # compute_overlapping_with_previous_blob
                                 blob.compute_overlapping_with_previous_blob()
 
-                            if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_a_fish:
+                            if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_an_individual:
                                 blob.next[0]._fragment_identifier = counter
                                 blob.next[0]._blob_index = blob_index
                                 blob.next[0].compute_overlapping_with_previous_blob()
@@ -148,13 +148,13 @@ class ListOfBlobs(object):
         median_body_length = np.median(areas_and_body_length[:,1])
         return ModelArea(mean_area, median_area, std_area), median_body_length
 
-    def apply_model_area_to_video(self, model_area, portrait_size):
-        def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, portrait_size):
+    def apply_model_area_to_video(self, model_area, identification_image_size):
+        def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, identification_image_size):
             number_of_blobs = len(blobs_in_frame)
             for blob in blobs_in_frame:
-                blob.apply_model_area(video, model_area, portrait_size, number_of_blobs)
+                blob.apply_model_area(video, model_area, identification_image_size, number_of_blobs)
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'Applying model area'):
-            apply_model_area_to_blobs_in_frame(self.video, blobs_in_frame, model_area, portrait_size)
+            apply_model_area_to_blobs_in_frame(self.video, blobs_in_frame, model_area, identification_image_size)
 
     def check_maximal_number_of_blob(self):
         frames_with_more_blobs_than_animals = []
@@ -182,3 +182,8 @@ class ListOfBlobs(object):
                             fragment.user_generated_identity,
                             fragment.used_for_training]
                 [setattr(blob, attribute, value) for attribute, value in zip(attributes, values)]
+
+    def compute_nose_and_head_coordinates(self):
+        for blobs_in_frame in self.blobs_in_video:
+            for blob in blobs_in_frame:
+                blob.get_nose_and_head_coordinates()

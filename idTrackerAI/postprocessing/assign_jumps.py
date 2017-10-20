@@ -43,14 +43,14 @@ from blob import Blob
 #     def jumping_blob(self, jumping_blob):
 #         """by definition, a jumping blob is a blob which satisfied the model area,
 #         but does not belong to an individual fragment"""
-#         assert jumping_blob.is_a_fish
+#         assert jumping_blob.is_an_individual
 #         assert not jumping_blob.is_in_a_fragment
 #         self._jumping_blob = jumping_blob
 #
 #     def get_available_identities(self, blobs_in_video):
 #         print('--- getting assigned identities')
 #         blobs_in_frame_sure_identities = [blob.identity for blob in blobs_in_video[self.jumping_blob.frame_number]
-#                                             if blob.is_a_fish
+#                                             if blob.is_an_individual
 #                                             and (blob.identity is not None or blob.identity != 0)]
 #         print("blobs_in_frame_sure_identities: ", blobs_in_frame_sure_identities)
 #         return set(self.possible_identities) - set(blobs_in_frame_sure_identities)
@@ -59,7 +59,7 @@ from blob import Blob
 #         # print("checking velocity model for blob ", self.jumping_blob.identity, " in frame ", self.jumping_blob.frame_number)
 #         blobs_in_frame = blobs_in_video[self.jumping_blob.frame_number - 1]
 #         corresponding_blob_list = []
-#         corresponding_blob_list_past = [blob for blob in blobs_in_frame if blob.is_a_fish and blob.identity == self.jumping_blob.identity]
+#         corresponding_blob_list_past = [blob for blob in blobs_in_frame if blob.is_an_individual and blob.identity == self.jumping_blob.identity]
 #         if corresponding_blob_list_past:
 #             corresponding_blob_list.append(corresponding_blob_list_past[0])
 #         corresponding_blob_list.append(self.jumping_blob)
@@ -69,8 +69,8 @@ from blob import Blob
 #         if self.jumping_blob.frame_number + 1 < self.number_of_frames:
 #             blobs_in_frame = blobs_in_video[self.jumping_blob.frame_number + 1]
 #             # for blob in blobs_in_frame:
-#                 # print(blob.frame_number, blob.is_a_fish, blob.identity)
-#             corresponding_blob_list_future = [blob for blob in blobs_in_frame if blob.is_a_fish and blob.identity == self.jumping_blob.identity]
+#                 # print(blob.frame_number, blob.is_an_individual, blob.identity)
+#             corresponding_blob_list_future = [blob for blob in blobs_in_frame if blob.is_an_individual and blob.identity == self.jumping_blob.identity]
 #             # print("corresponding_blob_list_future ", corresponding_blob_list_future)
 #             if corresponding_blob_list_future:
 #                 corresponding_blob_list.append(corresponding_blob_list_future[0])
@@ -240,7 +240,7 @@ from blob import Blob
 #                     use_adam_optimiser = False,
 #                     restore_folder = video._accumulation_folder,
 #                     save_folder = video._accumulation_folder,
-#                     image_size = video.portrait_size)
+#                     image_size = video.identification_image_size)
 #     net = ConvNetwork(net_params)
 #     net.restore()
 #     return assign(net, video, images, print_flag = True)
@@ -249,9 +249,9 @@ from blob import Blob
 #     if not hasattr(video, "velocity_threshold"):
 #         video.velocity_threshold = compute_model_velocity(blobs, video.number_of_animals, percentile = VEL_PERCENTILE)
 #     jump_blobs = [blob for blobs_in_frame in blobs for blob in blobs_in_frame
-#                     if blob.is_a_jump or (blob.is_a_fish and (blob.identity == 0 or blob.identity is None))]
+#                     if blob.is_a_jump or (blob.is_an_individual and (blob.identity == 0 or blob.identity is None))]
 #     # print("number of blobs to assing during jumps, ", len(jump_blobs))
-#     jump_images = [blob.portrait for blob in jump_blobs]
+#     jump_images = [blob.image_for_identification for blob in jump_blobs]
 #     #assign jumps by restoring the network
 #     assigner = assign_jumps(jump_images, video)
 #
@@ -280,7 +280,7 @@ from blob import Blob
 #
 #         jump.assign_jump(blobs)
 #         blob._identity = jump.jumping_blob.identity
-#         if len(blob.next) == 1 and blob.next[0].is_a_fish and blob.next[0].fragment_identifier == blob.fragment_identifier:
+#         if len(blob.next) == 1 and blob.next[0].is_an_individual and blob.next[0].fragment_identifier == blob.fragment_identifier:
 #             print("assigning identity %i to next in frame %i " %(blob.identity, blob.next[0].frame_number))
 #             blob.next[0]._identity = blob.identity
 #             if blob.next[0] in jump_blobs: jump_blobs.remove(blob.next[0])
