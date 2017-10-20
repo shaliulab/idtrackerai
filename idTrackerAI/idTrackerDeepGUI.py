@@ -386,10 +386,23 @@ if __name__ == '__main__':
     else:
         ### NOTE: load all the accumulation statistics
         logger.info("Restoring accumulation network")
-        video.copy_attributes_between_two_video_objects(old_video, ['_accumulation_folder',\
-                                                                    'ratio_accumulated_images',\
-                                                                    '_first_accumulation_finished',\
-                                                                    'knowledge_transfer_from_same_animals'])
+        list_of_attributes = ['_accumulation_folder', '_second_accumulation_finished',
+                    'number_of_accumulated_global_fragments',
+                    'number_of_non_certain_global_fragments',
+                    'number_of_randomly_assigned_global_fragments',
+                    'number_of_nonconsistent_global_fragments',
+                    'number_of_nonunique_global_fragments',
+                    'number_of_acceptable_global_fragments',
+                    'validation_accuracy',
+                    'validation_individual_accuracies',
+                    'training_accuracy',
+                    'training_individual_accuracies',
+                    'ratio_of_accumulated_images',
+                    'accumulation_trial',
+                    'ratio_accumulated_images',
+                    '_first_accumulation_finished',
+                    'knowledge_transfer_from_same_animals']
+        video.copy_attributes_between_two_video_objects(old_video, list_of_attributes)
         accumulation_network_params.restore_folder = video._accumulation_folder
         net = ConvNetwork(accumulation_network_params)
         net.restore()
@@ -500,7 +513,20 @@ if __name__ == '__main__':
             ### NOTE: save second_accumulation statistics
             video.save()
         else:
-            video.copy_attributes_between_two_video_objects(old_video, ['_accumulation_folder', '_second_accumulation_finished'])
+            list_of_attributes = ['_accumulation_folder', '_second_accumulation_finished',
+                        'number_of_accumulated_global_fragments',
+                        'number_of_non_certain_global_fragments',
+                        'number_of_randomly_assigned_global_fragments',
+                        'number_of_nonconsistent_global_fragments',
+                        'number_of_nonunique_global_fragments',
+                        'number_of_acceptable_global_fragments',
+                        'validation_accuracy',
+                        'validation_individual_accuracies',
+                        'training_accuracy',
+                        'training_individual_accuracies',
+                        'ratio_of_accumulated_images',
+                        'accumulation_trial']
+            video.copy_attributes_between_two_video_objects(old_video, list_of_attributes)
             ### NOTE: load pre-training statistics
         video.second_accumulation_time = time.time() - video.second_accumulation_time
         video.assignment_time = time.time()
