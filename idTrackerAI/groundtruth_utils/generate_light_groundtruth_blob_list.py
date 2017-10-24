@@ -56,7 +56,7 @@ def generate_groundtruth_files(video_object, start = None, end = None):
     tracked video
     """
     #make sure the video has been succesfully tracked
-    assert video_object._has_been_assigned == True
+    assert video_object.has_been_assigned == True
     #read blob list from video
     list_of_fragments = ListOfFragments.load(video_object.fragments_path)
     list_of_blobs = ListOfBlobs.load(video_object.blobs_path)

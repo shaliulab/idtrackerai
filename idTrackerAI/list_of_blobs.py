@@ -33,7 +33,7 @@ class ListOfBlobs(object):
                 blob.next, blob.previous = [], []
 
     def reconnect(self):
-        if self.video._has_been_segmented:
+        if self.video.has_been_segmented:
             logger.info("Reconnecting list of blob objects")
             for frame_i in tqdm(range(1,self.video.number_of_frames), desc = 'reconnecting blobs'):
                 for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):

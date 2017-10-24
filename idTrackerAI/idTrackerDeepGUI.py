@@ -102,7 +102,7 @@ if __name__ == '__main__':
     video.create_session_folder(name = new_name_session_folder)
     video.init_processes_time_attributes()
     # set log config
-    logger = setup_logging(path_to_save_logs = video._session_folder, video_object = video)
+    logger = setup_logging(path_to_save_logs = video.session_folder, video_object = video)
     logger.info("Starting working on session %s" %new_name_session_folder)
     logger.info("Log files saved in %s" %video.logs_folder)
     #Asking user whether to reuse preprocessing steps...'
@@ -119,9 +119,10 @@ if __name__ == '__main__':
     #get existent files and paths to load them
     existentFiles, old_video = getExistentFiles(video, processes_list)
     #selecting files to load from previous session...'
-    loadPreviousDict = selectOptions(processes_list, existentFiles, text='Steps already processed in this video \n (loaded from ' + video._video_folder + ')')
+    loadPreviousDict = selectOptions(processes_list, existentFiles,
+                    text='Steps already processed in this video \n (loaded from ' + video.video_folder + ')')
     #use previous values and parameters (bkg, roi, preprocessing parameters)?
-    logger.debug("Video session folder: %s " %video._session_folder)
+    logger.debug("Video session folder: %s " %video.session_folder)
     video.save()
     #############################################################
     ##################   Knowledge transfer  ####################
@@ -140,7 +141,7 @@ if __name__ == '__main__':
         else:
             raise ValueError("Invalid value, type either 'y' or 'n'")
     else:
-        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder','tracking_with_knowledge_transfer',])
+        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder','tracking_with_knowledge_transfer'])
         video.use_previous_knowledge_transfer_decision = True
     #############################################################
     ####################  Preprocessing   #######################
@@ -174,7 +175,7 @@ if __name__ == '__main__':
         logger.info("Starting preprocessing")
         cv2.namedWindow('Bars')
         video.create_preprocessing_folder()
-        if not old_video or not old_video._has_been_segmented or restore_segmentation == 'n':
+        if not old_video or not old_video.has_been_segmented or restore_segmentation == 'n':
             logger.debug("Starting segmentation")
             blobs = segment(video)
             logger.debug("Segmentation finished")
@@ -199,7 +200,7 @@ if __name__ == '__main__':
         logger.info("Computing maximum number of blobs detected in the video")
         list_of_blobs.check_maximal_number_of_blob()
         logger.info("Computing a model of the area of the individuals")
-        video.model_area, video.median_body_length = list_of_blobs.compute_model_area_and_body_length()
+        video._model_area, video._median_body_length = list_of_blobs.compute_model_area_and_body_length()
         video.compute_identification_image_size(video.median_body_length)
         list_of_blobs.video = video
         if not list_of_blobs.blobs_are_connected:
@@ -215,7 +216,7 @@ if __name__ == '__main__':
         fragments = create_list_of_fragments(list_of_blobs.blobs_in_video,
                                             video.number_of_animals)
         list_of_fragments = ListOfFragments(video, fragments)
-        video.fragment_identifier_to_index = list_of_fragments.get_fragment_identifier_to_index_list()
+        video._fragment_identifier_to_index = list_of_fragments.get_fragment_identifier_to_index_list()
         #compute the global fragments (all animals are visible + each animals overlaps
         #with a single blob in the consecutive frame + the blobs respect the area model)
         global_fragments = create_list_of_global_fragments(list_of_blobs.blobs_in_video,
@@ -232,9 +233,9 @@ if __name__ == '__main__':
         list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
         video.number_of_global_fragments_candidates_for_accumulation = list_of_global_fragments.number_of_global_fragments
         list_of_global_fragments.relink_fragments_to_global_fragments(list_of_fragments.fragments)
-        video.number_of_unique_images_in_global_fragments = list_of_fragments.compute_total_number_of_images_in_global_fragments()
+        video._number_of_unique_images_in_global_fragments = list_of_fragments.compute_total_number_of_images_in_global_fragments()
         list_of_global_fragments.compute_maximum_number_of_images()
-        video.maximum_number_of_images_in_global_fragments = list_of_global_fragments.maximum_number_of_images
+        video._maximum_number_of_images_in_global_fragments = list_of_global_fragments.maximum_number_of_images
         list_of_fragments.get_accumulable_individual_fragments_identifiers(list_of_global_fragments)
         list_of_fragments.get_not_accumulable_individual_fragments_identifiers(list_of_global_fragments)
         list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
@@ -249,7 +250,7 @@ if __name__ == '__main__':
     else:
         cv2.namedWindow('Bars')
         logger.info("Loading preprocessed video")
-        path_attributes = ['_preprocessing_folder', '_blobs_path', '_global_fragments_path', '_fragments_path']
+        path_attributes = ['preprocessing_folder', 'blobs_path', 'global_fragments_path', 'fragments_path']
         video.copy_attributes_between_two_video_objects(old_video, path_attributes)
         video._has_been_segmented = True
         video._has_been_preprocessed = True
@@ -300,13 +301,13 @@ if __name__ == '__main__':
         #restore variables from the pretraining
         net.restore()
         #if knowledge transfer is performed on the same animals we don't reinitialise the classification part of the net
-        video.knowledge_transfer_from_same_animals = False
+        video._knowledge_transfer_from_same_animals = False
         if video.tracking_with_knowledge_transfer:
             same_animals = getInput("Same animals", "Are you tracking the same animals? y/N")
             if same_animals.lower() == 'n' or same_animals == '':
                 net.reinitialize_softmax_and_fully_connected()
             else:
-                video.knowledge_transfer_from_same_animals = True
+                video._knowledge_transfer_from_same_animals = True
         #instantiate accumulation manager
         logger.info("Initialising accumulation manager")
         # the list of global fragments is ordered in place from the distance (in frames) wrt
@@ -317,7 +318,7 @@ if __name__ == '__main__':
         #set global epoch counter to 0
         logger.info("Start accumulation")
         global_step = 0
-        video.ratio_accumulated_images = accumulate(accumulation_manager,
+        video._ratio_accumulated_images = accumulate(accumulation_manager,
                                             video,
                                             global_step,
                                             net,
@@ -332,23 +333,25 @@ if __name__ == '__main__':
     else:
         ### NOTE: load all the accumulation statistics
         logger.info("Restoring accumulation network")
-        list_of_attributes = ['_accumulation_folder', '_second_accumulation_finished',
+        list_of_attributes = ['accumulation_folder',
+                    'second_accumulation_finished',
                     'number_of_accumulated_global_fragments',
                     'number_of_non_certain_global_fragments',
                     'number_of_randomly_assigned_global_fragments',
                     'number_of_nonconsistent_global_fragments',
                     'number_of_nonunique_global_fragments',
                     'number_of_acceptable_global_fragments',
-                    'validation_accuracy',
-                    'validation_individual_accuracies',
-                    'training_accuracy',
-                    'training_individual_accuracies',
-                    'ratio_of_accumulated_images',
-                    'accumulation_trial',
-                    'ratio_accumulated_images',
-                    '_first_accumulation_finished',
-                    'knowledge_transfer_from_same_animals']
-        video.copy_attributes_between_two_video_objects(old_video, list_of_attributes)
+                    'validation_accuracy', 'validation_individual_accuracies',
+                    'training_accuracy', 'training_individual_accuracies',
+                    'ratio_of_accumulated_images', 'accumulation_trial',
+                    'ratio_accumulated_images', 'first_accumulation_finished',
+                    'knowledge_transfer_from_same_animals', 'accumulation_statistics']
+        is_property = [True, True, False, False,
+                        False, False, False, False,
+                        False, False, False, False,
+                        False, False, True, True,
+                        True]
+        video.copy_attributes_between_two_video_objects(old_video, list_of_attributes, is_property = is_property)
         accumulation_network_params.restore_folder = video._accumulation_folder
         net = ConvNetwork(accumulation_network_params)
         net.restore()
@@ -380,7 +383,7 @@ if __name__ == '__main__':
                                                 keep_prob = 1.0,
                                                 use_adam_optimiser = False,
                                                 scopes_layers_to_optimize = None,
-                                                save_folder = video._pretraining_folder,
+                                                save_folder = video.pretraining_folder,
                                                 image_size = video.identification_image_size)
         if not loadPreviousDict['pretraining']:
             #### Pre-trainer ####
@@ -395,8 +398,8 @@ if __name__ == '__main__':
             ### NOTE: save pre-training statistics
         else:
             logger.info("Restoring pretrained network")
-            video.copy_attributes_between_two_video_objects(old_video, ['_pretraining_folder', '_has_been_pretrained'])
-            pretrain_network_params.restore_folder = video._pretraining_folder
+            video.copy_attributes_between_two_video_objects(old_video, ['pretraining_folder', 'has_been_pretrained'])
+            pretrain_network_params.restore_folder = video.pretraining_folder
             net = ConvNetwork(pretrain_network_params)
             net.restore()
             # Set preprocessed flag to True
@@ -417,9 +420,9 @@ if __name__ == '__main__':
                 #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
                 list_of_fragments.reset(roll_back_to = 'fragmentation')
                 list_of_global_fragments.reset(roll_back_to = 'fragmentation')
-                logger.info("We will restore the network from a previous pretraining: %s" %video._pretraining_folder)
-                accumulation_network_params.save_folder = video._accumulation_folder
-                accumulation_network_params.restore_folder = video._pretraining_folder
+                logger.info("We will restore the network from a previous pretraining: %s" %video.pretraining_folder)
+                accumulation_network_params.save_folder = video.accumulation_folder
+                accumulation_network_params.restore_folder = video.pretraining_folder
                 accumulation_network_params.scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax']
                 logger.info("Initialising accumulation network")
                 net = ConvNetwork(accumulation_network_params)
@@ -434,7 +437,7 @@ if __name__ == '__main__':
                 #set global epoch counter to 0
                 logger.info("Start accumulation")
                 global_step = 0
-                video.ratio_accumulated_images = accumulate(accumulation_manager,
+                video._ratio_accumulated_images = accumulate(accumulation_manager,
                                                             video,
                                                             global_step,
                                                             net,
@@ -449,10 +452,9 @@ if __name__ == '__main__':
 
 
             if len(percentage_of_accumulated_images) > 1 and np.argmax(percentage_of_accumulated_images) != 2:
-                video._accumulation_trial = np.argmax(percentage_of_accumulated_images) + 1
+                video.accumulation_trial = np.argmax(percentage_of_accumulated_images) + 1
                 accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
-                video._accumulation_folder = os.path.join(video._session_folder, accumulation_folder_name)
-                video.accumulation_trial = np.argmax(percentage_of_accumulated_images)
+                video._accumulation_folder = os.path.join(video.session_folder, accumulation_folder_name)
                 list_of_fragments.load_light_list(video._accumulation_folder)
             video._second_accumulation_finished = True
             logger.info("Saving global fragments")
@@ -461,19 +463,17 @@ if __name__ == '__main__':
             ### NOTE: save second_accumulation statistics
             video.save()
         else:
-            list_of_attributes = ['_accumulation_folder', '_second_accumulation_finished',
+            list_of_attributes = ['accumulation_folder',
+                        'second_accumulation_finished',
                         'number_of_accumulated_global_fragments',
                         'number_of_non_certain_global_fragments',
                         'number_of_randomly_assigned_global_fragments',
                         'number_of_nonconsistent_global_fragments',
                         'number_of_nonunique_global_fragments',
                         'number_of_acceptable_global_fragments',
-                        'validation_accuracy',
-                        'validation_individual_accuracies',
-                        'training_accuracy',
-                        'training_individual_accuracies',
-                        'ratio_of_accumulated_images',
-                        'accumulation_trial']
+                        'validation_accuracy','validation_individual_accuracies',
+                        'training_accuracy', 'training_individual_accuracies',
+                        'ratio_of_accumulated_images', 'accumulation_trial']
             video.copy_attributes_between_two_video_objects(old_video, list_of_attributes)
             logger.info("Restoring trained network")
             accumulation_network_params.restore_folder = video._accumulation_folder
@@ -620,7 +620,7 @@ if __name__ == '__main__':
     ##############   Compute groundtruth    #####################
     ####
     #############################################################
-    groundtruth_path = os.path.join(video._video_folder,'_groundtruth.npy')
+    groundtruth_path = os.path.join(video.video_folder,'_groundtruth.npy')
     if os.path.isfile(groundtruth_path):
         print("\n**** Computing accuracy wrt. groundtruth ****")
         groundtruth = np.load(groundtruth_path).item()

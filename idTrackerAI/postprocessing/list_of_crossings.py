@@ -70,7 +70,7 @@ def assign_jumps(images, video):
         conencted layer (ndarray of shape [number of images, 100]), and the values of the softmax layer
         (ndarray of shape [number of images, number of animals in the tracked video])
     """
-    assert video._has_been_assigned == True
+    assert video.has_been_assigned == True
     net_params = NetworkParams(video.number_of_animals,
                     learning_rate = 0.005,
                     keep_prob = 1.0,
@@ -432,8 +432,8 @@ class Crossing(object):
             list of blobs objects (with identity) extracted from the crossing.
             These blobs have P1 and P2 vectors set to zero.
         """
-        self.height = video._height
-        self.width = video._width
+        self.height = video.height
+        self.width = video.width
         self.blob = crossing_blob
         self.bounding_box = self.blob.bounding_box_in_frame_coordinates
         # print("start solving crossing in frame: " , self.blob.frame_number)

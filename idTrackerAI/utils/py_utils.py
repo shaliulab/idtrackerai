@@ -248,33 +248,30 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
 def check_and_change_video_path(video,old_video):
     current_video_folder = os.path.split(video.video_path)[0]
     old_video_folder = os.path.split(old_video.video_path)[0]
-    print("current_video_folder, ", current_video_folder)
-    print("old_video_folder, ", old_video_folder)
     if current_video_folder != old_video_folder:
-        print("we need to substitute paths")
-
         attributes_to_modify = {key: getattr(old_video, key) for key in old_video.__dict__
         if isinstance(getattr(old_video, key), basestring)
         and old_video_folder in getattr(old_video, key) }
 
-        print("Updating video object")
         for key in attributes_to_modify:
             new_value = attributes_to_modify[key].replace(old_video_folder, current_video_folder)
             setattr(old_video, key, new_value)
-        if len(old_video._paths_to_video_segments) != 0:
+
+        if len(old_video.paths_to_video_segments) != 0:
             new_paths_to_video_segments = []
-            for path in old_video._paths_to_video_segments:
+
+            for path in old_video.paths_to_video_segments:
                 new_paths_to_video_segments.append(path.replace(old_video_folder, current_video_folder))
+                
             old_video._paths_to_video_segments = new_paths_to_video_segments
-        pprint(old_video.__dict__)
     return old_video
 
 def set_load_previous_dict(old_video, processes, existentFile):
-    attributes = ['_has_been_preprocessed', 'use_previous_knowledge_transfer_decision',
-                    '_first_accumulation_finished',
-                    '_has_been_pretrained', '_second_accumulation_finished',
-                    '_has_been_assigned', '_has_duplications_solved',
-                    '_has_crossings_solved', '_has_trajectories']
+    attributes = ['has_been_preprocessed', 'use_previous_knowledge_transfer_decision',
+                    'first_accumulation_finished',
+                    'has_been_pretrained', 'second_accumulation_finished',
+                    'has_been_assigned', 'has_duplications_solved',
+                    'has_crossings_solved', 'has_trajectories']
     for i, attribute in enumerate(attributes):
         attr_value = getattr(old_video, attribute)
         if attr_value == True:

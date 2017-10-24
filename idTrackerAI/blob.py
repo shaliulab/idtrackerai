@@ -224,11 +224,11 @@ class Blob(object):
 
     def get_image_for_identification(self, video):
         if video.resolution_reduction == 1:
-            height = video._height
-            width = video._width
+            height = video.height
+            width = video.width
         else:
-            height  = int(video._height * video.resolution_reduction)
-            width  = int(video._width * video.resolution_reduction)
+            height  = int(video.height * video.resolution_reduction)
+            width  = int(video.width * video.resolution_reduction)
 
         return self._get_image_for_identification(height, width,
                                                 self.bounding_box_image, self.pixels,

@@ -34,11 +34,11 @@ class CrossingDataset(object):
 
     def get_video_height_and_width_according_to_resolution_reduction(self):
         if self.video.resolution_reduction == 1:
-            self.video_height = self.video._height
-            self.video_width = self.video._width
+            self.video_height = self.video.height
+            self.video_width = self.video.width
         else:
-            self.video_height  = int(self.video._height * self.video.resolution_reduction)
-            self.video_width  = int(self.video._width * self.video.resolution_reduction)
+            self.video_height  = int(self.video.height * self.video.resolution_reduction)
+            self.video_width  = int(self.video.width * self.video.resolution_reduction)
 
     def get_list_of_individual_blobs_for_training(self, individual_blobs):
         if len(individual_blobs) == 0:

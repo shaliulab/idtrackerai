@@ -158,7 +158,7 @@ if __name__ == '__main__':
                             pretrain_network_params = NetworkParams(video.number_of_animals,
                                                                     learning_rate = 0.01,
                                                                     keep_prob = 1.0,
-                                                                    save_folder = video._pretraining_folder,
+                                                                    save_folder = video.pretraining_folder,
                                                                     image_size = video.portrait_size)
 
                             if video.tracking_with_knowledge_transfer:
@@ -197,8 +197,8 @@ if __name__ == '__main__':
                                                     save_folder = video._accumulation_folder,
                                                     image_size = video.portrait_size)
                         if video._has_been_pretrained:
-                            print("We will restore the network from pretraining: %s\n" %video._pretraining_folder)
-                            accumulation_network_params.restore_folder = video._pretraining_folder
+                            print("We will restore the network from pretraining: %s\n" %video.pretraining_folder)
+                            accumulation_network_params.restore_folder = video.pretraining_folder
                         elif not video._has_been_pretrained:
                             if video.tracking_with_knowledge_transfer:
                                 print("We will restore the network from a previous model (knowledge transfer): %s\n" %video.knowledge_transfer_model_folder)
@@ -277,7 +277,7 @@ if __name__ == '__main__':
                         start = time.time()
                         print("\n**** Assignation ****")
                         # Get images from the blob collection
-                        images = get_images_from_blobs_in_video(blobs)#, video._episodes_start_end)
+                        images = get_images_from_blobs_in_video(blobs)#, video.episodes_start_end)
                         if len(images) != 0:
                             print("images shape before entering to assign, ", images.shape)
                             # get predictions
