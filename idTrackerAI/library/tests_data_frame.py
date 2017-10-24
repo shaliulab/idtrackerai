@@ -30,8 +30,7 @@ def tests_data_frame():
     *************************************************************************'''
     preprocessing_types = ['body_blob'] #['portrait', 'body', 'body_blob']
     IMDB_codes = ['GHI'] #['ABC','DEF','GHI']
-    # CNN_models = [0,1,2,3,4,5,6,7,8,9,10,11]
-    CNN_models = [11]
+    CNN_models = [0,1,2,3,4,5,6,7,8,9,10,11]
     for preprocessing, IMBD_code in zip(preprocessing_types,IMDB_codes):
         for CNN_model in CNN_models:
             tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_' + IMBD_code + '_aaa_cnn_' + str(CNN_model) + '_' + preprocessing,
@@ -52,77 +51,24 @@ def tests_data_frame():
                                                             "repetitions": [1, 2, 3, 4, 5],
                                                              }, ignore_index=True)
 
-    # preprocessing_types = ['body_blob'] #['portrait', 'body', 'body_blob']
-    # IMDB_codes = ['G'] #['ABC','DEF','GHI']
-    # CNN_models = [0,1,2,3,4,5,6,7,8,9,10]
-    # for preprocessing, IMBD_code in zip(preprocessing_types,IMDB_codes):
-    #     for CNN_model in CNN_models:
-    #         tests_data_frame = tests_data_frame.append({"test_name": 'uncorrelated_' + IMBD_code + '_a_cnn_' + str(CNN_model) + '_' + preprocessing,
-    #                                                         "CNN_model": CNN_model,
-    #                                                         "knowledge_transfer_flag": False,
-    #                                                         "knowledge_transfer_folder": '',
-    #                                                         "pretraining_flag": False,
-    #                                                         "percentage_of_frames_in_pretaining": 0.,
-    #                                                         "only_accumulate_one_fragment": False,
-    #                                                         "train_filters_in_accumulation": False,
-    #                                                         "accumulation_certainty": 0.,
-    #                                                         "solve_duplications": False,
-    #                                                         "preprocessing_type": preprocessing,
-    #                                                         "IMDB_codes": IMBD_code,
-    #                                                         "ids_codes": 'a',
-    #                                                         "group_sizes": [2, 5, 10],
-    #                                                         "frames_in_video": [3000],
-    #                                                         "frames_per_individual_fragment": [0],
-    #                                                         "repetitions": [1, 2, 3],
-    #                                                          }, ignore_index=True)
-
     ''' ************************************************************************
     Tests with correlated images and the real algorithm
     Portrait preprocessing
     100 fish 3000 frames per video. Normal distribution of individual fragments
     *************************************************************************'''
-    # solve_duplications = [True, False]
-    solve_duplications = [True]
-    # preprocessing_types = ['portrait', 'body', 'body_blob']
-    preprocessing_types = ['portrait']
-    # IMDB_codes = ['ABC','DEF','GHI']
-    IMDB_codes = ['ABC']
-    test_names = ['correlated_images_DEF_aaa_CNN0_noPretrain_noAccum_10fish_3000frames_gamma',
-                    'correlated_images_DEF_aaa_CNN0_noPretrain_Accum05_10fish_3000frames_gamma',
-                    'correlated_images_DEF_aaa_CNN0_Pretrain_Accum05_10fish_3000frames_gamma'
-                    ]
-    pretraining_flags = [False, False, True]
-    percentage_of_frames_in_pretainings = [0,0,0.25]
-    only_accumulate_one_fragments = [True, False, False]
-    train_filters_in_accumulations = [True, True, False]
-    accumulation_certainties = [.1, .5, .5]
 
-    for solve_duplication in solve_duplications:
-        if solve_duplication:
-            duplications_extension = 'noDuplications'
-        else:
-            duplications_extension = 'duplications'
-        for preprocessing, IMBD_code in zip(preprocessing_types,IMDB_codes):
-            for i, test_name in enumerate(test_names):
-                tests_data_frame = tests_data_frame.append({"test_name": test_name + '_' + preprocessing + '_' + duplications_extension,
-                                                                "CNN_model": 0,
-                                                                "knowledge_transfer_flag": False,
-                                                                "knowledge_transfer_folder": '',
-                                                                "pretraining_flag": pretraining_flags[i],
-                                                                "percentage_of_frames_in_pretaining": percentage_of_frames_in_pretainings[i],
-                                                                "only_accumulate_one_fragment": only_accumulate_one_fragments[i],
-                                                                "train_filters_in_accumulation": train_filters_in_accumulations[i],
-                                                                "accumulation_certainty": accumulation_certainties[i],
-                                                                "solve_duplications": solve_duplication,
-                                                                "preprocessing_type": preprocessing,
-                                                                "IMDB_codes": IMBD_code,
-                                                                "ids_codes": 'aaa',
-                                                                "group_sizes": [10],
-                                                                "frames_in_video": [3000],
-                                                                "frames_per_individual_fragment": [50, 250, 165, 848.5],
-                                                                "std_frames_per_individual_fragment": [1.5, 0.35, 1, .6], # it is the parameter of the gamma related to the variance "a" in scipy
-                                                                "repetitions": [1, 2, 3, 4, 5],
-                                                                 }, ignore_index=True)
+    tests_data_frame = tests_data_frame.append({"test_name": 'algorithm_test_GHI_aaa_cnn_0',
+                                                    "CNN_model": 0,
+                                                    "knowledge_transfer_flag": False,
+                                                    "knowledge_transfer_folder": '',
+                                                    "IMDB_codes": 'G',
+                                                    "ids_codes": 'a',
+                                                    "group_sizes": [10],
+                                                    "frames_in_video": [3000, 10000],
+                                                    "mean_frames_per_individual_fragment": [50, 250, 165, 848.5],
+                                                    "std_frames_per_individual_fragment": [1.5, 0.35, 1, .6], # it is the parameter of the gamma related to the variance "a" in scipy
+                                                    "repetitions": [1, 2, 3, 4, 5],
+                                                     }, ignore_index=True)
 
     tests_data_frame.to_pickle('./library/tests_data_frame.pkl')
     return tests_data_frame

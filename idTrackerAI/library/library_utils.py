@@ -9,8 +9,8 @@ import numpy as np
 import h5py
 import time
 
-from blob import Blob, compute_fragment_identifier_and_blob_index
-from globalfragment import give_me_list_of_global_fragments, order_global_fragments_by_distance_travelled
+from blob import Blob
+from globalfragment import GlobalFragment
 from scipy.stats import gamma
 from joblib import Parallel, delayed
 import multiprocessing
@@ -43,7 +43,7 @@ class LibraryJobConfig(object):
                 if not os.path.exists(num_frames_path):
                     os.makedirs(num_frames_path)
                 #create subfolders for frames_in_fragment
-                for frames_in_fragment in self.frames_per_individual_fragment:
+                for frames_in_fragment in self.mean_frames_per_individual_fragment:
                     frames_in_fragment_path = os.path.join(num_frames_path, 'frames_in_fragment_' + str(frames_in_fragment))
                     if not os.path.exists(frames_in_fragment_path):
                         os.makedirs(frames_in_fragment_path)
@@ -52,24 +52,18 @@ class LibraryJobConfig(object):
                         if not os.path.exists(repetition_path):
                             os.makedirs(repetition_path)
 
-def check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, frames_in_fragment, repetition):
+def check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, mean_frames_per_fragment, var_frames_per_fragment, repetition):
 
     return len(results_data_frame.query('test_name == @job_config.test_name' +
                                             ' & CNN_model == @job_config.CNN_model' +
                                             ' & knowledge_transfer_flag == @job_config.knowledge_transfer_flag' +
                                             ' & knowledge_transfer_folder == @job_config.knowledge_transfer_folder' +
-                                            ' & pretraining_flag == @job_config.pretraining_flag' +
-                                            ' & percentage_of_frames_in_pretaining == @job_config.percentage_of_frames_in_pretaining' +
-                                            ' & only_accumulate_one_fragment == @job_config.only_accumulate_one_fragment' +
-                                            ' & train_filters_in_accumulation == @job_config.train_filters_in_accumulation' +
-                                            ' & accumulation_certainty == @job_config.accumulation_certainty' +
-                                            ' & solve_duplications == @job_config.solve_duplications' +
-                                            ' & preprocessing_type == @job_config.preprocessing_type' +
                                             ' & IMDB_codes == @job_config.IMDB_codes' +
                                             ' & ids_codes == @job_config.ids_codes' +
                                             ' & group_size == @group_size' +
                                             ' & frames_in_video == @frames_in_video' +
-                                            ' & frames_per_fragment == @frames_in_fragment' +
+                                            ' & mean_frames_per_fragment == @mean_frames_per_fragment' +
+                                            ' & var_frames_per_fragment == @var_frames_per_fragment'
                                             ' & repetition == @repetition')) != 0
 
 """ generate blob lists """
@@ -77,12 +71,12 @@ class BlobsListConfig(object):
     def __init__(self,
                     number_of_animals = None,
                     number_of_frames_per_fragment = None,
-                    std_number_of_frames_per_fragment = None,
+                    var_number_of_frames_per_fragment = None,
                     number_of_frames = None,
                     repetition = None):
         self.number_of_animals = number_of_animals
         self.number_of_frames_per_fragment = number_of_frames_per_fragment
-        self.std_number_of_frames_per_fragment = std_number_of_frames_per_fragment
+        self.var_number_of_frames_per_fragment = var_number_of_frames_per_fragment
         self.max_number_of_frames_per_fragment = number_of_frames
         self.min_number_of_frames_per_fragment = 1
         self.number_of_frames = number_of_frames
@@ -125,58 +119,61 @@ def subsample_dataset_by_individuals(dataset, config):
 
 def get_next_number_of_frames_in_fragment(config):
     mu = config.number_of_frames_per_fragment
-    std = config.std_number_of_frames_per_fragment
-    X = gamma(a = std, loc = 1, scale = mu)
+    var = config.var_number_of_frames_per_fragment
+    X = gamma(a = var, loc = 1, scale = mu)
     number_of_frames_per_fragment = int(X.rvs(1))
     while number_of_frames_per_fragment < config.min_number_of_frames_per_fragment or number_of_frames_per_fragment > config.max_number_of_frames_per_fragment:
         number_of_frames_per_fragment = int(X.rvs(1))
 
     return number_of_frames_per_fragment
 
-def generate_list_of_blobs(portraits, centroids, config):
+def generate_list_of_blobs(identification_images, centroids, config):
+
     blobs_in_video = []
     frames_in_fragment = 0
     number_of_fragments = 0
 
     print("\n***********Generating list of blobs")
     print("centroids shape ", centroids.shape)
-    print("portraits shape", portraits.shape)
+    print("identification_images shape", identification_images.shape)
     for identity in range(config.number_of_animals):
-        # print("*\n**identity ", identity)
         # decide length of first individual fragment for this identity
         number_of_frames_per_fragment = get_next_number_of_frames_in_fragment(config)
+        number_of_frames_per_crossing_fragment = 3
         frames_in_fragment = 0
-        # print("number_of_frames_per_fragment, ", number_of_frames_per_fragment)
-        # print("frames_in_fragment, ", frames_in_fragment)
+        frames_in_crossing_fragment = 0
         blobs_in_identity = []
         for frame_number in range(config.number_of_frames):
-            # print("frame_number, ", frame_number)
-            # print("identity, ", identity)
             centroid = centroids[frame_number,identity,:]
-            image = portraits[frame_number,identity,:,:]
+            image = identification_images[frame_number,identity,:,:]
 
             blob = Blob(centroid, None, None, None,
                         number_of_animals = config.number_of_animals)
             blob.frame_number = frame_number
-            blob._portrait = ((image - np.mean(image))/np.std(image)).astype("float16")
+            blob._is_an_individual = True
+            blob._is_a_crossing = False
+            blob._image_for_identification = ((image - np.mean(image))/np.std(image)).astype("float16")
             blob._user_generated_identity = identity + 1
 
-            if frame_number > 0 and frames_in_fragment <= number_of_frames_per_fragment + 2 and frames_in_fragment != 0:
+            if frame_number > 0 and frames_in_fragment <= number_of_frames_per_fragment and frames_in_fragment != 0:
                 blob.previous = [blobs_in_identity[frame_number-1]]
                 blobs_in_identity[frame_number-1].next = [blob]
 
             if frames_in_fragment <= number_of_frames_per_fragment:
                 frames_in_fragment += 1
-                # print("frames_in_fragment, ", frames_in_fragment)
+            elif frames_in_crossing_fragment <= number_of_frames_per_crossing_fragment:
+                frames_in_crossing_fragment += 1
+                blob._is_a_crossing = True
+                blob._is_an_individual = False
+                blob._image_for_identification = None
+                blob._user_generated_identity = 0
             else:
                 frames_in_fragment = 0
+                frames_in_crossing_fragment = 0
                 number_of_fragments += 1
                 number_of_frames_per_fragment = get_next_number_of_frames_in_fragment(config)
-                # print("number_of_frames_per_fragment, ", number_of_frames_per_fragment)
-                # print("frames_in_fragment, ", frames_in_fragment)
 
             blobs_in_identity.append(blob)
-
         blobs_in_video.append(blobs_in_identity)
 
     blobs_in_video = zip(*blobs_in_video)
@@ -315,12 +312,7 @@ def getVarAttrFromHdf5(database, preprocessing_type):
     grp = database['database']
     datanames = grp.keys()
     labels = grp['labels'][()]
-    if preprocessing_type == 'portrait':
-        images = grp['portraits'][()]
-    elif preprocessing_type == 'body':
-        images = grp['bodies'][()]
-    elif preprocessing_type == 'body_blob':
-        images = grp['bodyblobs'][()]
+    images = grp['bodyblobs'][()]
     centroids = grp['centroids'][()]
     # info = [item for item in grp.attrs.iteritems()]
     return grp, images, labels, centroids
