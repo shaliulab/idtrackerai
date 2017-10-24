@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # PCA 1
     print("PCA 1 numpy")
     start = time.time()
-    pxs = np.unravel_index(blob.pixels,(video._height,video._width))
+    pxs = np.unravel_index(blob.pixels,(video.height,video.width))
     pxs1 = np.asarray(zip(pxs[0],pxs[1]))
     center1 = (np.mean(pxs[0]),np.mean(pxs[1]))
     cov_mat = np.cov(pxs1.T)

@@ -74,5 +74,5 @@ def visualize_embeddings_global_fragments(video, global_fragments, params, print
     video.create_embeddings_folder()
     visualize_fully_connected_embedding = EmbeddingVisualiser(labels = [labelsT, labelsV],
                                                             features = [assignerT._fc_vectors, assignerV._fc_vectors])
-    visualize_fully_connected_embedding.create_labels_file(video._embeddings_folder)
-    visualize_fully_connected_embedding.visualize(video._embeddings_folder)
+    visualize_fully_connected_embedding.create_labels_file(video.embeddings_folder)
+    visualize_fully_connected_embedding.visualize(video.embeddings_folder)

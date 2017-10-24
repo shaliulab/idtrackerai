@@ -79,20 +79,20 @@ class Chosen_Video(EventDispatcher):
             #get existent files and paths to load them
             self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
             print("------- old video", self.old_video)
-            if self.old_video._has_been_assigned: self.video._has_been_assigned
+            if self.old_video.has_been_assigned: self.video._has_been_assigned = True
             if hasattr(self.old_video, 'resolution_reduction'):
                 # print("--------------------------------------------------------")
-                self.video.resolution_reduction = self.old_video.resolution_reduction
-                self.video.bkg = self.old_video.bkg
-                self.video.ROI = self.old_video.ROI
+                self.video._resolution_reduction = self.old_video.resolution_reduction
+                self.video._bkg = self.old_video.bkg
+                self.video._ROI = self.old_video.ROI
 
                 # print(self.video.resolution_reduction, self.video.ROI.shape)
-                if self.video.ROI.shape[0] != self.video._height * self.video.resolution_reduction:
+                if self.video.ROI.shape[0] != self.video.height * self.video.resolution_reduction:
                     # print("resizing ROI")
                     self.video.ROI = cv2.resize(self.video.ROI, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
 
                     # print("***********************resized ROI shape ", self.video.ROI.shape)
-                if self.video.bkg is not None and self.video.bkg.shape[0] != self.video._height * self.video.resolution_reduction:
+                if self.video.bkg is not None and self.video.bkg.shape[0] != self.video.height * self.video.resolution_reduction:
                     # print("resizing BKG")
                     self.video.bkg = cv2.resize(self.video.bkg, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
             if CHOSEN_VIDEO.video.video_path is not None:
@@ -151,7 +151,7 @@ class SelectFile(BoxLayout):
             if CHOSEN_VIDEO.video.video_path is not None:
                 self.video = CHOSEN_VIDEO.video
                 self.old_video = CHOSEN_VIDEO.old_video
-        return not (hasattr(self.video, '_has_been_assigned') or hasattr(self.old_video, "_has_been_assigned"))
+        return not (hasattr(self.video, 'has_been_assigned') or hasattr(self.old_video, "has_been_assigned"))
 
     def create_preprocessing_type_and_number_popup(self):
         self.popup_container = BoxLayout()
@@ -221,10 +221,10 @@ class VisualiseVideo(BoxLayout):
         # print('seg number ', sNumber)
         sFrame = trackbar_value
         current_segment = sNumber
-        if self.video_object._paths_to_video_segments:
-            self.cap = cv2.VideoCapture(self.video_object._paths_to_video_segments[sNumber])
+        if self.video_object.paths_to_video_segments:
+            self.cap = cv2.VideoCapture(self.video_object.paths_to_video_segments[sNumber])
         #Get frame from video file
-        if self.video_object._paths_to_video_segments:
+        if self.video_object.paths_to_video_segments:
             start = self.video_object._episodes_start_end[sNumber][0]
             self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
@@ -551,7 +551,7 @@ class PreprocessingPreview(BoxLayout):
             self.bkg_subtractor_switch.active = CHOSEN_VIDEO.video.subtract_bkg
             self.bkg_subtractor_switch.bind(active = self.apply_bkg_subtraction)
             self.bkg = CHOSEN_VIDEO.video.bkg
-            self.ROI = CHOSEN_VIDEO.video.ROI if CHOSEN_VIDEO.video.ROI is not None else np.ones((CHOSEN_VIDEO.video._height, CHOSEN_VIDEO.video._width) ,dtype='uint8') * 255
+            self.ROI = CHOSEN_VIDEO.video.ROI if CHOSEN_VIDEO.video.ROI is not None else np.ones((CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width) ,dtype='uint8') * 255
             CHOSEN_VIDEO.video.ROI = self.ROI
             # print("ROI in do - preprocessing", self.ROI)
             self.init_segment_zero()
@@ -561,7 +561,7 @@ class PreprocessingPreview(BoxLayout):
         CHOSEN_VIDEO.video.apply_ROI = active
         if active  == True:
             num_valid_pxs_in_ROI = len(sum(np.where(CHOSEN_VIDEO.video.ROI == 255)))
-            num_pxs_in_frame = CHOSEN_VIDEO.video._height * CHOSEN_VIDEO.video._width
+            num_pxs_in_frame = CHOSEN_VIDEO.video.height * CHOSEN_VIDEO.video.width
             self.ROI_is_trivial = num_pxs_in_frame == num_valid_pxs_in_ROI
 
             if CHOSEN_VIDEO.video.ROI is not None and not self.ROI_is_trivial:
@@ -571,7 +571,7 @@ class PreprocessingPreview(BoxLayout):
                 instance.active = False
                 CHOSEN_VIDEO.apply_ROI = False
         elif active == False:
-            self.ROI = np.ones((CHOSEN_VIDEO.video._height, CHOSEN_VIDEO.video._width) ,dtype='uint8') * 255
+            self.ROI = np.ones((CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width) ,dtype='uint8') * 255
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def apply_bkg_subtraction(self, instance, active):
@@ -671,8 +671,8 @@ class PreprocessingPreview(BoxLayout):
         the coordinates of the original image
         """
         coords = np.asarray(coords)
-        origFrameW = CHOSEN_VIDEO.video._width
-        origFrameH = CHOSEN_VIDEO.video._height
+        origFrameW = CHOSEN_VIDEO.video.width
+        origFrameH = CHOSEN_VIDEO.video.height
 
         # actualFrameW, actualFrameH = self.visualiser.display_layout.size
         # self.y_offset = self.sliderBox.height + self.button_layout.height
@@ -737,7 +737,7 @@ class Accumulator(BoxLayout):
 
     def do(self, *args):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
-            if CHOSEN_VIDEO.video._has_been_assigned == True or  CHOSEN_VIDEO.old_video._has_been_assigned == True:
+            if CHOSEN_VIDEO.video.has_been_assigned == True or  CHOSEN_VIDEO.old_video.has_been_assigned == True:
                 return False
             else:
                 return True
@@ -771,14 +771,13 @@ class Validator(BoxLayout):
 
     def do(self, *args):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
-            # print("has been assigned ", CHOSEN_VIDEO.video._has_been_assigned)
-            if CHOSEN_VIDEO.video._has_been_assigned == True:
+            if CHOSEN_VIDEO.video.has_been_assigned == True:
                 list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_path)
                 list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.old_video.fragments_path)
                 list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
                 self.list_of_fragments = list_of_fragments
                 self.blobs_in_video = list_of_blobs.blobs_in_video
-            elif CHOSEN_VIDEO.old_video._has_been_assigned == True:
+            elif CHOSEN_VIDEO.old_video.has_been_assigned == True:
                 CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
                 list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
                 list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
@@ -955,14 +954,14 @@ class Validator(BoxLayout):
         coords = np.asarray(coords)
         if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction'):
             if CHOSEN_VIDEO.video.resolution_reduction == 1:
-                original_frame_width = CHOSEN_VIDEO.video._width
-                original_frame_height = CHOSEN_VIDEO.video._height
+                original_frame_width = CHOSEN_VIDEO.video.width
+                original_frame_height = CHOSEN_VIDEO.video.height
             else:
-                original_frame_width = int(CHOSEN_VIDEO.video._width * CHOSEN_VIDEO.video.resolution_reduction)
-                original_frame_height = int(CHOSEN_VIDEO.video._height * CHOSEN_VIDEO.video.resolution_reduction)
+                original_frame_width = int(CHOSEN_VIDEO.video.width * CHOSEN_VIDEO.video.resolution_reduction)
+                original_frame_height = int(CHOSEN_VIDEO.video.height * CHOSEN_VIDEO.video.resolution_reduction)
         else:
-            original_frame_width = int(CHOSEN_VIDEO.video._width)
-            original_frame_height = int(CHOSEN_VIDEO.video._height)
+            original_frame_width = int(CHOSEN_VIDEO.video.width)
+            original_frame_height = int(CHOSEN_VIDEO.video.height)
         # print("--------------------------- width and height ", original_frame_width, original_frame_height)
 
         actual_frame_width, actual_frame_height = self.visualiser.display_layout.size

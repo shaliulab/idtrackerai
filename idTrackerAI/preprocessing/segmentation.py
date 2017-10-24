@@ -103,14 +103,14 @@ def segment(video):
     blobs_in_video = []
     number_of_blobs = []
     #videoPaths is used to check if the video was previously split or not (it is either None or
-    #a list of paths. Check attribute _paths_to_video_segments in Video)
-    videoPaths = video._paths_to_video_segments
+    #a list of paths. Check attribute paths_to_video_segments in Video)
+    videoPaths = video.paths_to_video_segments
     if not videoPaths:
         print '**************************************'
         print 'There is only one path, segmenting by frame indices'
         print '**************************************'
         #Define list of starting and ending frames
-        segmFramesIndices = video._episodes_start_end
+        segmFramesIndices = video.episodes_start_end
         #Spliting frames list into sublists
         segmFramesIndicesSubLists = [segmFramesIndices[i:i+num_cores] for i in range(0,len(segmFramesIndices),num_cores)]
 
@@ -132,5 +132,4 @@ def segment(video):
     video._maximum_number_of_blobs = max(flatten(number_of_blobs))
     #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
     blobs_in_video = flatten(flatten(blobs_in_video))
-    # np.save(video.blobs_path, blobs_in_video, allow_pickle = True)
     return blobs_in_video

@@ -74,7 +74,7 @@ if __name__ == "__main__":
     video = np.load(video_path).item(0)
     blobs_list = ListOfBlobs.load(video.blobs_path)
 
-    trajectories_folder = os.path.join(video._session_folder,'trajectories')
+    trajectories_folder = os.path.join(video.session_folder,'trajectories')
     if not os.path.isdir(trajectories_folder):
         print("Creating trajectories folder...")
         os.makedirs(trajectories_folder)

@@ -107,7 +107,7 @@ def compute_and_save_gt_accuracy(video_object_path, video):
 
     ''' select ground truth file '''
     print("loading groundtruth")
-    groundtruth_path = os.path.join(video._video_folder,'_groundtruth.npy')
+    groundtruth_path = os.path.join(video.video_folder,'_groundtruth.npy')
     groundtruth = np.load(groundtruth_path).item()
     groundtruth.list_of_blobs = groundtruth.list_of_blobs[groundtruth.start:groundtruth.end]
     blobs = blobs[groundtruth.start:groundtruth.end]

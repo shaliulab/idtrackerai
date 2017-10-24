@@ -147,8 +147,8 @@ class Crossing(object):
             list of blobs objects (with identity) extracted from the crossing.
             These blobs have P1 and P2 vectors set to zero.
         """
-        self.height = video._height
-        self.width = video._width
+        self.height = video.height
+        self.width = video.width
         self.blob = crossing_blob
         self.bounding_box = self.blob.bounding_box_in_frame_coordinates
         self.original_image = self.blob.bounding_box_image
@@ -247,20 +247,20 @@ class Crossing(object):
     def get_blob_miniframe(blob, video):
         sNumber = video.in_which_episode(blob.frame_number)
         sFrame = blob.frame_number
-        if video._paths_to_video_segments:
-            cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
+        if video.paths_to_video_segments:
+            cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
         else:
             cap = cv2.VideoCapture(video.video_path)
         #Get frame from video file
-        if video._paths_to_video_segments:
-            start = video._episodes_start_end[sNumber][0]
+        if video.paths_to_video_segments:
+            start = video.episodes_start_end[sNumber][0]
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,blob.frame_number)
         ret, frame = cap.read()
         if ret:
             frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            bounding_box, estimated_body_length = getBoundigBox(blob.contour, video._width, video._height, crossing_detector = True)
+            bounding_box, estimated_body_length = getBoundigBox(blob.contour, video.width, video.height, crossing_detector = True)
             return frameGray[bounding_box[0][1]:bounding_box[1][1], bounding_box[0][0]:bounding_box[1][0]], bounding_box, estimated_body_length
         else:
             return None, None, None

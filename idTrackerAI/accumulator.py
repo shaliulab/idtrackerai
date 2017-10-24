@@ -20,7 +20,7 @@ def accumulate(accumulation_manager,
                 global_step,
                 net,
                 knowledge_transfer_from_same_animals):
-    video.init_accumulation_statistics_attributes(index = video.accumulation_trial)
+    video.init_accumulation_statistics_attributes()
     accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
 
     while accumulation_manager.continue_accumulation:
@@ -107,11 +107,12 @@ def accumulate(accumulation_manager,
                             store_training_accuracy_and_loss_data.accuracy,
                             store_training_accuracy_and_loss_data.individual_accuracy,
                             accumulation_manager.ratio_accumulated_images]
-            video.store_accumulation_statistics_data(new_values)
+            video.store_accumulation_step_statistics_data(new_values)
             accumulation_manager.update_counter()
         else:
             logger.info("All the global fragments have been used for accumulation")
             break
 
         accumulation_manager.ratio_accumulated_images = accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
+        video.store_accumulation_statistics_data(video.accumulation_trial)
     return accumulation_manager.ratio_accumulated_images

@@ -40,7 +40,7 @@ class ListOfGlobalFragments(object):
             setattr(fragment, '_certainty', 1.),
             setattr(fragment, '_P1_vector', fragment.compute_P1_from_frequencies(fragment.frequencies)))
             for i, fragment in enumerate(self.first_global_fragment_for_accumulation.individual_fragments)]
-        self.video.first_frame_first_global_fragment = self.first_global_fragment_for_accumulation.index_beginning_of_fragment
+        self.video._first_frame_first_global_fragment = self.first_global_fragment_for_accumulation.index_beginning_of_fragment
         self.video.save()
 
     def order_by_distance_to_the_first_global_fragment_for_accumulation(self):

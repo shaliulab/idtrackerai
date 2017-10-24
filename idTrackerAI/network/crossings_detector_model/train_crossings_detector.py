@@ -139,7 +139,7 @@ if __name__ == "__main__":
     video_path = os.path.join(session_path,'video_object.npy')
     print("loading video object...")
     video = np.load(video_path).item(0)
-    session_folder = video._session_folder
+    session_folder = video.session_folder
 
     blobs_path = video.blobs_path
     global_fragments_path = video.global_fragments_path

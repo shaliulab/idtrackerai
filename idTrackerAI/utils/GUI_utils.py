@@ -292,6 +292,11 @@ def SegmentationPreview(video):
     global cap, currentSegment
     currentSegment = 0
     cap = cv2.VideoCapture(video.video_path)
+    ret, frame = cap.read()
+    if frame.shape[2] == 1 or (np.any(frame[:,:,1] == frame[:,:,2] ) and np.any(frame[:,:, 0] == frame[:,:,1])):
+        video._number_of_channels = 1
+    else:
+        raise NotImplementedError("Colour videos has still to be intgrated")
     numFrames = video.number_of_frames
     bkg = video.bkg
     mask = video.ROI
@@ -301,11 +306,11 @@ def SegmentationPreview(video):
         mask = cv2.resize(mask, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
     subtract_bkg = video.subtract_bkg
     if video.resolution_reduction == 1:
-        height = video._height
-        width = video._width
+        height = video.height
+        width = video.width
     else:
-        height = int(video._height * video.resolution_reduction)
-        width = int(video._width * video.resolution_reduction)
+        height = int(video.height * video.resolution_reduction)
+        width = int(video.width * video.resolution_reduction)
 
 
     def thresholder(minTh, maxTh):
@@ -365,11 +370,11 @@ def SegmentationPreview(video):
         sFrame = trackbarValue
         if sNumber != currentSegment: # we are changing segment
             currentSegment = sNumber
-            if video._paths_to_video_segments:
-                cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
+            if video.paths_to_video_segments:
+                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
         #Get frame from video file
-        if video._paths_to_video_segments:
-            start = video._episodes_start_end[sNumber][0]
+        if video.paths_to_video_segments:
+            start = video.episodes_start_end[sNumber][0]
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
@@ -655,7 +660,7 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
 def selectPreprocParams(video, old_video, usePreviousPrecParams):
     restore_segmentation = False
     if not usePreviousPrecParams:
-        if old_video and old_video._has_been_segmented:
+        if old_video and old_video.has_been_segmented:
             restore_segmentation = getInput("Load segmentation", "Load the previous segmentation? Y/n")
             if restore_segmentation == 'y' or restore_segmentation == '':
                 restore_segmentation = True
@@ -664,8 +669,8 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
 
     if not usePreviousPrecParams and not restore_segmentation:
         prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?', is_processes_list = False)
-        video.subtract_bkg = bool(prepOpts['bkg'])
-        video.apply_ROI =  bool(prepOpts['ROI'])
+        video._subtract_bkg = bool(prepOpts['bkg'])
+        video._apply_ROI =  bool(prepOpts['ROI'])
         print("********************", video.apply_ROI, video.subtract_bkg)
         video.reduce_resolution = bool(prepOpts['resolution_reduction'])
         if old_video is not None:
@@ -683,11 +688,11 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
             usePreviousROI, usePreviousBkg, usePreviousRR = False, False, False
             video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
         #ROI selection/loading
-        video.ROI = ROISelectorPreview(video, old_video, usePreviousROI)
+        video._ROI = ROISelectorPreview(video, old_video, usePreviousROI)
         #BKG computation/loading
-        video.bkg = checkBkg(video, old_video, usePreviousBkg)
+        video._bkg = checkBkg(video, old_video, usePreviousBkg)
         # Resolution reduction
-        video.resolution_reduction = check_resolution_reduction(video, old_video, usePreviousRR)
+        video._resolution_reduction = check_resolution_reduction(video, old_video, usePreviousRR)
 
         video._min_threshold = 0
         video._max_threshold = 135
@@ -700,25 +705,27 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         cv2.waitKey(1)
     elif not usePreviousPrecParams and restore_segmentation:
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
-                                    '_maximum_number_of_blobs',
-                                    '_blobs_path_segmented', '_min_threshold','_max_threshold',
-                                    '_min_area','_max_area', '_resize','resolution_reduction',
-                                    '_number_of_animals',
-                                    'ROI','bkg',
-                                    '_preprocessing_folder']
+                                    'resolution_reduction',
+                                    'maximum_number_of_blobs',
+                                    'number_of_channels',
+                                    'blobs_path_segmented', 'min_threshold',
+                                    'max_threshold',
+                                    'min_area','max_area', 'resize',
+                                    'number_of_animals', 'ROI','bkg',
+                                    'preprocessing_folder']
         video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_been_segmented = True
     else:
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
-                                    '_maximum_number_of_blobs',
-                                    'median_body_length','identification_image_size',
-                                    '_blobs_path_segmented',
-                                    '_min_threshold','_max_threshold',
-                                    '_min_area','_max_area',
-                                    '_resize','resolution_reduction',
-                                    '_number_of_animals',
-                                    'ROI','bkg',
                                     'resolution_reduction',
+                                    'maximum_number_of_blobs',
+                                    'median_body_length',
+                                    'identification_image_size',
+                                    'blobs_path_segmented',
+                                    'min_threshold','max_threshold',
+                                    'min_area','max_area',
+                                    'resize', 'number_of_animals',
+                                    'ROI','bkg', 'preprocessing_folder',
                                     'fragment_identifier_to_index',
                                     'number_of_unique_images_in_global_fragments',
                                     'maximum_number_of_images_in_global_fragments',
@@ -763,8 +770,8 @@ def fragmentation_inspector(video, blobs_in_video):
     bkg = video.bkg
     mask = video.ROI
     subtract_bkg = video.subtract_bkg
-    height = video._height
-    width = video._width
+    height = video.height
+    width = video.width
     global currentSegment, cap, frame
     currentSegment = 0
     cv2.namedWindow('fragmentInspection')
@@ -796,11 +803,11 @@ def fragmentation_inspector(video, blobs_in_video):
         if sNumber != currentSegment: # we are changing segment
             logger.debug('Changing segment...')
             currentSegment = sNumber
-            if video._paths_to_video_segments:
-                cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
+            if video.paths_to_video_segments:
+                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
         #Get frame from video file
-        if video._paths_to_video_segments:
-            start = video._episodes_start_end[sNumber][0]
+        if video.paths_to_video_segments:
+            start = video.episodes_start_end[sNumber][0]
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
@@ -925,8 +932,8 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
     bkg = video.bkg
     mask = video.ROI
     subtract_bkg = video.subtract_bkg
-    height = video._height
-    width = video._width
+    height = video.height
+    width = video.width
     global currentSegment, cap
     currentSegment = 0
     cv2.namedWindow('frame_by_frame_identity_inspector')
@@ -934,8 +941,8 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
     colors = get_spaced_colors_util(video.number_of_animals,black=True)
 
     fourcc = cv2.cv.CV_FOURCC(*'XVID')
-    name = video._session_folder +'/tracked.avi'
-    out = cv2.VideoWriter(name, fourcc, 32.0, (video._width, video._height))
+    name = video.session_folder +'/tracked.avi'
+    out = cv2.VideoWriter(name, fourcc, 32.0, (video.width, video.height))
 
     def scroll(trackbarValue):
         global frame, currentSegment, cap
@@ -949,12 +956,12 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
         if sNumber != currentSegment: # we are changing segment
             logger.debug('Changing segment...')
             currentSegment = sNumber
-            if video._paths_to_video_segments:
-                cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
+            if video.paths_to_video_segments:
+                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
 
         #Get frame from video file
-        if video._paths_to_video_segments:
-            start = video._episodes_start_end[sNumber][0]
+        if video.paths_to_video_segments:
+            start = video.episodes_start_end[sNumber][0]
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
@@ -972,7 +979,7 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                 blobs_identities = get_n_previous_blobs_attribute(blob,'identity',number_of_previous)[::-1]
 
                 for i, (blob_pixels, blob_identity) in enumerate(zip(blobs_pixels,blobs_identities)):
-                    pxs = np.unravel_index(blob_pixels,(video._height,video._width))
+                    pxs = np.unravel_index(blob_pixels,(video.height,video.width))
                     if i < number_of_previous-1:
                         if type(blob_identity) is not list and blob_identity is not None and blob_identity != 0:
                             frame[pxs[0], pxs[1], :] = np.multiply(colors[blob_identity], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
@@ -1055,8 +1062,8 @@ def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_
     bkg = video.bkg
     mask = video.ROI
     subtract_bkg = video.subtract_bkg
-    height = video._height
-    width = video._width
+    height = video.height
+    width = video.width
     global currentSegment, cap
     currentSegment = 0
     cv2.namedWindow('frame_by_frame_identity_inspector')
@@ -1064,8 +1071,8 @@ def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_
     colors = get_spaced_colors_util(video.number_of_animals,black=True)
     fourcc = cv2.cv.CV_FOURCC(*'XVID')
     if save_video:
-        name = video._session_folder +'/tracked.avi'
-        out = cv2.VideoWriter(name, fourcc, 32.0, (video._width, video._height))
+        name = video.session_folder +'/tracked.avi'
+        out = cv2.VideoWriter(name, fourcc, 32.0, (video.width, video.height))
 
     def scroll(trackbarValue):
         global frame, currentSegment, cap
@@ -1078,12 +1085,12 @@ def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_
         if sNumber != currentSegment: # we are changing segment
             logger.debug('Changing segment...')
             currentSegment = sNumber
-            if video._paths_to_video_segments:
-                cap = cv2.VideoCapture(video._paths_to_video_segments[sNumber])
+            if video.paths_to_video_segments:
+                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
 
         #Get frame from video file
-        if video._paths_to_video_segments:
-            start = video._episodes_start_end[sNumber][0]
+        if video.paths_to_video_segments:
+            start = video.episodes_start_end[sNumber][0]
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
@@ -1098,7 +1105,7 @@ def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_
                 blobs_identities = get_n_previous_blobs_attribute(blob,'identity',number_of_previous)[::-1]
 
                 for i, (blob_pixels, blob_identity) in enumerate(zip(blobs_pixels,blobs_identities)):
-                    pxs = np.unravel_index(blob_pixels,(video._height,video._width))
+                    pxs = np.unravel_index(blob_pixels,(video.height,video.width))
                     if i < number_of_previous-1:
                         if type(blob_identity) is not list and blob_identity is not None and blob_identity != 0:
                             frame[pxs[0], pxs[1], :] = np.multiply(colors[blob_identity], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')

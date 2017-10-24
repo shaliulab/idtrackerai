@@ -60,14 +60,14 @@ def computeBkg(video):
     chunks and videos composed by a single file."""
     # This holds even if we have not selected a ROI because then the ROI is
     # initialized as the full frame
-    bkg = np.zeros((video._height, video._width))
+    bkg = np.zeros((video.height, video.width))
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    if video._paths_to_video_segments is None: # one single video
+    if video.paths_to_video_segments is None: # one single video
         print('one single video, computing bkg in parallel from single video')
-        output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSingleVideo)(starting_frame, ending_frame, video.video_path, bkg) for (starting_frame, ending_frame) in video._episodes_start_end)
+        output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSingleVideo)(starting_frame, ending_frame, video.video_path, bkg) for (starting_frame, ending_frame) in video.episodes_start_end)
     else: # multiple segments video
-        output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSegmVideo)(videoPath,bkg) for videoPath in video._paths_to_video_segments)
+        output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSegmVideo)(videoPath,bkg) for videoPath in video.paths_to_video_segments)
 
     partialBkg = [bkg for (bkg,_) in output]
     totNumFrame = np.sum([numFrame for (_,numFrame) in output])
