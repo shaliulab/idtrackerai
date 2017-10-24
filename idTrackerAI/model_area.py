@@ -6,6 +6,9 @@ class ModelArea(object):
         self.median = median
         self.mean = mean
         self.std = std
+        self.std_tolerance = STD_TOLERANCE
 
-    def __call__(self, area, std_tolerance = STD_TOLERANCE):
-        return (area - self.median) < std_tolerance * self.std
+    def __call__(self, area, std_tolerance = None):
+        if std_tolerance is not None:
+            self.std_tolerance = std_tolerance
+        return (area - self.median) < self.std_tolerance * self.std

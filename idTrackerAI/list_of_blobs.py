@@ -159,6 +159,10 @@ class ListOfBlobs(object):
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'Applying model area'):
             apply_model_area_to_blobs_in_frame(self.video, blobs_in_frame, model_area, identification_image_size)
 
+    def get_data_plot(self):
+        return [blob.area for blobs_in_frame in self.blobs_in_video for blob in blobs_in_frame]
+
+
     def check_maximal_number_of_blob(self):
         frames_with_more_blobs_than_animals = []
         for frame_number, blobs_in_frame in enumerate(self.blobs_in_video):

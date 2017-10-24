@@ -199,12 +199,12 @@ if __name__ == '__main__':
         logger.info("Computing maximum number of blobs detected in the video")
         list_of_blobs.check_maximal_number_of_blob()
         logger.info("Computing a model of the area of the individuals")
-        model_area, video.median_body_length = list_of_blobs.compute_model_area_and_body_length()
+        video.model_area, video.median_body_length = list_of_blobs.compute_model_area_and_body_length()
         video.compute_identification_image_size(video.median_body_length)
         list_of_blobs.video = video
         if not list_of_blobs.blobs_are_connected:
             list_of_blobs.compute_overlapping_between_subsequent_frames()
-        detect_crossings(list_of_blobs, video, model_area)
+        detect_crossings(list_of_blobs, video, video.model_area)
         #connect blobs that overlap in consecutive frames
         list_of_blobs.compute_overlapping_between_subsequent_frames()
         #assign an identifier to each blob belonging to an individual fragment
@@ -224,6 +224,8 @@ if __name__ == '__main__':
         list_of_global_fragments = ListOfGlobalFragments(video, global_fragments)
         video.individual_fragments_lenghts, \
         video.individual_fragments_distance_travelled = compute_and_plot_fragments_statistics(video,
+                                                                                            video.model_area,
+                                                                                            list_of_blobs,
                                                                                             list_of_fragments,
                                                                                             list_of_global_fragments)
         video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
