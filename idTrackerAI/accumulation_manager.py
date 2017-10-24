@@ -153,7 +153,8 @@ class AccumulationManager(object):
             fragment.set_partially_or_globally_accumualted(self.accumulation_strategy),
             setattr(fragment, '_accumulation_step', self.counter))
             for fragment in self.list_of_fragments.fragments
-            if fragment.acceptable_for_training == True]
+            if fragment.acceptable_for_training == True
+            and not fragment.used_for_training]
 
     def assign_identities_to_fragments_used_for_training(self):
         """ assign the identities to the global fragments used for training and

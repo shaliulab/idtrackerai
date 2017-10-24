@@ -32,23 +32,13 @@ from list_of_fragments import ListOfFragments, create_list_of_fragments
 from list_of_global_fragments import ListOfGlobalFragments, create_list_of_global_fragments
 from global_fragments_statistics import compute_and_plot_fragments_statistics
 from segmentation import segment
-from get_crossings_data_set import CrossingDataset
-from network_params_crossings import NetworkParams_crossings
-from cnn_architectures import cnn_model_crossing_detector
-from crossings_detector_model import ConvNetwork_crossings
-from train_crossings_detector import TrainDeepCrossing
-from get_predictions_crossings import GetPredictionCrossigns
-from GUI_utils import selectFile,\
-                    getInput,\
-                    selectOptions,\
-                    ROISelectorPreview,\
-                    selectPreprocParams,\
-                    fragmentation_inspector,\
-                    frame_by_frame_identity_inspector,\
-                    selectDir,\
+from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview,\
+                    selectPreprocParams, fragmentation_inspector,\
+                    frame_by_frame_identity_inspector, selectDir,\
                     check_resolution_reduction
 from py_utils import getExistentFiles
 from video_utils import checkBkg
+from crossing_detector import detect_crossings
 from pre_trainer import pre_trainer
 from accumulation_manager import AccumulationManager
 from accumulator import accumulate
@@ -209,57 +199,12 @@ if __name__ == '__main__':
         logger.info("Computing maximum number of blobs detected in the video")
         list_of_blobs.check_maximal_number_of_blob()
         logger.info("Computing a model of the area of the individuals")
-        model_area, video.median_body_length = list_of_blobs.compute_model_area_and_body_length()
+        video.model_area, video.median_body_length = list_of_blobs.compute_model_area_and_body_length()
         video.compute_identification_image_size(video.median_body_length)
-        logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
-        list_of_blobs.apply_model_area_to_video(model_area, video.identification_image_size[0])
-        # use_crossings_detector = getInput('Crossings detector', 'Do you want to you the crossings detector? y/N')
-        # if use_crossings_detector == 'y':
-        #     video.create_crossings_detector_folder()
-        #     logger.info("Get individual and crossing images labelled data")
-        #     training_set = CrossingDataset(blobs, video, scope = 'training')
-        #     training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)
-        #     validation_set = CrossingDataset(blobs, video, scope = 'validation',
-        #                                                     crossings = training_set.crossings,
-        #                                                     fish = training_set.fish,
-        #                                                     image_size = training_set.image_size)
-        #     validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1.)
-        #     logger.info("Start crossing detector training")
-        #     logger.info("Crossing detector training finished")
-        #     crossing_image_size = training_set.image_size
-        #     crossing_image_shape = training_set.images.shape[1:]
-        #     logger.info("crossing image shape %s" %str(crossing_image_shape))
-        #     crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
-        #                                                                 learning_rate = 0.001,
-        #                                                                 architecture = cnn_model_crossing_detector,
-        #                                                                 keep_prob = 1.0,
-        #                                                                 save_folder = video._crossings_detector_folder,
-        #                                                                 image_size = crossing_image_shape)
-        #     net = ConvNetwork_crossings(crossings_detector_network_params)
-        #     TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
-        #     logger.debug("crossing image size %s" %str(crossing_image_size))
-        #     video.crossing_image_shape = crossing_image_shape
-        #     video.crossing_image_size = crossing_image_size
-        #     video.save()
-        #     logger.debug("Freeing memory. Validation and training crossings sets deleted")
-        #     validation_set = None
-        #     training_set = None
-        #     test_set = CrossingDataset(blobs, video, scope = 'test',
-        #                                             image_size = video.crossing_image_size)
-        #     # get predictions of individual blobs outside of global fragments
-        #     logger.debug("Classify individuals and crossings")
-        #     crossings_predictor = GetPredictionCrossigns(net)
-        #     predictions = crossings_predictor.get_all_predictions(test_set)
-        #     # set blobs as crossings by deleting the image_for_identification
-        #     [setattr(blob,'_portrait',None) if prediction == 1 else setattr(blob,'bounding_box_image', None)
-        #                                     for blob, prediction in zip(test_set.test, predictions)]
-        #     # delete bounding_box_image from blobs that have portraits
-        #     [setattr(blob,'bounding_box_image', None) for blobs_in_frame in blobs
-        #                                                 for blob in blobs_in_frame
-        #                                                 if blob.is_an_individual
-        #                                                 and blob.bounding_box_image is not None]
-        #     logger.debug("Freeing memory. Test crossings set deleted")
-        #     test_set = None
+        list_of_blobs.video = video
+        if not list_of_blobs.blobs_are_connected:
+            list_of_blobs.compute_overlapping_between_subsequent_frames()
+        detect_crossings(list_of_blobs, video, video.model_area)
         #connect blobs that overlap in consecutive frames
         list_of_blobs.compute_overlapping_between_subsequent_frames()
         #assign an identifier to each blob belonging to an individual fragment
@@ -279,6 +224,8 @@ if __name__ == '__main__':
         list_of_global_fragments = ListOfGlobalFragments(video, global_fragments)
         video.individual_fragments_lenghts, \
         video.individual_fragments_distance_travelled = compute_and_plot_fragments_statistics(video,
+                                                                                            video.model_area,
+                                                                                            list_of_blobs,
                                                                                             list_of_fragments,
                                                                                             list_of_global_fragments)
         video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
@@ -385,10 +332,23 @@ if __name__ == '__main__':
     else:
         ### NOTE: load all the accumulation statistics
         logger.info("Restoring accumulation network")
-        video.copy_attributes_between_two_video_objects(old_video, ['_accumulation_folder',\
-                                                                    'ratio_accumulated_images',\
-                                                                    '_first_accumulation_finished',\
-                                                                    'knowledge_transfer_from_same_animals'])
+        list_of_attributes = ['_accumulation_folder', '_second_accumulation_finished',
+                    'number_of_accumulated_global_fragments',
+                    'number_of_non_certain_global_fragments',
+                    'number_of_randomly_assigned_global_fragments',
+                    'number_of_nonconsistent_global_fragments',
+                    'number_of_nonunique_global_fragments',
+                    'number_of_acceptable_global_fragments',
+                    'validation_accuracy',
+                    'validation_individual_accuracies',
+                    'training_accuracy',
+                    'training_individual_accuracies',
+                    'ratio_of_accumulated_images',
+                    'accumulation_trial',
+                    'ratio_accumulated_images',
+                    '_first_accumulation_finished',
+                    'knowledge_transfer_from_same_animals']
+        video.copy_attributes_between_two_video_objects(old_video, list_of_attributes)
         accumulation_network_params.restore_folder = video._accumulation_folder
         net = ConvNetwork(accumulation_network_params)
         net.restore()
@@ -492,6 +452,7 @@ if __name__ == '__main__':
                 video._accumulation_trial = np.argmax(percentage_of_accumulated_images) + 1
                 accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
                 video._accumulation_folder = os.path.join(video._session_folder, accumulation_folder_name)
+                video.accumulation_trial = np.argmax(percentage_of_accumulated_images)
                 list_of_fragments.load_light_list(video._accumulation_folder)
             video._second_accumulation_finished = True
             logger.info("Saving global fragments")
@@ -500,7 +461,20 @@ if __name__ == '__main__':
             ### NOTE: save second_accumulation statistics
             video.save()
         else:
-            video.copy_attributes_between_two_video_objects(old_video, ['_accumulation_folder', '_second_accumulation_finished'])
+            list_of_attributes = ['_accumulation_folder', '_second_accumulation_finished',
+                        'number_of_accumulated_global_fragments',
+                        'number_of_non_certain_global_fragments',
+                        'number_of_randomly_assigned_global_fragments',
+                        'number_of_nonconsistent_global_fragments',
+                        'number_of_nonunique_global_fragments',
+                        'number_of_acceptable_global_fragments',
+                        'validation_accuracy',
+                        'validation_individual_accuracies',
+                        'training_accuracy',
+                        'training_individual_accuracies',
+                        'ratio_of_accumulated_images',
+                        'accumulation_trial']
+            video.copy_attributes_between_two_video_objects(old_video, list_of_attributes)
             logger.info("Restoring trained network")
             accumulation_network_params.restore_folder = video._accumulation_folder
             list_of_fragments.load_light_list(video._accumulation_folder)
@@ -604,7 +578,11 @@ if __name__ == '__main__':
     ####
     #############################################################
     video.individual_fragments_stats = list_of_fragments.get_stats(list_of_global_fragments)
+    video.compute_overall_P2(list_of_fragments.fragments)
+    print("individual overall_P2 ", video.individual_P2)
+    print("overall_P2 ", video.overall_P2)
     list_of_fragments.plot_stats()
+    list_of_fragments.save_light_list(video._accumulation_folder)
     video.save()
 
     #############################################################
@@ -614,6 +592,7 @@ if __name__ == '__main__':
     list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
     if False:
         list_of_blobs.compute_nose_and_head_coordinates()
+    list_of_blobs.save(number_of_chunks = video.number_of_frames)
 
     #############################################################
     ##############   Create trajectories    #####################

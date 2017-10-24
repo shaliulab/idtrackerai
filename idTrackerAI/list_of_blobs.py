@@ -19,6 +19,7 @@ class ListOfBlobs(object):
         self.blobs_in_video = blobs_in_video
         self.number_of_frames_with_blobs = len(self.blobs_in_video)
         self.check_consistency_number_of_frames_and_number_of_frames_with_blobs()
+        self.blobs_are_connected = False
 
     def check_consistency_number_of_frames_and_number_of_frames_with_blobs(self):
         frame_diff = int(self.video.number_of_frames - self.number_of_frames_with_blobs)
@@ -47,12 +48,14 @@ class ListOfBlobs(object):
         logger.info("saving blobs list at %s" %path_to_save)
         np.save(path_to_save, self)
         self.reconnect()
+        self.blobs_are_connected = True
 
     @classmethod
     def load(cls, path_to_load_blob_list_file):
         logger.info("loading blobs list from %s" %path_to_load_blob_list_file)
         list_of_blobs = np.load(path_to_load_blob_list_file).item()
         list_of_blobs.reconnect()
+        list_of_blobs.blobs_are_connected = True
         return list_of_blobs
 
     def compute_fragment_identifier_and_blob_index(self):
@@ -156,6 +159,10 @@ class ListOfBlobs(object):
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'Applying model area'):
             apply_model_area_to_blobs_in_frame(self.video, blobs_in_frame, model_area, identification_image_size)
 
+    def get_data_plot(self):
+        return [blob.area for blobs_in_frame in self.blobs_in_video for blob in blobs_in_frame]
+
+
     def check_maximal_number_of_blob(self):
         frames_with_more_blobs_than_animals = []
         for frame_number, blobs_in_frame in enumerate(self.blobs_in_video):
@@ -170,18 +177,15 @@ class ListOfBlobs(object):
         return frames_with_more_blobs_than_animals
 
     def update_from_list_of_fragments(self, fragments):
-        attributes = ['_identity',
-                        '_identity_corrected_solving_duplication',
-                        '_user_generated_identity', '_used_for_training']
+        attributes = ['identity',
+                        'identity_corrected_solving_duplication',
+                        'user_generated_identity', 'used_for_training',
+                        'accumulation_step']
 
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'updating list of blobs from list of fragments'):
             for blob in blobs_in_frame:
                 fragment = fragments[self.video.fragment_identifier_to_index[blob.fragment_identifier]]
-                values = [fragment.identity,
-                            fragment.identity_corrected_solving_duplication,
-                            fragment.user_generated_identity,
-                            fragment.used_for_training]
-                [setattr(blob, attribute, value) for attribute, value in zip(attributes, values)]
+                [setattr(blob, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes]
 
     def compute_nose_and_head_coordinates(self):
         for blobs_in_frame in self.blobs_in_video:

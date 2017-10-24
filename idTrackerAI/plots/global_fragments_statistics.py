@@ -16,12 +16,14 @@ import seaborn as sns
 import numpy as np
 
 from video import Video
+from model_area import ModelArea
+from list_of_blobs import ListOfBlobs
 from list_of_fragments import ListOfFragments
 from list_of_global_fragments import ListOfGlobalFragments
 from GUI_utils import selectDir
 
 """ plotter """
-def compute_and_plot_fragments_statistics(video, list_of_fragments, list_of_global_fragments):
+def compute_and_plot_fragments_statistics(video, model_area, list_of_blobs, list_of_fragments, list_of_global_fragments):
 
     number_of_images_in_individual_fragments, \
     distance_travelled_individual_fragments, \
@@ -32,16 +34,8 @@ def compute_and_plot_fragments_statistics(video, list_of_fragments, list_of_glob
     number_of_images_per_individual_fragment_in_global_fragment,\
     median_number_of_images,\
     minimum_distance_travelled = list_of_global_fragments.get_data_plot()
-    # print(number_of_images_in_individual_fragments, \
-    # distance_travelled_individual_fragments, \
-    # number_of_images_in_crossing_fragments)
-    # print("--------------------------------------------------------")
-    # print(number_of_images_in_shortest_individual_fragment,\
-    # number_of_images_in_longest_individual_fragment,\
-    # number_of_images_per_individual_fragment_in_global_fragment,\
-    # median_number_of_images,\
-    # minimum_distance_travelled)
 
+    areas = list_of_blobs.get_data_plot()
 
     ''' plotting '''
     plt.ion()
@@ -49,13 +43,36 @@ def compute_and_plot_fragments_statistics(video, list_of_fragments, list_of_glob
     window = plt.get_current_fig_manager().window
     screen_y = window.winfo_screenheight()
     screen_x = window.winfo_screenwidth()
-    fig, ax_arr = plt.subplots(2,4)
+    fig, ax_arr = plt.subplots(2,5)
     fig.canvas.set_window_title('Fragments summary')
     fig.set_size_inches((screen_x/100,screen_y/100))
     plt.subplots_adjust(hspace = .3, wspace = .5)
+    # distribution of areas all
+    nbins = 300
+    ax = plt.subplot(4,4,1)
+    MIN = np.percentile(areas, 0)
+    MAX = np.percentile(areas, 99.99)
+    area_threshold = model_area.median + model_area.std * model_area.std_tolerance
+    hist, bin_edges = np.histogram(areas, bins = nbins)
+    ax.plot(bin_edges[:-1], hist, 'g-')
+    ax.axvline(area_threshold, color = 'k')
+    ax.set_xlabel('area in pixels')
+    ax.set_ylabel('number of blobs')
+    ax.set_xlim([MIN,MAX])
+    # distribution of areas zoom
+    ax = plt.subplot(4,4,5)
+    MIN = np.percentile(areas, 0)
+    MAX = np.percentile(areas, 99.9)
+    ax.plot(bin_edges[:-1], hist, 'g-')
+    ax.axvline(area_threshold, color = 'k')
+    ax.set_xlabel('area in pixels')
+    ax.set_ylabel('number of blobs')
+    ax.set_xlim([MIN,MAX])
+    index_threshold = np.where(bin_edges > area_threshold)[0][0]
+    ax.set_ylim([0,np.max(hist[index_threshold:]) + 100])
     # number of frames in individual fragments
     nbins = 25
-    ax = ax_arr[0,0]
+    ax = ax_arr[0,1]
     MIN = np.min(number_of_images_in_individual_fragments)
     MAX = np.max(number_of_images_in_individual_fragments)
     hist, bin_edges = np.histogram(number_of_images_in_individual_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
@@ -65,21 +82,21 @@ def compute_and_plot_fragments_statistics(video, list_of_fragments, list_of_glob
     # distance travelled in individual fragments
     non_zero_indices = np.where(distance_travelled_individual_fragments != 0)[0]
     distance_travelled_individual_fragments_non_zero = distance_travelled_individual_fragments[non_zero_indices]
-    ax = ax_arr[0,1]
+    ax = ax_arr[0,2]
     MIN = np.min(distance_travelled_individual_fragments_non_zero)
     MAX = np.max(distance_travelled_individual_fragments_non_zero)
     hist, bin_edges = np.histogram(distance_travelled_individual_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
     ax.semilogx(bin_edges[:-1], hist, '-ob' ,markersize = 5)
     ax.set_xlabel('distance travelled (pixels)')
     # number of frames vs distance travelled
-    ax = ax_arr[0,2]
+    ax = ax_arr[0,3]
     ax.plot(np.asarray(number_of_images_in_individual_fragments)[non_zero_indices], distance_travelled_individual_fragments_non_zero, 'bo', alpha = .1, label = 'individual fragment', markersize = 5)
     ax.set_xlabel('num frames')
     ax.set_ylabel('distance travelled (pixels)')
     ax.set_xscale("log", nonposx='clip')
     ax.set_yscale("log", nonposy='clip')
     # number of frames in shortest individual fragment
-    ax = ax_arr[0,3]
+    ax = ax_arr[0,4]
     MIN = np.min(number_of_images_in_crossing_fragments)
     MAX = np.max(number_of_images_in_crossing_fragments)
     hist, bin_edges = np.histogram(number_of_images_in_crossing_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
@@ -87,7 +104,7 @@ def compute_and_plot_fragments_statistics(video, list_of_fragments, list_of_glob
     ax.set_xlabel('number of images')
     ax.set_ylabel('number of crossing fragments')
     # plot global fragments
-    ax = plt.subplot2grid((2, 4), (1, 0), colspan=4)
+    ax = plt.subplot2grid((2, 5), (1, 0), colspan=5)
     index_order_by_max_num_frames = np.argsort(minimum_distance_travelled)[::-1]
     number_of_images_in_longest_individual_fragment = np.asarray(number_of_images_in_longest_individual_fragment)[index_order_by_max_num_frames]
     number_of_images_in_shortest_individual_fragment = np.asarray(number_of_images_in_shortest_individual_fragment)[index_order_by_max_num_frames]
@@ -112,6 +129,7 @@ if __name__ == '__main__':
     session_path = selectDir('./') #select path to video
     video_path = os.path.join(session_path,'video_object.npy')
     video = np.load(video_path).item(0)
+    list_of_blobs = ListOfBlobs.load(video.blobs_path)
     list_of_fragments = ListOfFragments.load(video.fragments_path)
     list_of_global_fragments = ListOfGlobalFragments.load(video.global_fragments_path, list_of_fragments.fragments)
-    compute_and_plot_fragments_statistics(video, list_of_fragments, list_of_global_fragments)
+    compute_and_plot_fragments_statistics(video, video.model_area, list_of_blobs, list_of_fragments, list_of_global_fragments)

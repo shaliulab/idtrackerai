@@ -75,10 +75,10 @@ class Store_Accuracy_and_Loss(object):
         ax4.axis('tight')
         ax4.set_xlabel('Frame number')
         ax4.set_ylabel('Blob index')
-        ax4.set_yticks(range(0,video.number_of_animals,4))
-        ax4.set_yticklabels(range(1,video.number_of_animals+1,4))
+        ax4.set_yticks(range(0,video.number_of_animals,3))
+        ax4.set_yticklabels(range(1,video.number_of_animals+1,3))
         ax4.set_xlim([0., video.number_of_frames])
-        ax4.set_ylim([-.5, .5 + video.number_of_animals])
+        ax4.set_ylim([-.5, video.number_of_animals + .5 - 1])
 
     def save(self):
         np.save(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy'), self.__dict__)

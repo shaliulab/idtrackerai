@@ -343,7 +343,7 @@ def SegmentationPreview(video):
 
         while j < numImages:
             if j < numGoodContours:
-                image_for_identification, _, _ = Blob.get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize)
+                image_for_identification, _, _ = Blob._get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize)
             else:
                 image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
             rowImage.append(image_for_identification)
@@ -518,7 +518,7 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
 
         while j < numImages:
             if j < numGoodContours:
-                image_for_identification, _, _ = Blob.get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize, only_blob = True)
+                image_for_identification, _, _ = Blob._get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize, only_blob = True)
             else:
                 image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
             rowImage.append(image_for_identification)

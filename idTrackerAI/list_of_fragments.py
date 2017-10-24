@@ -97,7 +97,7 @@ class ListOfFragments(object):
             attributes_to_discard = ['images',
                             'pixels',
                             'coexisting_individual_fragments']
-        return [{attribute : getattr(fragment, attribute) for attribute in fragment.__dict__.keys() if attribute not in attributes_to_discard}
+        return [{attribute: getattr(fragment, attribute) for attribute in fragment.__dict__.keys() if attribute not in attributes_to_discard}
                     for fragment in self.fragments]
 
     def save_light_list(self, accumulation_folder):
@@ -277,7 +277,7 @@ class ListOfFragments(object):
         ax.set_yticks(range(0,self.video.number_of_animals,4))
         ax.set_yticklabels(range(1,self.video.number_of_animals+1,4))
         ax.set_xlim([0., self.video.number_of_frames])
-        ax.set_ylim([-.5, .5 + self.video.number_of_animals])
+        ax.set_ylim([-.5, .5 + self.video.number_of_animals - 1])
 
         plt.show()
 

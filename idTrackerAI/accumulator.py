@@ -34,7 +34,7 @@ def accumulate(accumulation_manager,
         logger.debug("images: %s" %str(images.shape))
         logger.debug("labels: %s" %str(labels.shape))
         #start training
-        global_step, net, store_validation_accuracy_and_loss_data = train(video,
+        global_step, net, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data = train(video,
                                                             accumulation_manager.list_of_fragments.fragments,
                                                             net, images, labels,
                                                             store_accuracy_and_error = False,
@@ -102,8 +102,10 @@ def accumulate(accumulation_manager,
                             accumulation_manager.number_of_nonconsistent_global_fragments,
                             accumulation_manager.number_of_nonunique_global_fragments,
                             np.sum([global_fragment.acceptable_for_training(accumulation_manager.accumulation_strategy) for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments]),
-                            store_validation_accuracy_and_loss_data.accuracy[-1],
-                            store_validation_accuracy_and_loss_data.individual_accuracy[-1],
+                            store_validation_accuracy_and_loss_data.accuracy,
+                            store_validation_accuracy_and_loss_data.individual_accuracy,
+                            store_training_accuracy_and_loss_data.accuracy,
+                            store_training_accuracy_and_loss_data.individual_accuracy,
                             accumulation_manager.ratio_accumulated_images]
             video.store_accumulation_statistics_data(new_values)
             accumulation_manager.update_counter()

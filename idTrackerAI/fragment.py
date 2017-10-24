@@ -37,7 +37,8 @@ class Fragment(object):
         self.blob_hierarchy_in_starting_frame = blob_hierarchy_in_starting_frame
         self.images = images
         self.centroids = np.asarray(centroids)
-        self.set_distance_travelled()
+        if centroids is not None:
+            self.set_distance_travelled()
         self.areas = np.asarray(areas)
         self.pixels = pixels
         self.is_an_individual = is_an_individual
