@@ -487,8 +487,10 @@ if __name__ == '__main__':
                     logger.info("This accumulation was not satisfactory. Try to start from a different global fragment")
                     list_of_fragments.save_light_list(video._accumulation_folder)
 
+
             if len(percentage_of_accumulated_images) > 1 and np.argmax(percentage_of_accumulated_images) != 2:
-                accumulation_folder_name = 'accumulation_' + str(np.argmax(percentage_of_accumulated_images))
+                video._accumulation_trial = np.argmax(percentage_of_accumulated_images) + 1
+                accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
                 video._accumulation_folder = os.path.join(video._session_folder, accumulation_folder_name)
                 list_of_fragments.load_light_list(video._accumulation_folder)
             video._second_accumulation_finished = True
@@ -499,6 +501,13 @@ if __name__ == '__main__':
             video.save()
         else:
             video.copy_attributes_between_two_video_objects(old_video, ['_accumulation_folder', '_second_accumulation_finished'])
+            logger.info("Restoring trained network")
+            accumulation_network_params.restore_folder = video._accumulation_folder
+            list_of_fragments.load_light_list(video._accumulation_folder)
+            net = ConvNetwork(accumulation_network_params)
+            net.restore()
+            # Set preprocessed flag to True
+            video.save()
             ### NOTE: load pre-training statistics
         video.second_accumulation_time = time.time() - video.second_accumulation_time
         video.assignment_time = time.time()
