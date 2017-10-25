@@ -74,8 +74,9 @@ def compute_and_plot_fragments_statistics(video, model_area = None,
         ax.set_xlabel('area in pixels')
         ax.set_ylabel('number of blobs')
         ax.set_xlim([MIN,MAX])
-        index_threshold = np.where(bin_edges > area_threshold)[0][0]
-        ax.set_ylim([0,np.max(hist[index_threshold:]) + 100])
+        if np.any(bin_edges > area_threshold):
+            index_threshold = np.where(bin_edges > area_threshold)[0][0]
+            ax.set_ylim([0,np.max(hist[index_threshold:]) + 100])
     # number of frames in individual fragments
     nbins = 25
     ax = ax_arr[0,1]

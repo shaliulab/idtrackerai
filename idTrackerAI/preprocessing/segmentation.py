@@ -130,6 +130,7 @@ def segment(video):
             blobs_in_video.append(blobs_in_episode)
 
     video._maximum_number_of_blobs = max(flatten(number_of_blobs))
+    print("video.maximum_number_of_blobs ", video.maximum_number_of_blobs)
     #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
     blobs_in_video = flatten(flatten(blobs_in_video))
     return blobs_in_video

@@ -60,7 +60,7 @@ class ListOfBlobs(object):
 
     def compute_fragment_identifier_and_blob_index(self):
         counter = 0
-        possible_blob_indices = range(self.video.maximum_number_of_blobs)
+        possible_blob_indices = range(self.video.number_of_animals)
 
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'assigning fragment identifier'):
             used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]

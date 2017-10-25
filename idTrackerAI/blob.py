@@ -32,7 +32,7 @@ class Blob(object):
         self.reset_before_fragmentation('fragmentation')
         self._used_for_training = None
         self._accumulation_step = None
-
+        
     def reset_before_fragmentation(self, recovering_from):
         if recovering_from == 'fragmentation':
             self.next = [] # next blob object overlapping in pixels with current blob object
