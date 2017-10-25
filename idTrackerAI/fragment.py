@@ -30,7 +30,8 @@ class Fragment(object):
                         is_a_jump = None,\
                         is_a_jumping_fragment = None,\
                         is_a_ghost_crossing = None,\
-                        number_of_animals = None):
+                        number_of_animals = None,\
+                        user_generated_identity = None): # this last argument is used for the library tests of the paper
 
         self.identifier = fragment_identifier
         self.start_end = start_end
@@ -55,7 +56,7 @@ class Fragment(object):
         self._temporary_id = None
         self._identity = None
         self._identity_corrected_solving_duplication = None
-        self._user_generated_identity = None
+        self._user_generated_identity = user_generated_identity
         self._identity_is_fixed = False
         self._accumulated_globally = False
         self._accumulated_partially = False

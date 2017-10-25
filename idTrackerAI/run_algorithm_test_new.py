@@ -97,6 +97,29 @@ def setup_logging(
     logger.setLevel("DEBUG")
     return logger
 
+def plot_fragments_generated(fragments):
+    from matplotlib import pyplot as plt
+    import matplotlib.patches as patches
+
+    fig, ax = plt.subplots(1,1)
+    from py_utils import get_spaced_colors_util
+    colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=False)
+    for fragment in fragments:
+        if fragment.is_an_individual:
+            blob_index = fragment.blob_hierarchy_in_starting_frame
+            (start, end) = fragment.start_end
+            ax.add_patch(
+                patches.Rectangle(
+                    (start, blob_index - 0.5),   # (x,y)
+                    end - start - 1,  # width
+                    1.,          # height
+                    fill=True,
+                    edgecolor=None,
+                    facecolor=colors[blob_index],
+                )
+            )
+    plt.show()
+
 if __name__ == '__main__':
     '''
     argv[1]: 1 = cluster, 0 = no cluster
@@ -155,9 +178,12 @@ if __name__ == '__main__':
                         video = Video() #instantiate object video
                         video.video_path = os.path.join(repetition_path,'_fake_0.avi') #set path
                         video.create_session_folder()
+                        logger = setup_logging(path_to_save_logs = video.session_folder, video_object = video)
+                        logger.info("Starting working on session %s" %video.session_folder)
+                        logger.info("Log files saved in %s" %video.logs_folder)
                         video._number_of_animals = group_size #int: number of animals in the video
                         video._maximum_number_of_blobs = group_size #int: the maximum number of blobs detected in the video
-                        video.number_of_frames = frames_in_video
+                        video._number_of_frames = frames_in_video
                         video.tracking_with_knowledge_transfer = job_config.knowledge_transfer_flag
                         video.knowledge_transfer_model_folder = job_config.knowledge_transfer_folder
                         video._identification_image_size = (imsize, imsize, 1) #NOTE: this can change if the library changes. BUILD next library with new preprocessing.
@@ -188,6 +214,7 @@ if __name__ == '__main__':
                         #create list of fragments
                         fragments = create_list_of_fragments(list_of_blobs.blobs_in_video,
                                                             video.number_of_animals)
+                        # plot_fragments_generated(fragments)
                         list_of_fragments = ListOfFragments(video, fragments)
                         video._fragment_identifier_to_index = list_of_fragments.get_fragment_identifier_to_index_list()
                         #compute the global fragments (all animals are visible + each animals overlaps
@@ -196,6 +223,10 @@ if __name__ == '__main__':
                                                                             list_of_fragments.fragments,
                                                                             video.number_of_animals)
                         list_of_global_fragments = ListOfGlobalFragments(video, global_fragments)
+                        video.individual_fragments_distance_travelled = compute_and_plot_fragments_statistics(video,
+                                                                                                            list_of_fragments = list_of_fragments,
+                                                                                                            list_of_global_fragments = list_of_global_fragments,
+                                                                                                            save = False)
                         video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
                         list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
                         video.number_of_global_fragments_candidates_for_accumulation = list_of_global_fragments.number_of_global_fragments
@@ -206,13 +237,7 @@ if __name__ == '__main__':
                         list_of_fragments.get_accumulable_individual_fragments_identifiers(list_of_global_fragments)
                         list_of_fragments.get_not_accumulable_individual_fragments_identifiers(list_of_global_fragments)
                         list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
-                        #save connected blobs in video (organized frame-wise)
-                        list_of_blobs.video = video
-                        list_of_blobs.save(number_of_chunks = video.number_of_frames)
-                        list_of_fragments.save()
-                        list_of_global_fragments.save(list_of_fragments.fragments)
                         video._has_been_preprocessed = True
-                        video.save()
                         logger.info("Blobs detection and fragmentation finished succesfully.")
 
                         aaa

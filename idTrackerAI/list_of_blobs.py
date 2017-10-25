@@ -74,7 +74,7 @@ class ListOfBlobs(object):
                     if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_an_individual:
                         blob.next[0]._fragment_identifier = counter
                         blob.next[0]._blob_index = blob_index
-                        blob.next[0].compute_overlapping_with_previous_blob()
+                        # blob.next[0].compute_overlapping_with_previous_blob()
                         if blob.next[0].is_an_individual_in_a_fragment:
                             blob = blob.next[0]
 
@@ -83,12 +83,12 @@ class ListOfBlobs(object):
                                 blob._fragment_identifier = counter
                                 blob._blob_index = blob_index
                                 # compute_overlapping_with_previous_blob
-                                blob.compute_overlapping_with_previous_blob()
+                                # blob.compute_overlapping_with_previous_blob()
 
                             if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_an_individual:
                                 blob.next[0]._fragment_identifier = counter
                                 blob.next[0]._blob_index = blob_index
-                                blob.next[0].compute_overlapping_with_previous_blob()
+                                # blob.next[0].compute_overlapping_with_previous_blob()
                     counter += 1
 
         self.number_of_individual_fragments = counter

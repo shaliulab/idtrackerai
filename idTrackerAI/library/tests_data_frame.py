@@ -66,7 +66,7 @@ def tests_data_frame():
                                                     "group_sizes": [10],
                                                     "frames_in_video": [3000, 10000],
                                                     "mean_frames_per_individual_fragment": [50, 250, 165, 848.5],
-                                                    "std_frames_per_individual_fragment": [1.5, 0.35, 1, .6], # it is the parameter of the gamma related to the variance "a" in scipy
+                                                    "var_frames_per_individual_fragment": [1.5, 0.35, 1, .6], # it is the parameter of the gamma related to the variance "a" in scipy
                                                     "repetitions": [1, 2, 3, 4, 5],
                                                      }, ignore_index=True)
 

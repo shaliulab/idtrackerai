@@ -117,7 +117,7 @@ def subsample_dataset_by_individuals(dataset, config):
 
     return np.concatenate(subsampled_images, axis = 1), np.concatenate(subsampled_centroids, axis = 1)
 
-def get_next_number_of_frames_in_fragment(config):
+def get_next_nubmer_of_blobs_in_fragment(config):
     mu = config.number_of_frames_per_fragment
     var = config.var_number_of_frames_per_fragment
     X = gamma(a = var, loc = 1, scale = mu)
@@ -130,7 +130,6 @@ def get_next_number_of_frames_in_fragment(config):
 def generate_list_of_blobs(identification_images, centroids, config):
 
     blobs_in_video = []
-    frames_in_fragment = 0
     number_of_fragments = 0
 
     print("\n***********Generating list of blobs")
@@ -138,10 +137,11 @@ def generate_list_of_blobs(identification_images, centroids, config):
     print("identification_images shape", identification_images.shape)
     for identity in range(config.number_of_animals):
         # decide length of first individual fragment for this identity
-        number_of_frames_per_fragment = get_next_number_of_frames_in_fragment(config)
+        number_of_blobs_per_fragment = get_next_nubmer_of_blobs_in_fragment(config)
+        number_of_fragments += 1
         number_of_frames_per_crossing_fragment = 3
-        frames_in_fragment = 0
-        frames_in_crossing_fragment = 0
+        blobs_in_fragment = 0
+        blobs_in_crossing_fragment = 0
         blobs_in_identity = []
         for frame_number in range(config.number_of_frames):
             centroid = centroids[frame_number,identity,:]
@@ -150,34 +150,36 @@ def generate_list_of_blobs(identification_images, centroids, config):
             blob = Blob(centroid, None, None, None,
                         number_of_animals = config.number_of_animals)
             blob.frame_number = frame_number
-            blob._is_an_individual = True
-            blob._is_a_crossing = False
-            blob._image_for_identification = ((image - np.mean(image))/np.std(image)).astype("float16")
-            blob._user_generated_identity = identity + 1
 
-            if frame_number > 0 and frames_in_fragment <= number_of_frames_per_fragment and frames_in_fragment != 0:
-                blob.previous = [blobs_in_identity[frame_number-1]]
-                blobs_in_identity[frame_number-1].next = [blob]
-
-            if frames_in_fragment <= number_of_frames_per_fragment:
-                frames_in_fragment += 1
-            elif frames_in_crossing_fragment <= number_of_frames_per_crossing_fragment:
-                frames_in_crossing_fragment += 1
-                blob._is_a_crossing = True
-                blob._is_an_individual = False
-                blob._image_for_identification = None
-                blob._user_generated_identity = 0
+            if blobs_in_fragment <= number_of_blobs_per_fragment:
+                blob._is_an_individual = True
+                blob._is_a_crossing = False
+                blob._image_for_identification = ((image - np.mean(image))/np.std(image)).astype("float16")
+                blob._user_generated_identity = identity + 1
+                if blobs_in_fragment != 0:
+                    blob.previous = [blobs_in_identity[frame_number-1]]
+                    blobs_in_identity[frame_number-1].next = [blob]
+                blobs_in_fragment += 1
+            elif blobs_in_crossing_fragment < number_of_frames_per_crossing_fragment:
+                blobs_in_crossing_fragment += 1
+                blob = None
             else:
-                frames_in_fragment = 0
-                frames_in_crossing_fragment = 0
-                number_of_fragments += 1
-                number_of_frames_per_fragment = get_next_number_of_frames_in_fragment(config)
+                blob._is_an_individual = True
+                blob._is_a_crossing = False
+                blob._image_for_identification = ((image - np.mean(image))/np.std(image)).astype("float16")
+                blob._user_generated_identity = identity + 1
+                blob.previous = []
 
+                blobs_in_fragment = 1
+                blobs_in_crossing_fragment = 0
+                number_of_fragments += 1
+                number_of_blobs_per_fragment = get_next_nubmer_of_blobs_in_fragment(config)
             blobs_in_identity.append(blob)
         blobs_in_video.append(blobs_in_identity)
 
     blobs_in_video = zip(*blobs_in_video)
-    blobs_in_video = [list(blobs_in_frame) for blobs_in_frame in blobs_in_video]
+    blobs_in_video = [[b for b in blobs_in_frame if b is not None] for blobs_in_frame in blobs_in_video]
+    print("number of fragments ", number_of_fragments)
     return blobs_in_video
 
 class Dataset(object):
