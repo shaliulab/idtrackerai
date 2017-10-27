@@ -193,7 +193,7 @@ if __name__ == '__main__':
                         #### prepare blobs list and global fragments from the    ####
                         #### library                                             ####
                         #############################################################
-
+                        video.create_preprocessing_folder()
                         list_of_blobs_config = BlobsListConfig(number_of_animals = group_size,
                                                 number_of_frames_per_fragment = mean_frames_per_fragment,
                                                 var_number_of_frames_per_fragment = var_frames_per_fragment,
@@ -240,175 +240,178 @@ if __name__ == '__main__':
                         video._has_been_preprocessed = True
                         logger.info("Blobs detection and fragmentation finished succesfully.")
 
-                        aaa
-
                         #############################################################
-                        ##################      Pre-trainer      ####################
-                        #### create the folder training in which all the         ####
-                        #### CNN-related process will be stored. The structure   ####
-                        #### is /training/session_num, where num is an natural   ####
-                        #### number. num increases each time a training is       ####
-                        #### launched                                            ####
+                        ##################   Protocols cascade   ####################
                         #############################################################
-                        start = time.time()
-                        print("\n**** Pretraining ****\n")
-                        if job_config.pretraining_flag:
-                            if job_config.percentage_of_frames_in_pretaining != 1.:
-                                number_of_pretraining_global_fragments = int(len(global_fragments) * job_config.percentage_of_frames_in_pretaining)
-                                pretraining_global_fragments = order_global_fragments_by_distance_travelled(give_me_pre_training_global_fragments(global_fragments, number_of_pretraining_global_fragments = number_of_pretraining_global_fragments))
-                            else:
-                                number_of_pretraining_global_fragments = len(global_fragments)
-                                pretraining_global_fragments = order_global_fragments_by_distance_travelled(global_fragments)
-                            print("pretraining with %i" %number_of_pretraining_global_fragments, ' global fragments\n')
-                            #create folder to store pretraining
-                            video.create_pretraining_folder(number_of_pretraining_global_fragments)
-                            #pretraining network parameters
-                            pretrain_network_params = NetworkParams(video.number_of_animals,
-                                                                    learning_rate = 0.01,
-                                                                    keep_prob = 1.0,
-                                                                    save_folder = video.pretraining_folder,
-                                                                    image_size = video.portrait_size)
-
-                            if video.tracking_with_knowledge_transfer:
-                                print("Performing knowledge transfer from %s" %video.knowledge_transfer_model_folder)
-                                pretrain_network_params.restore_folder = video.knowledge_transfer_model_folder
-
-                            #start pretraining
-                            net = pre_train(video, blobs,
-                                            pretraining_global_fragments,
-                                            pretrain_network_params,
-                                            store_accuracy_and_error = False,
-                                            check_for_loss_plateau = True,
-                                            save_summaries = False,
-                                            print_flag = False,
-                                            plot_flag = False)
-
-                            video._has_been_pretrained = True
-                        else:
-                            print("no pretraining")
-                            number_of_pretraining_global_fragments = 0
-
-                        pretraining_time = time.time() - start
-                        #############################################################
-                        ###################    Accumulation   #######################
-                        #### take references in 'good' global fragments          ####
-                        #############################################################
-                        start = time.time()
-                        print("\n**** Acumulation ****")
-                        #create folder to store accumulation models
-                        video.create_accumulation_folder()
-                        #set network params for the accumulation model
+                        #### Accumulation ####
+                        print('\nAccumulation 0 ---------------------------------------------------------')
+                        video.first_accumulation_time = time.time()
+                        video.accumulation_trial = 0
+                        video.create_accumulation_folder(iteration_number = 0)
+                        logger.info("Set accumulation network parameters")
                         accumulation_network_params = NetworkParams(video.number_of_animals,
                                                     learning_rate = 0.005,
                                                     keep_prob = 1.0,
-                                                    scopes_layers_to_optimize = ['fully-connected1','softmax1'],
+                                                    scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax'],
                                                     save_folder = video._accumulation_folder,
-                                                    image_size = video.portrait_size)
-                        if video._has_been_pretrained:
-                            print("We will restore the network from pretraining: %s\n" %video.pretraining_folder)
-                            accumulation_network_params.restore_folder = video.pretraining_folder
-                        elif not video._has_been_pretrained:
-                            if video.tracking_with_knowledge_transfer:
-                                print("We will restore the network from a previous model (knowledge transfer): %s\n" %video.knowledge_transfer_model_folder)
-                                accumulation_network_params.restore_folder = video.knowledge_transfer_model_folder
-                            else:
-                                print("The network will be trained from scracth during accumulation\n")
-                                accumulation_network_params.scopes_layers_to_optimize = None
+                                                    image_size = video.identification_image_size)
 
-                        if job_config.train_filters_in_accumulation == True:
+                        logger.info("Starting accumulation")
+                        list_of_fragments.reset(roll_back_to = 'fragmentation')
+                        list_of_global_fragments.reset(roll_back_to = 'fragmentation')
+                        if video.tracking_with_knowledge_transfer:
+                            logger.info("We will restore the network from a previous model (knowledge transfer): %s" %video.knowledge_transfer_model_folder)
+                            accumulation_network_params.restore_folder = video.knowledge_transfer_model_folder
+                        else:
+                            logger.info("The network will be trained from scratch during accumulation")
                             accumulation_network_params.scopes_layers_to_optimize = None
                         #instantiate network object
+                        logger.info("Initialising accumulation network")
                         net = ConvNetwork(accumulation_network_params)
                         #restore variables from the pretraining
                         net.restore()
-                        net.reinitialize_softmax_and_fully_connected()
-                        #instantiate accumulation manager
-                        accumulation_manager = AccumulationManager(global_fragments, video.number_of_animals, certainty_threshold = job_config.accumulation_certainty)
-                        #set global epoch counter to 0
-                        global_step = 0
-                        while accumulation_manager.continue_accumulation:
-                            print("\n***new accumulation step %i" %accumulation_manager.counter)
-                            #get next fragments for accumulation
-                            accumulation_manager.get_next_global_fragments()
-                            #get images from the new global fragments
-                            #(we do not take images from individual fragments already used)
-                            accumulation_manager.get_new_images_and_labels()
-                            #get images for training
-                            #(we mix images already used with new images)
-                            images, labels = accumulation_manager.get_images_and_labels_for_training()
-                            print("images: ", images.shape)
-                            print("labels: ", labels.shape)
-                            #start training
-                            global_step, net, _ = train(video, blobs,
-                                                    global_fragments,
-                                                    net, images, labels,
-                                                    store_accuracy_and_error = False,
-                                                    check_for_loss_plateau = True,
-                                                    save_summaries = False,
-                                                    print_flag = False,
-                                                    plot_flag = False,
-                                                    global_step = global_step,
-                                                    first_accumulation_flag = accumulation_manager.counter == 0)
-                            # update used_for_training flag to True for fragments used
-                            accumulation_manager.update_global_fragments_used_for_training()
-                            # update the set of images used for training
-                            accumulation_manager.update_used_images_and_labels()
-                            # assign identities fo the global fragments that have been used for training
-                            accumulation_manager.assign_identities_to_accumulated_global_fragments(blobs)
-                            # update the list of individual fragments that have been used for training
-                            accumulation_manager.update_individual_fragments_used()
-                            # Set accumulation params for rest of the accumulation
-                            # net.params.restore_folder = video._accumulation_folder
-                            #take images from global fragments not used in training (in the remainder test global fragments)
-                            candidates_next_global_fragments = [global_fragment for global_fragment in global_fragments if not global_fragment.used_for_training]
-                            print("number of candidate global fragments, ", len(candidates_next_global_fragments))
-                            if any([not global_fragment.used_for_training for global_fragment in global_fragments]):
-                                images, _, candidate_individual_fragments_indices, indices_to_split = get_images_and_labels_from_global_fragments(candidates_next_global_fragments,[])
+                        #if knowledge transfer is performed on the same animals we don't reinitialise the classification part of the net
+                        video._knowledge_transfer_from_same_animals = False
+                        if video.tracking_with_knowledge_transfer:
+                            same_animals = getInput("Same animals", "Are you tracking the same animals? y/N")
+                            if same_animals.lower() == 'n' or same_animals == '':
+                                net.reinitialize_softmax_and_fully_connected()
                             else:
-                                print("All the global fragments have been used for accumulation")
-                                break
-                            # get predictions for images in test global fragments
-                            assigner = assign(net, video, images, print_flag = True)
-                            accumulation_manager.split_predictions_after_network_assignment(assigner._predictions, assigner._softmax_probs, indices_to_split)
-                            # assign identities to the global fragments based on the predictions
-                            accumulation_manager.assign_identities_and_check_eligibility_for_training_global_fragments(candidate_individual_fragments_indices)
-                            accumulation_manager.update_counter()
-                            if job_config.only_accumulate_one_fragment:
-                                print("we only accumulate one fragment")
-                                break
-
-                        accumulation_time = time.time() - start
-                        #############################################################
-                        ###################     Assigner      ######################
-                        ####
-                        #############################################################
-                        start = time.time()
-                        print("\n**** Assignation ****")
-                        # Get images from the blob collection
-                        images = get_images_from_blobs_in_video(blobs)#, video.episodes_start_end)
-                        if len(images) != 0:
-                            print("images shape before entering to assign, ", images.shape)
-                            # get predictions
-                            assigner = assign(net, video, images, print_flag = True)
-                            print("number of predictions, ", len(assigner._predictions))
-                            print("predictions range", np.unique(assigner._predictions))
-                            # assign identities to each blob in each frame
-                            assign_identity_to_blobs_in_video(blobs, assigner)
-                            # compute P1 vector for individual fragmets
-                            compute_P1_for_blobs_in_video(video, blobs)
-                            # assign identities based on individual fragments
-                            assign_identity_to_blobs_in_video_by_fragment(video, blobs)
-                            # assign identity to the extremes of the fragments
-                            # for blobs_in_frame in blobs:
-                            #     for blob in blobs_in_frame:
-                            #         #if a blob has not been assigned but it is a fish and overlaps with one fragment
-                            #         #assign it!
-                            #         if blob.identity == 0 and blob.is_an_individual:
-                            #             if len(blob.next) == 1: blob.identity = blob.next[0].identity
-                            #             elif len(blob.previous) == 1: blob.identity = blob.previous[0].identity
+                                video._knowledge_transfer_from_same_animals = True
+                        #instantiate accumulation manager
+                        logger.info("Initialising accumulation manager")
+                        # the list of global fragments is ordered in place from the distance (in frames) wrt
+                        # the core of the first global fragment that will be accumulated
+                        list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = 0)
+                        list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation()
+                        accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+                        #set global epoch counter to 0
+                        logger.info("Start accumulation")
+                        global_step = 0
+                        video._ratio_accumulated_images = accumulate(accumulation_manager,
+                                                            video,
+                                                            global_step,
+                                                            net,
+                                                            video.knowledge_transfer_from_same_animals)
+                        logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
+                        video._first_accumulation_finished = True
+                        ### NOTE: save all the accumulation statistics
+                        video.save()
+                        logger.info("Saving fragments")
+                        list_of_fragments.save()
+                        list_of_global_fragments.save(list_of_fragments.fragments)
+                        video.first_accumulation_time = time.time() - video.first_accumulation_time
+                        list_of_fragments.save_light_list(video._accumulation_folder)
+                        if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
+                            video.assignment_time = time.time()
+                            #### Assigner ####
+                            print('\nAssignment ---------------------------------------------------------')
+                            assigner(list_of_fragments, video, net)
+                            video._has_been_assigned = True
+                            ### NOTE: save all the assigner statistics
+                            video.assignment_time = time.time() - video.assignment_time
+                            video.save()
                         else:
-                            print("All the global fragments have been used in the accumulation")
-                        assignation_time = time.time() - start
+                            print('\nPretraining ---------------------------------------------------------')
+                            video.pretraining_time = time.time()
+                            #create folder to store pretraining
+                            video.create_pretraining_folder()
+                            #pretraining if first accumulation trial does not cover 90% of the images in global fragments
+                            pretrain_network_params = NetworkParams(video.number_of_animals,
+                                                                    learning_rate = 0.01,
+                                                                    keep_prob = 1.0,
+                                                                    use_adam_optimiser = False,
+                                                                    scopes_layers_to_optimize = None,
+                                                                    save_folder = video.pretraining_folder,
+                                                                    image_size = video.identification_image_size)
+
+                            #### Pre-trainer ####
+                            list_of_fragments.reset(roll_back_to = 'fragmentation')
+                            list_of_global_fragments.order_by_distance_travelled()
+                            pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, pretrain_network_params)
+                            logger.info("Pretraining ended")
+                            #save changes
+                            logger.info("Saving changes in video object")
+                            video._has_been_pretrained = True
+                            video.save()
+                            ### NOTE: save pre-training statistics
+                            video.pretraining_time = time.time() - video.pretraining_time
+                            #### Accumulation ####
+                            #Last accumulation after pretraining
+                            video.second_accumulation_time = time.time()
+
+                            percentage_of_accumulated_images = []
+                            for i in range(1,4):
+                                print('\nAccumulation %i ---------------------------------------------------------' %i)
+                                logger.info("Starting accumulation")
+                                #create folder to store accumulation models
+                                video.create_accumulation_folder(iteration_number = i)
+                                video.accumulation_trial = i
+                                #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
+                                list_of_fragments.reset(roll_back_to = 'fragmentation')
+                                list_of_global_fragments.reset(roll_back_to = 'fragmentation')
+                                logger.info("We will restore the network from a previous pretraining: %s" %video.pretraining_folder)
+                                accumulation_network_params.save_folder = video.accumulation_folder
+                                accumulation_network_params.restore_folder = video.pretraining_folder
+                                accumulation_network_params.scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax']
+                                logger.info("Initialising accumulation network")
+                                net = ConvNetwork(accumulation_network_params)
+                                #restore variables from the pretraining
+                                net.restore()
+                                net.reinitialize_softmax_and_fully_connected()
+                                #instantiate accumulation manager
+                                logger.info("Initialising accumulation manager")
+                                list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = i - 1)
+                                list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation()
+                                accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+                                #set global epoch counter to 0
+                                logger.info("Start accumulation")
+                                global_step = 0
+                                video._ratio_accumulated_images = accumulate(accumulation_manager,
+                                                                            video,
+                                                                            global_step,
+                                                                            net,
+                                                                            video.knowledge_transfer_from_same_animals)
+                                logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
+                                if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
+                                    break
+                                else:
+                                    percentage_of_accumulated_images.append(video.ratio_accumulated_images)
+                                    logger.info("This accumulation was not satisfactory. Try to start from a different global fragment")
+                                    list_of_fragments.save_light_list(video._accumulation_folder)
+
+
+                            if len(percentage_of_accumulated_images) > 1 and np.argmax(percentage_of_accumulated_images) != 2:
+                                video.accumulation_trial = np.argmax(percentage_of_accumulated_images) + 1
+                                accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
+                                video._accumulation_folder = os.path.join(video.session_folder, accumulation_folder_name)
+                                list_of_fragments.load_light_list(video._accumulation_folder)
+                            video._second_accumulation_finished = True
+                            logger.info("Saving global fragments")
+                            list_of_fragments.save()
+                            list_of_global_fragments.save(list_of_fragments.fragments)
+                            ### NOTE: save second_accumulation statistics
+                            video.save()
+                            video.second_accumulation_time = time.time() - video.second_accumulation_time
+                            video.assignment_time = time.time()
+                            #### Assigner ####
+                            print('\n---------------------------------------------------------')
+                            assigner(list_of_fragments, video, net)
+                            video._has_been_assigned = True
+                            ### NOTE: save all the assigner statistics
+                            video.assignment_time = time.time() - video.assignment_time
+                            video.save()
+
+                        # finish and save
+                        logger.debug("Saving list of fragments, list of global fragments and video object")
+                        list_of_fragments.save()
+                        list_of_global_fragments.save(list_of_fragments.fragments)
+                        video.save()
+
+
+
+
+                        aaa
 
                         #############################################################
                         ###################     Accuracies     ######################
