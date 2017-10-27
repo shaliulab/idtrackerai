@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+import os
 import sys
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
@@ -14,6 +15,12 @@ from sklearn.decomposition import PCA
 from fishcontour import FishContour
 
 logger = logging.getLogger("__main__.blob")
+
+### NOTE : variables and functions to delete that are only used for the paper
+"""
+folder_to_save_for_paper_figure
+save_preprocessing_step_image
+"""
 
 class Blob(object):
     def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, estimated_body_length = None, pixels = None, number_of_animals = None, frame_number = None):
@@ -32,7 +39,7 @@ class Blob(object):
         self.reset_before_fragmentation('fragmentation')
         self._used_for_training = None
         self._accumulation_step = None
-        
+
     def reset_before_fragmentation(self, recovering_from):
         if recovering_from == 'fragmentation':
             self.next = [] # next blob object overlapping in pixels with current blob object
@@ -214,15 +221,14 @@ class Blob(object):
     def apply_model_area(self, video, model_area, identification_image_size, number_of_blobs):
         if model_area(self.area) or number_of_blobs == video.number_of_animals: #Checks if area is compatible with the model area we built
 
-            image_for_identification, \
+            self._image_for_identification, \
             self._extreme1_coordinates, \
             self._extreme2_coordinates = self.get_image_for_identification(video)
-            self._image_for_identification = ((image_for_identification - np.mean(image_for_identification))/np.std(image_for_identification)).astype('float32')
             self._is_an_individual = True
         else:
             self._is_a_crossing = True
 
-    def get_image_for_identification(self, video):
+    def get_image_for_identification(self, video, folder_to_save_for_paper_figure = ''):
         if video.resolution_reduction == 1:
             height = video.height
             width = video.width
@@ -233,21 +239,32 @@ class Blob(object):
         return self._get_image_for_identification(height, width,
                                                 self.bounding_box_image, self.pixels,
                                                 self.bounding_box_in_frame_coordinates,
-                                                video.identification_image_size[0])
+                                                video.identification_image_size[0],
+                                                folder_to_save_for_paper_figure = folder_to_save_for_paper_figure)
 
     @staticmethod
-    def _get_image_for_identification(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, identification_image_size):
-        bounding_box_image = remove_background_pixels(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates)
+    def _get_image_for_identification(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, identification_image_size, folder_to_save_for_paper_figure = ''):
+        if folder_to_save_for_paper_figure:
+            save_preprocessing_step_image(bounding_box_image/255, folder_to_save_for_paper_figure, name = '0_bounding_box_image', min_max = [0, 1])
+        bounding_box_image = remove_background_pixels(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, folder_to_save_for_paper_figure)
         pca = PCA()
         pxs = np.unravel_index(pixels,(height,width))
-        pxs1 = np.asarray(zip(pxs[0],pxs[1]))
+        pxs1 = np.asarray(zip(pxs[1],pxs[0]))
         pca.fit(pxs1)
-        rot_ang = 180 - np.arctan(pca.components_[0][1]/pca.components_[0][0])*180/np.pi - 45 # we substract 45 so that the fish is aligned in the diagonal. This say we have smaller frames
-        center = (pca.mean_[1], pca.mean_[0])
-        # print("PCA center before: ", center)
+        rot_ang = np.arctan(pca.components_[0][1]/pca.components_[0][0])*180/np.pi + 45 # we substract 45 so that the fish is aligned in the diagonal. This way we have smaller frames
+        center = (pca.mean_[0], pca.mean_[1])
         center = full2miniframe(center, bounding_box_in_frame_coordinates)
         center = np.array([int(center[0]), int(center[1])])
-        # print("PCA center and angle: ", center, rot_ang)
+
+        if folder_to_save_for_paper_figure:
+            pxs_for_plot = np.array(pxs).T
+            pxs_for_plot = np.array([pxs_for_plot[:, 0] - bounding_box_in_frame_coordinates[0][1], pxs_for_plot[:, 1] - bounding_box_in_frame_coordinates[0][0]])
+            temp_image = np.zeros_like(bounding_box_image).astype('uint8')
+            temp_image[pxs_for_plot[0,:], pxs_for_plot[1,:]] = 255
+            slope = np.tan((rot_ang - 45) * np.pi / 180)
+            X = [0, temp_image.shape[1]]
+            Y = [-slope * center[0] + center[1], slope * (X[1] - center[0]) + center[1]]
+            save_preprocessing_step_image(temp_image/255, folder_to_save_for_paper_figure, name = '4_blob_with_PCA_axes', min_max = [0, 1], draw_line = (X, Y))
 
         #rotate
         diag = np.sqrt(np.sum(np.asarray(bounding_box_image.shape)**2)).astype(int)
@@ -266,6 +283,12 @@ class Blob(object):
         h_or_t_1 = np.array([np.cos(rot_ang_rad), np.sin(rot_ang_rad)]) * rot_ang_rad
         h_or_t_2 = - h_or_t_1
         # print(h_or_t_1,h_or_t_2,image_for_identification.shape)
+        if folder_to_save_for_paper_figure:
+            save_preprocessing_step_image(image_for_identification/255, folder_to_save_for_paper_figure, name = '5_blob_dilated_rotated', min_max = [0, 1])
+        image_for_identification = ((image_for_identification - np.mean(image_for_identification))/np.std(image_for_identification)).astype('float32')
+        if folder_to_save_for_paper_figure:
+            save_preprocessing_step_image(image_for_identification, folder_to_save_for_paper_figure, name = '6_blob_dilated_rotated_normalized', min_max = [np.min(image_for_identification), np.max(image_for_identification)])
+
         return image_for_identification, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int'))
 
     def get_nose_and_head_coordinates(self):
@@ -279,16 +302,22 @@ class Blob(object):
             self._nose_coordinates = None
             self._head_coordinates = None
 
-def remove_background_pixels(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates):
+def remove_background_pixels(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, folder_to_save_for_paper_figure):
     pxs = np.array(np.unravel_index(pixels,(height, width))).T
     pxs = np.array([pxs[:, 0] - bounding_box_in_frame_coordinates[0][1], pxs[:, 1] - bounding_box_in_frame_coordinates[0][0]])
     temp_image = np.zeros_like(bounding_box_image).astype('uint8')
     temp_image[pxs[0,:], pxs[1,:]] = 255
+    if folder_to_save_for_paper_figure:
+        save_preprocessing_step_image(temp_image/255, folder_to_save_for_paper_figure, name = '1_blob_bw',  min_max = [0, 1])
     temp_image = cv2.dilate(temp_image, np.ones((3,3)).astype('uint8'), iterations = 1)
+    if folder_to_save_for_paper_figure:
+        save_preprocessing_step_image(temp_image, folder_to_save_for_paper_figure, name = '2_blob_bw_dilated',  min_max = [0, 1])
     rows, columns = np.where(temp_image == 255)
     dilated_pixels = np.array([rows, columns])
 
     temp_image[dilated_pixels[0,:], dilated_pixels[1,:]] = bounding_box_image[dilated_pixels[0,:], dilated_pixels[1,:]]
+    if folder_to_save_for_paper_figure:
+        save_preprocessing_step_image(temp_image/255, folder_to_save_for_paper_figure, name = '3_blob_dilated',  min_max = [0, 1])
     return temp_image
 
 def full2miniframe(point, boundingBox):
@@ -297,3 +326,20 @@ def full2miniframe(point, boundingBox):
     Here it is use for centroids
     """
     return tuple(np.asarray(point) - np.asarray([boundingBox[0][0],boundingBox[0][1]]))
+
+def save_preprocessing_step_image(image, save_folder, name = None, min_max = None, draw_line = None):
+    from matplotlib import pyplot as plt
+    import seaborn as sns
+    fig, ax = plt.subplots(1,1)
+    ax.imshow(image, cmap = 'gray', vmin = min_max[0], vmax = min_max[1])
+    if draw_line is not None:
+        plt.plot(draw_line[0], draw_line[1], 'b-')
+        ax.set_xlim([0, image.shape[1]])
+        ax.set_ylim([0, image.shape[0]])
+        ax.invert_yaxis()
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    sns.despine(left = True, right = True, top = True, bottom = True)
+    fig.savefig(os.path.join(save_folder,'%s.pdf' %name), transparent=True, bbox_inches='tight')
