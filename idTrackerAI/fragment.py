@@ -78,8 +78,7 @@ class Fragment(object):
             attributes_to_delete = ['_frequencies',
                                     '_P1_vector', '_certainty',
                                     '_is_certain',
-                                    '_P1_below_random', '_non_consistent',
-                                    'assigned_during_accumulation']
+                                    '_P1_below_random', '_non_consistent']
             delete_attributes_from_object(self, attributes_to_delete)
         elif roll_back_to == 'accumulation':
             self._identity_is_fixed = False

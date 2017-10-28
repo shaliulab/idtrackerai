@@ -53,7 +53,7 @@ from correct_duplications import solve_duplications, mark_fragments_as_duplicati
 from correct_impossible_velocity_jumps import correct_impossible_velocity_jumps
 from solve_crossing import give_me_identities_in_crossings
 from get_trajectories import produce_trajectories, smooth_trajectories
-from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
+from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob, generate_groundtruth_files
 from compute_statistics_against_groundtruth import get_statistics_against_groundtruth
 from compute_velocity_model import compute_model_velocity
 
@@ -408,10 +408,61 @@ if __name__ == '__main__':
                         list_of_global_fragments.save(list_of_fragments.fragments)
                         video.save()
 
+                        #############################################################
+                        ###################   Solve duplications      ###############
+                        ####
+                        #############################################################
+                        video.solve_duplications_time = time.time()
+                        logger.info("Start checking for and solving duplications")
+                        list_of_fragments.reset(roll_back_to = 'assignment')
+                        # mark fragments as duplications
+                        mark_fragments_as_duplications(list_of_fragments.fragments)
+                        # solve duplications
+                        solve_duplications(list_of_fragments)
+                        video._has_duplications_solved = True
+                        logger.info("Done")
+                        # finish and save
+                        logger.info("Saving")
+                        # list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
+                        # list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
+                        video.save()
+                        logger.info("Done")
 
+                        #############################################################
+                        ##############   Invididual fragments stats #################
+                        ####
+                        #############################################################
+                        video.individual_fragments_stats = list_of_fragments.get_stats(list_of_global_fragments)
+                        video.compute_overall_P2(list_of_fragments.fragments)
+                        print("individual overall_P2 ", video.individual_P2)
+                        print("overall_P2 ", video.overall_P2)
+                        list_of_fragments.plot_stats()
+                        list_of_fragments.save_light_list(video._accumulation_folder)
+                        video.save()
 
+                        #############################################################
+                        ##############   Update list of blobs   #####################
+                        ####
+                        #############################################################
+                        list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
+                        if False:
+                            list_of_blobs.compute_nose_and_head_coordinates()
+                        list_of_blobs.save(number_of_chunks = video.number_of_frames)
 
-                        aaa
+                        #############################################################
+                        ############   Generate generate_groundtruth_file ###########
+                        ####
+                        #############################################################
+
+                        groundtruth = generate_groundtruth_files(video,
+                                                                    list_of_fragments = list_of_fragments,
+                                                                    list_of_blobs = list_of_blobs,
+                                                                    start = 0, end = video.number_of_frames-1)
+
+                        accuracy, \
+                        individual_accuracy, \
+                        accuracy_assigned, \
+                        individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, list_of_blobs.blobs_in_video)
 
                         #############################################################
                         ###################     Accuracies     ######################
@@ -486,18 +537,6 @@ if __name__ == '__main__':
                         print("number of identity repetitions: ", number_of_identity_repetitions)
                         print("number of identity shifts in accumulated frames: ", number_of_identity_shifts_in_accumulated_frames)
                         print("****************************************************************************************************\n\n")
-
-                        #############################################################
-                        ###################  Duplications removal ###################
-                        ####
-                        #############################################################
-                        start = time.time()
-                        if job_config.solve_duplications:
-                            print("\n**** Solving duplicated identities ****")
-                            solve_duplications(blobs,group_size)
-
-
-                        duplications_removal_time = time.time() - start
 
                         #############################################################
                         ###################     Accuracies     ######################

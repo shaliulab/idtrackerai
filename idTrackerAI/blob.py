@@ -174,10 +174,6 @@ class Blob(object):
     def extreme2_coordinates(self):
         return self._extreme2_coordinates
 
-    @property
-    def assigned_during_accumulation(self):
-        return self._assigned_during_accumulation
-
     def in_a_global_fragment_core(self, blobs_in_frame):
         '''a blob in a frame is a fish in the core of a global fragment if in
         that frame there are as many blobs as number of animals to track
@@ -200,7 +196,12 @@ class Blob(object):
     def final_identity(self):
         if hasattr(self, 'user_generated_identity') and self.user_generated_identity is not None:
             return self.user_generated_identity
-        elif hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
+        else:
+            return self.assigned_identity
+
+    @property
+    def assigned_identity(self):
+        if hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
             return self.identity_corrected_solving_duplication
         else:
             return self.identity
@@ -223,7 +224,7 @@ class Blob(object):
 
             self._image_for_identification, \
             self._extreme1_coordinates, \
-            self._extreme2_coordinates = self.get_image_for_identification(video)
+            self._extreme2_coordinates, _ = self.get_image_for_identification(video)
             self._is_an_individual = True
         else:
             self._is_a_crossing = True
@@ -285,11 +286,11 @@ class Blob(object):
         # print(h_or_t_1,h_or_t_2,image_for_identification.shape)
         if folder_to_save_for_paper_figure:
             save_preprocessing_step_image(image_for_identification/255, folder_to_save_for_paper_figure, name = '5_blob_dilated_rotated', min_max = [0, 1])
-        image_for_identification = ((image_for_identification - np.mean(image_for_identification))/np.std(image_for_identification)).astype('float32')
+        image_for_identification_standarised = ((image_for_identification - np.mean(image_for_identification))/np.std(image_for_identification)).astype('float32')
         if folder_to_save_for_paper_figure:
-            save_preprocessing_step_image(image_for_identification, folder_to_save_for_paper_figure, name = '6_blob_dilated_rotated_normalized', min_max = [np.min(image_for_identification), np.max(image_for_identification)])
+            save_preprocessing_step_image(image_for_identification_standarised, folder_to_save_for_paper_figure, name = '6_blob_dilated_rotated_normalized', min_max = [np.min(image_for_identification), np.max(image_for_identification)])
 
-        return image_for_identification, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int'))
+        return image_for_identification_standarised, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int')), image_for_identification
 
     def get_nose_and_head_coordinates(self):
         if self.is_an_individual:
