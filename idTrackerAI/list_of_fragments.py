@@ -187,16 +187,6 @@ class ListOfFragments(object):
         logger.info('number_of_not_accumulated_individual_fragments %i' %self.number_of_not_accumulated_individual_fragments)
         logger.info('number_of_globally_accumulated_individual_fragments %i' %self.number_of_globally_accumulated_individual_fragments)
         logger.info('number_of_partially_accumulated_individual_fragments %i' %self.number_of_partially_accumulated_individual_fragments)
-        print('\n')
-        logger.info('number_of_blobs %i' %self.number_of_blobs)
-        logger.info('number_of_crossing_blobs %i' %self.number_of_crossing_blobs)
-        logger.info('number_of_individual_blobs %i ' %self.number_of_individual_blobs)
-        logger.info('number_of_individual_blobs_not_in_a_global_fragment %i' %self.number_of_individual_blobs_not_in_a_global_fragment)
-        logger.info('number_of_accumulable_individual_blobs %i' %self.number_of_accumulable_individual_blobs)
-        logger.info('number_of_not_accumulable_individual_blobs %i' %self.number_of_not_accumulable_individual_blobs)
-        logger.info('number_of_not_accumulated_individual_blobs %i' %self.number_of_not_accumulated_individual_blobs)
-        logger.info('number_of_globally_accumulated_individual_blobs %i' %self.number_of_globally_accumulated_individual_blobs)
-        logger.info('number_of_partially_accumulated_individual_blobs %i' %self.number_of_partially_accumulated_individual_blobs)
 
         attributes_to_return = ['number_of_fragments', 'number_of_crossing_fragments', 'number_of_individual_fragments',
                                     'number_of_individual_fragments_not_in_a_global_fragment',
@@ -238,6 +228,8 @@ class ListOfFragments(object):
         ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
         ax.legend(patches_pie, labels=labels_with_percentage, loc=3, title = 'Blob class percentage')
 
+        fig.savefig(os.path.join(self.video.preprocessing_folder,'fragments_summary_1.pdf'), transparent=True)
+
 
         import matplotlib.patches as patches
         def get_class(fragment):
@@ -278,10 +270,8 @@ class ListOfFragments(object):
         ax.set_yticklabels(range(1,self.video.number_of_animals+1,4))
         ax.set_xlim([0., self.video.number_of_frames])
         ax.set_ylim([-.5, .5 + self.video.number_of_animals - 1])
-
+        fig.savefig(os.path.join(self.video.preprocessing_folder,'fragments_summary_2.pdf'), transparent=True)
         plt.show()
-
-
 
 def create_list_of_fragments(blobs_in_video, number_of_animals):
     attributes_to_set = ['_image_for_identification', 'bounding_box_image', 'bounding_box_in_frame_coordinates'

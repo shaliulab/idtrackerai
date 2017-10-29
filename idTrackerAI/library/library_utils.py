@@ -44,13 +44,17 @@ class LibraryJobConfig(object):
                     os.makedirs(num_frames_path)
                 #create subfolders for frames_in_fragment
                 for frames_in_fragment in self.mean_frames_per_individual_fragment:
-                    frames_in_fragment_path = os.path.join(num_frames_path, 'frames_in_fragment_' + str(frames_in_fragment))
-                    if not os.path.exists(frames_in_fragment_path):
-                        os.makedirs(frames_in_fragment_path)
-                    for repetition in self.repetitions:
-                        repetition_path = os.path.join(frames_in_fragment_path, 'repetition_' + str(repetition))
-                        if not os.path.exists(repetition_path):
-                            os.makedirs(repetition_path)
+                    mean_frames_in_fragment_path = os.path.join(num_frames_path, 'mean_frames_in_fragment_' + str(frames_in_fragment))
+                    if not os.path.exists(mean_frames_in_fragment_path):
+                        os.makedirs(mean_frames_in_fragment_path)
+                    for var_frames_in_fragment in self.std_frames_per_individual_fragment:
+                        var_frames_in_fragment_path = os.path.join(num_frames_path, 'var_frames_in_fragment_' + str(frames_in_fragment))
+                        if not os.path.exists(var_frames_in_fragment_path):
+                            os.makedirs(var_frames_in_fragment_path)
+                        for repetition in self.repetitions:
+                            repetition_path = os.path.join(var_frames_in_fragment_path, 'repetition_' + str(repetition))
+                            if not os.path.exists(repetition_path):
+                                os.makedirs(repetition_path)
 
 def check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, mean_frames_per_fragment, var_frames_per_fragment, repetition):
 

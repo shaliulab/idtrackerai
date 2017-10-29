@@ -130,6 +130,7 @@ def solve_duplication(fragment):
                 break
 
 def solve_duplications(list_of_fragments):
+    check_for_duplications_last_pass(list_of_fragments.fragments)
     solve_duplications_loop(list_of_fragments, scope = 'to_the_past')
     solve_duplications_loop(list_of_fragments, scope = 'to_the_future')
     check_for_duplications_last_pass(list_of_fragments.fragments)
@@ -147,3 +148,4 @@ def check_for_duplications_last_pass(fragments):
             duplicated_fragments_start_end.append((fragment.identifier, fragment.start_end))
 
     print("start end tuples of fragments with duplicated identity ",duplicated_fragments_start_end)
+    return duplicated_fragments_start_end

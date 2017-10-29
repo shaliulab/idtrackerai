@@ -1362,12 +1362,15 @@ class Validator(BoxLayout):
             end = int(raw_input('end frame:'))
             groundtruth = generate_groundtruth(CHOSEN_VIDEO.video, self.blobs_in_video, int(start), int(end))
 
+        blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
+        blobs_in_video = self.blobs_in_video[groundtruth.start:groundtruth.end]
+
         print("computting groundtrugh")
         self.accuracy, \
         self.individual_accuracy, \
         self.accuracy_assigned, \
         self.individual_accuracy_assigned, \
-        self.frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, groundtruth.blobs_in_video, self.blobs_in_video)
+        self.frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, blobs_in_video_groundtruth, blobs_in_video)
 
         if self.individual_accuracy is not None:
             self.plot_final_statistics()

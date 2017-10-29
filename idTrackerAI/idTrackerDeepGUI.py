@@ -51,8 +51,8 @@ from correct_duplications import solve_duplications, mark_fragments_as_duplicati
 from correct_impossible_velocity_jumps import correct_impossible_velocity_jumps
 from solve_crossing import give_me_identities_in_crossings
 from get_trajectories import produce_trajectories, smooth_trajectories
-from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
-from compute_statistics_against_groundtruth import get_statistics_against_groundtruth
+from generate_groundtruth import GroundTruth, GroundTruthBlob
+from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
 from compute_velocity_model import compute_model_velocity
 # from visualise_cnn import visualise
 
@@ -350,7 +350,7 @@ if __name__ == '__main__':
                         False, False, False, False,
                         False, False, False, False,
                         False, False, True, True,
-                        True]
+                        True, False]
         video.copy_attributes_between_two_video_objects(old_video, list_of_attributes, is_property = is_property)
         accumulation_network_params.restore_folder = video._accumulation_folder
         net = ConvNetwork(accumulation_network_params)
@@ -624,12 +624,17 @@ if __name__ == '__main__':
     if os.path.isfile(groundtruth_path):
         print("\n**** Computing accuracy wrt. groundtruth ****")
         groundtruth = np.load(groundtruth_path).item()
-        groundtruth.list_of_blobs = groundtruth.list_of_blobs[groundtruth.start:groundtruth.end]
-        blobs_to_compare_with_groundtruth = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
+        blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
+        blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
 
-        video.gt_accuracy, video.gt_individual_accuracy, video.gt_accuracy_assigned, video.gt_individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs_to_compare_with_groundtruth)
+        video.gt_accuracy, \
+        video.gt_individual_accuracy, \
+        video.gt_accuracy_assigned, \
+        video.gt_individual_accuracy_assigned, \
+        frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
         video.gt_start_end = (groundtruth.start, groundtruth.end)
         video.save()
+
     video.total_time = sum([video.generate_trajectories_time,
                             video.solve_impossible_jumps_time,
                             video.solve_duplications_time,

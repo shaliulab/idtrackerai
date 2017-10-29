@@ -169,7 +169,12 @@ class Fragment(object):
     def final_identity(self):
         if hasattr(self, 'user_generated_identity') and self.user_generated_identity is not None:
             return self.user_generated_identity
-        elif hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
+        else:
+            return self.assigned_identity
+
+    @property
+    def assigned_identity(self):
+        if hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
             return self.identity_corrected_solving_duplication
         else:
             return self.identity
