@@ -29,7 +29,6 @@ def train(video,
             print_flag,
             plot_flag,
             global_step = 0,
-            first_accumulation_flag = False,
             knowledge_transfer_from_same_animals = False,
             accumulation_manager = None):
     # Save accuracy and error during training and validation
@@ -55,7 +54,7 @@ def train(video,
     training_dataset.convert_labels_to_one_hot()
     validation_dataset.convert_labels_to_one_hot()
     # Reinitialize softmax and fully connected
-    if first_accumulation_flag == True and not knowledge_transfer_from_same_animals:
+    if video.accumulation_step == 0 and not knowledge_transfer_from_same_animals:
         net.reinitialize_softmax_and_fully_connected()
     # Train network
     #compute weights to be fed to the loss function (weighted cross entropy)
@@ -69,8 +68,9 @@ def train(video,
     #set criteria to stop the training
     stop_training = Stop_Training(net.params.number_of_animals,
                                 check_for_loss_plateau = check_for_loss_plateau,
-                                first_accumulation_flag = first_accumulation_flag)
+                                first_accumulation_flag = video.accumulation_step == 0)
 
+    global_step0 = global_step
     while not stop_training(store_training_accuracy_and_loss_data,
                             store_validation_accuracy_and_loss_data,
                             trainer._epochs_completed):
@@ -87,6 +87,10 @@ def train(video,
         trainer._epochs_completed += 1
         validator._epochs_completed += 1
 
+        # Save network model
+        if accumulation_manager.restore_criterion == 'best':
+            net.save()
+
     global_step += trainer.epochs_completed
     logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss))
     # update used_for_training flag to True for fragments used
@@ -102,11 +106,12 @@ def train(video,
         store_training_accuracy_and_loss_data.save()
         store_validation_accuracy_and_loss_data.save()
     # Get best checkpoint
-    net.restore_index = np.argmax(store_validation_accuracy_and_loss_data.accuracy)
-    logger.debug("next restore index: %s" %str(net.restore_index))
-    logger.debug("corresponding accuracy value %f" %store_validation_accuracy_and_loss_data.accuracy[net.restore_index])
-    # Save network model
-    net.save()
+    if accumulation_manager.restore_criterion == 'best':
+        logger.debug("Accumulation with best validation accuracy model")
+        net.restore_index = np.argmax(store_validation_accuracy_and_loss_data.accuracy) + global_step0 if video.accumulation_step > 0 else np.argmax(store_validation_accuracy_and_loss_data.accuracy)
+        net.restore()
+    else:
+        logger.debug("Accumulation with last model")
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'Accumulation-' + str(video.accumulation_trial) + '-' + str(video.accumulation_step) + '.pdf'))
     return global_step, net, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import os
+import sys
 
 import tensorflow as tf
 import numpy as np
@@ -17,7 +18,6 @@ from cnn_architectures import cnn_model_0, \
                                 cnn_model_9, \
                                 cnn_model_10, \
                                 cnn_model_11
-
 
 CNN_MODELS_DICT = {0: cnn_model_0,
                     1: cnn_model_1,
@@ -167,22 +167,23 @@ class ConvNetwork():
 
     def restore(self):
         self.session.run(tf.global_variables_initializer())
-        try:
+        if self.is_restoring:
             ckpt = tf.train.get_checkpoint_state(self.restore_folder_conv)
             if self.restore_index is None:
                 self.saver_conv.restore(self.session, ckpt.model_checkpoint_path) # restore convolutional variables
+                logger.debug('Restoring convolutional part from %s' %ckpt.model_checkpoint_path)
             else:
-                self.saver_conv.restore(self.session, ckpt.all_checkpoint_paths[self.restore_index])
-            logger.debug('Restoring convolutional part from %s' %ckpt.model_checkpoint_path)
-        except:
-            logger.debug('Warning: no checkpoints found for the convolutional part')
-        if self.is_restoring:
-            try:
-                ckpt = tf.train.get_checkpoint_state(self.restore_folder_fc_softmax)
+                self.saver_conv.restore(self.session, ckpt.all_model_checkpoint_paths[self.restore_index])
+                logger.debug('Restoring convolutional part from %s' %ckpt.all_model_checkpoint_paths[self.restore_index])
+
+            ckpt = tf.train.get_checkpoint_state(self.restore_folder_fc_softmax)
+            if self.restore_index is None:
                 self.saver_fc_softmax.restore(self.session, ckpt.model_checkpoint_path) # restore fully-conected and softmax variables
                 logger.debug('Restoring fully-connected and softmax part from %s' %ckpt.model_checkpoint_path)
-            except:
-                logger.debug('Warning: no checkpoints found for the fully-connected and softmax parts')
+            else:
+                self.saver_fc_softmax.restore(self.session, ckpt.all_model_checkpoint_paths[self.restore_index]) # restore fully-conected and softmax variables
+                logger.debug('Restoring fully-connected and softmax part from %s' %ckpt.all_model_checkpoint_paths[self.restore_index])
+
 
     def compute_batch_weights(self, batch_labels):
         # if self.weighted_flag:
@@ -291,9 +292,9 @@ def create_checkpoint_subfolders(folderName, subfoldersNameList):
 
 def createSaver(name, exclude_fc_and_softmax):
     if not exclude_fc_and_softmax:
-        saver = tf.train.Saver([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name], name = name)
+        saver = tf.train.Saver([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name], name = name, max_to_keep = 1000000)
     elif exclude_fc_and_softmax:
-        saver = tf.train.Saver([v for v in tf.global_variables() if 'conv' in v.name], name = name)
+        saver = tf.train.Saver([v for v in tf.global_variables() if 'conv' in v.name], name = name, max_to_keep = 1000000)
     else:
         raise ValueError('The second argument has to be a boolean')
 

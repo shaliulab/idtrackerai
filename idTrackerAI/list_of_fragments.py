@@ -115,7 +115,7 @@ class ListOfFragments(object):
         images = []
         labels = []
         for fragment in self.fragments:
-            if fragment.acceptable_for_training:
+            if fragment.acceptable_for_training and not fragment.used_for_training:
                 assert fragment.is_an_individual
                 images.append(fragment.images)
                 labels.extend([fragment.temporary_id] * fragment.number_of_images)

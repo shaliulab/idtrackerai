@@ -40,12 +40,11 @@ class ListOfGlobalFragments(object):
             setattr(fragment, '_certainty', 1.),
             setattr(fragment, '_P1_vector', fragment.compute_P1_from_frequencies(fragment.frequencies)))
             for i, fragment in enumerate(self.first_global_fragment_for_accumulation.individual_fragments)]
-        self.video._first_frame_first_global_fragment = self.first_global_fragment_for_accumulation.index_beginning_of_fragment
-        self.video.save()
+        return self.first_global_fragment_for_accumulation.index_beginning_of_fragment
 
-    def order_by_distance_to_the_first_global_fragment_for_accumulation(self):
+    def order_by_distance_to_the_first_global_fragment_for_accumulation(self, accumulation_trial = None):
         self.global_fragments = sorted(self.global_fragments,
-                                        key = lambda x: np.abs(x.index_beginning_of_fragment - self.video.first_frame_first_global_fragment),
+                                        key = lambda x: np.abs(x.index_beginning_of_fragment - self.video.first_frame_first_global_fragment[accumulation_trial]),
                                         reverse = False)
 
     def compute_maximum_number_of_images(self):
