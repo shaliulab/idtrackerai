@@ -210,7 +210,7 @@ class Fragment(object):
         return [getattr(fragment,attribute) for fragment in self.coexisting_individual_fragments]
 
     def get_missing_identities_in_coexisting_fragments(self, fixed_identities):
-        identities = self.get_attribute_of_coexisting_fragments('final_identity')
+        identities = self.get_attribute_of_coexisting_fragments('assigned_identity')
         identities = [identity for identity in identities if identity != 0]
         if not self.identity in fixed_identities:
             return list((set(self.possible_identities) - set(identities)) | set([self.identity]))
@@ -218,7 +218,7 @@ class Fragment(object):
             return list(set(self.possible_identities) - set(identities))
 
     def get_fixed_identities_of_coexisting_fragments(self):
-        return [fragment.final_identity for fragment in self.coexisting_individual_fragments
+        return [fragment.assigned_identity for fragment in self.coexisting_individual_fragments
                 if fragment.used_for_training
                 or not fragment.is_a_duplication
                 or fragment.user_generated_identity is not None
@@ -365,11 +365,11 @@ class Fragment(object):
     def get_neighbour_fragment(self, fragments, scope):
         if scope == 'to_the_past':
             neighbour = [fragment for fragment in fragments
-                            if fragment.final_identity == self.final_identity
+                            if fragment.assigned_identity == self.assigned_identity
                             and self.start_end[0] - fragment.start_end[1] == 1]
         elif scope == 'to_the_future':
             neighbour = [fragment for fragment in fragments
-                            if fragment.final_identity == self.final_identity
+                            if fragment.assigned_identity == self.assigned_identity
                             and fragment.start_end[0] - self.start_end[1] == 1]
 
         assert len(neighbour) < 2

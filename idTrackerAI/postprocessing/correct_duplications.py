@@ -38,7 +38,7 @@ def solve_duplications_loop(list_of_fragments, scope = None):
             and fragment.is_a_duplication\
             and not fragment.used_for_training\
             and fragment.identity_corrected_solving_duplication is None:
-            # print("\n***fragment: ", fragment.identifier, fragment.start_end, fragment.final_identity, fragment.number_of_images)
+            # print("\n***fragment: ", fragment.identifier, fragment.start_end, fragment.assigned_identity, fragment.number_of_images)
             solve_duplication(fragment)
 
 def solve_duplication(fragment):
@@ -47,7 +47,7 @@ def solve_duplication(fragment):
 
     # print("missing_identities: ", missing_identities)
     # print("fixed_identities: ", fixed_identities)
-    print([(f.identifier, f.final_identity, f.is_a_duplication, f.used_for_training) for f in fragment.coexisting_individual_fragments])
+    print([(f.identifier, f.assigned_identity, f.is_a_duplication, f.used_for_training) for f in fragment.coexisting_individual_fragments])
     number_of_candidate_identities = len(missing_identities)
     # case 1
     if len(missing_identities) == 0:
@@ -60,14 +60,14 @@ def solve_duplication(fragment):
     elif len(missing_identities) == 1:
         # print("case 2")
         fragment._identity_corrected_solving_duplication = missing_identities[0]
-        # print("final identity: ", fragment.final_identity)
+        # print("final identity: ", fragment.assigned_identity)
     # case 3
     else:
         # print("case 3")
         fragments_with_duplicated_ids = [fragment] + [coexisting_fragment
                 for coexisting_fragment in
                 fragment.coexisting_individual_fragments
-                if coexisting_fragment.final_identity == fragment.identity and
+                if coexisting_fragment.assigned_identity == fragment.identity and
                 (not coexisting_fragment.used_for_training
                 or coexisting_fragment.identity_corrected_solving_duplication is not None
                 or coexisting_fragment.user_generated_identity is not None)]
@@ -92,19 +92,19 @@ def solve_duplication(fragment):
             if (number_of_candidate_identities > 1) and (P2_max_col == 0 or P2_max_col < random_threshold):
                 # print("case 3.1")
                 fragment._identity_corrected_solving_duplication = 0
-                # print("final identity: ", fragment.final_identity)
+                # print("final identity: ", fragment.assigned_identity)
                 break
             elif number_of_candidate_identities == 1:
                 # print("case 3.2")
                 fragment._identity_corrected_solving_duplication = max_indices_col[0] + 1
-                # print("final identity: ", fragment.final_identity)
+                # print("final identity: ", fragment.assigned_identity)
                 break
             if len(max_indices_col) == 1 and len(fragments_with_duplicated_ids) > 1:
                 # print("case 3.3")
                 if P2_max_col > np.max(P2_matrix[1:,max_indices_col[0]]):
                     # print("case 3.3.1")
                     fragment._identity_corrected_solving_duplication = max_indices_col[0] + 1
-                    # print("final identity: ", fragment.final_identity)
+                    # print("final identity: ", fragment.assigned_identity)
                     break
                 elif P2_max_col == np.max(P2_matrix[1:,max_indices_col[0]]):
                     # print("case 3.3.2")
@@ -112,7 +112,7 @@ def solve_duplication(fragment):
                     # print("fragment_indices:", fragment_indices)
                     for fragment_index in fragment_indices:
                         fragments_with_duplicated_ids[fragment_index]._identity_corrected_solving_duplication = 0
-                        # print("final identity: ", fragment.final_identity)
+                        # print("final identity: ", fragment.assigned_identity)
                     break
                 elif P2_max_col < np.max(P2_matrix[1:,max_indices_col[0]]):
                     # print("case 3.3.3")
@@ -121,12 +121,12 @@ def solve_duplication(fragment):
             elif len(max_indices_col) == 1 and len(fragments_with_duplicated_ids) == 1:
                 # print("case 3.4")
                 fragment._identity_corrected_solving_duplication = max_indices_col[0] + 1
-                # print("final identity: ", fragment.final_identity)
+                # print("final identity: ", fragment.assigned_identity)
                 break
             elif len(max_indices_col) > 1:
                 # print("case 3.5")
                 fragment._identity_corrected_solving_duplication = 0
-                # print("final identity: ", fragment.final_identity)
+                # print("final identity: ", fragment.assigned_identity)
                 break
 
 def solve_duplications(list_of_fragments):
@@ -141,9 +141,9 @@ def mark_fragments_as_duplications(fragments):
 def check_for_duplications_last_pass(fragments):
     duplicated_fragments_start_end = []
     for fragment in fragments:
-        overlapping_identities = [fragment.final_identity == coexisting_fragment.final_identity
+        overlapping_identities = [fragment.assigned_identity == coexisting_fragment.assigned_identity
                                     for coexisting_fragment in fragment.coexisting_individual_fragments
-                                    if (fragment.final_identity != 0 and coexisting_fragment.final_identity != 0)]
+                                    if (fragment.assigned_identity != 0 and coexisting_fragment.assigned_identity != 0)]
         if sum(overlapping_identities) != 0:
             duplicated_fragments_start_end.append((fragment.identifier, fragment.start_end))
 

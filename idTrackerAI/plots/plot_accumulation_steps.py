@@ -29,7 +29,7 @@ def get_object_type(object_to_evaluate):
 
     if object_to_evaluate.is_a_crossing:
         return 0 #crossing
-    elif object_to_evaluate.final_identity != 0:
+    elif object_to_evaluate.assigned_identity != 0:
         return 1 #assigned after accumulation
     else:
         return 2 #not assigned
@@ -43,7 +43,7 @@ def plot_accumulation_step_from_fragments(fragments, ax, accumulation_step, plot
         if fragment.is_an_individual \
             and (fragment.used_for_training or plot_assignment_flag and not fragment.used_for_training) \
             and fragment.accumulation_step <= accumulation_step:
-            blob_index = fragment.final_identity-1
+            blob_index = fragment.assigned_identity-1
             (start, end) = fragment.start_end
             ax.add_patch(
                 patches.Rectangle(
@@ -52,7 +52,7 @@ def plot_accumulation_step_from_fragments(fragments, ax, accumulation_step, plot
                     1.,          # height
                     fill=True,
                     edgecolor=None,
-                    facecolor=colors[fragment.final_identity],
+                    facecolor=colors[fragment.assigned_identity],
                     alpha = 1. if fragment.used_for_training else .5
                 )
             )
