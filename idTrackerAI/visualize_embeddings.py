@@ -60,8 +60,8 @@ def visualize_embeddings_global_fragments(video, global_fragments, params, print
     dataT.standarize_images()
     dataV.standarize_images()
     # Crop images from 36x36 to 32x32 without performing data augmentation
-    dataT.crop_images(image_size = 32)
-    dataV.crop_images(image_size = 32)
+    # dataT.crop_images(image_size = 32)
+    # dataV.crop_images(image_size = 32)
     # Restore network
     net.restore()
     # Train network

@@ -27,9 +27,12 @@ class CrossingDataset(object):
         if (scope == 'training' or scope == 'validation'):
             self.get_list_of_crossing_blobs_for_training(crossings, image_size)
             self.get_list_of_individual_blobs_for_training(individual_blobs)
+            print("________________number of crossing blobs: ", len(self.crossing_blobs))
+            print("________________number of individual blobs: ", len(self.individual_blobs))
         if scope == 'test':
             self.image_size = image_size
             self.get_list_of_blobs_for_test(test)
+            print("________________number of test: ", len(self.test))
 
 
     def get_video_height_and_width_according_to_resolution_reduction(self):
@@ -43,37 +46,46 @@ class CrossingDataset(object):
     def get_list_of_individual_blobs_for_training(self, individual_blobs):
         if len(individual_blobs) == 0:
             self.individual_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
-                                    if blob.is_an_individual
-                                    and blob.in_a_global_fragment_core(blobs_in_frame)]
-            ratio = 1
-            if len(self.individual_blobs) > ratio * len(self.crossings):
-                self.individual_blobs = self.individual_blobs[:ratio * len(self.crossings)]
+                                    if (blob.is_an_individual
+                                    and blob.is_a_sure_individual)
+                                    or blob.in_a_global_fragment_core(blobs_in_frame)]
             np.random.shuffle(self.individual_blobs)
+            ratio = 1
+            if len(self.individual_blobs) > ratio * len(self.crossing_blobs):
+                self.individual_blobs = self.individual_blobs[:ratio * len(self.crossing_blobs)]
+
         else:
             self.individual_blobs = individual_blobs
 
     def get_list_of_crossing_blobs_for_training(self, crossings, image_size):
         if len(crossings) == 0 or image_size is None:
-            num_crossing_images = 0
-            self.crossings = []
-            frame_number = 0
 
-            while (num_crossing_images <= MAX_NUMBER_OF_IMAGES * self.video.number_of_animals\
-                and frame_number < self.video.number_of_frames - 1):
-
-                blobs_in_frame = self.blobs[frame_number]
-                frame_number += 1
-
-                for blob in blobs_in_frame:
-                    if (blob.is_a_crossing and blob.is_a_sure_crossing and not blob.is_a_ghost_crossing):
-                        self.crossings.append(blob)
-                        num_crossing_images += 1
-
+            self.crossing_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
+                                    if blob.is_a_crossing
+                                    and not blob.is_a_ghost_crossing
+                                    and blob.is_a_sure_crossing]
             np.random.seed(0)
-            np.random.shuffle(self.crossings)
-            self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossings]) + 5
+            np.random.shuffle(self.crossing_blobs)
+            # num_crossing_images = 0
+            # self.crossings = []
+            # frame_number = 0
+            #
+            # while (num_crossing_images <= MAX_NUMBER_OF_IMAGES * self.video.number_of_animals\
+            #     and frame_number < self.video.number_of_frames - 1):
+            #
+            #     blobs_in_frame = self.blobs[frame_number]
+            #     frame_number += 1
+            #
+            #     for blob in blobs_in_frame:
+            #         if (blob.is_a_crossing and blob.is_a_sure_crossing and not blob.is_a_ghost_crossing):
+            #             self.crossings.append(blob)
+            #             num_crossing_images += 1
+            #
+            # np.random.seed(0)
+            # np.random.shuffle(self.crossings)
+            self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossing_blobs]) + 5
         else:
-            self.crossings = crossings
+            self.crossing_blobs = crossings
             self.image_size = image_size
 
     def get_list_of_blobs_for_test(self, test):
@@ -83,6 +95,7 @@ class CrossingDataset(object):
                                 and not blob.in_a_global_fragment_core(blobs_in_frame)
                                 and not blob.is_a_sure_individual())
                             or (blob.is_a_crossing
+                                and not blob.is_a_ghost_crossing
                                 and not blob.is_a_sure_crossing())]
         else:
             self.test = test
@@ -90,7 +103,7 @@ class CrossingDataset(object):
     def get_data(self, sampling_ratio_start = 0, sampling_ratio_end = 1.):
         # positive examples (crossings)
         print("Generating crossing ", self.scope, " set.")
-        self.crossings_sliced = self.slice(self.crossings, sampling_ratio_start, sampling_ratio_end)
+        self.crossings_sliced = self.slice(self.crossing_blobs, sampling_ratio_start, sampling_ratio_end)
         self.crossings_images =  self.generate_crossing_images()
         self.crossing_labels = np.ones(len(self.crossings_images))
         if self.scope == "training":

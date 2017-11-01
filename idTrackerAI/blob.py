@@ -32,6 +32,11 @@ class Blob(object):
         self.reset_before_fragmentation('fragmentation')
         self._used_for_training = None
         self._accumulation_step = None
+        self._generated_while_closing_the_gap = False
+        self._user_generated_identity = None
+        self._identity_corrected_closing_gaps = None
+        self._identity_corrected_solving_duplication = None
+        self._identity = None
 
     def reset_before_fragmentation(self, recovering_from):
         if recovering_from == 'fragmentation':
@@ -122,6 +127,15 @@ class Blob(object):
         self.next.append(other)
         other.previous.append(self)
 
+    def squared_distance_to(self, other):
+        if isinstance(other, Blob):
+            return np.sum((np.asarray(self.centroid) - np.asarray(other.centroid))**2)
+        elif isinstance(other, (tuple, list, np.ndarray)):
+            return np.sum((np.asarray(self.centroid) - np.asarray(other))**2)
+
+    def distance_from_countour_to(self, point):
+        return np.abs(cv2.pointPolygonTest(self.contour, point, True))
+
     @property
     def used_for_training(self):
         return self._used_for_training
@@ -190,9 +204,15 @@ class Blob(object):
         return self._identity_corrected_solving_duplication
 
     @property
+    def identity_corrected_closing_gaps(self):
+        return self._identity_corrected_closing_gaps
+
+    @property
     def final_identity(self):
         if hasattr(self, 'user_generated_identity') and self.user_generated_identity is not None:
             return self.user_generated_identity
+        elif hasattr(self, 'identity_corrected_closing_gaps') and self.identity_corrected_closing_gaps is not None:
+            return self.identity_corrected_closing_gaps
         elif hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
             return self.identity_corrected_solving_duplication
         else:
@@ -201,6 +221,10 @@ class Blob(object):
     @property
     def is_identified(self):
         return self._identity is not None
+
+    @property
+    def generated_while_closing_the_gap(self):
+        return self._generated_while_closing_the_gap
 
     def compute_overlapping_with_previous_blob(self):
         number_of_previous_blobs = len(self.previous)

@@ -43,7 +43,7 @@ from py_utils import getExistentFiles, get_spaced_colors_util
 from video_utils import computeBkg, blobExtractor
 from segmentation import segmentVideo
 from list_of_blobs import ListOfBlobs
-from list_of_fragments import ListOfFragments
+# from list_of_fragments import ListOfFragments
 # from validator import Validator
 """
 Start kivy classes
@@ -96,13 +96,11 @@ class Chosen_Video(EventDispatcher):
                     # print("resizing BKG")
                     self.video.bkg = cv2.resize(self.video.bkg, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
             if CHOSEN_VIDEO.video.video_path is not None:
-                if CHOSEN_VIDEO.old_video.preprocessing_type is None or CHOSEN_VIDEO.old_video.number_of_animals is None:
-                    self.create_preprocessing_type_and_number_popup()
-                    self.preprocessing_type_input.bind(on_text_validate = self.on_enter)
+                if CHOSEN_VIDEO.old_video.number_of_animals is None:
+                    self.create_number_of_animals_popup()
                     self.animal_number_input.bind(on_text_validate = self.on_enter)
                     self.popup.open()
                 else:
-                    CHOSEN_VIDEO.video._preprocessing_type = CHOSEN_VIDEO.old_video.preprocessing_type
                     CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
                 self.enable_ROI_and_preprocessing_tabs = True
         except Exception,e:
@@ -153,17 +151,8 @@ class SelectFile(BoxLayout):
                 self.old_video = CHOSEN_VIDEO.old_video
         return not (hasattr(self.video, 'has_been_assigned') or hasattr(self.old_video, "has_been_assigned"))
 
-    def create_preprocessing_type_and_number_popup(self):
+    def create_number_of_animals_popup(self):
         self.popup_container = BoxLayout()
-        self.preprocessing_type_box = BoxLayout(orientation="vertical")
-        self.preprocessing_type_label = Label(text='What animal are you tracking? [fish/flies]:\n')
-        self.preprocessing_type_label.text_size = self.preprocessing_type_label.size
-        self.preprocessing_type_label.texture_size = self.preprocessing_type_label.size
-        self.preprocessing_type_box.add_widget(self.preprocessing_type_label)
-        self.preprocessing_type_input = TextInput(text ='', multiline=False)
-        self.preprocessing_type_box.add_widget(self.preprocessing_type_input)
-        self.popup_container.add_widget(self.preprocessing_type_box)
-
         self.animal_number_box = BoxLayout(orientation="vertical")
         self.animal_number_label = Label(text='How many animals are you going to track:\n')
         self.animal_number_label.text_size = self.animal_number_label.size
@@ -767,22 +756,24 @@ class Validator(BoxLayout):
         self.popup.open()
 
     def get_first_frame(self):
+        if not hasattr(CHOSEN_VIDEO.video, 'first_frame_first_global_fragment'):
+            CHOSEN_VIDEO.video._first_frame_first_global_fragment = CHOSEN_VIDEO.old_video.first_frame_first_global_fragment
         return CHOSEN_VIDEO.video.first_frame_first_global_fragment
 
     def do(self, *args):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
             if CHOSEN_VIDEO.video.has_been_assigned == True:
-                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_path)
-                list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.old_video.fragments_path)
-                list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
-                self.list_of_fragments = list_of_fragments
+                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_no_gaps_path)
+                # list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.old_video.fragments_path)
+                # list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
+                # self.list_of_fragments = list_of_fragments
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             elif CHOSEN_VIDEO.old_video.has_been_assigned == True:
                 CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
-                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
-                list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
-                self.list_of_fragments = list_of_fragments
-                list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
+                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path)
+                # list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
+                # self.list_of_fragments = list_of_fragments
+                # list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             #init variables used for zooming
             self.count_scrollup = 0
@@ -803,11 +794,11 @@ class Validator(BoxLayout):
         self.button_box = BoxLayout(orientation='vertical', size_hint=(.3,1.))
         self.add_widget(self.button_box)
         #create, add and bind button: go to next crossing
-        self.next_cross_button = Button(id='crossing_btn', text='Next crossing', size_hint=(1,1))
+        self.next_cross_button = Button(id='crossing_btn', text='Next fucking crossing', size_hint=(1,1))
         self.next_cross_button.bind(on_press=self.go_to_next_crossing)
         self.button_box.add_widget(self.next_cross_button)
         #create, add and bind button: go to previous crossing
-        self.previous_cross_button = Button(id='crossing_btn', text='Previous crossing', size_hint=(1,1))
+        self.previous_cross_button = Button(id='crossing_btn', text='Previous fucking crossing', size_hint=(1,1))
         self.previous_cross_button.bind(on_press=self.go_to_previous_crossing)
         self.button_box.add_widget(self.previous_cross_button)
         #create, add and bind button to go back to the first global fragments
@@ -984,74 +975,108 @@ class Validator(BoxLayout):
         frame = self.visualiser.frame
         # print("frame shape in write Ids ", frame.shape)
         # cv2.putText(frame, str(self.visualiser.video_slider.value),(50,50), font, 1, [0, 0, 0], 3)
-        # print("****************************************************************")
+        print("****************************************************************")
+        frame_number = blobs_in_frame[0].frame_number
+        print("frame number ", frame_number)
         for blob in blobs_in_frame:
-            # print("8<-------------------------------------------------------------")
-
-            if not blob.is_a_crossing:
-                # print("______________________user generated id ", blob.user_generated_identity)
-                int_centroid = blob.centroid.astype('int')
-                if blob.user_generated_identity is None:
-                    if hasattr(blob, "_identity_corrected_solving_duplication"):
-                        if blob._identity_corrected_solving_duplication is not None:
-                            cur_id = blob._identity_corrected_solving_duplication
-                            cur_id_str = 'd-' + str(cur_id)
-                        else:
-                            cur_id = blob.identity
-                            cur_id_str = str(cur_id)
-                    else:
-                        cur_id = blob.identity
-                        cur_id_str = str(cur_id)
-                else:
-                    cur_id = blob.user_generated_identity
-                    cur_id_str = 'u-' + str(cur_id)
-
-                cur_id = blob.final_identity
-                if blob.user_generated_identity is None:
-                    if blob._identity_corrected_solving_duplication is not None:
-                        cur_id_str = 'd-' + str(cur_id)
-                    else:
-                        cur_id_str = str(cur_id)
-                else:
-                    cur_id_str = 'u-' + str(cur_id)
+            print("8<-------------------------------------------------------------")
+            cur_id = blob.final_identity
+            cur_id_str = str(cur_id)
+            print("final_identity ", cur_id_str)
+            roots = ['a-', 'd-', 'i-', 'c-' ,'u-']
+            if blob.user_generated_identity is not None:
+                root = roots[4]
+            elif blob.identity_corrected_closing_gaps is not None and blob.is_a_crossing:
+                root = roots[3]
+            elif blob.identity_corrected_closing_gaps is not None and blob.is_an_individual:
+                root = roots[2]
+            elif blob.identity_corrected_solving_duplication is not None:
+                root = roots[1]
+            else:
+                root = roots[0]
 
 
-                if type(cur_id) is 'int':
-                    cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
-                elif type(cur_id) is 'list':
-                    cv2.circle(frame, tuple(int_centroid), 2, [255, 255, 255], -1)
-                if blob.used_for_training:
-                    # we draw a circle in the centroid if the blob has been assigned during accumulation
-                    cv2.putText(frame, 'a-' + cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
-                elif not blob.used_for_training:
-                    # we draw a cross in the centroid if the blob has been assigned during assignation
-                    # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[cur_id], 1)
-                    if blob.is_an_individual_in_a_fragment:
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
-                    elif not blob.is_an_individual:
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, [255,255,255], 2)
-                    elif blob.is_a_jump:
-                        bounding_box = blob.bounding_box_in_frame_coordinates
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
-                        cv2.rectangle(frame, bounding_box[0], bounding_box[1], (0, 255, 0) , 2)
-                    elif blob.is_a_ghost_crossing:
-                        bounding_box = blob.bounding_box_in_frame_coordinates
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
-                        cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 255, 255) , 2)
-                    elif hasattr(blob , 'is_an_extreme_of_individual_fragment'):
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
-                    else:
-                        cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, [0, 0, 0], 2)
-            elif blob.is_a_crossing:
-                # print("writing crossing ids")
-                if blob.user_generated_identity is not None:
-                    for centroid, identity in zip(blob._user_generated_centroids, blob._user_generated_identities):
-                        centroid = centroid.astype('int')
-                        cv2.putText(frame, str(identity), tuple(centroid), font, .5, self.colors[identity], 3)
-                        cv2.circle(frame, tuple(centroid), 2, self.colors[identity], -1)
-                else:
-                    bounding_box = blob.bounding_box_in_frame_coordinates
-                    cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
+            if isinstance(cur_id, int):
+                print("centroid ", blob.centroid)
+                cur_id_str = root + cur_id_str
+                int_centroid = np.asarray(blob.centroid).astype('int')
+                cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
+                cv2.putText(frame, cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
+            elif isinstance(cur_id, list):
+                print("centroid ", blob.interpolated_centroids)
+                for c_id, c_centroid in zip(cur_id, blob.interpolated_centroids):
+                    c_id_str = root + str(c_id)
+                    int_centroid = tuple([int(centroid_coordinate) for centroid_coordinate in c_centroid])
+                    cv2.circle(frame, int_centroid, 2, self.colors[c_id], -1)
+                    cv2.putText(frame, c_id_str, int_centroid, font, 1, self.colors[c_id], 3)
+
+
+
+
+            # if not blob.is_a_crossing:
+            #     # print("______________________user generated id ", blob.user_generated_identity)
+            #     int_centroid = blob.centroid.astype('int')
+            #     if blob.user_generated_identity is None:
+            #         if hasattr(blob, "_identity_corrected_solving_duplication"):
+            #             if blob._identity_corrected_solving_duplication is not None:
+            #                 cur_id = blob._identity_corrected_solving_duplication
+            #                 cur_id_str = 'd-' + str(cur_id)
+            #             else:
+            #                 cur_id = blob.identity
+            #                 cur_id_str = str(cur_id)
+            #         else:
+            #             cur_id = blob.identity
+            #             cur_id_str = str(cur_id)
+            #     else:
+            #         cur_id = blob.user_generated_identity
+            #         cur_id_str = 'u-' + str(cur_id)
+            #
+            #     cur_id = blob.final_identity
+            #     if blob.user_generated_identity is None:
+            #         if blob._identity_corrected_solving_duplication is not None:
+            #             cur_id_str = 'd-' + str(cur_id)
+            #         else:
+            #             cur_id_str = str(cur_id)
+            #     else:
+            #         cur_id_str = 'u-' + str(cur_id)
+            #
+            #
+            #     if type(cur_id) is 'int':
+            #         cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
+            #     elif type(cur_id) is 'list':
+            #         cv2.circle(frame, tuple(int_centroid), 2, [255, 255, 255], -1)
+            #     if blob.used_for_training:
+            #         # we draw a circle in the centroid if the blob has been assigned during accumulation
+            #         cv2.putText(frame, 'a-' + cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
+            #     elif not blob.used_for_training:
+            #         # we draw a cross in the centroid if the blob has been assigned during assignation
+            #         # cv2.putText(frame, 'x',tuple(int_centroid), font, 1,self.colors[cur_id], 1)
+            #         if blob.is_an_individual_in_a_fragment:
+            #             cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
+            #         elif not blob.is_an_individual:
+            #             cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, [255,255,255], 2)
+            #         elif blob.is_a_jump:
+            #             bounding_box = blob.bounding_box_in_frame_coordinates
+            #             cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
+            #             cv2.rectangle(frame, bounding_box[0], bounding_box[1], (0, 255, 0) , 2)
+            #         elif blob.is_a_ghost_crossing:
+            #             bounding_box = blob.bounding_box_in_frame_coordinates
+            #             cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
+            #             cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 255, 255) , 2)
+            #         elif hasattr(blob , 'is_an_extreme_of_individual_fragment'):
+            #             cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, self.colors[cur_id], 2)
+            #         else:
+            #             cv2.putText(frame, cur_id_str, tuple(int_centroid), font, 1, [0, 0, 0], 2)
+            # elif blob.is_a_crossing:
+            #     # print("writing crossing ids")
+            #     if blob.user_generated_identity is not None:
+            #         for centroid, identity in zip(blob._user_generated_centroids, blob._user_generated_identities):
+            #             centroid = centroid.astype('int')
+            #             cv2.putText(frame, str(identity), tuple(centroid), font, .5, self.colors[identity], 3)
+            #             cv2.circle(frame, tuple(centroid), 2, self.colors[identity], -1)
+            #     else:
+            #         bounding_box = blob.bounding_box_in_frame_coordinates
+            #         cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
 
                 self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
@@ -1159,8 +1184,9 @@ class Validator(BoxLayout):
         self.popup_saving.dismiss()
 
     def go_and_save(self):
-        self.list_of_fragments.update_from_list_of_blobs(self.blobs_in_video)
-        self.list_of_fragments.save()
+        # self.list_of_fragments.update_from_list_of_blobs(self.blobs_in_video)
+        # self.list_of_fragments.save()
+        self.list_of_blobs.save()
         CHOSEN_VIDEO.video.save()
 
     def modifyIdOpenPopup(self, blob_to_modify):

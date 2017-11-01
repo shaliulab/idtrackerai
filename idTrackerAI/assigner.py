@@ -29,10 +29,10 @@ def assign(net, video, images, print_flag):
     logger.info("assigning identities to images...")
     # build data object
     images = np.expand_dims(np.asarray(images), axis = 3)
-    logger.info("generating data set")
+    logger.info("generating data set. Images shape %s" %str(images.shape))
     data = DataSet(net.params.number_of_animals, images)
-    logger.debug("images shape %s" %str(images.shape))
-    data.crop_images(image_size = video.identification_image_size[0])
+    # logger.debug("images shape %s" %str(images.shape))
+    # data.crop_images(image_size = video.identification_image_size[0])
     logger.info("getting predictions")
     assigner = GetPrediction(data, print_flag = print_flag)
     assigner.get_predictions_softmax(net.predict)
