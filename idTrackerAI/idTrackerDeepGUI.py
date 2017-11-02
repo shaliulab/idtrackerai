@@ -350,12 +350,13 @@ if __name__ == '__main__':
                     'training_accuracy', 'training_individual_accuracies',
                     'ratio_of_accumulated_images', 'accumulation_trial',
                     'ratio_accumulated_images', 'first_accumulation_finished',
-                    'knowledge_transfer_from_same_animals', 'accumulation_statistics']
+                    'knowledge_transfer_from_same_animals', 'accumulation_statistics',
+                    'first_frame_first_global_fragment']
         is_property = [True, True, False, False,
                         False, False, False, False,
                         False, False, False, False,
                         False, False, True, True,
-                        True, False]
+                        True, False, True]
         video.copy_attributes_between_two_video_objects(old_video, list_of_attributes, is_property = is_property)
         accumulation_network_params.restore_folder = video._accumulation_folder
         net = ConvNetwork(accumulation_network_params)
@@ -487,9 +488,17 @@ if __name__ == '__main__':
                         'number_of_nonconsistent_global_fragments',
                         'number_of_nonunique_global_fragments',
                         'number_of_acceptable_global_fragments',
-                        'validation_accuracy','validation_individual_accuracies',
+                        'validation_accuracy', 'validation_individual_accuracies',
                         'training_accuracy', 'training_individual_accuracies',
-                        'ratio_of_accumulated_images', 'accumulation_trial']
+                        'ratio_of_accumulated_images', 'accumulation_trial',
+                        'ratio_accumulated_images', 'first_accumulation_finished',
+                        'knowledge_transfer_from_same_animals', 'accumulation_statistics',
+                        'first_frame_first_global_fragment']
+            is_property = [True, True, False, False,
+                            False, False, False, False,
+                            False, False, False, False,
+                            False, False, True, True,
+                            True, False, True]
             video.copy_attributes_between_two_video_objects(old_video, list_of_attributes)
             logger.info("Restoring trained network")
             accumulation_network_params.restore_folder = video._accumulation_folder
