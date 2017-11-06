@@ -16,6 +16,14 @@ from pprint import pprint
 
 from py_utils import get_spaced_colors_util
 
+def read_idTracker_times(file):
+    import csv
+    results = []
+    with open('/home/atlas/Desktop/IdTrackerDeep/idTrackerAI/library/times_idTracker.txt', 'rb') as csvfile:
+        spamreader = csv.reader(csvfile, delimiter = ',')
+        for row in spamreader:
+            results.append(row)
+
 def flatten(l):
     for el in l:
         if isinstance(el, collections.Iterable) and not isinstance(el, basestring):

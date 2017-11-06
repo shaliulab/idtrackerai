@@ -127,7 +127,7 @@ def pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, p
                     number_of_images_in_global_fragments,
                     list_of_global_fragments,
                     pretrain_network_params,
-                    store_accuracy_and_error = False,
+                    store_accuracy_and_error = True,
                     check_for_loss_plateau = True,
                     save_summaries = False,
                     print_flag = False,
