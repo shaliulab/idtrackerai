@@ -48,6 +48,7 @@ class Video(object):
         self._has_crossings_solved = None
         self._has_trajectories = None
         self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
+        self._first_frame_first_global_fragment = []
 
     @property
     def number_of_channels(self):

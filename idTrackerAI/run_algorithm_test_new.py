@@ -62,6 +62,7 @@ from library_utils import Dataset, BlobsListConfig, subsample_dataset_by_individ
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 VEL_PERCENTILE = 99
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
+RESTORE_CRITERION = 'last'
 ###
 # seed numpy
 np.random.seed(0)
@@ -157,26 +158,26 @@ if __name__ == '__main__':
 
             for frames_in_video in job_config.frames_in_video:
 
-                for mean_frames_per_fragment in job_config.mean_frames_per_individual_fragment:
+                for scale in job_config.scale:
 
-                    for var_frames_per_fragment in job_config.std_frames_per_individual_fragment:
+                    for shape in job_config.shape:
 
                         repetition_path = os.path.join(job_config.condition_path,'group_size_' + str(group_size),
                                                                 'num_frames_' + str(frames_in_video),
-                                                                'mean_frames_in_fragment_' + str(mean_frames_per_fragment),
-                                                                'var_frames_in_fragment_' + str(var_frames_per_fragment),
+                                                                'scale_' + str(scale),
+                                                                'shape_' + str(shape),
                                                                 'repetition_' + str(repetition))
 
 
-                        print("\n********** group size %i - frames_in_video %i - mean_frames_per_fragment %s -  std_frames_in_fragment %s - repetition %i ********"
-                                %(group_size,frames_in_video,str(mean_frames_per_fragment), str(var_frames_per_fragment), repetition))
+                        print("\n********** group size %i - frames_in_video %i - scale %s -  shape %s - repetition %i ********"
+                                %(group_size,frames_in_video,str(scale), str(shape), repetition))
                         already_computed = False
                         if os.path.isfile('./library/results_data_frame.pkl'):
                             already_computed = check_if_repetition_has_been_computed(results_data_frame,
                                                                                     job_config, group_size,
                                                                                     frames_in_video,
-                                                                                    mean_frames_per_fragment,
-                                                                                    var_frames_per_fragment,
+                                                                                    scale,
+                                                                                    shape,
                                                                                     repetition)
                             print("already_computed flag: ", already_computed)
                         if already_computed:
@@ -203,8 +204,8 @@ if __name__ == '__main__':
                             #############################################################
                             video.create_preprocessing_folder()
                             list_of_blobs_config = BlobsListConfig(number_of_animals = group_size,
-                                                    number_of_frames_per_fragment = mean_frames_per_fragment,
-                                                    var_number_of_frames_per_fragment = var_frames_per_fragment,
+                                                    number_of_frames_per_fragment = scale,
+                                                    var_number_of_frames_per_fragment = shape,
                                                     number_of_frames = frames_in_video,
                                                     repetition = repetition)
                             identification_images, centroids = subsample_dataset_by_individuals(dataset, list_of_blobs_config)
@@ -251,6 +252,7 @@ if __name__ == '__main__':
                             #############################################################
                             ##################   Protocols cascade   ####################
                             #############################################################
+                            video.protocol = 1
                             #### Accumulation ####
                             print('\nAccumulation 0 ---------------------------------------------------------')
                             video.first_accumulation_time = time.time()
@@ -281,6 +283,7 @@ if __name__ == '__main__':
                             #if knowledge transfer is performed on the same animals we don't reinitialise the classification part of the net
                             video._knowledge_transfer_from_same_animals = False
                             if video.tracking_with_knowledge_transfer:
+                                net.restore()
                                 same_animals = getInput("Same animals", "Are you tracking the same animals? y/N")
                                 if same_animals.lower() == 'n' or same_animals == '':
                                     net.reinitialize_softmax_and_fully_connected()
@@ -290,9 +293,13 @@ if __name__ == '__main__':
                             logger.info("Initialising accumulation manager")
                             # the list of global fragments is ordered in place from the distance (in frames) wrt
                             # the core of the first global fragment that will be accumulated
-                            list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = 0)
-                            list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation()
-                            accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+                            video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = 0))
+                            list_of_global_fragments.video = video
+                            list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(accumulation_trial = 0)
+                            accumulation_manager = AccumulationManager(video, list_of_fragments,
+                                                                        list_of_global_fragments,
+                                                                        threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION,
+                                                                        restore_criterion = RESTORE_CRITERION)
                             #set global epoch counter to 0
                             logger.info("Start accumulation")
                             global_step = 0
@@ -311,6 +318,11 @@ if __name__ == '__main__':
                             video.first_accumulation_time = time.time() - video.first_accumulation_time
                             list_of_fragments.save_light_list(video._accumulation_folder)
                             if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
+                                if isinstance(video.first_frame_first_global_fragment, list):
+                                    video.protocol = 1 if video.accumulation_step <= 1 else 2
+                                    video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[video.accumulation_trial]
+                                    list_of_fragments.video = video
+                                    list_of_global_fragments.video = video
                                 video.assignment_time = time.time()
                                 #### Assigner ####
                                 print('\nAssignment ---------------------------------------------------------')
@@ -318,10 +330,12 @@ if __name__ == '__main__':
                                 video._has_been_assigned = True
                                 ### NOTE: save all the assigner statistics
                                 video.assignment_time = time.time() - video.assignment_time
-                                video.save()
                                 video.pretraining_time = 0
                                 video.second_accumulation_time = 0
+                                video.save()
                             else:
+                                video.protocol = 3
+                                percentage_of_accumulated_images = [video._ratio_accumulated_images]
                                 print('\nPretraining ---------------------------------------------------------')
                                 video.pretraining_time = time.time()
                                 #create folder to store pretraining
@@ -338,7 +352,7 @@ if __name__ == '__main__':
                                 #### Pre-trainer ####
                                 list_of_fragments.reset(roll_back_to = 'fragmentation')
                                 list_of_global_fragments.order_by_distance_travelled()
-                                pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, pretrain_network_params)
+                                pre_trainer(None, video, list_of_fragments, list_of_global_fragments, pretrain_network_params)
                                 logger.info("Pretraining ended")
                                 #save changes
                                 logger.info("Saving changes in video object")
@@ -350,7 +364,6 @@ if __name__ == '__main__':
                                 #Last accumulation after pretraining
                                 video.second_accumulation_time = time.time()
 
-                                percentage_of_accumulated_images = []
                                 for i in range(1,4):
                                     print('\nAccumulation %i ---------------------------------------------------------' %i)
                                     logger.info("Starting accumulation")
@@ -371,9 +384,13 @@ if __name__ == '__main__':
                                     net.reinitialize_softmax_and_fully_connected()
                                     #instantiate accumulation manager
                                     logger.info("Initialising accumulation manager")
-                                    list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = i - 1)
-                                    list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation()
-                                    accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+                                    video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = i - 1))
+                                    list_of_global_fragments.video = video
+                                    list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(accumulation_trial = i - 1)
+                                    accumulation_manager = AccumulationManager(video,
+                                                                                list_of_fragments, list_of_global_fragments,
+                                                                                threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION,
+                                                                                restore_criterion = RESTORE_CRITERION)
                                     #set global epoch counter to 0
                                     logger.info("Start accumulation")
                                     global_step = 0
@@ -390,12 +407,14 @@ if __name__ == '__main__':
                                         logger.info("This accumulation was not satisfactory. Try to start from a different global fragment")
                                         list_of_fragments.save_light_list(video._accumulation_folder)
 
-
-                                if len(percentage_of_accumulated_images) > 1 and np.argmax(percentage_of_accumulated_images) != 2:
-                                    video.accumulation_trial = np.argmax(percentage_of_accumulated_images) + 1
-                                    accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
-                                    video._accumulation_folder = os.path.join(video.session_folder, accumulation_folder_name)
-                                    list_of_fragments.load_light_list(video._accumulation_folder)
+                                video.accumulation_trial = np.argmax(percentage_of_accumulated_images)
+                                video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[video.accumulation_trial]
+                                video._ratio_accumulated_images = percentage_of_accumulated_images[video.accumulation_trial]
+                                list_of_fragments.video = video
+                                list_of_global_fragments.video = video
+                                accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
+                                video._accumulation_folder = os.path.join(video.session_folder, accumulation_folder_name)
+                                list_of_fragments.load_light_list(video._accumulation_folder)
                                 video._second_accumulation_finished = True
                                 logger.info("Saving global fragments")
                                 # list_of_fragments.save()
@@ -423,38 +442,29 @@ if __name__ == '__main__':
                             ####
                             #############################################################
                             list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
-                            if False:
-                                list_of_blobs.compute_nose_and_head_coordinates()
 
                             #############################################################
                             ############   Generate generate_groundtruth_file ###########
                             ####
                             #############################################################
-
                             groundtruth = generate_groundtruth(video, list_of_blobs.blobs_in_video, start = 0, end = video.number_of_frames-1)
 
                             #############################################################
                             ##########  Accuracies before solving duplications ##########
                             ####
                             #############################################################
-
                             blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
                             blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
 
                             print("computting groundtrugh")
-                            accuracy, \
-                            individual_accuracy, \
-                            accuracy_assigned, \
-                            individual_accuracy_assigned, \
-                            frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, list_of_blobs.blobs_in_video)
+                            accuracies, _ = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth,
+                                                                            blobs_in_video,
+                                                                            video.first_frame_first_global_fragment)
 
-                            if accuracy is not None:
+                            if accuracies is not None:
                                 print("saving accuracies in video")
                                 video.gt_start_end = (groundtruth.start,groundtruth.end)
-                                video.gt_accuracy_before_solving_duplications = accuracy
-                                video.gt_individual_accuracy_before_solving_duplications = individual_accuracy
-                                video.gt_accuracy_assigned_before_solving_duplications = accuracy_assigned
-                                video.gt_individual_accuracy_assigned_before_solving_duplications = individual_accuracy_assigned
+                                video.gt_accuracy_before_duplications = accuracies
 
                             #############################################################
                             ###################   Solve duplications      ###############
@@ -492,8 +502,6 @@ if __name__ == '__main__':
                             ####
                             #############################################################
                             list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
-                            if False:
-                                list_of_blobs.compute_nose_and_head_coordinates()
                             list_of_blobs.save(number_of_chunks = video.number_of_frames)
 
                             #############################################################
@@ -505,18 +513,13 @@ if __name__ == '__main__':
                             blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
 
                             print("computting groundtrugh")
-                            accuracy, \
-                            individual_accuracy, \
-                            accuracy_assigned, \
-                            individual_accuracy_assigned, \
-                            frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, list_of_blobs.blobs_in_video)
+                            accuracies, _ = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth,
+                                                                            blobs_in_video,
+                                                                            video.first_frame_first_global_fragment)
 
-                            if accuracy is not None:
+                            if accuracies is not None:
                                 print("saving accuracies in video")
-                                video.gt_accuracy = accuracy
-                                video.gt_individual_accuracy = individual_accuracy
-                                video.gt_accuracy_assigned = accuracy_assigned
-                                video.gt_individual_accuracy_assigned = individual_accuracy_assigned
+                                video.gt_accuracy = accuracies
                                 video.save()
 
                             video.total_time = sum([video.solve_duplications_time,
@@ -529,49 +532,60 @@ if __name__ == '__main__':
                             #############################################################
                             ###################  Update data-frame   ####################
                             #############################################################
-                            results_data_frame = results_data_frame.append({'date': time.strftime("%c"),
-                                                                            'cluster': int(job_config.cluster) ,
-                                                                            'test_name': job_config.test_name,
-                                                                            'CNN_model': job_config.CNN_model,
-                                                                            'knowledge_transfer_flag': job_config.knowledge_transfer_flag,
-                                                                            'knowledge_transfer_folder': job_config.knowledge_transfer_folder,
-                                                                            'IMDB_codes': job_config.IMDB_codes,
-                                                                            'ids_codes': job_config.ids_codes,
-                                                                            'group_size': int(group_size),
-                                                                            'frames_in_video': int(frames_in_video),
-                                                                            'mean_frames_per_fragment': mean_frames_per_fragment,
-                                                                            'var_frames_per_fragment': var_frames_per_fragment,
-                                                                            'repetition': int(repetition),
-                                                                            'individual_accuracy_before_solving_duplications': video.gt_individual_accuracy_before_solving_duplications,
-                                                                            'accuracy_before_solving_duplications': video.gt_accuracy_before_solving_duplications,
-                                                                            'individual_accuracy_assigned_before_solving_duplications': video.gt_individual_accuracy_assigned_before_solving_duplications,
-                                                                            'accuracy_assigned_before_solving_duplications': video.gt_accuracy_assigned_before_solving_duplications,
-                                                                            'individual_accuracy': video.gt_individual_accuracy,
-                                                                            'accuracy': video.gt_accuracy,
-                                                                            'individual_accuracy_assigned': video.gt_individual_accuracy_assigned,
-                                                                            'accuracy_assigned': video.gt_accuracy_assigned,
-                                                                            'number_of_global_fragments': list_of_global_fragments.number_of_global_fragments,
-                                                                            'number_of_fragments': video.individual_fragments_stats['number_of_fragments'],
-                                                                            'number_of_crossing_fragments': video.individual_fragments_stats['number_of_crossing_fragments'],
-                                                                            'number_of_individual_fragments': video.individual_fragments_stats['number_of_individual_fragments'],
-                                                                            'number_of_individual_fragments_not_in_a_global_fragment': video.individual_fragments_stats['number_of_individual_fragments_not_in_a_global_fragment'],
-                                                                            'number_of_not_accumulable_individual_fragments': video.individual_fragments_stats['number_of_not_accumulable_individual_fragments'],
-                                                                            'number_of_globally_accumulated_individual_blobs': video.individual_fragments_stats['number_of_globally_accumulated_individual_blobs'],
-                                                                            'number_of_partially_accumulated_individual_fragments': video.individual_fragments_stats['number_of_partially_accumulated_individual_fragments'],
-                                                                            'number_of_blobs': video.individual_fragments_stats['number_of_blobs'],
-                                                                            'number_of_crossing_blobs': video.individual_fragments_stats['number_of_crossing_blobs'],
-                                                                            'number_of_individual_blobs': video.individual_fragments_stats['number_of_individual_blobs'],
-                                                                            'number_of_individual_blobs_not_in_a_global_fragment': video.individual_fragments_stats['number_of_individual_blobs_not_in_a_global_fragment'],
-                                                                            'number_of_not_accumulable_individual_blobs': video.individual_fragments_stats['number_of_not_accumulable_individual_blobs'],
-                                                                            'number_of_globally_accumulated_individual_fragments': video.individual_fragments_stats['number_of_globally_accumulated_individual_fragments'],
-                                                                            'number_of_partially_accumulated_individual_blobs': video.individual_fragments_stats['number_of_partially_accumulated_individual_blobs'],
-                                                                            'first_accumulation_time': video.first_accumulation_time,
-                                                                            'pretraining_time': video.pretraining_time,
-                                                                            'second_accumulation_time': video.second_accumulation_time,
-                                                                            'assignment_time': video.assignment_time,
-                                                                            'solve_duplications_time': video.solve_duplications_time,
-                                                                            'total_time': video.total_time
-                                                                             }, ignore_index=True)
+                            results_data_frame = \
+                                results_data_frame.append({'date': time.strftime("%c"),
+                                    'cluster': int(job_config.cluster) ,
+                                    'test_name': job_config.test_name,
+                                    'CNN_model': job_config.CNN_model,
+                                    'knowledge_transfer_flag': job_config.knowledge_transfer_flag,
+                                    'knowledge_transfer_folder': job_config.knowledge_transfer_folder,
+                                    'IMDB_codes': job_config.IMDB_codes,
+                                    'ids_codes': job_config.ids_codes,
+                                    'group_size': int(group_size),
+                                    'frames_in_video': int(frames_in_video),
+                                    'scale': scale,
+                                    'shape': shape,
+                                    'mean_frames_per_fragment': shape * scale,
+                                    'var_frames_per_fragment': shape * scale**2,
+                                    'repetition': int(repetition),
+                                    'protocol': video.protocol,
+                                    'individual_accuracy_before_duplications': video.gt_accuracy_before_duplications['individual_accuracy'],
+                                    'accuracy_before_duplications': video.gt_accuracy_before_duplications['accuracy'],
+                                    'individual_accuracy_assigned_before_duplications': video.gt_accuracy_before_duplications['individual_accuracy_assigned'],
+                                    'accuracy_assigned_before_duplications': video.gt_accuracy_before_duplications['accuracy_assigned'],
+                                    'individual_accuracy_after_accumulation_before_duplications': video.gt_accuracy_before_duplications['individual_accuracy_after_accumulation'],
+                                    'accuracy_after_accumulation_before_duplications': video.gt_accuracy_before_duplications['accuracy_after_accumulation'],
+                                    'individual_accuracy': video.gt_accuracy['individual_accuracy'],
+                                    'accuracy': video.gt_accuracy['accuracy'],
+                                    'individual_accuracy_assigned': video.gt_accuracy['individual_accuracy_assigned'],
+                                    'accuracy_assigned': video.gt_accuracy['accuracy_assigned'],
+                                    'individual_accuracy_in_accumulation': video.gt_accuracy['individual_accuracy_in_accumulation'],
+                                    'accuracy_in_accumulation': video.gt_accuracy['accuracy_in_accumulation'],
+                                    'individual_accuracy_after_accumulation': video.gt_accuracy['individual_accuracy_after_accumulation'],
+                                    'accuracy_after_accumulation': video.gt_accuracy['accuracy_after_accumulation'],
+                                    'crossing_detector_accuracy': video.gt_accuracy['crossing_detector_accuracy'],
+                                    'number_of_global_fragments': list_of_global_fragments.number_of_global_fragments,
+                                    'number_of_fragments': video.individual_fragments_stats['number_of_fragments'],
+                                    'number_of_crossing_fragments': video.individual_fragments_stats['number_of_crossing_fragments'],
+                                    'number_of_individual_fragments': video.individual_fragments_stats['number_of_individual_fragments'],
+                                    'number_of_individual_fragments_not_in_a_global_fragment': video.individual_fragments_stats['number_of_individual_fragments_not_in_a_global_fragment'],
+                                    'number_of_not_accumulable_individual_fragments': video.individual_fragments_stats['number_of_not_accumulable_individual_fragments'],
+                                    'number_of_globally_accumulated_individual_blobs': video.individual_fragments_stats['number_of_globally_accumulated_individual_blobs'],
+                                    'number_of_partially_accumulated_individual_fragments': video.individual_fragments_stats['number_of_partially_accumulated_individual_fragments'],
+                                    'number_of_blobs': video.individual_fragments_stats['number_of_blobs'],
+                                    'number_of_crossing_blobs': video.individual_fragments_stats['number_of_crossing_blobs'],
+                                    'number_of_individual_blobs': video.individual_fragments_stats['number_of_individual_blobs'],
+                                    'number_of_individual_blobs_not_in_a_global_fragment': video.individual_fragments_stats['number_of_individual_blobs_not_in_a_global_fragment'],
+                                    'number_of_not_accumulable_individual_blobs': video.individual_fragments_stats['number_of_not_accumulable_individual_blobs'],
+                                    'number_of_globally_accumulated_individual_fragments': video.individual_fragments_stats['number_of_globally_accumulated_individual_fragments'],
+                                    'number_of_partially_accumulated_individual_blobs': video.individual_fragments_stats['number_of_partially_accumulated_individual_blobs'],
+                                    'first_accumulation_time': video.first_accumulation_time,
+                                    'pretraining_time': video.pretraining_time,
+                                    'second_accumulation_time': video.second_accumulation_time,
+                                    'assignment_time': video.assignment_time,
+                                    'solve_duplications_time': video.solve_duplications_time,
+                                    'total_time': video.total_time
+                                     }, ignore_index=True)
 
                                                                             #  'number_of_frames_with_repetitions_after_assignation': int(number_of_frames_with_repetitions),
                                                                             #  'number_of_not_assigned_blobs': [blob.assigned_identity == 0 for blobs_in_frame in list_of_blobs.blobs in video for blob in blobs_in_frame],
@@ -580,7 +594,12 @@ if __name__ == '__main__':
                                                                             #  'number_of_individual_fragments_that_are_repetitions':individual_fragments_that_are_repetitions,
 
                             results_data_frame.to_pickle('./library/results_data_frame.pkl')
-
+                            blobs_in_video = None
+                            blobs_in_video_groundtruth = None
+                            groundtruth = None
                             list_of_blobs = None
                             list_of_fragments = None
                             list_of_global_fragments = None
+                            video = None
+                            accuracies = None
+                            percentage_of_accumulated_images = None

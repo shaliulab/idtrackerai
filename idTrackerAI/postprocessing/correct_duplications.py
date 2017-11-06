@@ -147,5 +147,5 @@ def check_for_duplications_last_pass(fragments):
         if sum(overlapping_identities) != 0:
             duplicated_fragments_start_end.append((fragment.identifier, fragment.start_end))
 
-    print("start end tuples of fragments with duplicated identity ",duplicated_fragments_start_end)
+    # print("start end tuples of fragments with duplicated identity ",duplicated_fragments_start_end)
     return duplicated_fragments_start_end

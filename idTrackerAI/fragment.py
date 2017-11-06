@@ -69,7 +69,6 @@ class Fragment(object):
             self._acceptable_for_training = None
             self._temporary_id = None
             self._identity = None
-            self._user_generated_identity = None
             self._identity_corrected_solving_duplication = None
             self._identity_is_fixed = False
             self._accumulated_globally = False
@@ -85,7 +84,6 @@ class Fragment(object):
             attributes_to_delete = []
             if not self.used_for_training:
                 self._identity = None
-                self._user_generated_identity = None
                 self._identity_corrected_solving_duplication = None
                 attributes_to_delete = ['_frequencies', '_P1_vector']
             attributes_to_delete.extend(['_P2_vector', '_ambiguous_identities',

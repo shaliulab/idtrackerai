@@ -22,7 +22,11 @@ MAX_RATIO_OF_PRETRAINED_IMAGES = .95
 
 logger = logging.getLogger("__main__.pre_trainer")
 
-def pre_train(video, list_of_fragments, number_of_images_in_global_fragments, list_of_global_fragments, params, store_accuracy_and_error, check_for_loss_plateau, save_summaries, print_flag, plot_flag):
+def pre_train(video, list_of_fragments,
+                number_of_images_in_global_fragments, list_of_global_fragments,
+                params, store_accuracy_and_error,
+                check_for_loss_plateau, save_summaries,
+                print_flag, plot_flag):
     #initialize global epoch counter that takes into account all the steps in the pretraining
     global_epoch = 0
     number_of_images_used_during_pretraining = 0
@@ -123,8 +127,8 @@ def pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, p
                     number_of_images_in_global_fragments,
                     list_of_global_fragments,
                     pretrain_network_params,
-                    store_accuracy_and_error = False,
+                    store_accuracy_and_error = True,
                     check_for_loss_plateau = True,
                     save_summaries = False,
                     print_flag = False,
-                    plot_flag = True)
+                    plot_flag = False)

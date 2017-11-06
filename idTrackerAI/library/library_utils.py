@@ -43,20 +43,20 @@ class LibraryJobConfig(object):
                 if not os.path.exists(num_frames_path):
                     os.makedirs(num_frames_path)
                 #create subfolders for frames_in_fragment
-                for frames_in_fragment in self.mean_frames_per_individual_fragment:
-                    mean_frames_in_fragment_path = os.path.join(num_frames_path, 'mean_frames_in_fragment_' + str(frames_in_fragment))
-                    if not os.path.exists(mean_frames_in_fragment_path):
-                        os.makedirs(mean_frames_in_fragment_path)
-                    for var_frames_in_fragment in self.std_frames_per_individual_fragment:
-                        var_frames_in_fragment_path = os.path.join(num_frames_path, 'var_frames_in_fragment_' + str(frames_in_fragment))
-                        if not os.path.exists(var_frames_in_fragment_path):
-                            os.makedirs(var_frames_in_fragment_path)
+                for scale in self.scale:
+                    scale_path = os.path.join(num_frames_path, 'scale_' + str(scale))
+                    if not os.path.exists(scale_path):
+                        os.makedirs(scale_path)
+                    for shape in self.shape:
+                        shape_path = os.path.join(scale_path, 'shape_' + str(shape))
+                        if not os.path.exists(shape_path):
+                            os.makedirs(shape_path)
                         for repetition in self.repetitions:
-                            repetition_path = os.path.join(var_frames_in_fragment_path, 'repetition_' + str(repetition))
+                            repetition_path = os.path.join(shape_path, 'repetition_' + str(repetition))
                             if not os.path.exists(repetition_path):
                                 os.makedirs(repetition_path)
 
-def check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, mean_frames_per_fragment, var_frames_per_fragment, repetition):
+def check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, scale, shape, repetition):
 
     return len(results_data_frame.query('test_name == @job_config.test_name' +
                                             ' & CNN_model == @job_config.CNN_model' +
@@ -66,8 +66,8 @@ def check_if_repetition_has_been_computed(results_data_frame, job_config, group_
                                             ' & ids_codes == @job_config.ids_codes' +
                                             ' & group_size == @group_size' +
                                             ' & frames_in_video == @frames_in_video' +
-                                            ' & mean_frames_per_fragment == @mean_frames_per_fragment' +
-                                            ' & var_frames_per_fragment == @var_frames_per_fragment'
+                                            ' & scale == @scale' +
+                                            ' & shape == @shape'
                                             ' & repetition == @repetition')) != 0
 
 """ generate blob lists """

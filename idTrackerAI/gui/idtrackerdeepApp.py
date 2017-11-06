@@ -775,7 +775,10 @@ class Validator(BoxLayout):
     def do(self, *args):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
             if CHOSEN_VIDEO.video.has_been_assigned == True:
+<<<<<<< HEAD
                 print("\n**** PASS 1")
+=======
+>>>>>>> 7c5b8e47373999548b00205f4d09d60cf74d5d79
                 CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
                 list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_path)
                 list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.old_video.fragments_path)

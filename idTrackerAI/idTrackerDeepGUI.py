@@ -59,6 +59,7 @@ from compute_velocity_model import compute_model_velocity
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
 VEL_PERCENTILE = 99
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
+RESTORE_CRITERION = 'last'
 ###
 # seed numpy
 np.random.seed(0)
@@ -283,7 +284,8 @@ if __name__ == '__main__':
                                 learning_rate = 0.005,
                                 keep_prob = 1.0,
                                 scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax'],
-                                save_folder = video._accumulation_folder,
+                                restore_folder = video.accumulation_folder,
+                                save_folder = video.accumulation_folder,
                                 image_size = video.identification_image_size)
     if not bool(loadPreviousDict['first_accumulation']):
         logger.info("Starting accumulation")
@@ -298,11 +300,10 @@ if __name__ == '__main__':
         #instantiate network object
         logger.info("Initialising accumulation network")
         net = ConvNetwork(accumulation_network_params)
-        #restore variables from the pretraining
-        net.restore()
         #if knowledge transfer is performed on the same animals we don't reinitialise the classification part of the net
         video._knowledge_transfer_from_same_animals = False
         if video.tracking_with_knowledge_transfer:
+            net.restore()
             same_animals = getInput("Same animals", "Are you tracking the same animals? y/N")
             if same_animals.lower() == 'n' or same_animals == '':
                 net.reinitialize_softmax_and_fully_connected()
@@ -312,9 +313,13 @@ if __name__ == '__main__':
         logger.info("Initialising accumulation manager")
         # the list of global fragments is ordered in place from the distance (in frames) wrt
         # the core of the first global fragment that will be accumulated
-        list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = 0)
-        list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation()
-        accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+        video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = 0))
+        list_of_global_fragments.video = video
+        list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(accumulation_trial = 0)
+        accumulation_manager = AccumulationManager(video, list_of_fragments,
+                                                    list_of_global_fragments,
+                                                    threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION,
+                                                    restore_criterion = RESTORE_CRITERION)
         #set global epoch counter to 0
         logger.info("Start accumulation")
         global_step = 0
@@ -360,6 +365,10 @@ if __name__ == '__main__':
     video.first_accumulation_time = time.time() - video.first_accumulation_time
     list_of_fragments.save_light_list(video._accumulation_folder)
     if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
+        if isinstance(video.first_frame_first_global_fragment, list):
+            video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[video.accumulation_trial]
+            list_of_fragments.video = video
+            list_of_global_fragments.video = video
         video.assignment_time = time.time()
         if not loadPreviousDict['assignment']:
             #### Assigner ####
@@ -371,6 +380,8 @@ if __name__ == '__main__':
             ### NOTE: load all the assigner statistics
             video._has_been_assigned = True
         video.assignment_time = time.time() - video.assignment_time
+        video.pretraining_time = 0
+        video.second_accumulation_time = 0
         video.save()
     else:
         print('\nPretraining ---------------------------------------------------------')
@@ -431,9 +442,13 @@ if __name__ == '__main__':
                 net.reinitialize_softmax_and_fully_connected()
                 #instantiate accumulation manager
                 logger.info("Initialising accumulation manager")
-                list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = i - 1)
-                list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation()
-                accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+                video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = i - 1))
+                list_of_global_fragments.video = video
+                list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(accumulation_trial = i - 1)
+                accumulation_manager = AccumulationManager(video,
+                                                            list_of_fragments, list_of_global_fragments,
+                                                            threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION,
+                                                            restore_criterion = RESTORE_CRITERION)
                 #set global epoch counter to 0
                 logger.info("Start accumulation")
                 global_step = 0
@@ -453,6 +468,9 @@ if __name__ == '__main__':
 
             if len(percentage_of_accumulated_images) > 1 and np.argmax(percentage_of_accumulated_images) != 2:
                 video.accumulation_trial = np.argmax(percentage_of_accumulated_images) + 1
+                video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[video.accumulation_trial]
+                list_of_fragments.video = video
+                list_of_global_fragments.video = video
                 accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
                 video._accumulation_folder = os.path.join(video.session_folder, accumulation_folder_name)
                 list_of_fragments.load_light_list(video._accumulation_folder)

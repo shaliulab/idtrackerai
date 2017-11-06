@@ -34,18 +34,19 @@ def accumulate(accumulation_manager,
         logger.debug("images: %s" %str(images.shape))
         logger.debug("labels: %s" %str(labels.shape))
         #start training
-        global_step, net, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data = train(video,
-                                                            accumulation_manager.list_of_fragments.fragments,
-                                                            net, images, labels,
-                                                            store_accuracy_and_error = False,
-                                                            check_for_loss_plateau = True,
-                                                            save_summaries = True,
-                                                            print_flag = False,
-                                                            plot_flag = True,
-                                                            global_step = global_step,
-                                                            first_accumulation_flag = accumulation_manager.counter == 0,
-                                                            knowledge_transfer_from_same_animals = knowledge_transfer_from_same_animals,
-                                                            accumulation_manager = accumulation_manager)
+        global_step, net,\
+        store_validation_accuracy_and_loss_data,\
+        store_training_accuracy_and_loss_data = train(video,
+                                                        accumulation_manager.list_of_fragments.fragments,
+                                                        net, images, labels,
+                                                        store_accuracy_and_error = True,
+                                                        check_for_loss_plateau = True,
+                                                        save_summaries = True,
+                                                        print_flag = False,
+                                                        plot_flag = False,
+                                                        global_step = global_step,
+                                                        knowledge_transfer_from_same_animals = knowledge_transfer_from_same_animals,
+                                                        accumulation_manager = accumulation_manager)
 
         # update the set of images used for training
         logger.info("Update images and labels used for training")

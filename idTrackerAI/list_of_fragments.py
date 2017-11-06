@@ -115,7 +115,7 @@ class ListOfFragments(object):
         images = []
         labels = []
         for fragment in self.fragments:
-            if fragment.acceptable_for_training:
+            if fragment.acceptable_for_training and not fragment.used_for_training:
                 assert fragment.is_an_individual
                 images.append(fragment.images)
                 labels.extend([fragment.temporary_id] * fragment.number_of_images)
@@ -314,7 +314,8 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                                     blob.is_a_jump,
                                     blob.is_a_jumping_fragment,
                                     blob.is_a_ghost_crossing,
-                                    number_of_animals)
+                                    number_of_animals,
+                                    user_generated_identity = blob.user_generated_identity)
                 if fragment.is_a_ghost_crossing:
                     fragment.next_blobs_fragment_identifier = [next_blob.fragment_identifier for next_blob in blob.next if len(blob.next) > 0]
                     fragment.previous_blobs_fragment_identifier = [previous_blob.fragment_identifier for previous_blob in blob.previous if len(blob.previous) > 0]

@@ -58,7 +58,7 @@ class Store_Accuracy_and_Loss(object):
         attribute_to_check = 'used_for_training' if self.scope == 'training' else 'used_for_pretraining'
         for fragment in fragments:
             if getattr(fragment, attribute_to_check):
-                blob_index = fragment.blob_hierarchy_in_starting_frame
+                blob_index = fragment.final_identity - 1
                 (start, end) = fragment.start_end
                 ax4.add_patch(
                     patches.Rectangle(
