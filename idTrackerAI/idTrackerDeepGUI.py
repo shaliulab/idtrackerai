@@ -53,15 +53,12 @@ from get_trajectories import produce_trajectories, smooth_trajectories
 from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
 from compute_statistics_against_groundtruth import get_statistics_against_groundtruth
 from compute_velocity_model import compute_model_velocity
+from assign_them_all import close_trajectories_gaps
 # from visualise_cnn import visualise
 
-NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
-VEL_PERCENTILE = 99
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
-###
-# seed numpy
 np.random.seed(0)
-###
+
 def setup_logging(
     default_path='logging.yaml',
     default_level=logging.INFO,
@@ -105,7 +102,6 @@ if __name__ == '__main__':
     logger.info("Starting working on session %s" %new_name_session_folder)
     logger.info("Log files saved in %s" %video.logs_folder)
     #Asking user whether to reuse preprocessing steps...'
-    # processes_list = ['preprocessing', 'pretraining', 'accumulation', 'assignment', 'solving_duplications', 'crossings', 'trajectories']
     processes_list = ['preprocessing',
                     'use_previous_knowledge_transfer_decision',
                     'first_accumulation',
@@ -205,13 +201,9 @@ if __name__ == '__main__':
         if not list_of_blobs.blobs_are_connected:
             list_of_blobs.compute_overlapping_between_subsequent_frames()
         detect_crossings(list_of_blobs, video, video.model_area)
-        #connect blobs that overlap in consecutive frames
         list_of_blobs.compute_overlapping_between_subsequent_frames()
-        #assign an identifier to each blob belonging to an individual fragment
         list_of_blobs.compute_fragment_identifier_and_blob_index()
-        #assign an identifier to each blob belonging to a crossing fragment
         list_of_blobs.compute_crossing_fragment_identifier()
-        #create list of fragments
         fragments = create_list_of_fragments(list_of_blobs.blobs_in_video,
                                             video.number_of_animals)
         list_of_fragments = ListOfFragments(video, fragments)
@@ -265,7 +257,6 @@ if __name__ == '__main__':
     video.preprocessing_time = time.time() - video.preprocessing_time
     #take a look to the resulting fragmentation
     # fragmentation_inspector(video, list_of_blobs.blobs_in_video)
-    #destroy windows to prevent openCV errors
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
@@ -294,10 +285,8 @@ if __name__ == '__main__':
         else:
             logger.info("The network will be trained from scratch during accumulation")
             accumulation_network_params.scopes_layers_to_optimize = None
-        #instantiate network object
         logger.info("Initialising accumulation network")
         net = ConvNetwork(accumulation_network_params)
-        #restore variables from the pretraining
         net.restore()
         #if knowledge transfer is performed on the same animals we don't reinitialise the classification part of the net
         video._knowledge_transfer_from_same_animals = False
@@ -307,7 +296,6 @@ if __name__ == '__main__':
                 net.reinitialize_softmax_and_fully_connected()
             else:
                 video._knowledge_transfer_from_same_animals = True
-        #instantiate accumulation manager
         logger.info("Initialising accumulation manager")
         # the list of global fragments is ordered in place from the distance (in frames) wrt
         # the core of the first global fragment that will be accumulated
@@ -324,13 +312,11 @@ if __name__ == '__main__':
                                             video.knowledge_transfer_from_same_animals)
         logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
         video._first_accumulation_finished = True
-        ### NOTE: save all the accumulation statistics
         video.save()
         logger.info("Saving fragments")
         list_of_fragments.save()
         list_of_global_fragments.save(list_of_fragments.fragments)
     else:
-        ### NOTE: load all the accumulation statistics
         logger.info("Restoring accumulation network")
         list_of_attributes = ['accumulation_folder',
                     'second_accumulation_finished',
@@ -349,7 +335,7 @@ if __name__ == '__main__':
                         False, False, False, False,
                         False, False, False, False,
                         False, False, True, True,
-                        True]
+                        True, False]
         video.copy_attributes_between_two_video_objects(old_video, list_of_attributes, is_property = is_property)
         accumulation_network_params.restore_folder = video._accumulation_folder
         net = ConvNetwork(accumulation_network_params)
@@ -361,7 +347,6 @@ if __name__ == '__main__':
     if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
         video.assignment_time = time.time()
         if not loadPreviousDict['assignment']:
-            #### Assigner ####
             print('\nAssignment ---------------------------------------------------------')
             assigner(list_of_fragments, video, net)
             video._has_been_assigned = True
@@ -374,9 +359,7 @@ if __name__ == '__main__':
     else:
         print('\nPretraining ---------------------------------------------------------')
         video.pretraining_time = time.time()
-        #create folder to store pretraining
         video.create_pretraining_folder()
-        #pretraining if first accumulation trial does not cover 90% of the images in global fragments
         pretrain_network_params = NetworkParams(video.number_of_animals,
                                                 learning_rate = 0.01,
                                                 keep_prob = 1.0,
@@ -390,7 +373,6 @@ if __name__ == '__main__':
             list_of_global_fragments.order_by_distance_travelled()
             pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, pretrain_network_params)
             logger.info("Pretraining ended")
-            #save changes
             logger.info("Saving changes in video object")
             video._has_been_pretrained = True
             video.save()
@@ -406,17 +388,14 @@ if __name__ == '__main__':
             ### NOTE: load pre-training statistics
         video.pretraining_time = time.time() - video.pretraining_time
         #### Accumulation ####
-        #Last accumulation after pretraining
         video.second_accumulation_time = time.time()
         if not loadPreviousDict['second_accumulation']:
             percentage_of_accumulated_images = []
             for i in range(1,4):
                 print('\nAccumulation %i ---------------------------------------------------------' %i)
                 logger.info("Starting accumulation")
-                #create folder to store accumulation models
                 video.create_accumulation_folder(iteration_number = i)
                 video.accumulation_trial = i
-                #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
                 list_of_fragments.reset(roll_back_to = 'fragmentation')
                 list_of_global_fragments.reset(roll_back_to = 'fragmentation')
                 logger.info("We will restore the network from a previous pretraining: %s" %video.pretraining_folder)
@@ -425,15 +404,12 @@ if __name__ == '__main__':
                 accumulation_network_params.scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax']
                 logger.info("Initialising accumulation network")
                 net = ConvNetwork(accumulation_network_params)
-                #restore variables from the pretraining
                 net.restore()
                 net.reinitialize_softmax_and_fully_connected()
-                #instantiate accumulation manager
                 logger.info("Initialising accumulation manager")
                 list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = i - 1)
                 list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation()
                 accumulation_manager = AccumulationManager(video, list_of_fragments, list_of_global_fragments, threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
-                #set global epoch counter to 0
                 logger.info("Start accumulation")
                 global_step = 0
                 video._ratio_accumulated_images = accumulate(accumulation_manager,
@@ -479,7 +455,6 @@ if __name__ == '__main__':
             list_of_fragments.load_light_list(video._accumulation_folder)
             net = ConvNetwork(accumulation_network_params)
             net.restore()
-            # Set preprocessed flag to True
             video.save()
             ### NOTE: load pre-training statistics
         video.second_accumulation_time = time.time() - video.second_accumulation_time
@@ -496,11 +471,11 @@ if __name__ == '__main__':
         video.assignment_time = time.time() - video.assignment_time
         video.save()
 
-    # finish and save
     logger.debug("Saving list of fragments, list of global fragments and video object")
     list_of_fragments.save()
     list_of_global_fragments.save(list_of_fragments.fragments)
     video.save()
+
     #############################################################
     ################### CNN-visualisation  ######################
     ####
@@ -514,6 +489,7 @@ if __name__ == '__main__':
     #     label = accumulated_global_fragments[0]._temporary_ids[0]
     #
     #     visualise(video, net, image, label)
+    
     #############################################################
     ###################   Solve duplications      ###############
     ####
@@ -522,29 +498,21 @@ if __name__ == '__main__':
     if not loadPreviousDict['solving_duplications']:
         logger.info("Start checking for and solving duplications")
         list_of_fragments.reset(roll_back_to = 'assignment')
-        # mark fragments as duplications
         mark_fragments_as_duplications(list_of_fragments.fragments)
-        # solve duplications
         solve_duplications(list_of_fragments)
         video._has_duplications_solved = True
-        logger.info("Done")
-        # finish and save
         logger.info("Saving")
-        # list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
-        # list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
         list_of_fragments.save()
         video.save()
-        logger.info("Done")
-        # visualise proposed tracking
-        # frame_by_frame_identity_inspector(video, blobs)
     else:
-        # Set duplications flag to True
         logger.info("Duplications have already been checked. Using previous information")
         video._has_duplications_solved = True
         video.save()
     video.solve_duplications_time = time.time() - video.solve_duplications_time
+
     #############################################################
     ###################  Solving impossible jumps    ############
+    #############################################################
     list_of_fragments.video = video
     video.solve_impossible_jumps_time = time.time()
     print("\n**** Correct impossible velocity jump ****")
@@ -553,24 +521,12 @@ if __name__ == '__main__':
         video.velocity_threshold = old_video.velocity_threshold
     elif not hasattr(old_video, 'velocity_threshold') and not hasattr(video,'velocity_threshold'):
         video.velocity_threshold = compute_model_velocity(list_of_fragments.fragments, video.number_of_animals, percentile = VEL_PERCENTILE)
-    # fix_identity_of_blobs_in_video(blobs)
     correct_impossible_velocity_jumps(list_of_fragments)
-    logger.info("Done")
-    # finish and save
     logger.info("Saving")
     list_of_fragments.save()
-    # video.compute_overall_P2(blobs)
     video.save()
     logger.info("Done")
     video.solve_impossible_jumps_time = time.time() - video.solve_impossible_jumps_time
-    #############################################################
-    ##############   Solve crossigns   ##########################
-    ####
-    #############################################################
-    # print("\n**** Assign crossings ****")
-    # if not loadPreviousDict['crossings']:
-    #     video._has_crossings_solved = False
-    #     pass
 
     #############################################################
     ##############   Invididual fragments stats #################
@@ -592,6 +548,21 @@ if __name__ == '__main__':
     if False:
         list_of_blobs.compute_nose_and_head_coordinates()
     list_of_blobs.save(number_of_chunks = video.number_of_frames)
+
+    #############################################################
+    ##############   Solve crossigns   ##########################
+    ####
+    #############################################################
+    print("\n**** Assign crossings ****")
+    if not loadPreviousDict['crossings']:
+        video._has_crossings_solved = False
+        if len(list_of_blobs.blobs_in_video[-1]) == 0:
+            list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
+        list_of_blobs = close_trajectories_gaps(video, list_of_blobs)
+        video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
+        video.save()
+        list_of_blobs.save(path_to_save = blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
+        video._has_crossings_solved = True
 
     #############################################################
     ##############   Create trajectories    #####################

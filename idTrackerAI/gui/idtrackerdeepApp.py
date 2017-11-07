@@ -983,12 +983,12 @@ class Validator(BoxLayout):
             cur_id = blob.final_identity
             cur_id_str = str(cur_id)
             print("final_identity ", cur_id_str)
-            roots = ['a-', 'd-', 'i-', 'c-' ,'u-']
+            roots = ['a-', 'd-', 'c-','i-', 'u-']
             if blob.user_generated_identity is not None:
                 root = roots[4]
-            elif blob.identity_corrected_closing_gaps is not None and blob.is_a_crossing:
-                root = roots[3]
             elif blob.identity_corrected_closing_gaps is not None and blob.is_an_individual:
+                root = roots[3]
+            elif blob.identity_corrected_closing_gaps is not None:
                 root = roots[2]
             elif blob.identity_corrected_solving_duplication is not None:
                 root = roots[1]
