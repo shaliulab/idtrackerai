@@ -18,25 +18,26 @@ MIN_FLOAT = sys.float_info[3]
 FIXED_IDENTITY_THRESHOLD = .9
 
 class Fragment(object):
-    def __init__(self, fragment_identifier = None,\
-                        start_end = None,\
-                        blob_hierarchy_in_starting_frame = None,\
-                        images = None,\
-                        centroids = None,\
-                        areas = None,\
-                        pixels = None,\
-                        is_an_individual = None,\
-                        is_a_crossing = None,\
-                        is_a_jump = None,\
-                        is_a_jumping_fragment = None,\
-                        is_a_ghost_crossing = None,\
-                        number_of_animals = None,\
-                        user_generated_identity = None): # this last argument is used for the library tests of the paper
-
+    def __init__(self, fragment_identifier = None,
+                        start_end = None,
+                        blob_hierarchy_in_starting_frame = None,
+                        images = None,
+                        bounding_box_in_frame_coordinates = None,
+                        centroids = None,
+                        areas = None,
+                        pixels = None,
+                        is_an_individual = None,
+                        is_a_crossing = None,
+                        is_a_jump = None,
+                        is_a_jumping_fragment = None,
+                        is_a_ghost_crossing = None,
+                        number_of_animals = None,
+                        user_generated_identity = None):
         self.identifier = fragment_identifier
         self.start_end = start_end
         self.blob_hierarchy_in_starting_frame = blob_hierarchy_in_starting_frame
         self.images = images
+        self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates
         self.centroids = np.asarray(centroids)
         if centroids is not None:
             self.set_distance_travelled()
@@ -160,6 +161,14 @@ class Fragment(object):
         return self._identity_is_fixed
 
     @property
+    def identity_corrected_solving_duplication(self):
+        return self._identity_corrected_solving_duplication
+
+    @property
+    def identity_corrected_closing_gaps(self):
+        return self._identity_corrected_closing_gaps
+
+    @property
     def user_generated_identity(self):
         return self._user_generated_identity
 
@@ -172,14 +181,12 @@ class Fragment(object):
 
     @property
     def assigned_identity(self):
-        if hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
+        if hasattr(self, 'identity_corrected_closing_gaps') and self.identity_corrected_closing_gaps is not None:
+            return self.identity_corrected_closing_gaps
+        elif hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
             return self.identity_corrected_solving_duplication
         else:
             return self.identity
-
-    @property
-    def identity_corrected_solving_duplication(self):
-        return self._identity_corrected_solving_duplication
 
     @property
     def ambiguous_identities(self):
@@ -249,8 +256,7 @@ class Fragment(object):
     def get_coexisting_individual_fragments_indices(self, fragments):
         self.coexisting_individual_fragments = [fragment for fragment in fragments
                                             if fragment.is_an_individual and self.are_overlapping(fragment)
-                                            and fragment is not self
-                                            and self.is_an_individual]
+                                            and fragment is not self]
         self.number_of_coexisting_individual_fragments = len(self.coexisting_individual_fragments)
 
     @property

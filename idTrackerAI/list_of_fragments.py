@@ -283,7 +283,8 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
         for blob in blobs_in_frame:
             current_fragment_identifier = blob.fragment_identifier
             if current_fragment_identifier not in used_fragment_identifiers:
-                images = [blob.image_for_identification]
+                images = [blob.image_for_identification] if blob.is_an_individual else [blob.bounding_box_image]
+                bounding_boxes = [blob.bounding_box_in_frame_coordinates] if blob.is_a_crossing else []
                 centroids = [blob.centroid]
                 areas = [blob.area]
                 pixels = [blob.pixels]
@@ -292,11 +293,14 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
 
                 while len(current.next) > 0 and current.next[0].fragment_identifier == current_fragment_identifier:
                     current = current.next[0]
-                    images, centroids, areas, pixels = append_values_to_lists([current.image_for_identification,
+                    bounding_box_in_frame_coordinates = [current.bounding_box_in_frame_coordinates] if current.is_a_crossing else []
+                    images, bounding_boxes, centroids, areas, pixels = append_values_to_lists([current.image_for_identification,
+                                                                bounding_box_in_frame_coordinates,
                                                                 current.centroid,
                                                                 current.area,
                                                                 current.pixels],
                                                                 [images,
+                                                                bounding_boxes,
                                                                 centroids,
                                                                 areas,
                                                                 pixels])
@@ -306,6 +310,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                                     (start, end + 1), # it is not inclusive to follow Python convention
                                     blob.blob_index,
                                     images,
+                                    bounding_boxes,
                                     centroids,
                                     areas,
                                     pixels,
@@ -316,9 +321,10 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                                     blob.is_a_ghost_crossing,
                                     number_of_animals,
                                     user_generated_identity = blob.user_generated_identity)
-                if fragment.is_a_ghost_crossing:
-                    fragment.next_blobs_fragment_identifier = [next_blob.fragment_identifier for next_blob in blob.next if len(blob.next) > 0]
-                    fragment.previous_blobs_fragment_identifier = [previous_blob.fragment_identifier for previous_blob in blob.previous if len(blob.previous) > 0]
+                fragment.next_blobs_fragment_identifier = [next_blob.fragment_identifier
+                                                            for next_blob in blob.next]
+                fragment.previous_blobs_fragment_identifier = [previous_blob.fragment_identifier
+                                                            for previous_blob in blob.previous]
                 used_fragment_identifiers.add(current_fragment_identifier)
                 fragments.append(fragment)
 

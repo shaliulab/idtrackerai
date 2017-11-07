@@ -438,6 +438,8 @@ def get_predictions_of_candidates_fragments(net, video, fragments):
 
     if len(images) != 0:
         images = np.asarray(images)
+        print("images ", images)
+        print("shape ", images.shape)
         assigner = assign(net, video, images, print_flag = True)
 
     return assigner._predictions, assigner._softmax_probs, np.cumsum(lengths)[:-1], candidate_individual_fragments_identifiers

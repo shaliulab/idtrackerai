@@ -45,8 +45,8 @@ def train(video,
     # Instantiate data_set
     training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images, labels)
     # Crop images from 36x36 to 32x32 without performing data augmentation
-    training_dataset.crop_images(image_size = net.params.image_size[0])
-    validation_dataset.crop_images(image_size = net.params.image_size[0])
+    # training_dataset.crop_images(image_size = net.params.image_size[0])
+    # validation_dataset.crop_images(image_size = net.params.image_size[0])
     # Standarize images
     # training_dataset.standarize_images()
     # validation_dataset.standarize_images()

@@ -191,6 +191,10 @@ class Video(object):
         return self._fragments_path
 
     @property
+    def erosion_kernel_size(self):
+        return self._erosion_kernel_size
+
+    @property
     def path_to_video_object(self):
         return self._path_to_video_object
 
