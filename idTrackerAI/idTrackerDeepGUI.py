@@ -58,6 +58,7 @@ from assign_them_all import close_trajectories_gaps
 
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
 RESTORE_CRITERION = 'last'
+VEL_PERCENTILE = 99
 np.random.seed(0)
 
 def setup_logging(
@@ -587,34 +588,34 @@ if __name__ == '__main__':
         video._has_crossings_solved = False
         if len(list_of_blobs.blobs_in_video[-1]) == 0:
             list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
-        list_of_blobs = close_trajectories_gaps(video, list_of_blobs)
+        list_of_blobs = close_trajectories_gaps(video, list_of_blobs, list_of_fragments)
         video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
         video.save()
-        list_of_blobs.save(path_to_save = blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
+        list_of_blobs.save(path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
         video._has_crossings_solved = True
 
     #############################################################
     ##############   Create trajectories    #####################
     ####
     #############################################################
-    video.generate_trajectories_time = time.time()
-    if not loadPreviousDict['trajectories']:
-        video.create_trajectories_folder()
-        logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
-        trajectories = produce_trajectories(list_of_blobs.blobs_in_video, video.number_of_frames, video.number_of_animals)
-        logger.info("Saving trajectories")
-        for name in trajectories:
-            np.save(os.path.join(video.trajectories_folder, name + '_trajectories.npy'), trajectories[name])
-            np.save(os.path.join(video.trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
-            np.save(os.path.join(video.trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
-            np.save(os.path.join(video.trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
-        video._has_trajectories = True
-        video.save()
-        logger.info("Done")
-    else:
-        video._has_trajectories = True
-        video.save()
-    video.generate_trajectories_time = time.time() - video.generate_trajectories_time
+    # video.generate_trajectories_time = time.time()
+    # if not loadPreviousDict['trajectories']:
+    #     video.create_trajectories_folder()
+    #     logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
+    #     trajectories = produce_trajectories(list_of_blobs.blobs_in_video, video.number_of_frames, video.number_of_animals)
+    #     logger.info("Saving trajectories")
+    #     for name in trajectories:
+    #         np.save(os.path.join(video.trajectories_folder, name + '_trajectories.npy'), trajectories[name])
+    #         np.save(os.path.join(video.trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
+    #         np.save(os.path.join(video.trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
+    #         np.save(os.path.join(video.trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
+    #     video._has_trajectories = True
+    #     video.save()
+    #     logger.info("Done")
+    # else:
+    #     video._has_trajectories = True
+    #     video.save()
+    # video.generate_trajectories_time = time.time() - video.generate_trajectories_time
     #############################################################
     ##############   Compute groundtruth    #####################
     ####
