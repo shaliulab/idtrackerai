@@ -39,6 +39,7 @@ class Blob(object):
         self.reset_before_fragmentation('fragmentation')
         self._used_for_training = None
         self._accumulation_step = None
+        self._user_generated_identity = None
 
     def reset_before_fragmentation(self, recovering_from):
         if recovering_from == 'fragmentation':

@@ -43,20 +43,20 @@ class LibraryJobConfig(object):
                 if not os.path.exists(num_frames_path):
                     os.makedirs(num_frames_path)
                 #create subfolders for frames_in_fragment
-                for scale in self.scale:
-                    scale_path = os.path.join(num_frames_path, 'scale_' + str(scale))
-                    if not os.path.exists(scale_path):
-                        os.makedirs(scale_path)
-                    for shape in self.shape:
-                        shape_path = os.path.join(scale_path, 'shape_' + str(shape))
-                        if not os.path.exists(shape_path):
-                            os.makedirs(shape_path)
+                for mean_number_of_frames_per_fragment in self.mean_number_of_frames_per_fragment:
+                    mean_number_of_frames_per_fragment_path = os.path.join(num_frames_path, 'mean_number_of_frames_per_fragment_' + str(mean_number_of_frames_per_fragment))
+                    if not os.path.exists(mean_number_of_frames_per_fragment_path):
+                        os.makedirs(mean_number_of_frames_per_fragment_path)
+                    for sigma_number_of_frames_per_fragment in self.sigma_number_of_frames_per_fragment:
+                        sigma_number_of_frames_per_fragment_path = os.path.join(mean_number_of_frames_per_fragment_path, 'sigma_number_of_frames_per_fragment_' + str(sigma_number_of_frames_per_fragment))
+                        if not os.path.exists(sigma_number_of_frames_per_fragment_path):
+                            os.makedirs(sigma_number_of_frames_per_fragment_path)
                         for repetition in self.repetitions:
-                            repetition_path = os.path.join(shape_path, 'repetition_' + str(repetition))
+                            repetition_path = os.path.join(sigma_number_of_frames_per_fragment_path, 'repetition_' + str(repetition))
                             if not os.path.exists(repetition_path):
                                 os.makedirs(repetition_path)
 
-def check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, scale, shape, repetition):
+def check_if_repetition_has_been_computed(results_data_frame, job_config, group_size, frames_in_video, mean_number_of_frames_per_fragment, sigma_number_of_frames_per_fragment, repetition):
 
     return len(results_data_frame.query('test_name == @job_config.test_name' +
                                             ' & CNN_model == @job_config.CNN_model' +
@@ -66,21 +66,21 @@ def check_if_repetition_has_been_computed(results_data_frame, job_config, group_
                                             ' & ids_codes == @job_config.ids_codes' +
                                             ' & group_size == @group_size' +
                                             ' & frames_in_video == @frames_in_video' +
-                                            ' & scale == @scale' +
-                                            ' & shape == @shape'
+                                            ' & mean_number_of_frames_per_fragment == @mean_number_of_frames_per_fragment' +
+                                            ' & sigma_number_of_frames_per_fragment == @sigma_number_of_frames_per_fragment'
                                             ' & repetition == @repetition')) != 0
 
 """ generate blob lists """
 class BlobsListConfig(object):
     def __init__(self,
                     number_of_animals = None,
-                    number_of_frames_per_fragment = None,
-                    var_number_of_frames_per_fragment = None,
+                    mean_number_of_frames_per_fragment = None,
+                    sigma_number_of_frames_per_fragment = None,
                     number_of_frames = None,
                     repetition = None):
         self.number_of_animals = number_of_animals
-        self.number_of_frames_per_fragment = number_of_frames_per_fragment
-        self.var_number_of_frames_per_fragment = var_number_of_frames_per_fragment
+        self.mean_number_of_frames_per_fragment = mean_number_of_frames_per_fragment
+        self.sigma_number_of_frames_per_fragment = sigma_number_of_frames_per_fragment
         self.max_number_of_frames_per_fragment = number_of_frames
         self.min_number_of_frames_per_fragment = 1
         self.number_of_frames = number_of_frames
@@ -122,9 +122,11 @@ def subsample_dataset_by_individuals(dataset, config):
     return np.concatenate(subsampled_images, axis = 1), np.concatenate(subsampled_centroids, axis = 1)
 
 def get_next_nubmer_of_blobs_in_fragment(config):
-    mu = config.number_of_frames_per_fragment
-    var = config.var_number_of_frames_per_fragment
-    X = gamma(a = var, loc = 1, scale = mu)
+    mu = config.mean_number_of_frames_per_fragment
+    sigma = config.sigma_number_of_frames_per_fragment
+    a = mu ** 2 / sigma ** 2
+    scale = sigma **2 / mu
+    X = gamma(a = a, loc = 1, scale = scale)
     number_of_frames_per_fragment = int(X.rvs(1))
     while number_of_frames_per_fragment < config.min_number_of_frames_per_fragment or number_of_frames_per_fragment > config.max_number_of_frames_per_fragment:
         number_of_frames_per_fragment = int(X.rvs(1))

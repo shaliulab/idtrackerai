@@ -27,7 +27,8 @@ def compute_and_plot_fragments_statistics(video, model_area = None,
                                             list_of_blobs = None,
                                             list_of_fragments = None,
                                             list_of_global_fragments = None,
-                                            save = True):
+                                            save = True,
+                                            plot = True):
 
     number_of_images_in_individual_fragments, \
     distance_travelled_individual_fragments, \
@@ -128,8 +129,8 @@ def compute_and_plot_fragments_statistics(video, model_area = None,
     ax.set_xlabel('global fragments ordered by minimum distance travelled (from max to min)')
     ax.set_ylabel('num of frames')
     ax.legend(handles = [c[0],d[0],b[0],a[0]])
-
-    plt.show()
+    if plot:
+        plt.show()
     if save:
         fig.savefig(os.path.join(video._preprocessing_folder,'global_fragments_summary.pdf'), transparent=True)
     return number_of_images_in_individual_fragments, distance_travelled_individual_fragments

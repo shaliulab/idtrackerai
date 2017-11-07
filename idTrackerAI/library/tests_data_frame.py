@@ -64,10 +64,10 @@ def tests_data_frame():
                                                     "IMDB_codes": 'G',
                                                     "ids_codes": 'a',
                                                     "group_sizes": [10],
-                                                    "frames_in_video": [3000, 10000],
-                                                    "scale": [50, 150, 300, 600],
-                                                    "shape": [.25, .5, 1, 1.5], # it is the parameter of the gamma related to the variance "a" in scipy
-                                                    "repetitions": [1, 2, 3, 4, 5],
+                                                    "frames_in_video": [10000],
+                                                    "mean_number_of_frames_per_fragment": [900, 400, 100, 15],
+                                                    "sigma_number_of_frames_per_fragment": [700, 300, 100, 25], # it is the parameter of the gamma related to the variance "a" in scipy
+                                                    "repetitions": [1],
                                                      }, ignore_index=True)
 
     tests_data_frame.to_pickle('./library/tests_data_frame.pkl')

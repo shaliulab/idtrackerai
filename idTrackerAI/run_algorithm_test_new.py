@@ -158,26 +158,29 @@ if __name__ == '__main__':
 
             for frames_in_video in job_config.frames_in_video:
 
-                for scale in job_config.scale:
+                for mean_number_of_frames_per_fragment in job_config.mean_number_of_frames_per_fragment:
 
-                    for shape in job_config.shape:
+                    for sigma_number_of_frames_per_fragment in job_config.sigma_number_of_frames_per_fragment:
 
                         repetition_path = os.path.join(job_config.condition_path,'group_size_' + str(group_size),
                                                                 'num_frames_' + str(frames_in_video),
-                                                                'scale_' + str(scale),
-                                                                'shape_' + str(shape),
+                                                                'mean_number_of_frames_per_fragment_' + str(mean_number_of_frames_per_fragment),
+                                                                'sigma_number_of_frames_per_fragment_' + str(sigma_number_of_frames_per_fragment),
                                                                 'repetition_' + str(repetition))
 
 
-                        print("\n********** group size %i - frames_in_video %i - scale %s -  shape %s - repetition %i ********"
-                                %(group_size,frames_in_video,str(scale), str(shape), repetition))
+                        print("\n********** group size %i - frames_in_video %i - mean_number_of_frames_per_fragment %s -  sigma_number_of_frames_per_fragment %s - repetition %i ********"
+                                %(group_size,frames_in_video,str(mean_number_of_frames_per_fragment), str(sigma_number_of_frames_per_fragment), repetition))
+                        a = mean_number_of_frames_per_fragment**2 / sigma_number_of_frames_per_fragment**2
+                        s = sigma_number_of_frames_per_fragment**2 / mean_number_of_frames_per_fragment
+                        print("a = %.2f, s = %.2f" %(a, s))
                         already_computed = False
                         if os.path.isfile('./library/results_data_frame.pkl'):
                             already_computed = check_if_repetition_has_been_computed(results_data_frame,
                                                                                     job_config, group_size,
                                                                                     frames_in_video,
-                                                                                    scale,
-                                                                                    shape,
+                                                                                    mean_number_of_frames_per_fragment,
+                                                                                    sigma_number_of_frames_per_fragment,
                                                                                     repetition)
                             print("already_computed flag: ", already_computed)
                         if already_computed:
@@ -204,8 +207,8 @@ if __name__ == '__main__':
                             #############################################################
                             video.create_preprocessing_folder()
                             list_of_blobs_config = BlobsListConfig(number_of_animals = group_size,
-                                                    number_of_frames_per_fragment = scale,
-                                                    var_number_of_frames_per_fragment = shape,
+                                                    mean_number_of_frames_per_fragment = mean_number_of_frames_per_fragment,
+                                                    sigma_number_of_frames_per_fragment = sigma_number_of_frames_per_fragment,
                                                     number_of_frames = frames_in_video,
                                                     repetition = repetition)
                             identification_images, centroids = subsample_dataset_by_individuals(dataset, list_of_blobs_config)
@@ -235,7 +238,7 @@ if __name__ == '__main__':
                             video.individual_fragments_distance_travelled = compute_and_plot_fragments_statistics(video,
                                                                                                                 list_of_fragments = list_of_fragments,
                                                                                                                 list_of_global_fragments = list_of_global_fragments,
-                                                                                                                save = False)
+                                                                                                                save = True, plot = False)
                             video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
                             list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
                             video.number_of_global_fragments_candidates_for_accumulation = list_of_global_fragments.number_of_global_fragments
@@ -543,10 +546,10 @@ if __name__ == '__main__':
                                     'ids_codes': job_config.ids_codes,
                                     'group_size': int(group_size),
                                     'frames_in_video': int(frames_in_video),
-                                    'scale': scale,
-                                    'shape': shape,
-                                    'mean_frames_per_fragment': shape * scale,
-                                    'var_frames_per_fragment': shape * scale**2,
+                                    'mean_number_of_frames_per_fragment': mean_number_of_frames_per_fragment,
+                                    'sigma_number_of_frames_per_fragment': sigma_number_of_frames_per_fragment,
+                                    'mean_frames_per_fragment': sigma_number_of_frames_per_fragment * mean_number_of_frames_per_fragment,
+                                    'var_frames_per_fragment': sigma_number_of_frames_per_fragment * mean_number_of_frames_per_fragment**2,
                                     'repetition': int(repetition),
                                     'protocol': video.protocol,
                                     'individual_accuracy_before_duplications': video.gt_accuracy_before_duplications['individual_accuracy'],

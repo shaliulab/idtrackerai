@@ -128,7 +128,7 @@ if __name__ == '__main__':
             def plot_statistics_heatmap(ax, matrix, title, xticklabels, yticklabels, vmax = None, vmin = None):
                 ax = sns.heatmap(np.mean(matrix, axis = 2),
                                     ax = ax,
-                                    fmt = '.3f',
+                                    fmt = '.5f',
                                     square = True,
                                     cbar = False,
                                     xticklabels = xticklabels,

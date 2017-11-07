@@ -137,7 +137,7 @@ def get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_vid
         accuracies['accuracy_after_accumulation'] = np.nanmean(accuracies['individual_accuracy_after_accumulation'].values())
 
         if results['number_of_crossing_blobs'] != 0:
-            accuracies['crossing_detector_accuracy'] = 1. - results['number_of_crossings_blobs_assigned_as_individuals'] / resutls['number_of_crossing_blobs']
+            accuracies['crossing_detector_accuracy'] = 1. - results['number_of_crossings_blobs_assigned_as_individuals'] / results['number_of_crossing_blobs']
         else:
             accuracies['crossing_detector_accuracy'] = None
 
@@ -163,7 +163,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, video_object_path):
     blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
 
     print("computting groundtrugh")
-    accuracies = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
+    accuracies, frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
 
     if accuracy is not None:
         print("saving accuracies in video")
