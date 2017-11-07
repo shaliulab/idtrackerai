@@ -47,4 +47,3 @@ from video_utils import segmentVideo, filterContoursBySize, getPixelsList, getBo
 #                     blob._P1_vector = blob.previous[0].P1_vector
 #                     blob._P2_vector = blob.previous[0].P2_vector ### NOTE: this is not strictly correct as it should be recomputed
 #                     # blob.is_an_extreme_of_individual_fragment = True
-#                 print("assigned during accumulation ----->", blob.assigned_during_accumulation)

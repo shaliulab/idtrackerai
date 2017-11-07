@@ -60,7 +60,7 @@ class ListOfBlobs(object):
 
     def compute_fragment_identifier_and_blob_index(self):
         counter = 0
-        possible_blob_indices = range(self.video.maximum_number_of_blobs)
+        possible_blob_indices = range(self.video.number_of_animals)
 
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'assigning fragment identifier'):
             used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]
@@ -74,7 +74,7 @@ class ListOfBlobs(object):
                     if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_an_individual:
                         blob.next[0]._fragment_identifier = counter
                         blob.next[0]._blob_index = blob_index
-                        blob.next[0].compute_overlapping_with_previous_blob()
+                        # blob.next[0].compute_overlapping_with_previous_blob()
                         if blob.next[0].is_an_individual_in_a_fragment:
                             blob = blob.next[0]
 
@@ -83,12 +83,12 @@ class ListOfBlobs(object):
                                 blob._fragment_identifier = counter
                                 blob._blob_index = blob_index
                                 # compute_overlapping_with_previous_blob
-                                blob.compute_overlapping_with_previous_blob()
+                                # blob.compute_overlapping_with_previous_blob()
 
                             if len(blob.next) == 1 and len(blob.next[0].previous) == 1 and blob.next[0].is_an_individual:
                                 blob.next[0]._fragment_identifier = counter
                                 blob.next[0]._blob_index = blob_index
-                                blob.next[0].compute_overlapping_with_previous_blob()
+                                # blob.next[0].compute_overlapping_with_previous_blob()
                     counter += 1
 
         self.number_of_individual_fragments = counter

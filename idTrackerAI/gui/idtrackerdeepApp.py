@@ -31,6 +31,7 @@ from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import os
 import sys
 sys.path.append('../')
 sys.path.append('../utils')
@@ -44,6 +45,8 @@ from video_utils import computeBkg, blobExtractor
 from segmentation import segmentVideo
 from list_of_blobs import ListOfBlobs
 from list_of_fragments import ListOfFragments
+from generate_groundtruth import generate_groundtruth
+from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
 # from validator import Validator
 """
 Start kivy classes
@@ -772,6 +775,10 @@ class Validator(BoxLayout):
     def do(self, *args):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
             if CHOSEN_VIDEO.video.has_been_assigned == True:
+<<<<<<< HEAD
+                print("\n**** PASS 1")
+=======
+>>>>>>> 7c5b8e47373999548b00205f4d09d60cf74d5d79
                 CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
                 list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_path)
                 list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.old_video.fragments_path)
@@ -779,6 +786,7 @@ class Validator(BoxLayout):
                 self.list_of_fragments = list_of_fragments
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             elif CHOSEN_VIDEO.old_video.has_been_assigned == True:
+                print("\n**** PASS 2")
                 CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
                 list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
                 list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
@@ -825,7 +833,7 @@ class Validator(BoxLayout):
         # create button to compute accuracy with respect to the groundtruth entered by the user
         self.compute_accuracy_button = Button(id = "compute_accuracy_button", text = "Compute accuracy", size_hint  = (1.,1.))
         self.compute_accuracy_button.disabled = False
-        self.compute_accuracy_button.bind(on_press = self.compute_accuracy_wrt_groundtruth)
+        self.compute_accuracy_button.bind(on_press = self.compute_and_save_session_accuracy_wrt_groundtruth_APP)
         # add button to layout
         self.button_box.add_widget(self.compute_accuracy_button)
         #start visualising the video
@@ -1068,7 +1076,6 @@ class Validator(BoxLayout):
         #         print("identity_before_crossing: ", blob.identities_before_crossing)
         #     if hasattr(blob,"identities_after_crossing"):
         #         print("identity_after_crossing: ", blob.identities_after_crossing)
-        #     print("assigned during accumulation: ", blob.assigned_during_accumulation)
         #     if hasattr(blob,"frequencies_in_fragment"):
         #         print("frequencies in fragment: ", blob.frequencies_in_fragment)
         #     else:
@@ -1341,65 +1348,44 @@ class Validator(BoxLayout):
         self.popup_start_end_groundtruth.dismiss()
 
 
-    def compute_accuracy_wrt_groundtruth(self, *args):
+    def compute_and_save_session_accuracy_wrt_groundtruth_APP(self, *args):
         # self.frame_interval_popup()
-        start = int(raw_input('starting frame: '))
-        end = int(raw_input('end frame:'))
-        blobs_in_video = self.blobs_in_video[start:end+1]
-        # blobs_in_video = self.blobs_in_video
-        count_number_assignment_per_individual_assigned = {i: 0 for i in range(1,CHOSEN_VIDEO.video.number_of_animals+1)}
-        count_number_assignment_per_individual_all = {i: 0 for i in range(1,CHOSEN_VIDEO.video.number_of_animals+1)}
-        #create dictionary to store eventual corrections made by the user
-        count_errors_identities_dict_assigned = {i:0 for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
-        count_errors_identities_dict_all = {i:0 for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
-        check_ground_truth = False
-        frames_with_zeros = []
-        for blobs_in_frame in blobs_in_video:
-            for blob in blobs_in_frame:
-                if hasattr(blob, "_identity_corrected_solving_duplication"):
-                    if blob._identity_corrected_solving_duplication is None:
-                        blob_identity = blob.identity
-                    elif blob._identity_corrected_solving_duplication is not None:
-                        blob_identity = blob._identity_corrected_solving_duplication
-                else:
-                    blob_identity = blob.identity
-                if (blob.is_an_individual_in_a_fragment or\
-                        blob.is_a_jump or\
-                        blob.is_a_jumping_fragment or\
-                        hasattr(blob,'is_an_extreme_of_individual_fragment')) and\
-                        blob.user_generated_identity != -1: # we are not considering crossing or failures of the model area
-                    if blob.user_generated_identity is not None and blob.user_generated_identity != blob.identity:
-                        count_number_assignment_per_individual_all[blob.user_generated_identity] += 1
-                        count_errors_identities_dict_all[blob.user_generated_identity] += 1
-                        if blob.identity != 0:
-                            count_number_assignment_per_individual_assigned[blob.user_generated_identity] += 1
-                            count_errors_identities_dict_assigned[blob.user_generated_identity] += 1
-                    elif blob.identity != 0:
-                        count_number_assignment_per_individual_assigned[blob.identity] += 1
-                        count_number_assignment_per_individual_all[blob.identity] += 1
-                    elif (blob.identity == 0 or blob._identity_corrected_solving_duplication == 0) and blob.user_generated_identity is None:
-                        # print("frame number, ", blob.frame_number)
-                        frames_with_zeros.append(blob.frame_number)
-                        check_ground_truth = True
 
-        if not check_ground_truth:
-            self.individual_accuracy_assigned = {i : 1 - count_errors_identities_dict_assigned[i] / count_number_assignment_per_individual_assigned[i] for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
-            self.accuracy_assigned = np.mean(self.individual_accuracy_assigned.values())
-            self.individual_accuracy = {i : 1 - count_errors_identities_dict_all[i] / count_number_assignment_per_individual_all[i] for i in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
-            self.accuracy = np.mean(self.individual_accuracy.values())
-            print("count_errors_identities_dict_assigned, ", count_errors_identities_dict_assigned)
-            print("count_errors_identities_dict_all, ", count_errors_identities_dict_all)
-            print("count_number_assignment_per_individual_assigned, ", count_number_assignment_per_individual_assigned)
-            print("count_number_assignment_per_individual_all, ", count_number_assignment_per_individual_all)
-            print("individual_accuracy_assigned, ", self.individual_accuracy_assigned)
-            print("accuracy_assigned, ", self.accuracy_assigned)
-            print("individual_accuracy, ", self.individual_accuracy)
-            print("accuracy, ", self.accuracy)
+        groundtruth_path = os.path.join(CHOSEN_VIDEO.video.video_folder, '_groundtruth.npy')
+        if os.path.isfile(groundtruth_path):
+            generate_new_groundtruth = raw_input('A groundtruth file already exists, Do you want to generate a new one? [Y/n]')
+            if generate_new_groundtruth == '' or generate_new_groundtruth == 'y':
+                start = int(raw_input('starting frame: '))
+                end = int(raw_input('end frame:'))
+                groundtruth = generate_groundtruth(CHOSEN_VIDEO.video, self.blobs_in_video, int(start), int(end))
+            else:
+                groundtruth = np.load(groundtruth_path).item()
+        else:
+            start = int(raw_input('starting frame: '))
+            end = int(raw_input('end frame:'))
+            groundtruth = generate_groundtruth(CHOSEN_VIDEO.video, self.blobs_in_video, int(start), int(end))
 
+        blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
+        blobs_in_video = self.blobs_in_video[groundtruth.start:groundtruth.end]
+
+        print("computting groundtrugh")
+        self.accuracy, \
+        self.individual_accuracy, \
+        self.accuracy_assigned, \
+        self.individual_accuracy_assigned, \
+        self.frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, blobs_in_video_groundtruth, blobs_in_video)
+
+        if self.individual_accuracy is not None:
             self.plot_final_statistics()
             self.statistics_popup.open()
-        else:
-            print("there are fish with 0 identity in frame ", frames_with_zeros)
+
+            print("saving accuracies in video")
+            CHOSEN_VIDEO.video.gt_start_end = (groundtruth.start,groundtruth.end)
+            CHOSEN_VIDEO.video.gt_accuracy = self.accuracy
+            CHOSEN_VIDEO.video.gt_individual_accuracy = self.individual_accuracy
+            CHOSEN_VIDEO.video.gt_accuracy_assigned = self.accuracy_assigned
+            CHOSEN_VIDEO.video.gt_individual_accuracy_assigned = self.individual_accuracy_assigned
+            CHOSEN_VIDEO.video.save()
 
     def plot_final_statistics(self):
         content = BoxLayout()
@@ -1412,7 +1398,7 @@ class Validator(BoxLayout):
 
         width = .5
         plt.bar(self.individual_accuracy.keys(), self.individual_accuracy.values(), width, color=colors)
-        plt.axhline(self.accuracy, color = 'k')
+        plt.axhline(self.accuracy, color = 'k', linewidth = .2)
         ax.set_xlabel('individual')
         ax.set_ylabel('Individual accuracy')
         content.add_widget(FigureCanvasKivyAgg(fig))

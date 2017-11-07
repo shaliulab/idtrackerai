@@ -131,4 +131,4 @@ def pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, p
                     check_for_loss_plateau = True,
                     save_summaries = False,
                     print_flag = False,
-                    plot_flag = True)
+                    plot_flag = False)

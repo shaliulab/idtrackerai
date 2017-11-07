@@ -128,7 +128,7 @@ class CrossingDataset(object):
     def generate_crossing_images(self):
         crossing_images = []
         for crossing in self.crossings_sliced:
-            crossing_image, _, _ = crossing.get_image_for_identification(self.video)
+            _, _, _, crossing_image = crossing.get_image_for_identification(self.video)
             crossing_image = cv2.resize(crossing_image, None,
                                         fx = self.downsampling_factor,
                                         fy = self.downsampling_factor,
@@ -140,7 +140,7 @@ class CrossingDataset(object):
     def generate_individual_blobs_images(self):
         individual_blobs_images = []
         for individual_blobs in self.individual_blobs_sliced:
-            individual_blobs_image, _, _ = individual_blobs.get_image_for_identification(self.video)
+            _, _, _, individual_blobs_image = individual_blobs.get_image_for_identification(self.video)
             individual_blobs_image = cv2.resize(individual_blobs_image, None,
                                                 fx = self.downsampling_factor,
                                                 fy = self.downsampling_factor,
@@ -156,7 +156,7 @@ class CrossingDataset(object):
         else:
             blobs = self.test[interval[0]:interval[1]]
         for blob in blobs:
-            test_image, _, _ = blob.get_image_for_identification(self.video)
+            _, _, _, test_image = blob.get_image_for_identification(self.video)
             test_image = cv2.resize(test_image, None,
                                     fx = self.downsampling_factor,
                                     fy = self.downsampling_factor,

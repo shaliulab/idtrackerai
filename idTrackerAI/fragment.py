@@ -30,7 +30,8 @@ class Fragment(object):
                         is_a_jump = None,\
                         is_a_jumping_fragment = None,\
                         is_a_ghost_crossing = None,\
-                        number_of_animals = None):
+                        number_of_animals = None,\
+                        user_generated_identity = None): # this last argument is used for the library tests of the paper
 
         self.identifier = fragment_identifier
         self.start_end = start_end
@@ -55,7 +56,7 @@ class Fragment(object):
         self._temporary_id = None
         self._identity = None
         self._identity_corrected_solving_duplication = None
-        self._user_generated_identity = None
+        self._user_generated_identity = user_generated_identity
         self._identity_is_fixed = False
         self._accumulated_globally = False
         self._accumulated_partially = False
@@ -68,7 +69,6 @@ class Fragment(object):
             self._acceptable_for_training = None
             self._temporary_id = None
             self._identity = None
-            self._user_generated_identity = None
             self._identity_corrected_solving_duplication = None
             self._identity_is_fixed = False
             self._accumulated_globally = False
@@ -77,15 +77,13 @@ class Fragment(object):
             attributes_to_delete = ['_frequencies',
                                     '_P1_vector', '_certainty',
                                     '_is_certain',
-                                    '_P1_below_random', '_non_consistent',
-                                    'assigned_during_accumulation']
+                                    '_P1_below_random', '_non_consistent']
             delete_attributes_from_object(self, attributes_to_delete)
         elif roll_back_to == 'accumulation':
             self._identity_is_fixed = False
             attributes_to_delete = []
             if not self.used_for_training:
                 self._identity = None
-                self._user_generated_identity = None
                 self._identity_corrected_solving_duplication = None
                 attributes_to_delete = ['_frequencies', '_P1_vector']
             attributes_to_delete.extend(['_P2_vector', '_ambiguous_identities',
@@ -169,7 +167,12 @@ class Fragment(object):
     def final_identity(self):
         if hasattr(self, 'user_generated_identity') and self.user_generated_identity is not None:
             return self.user_generated_identity
-        elif hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
+        else:
+            return self.assigned_identity
+
+    @property
+    def assigned_identity(self):
+        if hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
             return self.identity_corrected_solving_duplication
         else:
             return self.identity
@@ -205,7 +208,7 @@ class Fragment(object):
         return [getattr(fragment,attribute) for fragment in self.coexisting_individual_fragments]
 
     def get_missing_identities_in_coexisting_fragments(self, fixed_identities):
-        identities = self.get_attribute_of_coexisting_fragments('final_identity')
+        identities = self.get_attribute_of_coexisting_fragments('assigned_identity')
         identities = [identity for identity in identities if identity != 0]
         if not self.identity in fixed_identities:
             return list((set(self.possible_identities) - set(identities)) | set([self.identity]))
@@ -213,7 +216,7 @@ class Fragment(object):
             return list(set(self.possible_identities) - set(identities))
 
     def get_fixed_identities_of_coexisting_fragments(self):
-        return [fragment.final_identity for fragment in self.coexisting_individual_fragments
+        return [fragment.assigned_identity for fragment in self.coexisting_individual_fragments
                 if fragment.used_for_training
                 or not fragment.is_a_duplication
                 or fragment.user_generated_identity is not None
@@ -360,11 +363,11 @@ class Fragment(object):
     def get_neighbour_fragment(self, fragments, scope):
         if scope == 'to_the_past':
             neighbour = [fragment for fragment in fragments
-                            if fragment.final_identity == self.final_identity
+                            if fragment.assigned_identity == self.assigned_identity
                             and self.start_end[0] - fragment.start_end[1] == 1]
         elif scope == 'to_the_future':
             neighbour = [fragment for fragment in fragments
-                            if fragment.final_identity == self.final_identity
+                            if fragment.assigned_identity == self.assigned_identity
                             and fragment.start_end[0] - self.start_end[1] == 1]
 
         assert len(neighbour) < 2

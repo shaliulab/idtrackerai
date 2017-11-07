@@ -23,7 +23,12 @@ from list_of_global_fragments import ListOfGlobalFragments
 from GUI_utils import selectDir
 
 """ plotter """
-def compute_and_plot_fragments_statistics(video, model_area, list_of_blobs, list_of_fragments, list_of_global_fragments):
+def compute_and_plot_fragments_statistics(video, model_area = None,
+                                            list_of_blobs = None,
+                                            list_of_fragments = None,
+                                            list_of_global_fragments = None,
+                                            save = True,
+                                            plot = True):
 
     number_of_images_in_individual_fragments, \
     distance_travelled_individual_fragments, \
@@ -35,7 +40,8 @@ def compute_and_plot_fragments_statistics(video, model_area, list_of_blobs, list
     median_number_of_images,\
     minimum_distance_travelled = list_of_global_fragments.get_data_plot()
 
-    areas = list_of_blobs.get_data_plot()
+    if list_of_blobs is not None:
+        areas = list_of_blobs.get_data_plot()
 
     ''' plotting '''
     plt.ion()
@@ -47,29 +53,31 @@ def compute_and_plot_fragments_statistics(video, model_area, list_of_blobs, list
     fig.canvas.set_window_title('Fragments summary')
     fig.set_size_inches((screen_x/100,screen_y/100))
     plt.subplots_adjust(hspace = .3, wspace = .5)
-    # distribution of areas all
-    nbins = 300
-    ax = plt.subplot(4,4,1)
-    MIN = np.percentile(areas, 0)
-    MAX = np.percentile(areas, 99.99)
-    area_threshold = model_area.median + model_area.std * model_area.std_tolerance
-    hist, bin_edges = np.histogram(areas, bins = nbins)
-    ax.plot(bin_edges[:-1], hist, 'g-')
-    ax.axvline(area_threshold, color = 'k')
-    ax.set_xlabel('area in pixels')
-    ax.set_ylabel('number of blobs')
-    ax.set_xlim([MIN,MAX])
-    # distribution of areas zoom
-    ax = plt.subplot(4,4,5)
-    MIN = np.percentile(areas, 0)
-    MAX = np.percentile(areas, 99.9)
-    ax.plot(bin_edges[:-1], hist, 'g-')
-    ax.axvline(area_threshold, color = 'k')
-    ax.set_xlabel('area in pixels')
-    ax.set_ylabel('number of blobs')
-    ax.set_xlim([MIN,MAX])
-    index_threshold = np.where(bin_edges > area_threshold)[0][0]
-    ax.set_ylim([0,np.max(hist[index_threshold:]) + 100])
+    if list_of_blobs is not None:
+        # distribution of areas all
+        nbins = 300
+        ax = plt.subplot(4,4,1)
+        MIN = np.percentile(areas, 0)
+        MAX = np.percentile(areas, 99.99)
+        area_threshold = model_area.median + model_area.std * model_area.std_tolerance
+        hist, bin_edges = np.histogram(areas, bins = nbins)
+        ax.plot(bin_edges[:-1], hist, 'g-')
+        ax.axvline(area_threshold, color = 'k')
+        ax.set_xlabel('area in pixels')
+        ax.set_ylabel('number of blobs')
+        ax.set_xlim([MIN,MAX])
+        # distribution of areas zoom
+        ax = plt.subplot(4,4,5)
+        MIN = np.percentile(areas, 0)
+        MAX = np.percentile(areas, 99.9)
+        ax.plot(bin_edges[:-1], hist, 'g-')
+        ax.axvline(area_threshold, color = 'k')
+        ax.set_xlabel('area in pixels')
+        ax.set_ylabel('number of blobs')
+        ax.set_xlim([MIN,MAX])
+        if np.any(bin_edges > area_threshold):
+            index_threshold = np.where(bin_edges > area_threshold)[0][0]
+            ax.set_ylim([0,np.max(hist[index_threshold:]) + 100])
     # number of frames in individual fragments
     nbins = 25
     ax = ax_arr[0,1]
@@ -96,13 +104,14 @@ def compute_and_plot_fragments_statistics(video, model_area, list_of_blobs, list
     ax.set_xscale("log", nonposx='clip')
     ax.set_yscale("log", nonposy='clip')
     # number of frames in shortest individual fragment
-    ax = ax_arr[0,4]
-    MIN = np.min(number_of_images_in_crossing_fragments)
-    MAX = np.max(number_of_images_in_crossing_fragments)
-    hist, bin_edges = np.histogram(number_of_images_in_crossing_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
-    ax.semilogx(bin_edges[:-1],hist, 'ro-', markersize = 5)
-    ax.set_xlabel('number of images')
-    ax.set_ylabel('number of crossing fragments')
+    if len(number_of_images_in_crossing_fragments) != 0:
+        ax = ax_arr[0,4]
+        MIN = np.min(number_of_images_in_crossing_fragments)
+        MAX = np.max(number_of_images_in_crossing_fragments)
+        hist, bin_edges = np.histogram(number_of_images_in_crossing_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
+        ax.semilogx(bin_edges[:-1],hist, 'ro-', markersize = 5)
+        ax.set_xlabel('number of images')
+        ax.set_ylabel('number of crossing fragments')
     # plot global fragments
     ax = plt.subplot2grid((2, 5), (1, 0), colspan=5)
     index_order_by_max_num_frames = np.argsort(minimum_distance_travelled)[::-1]
@@ -120,9 +129,10 @@ def compute_and_plot_fragments_statistics(video, model_area, list_of_blobs, list
     ax.set_xlabel('global fragments ordered by minimum distance travelled (from max to min)')
     ax.set_ylabel('num of frames')
     ax.legend(handles = [c[0],d[0],b[0],a[0]])
-
-    plt.show()
-    fig.savefig(os.path.join(video._preprocessing_folder,'global_fragments_summary.pdf'), transparent=True)
+    if plot:
+        plt.show()
+    if save:
+        fig.savefig(os.path.join(video._preprocessing_folder,'global_fragments_summary.pdf'), transparent=True)
     return number_of_images_in_individual_fragments, distance_travelled_individual_fragments
 
 if __name__ == '__main__':

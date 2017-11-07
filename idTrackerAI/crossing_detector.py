@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import logging
+import numpy as np
 
 from list_of_blobs import ListOfBlobs
 from get_crossings_data_set import CrossingDataset
@@ -50,7 +51,6 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True):
         logger.debug("Classify individuals and crossings")
         crossings_predictor = GetPredictionCrossigns(net)
         predictions = crossings_predictor.get_all_predictions(test_set)
-
         [(setattr(blob,'_is_a_crossing', True), setattr(blob, '_is_an_individual', False)) if prediction == 1
             else (setattr(blob,'_is_a_crossing', False), setattr(blob, '_is_an_individual', True))
             for blob, prediction in zip(test_set.test, predictions)]

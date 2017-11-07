@@ -348,7 +348,7 @@ def SegmentationPreview(video):
 
         while j < numImages:
             if j < numGoodContours:
-                image_for_identification, _, _ = Blob._get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize)
+                _ , _, _, image_for_identification = Blob._get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize)
             else:
                 image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
             rowImage.append(image_for_identification)
@@ -523,7 +523,7 @@ def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, pr
 
         while j < numImages:
             if j < numGoodContours:
-                image_for_identification, _, _ = Blob._get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize, only_blob = True)
+                _, _, _, image_for_identification = Blob._get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize, only_blob = True)
             else:
                 image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
             rowImage.append(image_for_identification)
@@ -994,7 +994,7 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                     cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, colors[blob._identity], -1)
                 elif type(blob.identity) is list:
                     cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, [255, 255, 255], -1)
-                if blob._assigned_during_accumulation:
+                if blob.used_for_training:
                     cv2.putText(frame, str(blob.identity),tuple(blob.centroid.astype('int')), font, 1, colors[blob.identity], 3)
                 else:
                     logger.debug("the current blob is a fish %s" %blob.is_an_individual)
@@ -1013,12 +1013,6 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                         logger.debug("identity_before_crossing: %s" %str(blob.identities_before_crossing))
                     if hasattr(blob,"identities_after_crossing"):
                         logger.debug("identity_after_crossing: %s" %str(blob.identities_after_crossing))
-                    logger.debug("assigned during accumulation: %s" %blob.assigned_during_accumulation)
-                    if not blob.assigned_during_accumulation and blob.is_an_individual_in_a_fragment:
-                        try:
-                            logger.debug("frequencies in fragment: %s" %str(blob.frequencies_in_fragment))
-                        except:
-                            logger.debug("this blob does not have frequencies in fragment")
                     logger.debug("P1_vector:%s " %str(blob.P1_vector))
                     logger.debug("P2_vector: %s" %str(blob.P2_vector))
                     logger.debug("is_an_individual: %s" %blob.is_an_individual)

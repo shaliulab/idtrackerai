@@ -51,8 +51,8 @@ from correct_duplications import solve_duplications, mark_fragments_as_duplicati
 from correct_impossible_velocity_jumps import correct_impossible_velocity_jumps
 from solve_crossing import give_me_identities_in_crossings
 from get_trajectories import produce_trajectories, smooth_trajectories
-from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
-from compute_statistics_against_groundtruth import get_statistics_against_groundtruth
+from generate_groundtruth import GroundTruth, GroundTruthBlob
+from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
 from compute_velocity_model import compute_model_velocity
 # from visualise_cnn import visualise
 
@@ -176,7 +176,8 @@ if __name__ == '__main__':
         logger.info("Starting preprocessing")
         cv2.namedWindow('Bars')
         video.create_preprocessing_folder()
-        if not old_video or not old_video.has_been_segmented or restore_segmentation == 'n':
+        print("restore segmentation ", restore_segmentation)
+        if not old_video or not old_video.has_been_segmented or not restore_segmentation:
             logger.debug("Starting segmentation")
             blobs = segment(video)
             logger.debug("Segmentation finished")
@@ -381,6 +382,8 @@ if __name__ == '__main__':
             ### NOTE: load all the assigner statistics
             video._has_been_assigned = True
         video.assignment_time = time.time() - video.assignment_time
+        video.pretraining_time = 0
+        video.second_accumulation_time = 0
         video.save()
     else:
         print('\nPretraining ---------------------------------------------------------')
@@ -419,8 +422,8 @@ if __name__ == '__main__':
         #### Accumulation ####
         #Last accumulation after pretraining
         video.second_accumulation_time = time.time()
+        percentage_of_accumulated_images = [video._ratio_accumulated_images]
         if not loadPreviousDict['second_accumulation']:
-            percentage_of_accumulated_images = []
             for i in range(1,4):
                 print('\nAccumulation %i ---------------------------------------------------------' %i)
                 logger.info("Starting accumulation")
@@ -465,14 +468,14 @@ if __name__ == '__main__':
                     list_of_fragments.save_light_list(video._accumulation_folder)
 
 
-            if len(percentage_of_accumulated_images) > 1 and np.argmax(percentage_of_accumulated_images) != 2:
-                video.accumulation_trial = np.argmax(percentage_of_accumulated_images) + 1
-                video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[video.accumulation_trial]
-                list_of_fragments.video = video
-                list_of_global_fragments.video = video
-                accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
-                video._accumulation_folder = os.path.join(video.session_folder, accumulation_folder_name)
-                list_of_fragments.load_light_list(video._accumulation_folder)
+            video.accumulation_trial = np.argmax(percentage_of_accumulated_images)
+            video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[video.accumulation_trial]
+            video._ratio_accumulated_images = percentage_of_accumulated_images[video.accumulation_trial]
+            list_of_fragments.video = video
+            list_of_global_fragments.video = video
+            accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
+            video._accumulation_folder = os.path.join(video.session_folder, accumulation_folder_name)
+            list_of_fragments.load_light_list(video._accumulation_folder)
             video._second_accumulation_finished = True
             logger.info("Saving global fragments")
             list_of_fragments.save()
@@ -649,12 +652,13 @@ if __name__ == '__main__':
     if os.path.isfile(groundtruth_path):
         print("\n**** Computing accuracy wrt. groundtruth ****")
         groundtruth = np.load(groundtruth_path).item()
-        groundtruth.list_of_blobs = groundtruth.list_of_blobs[groundtruth.start:groundtruth.end]
-        blobs_to_compare_with_groundtruth = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
+        blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
+        blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
 
-        video.gt_accuracy, video.gt_individual_accuracy, video.gt_accuracy_assigned, video.gt_individual_accuracy_assigned = get_statistics_against_groundtruth(groundtruth, blobs_to_compare_with_groundtruth)
+        video.gt_accuracy, _ = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
         video.gt_start_end = (groundtruth.start, groundtruth.end)
         video.save()
+
     video.total_time = sum([video.generate_trajectories_time,
                             video.solve_impossible_jumps_time,
                             video.solve_duplications_time,

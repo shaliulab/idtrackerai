@@ -586,9 +586,9 @@ class Video(object):
         number_of_blobs_per_individual = np.zeros(self.number_of_animals)
 
         for fragment in fragments:
-            if fragment.is_an_individual and fragment.final_identity != 0:
-                weighted_P2_per_individual[fragment.final_identity - 1] += fragment.P2_vector[fragment.final_identity - 1] * fragment.number_of_images
-                number_of_blobs_per_individual[fragment.final_identity - 1] += fragment.number_of_images
+            if fragment.is_an_individual and fragment.assigned_identity != 0:
+                weighted_P2_per_individual[fragment.assigned_identity - 1] += fragment.P2_vector[fragment.assigned_identity - 1] * fragment.number_of_images
+                number_of_blobs_per_individual[fragment.assigned_identity - 1] += fragment.number_of_images
 
         self.individual_P2 = weighted_P2_per_individual / number_of_blobs_per_individual
         self.overall_P2 = np.mean(self.individual_P2)
