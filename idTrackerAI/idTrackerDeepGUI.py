@@ -206,7 +206,7 @@ if __name__ == '__main__':
         list_of_blobs.video = video
         if not list_of_blobs.blobs_are_connected:
             list_of_blobs.compute_overlapping_between_subsequent_frames()
-        detect_crossings(list_of_blobs, video, video.model_area)
+        detect_crossings(list_of_blobs, video, video.model_area, use_network = False)
         #connect blobs that overlap in consecutive frames
         list_of_blobs.compute_overlapping_between_subsequent_frames()
         #assign an identifier to each blob belonging to an individual fragment
