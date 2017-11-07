@@ -47,6 +47,7 @@ class Video(object):
         self._has_duplications_solved = None
         self._has_crossings_solved = None
         self._has_trajectories = None
+        self._has_trajectories_wo_gaps = None
         self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
         self._first_frame_first_global_fragment = []
 
@@ -113,6 +114,10 @@ class Video(object):
     @property
     def has_trajectories(self):
         return self._has_trajectories
+
+    @property
+    def has_trajectories_wo_gaps(self):
+        return self._has_trajectories_wo_gaps
 
     @property
     def embeddings_folder(self):
@@ -546,6 +551,15 @@ class Video(object):
             logger.info("Creating trajectories folder...")
             os.makedirs(self.trajectories_folder)
             logger.info("the folder %s has been created" %self.trajectories_folder)
+
+    def create_trajectories_wo_gaps_folder(self):
+        """Folder in which trajectories files are stored
+        """
+        self.trajectories_wo_gaps_folder = os.path.join(self.session_folder, 'trajectories_wo_gaps')
+        if not os.path.isdir(self.trajectories_wo_gaps_folder):
+            logger.info("Creating trajectories folder...")
+            os.makedirs(self.trajectories_wo_gaps_folder)
+            logger.info("the folder %s has been created" %self.trajectories_wo_gaps_folder)
 
     def create_embeddings_folder(self):
         """If it does not exist creates a folder called embedding

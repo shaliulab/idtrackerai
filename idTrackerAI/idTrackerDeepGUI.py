@@ -14,6 +14,7 @@ import cv2
 import psutil
 import logging.config
 import yaml
+import copy
 # Import application/library specifics
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
@@ -24,12 +25,12 @@ sys.path.append('./network/identification_model')
 sys.path.append('./groundtruth_utils')
 sys.path.append('./tf_cnnvis')
 sys.path.append('./plots')
-# sys.path.append('IdTrackerDeep/tracker')
-
+#import from idTrackerai
 from video import Video
 from list_of_blobs import ListOfBlobs
 from list_of_fragments import ListOfFragments, create_list_of_fragments
-from list_of_global_fragments import ListOfGlobalFragments, create_list_of_global_fragments
+from list_of_global_fragments import ListOfGlobalFragments,\
+                                        create_list_of_global_fragments
 from global_fragments_statistics import compute_and_plot_fragments_statistics
 from segmentation import segment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview,\
@@ -47,9 +48,10 @@ from trainer import train
 from assigner import assigner
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
-from correct_duplications import solve_duplications, mark_fragments_as_duplications
+from correct_duplications import solve_duplications,\
+                                    mark_fragments_as_duplications
 from correct_impossible_velocity_jumps import correct_impossible_velocity_jumps
-from get_trajectories import produce_trajectories, smooth_trajectories
+from get_trajectories import produce_trajectories, save_trajectories
 from generate_groundtruth import GroundTruth, GroundTruthBlob
 from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
 from compute_velocity_model import compute_model_velocity
@@ -88,7 +90,7 @@ def setup_logging(
 
     logger = logging.getLogger(__name__)
     logger.propagate = True
-    logger.setLevel("DEBUG")
+    logger.setLevel("INFO")
     return logger
 
 if __name__ == '__main__':
@@ -112,7 +114,8 @@ if __name__ == '__main__':
                     'assignment',
                     'solving_duplications',
                     'crossings',
-                    'trajectories']
+                    'trajectories',
+                    'trajectories_wo_gaps']
     #get existent files and paths to load them
     existentFiles, old_video = getExistentFiles(video, processes_list)
     #selecting files to load from previous session...'
@@ -585,40 +588,56 @@ if __name__ == '__main__':
     #############################################################
     print("\n**** Assign crossings ****")
     if not loadPreviousDict['crossings']:
+        list_of_blobs_no_gaps = copy.copy(list_of_blobs)
         video._has_crossings_solved = False
-        if len(list_of_blobs.blobs_in_video[-1]) == 0:
-            list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
-        list_of_blobs = close_trajectories_gaps(video, list_of_blobs, list_of_fragments)
+        if len(list_of_blobs_no_gaps.blobs_in_video[-1]) == 0:
+            list_of_blobs_no_gaps.blobs_in_video = list_of_blobs_no_gaps.blobs_in_video[:-1]
+        list_of_blobs_no_gaps = close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
         video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
         video.save()
-        list_of_blobs.save(path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
+        list_of_blobs_no_gaps.save(path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
         video._has_crossings_solved = True
+    else:
+        list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_no_gaps_path)
+        video._has_crossings_solved = True
+        video.save()
 
     #############################################################
-    ##############   Create trajectories    #####################
-    ####
+    ############ Create trajectories (w gaps) ###################
     #############################################################
-    # video.generate_trajectories_time = time.time()
-    # if not loadPreviousDict['trajectories']:
-    #     video.create_trajectories_folder()
-    #     logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
-    #     trajectories = produce_trajectories(list_of_blobs.blobs_in_video, video.number_of_frames, video.number_of_animals)
-    #     logger.info("Saving trajectories")
-    #     for name in trajectories:
-    #         np.save(os.path.join(video.trajectories_folder, name + '_trajectories.npy'), trajectories[name])
-    #         np.save(os.path.join(video.trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
-    #         np.save(os.path.join(video.trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
-    #         np.save(os.path.join(video.trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
-    #     video._has_trajectories = True
-    #     video.save()
-    #     logger.info("Done")
-    # else:
-    #     video._has_trajectories = True
-    #     video.save()
-    # video.generate_trajectories_time = time.time() - video.generate_trajectories_time
+    video.generate_trajectories_time = time.time()
+    if not loadPreviousDict['trajectories']:
+        video.create_trajectories_folder()
+        logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
+        trajectories = produce_trajectories(list_of_blobs.blobs_in_video, video.number_of_frames, video.number_of_animals)
+        save_trajectories(trajectories, video.trajectories_folder)
+        logger.info("Saving trajectories")
+        video._has_trajectories = True
+        video.save()
+    else:
+        video._has_trajectories = True
+        video.save()
+    video.generate_trajectories_time = time.time() - video.generate_trajectories_time
+
+    #############################################################
+    ########### Create trajectories (w/o gaps) ##################
+    #############################################################
+    video.generate_trajectories_wogaps_time = time.time()
+    if not loadPreviousDict['trajectories_wo_gaps']:
+        video.create_trajectories_wo_gaps_folder()
+        logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_wo_gaps_folder)
+        trajectories_wo_gaps = produce_trajectories(list_of_blobs_no_gaps.blobs_in_video, video.number_of_frames, video.number_of_animals)
+        save_trajectories(trajectories_wo_gaps, video.trajectories_wo_gaps_folder)
+        logger.info("Saving trajectories")
+        video._has_trajectories_wo_gaps = True
+        video.save()
+    else:
+        video._has_trajectories_wo_gaps = True
+        video.save()
+    video.generate_trajectories_wogaps_time = time.time() - video.generate_trajectories_wogaps_time
+
     #############################################################
     ##############   Compute groundtruth    #####################
-    ####
     #############################################################
     groundtruth_path = os.path.join(video.video_folder,'_groundtruth.npy')
     if os.path.isfile(groundtruth_path):
@@ -626,7 +645,6 @@ if __name__ == '__main__':
         groundtruth = np.load(groundtruth_path).item()
         blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
         blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
-
         video.gt_accuracy, _ = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
         video.gt_start_end = (groundtruth.start, groundtruth.end)
         video.save()

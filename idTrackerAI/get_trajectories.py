@@ -37,33 +37,47 @@ def smooth_trajectories(t, sigma = 1.5, truncate = 4.0, derivative = 0):
     t = gaussian_filter1d(t, sigma=sigma, axis=1, truncate = truncate, order = derivative)
     return t
 
+def assign_point_to_identity(centroid, identity, frame_number, centroid_trajectories):
+    if identity is not None and identity != 0:
+        centroid_trajectories[identity - 1, frame_number, :] = centroid
+    return centroid_trajectories
+
 def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
     """Produce trajectories from ListOfBlobs
-
     :param blob_file: ListOfBlobs instance
     :returns: A dictionary with np.array as values
     """
     centroid_trajectories = np.ones((number_of_animals,number_of_frames, 2))*np.NaN
-    nose_trajectories = np.ones((number_of_animals,number_of_frames, 2))*np.NaN
-    head_trajectories = np.ones((number_of_animals, number_of_frames, 2))*np.NaN
-
-    missing_head = False
 
     for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video)):
 
         for blob in blobs_in_frame:
 
-            if blob.final_identity is not None and blob.final_identity != 0:
-                centroid_trajectories[blob.final_identity-1, frame_number, :] = blob.centroid
-                try:
-                    head_trajectories[blob.final_identity-1, frame_number, :] = blob.head_coordinates
-                    nose_trajectories[blob.final_identity-1, frame_number, :] = blob.nose_coordinates
-                except:
-                    missing_head = True
+            if isinstance(blob.final_identity, int):
+                centroid_trajectories = assign_point_to_identity(blob.centroid,
+                                                                blob.final_identity,
+                                                                blob.frame_number,
+                                                                centroid_trajectories)
+            elif isinstance(blob.final_identity, list):
+                for identity, centroid in zip(blob.final_identity, blob.interpolated_centroids):
+                    centroid_trajectories = assign_point_to_identity(centroid,
+                                                                    identity,
+                                                                    blob.frame_number,
+                                                                    centroid_trajectories)
 
-    if not missing_head:
-        return {"centroid": centroid_trajectories, "head": head_trajectories, "nose": nose_trajectories}
     return {"centroid": centroid_trajectories}
+
+def save_trajectories(trajectories, trajectories_folder):
+    """
+    params:
+        trajectories: dictionary of trajectories
+        trajectories_folder: path to save trajectories
+    """
+    for name in trajectories:
+        np.save(os.path.join(trajectories_folder, name + '_trajectories.npy'), trajectories[name])
+        np.save(os.path.join(trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
+        np.save(os.path.join(trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
+        np.save(os.path.join(trajectories_folder, name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
 
 if __name__ == "__main__":
     # #SIMPLE USAGE EXAMPLE
@@ -80,8 +94,4 @@ if __name__ == "__main__":
         os.makedirs(trajectories_folder)
 
     trajectories = produce_trajectories(blobs_list.blobs_in_video, video.number_of_frames, video.number_of_animals)
-    for name in trajectories:
-        np.save(os.path.join(trajectories_folder, name + '_trajectories.npy'), trajectories[name])
-        np.save(os.path.join(trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
-        np.save(os.path.join(trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
-        np.save(os.path.join(trajectories_folder,name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
+    save_trajectories(trajectories, trajectories_folder)
