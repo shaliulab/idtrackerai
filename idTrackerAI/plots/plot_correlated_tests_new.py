@@ -35,10 +35,10 @@ if __name__ == '__main__':
     pprint(test_dictionary)
 
     ### Initialize arrays
-    scale_list = test_dictionary['scale']
-    shape_list = test_dictionary['shape']
-    number_of_conditions_mean = len(results_data_frame.loc[:,'scale'].unique())
-    number_of_condition_var = len(results_data_frame.loc[:,'shape'].unique())
+    scale_parameter_list = test_dictionary['scale_parameter'][::-1]
+    shape_parameter_list = test_dictionary['shape_parameter'][::-1]
+    number_of_conditions_mean = len(results_data_frame.loc[:,'scale_parameter'].unique())
+    number_of_condition_var = len(results_data_frame.loc[:,'shape_parameter'].unique())
     number_of_repetitions = len(results_data_frame.repetition.unique())
     protocol = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
     total_time = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
@@ -59,26 +59,26 @@ if __name__ == '__main__':
     for group_size in results_data_frame.group_size.unique():
 
         for frames_in_video in results_data_frame.frames_in_video.unique():
-            fig_distributions, ax_arr = plt.subplots(len(results_data_frame.loc[:,'scale'].unique()), len(results_data_frame.loc[:,'shape'].unique()),
+            fig_distributions, ax_arr = plt.subplots(len(results_data_frame.loc[:,'scale_parameter'].unique()), len(results_data_frame.loc[:,'shape_parameter'].unique()),
                                         sharex = True, sharey = False)
             fig_distributions_list.append(fig_distributions)
             fig_distributions.suptitle('Group size %i - Frames in video %i' %(group_size, frames_in_video))
 
 
-            for i, scale in enumerate(scale_list):
-                if scale % 1 == 0:
-                    scale = int(scale)
+            for i, scale_parameter in enumerate(scale_parameter_list):
+                if scale_parameter % 1 == 0:
+                    scale_parameter = int(scale_parameter)
 
-                for j, shape in enumerate(shape_list):
-                    if shape % 1 == 0:
-                        shape = int(shape)
+                for j, shape_parameter in enumerate(shape_parameter_list):
+                    if shape_parameter % 1 == 0:
+                        shape_parameter = int(shape_parameter)
 
                     for k, repetition in enumerate(results_data_frame.repetition.unique()):
                         repetition_path = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0],
                                                         'group_size_' + str(int(group_size)),
                                                         'num_frames_' + str(int(frames_in_video)),
-                                                        'scale_' + str(scale),
-                                                        'shape_' + str(shape),
+                                                        'scale_parameter_' + str(scale_parameter),
+                                                        'shape_parameter_' + str(shape_parameter),
                                                         'repetition_' + str(int(repetition)))
                         video_path = os.path.join(repetition_path, 'session', 'video_object.npy')
                         video = np.load(video_path).item(0)
@@ -86,26 +86,26 @@ if __name__ == '__main__':
                         if repetition == 1:
                             nbins = 10
                             ax = ax_arr[j,i]
-                            number_of_images_in_individual_fragments = video.individual_fragments_distance_travelled[0]
-                            number_of_images_in_individual_fragments = number_of_images_in_individual_fragments[number_of_images_in_individual_fragments > 3]
+                            number_of_images_in_individual_fragments = video.individual_fragments_lenghts
+                            number_of_images_in_individual_fragments = number_of_images_in_individual_fragments[number_of_images_in_individual_fragments >= 3]
                             MIN = np.min(number_of_images_in_individual_fragments)
                             MAX = np.max(number_of_images_in_individual_fragments)
                             hist, bin_edges = np.histogram(number_of_images_in_individual_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
                             ax.semilogx(bin_edges[:-1], hist, '-ob' ,markersize = 5)
                             if j == 3:
-                                ax.set_xlabel('number of frames \nscale = %.1f' %scale)
+                                ax.set_xlabel('number of frames \nscale_parameter = %.1f' %scale_parameter)
                             if i == 0:
-                                ax.set_ylabel('shape = %.1f \nnumber of \nindividual \nfragments' %shape)
-                            mean = shape * scale
-                            sigma = np.sqrt(shape * scale**2)
+                                ax.set_ylabel('shape_parameter = %.1f \nnumber of \nindividual \nfragments' %shape_parameter)
+                            mean = shape_parameter * scale_parameter
+                            sigma = np.sqrt(shape_parameter * scale_parameter**2)
                             title = r'$\mu$ = %.2f, $\sigma$ = %.2f' %(mean, sigma)
                             ax.set_title(title)
 
                         ### Create accuracy matrix
                         results_data_frame_rep = results_data_frame.query('group_size == @group_size' +
                                                                     ' & frames_in_video == @frames_in_video' +
-                                                                    ' & scale == @scale' +
-                                                                    ' & shape == @shape' +
+                                                                    ' & scale_parameter == @scale_parameter' +
+                                                                    ' & shape_parameter == @shape_parameter' +
                                                                     ' & repetition == @repetition')
                         protocol[j,i,k] = results_data_frame_rep.protocol
                         total_time[j,i,k] = results_data_frame_rep.total_time
@@ -128,7 +128,7 @@ if __name__ == '__main__':
             def plot_statistics_heatmap(ax, matrix, title, xticklabels, yticklabels, vmax = None, vmin = None):
                 ax = sns.heatmap(np.mean(matrix, axis = 2),
                                     ax = ax,
-                                    fmt = '.5f',
+                                    fmt = '.3f',
                                     square = True,
                                     cbar = False,
                                     xticklabels = xticklabels,
@@ -138,26 +138,26 @@ if __name__ == '__main__':
                                     annot=True)
                 ax.set_title(title)
 
-            plot_statistics_heatmap(ax_arr[0,0], protocol, 'protocol', scale_list, shape_list)
-            plot_statistics_heatmap(ax_arr[0,1], total_time, 'total time', scale_list, shape_list)
-            plot_statistics_heatmap(ax_arr[0,2], ratio_of_accumulated_images, r'$\%$' + ' accumulated images', scale_list, shape_list, vmax = 1, vmin = 0 )
-            plot_statistics_heatmap(ax_arr[0,3], ratio_of_video_accumulated, r'$\%$' + ' video', scale_list, shape_list, vmax = 1, vmin = 0)
-            plot_statistics_heatmap(ax_arr[1,0], overall_P2, 'overall P2', scale_list, shape_list, vmax = 1, vmin = 0)
-            plot_statistics_heatmap(ax_arr[1,1], accuracy, 'accuracy', scale_list, shape_list, vmax = 1, vmin = 0)
-            plot_statistics_heatmap(ax_arr[1,2], accuracy_in_accumulation, 'accuracy in accumulation', scale_list, shape_list, vmax = 1, vmin = 0)
-            plot_statistics_heatmap(ax_arr[1,3], accuracy_after_accumulation, 'accuracy after accumulation', scale_list, shape_list, vmax = 1, vmin = 0)
+            plot_statistics_heatmap(ax_arr[0,0], protocol, 'protocol', scale_parameter_list, shape_parameter_list)
+            plot_statistics_heatmap(ax_arr[0,1], total_time, 'total time', scale_parameter_list, shape_parameter_list)
+            plot_statistics_heatmap(ax_arr[0,2], ratio_of_accumulated_images, r'$\%$' + ' accumulated images', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0 )
+            plot_statistics_heatmap(ax_arr[0,3], ratio_of_video_accumulated, r'$\%$' + ' video', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
+            plot_statistics_heatmap(ax_arr[1,0], overall_P2, 'overall P2', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
+            plot_statistics_heatmap(ax_arr[1,1], accuracy, 'accuracy', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
+            plot_statistics_heatmap(ax_arr[1,2], accuracy_in_accumulation, 'accuracy in accumulation', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
+            plot_statistics_heatmap(ax_arr[1,3], accuracy_after_accumulation, 'accuracy after accumulation', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
 
-            ax_arr[0,0].set_ylabel('shape')
+            ax_arr[0,0].set_ylabel('shape_parameter')
             ax_arr[0,1].set_xticklabels([]), ax_arr[0,1].set_yticklabels([])
             ax_arr[0,2].set_xticklabels([]), ax_arr[0,2].set_yticklabels([])
             ax_arr[0,3].set_xticklabels([]), ax_arr[0,3].set_yticklabels([])
-            ax_arr[1,0].set_xlabel('scale')
-            ax_arr[1,0].set_ylabel('shape')
-            ax_arr[1,1].set_xlabel('scale')
+            ax_arr[1,0].set_xlabel('scale_parameter')
+            ax_arr[1,0].set_ylabel('shape_parameter')
+            ax_arr[1,1].set_xlabel('scale_parameter')
             ax_arr[1,1].set_yticklabels([])
-            ax_arr[1,2].set_xlabel('scale')
+            ax_arr[1,2].set_xlabel('scale_parameter')
             ax_arr[1,2].set_yticklabels([])
-            ax_arr[1,3].set_xlabel('scale')
+            ax_arr[1,3].set_xlabel('scale_parameter')
             ax_arr[1,3].set_yticklabels([])
 
     path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0],
