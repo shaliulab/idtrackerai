@@ -59,7 +59,6 @@ from assign_them_all import close_trajectories_gaps
 # from visualise_cnn import visualise
 
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
-RESTORE_CRITERION = 'last'
 VEL_PERCENTILE = 99
 np.random.seed(0)
 
@@ -90,7 +89,7 @@ def setup_logging(
 
     logger = logging.getLogger(__name__)
     logger.propagate = True
-    logger.setLevel("INFO")
+    logger.setLevel("DEBUG")
     return logger
 
 if __name__ == '__main__':
@@ -279,7 +278,6 @@ if __name__ == '__main__':
                                 learning_rate = 0.005,
                                 keep_prob = 1.0,
                                 scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax'],
-                                restore_folder = video.accumulation_folder,
                                 save_folder = video.accumulation_folder,
                                 image_size = video.identification_image_size)
     if not bool(loadPreviousDict['first_accumulation']):
@@ -311,8 +309,7 @@ if __name__ == '__main__':
         list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(accumulation_trial = 0)
         accumulation_manager = AccumulationManager(video, list_of_fragments,
                                                     list_of_global_fragments,
-                                                    threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION,
-                                                    restore_criterion = RESTORE_CRITERION)
+                                                    threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
         #set global epoch counter to 0
         logger.info("Start accumulation")
         global_step = 0
@@ -430,8 +427,7 @@ if __name__ == '__main__':
                 list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(accumulation_trial = i - 1)
                 accumulation_manager = AccumulationManager(video,
                                                             list_of_fragments, list_of_global_fragments,
-                                                            threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION,
-                                                            restore_criterion = RESTORE_CRITERION)
+                                                            threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
                 logger.info("Start accumulation")
                 global_step = 0
                 video._ratio_accumulated_images = accumulate(accumulation_manager,

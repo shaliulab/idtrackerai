@@ -87,9 +87,6 @@ def train(video,
         trainer._epochs_completed += 1
         validator._epochs_completed += 1
 
-        # Save network model
-        if accumulation_manager.restore_criterion == 'best':
-            net.save()
 
     global_step += trainer.epochs_completed
     logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss))
@@ -105,15 +102,7 @@ def train(video,
     if store_accuracy_and_error:
         store_training_accuracy_and_loss_data.save()
         store_validation_accuracy_and_loss_data.save()
-    # Get best checkpoint
-    if accumulation_manager.restore_criterion == 'best':
-        logger.debug("Accumulation with best validation accuracy model")
-        net.restore_index = np.argmax(store_validation_accuracy_and_loss_data.accuracy) + global_step0 if video.accumulation_step > 0 else np.argmax(store_validation_accuracy_and_loss_data.accuracy)
-        net.restore()
-    else:
-        logger.debug("Accumulation with last model")
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'Accumulation-' + str(video.accumulation_trial) + '-' + str(video.accumulation_step) + '.pdf'))
-    if accumulation_manager.restore_criterion == 'last':
-        net.save()
+    net.save()
     return global_step, net, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data

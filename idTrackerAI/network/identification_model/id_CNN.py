@@ -70,7 +70,6 @@ class ConvNetwork():
             logger.debug('Performing knowledge transfer...')
             [self.restore_folder_conv] = get_checkpoint_subfolders(self.params._knowledge_transfer_folder,['conv'])
             self.session.run(self.global_step.assign(0))
-        # self.restore()
         if self.training:
             self.create_summaries_writers()
 
