@@ -21,7 +21,7 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True):
         training_set = CrossingDataset(list_of_blobs.blobs_in_video, video, scope = 'training')
         training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)
         validation_set = CrossingDataset(list_of_blobs.blobs_in_video, video, scope = 'validation',
-                                                        crossings = training_set.crossings,
+                                                        crossings = training_set.crossing_blobs,
                                                         individual_blobs = training_set.individual_blobs,
                                                         image_size = training_set.image_size)
         validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1.)

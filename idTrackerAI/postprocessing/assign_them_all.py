@@ -70,9 +70,9 @@ def erode(image, kernel_size):
     return cv2.erode(image,kernel,iterations = 1)
 
 def get_blob_by_identity(blobs_in_frame, identity):
-    #print("identities in frame",  [blob.assigned_identity for blob in blobs_in_frame])
+    #print("identities in frame",  [blob.final_identity for blob in blobs_in_frame])
     for blob in blobs_in_frame:
-        if blob.assigned_identity == identity:
+        if blob.final_identity == identity:
             return [blob]
         elif (hasattr(blob, 'identity_corrected_closing_gaps')
             and isinstance(blob.identity_corrected_closing_gaps, list) and
@@ -96,16 +96,16 @@ def get_candidate_blobs(blob_to_test, eroded_blobs_in_frame):
 def get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame):
     identities_in_frame = []
     for blob in blobs_in_frame:
-        if isinstance(blob.assigned_identity, int):
-            identities_in_frame.append(blob.assigned_identity)
-        elif isinstance(blob.assigned_identity, list):
-            identities_in_frame.extend(blob.assigned_identity)
+        if isinstance(blob.final_identity, int):
+            identities_in_frame.append(blob.final_identity)
+        elif isinstance(blob.final_identity, list):
+            identities_in_frame.extend(blob.final_identity)
     # identities_in_frame = flatten(identities_in_frame)
     return (set(possible_identities) - set(identities_in_frame)) - set(occluded_identities_in_frame)
 
 def get_candidate_centroid(individual_gap_interval, previous_blob_to_the_gap, next_blob_to_the_gap, identity, border = ''):
     blobs_for_interpolation = [previous_blob_to_the_gap, next_blob_to_the_gap]
-    #print([(blob.is_an_individual, blob.assigned_identity) for blob in blobs_for_interpolation])
+    #print([(blob.is_an_individual, blob.final_identity) for blob in blobs_for_interpolation])
     centroids_to_interpolate = [blob_for_interpolation.centroid
                                 if blob_for_interpolation.is_an_individual else
                                 blob_for_interpolation.interpolated_centroids[blob_for_interpolation.identity_corrected_closing_gaps.index(identity)]
@@ -280,7 +280,7 @@ def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_iden
     for i, original_blob in enumerate(original_blobs):
         # print("-original blob ", i,
         #         " fragment_identifier ", original_blob.fragment_identifier,
-        #         " assigned_identity ", original_blob.assigned_identity ,
+        #         " final_identity ", original_blob.final_identity ,
         #         " is_an_individual ", original_blob.is_an_individual,
         #         " is_a_crossing ", original_blob.is_a_crossing)
         candidate_tuples_with_centroids_in_original_blob = get_blobs_with_centroid_in_original_blob(original_blob, candidate_tuples_to_close_gap)
@@ -288,7 +288,7 @@ def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_iden
             #print("this original blob only has an eroded blob inside")
             identity = candidate_tuples_with_centroids_in_original_blob[0][2]
             centroid = candidate_tuples_with_centroids_in_original_blob[0][1]
-            if original_blob.assigned_identity == 0 and original_blob.is_an_individual:
+            if original_blob.final_identity == 0 and original_blob.is_an_individual:
                 #print(" is and individual with identity 0 and we propagate")
                 original_blob._identity_corrected_closing_gaps = identity
                 #print(" identity: ", identity, ", centroid: ", original_blob.centroid)
@@ -297,23 +297,23 @@ def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_iden
                     if blob.fragment_identifier == original_blob.fragment_identifier]
             elif original_blob.is_an_individual:
                 #print(" is probably a failure of the model area")
-                if isinstance(original_blob.assigned_identity, list):
-                    identity = original_blob.assigned_identity + [identity]
+                if isinstance(original_blob.final_identity, list):
+                    identity = original_blob.final_identity + [identity]
                     centroid = original_blob.interpolated_centroids + [centroid]
                 else:
-                    identity = [original_blob.assigned_identity, identity]
+                    identity = [original_blob.final_identity, identity]
                     centroid = [original_blob.centroid, centroid]
                 #print(" identity: ", identity, ", centroid: ", centroid)
                 original_blob._identity_corrected_closing_gaps = identity
                 original_blob.interpolated_centroids = centroid
             elif original_blob.is_a_crossing:
                 #print(" is probably a failure of the model area")
-                if original_blob.assigned_identity is not None:
-                    if isinstance(original_blob.assigned_identity, list):
-                        identity = original_blob.assigned_identity + [identity]
+                if original_blob.final_identity is not None:
+                    if isinstance(original_blob.final_identity, list):
+                        identity = original_blob.final_identity + [identity]
                         centroid = original_blob.interpolated_centroids + [centroid]
                     else:
-                        identity = [original_blob.assigned_identity, identity]
+                        identity = [original_blob.final_identity, identity]
                         centroid = [original_blob.centroid, centroid]
                 else:
                     identity = [identity]
@@ -480,9 +480,9 @@ def clean_individual_blob_before_saving(blobs_in_video):
     """
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
-            if blob.is_an_individual and isinstance(blob.assigned_identity, list):
+            if blob.is_an_individual and isinstance(blob.final_identity, list):
                 if blob.identity_corrected_solving_duplication is not None:
-                    blob._identity_corrected_closing_gaps = blobs.identity_corrected_solving_duplication
+                    blob._identity_corrected_closing_gaps = blob.identity_corrected_solving_duplication
                 elif blob.identity is not None and blob.identity != 0:
                     blob._identity_corrected_closing_gaps = blob.identity
                 elif blob.identity == 0:

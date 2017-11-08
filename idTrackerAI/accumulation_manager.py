@@ -21,8 +21,7 @@ class AccumulationManager(object):
                 list_of_fragments, list_of_global_fragments,
                 certainty_threshold = CERTAINTY_THRESHOLD,
                 allow_partial_accumulation = False,
-                threshold_acceptable_accumulation = None,
-                restore_criterion = ''):
+                threshold_acceptable_accumulation = None):
         """ This class manages the selection of global fragments for accumulation,
         the retrieval of images from the new global fragments, the selection of
         of images for training, the final assignment of identities to the global fragments
@@ -49,7 +48,6 @@ class AccumulationManager(object):
         self.new_images = None # set of images that will be added to the new training
         self.new_labels = None # labels for the set of images that will be added for training
         self._continue_accumulation = True # flag to continue_accumulation or not
-        self._restore_criterion = restore_criterion
 
     @property
     def continue_accumulation(self):
@@ -66,10 +64,6 @@ class AccumulationManager(object):
             return False
         else:
             return True
-
-    @property
-    def restore_criterion(self):
-        return self._restore_criterion
 
     def update_counter(self):
         """ updates the counter of the accumulation"""
