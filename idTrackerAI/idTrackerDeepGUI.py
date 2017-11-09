@@ -579,6 +579,23 @@ if __name__ == '__main__':
     list_of_blobs.save(number_of_chunks = video.number_of_frames)
 
     #############################################################
+    ############ Create trajectories (w gaps) ###################
+    #############################################################
+    video.generate_trajectories_time = time.time()
+    if not loadPreviousDict['trajectories']:
+        video.create_trajectories_folder()
+        logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
+        trajectories = produce_trajectories(list_of_blobs.blobs_in_video, video.number_of_frames, video.number_of_animals)
+        save_trajectories(trajectories, video.trajectories_folder)
+        logger.info("Saving trajectories")
+        video._has_trajectories = True
+        video.save()
+    else:
+        video._has_trajectories = True
+        video.save()
+    video.generate_trajectories_time = time.time() - video.generate_trajectories_time
+
+    #############################################################
     ##############   Solve crossigns   ##########################
     ####
     #############################################################
@@ -597,23 +614,6 @@ if __name__ == '__main__':
         list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_no_gaps_path)
         video._has_crossings_solved = True
         video.save()
-
-    #############################################################
-    ############ Create trajectories (w gaps) ###################
-    #############################################################
-    video.generate_trajectories_time = time.time()
-    if not loadPreviousDict['trajectories']:
-        video.create_trajectories_folder()
-        logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
-        trajectories = produce_trajectories(list_of_blobs.blobs_in_video, video.number_of_frames, video.number_of_animals)
-        save_trajectories(trajectories, video.trajectories_folder)
-        logger.info("Saving trajectories")
-        video._has_trajectories = True
-        video.save()
-    else:
-        video._has_trajectories = True
-        video.save()
-    video.generate_trajectories_time = time.time() - video.generate_trajectories_time
 
     #############################################################
     ########### Create trajectories (w/o gaps) ##################
