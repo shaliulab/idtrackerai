@@ -88,7 +88,7 @@ def train(video,
         validator._epochs_completed += 1
 
     global_step += trainer.epochs_completed
-    logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss))
+    logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss[global_step0:]))
     # update used_for_training flag to True for fragments used
     logger.info("Accumulation step completed. Updating global fragments used for training")
     accumulation_manager.update_fragments_used_for_training()
@@ -99,8 +99,8 @@ def train(video,
         store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b')
     # store training and validation losses and accuracies
     if store_accuracy_and_error:
-        store_training_accuracy_and_loss_data.save()
-        store_validation_accuracy_and_loss_data.save()
+        store_training_accuracy_and_loss_data.save(trainer._epochs_completed)
+        store_validation_accuracy_and_loss_data.save(trainer._epochs_completed)
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'Accumulation-' + str(video.accumulation_trial) + '-' + str(video.accumulation_step) + '.pdf'))
     net.save()

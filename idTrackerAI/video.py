@@ -511,6 +511,9 @@ class Video(object):
         self._accumulation_folder = os.path.join(self.session_folder, accumulation_folder_name)
         if not os.path.isdir(self.accumulation_folder):
             os.makedirs(self.accumulation_folder)
+        else:
+            import shutil
+            shutil.rmtree(self.accumulation_folder)
 
     def init_accumulation_statistics_attributes(self, attributes = None):
         if attributes is None:
