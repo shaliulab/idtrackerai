@@ -5,7 +5,7 @@ import itertools
 import numpy as np
 import os
 from tempfile import mkstemp
-from shutil import move
+from shutil import move, rmtree
 import glob
 try:
     import cPickle as pickle
@@ -513,16 +513,15 @@ class Video(object):
         if not os.path.isdir(self.pretraining_folder):
             os.makedirs(self.pretraining_folder)
 
-    def create_accumulation_folder(self, iteration_number = 0):
+    def create_accumulation_folder(self, iteration_number = 0, delete = False):
         """Folder in which the model generated while accumulating is stored (after pretraining)
         """
         accumulation_folder_name = 'accumulation_' + str(iteration_number)
         self._accumulation_folder = os.path.join(self.session_folder, accumulation_folder_name)
         if not os.path.isdir(self.accumulation_folder):
             os.makedirs(self.accumulation_folder)
-        else:
-            import shutil
-            shutil.rmtree(self.accumulation_folder)
+        elif delete:
+            rmtree(self.accumulation_folder)
 
     def init_accumulation_statistics_attributes(self, attributes = None):
         if attributes is None:
