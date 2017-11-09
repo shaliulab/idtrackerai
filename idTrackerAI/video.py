@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+import sys
 #from collections import namedtuple
 import itertools
 import numpy as np
@@ -14,6 +15,9 @@ from natsort import natsorted
 import cv2
 import time
 import logging
+
+sys.path.append('./utils')
+from py_utils import get_git_revision_hash
 
 AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg']
 FRAMES_PER_EPISODE = 500 #long videos are divided into chunks. This is the number of frame per chunk
@@ -203,8 +207,13 @@ class Video(object):
     def path_to_video_object(self):
         return self._path_to_video_object
 
+    @property
+    def git_commit(self):
+        return self._git_commit
+
     def save(self):
         """save class"""
+        self._git_commit = get_git_revision_hash()
         logger.info("saving video object in %s" %self.path_to_video_object)
         np.save(self.path_to_video_object, self)
 

@@ -11,9 +11,14 @@ import cPickle as pickle
 import sys
 from pprint import pprint
 import logging
+import subprocess
 # sys.path.append('../utils')
 
 logger = logging.getLogger("__main__.py_utils")
+
+### Git utils ###
+def get_git_revision_hash():
+    return subprocess.check_output(['git', 'rev-parse', 'HEAD'])
 
 ### Object utils ###
 def append_values_to_lists(values, list_of_lists):
@@ -262,7 +267,7 @@ def check_and_change_video_path(video,old_video):
 
             for path in old_video.paths_to_video_segments:
                 new_paths_to_video_segments.append(path.replace(old_video_folder, current_video_folder))
-                
+
             old_video._paths_to_video_segments = new_paths_to_video_segments
     return old_video
 
