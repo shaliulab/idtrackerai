@@ -53,16 +53,19 @@ def compute_max_distance_transform(video, blob):
 def find_the_gap_interval(blobs_in_video, possible_identities, gap_start, list_of_occluded_identities):
     there_are_missing_identities = True
     frame_number = gap_start + 1
+    if frame_number < len(blobs_in_video):
 
-    while there_are_missing_identities:
-        blobs_in_frame = blobs_in_video[frame_number]
-        occluded_identities_in_frame = list_of_occluded_identities[frame_number]
-        missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame)
-        if len(missing_identities) == 0:
+        while there_are_missing_identities and frame_number < len(blobs_in_video):
+            blobs_in_frame = blobs_in_video[frame_number]
+            occluded_identities_in_frame = list_of_occluded_identities[frame_number]
+            missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame)
+            if len(missing_identities) == 0 or frame_number == len(blobs_in_video)-1:
+                there_are_missing_identities = False
+            else:
+                frame_number += 1
             gap_end = frame_number
-            there_are_missing_identities = False
-        else:
-            frame_number += 1
+    else:
+        gap_end = gap_start
     return (gap_start, gap_end)
 
 def erode(image, kernel_size):
@@ -129,7 +132,7 @@ def find_the_individual_gap_interval(blobs_in_video, possible_identities, identi
     gap_start = a_frame_in_the_gap
     frame_number = gap_start
     # print("finding the gap start")
-    while identity_is_missing:
+    while identity_is_missing and frame_number > 0:
         blobs_in_frame = blobs_in_video[frame_number]
         occluded_identities_in_frame = list_of_occluded_identities[frame_number]
         missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame)
@@ -145,7 +148,7 @@ def find_the_individual_gap_interval(blobs_in_video, possible_identities, identi
     frame_number = a_frame_in_the_gap
     gap_end = a_frame_in_the_gap
     # print("finding the gap end")
-    while identity_is_missing:
+    while identity_is_missing and frame_number < len(blobs_in_video):
         blobs_in_frame = blobs_in_video[frame_number]
         occluded_identities_in_frame = list_of_occluded_identities[frame_number]
         missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame)

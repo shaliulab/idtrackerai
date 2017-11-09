@@ -198,10 +198,10 @@ def plot_accumulation_steps(video, list_of_fragments, training_dict, validation_
 
 if __name__ == '__main__':
     # session_path = selectDir('./') #select path to video
-    session_path = '/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4'
+    session_path = '/home/themis/Desktop/IdTrackerDeep/videos/idTrackerDeep_LargeGroups_3/100fish/First/session_2'
     video_path = os.path.join(session_path,'video_object.npy')
     video = np.load(video_path).item(0)
-    list_of_fragments = ListOfFragments.load(video.fragments_path)
+    # list_of_fragments = ListOfFragments.load(video.fragments_path)
     list_of_fragments_dictionaries = np.load(os.path.join(video._accumulation_folder,'light_list_of_fragments.npy'))
     fragments = [Fragment(number_of_animals = video.number_of_animals) for fragment_dictionary in list_of_fragments_dictionaries]
     [fragment.__dict__.update(fragment_dictionary) for fragment, fragment_dictionary in zip(fragments, list_of_fragments_dictionaries)]
