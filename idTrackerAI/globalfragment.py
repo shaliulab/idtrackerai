@@ -61,8 +61,6 @@ class GlobalFragment(object):
     def candidate_for_accumulation(self):
         return self._candidate_for_accumulation
 
-
-
     def get_total_number_of_images(self):
         return sum([fragment.number_of_images for fragment in self.individual_fragments])
 

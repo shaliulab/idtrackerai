@@ -302,6 +302,10 @@ class Video(object):
         return self._model_area
 
     @property
+    def gamma_fit_parameters(self):
+        return self._gamma_fit_parameters
+
+    @property
     def maximum_number_of_images_in_global_fragments(self):
         return self._maximum_number_of_images_in_global_fragments
 
@@ -507,6 +511,9 @@ class Video(object):
         self._accumulation_folder = os.path.join(self.session_folder, accumulation_folder_name)
         if not os.path.isdir(self.accumulation_folder):
             os.makedirs(self.accumulation_folder)
+        else:
+            import shutil
+            shutil.rmtree(self.accumulation_folder)
 
     def init_accumulation_statistics_attributes(self, attributes = None):
         if attributes is None:

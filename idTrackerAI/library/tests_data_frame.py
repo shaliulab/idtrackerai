@@ -65,8 +65,8 @@ def tests_data_frame():
                                                     "ids_codes": 'a',
                                                     "group_sizes": [10],
                                                     "frames_in_video": [10000],
-                                                    "mean_number_of_frames_per_fragment": [900, 400, 100, 15],
-                                                    "sigma_number_of_frames_per_fragment": [700, 300, 100, 25], # it is the parameter of the gamma related to the variance "a" in scipy
+                                                    "scale_parameter": [800, 500, 250, 100, 50],
+                                                    "shape_parameter": [1.5, 1, 0.75, 0.5, 0.25],
                                                     "repetitions": [1],
                                                      }, ignore_index=True)
 
