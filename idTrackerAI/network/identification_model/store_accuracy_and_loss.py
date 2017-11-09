@@ -57,8 +57,14 @@ class Store_Accuracy_and_Loss(object):
         colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=black)
         attribute_to_check = 'used_for_training' if self.scope == 'training' else 'used_for_pretraining'
         for fragment in fragments:
-            if getattr(fragment, attribute_to_check):
-                blob_index = fragment.final_identity - 1
+            if getattr(fragment, attribute_to_check) and fragment.is_an_individual:
+                print(fragment.identity)
+                print(fragment.identity_corrected_solving_duplication)
+                print(fragment.user_generated_identity)
+                if fragment.final_identity is not None:
+                    blob_index = fragment.final_identity - 1
+                else:
+                    blob_index = fragment.temporary_id
                 (start, end) = fragment.start_end
                 ax4.add_patch(
                     patches.Rectangle(

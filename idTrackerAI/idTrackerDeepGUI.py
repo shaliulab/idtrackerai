@@ -224,7 +224,7 @@ if __name__ == '__main__':
         video.number_of_global_fragments_candidates_for_accumulation = list_of_global_fragments.number_of_global_fragments
         video.individual_fragments_lenghts, \
         video.individual_fragments_distance_travelled, \
-        video.gamma_fit_parameters = compute_and_plot_fragments_statistics(video,
+        video._gamma_fit_parameters = compute_and_plot_fragments_statistics(video,
                                                                             video.model_area,
                                                                             list_of_blobs,
                                                                             list_of_fragments,
@@ -247,7 +247,7 @@ if __name__ == '__main__':
     else:
         cv2.namedWindow('Bars')
         logger.info("Loading preprocessed video")
-        path_attributes = ['preprocessing_folder', 'blobs_path', 'global_fragments_path', 'fragments_path']
+        path_attributes = ['preprocessing_folder', 'blobs_path', 'global_fragments_path', 'fragments_path', 'gamma_fit_parameters']
         video.copy_attributes_between_two_video_objects(old_video, path_attributes)
         video._has_been_segmented = True
         video._has_been_preprocessed = True

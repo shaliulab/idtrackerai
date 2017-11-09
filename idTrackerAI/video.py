@@ -302,6 +302,10 @@ class Video(object):
         return self._model_area
 
     @property
+    def gamma_fit_parameters(self):
+        return self._gamma_fit_parameters
+
+    @property
     def maximum_number_of_images_in_global_fragments(self):
         return self._maximum_number_of_images_in_global_fragments
 
