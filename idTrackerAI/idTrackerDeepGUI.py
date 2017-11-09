@@ -219,15 +219,15 @@ if __name__ == '__main__':
                                                             list_of_fragments.fragments,
                                                             video.number_of_animals)
         list_of_global_fragments = ListOfGlobalFragments(video, global_fragments)
+        video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
+        list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
+        video.number_of_global_fragments_candidates_for_accumulation = list_of_global_fragments.number_of_global_fragments
         video.individual_fragments_lenghts, \
         video.individual_fragments_distance_travelled = compute_and_plot_fragments_statistics(video,
                                                                                             video.model_area,
                                                                                             list_of_blobs,
                                                                                             list_of_fragments,
                                                                                             list_of_global_fragments)
-        video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
-        list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
-        video.number_of_global_fragments_candidates_for_accumulation = list_of_global_fragments.number_of_global_fragments
         list_of_global_fragments.relink_fragments_to_global_fragments(list_of_fragments.fragments)
         video._number_of_unique_images_in_global_fragments = list_of_fragments.compute_total_number_of_images_in_global_fragments()
         list_of_global_fragments.compute_maximum_number_of_images()

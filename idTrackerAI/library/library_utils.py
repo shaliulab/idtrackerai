@@ -121,7 +121,7 @@ def subsample_dataset_by_individuals(dataset, config):
 
     return np.concatenate(subsampled_images, axis = 1), np.concatenate(subsampled_centroids, axis = 1)
 
-def get_next_nubmer_of_blobs_in_fragment(config):
+def get_next_number_of_blobs_in_fragment(config):
     scale = config.scale_parameter
     shape = config.shape_parameter
     X = gamma(a = shape, loc = 1, scale = scale)
@@ -141,7 +141,7 @@ def generate_list_of_blobs(identification_images, centroids, config):
     print("identification_images shape", identification_images.shape)
     for identity in range(config.number_of_animals):
         # decide length of first individual fragment for this identity
-        number_of_blobs_per_fragment = get_next_nubmer_of_blobs_in_fragment(config)
+        number_of_blobs_per_fragment = get_next_number_of_blobs_in_fragment(config)
         number_of_fragments += 1
         number_of_frames_per_crossing_fragment = 3
         blobs_in_fragment = 0
@@ -177,7 +177,7 @@ def generate_list_of_blobs(identification_images, centroids, config):
                 blobs_in_fragment = 1
                 blobs_in_crossing_fragment = 0
                 number_of_fragments += 1
-                number_of_blobs_per_fragment = get_next_nubmer_of_blobs_in_fragment(config)
+                number_of_blobs_per_fragment = get_next_number_of_blobs_in_fragment(config)
             blobs_in_identity.append(blob)
         blobs_in_video.append(blobs_in_identity)
 

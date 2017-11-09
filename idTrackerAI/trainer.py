@@ -87,7 +87,6 @@ def train(video,
         trainer._epochs_completed += 1
         validator._epochs_completed += 1
 
-
     global_step += trainer.epochs_completed
     logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss))
     # update used_for_training flag to True for fragments used

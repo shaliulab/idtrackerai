@@ -66,7 +66,7 @@ def tests_data_frame():
                                                     "group_sizes": [10],
                                                     "frames_in_video": [10000],
                                                     "scale_parameter": [800, 500, 250, 100, 50],
-                                                    "shape_parameter": [1.5, 1, 0.75, 0.5, 0.25], 
+                                                    "shape_parameter": [1.5, 1, 0.75, 0.5, 0.25],
                                                     "repetitions": [1],
                                                      }, ignore_index=True)
 
