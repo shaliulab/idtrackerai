@@ -163,7 +163,7 @@ def compute_and_plot_fragments_statistics(video, model_area = None,
         plt.show()
     if save:
         fig.savefig(os.path.join(video._preprocessing_folder,'global_fragments_summary.pdf'), transparent=True)
-    return number_of_images_in_individual_fragments, distance_travelled_individual_fragments
+    return number_of_images_in_individual_fragments, distance_travelled_individual_fragments, (shape, loc, scale)
 
 if __name__ == '__main__':
     session_path = selectDir('./') #select path to video
