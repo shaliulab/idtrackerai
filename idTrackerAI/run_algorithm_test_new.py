@@ -213,11 +213,11 @@ if __name__ == '__main__':
                             video._has_been_segmented = True
                             list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
                             logger.info("Computing maximum number of blobs detected in the video")
-                            list_of_blobs.check_maximal_number_of_blob()
+                            list_of_blobs.check_maximal_number_of_blob(video.number_of_animals)
                             logger.info("Computing a model of the area of the individuals")
                             list_of_blobs.video = video
                             #assign an identifier to each blob belonging to an individual fragment
-                            list_of_blobs.compute_fragment_identifier_and_blob_index()
+                            list_of_blobs.compute_fragment_identifier_and_blob_index(video.number_of_animals)
                             #assign an identifier to each blob belonging to a crossing fragment
                             list_of_blobs.compute_crossing_fragment_identifier()
                             #create list of fragments
@@ -294,9 +294,9 @@ if __name__ == '__main__':
                             logger.info("Initialising accumulation manager")
                             # the list of global fragments is ordered in place from the distance (in frames) wrt
                             # the core of the first global fragment that will be accumulated
-                            video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = 0))
+                            video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = 0))
                             list_of_global_fragments.video = video
-                            list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(accumulation_trial = 0)
+                            list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = 0)
                             accumulation_manager = AccumulationManager(video, list_of_fragments,
                                                                         list_of_global_fragments,
                                                                         threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION,
@@ -314,15 +314,14 @@ if __name__ == '__main__':
                             ### NOTE: save all the accumulation statistics
                             video.save()
                             logger.info("Saving fragments")
-                            # list_of_fragments.save()
-                            list_of_global_fragments.save(list_of_fragments.fragments)
+                            # list_of_fragments.save(video.fragments_path)
+                            list_of_global_fragments.save(video.global_fragments_path, video.global_fragments_path, list_of_fragments.fragments)
                             video.first_accumulation_time = time.time() - video.first_accumulation_time
                             list_of_fragments.save_light_list(video._accumulation_folder)
                             if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                                 if isinstance(video.first_frame_first_global_fragment, list):
                                     video.protocol = 1 if video.accumulation_step <= 1 else 2
                                     video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[video.accumulation_trial]
-                                    list_of_fragments.video = video
                                     list_of_global_fragments.video = video
                                 video.assignment_time = time.time()
                                 #### Assigner ####
@@ -385,9 +384,9 @@ if __name__ == '__main__':
                                     net.reinitialize_softmax_and_fully_connected()
                                     #instantiate accumulation manager
                                     logger.info("Initialising accumulation manager")
-                                    video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = i - 1))
+                                    video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1))
                                     list_of_global_fragments.video = video
-                                    list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(accumulation_trial = i - 1)
+                                    list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1)
                                     accumulation_manager = AccumulationManager(video,
                                                                                 list_of_fragments, list_of_global_fragments,
                                                                                 threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION,
@@ -411,15 +410,14 @@ if __name__ == '__main__':
                                 video.accumulation_trial = np.argmax(percentage_of_accumulated_images)
                                 video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[video.accumulation_trial]
                                 video._ratio_accumulated_images = percentage_of_accumulated_images[video.accumulation_trial]
-                                list_of_fragments.video = video
                                 list_of_global_fragments.video = video
                                 accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
                                 video._accumulation_folder = os.path.join(video.session_folder, accumulation_folder_name)
                                 list_of_fragments.load_light_list(video._accumulation_folder)
                                 video._second_accumulation_finished = True
                                 logger.info("Saving global fragments")
-                                # list_of_fragments.save()
-                                list_of_global_fragments.save(list_of_fragments.fragments)
+                                # list_of_fragments.save(video.fragments_path)
+                                list_of_global_fragments.save(video.global_fragments_path, video.global_fragments_path, list_of_fragments.fragments)
                                 ### NOTE: save second_accumulation statistics
                                 video.save()
                                 video.second_accumulation_time = time.time() - video.second_accumulation_time
@@ -434,15 +432,15 @@ if __name__ == '__main__':
 
                             # finish and save
                             logger.debug("Saving list of fragments, list of global fragments and video object")
-                            # list_of_fragments.save()
-                            list_of_global_fragments.save(list_of_fragments.fragments)
+                            # list_of_fragments.save(video.fragments_path)
+                            list_of_global_fragments.save(video.global_fragments_path, video.global_fragments_path, list_of_fragments.fragments)
                             video.save()
 
                             #############################################################
                             ##############   Update list of blobs   #####################
                             ####
                             #############################################################
-                            list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
+                            list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
 
                             #############################################################
                             ############   Generate generate_groundtruth_file ###########
@@ -477,7 +475,7 @@ if __name__ == '__main__':
                             # mark fragments as duplications
                             mark_fragments_as_duplications(list_of_fragments.fragments)
                             # solve duplications
-                            solve_duplications(list_of_fragments)
+                            solve_duplications(list_of_fragments, video.first_frame_first_global_fragment)
                             video._has_duplications_solved = True
                             logger.info("Done")
                             # finish and save
@@ -495,15 +493,15 @@ if __name__ == '__main__':
                             video.compute_overall_P2(list_of_fragments.fragments)
                             print("individual overall_P2 ", video.individual_P2)
                             print("overall_P2 ", video.overall_P2)
-                            list_of_fragments.plot_stats()
+                            list_of_fragments.plot_stats(os.path.join(video.preprocessing_folder,'fragments_summary_1.pdf'))
                             list_of_fragments.save_light_list(video._accumulation_folder)
 
                             #############################################################
                             ##############   Update list of blobs   #####################
                             ####
                             #############################################################
-                            list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
-                            list_of_blobs.save(number_of_chunks = video.number_of_frames)
+                            list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
+                            list_of_blobs.save(video.blobs_path, number_of_chunks = video.number_of_frames, video_has_been_segmented = video.has_been_segmented))
 
                             #############################################################
                             ##########  Accuracies after solving duplications ##########

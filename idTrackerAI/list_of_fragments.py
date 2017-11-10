@@ -18,8 +18,7 @@ from py_utils import set_attributes_of_object_to_value, append_values_to_lists
 logger = logging.getLogger("__main__.list_of_fragments")
 
 class ListOfFragments(object):
-    def __init__(self, video, fragments):
-        self.video = video
+    def __init__(self, fragments):
         self.fragments = fragments
         self.number_of_fragments = len(self.fragments)
 
@@ -66,23 +65,23 @@ class ListOfFragments(object):
                 np.asarray(distance_travelled_individual_fragments),\
                 number_of_images_in_crossing_fragments
 
-    def update_from_list_of_blobs(self, blobs_in_video):
-        [setattr(self.fragments[self.video.fragment_identifier_to_index[blob.fragment_identifier]], '_user_generated_identity', blob.user_generated_identity)
+    def update_from_list_of_blobs(self, blobs_in_video, fragment_identifier_to_index):
+        [setattr(self.fragments[fragment_identifier_to_index[blob.fragment_identifier]], '_user_generated_identity', blob.user_generated_identity)
             for blobs_in_frame in blobs_in_video for blob in blobs_in_frame if blob.user_generated_identity is not None ]
 
-    def get_ordered_list_of_fragments(self, scope = None):
+    def get_ordered_list_of_fragments(self, scope = None, first_frame_first_global_fragment = None):
         if scope == 'to_the_past':
-            fragments_subset = [fragment for fragment in self.fragments if fragment.start_end[1] <= self.video.first_frame_first_global_fragment]
+            fragments_subset = [fragment for fragment in self.fragments if fragment.start_end[1] <= first_frame_first_global_fragment]
             fragments_subset.sort(key=lambda x: x.start_end[1], reverse=True)
         elif scope == 'to_the_future':
-            fragments_subset = [fragment for fragment in self.fragments if fragment.start_end[0] >= self.video.first_frame_first_global_fragment]
+            fragments_subset = [fragment for fragment in self.fragments if fragment.start_end[0] >= first_frame_first_global_fragment]
             fragments_subset.sort(key=lambda x: x.start_end[0], reverse=False)
         return fragments_subset
 
-    def save(self):
-        logger.info("saving list of fragments at %s" %self.video.fragments_path)
+    def save(self, fragments_path):
+        logger.info("saving list of fragments at %s" %fragments_path)
         [setattr(fragment, 'coexisting_individual_fragments', None) for fragment in self.fragments]
-        np.save(self.video.fragments_path,self)
+        np.save(fragments_path,self)
         [fragment.get_coexisting_individual_fragments_indices(self.fragments) for fragment in self.fragments]
 
     @classmethod
@@ -204,7 +203,7 @@ class ListOfFragments(object):
                                     'number_of_partially_accumulated_individual_blobs']
         return {key: getattr(self, key) for key in self.__dict__ if key in attributes_to_return}
 
-    def plot_stats(self):
+    def plot_stats(self, video):
         plt.ion()
         fig, ax = plt.subplots(1,1)
         sns.set_style("ticks")
@@ -228,7 +227,7 @@ class ListOfFragments(object):
         ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
         ax.legend(patches_pie, labels=labels_with_percentage, loc=3, title = 'Blob class percentage')
 
-        fig.savefig(os.path.join(self.video.preprocessing_folder,'fragments_summary_1.pdf'), transparent=True)
+        fig.savefig(os.path.join(video.preprocessing_folder,'fragments_summary_1.pdf'), transparent=True)
 
 
         import matplotlib.patches as patches
@@ -266,11 +265,11 @@ class ListOfFragments(object):
         ax.axis('tight')
         ax.set_xlabel('Frame number')
         ax.set_ylabel('Blob index')
-        ax.set_yticks(range(0,self.video.number_of_animals,4))
-        ax.set_yticklabels(range(1,self.video.number_of_animals+1,4))
-        ax.set_xlim([0., self.video.number_of_frames])
-        ax.set_ylim([-.5, .5 + self.video.number_of_animals - 1])
-        fig.savefig(os.path.join(self.video.preprocessing_folder,'fragments_summary_2.pdf'), transparent=True)
+        ax.set_yticks(range(0,video.number_of_animals,4))
+        ax.set_yticklabels(range(1,video.number_of_animals+1,4))
+        ax.set_xlim([0., video.number_of_frames])
+        ax.set_ylim([-.5, .5 + video.number_of_animals - 1])
+        fig.savefig(os.path.join(video.preprocessing_folder,'fragments_summary_2.pdf'), transparent=True)
         plt.show()
 
 def create_list_of_fragments(blobs_in_video, number_of_animals):
@@ -290,15 +289,9 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                 pixels = [blob.pixels]
                 start = blob.frame_number
                 current = blob
-                if current_fragment_identifier == 49:
-                    print(blob.is_an_individual)
-                    print(blob.image_for_identification.shape)
 
                 while len(current.next) > 0 and current.next[0].fragment_identifier == current_fragment_identifier:
                     current = current.next[0]
-                    if current_fragment_identifier == 49:
-                        print(current.is_an_individual)
-                        print(current.image_for_identification.shape)
                     bounding_box_in_frame_coordinates = [current.bounding_box_in_frame_coordinates] if current.is_a_crossing else []
                     images, bounding_boxes, centroids, areas, pixels = append_values_to_lists([current.image_for_identification,
                                                                 bounding_box_in_frame_coordinates,

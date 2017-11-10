@@ -243,9 +243,9 @@ class Blob(object):
                 logger.debug("mean pixels both blobs %s" %str(np.mean([len(self.pixels), len(self.previous[0].pixels)])))
                 raise ValueError("non_shared_information_with_previous is nan")
 
-    def apply_model_area(self, video, model_area, identification_image_size, number_of_blobs):
-        if model_area(self.area) or number_of_blobs == video.number_of_animals: #Checks if area is compatible with the model area we built
-            self.set_image_for_identification(video)        
+    def apply_model_area(self, video, number_of_animals, model_area, identification_image_size, number_of_blobs):
+        if model_area(self.area) or number_of_blobs == number_of_animals: #Checks if area is compatible with the model area we built
+            self.set_image_for_identification(video)
             self._is_an_individual = True
         else:
             self._is_a_crossing = True

@@ -13,8 +13,7 @@ from globalfragment import GlobalFragment
 logger = logging.getLogger("__main__.list_of_global_fragments")
 
 class ListOfGlobalFragments(object):
-    def __init__(self, video, global_fragments):
-        self.video = video
+    def __init__(self, global_fragments):
         self.global_fragments = global_fragments
         self.number_of_global_fragments = len(self.global_fragments)
 
@@ -30,21 +29,21 @@ class ListOfGlobalFragments(object):
         frequencies[i] = fragment.number_of_images
         return frequencies
 
-    def set_first_global_fragment_for_accumulation(self, accumulation_trial):
+    def set_first_global_fragment_for_accumulation(self, video, accumulation_trial):
         self.order_by_distance_travelled()
         self.first_global_fragment_for_accumulation = self.global_fragments[accumulation_trial]
         [(setattr(fragment, '_acceptable_for_training', True),
             setattr(fragment, '_temporary_id', i),
-            setattr(fragment, '_frequencies', self.give_me_frequencies_first_fragment_accumulated(i, self.video.number_of_animals, fragment)),
+            setattr(fragment, '_frequencies', self.give_me_frequencies_first_fragment_accumulated(i, video.number_of_animals, fragment)),
             setattr(fragment, '_is_certain', True),
             setattr(fragment, '_certainty', 1.),
             setattr(fragment, '_P1_vector', fragment.compute_P1_from_frequencies(fragment.frequencies)))
             for i, fragment in enumerate(self.first_global_fragment_for_accumulation.individual_fragments)]
         return self.first_global_fragment_for_accumulation.index_beginning_of_fragment
 
-    def order_by_distance_to_the_first_global_fragment_for_accumulation(self, accumulation_trial = None):
+    def order_by_distance_to_the_first_global_fragment_for_accumulation(self, video, accumulation_trial = None):
         self.global_fragments = sorted(self.global_fragments,
-                                        key = lambda x: np.abs(x.index_beginning_of_fragment - self.video.first_frame_first_global_fragment[accumulation_trial]),
+                                        key = lambda x: np.abs(x.index_beginning_of_fragment - video.first_frame_first_global_fragment[accumulation_trial]),
                                         reverse = False)
 
     def compute_maximum_number_of_images(self):
@@ -82,10 +81,10 @@ class ListOfGlobalFragments(object):
     def relink_fragments_to_global_fragments(self, fragments):
         [global_fragment.get_individual_fragments_of_global_fragment(fragments) for global_fragment in self.global_fragments]
 
-    def save(self, fragments):
-        logger.info("saving list of global fragments at %s" %self.video.global_fragments_path)
+    def save(self, global_fragments_path, fragments):
+        logger.info("saving list of global fragments at %s" %global_fragments_path)
         self.delete_fragments_from_global_fragments()
-        np.save(self.video.global_fragments_path,self)
+        np.save(global_fragments_path,self)
         # After saving the list of globa fragments the individual fragments are deleted and we need to relink them again
         self.relink_fragments_to_global_fragments(fragments)
 

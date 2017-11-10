@@ -14,7 +14,7 @@ logger = logging.getLogger("__main__.crossing_detector")
 
 def detect_crossings(list_of_blobs, video, model_area, use_network = True):
     logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
-    list_of_blobs.apply_model_area_to_video(model_area, video.identification_image_size[0])
+    list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0], video.number_of_animals)
     if use_network:
         video.create_crossings_detector_folder()
         logger.info("Get individual and crossing images labelled data")
