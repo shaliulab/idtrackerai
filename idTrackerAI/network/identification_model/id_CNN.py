@@ -213,7 +213,6 @@ class ConvNetwork():
 
     def predict(self,batch):
         feed_dict = {self.x_pl: batch}
-        print("batch shape", batch.shape)
         return self.session.run([self.softmax_probs,self.predictions], feed_dict = feed_dict)
 
     def get_fully_connected_vectors(self,batch):
