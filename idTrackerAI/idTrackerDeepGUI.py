@@ -273,7 +273,7 @@ if __name__ == '__main__':
     print('\nAccumulation 0 ---------------------------------------------------------')
     video.first_accumulation_time = time.time()
     video.accumulation_trial = 0
-    video.create_accumulation_folder(iteration_number = 0)
+    video.create_accumulation_folder(iteration_number = 0, delete = not bool(loadPreviousDict['first_accumulation']))
     logger.info("Set accumulation network parameters")
     accumulation_network_params = NetworkParams(video.number_of_animals,
                                 learning_rate = 0.005,
@@ -597,12 +597,37 @@ if __name__ == '__main__':
     video.generate_trajectories_time = time.time() - video.generate_trajectories_time
 
     #############################################################
+    ##############   Compute groundtruth    #####################
+    #############################################################
+    groundtruth_path = os.path.join(video.video_folder,'_groundtruth.npy')
+    if os.path.isfile(groundtruth_path):
+        print("\n**** Computing accuracy wrt. groundtruth ****")
+        groundtruth = np.load(groundtruth_path).item()
+        blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
+        blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
+        video.gt_accuracy, _ = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
+        video.gt_start_end = (groundtruth.start, groundtruth.end)
+        video.save()
+
+    video.total_time = sum([video.generate_trajectories_time,
+                            video.solve_impossible_jumps_time,
+                            video.solve_duplications_time,
+                            video.assignment_time,
+                            video.second_accumulation_time,
+                            video.pretraining_time,
+                            video.assignment_time,
+                            video.first_accumulation_time,
+                            video.preprocessing_time])
+    video.save()
+
+    #############################################################
     ##############   Solve crossigns   ##########################
     ####
     #############################################################
     print("\n**** Assign crossings ****")
     if not loadPreviousDict['crossings']:
-        list_of_blobs_no_gaps = copy.copy(list_of_blobs)
+        list_of_blobs.disconnect()
+        list_of_blobs_no_gaps = copy.deepcopy(list_of_blobs)
         video._has_crossings_solved = False
         if len(list_of_blobs_no_gaps.blobs_in_video[-1]) == 0:
             list_of_blobs_no_gaps.blobs_in_video = list_of_blobs_no_gaps.blobs_in_video[:-1]
@@ -632,27 +657,3 @@ if __name__ == '__main__':
         video._has_trajectories_wo_gaps = True
         video.save()
     video.generate_trajectories_wogaps_time = time.time() - video.generate_trajectories_wogaps_time
-
-    #############################################################
-    ##############   Compute groundtruth    #####################
-    #############################################################
-    groundtruth_path = os.path.join(video.video_folder,'_groundtruth.npy')
-    if os.path.isfile(groundtruth_path):
-        print("\n**** Computing accuracy wrt. groundtruth ****")
-        groundtruth = np.load(groundtruth_path).item()
-        blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
-        blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
-        video.gt_accuracy, _ = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
-        video.gt_start_end = (groundtruth.start, groundtruth.end)
-        video.save()
-
-    video.total_time = sum([video.generate_trajectories_time,
-                            video.solve_impossible_jumps_time,
-                            video.solve_duplications_time,
-                            video.assignment_time,
-                            video.second_accumulation_time,
-                            video.pretraining_time,
-                            video.assignment_time,
-                            video.first_accumulation_time,
-                            video.preprocessing_time])
-    video.save()

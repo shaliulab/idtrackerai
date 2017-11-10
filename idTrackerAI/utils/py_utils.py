@@ -12,9 +12,15 @@ import sys
 from pprint import pprint
 import logging
 import matplotlib
+import subprocess
+
 # sys.path.append('../utils')
 
 logger = logging.getLogger("__main__.py_utils")
+
+### Git utils ###
+def get_git_revision_hash():
+    return subprocess.check_output(['git', 'rev-parse', 'HEAD'])
 
 ### Object utils ###
 def append_values_to_lists(values, list_of_lists):
