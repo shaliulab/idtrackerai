@@ -52,7 +52,7 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True):
         crossings_predictor = GetPredictionCrossigns(net)
         predictions = crossings_predictor.get_all_predictions(test_set)
         [(setattr(blob,'_is_a_crossing', True), setattr(blob, '_is_an_individual', False)) if prediction == 1
-            else (setattr(blob,'_is_a_crossing', False), setattr(blob, '_is_an_individual', True))
+            else (setattr(blob,'_is_a_crossing', False), setattr(blob, '_is_an_individual', True), blob.set_image_for_identification(video))
             for blob, prediction in zip(test_set.test, predictions)]
         logger.debug("Freeing memory. Test crossings set deleted")
         test_set = None

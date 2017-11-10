@@ -290,9 +290,15 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                 pixels = [blob.pixels]
                 start = blob.frame_number
                 current = blob
+                if current_fragment_identifier == 49:
+                    print(blob.is_an_individual)
+                    print(blob.image_for_identification.shape)
 
                 while len(current.next) > 0 and current.next[0].fragment_identifier == current_fragment_identifier:
                     current = current.next[0]
+                    if current_fragment_identifier == 49:
+                        print(current.is_an_individual)
+                        print(current.image_for_identification.shape)
                     bounding_box_in_frame_coordinates = [current.bounding_box_in_frame_coordinates] if current.is_a_crossing else []
                     images, bounding_boxes, centroids, areas, pixels = append_values_to_lists([current.image_for_identification,
                                                                 bounding_box_in_frame_coordinates,
