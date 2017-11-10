@@ -38,12 +38,13 @@ def get_number_of_accumulation_steps(list_of_fragments):
     return len(np.unique([fragment.accumulation_step for fragment in list_of_fragments.fragments
                         if fragment.accumulation_step is not None]))
 
-def plot_accumulation_step_from_fragments(fragments, ax, accumulation_step, plot_assignment_flag, colors):
+def plot_accumulation_step_from_fragments(fragments, ax, accumulation_step, plot_assignment_flag, colors, identity_to_blob_hierarchy_list):
     for fragment in fragments:
         if fragment.is_an_individual \
             and (fragment.used_for_training or plot_assignment_flag and not fragment.used_for_training) \
             and fragment.accumulation_step <= accumulation_step:
-            blob_index = fragment.assigned_identity-1
+            # blob_index = fragment.assigned_identity-1
+            blob_index = identity_to_blob_hierarchy_list[fragment.assigned_identity-1]
             (start, end) = fragment.start_end
             ax.add_patch(
                 patches.Rectangle(
@@ -52,7 +53,7 @@ def plot_accumulation_step_from_fragments(fragments, ax, accumulation_step, plot
                     1.,          # height
                     fill=True,
                     edgecolor=None,
-                    facecolor=colors[fragment.assigned_identity],
+                    facecolor=colors[fragment.assigned_identity-1],
                     alpha = 1. if fragment.used_for_training else .5
                 )
             )
@@ -78,15 +79,16 @@ def plot_validation_and_training_accuracies(video, ax):
     ax.bar(np.arange(video.number_of_animals)+1, validation_individual_accuracies, width, color = 'b', alpha=.5, label = 'validation', align = 'edge')
     ax.bar(np.arange(video.number_of_animals)+1-width, training_individual_accuracies, width, color = 'r', alpha=.5, label = 'training', align = 'edge')
 
-def plot_individual_certainty(video, ax, colors):
-    ax.bar(np.arange(video.number_of_animals)+1, video.individual_P2, color = colors[1:])
+def plot_individual_certainty(video, ax, colors, identity_to_blob_hierarchy_list):
+    # ax.bar(np.arange(video.number_of_animals)+1, video.individual_P2, color = colors[1:])
+    ax.bar(np.asarray(identity_to_blob_hierarchy_list) + 1, video.individual_P2, color = colors)
     ax.axhline(1., color = 'k', linestyle = '--')
 
 def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps):
 
     [ax.set_ylabel('Individual', fontsize = 12) for ax in ax_arr]
-    [ax.set_yticks(range(0,video.number_of_animals,2)) for ax in ax_arr]
-    [ax.set_yticklabels(range(1,video.number_of_animals + 1,2)) for ax in ax_arr]
+    [ax.set_yticks(range(19,video.number_of_animals+1,20)) for ax in ax_arr]
+    [ax.set_yticklabels(range(20,video.number_of_animals+1,20)) for ax in ax_arr]
     [ax.set_xticklabels([]) for ax in ax_arr[:-1]]
     [ax.set_xlim([0., video.number_of_frames]) for ax in ax_arr]
     [ax.set_ylim([-.5, video.number_of_animals + .5 - 1]) for ax in ax_arr]
@@ -131,8 +133,8 @@ def set_properties_assignment(video, fig, ax, number_of_accumulation_steps):
     text_axes.grid(False)
     sns.despine(ax = text_axes, left=True, bottom=True, right=True)
 
-    ax.set_yticks(range(0,video.number_of_animals,2))
-    ax.set_yticklabels(range(1,video.number_of_animals + 1,2))
+    ax.set_yticks(range(19,video.number_of_animals+1,20))
+    ax.set_yticklabels(range(20,video.number_of_animals+1,20))
     ax.set_xlim([0., video.number_of_frames])
     ax.set_ylim([-.5, video.number_of_animals + .5 - 1])
     ax.set_xlabel('Frame number', fontsize = 12)
@@ -153,19 +155,26 @@ def get_list_of_accuulation_steps_to_plot(number_of_accumulation_steps):
         list_of_accumulation_steps.append(number_of_accumulation_steps-1)
         return list_of_accumulation_steps
 
+def get_identity_to_blob_hierarchy_list(list_of_fragments):
+    return [fragment.blob_hierarchy_in_starting_frame
+            for fragment in list_of_fragments.fragments
+            if fragment.accumulation_step == 0]
+
 def plot_accumulation_steps(video, list_of_fragments, training_dict, validation_dict):
     plt.ion()
     sns.set_style("ticks")
     number_of_accumulation_steps = get_number_of_accumulation_steps(list_of_fragments)
+    identity_to_blob_hierarchy_list = get_identity_to_blob_hierarchy_list(list_of_fragments)
+    # identity_to_blob_hierarchy_list = range(video.number_of_animals)
 
-    list_of_accumulation_steps = get_list_of_accuulation_steps_to_plot(number_of_accumulation_steps)
-
+    # list_of_accumulation_steps = get_list_of_accuulation_steps_to_plot(number_of_accumulation_steps)
+    list_of_accumulation_steps = [0, 1, 2, 7]
     fig1 = plt.figure()
     window = plt.get_current_fig_manager().window
     screen_y = window.winfo_screenheight()
     screen_x = window.winfo_screenwidth()
     fig1.set_size_inches((screen_x*2/3/100,screen_y/100))
-    colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=True)
+    colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=False)
 
     ax_arr_fragments = []
     ax_arr_network_accuracy = []
@@ -174,17 +183,17 @@ def plot_accumulation_steps(video, list_of_fragments, training_dict, validation_
     for i, accumulation_step in enumerate(list_of_accumulation_steps):
         ax = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i, 0), colspan=3)
         ax_arr_fragments.append(ax)
-        plot_accumulation_step_from_fragments(list_of_fragments.fragments, ax, accumulation_step, False, colors)
+        plot_accumulation_step_from_fragments(list_of_fragments.fragments, ax, accumulation_step, False, colors, identity_to_blob_hierarchy_list)
 
         ax = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i, 3), colspan=2)
         ax_arr_network_accuracy.append(ax)
         plot_accuracy_step(ax, accumulation_step, training_dict, validation_dict)
 
     ax_assignment = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 1, 0), colspan=5)
-    plot_accumulation_step_from_fragments(list_of_fragments.fragments, ax_assignment, accumulation_step, True, colors)
+    plot_accumulation_step_from_fragments(list_of_fragments.fragments, ax_assignment, accumulation_step, True, colors, identity_to_blob_hierarchy_list)
 
     ax_final_accuracy = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 2, 0), colspan=5)
-    plot_individual_certainty(video, ax_final_accuracy, colors)
+    plot_individual_certainty(video, ax_final_accuracy, colors, identity_to_blob_hierarchy_list)
 
     fig1.subplots_adjust(left=None, bottom=.1, right=None, top=.95,
                 wspace=None, hspace=.5)
@@ -193,7 +202,7 @@ def plot_accumulation_steps(video, list_of_fragments, training_dict, validation_
     set_properties_assignment(video, fig1, ax_assignment, number_of_accumulation_steps_to_plot)
     set_properties_final_accuracy(video, fig1, ax_final_accuracy, number_of_accumulation_steps_to_plot)
 
-    fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps.pdf'), transparent=False)
+    fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps_1.pdf'), transparent=False)
     plt.show()
 
 if __name__ == '__main__':

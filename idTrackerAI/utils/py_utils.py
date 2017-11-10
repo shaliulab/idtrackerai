@@ -11,7 +11,9 @@ import cPickle as pickle
 import sys
 from pprint import pprint
 import logging
+import matplotlib
 import subprocess
+
 # sys.path.append('../utils')
 
 logger = logging.getLogger("__main__.py_utils")
@@ -151,19 +153,16 @@ def scanFolder(path):
         paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
     return paths
 
-def get_spaced_colors_util(n,norm=False,black=True):
-    max_value = 16581375 #255**3
-    interval = int(max_value / n)
-    colors = [hex(I)[2:].zfill(6) for I in range(100, max_value, interval)]
+def get_spaced_colors_util(n,norm=False,black=True, cmap = 'jet'):
+    RGB_tuples = matplotlib.cm.get_cmap(cmap)
     if norm:
-        rgbcolorslist = [(int(i[4:], 16)/256., int(i[2:4], 16)/256., int(i[:2], 16)/256.) for i in colors]
+        colors = [RGB_tuples(i/n) for i in range(n)]
     else:
-        rgbcolorslist = [(int(i[:2], 16), int(i[2:4], 16), int(i[4:], 16)) for i in colors]
-
+        colors = [tuple(np.asarray(RGB_tuples(i/n) * 256)) for i in range(n)]
     if black:
         black = (0., 0., 0.)
-        rgbcolorslist.insert(0, black)
-    return rgbcolorslist
+        colors.insert(0, black)
+    return colors
 
 def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = '', nSegment = None):
     import cPickle as pickle
