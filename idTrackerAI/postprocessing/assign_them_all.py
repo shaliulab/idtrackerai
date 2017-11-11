@@ -528,7 +528,7 @@ if __name__ == "__main__":
     list_of_blobs = ListOfBlobs.load(video.blobs_path)
     if len(list_of_blobs.blobs_in_video[-1]) == 0:
         list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
-    list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
+    list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
     list_of_blobs = close_trajectories_gaps(video, list_of_blobs)
     # while continue_erosion_protocol:
     #     #print('\n')
@@ -553,4 +553,4 @@ if __name__ == "__main__":
 
     video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
     video.save()
-    list_of_blobs.save(path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
+    list_of_blobs.save(path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames, video_has_been_segmented = video.has_been_segmented)

@@ -719,6 +719,7 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
                                     'resolution_reduction',
                                     'maximum_number_of_blobs',
+                                    'number_of_channels', 
                                     'median_body_length',
                                     'model_area',
                                     'identification_image_size',

@@ -111,9 +111,9 @@ def compute_velocities_consecutive_fragments(neighbour_fragment_past, fragment, 
         velocities[1] = neighbour_fragment_future.compute_border_velocity(fragment)
     return velocities
 
-def correct_impossible_velocity_jumps_loop(list_of_fragments, scope = None):
-    fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(scope)
-    impossible_velocity_threshold = list_of_fragments.video.velocity_threshold * VELOCITY_TOLERANCE
+def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = None):
+    fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(scope, video.first_frame_first_global_fragment)
+    impossible_velocity_threshold = video.velocity_threshold * VELOCITY_TOLERANCE
 
     for fragment in tqdm(fragments_in_direction, desc = 'Correcting impossible velocity jumps ' + scope):
         if fragment.is_an_individual and fragment.assigned_identity != 0:
@@ -150,6 +150,6 @@ def correct_impossible_velocity_jumps_loop(list_of_fragments, scope = None):
                 # print("corrected identity: ", fragment.assigned_identity)
 
 
-def correct_impossible_velocity_jumps(list_of_fragments):
-    correct_impossible_velocity_jumps_loop(list_of_fragments, scope = 'to_the_past')
-    correct_impossible_velocity_jumps_loop(list_of_fragments, scope = 'to_the_future')
+def correct_impossible_velocity_jumps(video, list_of_fragments):
+    correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = 'to_the_past')
+    correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = 'to_the_future')

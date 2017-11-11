@@ -398,7 +398,13 @@ class Video(object):
         new_session_name = 'session_' + new_session_name
         current_session_name = os.path.split(self.session_folder)[1]
         logger.info("Updating checkpoint files")
-        folders_to_check = ['crossings_detector_folder', 'pretraining_folder', 'accumulation_folder']
+        folders_to_check = ['video_folder',
+                            'preprocessing_folder',
+                            'logs_folder',
+                            'previous_session_folder'
+                            'crossings_detector_folder',
+                            'pretraining_folder',
+                            'accumulation_folder']
 
         for folder in folders_to_check:
             if hasattr(self, folder) and getattr(self, folder) is not None:
