@@ -18,7 +18,7 @@ from list_of_blobs import ListOfBlobs
 from blob import Blob
 from list_of_fragments import ListOfFragments
 from fragment import Fragment
-# from GUI_utils import selectDir
+from GUI_utils import selectDir
 from py_utils import get_spaced_colors_util
 
 
@@ -58,6 +58,7 @@ def plot_accumulation_step_from_fragments(fragments, ax, accumulation_step, plot
                 )
             )
 
+
 def plot_accuracy_step(ax, accumulation_step, training_dict, validation_dict):
     total_epochs_completed_previous_step = int(np.sum(training_dict['number_of_epochs_completed'][:accumulation_step]))
     total_epochs_completed_this_step = int(np.sum(training_dict['number_of_epochs_completed'][:accumulation_step + 1]))
@@ -70,33 +71,31 @@ def plot_accuracy_step(ax, accumulation_step, training_dict, validation_dict):
     ax.plot(range(total_epochs_completed_previous_step, total_epochs_completed_this_step),
                 validation_dict['accuracy'][total_epochs_completed_previous_step:total_epochs_completed_this_step], '-b', label = 'validation')
 
-
-def plot_validation_and_training_accuracies(video, ax):
-    validation_individual_accuracies = getattr(video, 'validation_individual_accuracies_' + str(video.accumulation_trial))[-1]
-    training_individual_accuracies = getattr(video, 'training_individual_accuracies_' + str(video.accumulation_trial))[-1]
-
-    width = 0.35
-    ax.bar(np.arange(video.number_of_animals)+1, validation_individual_accuracies, width, color = 'b', alpha=.5, label = 'validation', align = 'edge')
-    ax.bar(np.arange(video.number_of_animals)+1-width, training_individual_accuracies, width, color = 'r', alpha=.5, label = 'training', align = 'edge')
-
 def plot_individual_certainty(video, ax, colors, identity_to_blob_hierarchy_list):
     # ax.bar(np.arange(video.number_of_animals)+1, video.individual_P2, color = colors[1:])
     ax.bar(np.asarray(identity_to_blob_hierarchy_list) + 1, video.individual_P2, color = colors)
-    ax.axhline(1., color = 'k', linestyle = '--')
+    ax.axhline(1., color = 'k', linestyle = '--', alpha = .4)
 
 def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps):
 
     [ax.set_ylabel('Individual', fontsize = 12) for ax in ax_arr]
     [ax.set_yticks(range(19,video.number_of_animals+1,20)) for ax in ax_arr]
     [ax.set_yticklabels(range(20,video.number_of_animals+1,20)) for ax in ax_arr]
-    [ax.set_xticklabels([]) for ax in ax_arr[:-1]]
+    [ax.set_xticklabels([]) for ax in ax_arr]
     [ax.set_xlim([0., video.number_of_frames]) for ax in ax_arr]
     [ax.set_ylim([-.5, video.number_of_animals + .5 - 1]) for ax in ax_arr]
     for i, ax in enumerate(ax_arr):
         pos = ax.get_position()
         ax.set_position([pos.x0, pos.y0 + .015 * i , pos.width, pos.height])
 
-    ax_arr[-1].set_xlabel('Frame number', fontsize = 12)
+    axes_position_first_acc = ax_arr[0].get_position()
+    axes_position_last_acc = ax_arr[number_of_accumulation_steps - 1].get_position()
+    text_axes = fig.add_axes([axes_position_last_acc.x0 - .05, axes_position_last_acc.y0, 0.01, (axes_position_first_acc.y0 + axes_position_first_acc.height) - axes_position_last_acc.y0])
+    text_axes.text(0.5, 0.5,'Accumulation steps', horizontalalignment='center', verticalalignment='center', rotation=90, fontsize = 15)
+    text_axes.set_xticks([])
+    text_axes.set_yticks([])
+    text_axes.grid(False)
+    sns.despine(ax = text_axes, left=True, bottom=True, right=True)
 
 def set_properties_network_accuracy(video, fig, ax_arr, number_of_accumulation_steps, total_number_of_epochs_completed):
 
@@ -111,23 +110,13 @@ def set_properties_network_accuracy(video, fig, ax_arr, number_of_accumulation_s
     ax_arr[-1].set_xlabel('Epoch number', fontsize = 12)
     ax_arr[0].legend()
 
-    axes_position_first_acc = ax_arr[0].get_position()
-    axes_position_last_acc = ax_arr[number_of_accumulation_steps - 1].get_position()
-    text_axes = fig.add_axes([axes_position_last_acc.x0 + axes_position_last_acc.width + .01, axes_position_last_acc.y0, 0.01, (axes_position_first_acc.y0 + axes_position_first_acc.height) - axes_position_last_acc.y0])
-    text_axes.text(0.5, 0.5,'Accumulation steps', horizontalalignment='center', verticalalignment='center', rotation=-90, fontsize = 15)
-    text_axes.set_xticks([])
-    text_axes.set_yticks([])
-    text_axes.grid(False)
-    sns.despine(ax = text_axes, left=True, bottom=True, right=True)
-
-
-def set_properties_assignment(video, fig, ax, number_of_accumulation_steps):
+def set_properties_assignment(video, fig, ax, number_of_accumulation_steps, zoomed_frames = None):
     pos = ax.get_position()
-    ax.set_position([pos.x0, pos.y0 + .008 * number_of_accumulation_steps , pos.width, pos.height])
+    ax.set_position([pos.x0, pos.y0 + .015 * number_of_accumulation_steps , pos.width, pos.height])
 
     axes_position_assignment = ax.get_position()
-    text_axes = fig.add_axes([axes_position_assignment.x0 + axes_position_assignment.width + .01, axes_position_assignment.y0, 0.01, axes_position_assignment.height])
-    text_axes.text(0.5, 0.5,'Assignment', horizontalalignment='center', verticalalignment='center', rotation=-90, fontsize = 15)
+    text_axes = fig.add_axes([axes_position_assignment.x0 - .05, axes_position_assignment.y0, 0.01, axes_position_assignment.height])
+    text_axes.text(0.5, 0.5,'Assignment', horizontalalignment='center', verticalalignment='center', rotation=90, fontsize = 15)
     text_axes.set_xticks([])
     text_axes.set_yticks([])
     text_axes.grid(False)
@@ -139,6 +128,15 @@ def set_properties_assignment(video, fig, ax, number_of_accumulation_steps):
     ax.set_ylim([-.5, video.number_of_animals + .5 - 1])
     ax.set_xlabel('Frame number', fontsize = 12)
     ax.set_ylabel('Individual', fontsize = 12)
+    ax.axvline(zoomed_frames[0], color = 'k', linestyle = '-')
+    ax.axvline(zoomed_frames[1], color = 'k', linestyle = '-')
+
+def set_properties_zoom_assignment(video, fig1, ax, zoom = None):
+    pos = ax.get_position()
+    ax.set_position([pos.x0 + 0.05, pos.y0, pos.width - 0.05, pos.height])
+    ax.set_xlim(zoom)
+    ax.set_ylim([-.5, video.number_of_animals + .5 - 1])
+    ax.set_yticks([])
 
 def set_properties_final_accuracy(video, fig, ax, number_of_accumulation_steps):
     ax.set_xlabel('Individual', fontsize = 12)
@@ -168,7 +166,7 @@ def plot_accumulation_steps(video, list_of_fragments, training_dict, validation_
     # identity_to_blob_hierarchy_list = range(video.number_of_animals)
 
     # list_of_accumulation_steps = get_list_of_accuulation_steps_to_plot(number_of_accumulation_steps)
-    list_of_accumulation_steps = [0, 1, 2, 7]
+    list_of_accumulation_steps = [0, 1, 2, number_of_accumulation_steps - 1]
     fig1 = plt.figure()
     window = plt.get_current_fig_manager().window
     screen_y = window.winfo_screenheight()
@@ -189,8 +187,13 @@ def plot_accumulation_steps(video, list_of_fragments, training_dict, validation_
         ax_arr_network_accuracy.append(ax)
         plot_accuracy_step(ax, accumulation_step, training_dict, validation_dict)
 
-    ax_assignment = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 1, 0), colspan=5)
+    ax_assignment = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 1, 0), colspan=3)
     plot_accumulation_step_from_fragments(list_of_fragments.fragments, ax_assignment, accumulation_step, True, colors, identity_to_blob_hierarchy_list)
+
+    axes_position_last_acc_step_accuracy = ax.get_position()
+    ax_zoom_assignment = fig1.add_axes([axes_position_last_acc_step_accuracy.x0, axes_position_last_acc_step_accuracy.y0 - .12,
+                                        axes_position_last_acc_step_accuracy.width, axes_position_last_acc_step_accuracy.height])
+    plot_accumulation_step_from_fragments(list_of_fragments.fragments, ax_zoom_assignment, accumulation_step, True, colors, identity_to_blob_hierarchy_list)
 
     ax_final_accuracy = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 2, 0), colspan=5)
     plot_individual_certainty(video, ax_final_accuracy, colors, identity_to_blob_hierarchy_list)
@@ -199,22 +202,24 @@ def plot_accumulation_steps(video, list_of_fragments, training_dict, validation_
                 wspace=None, hspace=.5)
     set_properties_fragments(video, fig1, ax_arr_fragments, number_of_accumulation_steps_to_plot)
     set_properties_network_accuracy(video, fig1, ax_arr_network_accuracy, number_of_accumulation_steps_to_plot, np.sum(training_dict['number_of_epochs_completed']))
-    set_properties_assignment(video, fig1, ax_assignment, number_of_accumulation_steps_to_plot)
+    zoomed_frames = (6000,7000)
+    set_properties_assignment(video, fig1, ax_assignment, number_of_accumulation_steps_to_plot, zoomed_frames = zoomed_frames)
+    set_properties_zoom_assignment(video, fig1, ax_zoom_assignment, zoom = zoomed_frames)
     set_properties_final_accuracy(video, fig1, ax_final_accuracy, number_of_accumulation_steps_to_plot)
 
     fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps_1.pdf'), transparent=False)
     plt.show()
 
 if __name__ == '__main__':
-    # session_path = selectDir('./') #select path to video
-    session_path = '/home/themis/Desktop/IdTrackerDeep/videos/idTrackerDeep_LargeGroups_3/100fish/First/session_2'
+    session_path = selectDir('./') #select path to video
+    # session_path = '/home/themis/Desktop/IdTrackerDeep/videos/idTrackerDeep_LargeGroups_3/100fish/First/session_2'
     video_path = os.path.join(session_path,'video_object.npy')
     video = np.load(video_path).item(0)
     # list_of_fragments = ListOfFragments.load(video.fragments_path)
     list_of_fragments_dictionaries = np.load(os.path.join(video._accumulation_folder,'light_list_of_fragments.npy'))
     fragments = [Fragment(number_of_animals = video.number_of_animals) for fragment_dictionary in list_of_fragments_dictionaries]
     [fragment.__dict__.update(fragment_dictionary) for fragment, fragment_dictionary in zip(fragments, list_of_fragments_dictionaries)]
-    light_list_of_fragments = ListOfFragments(video, fragments)
+    light_list_of_fragments = ListOfFragments(fragments)
     training_dict = np.load(os.path.join(video.accumulation_folder, 'training_loss_acc_dict.npy')).item()
     validation_dict = np.load(os.path.join(video.accumulation_folder, 'validation_loss_acc_dict.npy')).item()
     plot_accumulation_steps(video, light_list_of_fragments, training_dict, validation_dict)

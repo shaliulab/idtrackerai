@@ -275,7 +275,8 @@ def set_load_previous_dict(old_video, processes, existentFile):
                     'first_accumulation_finished',
                     'has_been_pretrained', 'second_accumulation_finished',
                     'has_been_assigned', 'has_duplications_solved',
-                    'has_crossings_solved', 'has_trajectories']
+                    'has_crossings_solved', 'has_trajectories',
+                    'has_trajectories_wo_gaps']
     for i, attribute in enumerate(attributes):
         attr_value = getattr(old_video, attribute)
         if attr_value == True:

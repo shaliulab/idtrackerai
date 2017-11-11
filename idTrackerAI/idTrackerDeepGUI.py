@@ -623,10 +623,11 @@ if __name__ == '__main__':
             list_of_blobs_no_gaps.blobs_in_video = list_of_blobs_no_gaps.blobs_in_video[:-1]
         list_of_blobs_no_gaps = close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
         video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
-        video.save()
         list_of_blobs_no_gaps.save(path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
         video._has_crossings_solved = True
+        video.save()
     else:
+        video.copy_attributes_between_two_video_objects(old_video, ['blobs_no_gaps_path'])
         list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_no_gaps_path)
         video._has_crossings_solved = True
         video.save()
