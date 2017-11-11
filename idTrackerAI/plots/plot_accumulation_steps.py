@@ -46,18 +46,14 @@ def plot_accumulation_step_from_fragments(fragments, ax, accumulation_step, plot
             # blob_index = fragment.assigned_identity-1
             blob_index = identity_to_blob_hierarchy_list[fragment.assigned_identity-1]
             (start, end) = fragment.start_end
-            ax.add_patch(
-                patches.Rectangle(
+            ax.add_patch(patches.Rectangle(
                     (start, blob_index - 0.5),   # (x,y)
                     end - start - 1,  # width
                     1.,          # height
                     fill=True,
                     edgecolor=None,
                     facecolor=colors[fragment.assigned_identity-1],
-                    alpha = 1. if fragment.used_for_training else .5
-                )
-            )
-
+                    alpha = 1. if fragment.used_for_training else .5))
 
 def plot_accuracy_step(ax, accumulation_step, training_dict, validation_dict):
     total_epochs_completed_previous_step = int(np.sum(training_dict['number_of_epochs_completed'][:accumulation_step]))
@@ -76,9 +72,9 @@ def plot_individual_certainty(video, ax, colors, identity_to_blob_hierarchy_list
     ax.bar(np.asarray(identity_to_blob_hierarchy_list) + 1, video.individual_P2, color = colors)
     ax.axhline(1., color = 'k', linestyle = '--', alpha = .4)
 
-def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps):
+def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps, list_of_accumulation_steps):
 
-    [ax.set_ylabel('Individual', fontsize = 12) for ax in ax_arr]
+    [ax.set_ylabel('Step %i \n\nIndividual' %i, fontsize = 12) for ax, i in zip(ax_arr, np.asarray(list_of_accumulation_steps) + 1)]
     [ax.set_yticks(range(19,video.number_of_animals+1,20)) for ax in ax_arr]
     [ax.set_yticklabels(range(20,video.number_of_animals+1,20)) for ax in ax_arr]
     [ax.set_xticklabels([]) for ax in ax_arr]
@@ -87,11 +83,12 @@ def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps):
     for i, ax in enumerate(ax_arr):
         pos = ax.get_position()
         ax.set_position([pos.x0, pos.y0 + .015 * i , pos.width, pos.height])
+    [sns.despine(ax = ax, left=True, bottom=False, right=True) for ax in ax_arr]
 
     axes_position_first_acc = ax_arr[0].get_position()
     axes_position_last_acc = ax_arr[number_of_accumulation_steps - 1].get_position()
-    text_axes = fig.add_axes([axes_position_last_acc.x0 - .05, axes_position_last_acc.y0, 0.01, (axes_position_first_acc.y0 + axes_position_first_acc.height) - axes_position_last_acc.y0])
-    text_axes.text(0.5, 0.5,'Accumulation steps', horizontalalignment='center', verticalalignment='center', rotation=90, fontsize = 15)
+    text_axes = fig.add_axes([axes_position_last_acc.x0 - .07, axes_position_last_acc.y0, 0.01, (axes_position_first_acc.y0 + axes_position_first_acc.height) - axes_position_last_acc.y0])
+    text_axes.text(0.5, 0.5,'Accumulation', horizontalalignment='center', verticalalignment='center', rotation=90, fontsize = 15)
     text_axes.set_xticks([])
     text_axes.set_yticks([])
     text_axes.grid(False)
@@ -106,6 +103,7 @@ def set_properties_network_accuracy(video, fig, ax_arr, number_of_accumulation_s
     for i, ax in enumerate(ax_arr):
         pos = ax.get_position()
         ax.set_position([pos.x0 + .05, pos.y0 + .015 * i , pos.width - 0.05, pos.height])
+    [sns.despine(ax = ax, left=False, bottom=False, right=True) for ax in ax_arr]
 
     ax_arr[-1].set_xlabel('Epoch number', fontsize = 12)
     ax_arr[0].legend()
@@ -113,9 +111,10 @@ def set_properties_network_accuracy(video, fig, ax_arr, number_of_accumulation_s
 def set_properties_assignment(video, fig, ax, number_of_accumulation_steps, zoomed_frames = None):
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0 + .015 * number_of_accumulation_steps , pos.width, pos.height])
+    sns.despine(ax = ax, left=True, bottom=False, right=True)
 
     axes_position_assignment = ax.get_position()
-    text_axes = fig.add_axes([axes_position_assignment.x0 - .05, axes_position_assignment.y0, 0.01, axes_position_assignment.height])
+    text_axes = fig.add_axes([axes_position_assignment.x0 - .07, axes_position_assignment.y0, 0.01, axes_position_assignment.height])
     text_axes.text(0.5, 0.5,'Assignment', horizontalalignment='center', verticalalignment='center', rotation=90, fontsize = 15)
     text_axes.set_xticks([])
     text_axes.set_yticks([])
@@ -128,8 +127,15 @@ def set_properties_assignment(video, fig, ax, number_of_accumulation_steps, zoom
     ax.set_ylim([-.5, video.number_of_animals + .5 - 1])
     ax.set_xlabel('Frame number', fontsize = 12)
     ax.set_ylabel('Individual', fontsize = 12)
-    ax.axvline(zoomed_frames[0], color = 'k', linestyle = '-')
-    ax.axvline(zoomed_frames[1], color = 'k', linestyle = '-')
+    ax.add_patch(patches.Rectangle(
+            (zoomed_frames[0], 0 - 0.5),   # (x,y)
+            zoomed_frames[1] - zoomed_frames[0] + 1,  # width
+            video.number_of_animals,          # height
+            fill = False,
+            edgecolor = 'k',
+            linewidth = 2.,
+            facecolor = None))
+
 
 def set_properties_zoom_assignment(video, fig1, ax, zoom = None):
     pos = ax.get_position()
@@ -141,6 +147,7 @@ def set_properties_zoom_assignment(video, fig1, ax, zoom = None):
 def set_properties_final_accuracy(video, fig, ax, number_of_accumulation_steps):
     ax.set_xlabel('Individual', fontsize = 12)
     ax.set_ylabel('Average \ncertainty', fontsize = 12)
+    sns.despine(ax = ax, left=False, bottom=False, right=True)
 
 def get_list_of_accuulation_steps_to_plot(number_of_accumulation_steps):
 
@@ -200,7 +207,7 @@ def plot_accumulation_steps(video, list_of_fragments, training_dict, validation_
 
     fig1.subplots_adjust(left=None, bottom=.1, right=None, top=.95,
                 wspace=None, hspace=.5)
-    set_properties_fragments(video, fig1, ax_arr_fragments, number_of_accumulation_steps_to_plot)
+    set_properties_fragments(video, fig1, ax_arr_fragments, number_of_accumulation_steps_to_plot, list_of_accumulation_steps)
     set_properties_network_accuracy(video, fig1, ax_arr_network_accuracy, number_of_accumulation_steps_to_plot, np.sum(training_dict['number_of_epochs_completed']))
     zoomed_frames = (6000,7000)
     set_properties_assignment(video, fig1, ax_assignment, number_of_accumulation_steps_to_plot, zoomed_frames = zoomed_frames)
