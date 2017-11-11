@@ -63,13 +63,13 @@ def plot_accuracy_step(ax, accumulation_step, training_dict, validation_dict):
     total_epochs_completed_previous_step = int(np.sum(training_dict['number_of_epochs_completed'][:accumulation_step]))
     total_epochs_completed_this_step = int(np.sum(training_dict['number_of_epochs_completed'][:accumulation_step + 1]))
 
-    ax.plot(training_dict['accuracy'][0:total_epochs_completed_previous_step], '-r', alpha = .3)
-    ax.plot(validation_dict['accuracy'][0:total_epochs_completed_previous_step], '-b', alpha = .3)
+    ax.plot(1. - np.asarray(training_dict['accuracy'][0:total_epochs_completed_previous_step]), '-r', alpha = .3)
+    ax.plot(1. - np.asarray(validation_dict['accuracy'][0:total_epochs_completed_previous_step]), '-b', alpha = .3)
 
     ax.plot(range(total_epochs_completed_previous_step, total_epochs_completed_this_step),
-                training_dict['accuracy'][total_epochs_completed_previous_step:total_epochs_completed_this_step], '-r', label = 'training')
+                1. - np.asarray(training_dict['accuracy'][total_epochs_completed_previous_step:total_epochs_completed_this_step]), '-r', label = 'training')
     ax.plot(range(total_epochs_completed_previous_step, total_epochs_completed_this_step),
-                validation_dict['accuracy'][total_epochs_completed_previous_step:total_epochs_completed_this_step], '-b', label = 'validation')
+                1. - np.asarray(validation_dict['accuracy'][total_epochs_completed_previous_step:total_epochs_completed_this_step]), '-b', label = 'validation')
 
 def plot_individual_certainty(video, ax, colors, identity_to_blob_hierarchy_list):
     # ax.bar(np.arange(video.number_of_animals)+1, video.individual_P2, color = colors[1:])
@@ -99,10 +99,10 @@ def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps):
 
 def set_properties_network_accuracy(video, fig, ax_arr, number_of_accumulation_steps, total_number_of_epochs_completed):
 
-    [ax.set_ylabel('Accuracy', fontsize = 12) for ax in ax_arr]
+    [ax.set_ylabel('Error', fontsize = 12) for ax in ax_arr]
     [ax.set_xticklabels([]) for ax in ax_arr[:-1]]
     [ax.set_xlim([0., total_number_of_epochs_completed]) for ax in ax_arr]
-    [ax.set_ylim([0, 1.05]) for ax in ax_arr]
+    [ax.set_ylim([-0.01, .1]) for ax in ax_arr]
     for i, ax in enumerate(ax_arr):
         pos = ax.get_position()
         ax.set_position([pos.x0 + .05, pos.y0 + .015 * i , pos.width - 0.05, pos.height])
@@ -162,8 +162,8 @@ def plot_accumulation_steps(video, list_of_fragments, training_dict, validation_
     plt.ion()
     sns.set_style("ticks")
     number_of_accumulation_steps = get_number_of_accumulation_steps(list_of_fragments)
-    identity_to_blob_hierarchy_list = get_identity_to_blob_hierarchy_list(list_of_fragments)
-    # identity_to_blob_hierarchy_list = range(video.number_of_animals)
+    # identity_to_blob_hierarchy_list = get_identity_to_blob_hierarchy_list(list_of_fragments)
+    identity_to_blob_hierarchy_list = range(video.number_of_animals)
 
     # list_of_accumulation_steps = get_list_of_accuulation_steps_to_plot(number_of_accumulation_steps)
     list_of_accumulation_steps = [0, 1, 2, number_of_accumulation_steps - 1]

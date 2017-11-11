@@ -291,7 +291,7 @@ if __name__ == '__main__':
         logger.info("Initialising accumulation network")
         net = ConvNetwork(accumulation_network_params)
         #if knowledge transfer is performed on the same animals we don't reinitialise the classification part of the net
-        video._knowledge_transfer_from_same_animals = False
+        video._knowledge_transfer_from_same_animals = False #XXX
         if video.tracking_with_knowledge_transfer:
             net.restore()
             same_animals = getInput("Same animals", "Are you tracking the same animals? y/N")
