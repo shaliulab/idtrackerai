@@ -1180,9 +1180,9 @@ class Validator(BoxLayout):
         self.popup_saving.dismiss()
 
     def go_and_save(self):
-        # self.list_of_fragments.update_from_list_of_blobs(self.blobs_in_video)
-        # self.list_of_fragments.save()
-        self.list_of_blobs.save()
+        # self.list_of_fragments.update_from_list_of_blobs(CHOSEN_VIDEO.video.fragment_identifier_to_index, self.blobs_in_video)
+        # self.list_of_fragments.save(video.fragments_path)
+        self.list_of_blobs.save(CHOSEN_VIDEO.video.blobs_path)
         CHOSEN_VIDEO.video.save()
 
     def modifyIdOpenPopup(self, blob_to_modify):

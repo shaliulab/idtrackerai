@@ -18,9 +18,9 @@ class Store_Accuracy_and_Loss(object):
         self.loss = []
         self.accuracy = []
         self.individual_accuracy = []
+        self.number_of_epochs_completed = []
         self.scope = scope
-        if network.is_restoring or network.is_knowledge_transfer:
-            self.load()
+        self.load()
 
     def append_data(self, loss_value, accuracy_value, individual_accuracy_value):
         self.loss.append(loss_value)
@@ -58,9 +58,6 @@ class Store_Accuracy_and_Loss(object):
         attribute_to_check = 'used_for_training' if self.scope == 'training' else 'used_for_pretraining'
         for fragment in fragments:
             if getattr(fragment, attribute_to_check) and fragment.is_an_individual:
-                print(fragment.identity)
-                print(fragment.identity_corrected_solving_duplication)
-                print(fragment.user_generated_identity)
                 if fragment.final_identity is not None:
                     blob_index = fragment.final_identity - 1
                 else:
@@ -86,7 +83,8 @@ class Store_Accuracy_and_Loss(object):
         ax4.set_xlim([0., video.number_of_frames])
         ax4.set_ylim([-.5, video.number_of_animals + .5 - 1])
 
-    def save(self):
+    def save(self, number_of_epochs_completed):
+        self.number_of_epochs_completed.append(number_of_epochs_completed)
         np.save(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy'), self.__dict__)
 
     def load(self):
