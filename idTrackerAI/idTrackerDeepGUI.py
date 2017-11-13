@@ -430,12 +430,13 @@ if __name__ == '__main__':
                                                             net,
                                                             video.knowledge_transfer_from_same_animals)
                 logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
+                percentage_of_accumulated_images.append(video.ratio_accumulated_images)
+                list_of_fragments.save_light_list(video._accumulation_folder)
                 if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                     break
                 else:
-                    percentage_of_accumulated_images.append(video.ratio_accumulated_images)
                     logger.info("This accumulation was not satisfactory. Try to start from a different global fragment")
-                    list_of_fragments.save_light_list(video._accumulation_folder)
+
 
 
             video.accumulation_trial = np.argmax(percentage_of_accumulated_images)
