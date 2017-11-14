@@ -36,6 +36,9 @@ def train(video,
     logger.info("Training...")
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training', scope = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation', scope = 'training')
+    print("-----------------------")
+    print("store_training_accuracy_and_loss_data", store_training_accuracy_and_loss_data.__dict__.keys())
+    print("store_validation_accuracy_and_loss_data", store_validation_accuracy_and_loss_data.__dict__.keys())
     if plot_flag:
         plt.ion()
         fig, ax_arr = plt.subplots(4)

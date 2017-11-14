@@ -399,8 +399,10 @@ if __name__ == '__main__':
         video.pretraining_time = time.time() - video.pretraining_time
         #### Accumulation ####
         video.second_accumulation_time = time.time()
-        percentage_of_accumulated_images = [video._ratio_accumulated_images]
+        percentage_of_accumulated_images = [video.ratio_accumulated_images]
         if not loadPreviousDict['second_accumulation']:
+            if isinstance(video.first_frame_first_global_fragment, int):
+                video._first_frame_first_global_fragment = [video.first_frame_first_global_fragment]
             for i in range(1,4):
                 print('\nAccumulation %i ---------------------------------------------------------' %i)
                 logger.info("Starting accumulation")
