@@ -91,3 +91,5 @@ class Store_Accuracy_and_Loss(object):
         if os.path.isfile(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy')):
             loss_accuracy_dictionary = np.load(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy')).item()
             self.__dict__ = loss_accuracy_dictionary
+            if not hasattr(self, 'number_of_epochs_completed'):
+                self.number_of_epochs_completed = []

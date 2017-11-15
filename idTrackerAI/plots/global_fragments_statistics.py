@@ -169,7 +169,11 @@ if __name__ == '__main__':
     session_path = selectDir('./') #select path to video
     video_path = os.path.join(session_path,'video_object.npy')
     video = np.load(video_path).item(0)
+    print("loading list_of_blobs")
     list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    print("loading list_of_fragments")
     list_of_fragments = ListOfFragments.load(video.fragments_path)
+    print("loading list_of_global_fragments")
     list_of_global_fragments = ListOfGlobalFragments.load(video.global_fragments_path, list_of_fragments.fragments)
+    print("plotting")
     compute_and_plot_fragments_statistics(video, video.model_area, list_of_blobs, list_of_fragments, list_of_global_fragments)

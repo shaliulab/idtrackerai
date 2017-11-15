@@ -14,53 +14,43 @@ from model_area import ModelArea
 logger = logging.getLogger("__main__.list_of_blobs")
 
 class ListOfBlobs(object):
-    def __init__(self, video, blobs_in_video = None):
-        self.video = video
+    def __init__(self, blobs_in_video = None, number_of_frames = None):
         self.blobs_in_video = blobs_in_video
-        self.number_of_frames_with_blobs = len(self.blobs_in_video)
-        self.check_consistency_number_of_frames_and_number_of_frames_with_blobs()
+        self.number_of_frames = len(self.blobs_in_video)
         self.blobs_are_connected = False
-
-    def check_consistency_number_of_frames_and_number_of_frames_with_blobs(self):
-        frame_diff = int(self.video.number_of_frames - self.number_of_frames_with_blobs)
-        if frame_diff != 0:
-            logger.warning("%i frames do not contain blobs" %frame_diff)
-        self.number_of_frames_without_blobs = frame_diff
 
     def disconnect(self):
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
                 blob.next, blob.previous = [], []
 
-    def reconnect(self):
-        if self.video.has_been_segmented:
+    def reconnect(self, video_has_been_segmented):
+        if video_has_been_segmented:
             logger.info("Reconnecting list of blob objects")
-            for frame_i in tqdm(range(1,self.video.number_of_frames), desc = 'reconnecting blobs'):
+            for frame_i in tqdm(range(1,self.number_of_frames), desc = 'reconnecting blobs'):
                 for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                     if blob_0.overlaps_with(blob_1):
                         blob_0.now_points_to(blob_1)
 
-    def save(self, path_to_save = None, number_of_chunks = 1):
+    def save(self, path_to_save = None, number_of_chunks = 1, video_has_been_segmented = None):
         """save instance"""
-        if path_to_save is None:
-            path_to_save = self.video.blobs_path
         self.disconnect()
         logger.info("saving blobs list at %s" %path_to_save)
         np.save(path_to_save, self)
-        self.reconnect()
+        self.reconnect(video_has_been_segmented)
         self.blobs_are_connected = True
 
     @classmethod
-    def load(cls, path_to_load_blob_list_file):
+    def load(cls, path_to_load_blob_list_file, video_has_been_segmented = None):
         logger.info("loading blobs list from %s" %path_to_load_blob_list_file)
         list_of_blobs = np.load(path_to_load_blob_list_file).item()
-        list_of_blobs.reconnect()
+        list_of_blobs.reconnect(video_has_been_segmented)
         list_of_blobs.blobs_are_connected = True
         return list_of_blobs
 
-    def compute_fragment_identifier_and_blob_index(self):
+    def compute_fragment_identifier_and_blob_index(self, number_of_animals):
         counter = 0
-        possible_blob_indices = range(self.video.number_of_animals)
+        possible_blob_indices = range(number_of_animals)
 
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'assigning fragment identifier'):
             used_blob_indices = [blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None]
@@ -127,7 +117,7 @@ class ListOfBlobs(object):
             for blob in blobs_in_frame:
                 blob.frame_number = frame_number
 
-        for frame_i in tqdm(xrange(1, self.number_of_frames_with_blobs), desc = 'Connecting blobs '):
+        for frame_i in tqdm(xrange(1, self.number_of_frames), desc = 'Connecting blobs '):
             set_frame_number_to_blobs_in_frame(self.blobs_in_video[frame_i-1], frame_i-1)
 
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
@@ -135,7 +125,7 @@ class ListOfBlobs(object):
                     blob_0.now_points_to(blob_1)
         set_frame_number_to_blobs_in_frame(self.blobs_in_video[frame_i], frame_i)
 
-    def compute_model_area_and_body_length(self):
+    def compute_model_area_and_body_length(self, number_of_animals):
         """computes the median and standard deviation of all the blobs of the video
         and the median_body_length estimated from the diagonal of the bounding box.
         These values are later used to discard blobs that are not fish and potentially
@@ -144,30 +134,30 @@ class ListOfBlobs(object):
         #areas are collected throughout the entire video in the cores of the global fragments
         areas_and_body_length = np.asarray([(blob.area,blob.estimated_body_length) for blobs_in_frame in self.blobs_in_video
                                                                                     for blob in blobs_in_frame
-                                                                                    if len(blobs_in_frame) == self.video.number_of_animals])
+                                                                                    if len(blobs_in_frame) == number_of_animals])
         median_area = np.median(areas_and_body_length[:,0])
         mean_area = np.mean(areas_and_body_length[:,0])
         std_area = np.std(areas_and_body_length[:,0])
         median_body_length = np.median(areas_and_body_length[:,1])
         return ModelArea(mean_area, median_area, std_area), median_body_length
 
-    def apply_model_area_to_video(self, model_area, identification_image_size):
-        def apply_model_area_to_blobs_in_frame(video, blobs_in_frame, model_area, identification_image_size):
+    def apply_model_area_to_video(self, video, model_area, identification_image_size, number_of_animals):
+        def apply_model_area_to_blobs_in_frame(video, number_of_animals, blobs_in_frame, model_area, identification_image_size):
             number_of_blobs = len(blobs_in_frame)
             for blob in blobs_in_frame:
-                blob.apply_model_area(video, model_area, identification_image_size, number_of_blobs)
+                blob.apply_model_area(video, number_of_animals, model_area, identification_image_size, number_of_blobs)
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'Applying model area'):
-            apply_model_area_to_blobs_in_frame(self.video, blobs_in_frame, model_area, identification_image_size)
+            apply_model_area_to_blobs_in_frame(video, number_of_animals, blobs_in_frame, model_area, identification_image_size)
 
     def get_data_plot(self):
         return [blob.area for blobs_in_frame in self.blobs_in_video for blob in blobs_in_frame]
 
 
-    def check_maximal_number_of_blob(self):
+    def check_maximal_number_of_blob(self, number_of_animals):
         frames_with_more_blobs_than_animals = []
         for frame_number, blobs_in_frame in enumerate(self.blobs_in_video):
 
-            if len(blobs_in_frame) > self.video.number_of_animals:
+            if len(blobs_in_frame) > number_of_animals:
                 frames_with_more_blobs_than_animals.append(frame_number)
 
         if len(frames_with_more_blobs_than_animals) > 0:
@@ -176,7 +166,7 @@ class ListOfBlobs(object):
             raise ValueError('Please check your segmentaion')
         return frames_with_more_blobs_than_animals
 
-    def update_from_list_of_fragments(self, fragments):
+    def update_from_list_of_fragments(self, fragments, fragment_identifier_to_index):
         attributes = ['identity',
                         'identity_corrected_solving_duplication',
                         'user_generated_identity', 'used_for_training',
@@ -184,7 +174,7 @@ class ListOfBlobs(object):
 
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'updating list of blobs from list of fragments'):
             for blob in blobs_in_frame:
-                fragment = fragments[self.video.fragment_identifier_to_index[blob.fragment_identifier]]
+                fragment = fragments[fragment_identifier_to_index[blob.fragment_identifier]]
                 [setattr(blob, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes]
 
     def compute_nose_and_head_coordinates(self):
