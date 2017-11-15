@@ -93,7 +93,7 @@ def compute_and_plot_fragments_statistics(video, model_area = None,
     gamma_values = gamma_fitted.rvs(len(number_of_images_in_individual_fragments))
     gamma_fitted_logpdf = pdf2logpdf(gamma_fitted.pdf)
     ######### number of images in individual fragments ########
-    nbins = 10
+    nbins = 25
     ax = plt.subplot(4,5,2)
     MIN = np.min(number_of_images_in_individual_fragments)
     MAX = np.max(number_of_images_in_individual_fragments)
