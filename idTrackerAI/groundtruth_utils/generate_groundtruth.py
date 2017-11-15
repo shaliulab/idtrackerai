@@ -49,15 +49,17 @@ class GroundTruth(object):
         np.save(path_to_save_groundtruth, self)
         logger.info("done")
 
-def generate_groundtruth(video, blobs_in_video = None, start = None, end = None):
+def generate_groundtruth(video, blobs_in_video = None, start = None, end = None, wrong_crossing_counter = None, save_gt = True):
     """Generates a list of light blobs_in_video, given a video object corresponding to a
     tracked video
     """
     #make sure the video has been succesfully tracked
     assert video.has_been_assigned == True
     blobs_in_video_groundtruth = []
+
     for blobs_in_frame in blobs_in_video:
         blobs_in_frame_groundtruth = []
+
         for blob in blobs_in_frame:
             gt_blob = GroundTruthBlob()
             gt_blob.get_attribute(blob)
@@ -69,7 +71,9 @@ def generate_groundtruth(video, blobs_in_video = None, start = None, end = None)
                             blobs_in_video = blobs_in_video_groundtruth,
                             start = start,
                             end = end)
-    groundtruth.save()
+    groundtruth.wrong_crossing_counter = wrong_crossing_counter
+    if save_gt:
+        groundtruth.save()
     return groundtruth
 
 if __name__ == "__main__":
