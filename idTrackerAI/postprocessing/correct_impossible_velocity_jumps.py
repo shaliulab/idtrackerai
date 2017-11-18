@@ -45,12 +45,12 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
             if np.all(np.isnan(velocities_between_fragments)):
                 speed_of_candidate_identities.append(impossible_velocity_threshold)
             else:
-                speed_of_candidate_identities.append(np.nanmin(velocities_between_fragments))
+                speed_of_candidate_identities.append(np.nanmax(velocities_between_fragments))
         fragment._user_generated_identity = None
         argsort_identities_by_speed = np.argsort(speed_of_candidate_identities)
         return np.asarray(list(available_identities))[argsort_identities_by_speed], np.asarray(speed_of_candidate_identities)[argsort_identities_by_speed]
 
-    def get_candidate_identities_by_above_random_P2(fragment, fragments, non_available_identities, available_identities, impossible_velocity_threshold):
+    def get_candidate_identities_above_random_P2(fragment, fragments, non_available_identities, available_identities, impossible_velocity_threshold):
         P2_vector = fragment.P2_vector
         if len(non_available_identities) > 0:
             P2_vector[non_available_identities - 1] = 0
@@ -67,11 +67,11 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
     non_available_identities, available_identities = get_available_and_non_available_identities(fragment)
     if len(available_identities) == 1:
         candidate_id = list(available_identities)[0]
-    elif len(available_identities) == 0:
-        candidate_id = fragment.assigned_identity
+    # elif len(available_identities) == 0:
+    #     candidate_id = fragment.assigned_identity
     else:
         candidate_identities_speed, speed_of_candidate_identities = get_candidate_identities_by_minimum_speed(fragment, fragments, available_identities, impossible_velocity_threshold)
-        candidate_identities_P2 = get_candidate_identities_by_above_random_P2(fragment,
+        candidate_identities_P2 = get_candidate_identities_above_random_P2(fragment,
                                                                     fragments,
                                                                     non_available_identities,
                                                                     available_identities,

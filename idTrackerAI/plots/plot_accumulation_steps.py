@@ -40,20 +40,6 @@ def get_number_of_accumulation_steps(list_of_fragments):
 
 def plot_accumulation_step_from_fragments(fragments, ax, accumulation_step, plot_assignment_flag, colors, identity_to_blob_hierarchy_list):
     for fragment in fragments:
-        # if fragment.is_an_individual \
-        #     and (fragment.used_for_training or plot_assignment_flag and not fragment.used_for_training) \
-        #     and fragment.accumulation_step <= accumulation_step:
-        #     # blob_index = fragment.assigned_identity-1
-        #     blob_index = identity_to_blob_hierarchy_list[fragment.assigned_identity-1]
-        #     (start, end) = fragment.start_end
-        #     ax.add_patch(patches.Rectangle(
-        #             (start, blob_index - 0.5),   # (x,y)
-        #             end - start - 1,  # width
-        #             1.,          # height
-        #             fill = True,
-        #             edgecolor = None,
-        #             facecolor = colors[fragment.assigned_identity-1],
-        #             alpha = 1. if fragment.used_for_training else .5))
         if fragment.is_an_individual:
             # blob_index = fragment.assigned_identity-1
             blob_index = identity_to_blob_hierarchy_list[fragment.assigned_identity-1]
