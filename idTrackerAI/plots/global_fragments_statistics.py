@@ -87,7 +87,7 @@ def compute_and_plot_fragments_statistics(video, model_area = None,
             ax.set_ylim([0,np.max(hist[index_threshold:]) + 100])
 
     ######## Gamma fit to number of images in individual fragments ########
-    shape, loc, scale = gamma.fit(number_of_images_in_individual_fragments, floc = .99)
+    shape, loc, scale = gamma.fit(number_of_images_in_individual_fragments, floc = 0.99)
     print("shape %.2f, loc %.2f, scale %.2f" %(shape, loc, scale))
     gamma_fitted = gamma(shape, loc, scale)
     gamma_values = gamma_fitted.rvs(len(number_of_images_in_individual_fragments))
@@ -98,11 +98,13 @@ def compute_and_plot_fragments_statistics(video, model_area = None,
     MIN = np.min(number_of_images_in_individual_fragments)
     MAX = np.max(number_of_images_in_individual_fragments)
     logbins = np.linspace(np.log10(MIN), np.log10(MAX), nbins)
-    ax.hist(np.log10(number_of_images_in_individual_fragments), bins = logbins, normed = True)
-    ax.plot(logbins[:-1] + np.diff(logbins)/2, gamma_fitted_logpdf(np.power(10,logbins[:-1] + np.diff(logbins)/2)))
+    n, _, _  = ax.hist(np.log10(number_of_images_in_individual_fragments), bins = logbins, normed = True)
+    logbins2 = np.linspace(np.log10(MIN), np.log10(MAX), 100)
+    ax.plot(logbins2, gamma_fitted_logpdf(np.power(10,logbins2)))
     ax.set_xlim((np.log10(MIN), np.log10(MAX)))
     title = 'shape = %.2f, scale = %.2f' %(shape, scale)
     ax.set_title(title)
+    ax.set_ylim((0, np.max(n)))
     ax.set_xlabel('log_num_frames')
     ax.set_ylabel('logpdf')
 

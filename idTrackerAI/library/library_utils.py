@@ -124,15 +124,14 @@ def subsample_dataset_by_individuals(dataset, config):
 def get_next_number_of_blobs_in_fragment(config):
     scale = config.scale_parameter
     shape = config.shape_parameter
-    X = gamma(a = shape, loc = 1, scale = scale)
+    X = gamma(a = shape, loc = .99, scale = scale)
     number_of_frames_per_fragment = int(X.rvs(1))
-    while number_of_frames_per_fragment < config.min_number_of_frames_per_fragment or number_of_frames_per_fragment > config.max_number_of_frames_per_fragment:
+    while number_of_frames_per_fragment <= config.min_number_of_frames_per_fragment or number_of_frames_per_fragment > config.max_number_of_frames_per_fragment:
         number_of_frames_per_fragment = int(X.rvs(1))
 
     return number_of_frames_per_fragment
 
 def generate_list_of_blobs(identification_images, centroids, config):
-
     blobs_in_video = []
     number_of_fragments = 0
 

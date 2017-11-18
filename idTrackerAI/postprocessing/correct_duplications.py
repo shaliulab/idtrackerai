@@ -15,19 +15,6 @@ from video_utils import segmentVideo, filterContoursBySize, getPixelsList, getBo
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob
 
 
-# def solve_duplications_loop(video, blobs_in_video, group_size, scope = None):
-#     if scope == 'to_the_past':
-#         blobs_in_direction = blobs_in_video[:video.first_frame_first_global_fragment][::-1]
-#     elif scope == 'to_the_future':
-#         blobs_in_direction = blobs_in_video[video.first_frame_first_global_fragment:-1]
-#     possible_identities = set(range(1,group_size+1))
-#
-#     for blobs_in_frame in tqdm(blobs_in_direction, desc = 'Solving duplications ' + scope):
-#         duplicated_identities, identities_in_frame, missing_identities, _ = check_for_duplications(blobs_in_frame, possible_identities)
-#         assign_duplicated_identities_in_frame(blobs_in_video, blobs_in_frame, duplicated_identities, missing_identities, identities_in_frame)
-#         duplicated_identities, identities_in_frame, missing_identities, _ = check_for_duplications(blobs_in_frame, possible_identities)
-#         missing_identities = assign_single_unidentified_blob(missing_identities, blobs_in_frame, blobs_in_video)
-
 def solve_duplications_loop(list_of_fragments, first_frame_first_global_fragment, scope = None):
     fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(scope, first_frame_first_global_fragment)
 
