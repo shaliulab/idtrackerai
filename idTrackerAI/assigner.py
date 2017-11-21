@@ -56,23 +56,11 @@ def compute_identification_statistics_for_non_accumulated_fragments(fragments, a
 
 def assign_identity(list_of_fragments):
     list_of_fragments.compute_P2_vectors()
-    # [fragment.assign_identity() for fragment in list_of_fragments.fragments if fragment.is_an_individual]
-
     number_of_unidentified_individual_fragments = list_of_fragments.get_number_of_unidentified_individual_fragments()
 
     while number_of_unidentified_individual_fragments != 0:
-    #
         fragment = list_of_fragments.get_next_fragment_to_identify()
-        print("\n")
-        print("number_of_unidentified_individual_fragments ", number_of_unidentified_individual_fragments)
-        print("fragment identifier ", fragment.identifier)
-        print("fragment identity ", fragment.assigned_identity)
-        print("fragment used for training ", fragment.used_for_training)
-        print("fragment certainty_P2 ", fragment.certainty_P2)
-        print("fragment P2_vector ", fragment.P2_vector)
         fragment.assign_identity()
-        print("fragment identity ", fragment.assigned_identity)
-
         number_of_unidentified_individual_fragments -= 1
 
 

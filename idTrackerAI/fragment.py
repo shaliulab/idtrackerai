@@ -283,9 +283,8 @@ class Fragment(object):
 
     def set_P1_vector_accumulated(self):
         assert self.used_for_training and self.is_an_individual
-        identity = np.argmax(self.P1_vector)
         self._P1_vector = np.zeros(len(self.P1_vector))
-        self._P1_vector[identity] = 1.
+        self._P1_vector[self.temporary_id] = 1.
 
     @staticmethod
     def get_possible_identities(P2_vector):

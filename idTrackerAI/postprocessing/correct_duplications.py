@@ -8,12 +8,12 @@ import numpy as np
 from tqdm import tqdm
 import collections
 import logging
+from pprint import pprint
 
 from list_of_blobs import ListOfBlobs
 from blob import Blob
 from video_utils import segmentVideo, filterContoursBySize, getPixelsList, getBoundigBox
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob
-
 
 def solve_duplications_loop(list_of_fragments, first_frame_first_global_fragment, scope = None):
     fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(scope, first_frame_first_global_fragment)
@@ -34,7 +34,6 @@ def solve_duplication(fragment):
 
     # print("missing_identities: ", missing_identities)
     # print("fixed_identities: ", fixed_identities)
-    print([(f.identifier, f.assigned_identity, f.is_a_duplication, f.used_for_training) for f in fragment.coexisting_individual_fragments])
     number_of_candidate_identities = len(missing_identities)
     # case 1
     if len(missing_identities) == 0:
@@ -132,7 +131,13 @@ def check_for_duplications_last_pass(fragments):
                                     for coexisting_fragment in fragment.coexisting_individual_fragments
                                     if (fragment.assigned_identity != 0 and coexisting_fragment.assigned_identity != 0)]
         if sum(overlapping_identities) != 0:
-            duplicated_fragments_start_end.append((fragment.identifier, fragment.start_end))
+            duplicated_fragments_start_end.append((fragment.identifier,
+                                                fragment.start_end,
+                                                fragment.P1_vector,
+                                                fragment.P2_vector,
+                                                fragment.assigned_identity,
+                                                fragment.used_for_training))
 
-    # print("start end tuples of fragments with duplicated identity ",duplicated_fragments_start_end)
+    print("start end tuples of fragments with duplicated identity ")
+    pprint(duplicated_fragments_start_end)
     return duplicated_fragments_start_end
