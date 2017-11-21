@@ -1033,6 +1033,7 @@ class Validator(BoxLayout):
                 print("centroid ", blob.centroid)
                 cur_id_str = root + cur_id_str
                 int_centroid = np.asarray(blob.centroid).astype('int')
+                print("----------------------------------------", self.colors)
                 cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
                 cv2.putText(frame, cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
             elif isinstance(cur_id, list):
