@@ -857,7 +857,7 @@ class Validator(BoxLayout):
         if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
             CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
         if  CHOSEN_VIDEO.processes_to_restore is not None\
-            and 'crossing' in CHOSEN_VIDEO.processes_to_restore\
+            and 'crossings' in CHOSEN_VIDEO.processes_to_restore\
             and CHOSEN_VIDEO.processes_to_restore['crossings']:
             self.create_choose_list_of_blobs_popup()
             self.lob_btn1.bind(on_press = self.show_loading_text)
