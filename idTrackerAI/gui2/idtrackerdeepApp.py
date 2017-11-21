@@ -826,21 +826,25 @@ class Validator(BoxLayout):
         self.lob_label.text = "Loading..."
 
     def on_choose_list_of_blobs_btns_press(self, instance):
-
         if instance.text == 'With gaps':
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path,
+                                        video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
         else:
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path)
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path,
+                                        video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
             blobs_path, blobs_path_extension = CHOSEN_VIDEO.video.blobs_no_gaps_path
-        self.loading_popup.dismiss()
         self.choose_list_of_blobs_popup.dismiss()
+        self.populate_validation_tab()
+
+    def populate_validation_tab(self):
         self.blobs_in_video = self.list_of_blobs.blobs_in_video
         self.count_scrollup = 0
         self.scale = 1
         self.wrong_crossing_counter = {identity: 0 for identity in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
         self.create_count_bad_crossing_popup()
         self.wc_identity_input.bind(on_text_validate = self.on_enter_wrong_crossing_identity)
+        self.loading_popup.dismiss()
         self.init_segmentZero()
 
     def get_first_frame(self):
@@ -849,24 +853,29 @@ class Validator(BoxLayout):
         return CHOSEN_VIDEO.video.first_frame_first_global_fragment
 
     def do(self, *args):
-        try:
-            if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
-                CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
-            if  CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['crossings']:
-                self.create_choose_list_of_blobs_popup()
-                self.lob_btn1.bind(on_press = self.show_loading_text)
-                self.lob_btn2.bind(on_press = self.show_loading_text)
-                self.lob_btn1.bind(on_release = self.on_choose_list_of_blobs_btns_press)
-                self.lob_btn2.bind(on_release = self.on_choose_list_of_blobs_btns_press)
-                self.choose_list_of_blobs_popup.open()
-            else:
-                self.loading_popup.open()
-                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path)
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
-            self.warning_popup.open()
+        # try:
+        if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
+            CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
+        if  CHOSEN_VIDEO.processes_to_restore is not None\
+            and 'crossing' in CHOSEN_VIDEO.processes_to_restore\
+            and CHOSEN_VIDEO.processes_to_restore['crossings']:
+            self.create_choose_list_of_blobs_popup()
+            self.lob_btn1.bind(on_press = self.show_loading_text)
+            self.lob_btn2.bind(on_press = self.show_loading_text)
+            self.lob_btn1.bind(on_release = self.on_choose_list_of_blobs_btns_press)
+            self.lob_btn2.bind(on_release = self.on_choose_list_of_blobs_btns_press)
+            self.choose_list_of_blobs_popup.open()
+        else:
+            self.loading_popup.open()
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path,
+                                        video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
+            self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
+            self.populate_validation_tab()
+        # except Exception as e:
+        #     exc_type, exc_obj, exc_tb = sys.exc_info()
+        #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        #     print(exc_type, fname, exc_tb.tb_lineno)
+        #     self.warning_popup.open()
 
     def init_segmentZero(self):
         self.add_widget(self.visualiser)
