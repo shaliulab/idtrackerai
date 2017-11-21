@@ -50,6 +50,16 @@ class ListOfFragments(object):
     def compute_ratio_of_images_used_for_training(self):
         return self.compute_number_of_unique_images_used_for_training() / self.number_of_images_in_global_fragments
 
+    def compute_P2_vectors(self):
+        [fragment.compute_P2_vector() for fragment in self.fragments if fragment.is_an_individual]
+
+    def get_number_of_unidentified_individual_fragments(self):
+        return len([fragment for fragment in self.fragments if fragment.is_an_individual and not fragment.used_for_training])
+
+    def get_next_fragment_to_identify(self):
+        fragments = [fragment for fragment in self.fragments if fragment.assigned_identity is None and fragment.is_an_individual]
+        fragments.sort(key=lambda x: x.certainty_P2, reverse=True)
+        return fragments[0]
 
     def get_data_plot(self):
         number_of_images_in_individual_fragments = []

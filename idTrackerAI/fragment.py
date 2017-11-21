@@ -88,7 +88,7 @@ class Fragment(object):
                 self._identity_corrected_solving_duplication = None
                 attributes_to_delete = ['_frequencies', '_P1_vector']
             attributes_to_delete.extend(['_P2_vector', '_ambiguous_identities',
-                                        '_is_a_duplication'])
+                                        '_is_a_duplication', '_certainty_P2'])
             delete_attributes_from_object(self, attributes_to_delete)
         elif roll_back_to == 'assignment':
             self._user_generated_identity = None
@@ -143,6 +143,10 @@ class Fragment(object):
     @property
     def certainty(self):
         return self._certainty
+
+    @property
+    def certainty_P2(self):
+        return self._certainty_P2
 
     @property
     def is_certain(self):
@@ -277,6 +281,12 @@ class Fragment(object):
         median_softmax = self.compute_median_softmax(softmax_probs, self.number_of_animals)
         self._certainty = self.compute_certainty_of_individual_fragment(self._P1_vector,median_softmax)
 
+    def set_P1_vector_accumulated(self):
+        assert self.used_for_training and self.is_an_individual
+        identity = np.argmax(self.P1_vector)
+        self._P1_vector = np.zeros(len(self.P1_vector))
+        self._P1_vector[identity] = 1.
+
     @staticmethod
     def get_possible_identities(P2_vector):
         """Check if P2 has two identical maxima. In that case returns the indices.
@@ -287,7 +297,7 @@ class Fragment(object):
 
     def assign_identity(self, recompute = True):
         assert self.is_an_individual
-        self.compute_P2_vector()
+        # self.compute_P2_vector()
         if self.used_for_training and not self._identity_is_fixed:
             self._identity_is_fixed = True
         elif not self._identity_is_fixed:
@@ -300,15 +310,13 @@ class Fragment(object):
                     self._identity_is_fixed = True
                 self._identity = possible_identities[0]
                 self._P1_vector = np.zeros(len(self.P1_vector))
-                self._P1_vector[self.identity - 1] = 0.999999999999
-
-        if recompute:
-            self.recompute_P2_of_coexisting_fragments()
+                self._P1_vector[self.identity - 1] = 1.
+                self.recompute_P2_of_coexisting_fragments()
 
     def recompute_P2_of_coexisting_fragments(self):
         # The P2 of fragments with fixed identity won't be recomputed
         # due to the condition in assign_identity() (second line)
-        [fragment.assign_identity(recompute = False) for fragment in self.coexisting_individual_fragments]
+        [fragment.compute_P2_vector() for fragment in self.coexisting_individual_fragments]
 
     def compute_P2_vector(self):
         coexisting_P1_vectors = np.asarray([fragment.P1_vector for fragment in self.coexisting_individual_fragments])
@@ -318,6 +326,10 @@ class Fragment(object):
             self._P2_vector = self.P1_vector
         else:
             self._P2_vector = numerator / denominator
+        P2_vector_ordered = np.sort(self.P2_vector)
+        P2_first_max = P2_vector_ordered[-1]
+        P2_second_max = P2_vector_ordered[-2]
+        self._certainty_P2 = MAX_FLOAT if P2_second_max == 0 else P2_first_max / P2_second_max
 
     @staticmethod
     def compute_identification_frequencies_individual_fragment(predictions, number_of_animals):

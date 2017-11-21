@@ -53,6 +53,8 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
                 if gt_identity == 0:
                     results['frames_with_zeros_in_groundtruth'].append(groundtruth_blob.frame_number)
 
+                # print(gt_identity, blob.assigned_identity)
+
                 results['number_of_blobs_per_identity'][gt_identity] += 1
                 results['number_of_assigned_blobs_per_identity'][gt_identity] += 1 if blob.assigned_identity != 0 else 0
                 results['number_of_blobs_assigned_during_accumulation_per_identity'][gt_identity] += 1 if blob.used_for_training else 0

@@ -161,7 +161,8 @@ class AccumulationManager(object):
         to the blobs that belong to these global fragments. This function checks
         that the identities of the individual fragments in the global fragment
         are consistent with the previously assigned identities"""
-        [setattr(fragment, '_identity', getattr(fragment, 'temporary_id') + 1)
+        [(setattr(fragment, '_identity', getattr(fragment, 'temporary_id') + 1),
+        fragment.set_P1_vector_accumulated())
             for fragment in self.list_of_fragments.fragments
             if fragment.used_for_training]
 

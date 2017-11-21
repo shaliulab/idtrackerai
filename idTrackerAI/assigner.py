@@ -46,7 +46,6 @@ assign blobs in video
 """
 def compute_identification_statistics_for_non_accumulated_fragments(fragments, assigner):
     counter = 0
-
     for fragment in fragments:
         if not fragment.used_for_training and fragment.is_an_individual:
             next_counter_value = counter + fragment.number_of_images
@@ -54,13 +53,28 @@ def compute_identification_statistics_for_non_accumulated_fragments(fragments, a
             softmax_probs = assigner.softmax_probs[counter : next_counter_value]
             fragment.compute_identification_statistics(predictions, softmax_probs)
             counter = next_counter_value
-        elif fragment.used_for_training and fragment.is_an_individual:
-            identity = np.argmax(fragment.P1_vector)
-            fragment._P1_vector = np.zeros(len(fragment.P1_vector))
-            fragment._P1_vector[identity] = 0.999999999999
 
-def assign_identity(fragments):
-    [fragment.assign_identity() for fragment in fragments if fragment.is_an_individual]
+def assign_identity(list_of_fragments):
+    list_of_fragments.compute_P2_vectors()
+    # [fragment.assign_identity() for fragment in list_of_fragments.fragments if fragment.is_an_individual]
+
+    number_of_unidentified_individual_fragments = list_of_fragments.get_number_of_unidentified_individual_fragments()
+
+    while number_of_unidentified_individual_fragments != 0:
+    #
+        fragment = list_of_fragments.get_next_fragment_to_identify()
+        print("\n")
+        print("number_of_unidentified_individual_fragments ", number_of_unidentified_individual_fragments)
+        print("fragment identifier ", fragment.identifier)
+        print("fragment identity ", fragment.assigned_identity)
+        print("fragment used for training ", fragment.used_for_training)
+        print("fragment certainty_P2 ", fragment.certainty_P2)
+        print("fragment P2_vector ", fragment.P2_vector)
+        fragment.assign_identity()
+        print("fragment identity ", fragment.assigned_identity)
+
+        number_of_unidentified_individual_fragments -= 1
+
 
 """
 ********************************************************************************
@@ -108,6 +122,6 @@ def assigner(list_of_fragments, video, net):
     compute_identification_statistics_for_non_accumulated_fragments(list_of_fragments.fragments, assigner)
     # compute P2 for all the individual fragments (including the already accumulated)
     logger.info("Assigning identities")
-    assign_identity(list_of_fragments.fragments)
+    assign_identity(list_of_fragments)
     logger.info("Assigning ghost crossings")
     assign_ghost_crossings(list_of_fragments.fragments)
