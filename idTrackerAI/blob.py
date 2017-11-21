@@ -36,7 +36,11 @@ class Blob(object):
         self.pixels = pixels # list of int's: linearized pixels of the blob
         self._is_an_individual = False
         self._is_a_crossing = False
-        self.reset_before_fragmentation('fragmentation')
+        self._is_a_misclassified_individual = False
+        self.next = [] # next blob object overlapping in pixels with current blob object
+        self.previous = [] # previous blob object overlapping in pixels with the current blob object
+        self._fragment_identifier = None # identity in individual fragment after fragmentation
+        self._blob_index = None # index of the blob to plot the individual fragments
         self._used_for_training = None
         self._accumulation_step = None
         self._generated_while_closing_the_gap = False
@@ -44,13 +48,6 @@ class Blob(object):
         self._identity_corrected_closing_gaps = None
         self._identity_corrected_solving_duplication = None
         self._identity = None
-
-    def reset_before_fragmentation(self, recovering_from):
-        if recovering_from == 'fragmentation':
-            self.next = [] # next blob object overlapping in pixels with current blob object
-            self.previous = [] # previous blob object overlapping in pixels with the current blob object
-            self._fragment_identifier = None # identity in individual fragment after fragmentation
-            self._blob_index = None # index of the blob to plot the individual fragments
 
     @property
     def fragment_identifier(self):
@@ -160,6 +157,10 @@ class Blob(object):
         return self.is_an_individual and self.is_in_a_fragment
 
     @property
+    def is_a_misclassified_individual(self):
+        return self._is_a_misclassified_individual
+
+    @property
     def blob_index(self):
         return self._blob_index
 
@@ -201,6 +202,15 @@ class Blob(object):
     @property
     def user_generated_identity(self):
         return self._user_generated_identity
+
+    @user_generated_identity.setter
+    def user_generated_identity(self, new_value):
+        if not self.is_a_crossing:
+            self.propagate_groundtruth_identity_in_individual_fragment()
+        elif self.is_a_crossing and self.assigned_identity is None:
+            self._is_an_individual = True
+            self._is_a_crossing = False
+            self._is_a_misclassified_individual = True
 
     @property
     def identity_corrected_solving_duplication(self):
