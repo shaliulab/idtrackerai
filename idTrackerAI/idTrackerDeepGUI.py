@@ -615,41 +615,41 @@ if __name__ == '__main__':
                             video.preprocessing_time])
     video.save()
 
-    # #############################################################
-    # ##############   Solve crossigns   ##########################
-    # ####
-    # #############################################################
-    # print("\n**** Assign crossings ****")
-    # if not loadPreviousDict['crossings']:
-    #     list_of_blobs.disconnect()
-    #     list_of_blobs_no_gaps = copy.deepcopy(list_of_blobs)
-    #     video._has_crossings_solved = False
-    #     if len(list_of_blobs_no_gaps.blobs_in_video[-1]) == 0:
-    #         list_of_blobs_no_gaps.blobs_in_video = list_of_blobs_no_gaps.blobs_in_video[:-1]
-    #     list_of_blobs_no_gaps = close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
-    #     video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
-    #     list_of_blobs_no_gaps.save(path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
-    #     video._has_crossings_solved = True
-    #     video.save()
-    # else:
-    #     video.copy_attributes_between_two_video_objects(old_video, ['blobs_no_gaps_path'])
-    #     list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_no_gaps_path)
-    #     video._has_crossings_solved = True
-    #     video.save()
-    #
-    # #############################################################
-    # ########### Create trajectories (w/o gaps) ##################
-    # #############################################################
-    # video.generate_trajectories_wogaps_time = time.time()
-    # if not loadPreviousDict['trajectories_wo_gaps']:
-    #     video.create_trajectories_wo_gaps_folder()
-    #     logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_wo_gaps_folder)
-    #     trajectories_wo_gaps = produce_trajectories(list_of_blobs_no_gaps.blobs_in_video, video.number_of_frames, video.number_of_animals)
-    #     save_trajectories(trajectories_wo_gaps, video.trajectories_wo_gaps_folder)
-    #     logger.info("Saving trajectories")
-    #     video._has_trajectories_wo_gaps = True
-    #     video.save()
-    # else:
-    #     video._has_trajectories_wo_gaps = True
-    #     video.save()
-    # video.generate_trajectories_wogaps_time = time.time() - video.generate_trajectories_wogaps_time
+    #############################################################
+    ##############   Solve crossigns   ##########################
+    ####
+    #############################################################
+    print("\n**** Assign crossings ****")
+    if not loadPreviousDict['crossings']:
+        list_of_blobs.disconnect()
+        list_of_blobs_no_gaps = copy.deepcopy(list_of_blobs)
+        video._has_crossings_solved = False
+        if len(list_of_blobs_no_gaps.blobs_in_video[-1]) == 0:
+            list_of_blobs_no_gaps.blobs_in_video = list_of_blobs_no_gaps.blobs_in_video[:-1]
+        list_of_blobs_no_gaps = close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
+        video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
+        list_of_blobs_no_gaps.save(path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
+        video._has_crossings_solved = True
+        video.save()
+    else:
+        video.copy_attributes_between_two_video_objects(old_video, ['blobs_no_gaps_path'])
+        list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_no_gaps_path)
+        video._has_crossings_solved = True
+        video.save()
+
+    #############################################################
+    ########### Create trajectories (w/o gaps) ##################
+    #############################################################
+    video.generate_trajectories_wogaps_time = time.time()
+    if not loadPreviousDict['trajectories_wo_gaps']:
+        video.create_trajectories_wo_gaps_folder()
+        logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_wo_gaps_folder)
+        trajectories_wo_gaps = produce_trajectories(list_of_blobs_no_gaps.blobs_in_video, video.number_of_frames, video.number_of_animals)
+        save_trajectories(trajectories_wo_gaps, video.trajectories_wo_gaps_folder)
+        logger.info("Saving trajectories")
+        video._has_trajectories_wo_gaps = True
+        video.save()
+    else:
+        video._has_trajectories_wo_gaps = True
+        video.save()
+    video.generate_trajectories_wogaps_time = time.time() - video.generate_trajectories_wogaps_time
