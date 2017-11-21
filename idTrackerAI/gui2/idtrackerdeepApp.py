@@ -826,10 +826,15 @@ class Validator(BoxLayout):
         self.lob_label.text = "Loading..."
 
     def on_choose_list_of_blobs_btns_press(self, instance):
+
         if instance.text == 'With gaps':
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
+            blobs_path, blobs_path_extension = os.path.splitext(CHOSEN_VIDEO.video.blobs_path)
+            self.list_of_blobs_save_path = blobs_path + '_with_gaps' + blobs_path_extension
         else:
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path)
+            blobs_path, blobs_path_extension = os.path.splitext(CHOSEN_VIDEO.video.blobs_path)
+            self.list_of_blobs_save_path = blobs_path + '_without_gaps' + blobs_path_extension
         self.loading_popup.dismiss()
         self.choose_list_of_blobs_popup.dismiss()
         self.blobs_in_video = self.list_of_blobs.blobs_in_video
@@ -1103,7 +1108,7 @@ class Validator(BoxLayout):
             self.blob_to_modify._user_generated_centroids.append(self.user_generated_centroids)
             self.blob_to_modify._user_generated_identities.append(self.identity_update)
 
-        self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func=self.writeIds)
+        self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func = self.writeIds)
 
     def on_press_show_saving(selg, *args):
         self.show_saving()
@@ -1113,7 +1118,7 @@ class Validator(BoxLayout):
         self.popup_saving.dismiss()
 
     def go_and_save(self):
-        self.list_of_blobs.save()
+        self.list_of_blobs.save(path_to_save = self.list_of_blobs_save_path)
         CHOSEN_VIDEO.video.save()
 
     def modifyIdOpenPopup(self, blob_to_modify):
