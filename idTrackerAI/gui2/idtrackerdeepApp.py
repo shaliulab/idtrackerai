@@ -1027,17 +1027,16 @@ class Validator(BoxLayout):
                 root = roots[2]
             elif blob.identity_corrected_solving_duplication is not None:
                 root = roots[1]
-            else:
+            elif not blob.used_for_training:
                 root = roots[0]
+            else:
+                root  = ''
             if isinstance(cur_id, int):
-                print("centroid ", blob.centroid)
                 cur_id_str = root + cur_id_str
                 int_centroid = np.asarray(blob.centroid).astype('int')
-                print("----------------------------------------", self.colors)
                 cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
                 cv2.putText(frame, cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
             elif isinstance(cur_id, list):
-                print("centroid ", blob.interpolated_centroids)
                 for c_id, c_centroid in zip(cur_id, blob.interpolated_centroids):
                     c_id_str = root + str(c_id)
                     int_centroid = tuple([int(centroid_coordinate) for centroid_coordinate in c_centroid])
@@ -1046,7 +1045,9 @@ class Validator(BoxLayout):
 
                 self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
-
+            elif blob.is_a_crossing:
+                bounding_box = blob.bounding_box_in_frame_coordinates
+                cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
         if self.scale != 1:
             self.dst = cv2.warpAffine(frame, self.M, (frame.shape[1], frame.shape[0]))
             buf = cv2.flip(self.dst,0)
@@ -1146,7 +1147,7 @@ class Validator(BoxLayout):
         self.container = BoxLayout()
         self.blob_to_explore = blob_to_explore
         self.show_attributes_box = BoxLayout(orientation="vertical")
-        self.id_label = CustomLabel(text='Assigned identity: ' + str(blob.final_identity))
+        self.id_label = CustomLabel(text='Assigned identity: ' + str(blob_to_explore.final_identity))
         self.frag_id_label = CustomLabel(text='Fragment identifier: ' + str(blob_to_explore.fragment_identifier))
         self.accumulation_label = CustomLabel(text='Used for training: ' + str(blob_to_explore.used_for_training))
         self.in_a_fragment_label = CustomLabel(text='It is in an individual fragment: ' + str(blob_to_explore.is_in_a_fragment))
