@@ -829,12 +829,10 @@ class Validator(BoxLayout):
 
         if instance.text == 'With gaps':
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
-            blobs_path, blobs_path_extension = os.path.splitext(CHOSEN_VIDEO.video.blobs_path)
-            self.list_of_blobs_save_path = blobs_path + '_with_gaps' + blobs_path_extension
+            self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
         else:
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path)
-            blobs_path, blobs_path_extension = os.path.splitext(CHOSEN_VIDEO.video.blobs_path)
-            self.list_of_blobs_save_path = blobs_path + '_without_gaps' + blobs_path_extension
+            blobs_path, blobs_path_extension = CHOSEN_VIDEO.video.blobs_no_gaps_path
         self.loading_popup.dismiss()
         self.choose_list_of_blobs_popup.dismiss()
         self.blobs_in_video = self.list_of_blobs.blobs_in_video
@@ -1329,6 +1327,7 @@ class Root(TabbedPanel):
 
     def add_validation_tab(self):
         self.validation_tab = TabbedPanelItem(text='Global Validation')
+        self.validation_tab.id = "Global validation"
         self.validation_tab.disabled = True
         self.add_widget(self.validation_tab)
 
@@ -1344,7 +1343,7 @@ class Root(TabbedPanel):
 
     def content_changed_cb(self, obj, value):
         pass
-        # print('CONTENT', value.content.id)
+        # print('CONTENT', value.__dict__)
         # print(type(value.content.id))
 
     def on_switch(self, header):
