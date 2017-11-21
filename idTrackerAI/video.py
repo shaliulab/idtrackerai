@@ -86,6 +86,9 @@ class Video(object):
     @property
     def has_been_pretrained(self):
         return self._has_been_pretrained
+    @property
+    def previous_session_folder(self):
+        return self._previous_session_folder
 
     @property
     def pretraining_folder(self):
@@ -492,7 +495,6 @@ class Video(object):
         else:
             self._previous_session_folder = self.session_folder
 
-        #give a unique name (wrt the video)
         self._path_to_video_object = os.path.join(self.session_folder, 'video_object.npy')
         logger.info("the folder %s has been created" %self.session_folder)
 

@@ -5,10 +5,13 @@ from kivy.app import App
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import StringProperty
+from kivy.properties import BooleanProperty
 from kivy.event import EventDispatcher
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.tabbedpanel import TabbedPanel
+from kivy.uix.tabbedpanel import TabbedPanelItem
+from kivy.uix.tabbedpanel import TabbedPanelHeader
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.graphics.texture import Texture
@@ -19,17 +22,21 @@ from kivy.uix.popup import Popup
 from kivy.uix.switch import Switch
 from kivy.uix.dropdown import DropDown
 from kivy.uix.textinput import TextInput
+from kivy.uix.checkbox import CheckBox
+from kivy.uix.behaviors import ButtonBehavior
 from kivy.graphics import *
 from kivy.graphics.transformation import Matrix
 from kivy.clock import Clock
-from kivy.config import Config #used before running the app to set the keyboard usage
-from kivy.event import EventDispatcher
+from kivy.config import Config
+from kivy.uix.filechooser import FileChooserListView
+from visualise_video import VisualiseVideo
 
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 import seaborn as sns
+from functools import partial
 
 import os
 import sys
@@ -37,8 +44,11 @@ sys.path.append('../')
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
 sys.path.append('../groundtruth_utils')
-import cv2
 import numpy as np
+import logging.config
+import yaml
+import cv2
+
 from video import Video
 from py_utils import getExistentFiles, get_spaced_colors_util
 from video_utils import computeBkg, blobExtractor
@@ -65,31 +75,85 @@ Init variables
     VEL_PERCENTILE: integer [0, 100]
         percentile used to compute the maximal accpetable individual velocity
 """
-PROCESSES = ['preprocessing',
-            'use_previous_knowledge_transfer_decision',
-            'first_accumulation',
-            'pretraining',
-            'second_accumulation',
-            'assignment',
-            'solving_duplications',
-            'crossings',
-            'trajectories',
+PROCESSES = ['use_previous_knowledge_transfer_decision', 'preprocessing',
+            'first_accumulation', 'pretraining', 'second_accumulation',
+            'assignment', 'solving_duplications', 'crossings', 'trajectories',
             'trajectories_wo_gaps']
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
 RESTORE_CRITERION = 'last'
 VEL_PERCENTILE = 99
 
+def setup_logging(
+    default_path='logging.yaml',
+    default_level=logging.INFO,
+    env_key='LOG_CFG',
+    path_to_save_logs = './',
+    video_object = None):
+    """Setup logging configuration
+    """
+    path = default_path
+    value = os.getenv(env_key, None)
+    if value:
+        path = value
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            config = yaml.safe_load(f.read())
+        if os.path.exists(path_to_save_logs) and video_object is not None:
+            video_object.logs_folder = os.path.join(path_to_save_logs, 'log_files')
+            if not os.path.isdir(video_object.logs_folder):
+                os.makedirs(video_object.logs_folder)
+            config['handlers']['info_file_handler']['filename'] = os.path.join(video_object.logs_folder, 'info.log')
+            config['handlers']['error_file_handler']['filename'] = os.path.join(video_object.logs_folder, 'error.log')
+        logging.config.dictConfig(config)
+    else:
+        logging.basicConfig(level=default_level)
+
+    logger = logging.getLogger(__name__)
+    logger.propagate = True
+    logger.setLevel("INFO")
+    return logger
+
 """
 Start kivy classes
 """
+
+class HelpButton(ButtonBehavior, Image):
+    def __init__(self, **kwargs):
+        super(HelpButton, self).__init__(**kwargs)
+        self.source = './help_button.png'
+        self.size_hint = (.15,.15)
+
+    def on_press(self):
+        self.source = './help_button_on.png'
+
+    def on_release(self):
+        self.source = './help_button.png'
+
+    def create_help_popup(self, title, text):
+        self.help_popup_container = BoxLayout()
+        self.help_label = Label(text=text)
+        self.help_popup_container.add_widget(self.help_label)
+        self.help_label.bind(width=lambda s, w:
+                   s.setter('text_size')(s, (w, None)))
+        self.help_label.size_hint = (1,1)
+        self.help_popup = Popup(title = title,
+                            content = self.help_popup_container,
+                            size_hint = (.5, .5))
+        self.bind(on_press = self.open_popup)
+
+    def open_popup(self, *args):
+        self.help_popup.open()
+
 class Chosen_Video(EventDispatcher):
     chosen = StringProperty('')
 
-    def __init__(self,**kwargs):
+    def __init__(self, processes_list = None, **kwargs):
         super(Chosen_Video,self).__init__(**kwargs)
         self.chosen = 'Default String'
         self.video = Video()
+        self.processes_list = processes_list
         self.bind(chosen=self.on_modified)
+        self.processes_to_restore = None
 
     def set_chosen_item(self, chosen_string):
         self.chosen = chosen_string
@@ -97,177 +161,159 @@ class Chosen_Video(EventDispatcher):
     def on_modified(self, instance, value):
         try:
             self.video.video_path = value
-            new_name_session_folder = raw_input('Session name: ')
-            self.video.create_session_folder(name = new_name_session_folder)
-            processes_list = ['preprocessing',
-                            'use_previous_knowledge_transfer_decision',
-                            'first_accumulation',
-                            'pretraining',
-                            'second_accumulation',
-                            'assignment',
-                            'solving_duplications',
-                            'crossings',
-                            'trajectories']
-            #get existent files and paths to load them
-            self.existentFiles, self.old_video = getExistentFiles(self.video, processes_list)
-            print("------- old video", self.old_video)
-            if self.old_video.has_been_assigned: self.video._has_been_assigned = True
-            if hasattr(self.old_video, 'resolution_reduction'):
-                # print("--------------------------------------------------------")
-                self.video._resolution_reduction = self.old_video.resolution_reduction
-                self.video._bkg = self.old_video.bkg
-                self.video._ROI = self.old_video.ROI
-
-                # print(self.video.resolution_reduction, self.video.ROI.shape)
-                if self.video.ROI.shape[0] != self.video.height * self.video.resolution_reduction:
-                    # print("resizing ROI")
-                    self.video.ROI = cv2.resize(self.video.ROI, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
-
-                    # print("***********************resized ROI shape ", self.video.ROI.shape)
-                if self.video.bkg is not None and self.video.bkg.shape[0] != self.video.height * self.video.resolution_reduction:
-                    # print("resizing BKG")
-                    self.video.bkg = cv2.resize(self.video.bkg, None, fx = self.video.resolution_reduction, fy = self.video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
-            if CHOSEN_VIDEO.video.video_path is not None:
-                if CHOSEN_VIDEO.old_video.number_of_animals is None:
-                    self.create_number_of_animals_popup()
-                    self.animal_number_input.bind(on_text_validate = self.on_enter)
-                    self.popup.open()
-                else:
-                    CHOSEN_VIDEO.video._number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
-                self.enable_ROI_and_preprocessing_tabs = True
         except Exception,e:
             print(str(e))
             print("Choose a video to proceed")
 
+class Deactivate_Process(EventDispatcher):
+    process = BooleanProperty(True)
+
+    def __init__(self, **kwargs):
+        super(Deactivate_Process,self).__init__(**kwargs)
+        self.process = True
+        self.bind(process = self.on_modified)
+
+    def setter(self, new_value):
+        self.process = new_value
+
+    def on_modified(self, instance, value):
+        print("modifying validation to ", value)
+        return value
+
+
+class CustomLabel(Label):
+    def __init__(self, font_size = 16, text = '', **kwargs):
+        super(CustomLabel,self).__init__(**kwargs)
+        self.text = text
+        self.bind(size=lambda s, w: s.setter('text_size')(s, w))
+        self.text_size = self.size
+        self.size = self.texture_size
+        self.font_size = font_size
+        self.halign = "center"
+        self.valign = "middle"
+
 class SelectFile(BoxLayout):
+
     def __init__(self,**kwargs):
         super(SelectFile,self).__init__(**kwargs)
+        global DEACTIVATE_VALIDATION
+        DEACTIVATE_VALIDATION.bind(process = self.activate_process)
         self.update ='You did not select a video yet'
         self.main_layout = BoxLayout()
         self.main_layout.orientation = "vertical"
         self.logo = Image(source = "./logo.png")
-        self.welcome_label = Label()
         self.main_layout.add_widget(self.logo)
+        self.welcome_label = CustomLabel(font_size = 20, text = "Welcome to idTrackerAI")
         self.main_layout.add_widget(self.welcome_label)
         self.add_widget(self.main_layout)
-        self.welcome_label.text = "Select a video"
-        self.welcome_label.text_size = self.welcome_label.size
-        self.welcome_label.size = self.welcome_label.texture_size
-        self.welcome_label.font_size = 20
-        self.welcome_label.halign = "center"
-        self.welcome_label.valign = "middle"
         self.video = None
         self.old_video = None
+        self.help_button_welcome = HelpButton()
+        self.main_layout.add_widget(self.help_button_welcome)
+        self.help_button_welcome.create_help_popup("Getting started",\
+                                                "Use the menu on the right to browse and select a video file. The supported formats are avi, mp4 and mpg. Albeit compressed video formats are accepted, we suggest to use uncompressed ones for an optimal tracking. See the documentation for more details.\n\nClick on the main window to close the popup.")
+        self.filechooser = FileChooserListView(path = os.getcwd(), size_hint = (1., 1.))
+        self.filechooser.bind(selection = self.open)
+        self.add_widget(self.filechooser)
+
 
     global CHOSEN_VIDEO
-    CHOSEN_VIDEO = Chosen_Video()
+    CHOSEN_VIDEO = Chosen_Video(processes_list = PROCESSES)
 
-    def on_enter(self,value):
-        CHOSEN_VIDEO.video._preprocessing_type = self.preprocessing_type_input.text
-        CHOSEN_VIDEO.video._number_of_animals = int(self.animal_number_input.text)
-        self.popup.dismiss()
+    def on_enter_session_folder(self,value):
+        new_name_session_folder = self.session_name_input.text
+        CHOSEN_VIDEO.video.create_session_folder(name = new_name_session_folder)
+        CHOSEN_VIDEO.logger = setup_logging(path_to_save_logs = CHOSEN_VIDEO.video.session_folder, video_object = CHOSEN_VIDEO.video)
+        self.welcome_popup.dismiss()
+        if CHOSEN_VIDEO.video.previous_session_folder != '':
+            CHOSEN_VIDEO.existent_files, CHOSEN_VIDEO.old_video = getExistentFiles(CHOSEN_VIDEO.video, CHOSEN_VIDEO.processes_list)
+            self.create_restore_popup()
+            self.restore_popup.open()
 
-    def open(self, path, filename):
-        # print("opening video file")
-        # print("filename  ", filename)
-        if len(filename) > 0:
-            CHOSEN_VIDEO.set_chosen_item(filename[0])
-
-        return not hasattr(self, 'enable_ROI_and_preprocessing_tabs')
-
-    def enable_validation(self, path, filename):
-        if filename:
-            CHOSEN_VIDEO.set_chosen_item(filename[0])
+    def open(self, *args):
+        try:
+            CHOSEN_VIDEO.set_chosen_item(self.filechooser.selection[0])
             if CHOSEN_VIDEO.video.video_path is not None:
-                self.video = CHOSEN_VIDEO.video
-                self.old_video = CHOSEN_VIDEO.old_video
-        return not (hasattr(self.video, 'has_been_assigned') or hasattr(self.old_video, "has_been_assigned"))
+                self.create_welcome_popup()
+                self.session_name_input.bind(on_text_validate = self.on_enter_session_folder)
+                self.welcome_popup.open()
+        except Exception,e:
+            print(str(e))
 
-    def create_number_of_animals_popup(self):
+    def create_welcome_popup(self):
         self.popup_container = BoxLayout()
-        self.animal_number_box = BoxLayout(orientation="vertical")
-        self.animal_number_label = Label(text='How many animals are you going to track:\n')
-        self.animal_number_label.text_size = self.animal_number_label.size
-        self.animal_number_label.texture_size = self.animal_number_label.size
-        self.animal_number_box.add_widget(self.animal_number_label)
-        self.animal_number_input = TextInput(text ='', multiline=False)
-        self.animal_number_box.add_widget(self.animal_number_input)
-        self.popup_container.add_widget(self.animal_number_box)
-        self.popup = Popup(title='Animal model and number of animals',
-                    content=self.popup_container,
-                    size_hint=(.4,.4))
+        self.session_name_box = BoxLayout(orientation="vertical")
+        self.session_name_label = CustomLabel(font_size = 16, text='Give a name to the current tracking session. Use the name of an existent session to load it.')
+        self.session_name_box.add_widget(self.session_name_label)
+        self.session_name_input = TextInput(text ='', multiline=False)
+        self.session_name_box.add_widget(self.session_name_input)
+        self.popup_container.add_widget(self.session_name_box)
+        self.welcome_popup = Popup(title = 'Session name',
+                            content = self.popup_container,
+                            size_hint = (.4, .4))
 
-class VisualiseVideo(BoxLayout):
-    def __init__(self, **kwargs):
-        super(VisualiseVideo, self).__init__(**kwargs)
-        self.orientation = "vertical"
-        self.display_layout = Image(keep_ratio=False,
-                                    allow_stretch=True,
-                                    size_hint = (1.,1.))
-        self.footer = BoxLayout()
-        self.footer.size_hint = (1.,.2)
+    def create_restore_checkboxes(self):
+        self.processes_checkboxes = []
 
-    def visualise_video(self, video_object, func = None, frame_index_to_start = 0):
-        self.video_object = video_object
-        self.add_widget(self.display_layout)
-        self.add_slider()
-        self.add_widget(self.footer)
-        self.cap = cv2.VideoCapture(self.video_object.video_path)
-        self.func = func
-        self.video_slider.value = frame_index_to_start
-        self.visualise(frame_index_to_start, func = func)
+        for i, process in enumerate(CHOSEN_VIDEO.processes_list):
 
-    def add_slider(self):
-        self.video_slider = Slider(id='video_slider',
-                                min=0,
-                                max= int(self.video_object.number_of_frames) - 1,
-                                step=1,
-                                value=0,
-                                size_hint=(.8,1.))
-        self.video_slider.bind(value=self.get_value)
-        self.video_slider_lbl = Label( id = 'max_threshold_lbl')
-        self.video_slider_lbl.text = "Frame number:" + str(int(self.video_slider.value))
-        self.video_slider_lbl.text_size = self.video_slider_lbl.size
-        self.video_slider_lbl.size = self.video_slider_lbl.texture_size
-        self.video_slider_lbl.font_size = 16
-        self.video_slider_lbl.halign =  "center"
-        self.video_slider_lbl.valign = "middle"
-        self.footer.add_widget(self.video_slider)
-        self.footer.add_widget(self.video_slider_lbl)
+            process_container = BoxLayout()
+            if CHOSEN_VIDEO.existent_files[process] == '1':
+                checkbox = CheckBox(size_hint = (.1, 1))
+                checkbox.group = process
+                checkbox.active = True
+                process_container.add_widget(checkbox)
+                self.processes_checkboxes.append(checkbox)
+            else:
+                checkbox = BoxLayout(size_hint = (.1, 1))
+                process_container.add_widget(checkbox)
+            checkbox_label = Label(text = process.replace("_", " "), size_hint = (.9, 1))
+            process_container.add_widget(checkbox_label)
+            self.restore_popup_container.add_widget(process_container)
 
-    def visualise(self, trackbar_value, func = None):
-        self.func = func
-        sNumber = self.video_object.in_which_episode(int(trackbar_value))
-        sFrame = trackbar_value
-        current_segment = sNumber
-        if self.video_object.paths_to_video_segments:
-            self.cap = cv2.VideoCapture(self.video_object.paths_to_video_segments[sNumber])
-        if self.video_object.paths_to_video_segments:
-            start = self.video_object._episodes_start_end[sNumber][0]
-            self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
+        self.restore_button = Button(text = "Restore selected processes")
+        self.restore_popup_container.add_widget(self.restore_button)
+        self.restore_button.bind(on_press = self.get_processes_to_restore)
+
+    def get_processes_to_restore(self, *args):
+        CHOSEN_VIDEO.processes_to_restore = {checkbox.group: checkbox.active for checkbox
+                                        in self.processes_checkboxes}
+
+        if CHOSEN_VIDEO.processes_to_restore['assignment'] or CHOSEN_VIDEO.processes_to_restore['correct_duplications']:
+            DEACTIVATE_VALIDATION.setter(False)
+        self.restore_popup.dismiss()
+
+    def activate_process(self, *args):
+        print("in activate process. Returning ", DEACTIVATE_VALIDATION.process)
+        return DEACTIVATE_VALIDATION.process
+
+    def on_checkbox_active(self, checkbox, value):
+        index = self.processes_checkboxes.index(checkbox)
+        if value:
+
+            for i, checkbox in enumerate(self.processes_checkboxes):
+
+                if i <= index:
+                    checkbox.active = True
         else:
-            self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbar_value)
-        ret, self.frame = self.cap.read()
-        if ret == True:
-            if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction'):
-                self.frame = cv2.resize(self.frame, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
-            if self.func is None:
-                self.func = self.simple_visualisation
-            self.func(self.frame)
 
-    def simple_visualisation(self, frame):
-        buf1 = cv2.flip(frame, 0)
-        self.frame = cv2.cvtColor( frame, cv2.COLOR_RGB2GRAY )
-        buf = buf1.tostring()
-        textureFrame = Texture.create(size=(self.frame.shape[1], self.frame.shape[0]), colorfmt='bgr')
-        textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
-        self.display_layout.texture = textureFrame
-        self.initImW = self.width
-        self.initImH = self.height
+            for i, checkbox in enumerate(self.processes_checkboxes):
 
-    def get_value(self, instance, value):
-        self.video_slider_lbl.text = "Frame number:" + str(int(value))
-        self.visualise(value, func = self.func)
+                if i > index:
+                    checkbox.active = False
+
+    def bind_processes_checkboxes(self):
+        for checkbox in self.processes_checkboxes:
+            checkbox.bind(active = self.on_checkbox_active)
+
+    def create_restore_popup(self):
+        self.restore_popup_container = BoxLayout(orientation = "vertical")
+        self.create_restore_checkboxes()
+        self.bind_processes_checkboxes()
+        self.restore_popup = Popup(title = 'Some processes have already been executed.\nDo you want to restore them?',
+                                    content = self.restore_popup_container,
+                                    size_hint = (.6, .8))
+
 
 # class ROISelector(BoxLayout):
 #     def __init__(self,**kwargs):
@@ -383,42 +429,7 @@ class VisualiseVideo(BoxLayout):
 #     def load_ROI(self, *args):
 #         CHOSEN_VIDEO.video.ROI = CHOSEN_VIDEO.old_video.ROI
 #
-# class BkgSubtraction(BoxLayout):
-#     def __init__(self, **kwargs):
-#         super(BkgSubtraction, self).__init__(**kwargs)
-#         self.bkg = None
-#         #set useful popups
-#         #saving:
-#         self.saving_popup = Popup(title='Saving',
-#             content=Label(text='wait ...'),
-#             size_hint=(.3,.3))
-#         self.saving_popup.bind(on_open=self.save_bkg)
-#         #computing:
-#         self.computing_popup = Popup(title='Computing',
-#             content=Label(text='wait ...'),
-#             size_hint=(.3,.3))
-#         self.computing_popup.bind(on_open=self.compute_bkg)
-#         global CHOSEN_VIDEO
-#
-#     def subtract_bkg(self, *args):
-#         if hasattr(CHOSEN_VIDEO.old_video, "bkg") or hasattr(CHOSEN_VIDEO.video, "bkg"):
-#             if CHOSEN_VIDEO.old_video.bkg is not None:
-#                 self.bkg = CHOSEN_VIDEO.old_video.bkg
-#             elif CHOSEN_VIDEO.video.bkg is not None:
-#                 self.bkg = CHOSEN_VIDEO.video.bkg
-#         else:
-#             self.compute_bkg()
-#
-#     def save_bkg(self, *args):
-#         CHOSEN_VIDEO.video.bkg = self.bkg
-#         CHOSEN_VIDEO.video.save()
-#         self.saving_popup.dismiss()
-#
-#     def compute_bkg(self, *args):
-#         self.bkg = computeBkg(CHOSEN_VIDEO.video)
-#         self.save_bkg()
-#         self.computing_popup.dismiss()
-#
+
 # class PreprocessingPreview(BoxLayout):
 #     def __init__(self, **kwargs):
 #         super(PreprocessingPreview, self).__init__(**kwargs)
@@ -761,26 +772,73 @@ class VisualiseVideo(BoxLayout):
 class Validator(BoxLayout):
     def __init__(self, **kwargs):
         super(Validator, self).__init__(**kwargs)
-        global CHOSEN_VIDEO
-        CHOSEN_VIDEO.bind(chosen=self.do)
-        #it should not happen, but a warning just in case
+        global CHOSEN_VIDEO, DEACTIVATE_VALIDATION
+        self.visualiser = VisualiseVideo(chosen_video = CHOSEN_VIDEO)
         self.warning_popup = Popup(title = 'Warning',
-                            content = Label(text = 'The video has not been tracked yet. Track it before performing validation.'),
+                            content = CustomLabel(text = 'The video has not been tracked yet. Track it before performing validation.'),
                             size_hint = (.3,.3))
-        self.warning_popup.bind(size=lambda s, w: s.setter('text_size')(s, w))
+        self.loading_popup = Popup(title='Loading',
+            content=Label(text='wait ...'),
+            size_hint=(.3,.3))
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
+        self.do()
+
     def show_saving(self, *args):
         self.popup_saving = Popup(title='Saving',
             content=Label(text='wait ...'),
             size_hint=(.3,.3))
         self.popup_saving.open()
 
-    def showLoading(self):
-        self.popup = Popup(title='Loading',
-            content=Label(text='wait ...'),
-            size_hint=(.3,.3))
-        self.popup.open()
+    def create_count_bad_crossing_popup(self):
+        self.wc_popup_container = BoxLayout()
+        self.wc_identity_box = BoxLayout(orientation="vertical")
+        self.wc_label = CustomLabel(text='Type the identity associated to a badly corrected crossing')
+        self.wc_identity_box.add_widget(self.wc_label)
+        self.wc_identity_input = TextInput(text ='', multiline=False)
+        self.wc_identity_box.add_widget(self.wc_identity_input)
+        self.wc_popup_container.add_widget(self.wc_identity_box)
+        self.wc_popup = Popup(title = 'Count wrong crossings',
+                            content = self.wc_popup_container,
+                            size_hint = (.4, .4))
+
+    def on_enter_wrong_crossing_identity(self, value):
+        self.wrong_crossing_counter[int(self.wc_identity_input.text)] += 1
+        self.wc_popup.dismiss()
+
+    def create_choose_list_of_blobs_popup(self):
+        self.lob_container = BoxLayout()
+        self.lob_box = BoxLayout(orientation="vertical")
+        self.lob_label = CustomLabel(text='We detected two different trajectory files. Which one do you want to use for validation?')
+        self.lob_btns_container = BoxLayout()
+        self.lob_btn1 = Button(text = "With gaps")
+        self.lob_btn2 = Button(text = "Without gaps")
+        self.lob_btns_container.add_widget(self.lob_btn1)
+        self.lob_btns_container.add_widget(self.lob_btn2)
+        self.lob_box.add_widget(self.lob_label)
+        self.lob_box.add_widget(self.lob_btns_container)
+        self.lob_container.add_widget(self.lob_box)
+        self.choose_list_of_blobs_popup = Popup(title = 'Choose validation trajectories',
+                            content = self.lob_container,
+                            size_hint = (.4, .4))
+
+    def show_loading_text(self, *args):
+        self.lob_label.text = "Loading..."
+
+    def on_choose_list_of_blobs_btns_press(self, instance):
+        if instance.text == 'With gaps':
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
+        else:
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path)
+        self.loading_popup.dismiss()
+        self.choose_list_of_blobs_popup.dismiss()
+        self.blobs_in_video = self.list_of_blobs.blobs_in_video
+        self.count_scrollup = 0
+        self.scale = 1
+        self.wrong_crossing_counter = {identity: 0 for identity in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
+        self.create_count_bad_crossing_popup()
+        self.wc_identity_input.bind(on_text_validate = self.on_enter_wrong_crossing_identity)
+        self.init_segmentZero()
 
     def get_first_frame(self):
         if not hasattr(CHOSEN_VIDEO.video, 'first_frame_first_global_fragment'):
@@ -788,72 +846,60 @@ class Validator(BoxLayout):
         return CHOSEN_VIDEO.video.first_frame_first_global_fragment
 
     def do(self, *args):
-        if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
-            if CHOSEN_VIDEO.video.has_been_assigned == True:
-                CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
-                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_no_gaps_path)
-                self.blobs_in_video = list_of_blobs.blobs_in_video
-            elif CHOSEN_VIDEO.old_video.has_been_assigned == True:
-                CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
-                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path)
-                self.blobs_in_video = list_of_blobs.blobs_in_video
-            #init variables used for zooming
-            self.count_scrollup = 0
-            self.scale = 1
-            #init elements in the self widget
-            self.init_segmentZero()
-        else:
-            # print("no assignment done")
+        try:
+            if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
+                CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
+            if  CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['crossings']:
+                self.create_choose_list_of_blobs_popup()
+                self.lob_btn1.bind(on_press = self.show_loading_text)
+                self.lob_btn2.bind(on_press = self.show_loading_text)
+                self.lob_btn1.bind(on_release = self.on_choose_list_of_blobs_btns_press)
+                self.lob_btn2.bind(on_release = self.on_choose_list_of_blobs_btns_press)
+                self.choose_list_of_blobs_popup.open()
+            else:
+                self.loading_popup.open()
+                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path)
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
             self.warning_popup.open()
 
     def init_segmentZero(self):
-        #create and add widget to visualise the tracked video
-        self.visualiser = VisualiseVideo()
         self.add_widget(self.visualiser)
-        #get colors to visualise trajectories and so on
         self.colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals)
-        #create and add layout for buttons
         self.button_box = BoxLayout(orientation='vertical', size_hint=(.3,1.))
         self.add_widget(self.button_box)
-        #create, add and bind button: go to next crossing
         self.next_cross_button = Button(id='crossing_btn', text='Next fucking crossing', size_hint=(1,1))
         self.next_cross_button.bind(on_press=self.go_to_next_crossing)
         self.button_box.add_widget(self.next_cross_button)
-        #create, add and bind button: go to previous crossing
         self.previous_cross_button = Button(id='crossing_btn', text='Previous fucking crossing', size_hint=(1,1))
         self.previous_cross_button.bind(on_press=self.go_to_previous_crossing)
         self.button_box.add_widget(self.previous_cross_button)
-        #create, add and bind button to go back to the first global fragments
         self.go_to_first_global_fragment_button = Button(id='back_to_first_gf_btn', text='First global fragment', size_hint=(1,1))
         self.go_to_first_global_fragment_button.bind(on_press = self.go_to_first_global_fragment)
         self.button_box.add_widget(self.go_to_first_global_fragment_button)
-        #create, add and bind button: save groundtruth
         self.save_groundtruth_btn = Button(id='save_groundtruth_btn', text='Save updated identities',size_hint = (1,1))
         self.save_groundtruth_btn.bind(on_press=self.show_saving)
-        self.save_groundtruth_btn.bind(on_release=self.save_groundtruth)
+        self.save_groundtruth_btn.bind(on_release=self.save_groundtruth_list_of_blobs)
         self.save_groundtruth_btn.disabled = True
-        # add button to the button layout
         self.button_box.add_widget(self.save_groundtruth_btn)
-        # create button to compute accuracy with respect to the groundtruth entered by the user
         self.compute_accuracy_button = Button(id = "compute_accuracy_button", text = "Compute accuracy", size_hint  = (1.,1.))
         self.compute_accuracy_button.disabled = False
         self.compute_accuracy_button.bind(on_press = self.compute_and_save_session_accuracy_wrt_groundtruth_APP)
-        # add button to layout
         self.button_box.add_widget(self.compute_accuracy_button)
-        #start visualising the video
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.writeIds, frame_index_to_start = self.get_first_frame())
 
     def go_to_next_crossing(self,instance):
         non_crossing = True
-        #get frame index from the slider initialised in visualiser
         frame_index = int(self.visualiser.video_slider.value)
-        #for every subsequent frame check the blobs and stop if a crossing (or a jump) occurs
+
         while non_crossing == True:
             if frame_index < CHOSEN_VIDEO.video.number_of_frames:
                 frame_index = frame_index + 1
                 blobs_in_frame = self.blobs_in_video[frame_index]
                 for blob in blobs_in_frame:
-                    if not blob.is_an_individual_in_a_fragment:
+                    if not blob.is_an_individual:
                         non_crossing = False
                         self.visualiser.video_slider.value = frame_index
                         self.visualiser.visualise(frame_index, func = self.writeIds)
@@ -862,15 +908,14 @@ class Validator(BoxLayout):
 
     def go_to_previous_crossing(self,instance):
         non_crossing = True
-        #get frame index from the slider initialised in visualiser
         frame_index = int(self.visualiser.video_slider.value)
-        #for every subsequent frame check the blobs and stop if a crossing (or a jump) occurs
+
         while non_crossing == True:
             if frame_index > 0:
                 frame_index = frame_index - 1
                 blobs_in_frame = self.blobs_in_video[frame_index]
                 for blob in blobs_in_frame:
-                    if not blob.is_an_individual_in_a_fragment:
+                    if not blob.is_an_individual:
                         non_crossing = False
                         self.visualiser.video_slider.value = frame_index
                         self.visualiser.visualise(frame_index, func = self.writeIds)
@@ -884,6 +929,7 @@ class Validator(BoxLayout):
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
+
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
 
         frame_index = int(self.visualiser.video_slider.value)
@@ -891,33 +937,18 @@ class Validator(BoxLayout):
             frame_index -= 1
         elif keycode[1] == 'right':
             frame_index += 1
+        elif keycode[1] == 'c':
+            self.wc_popup.open()
         self.visualiser.video_slider.value = frame_index
         self.visualiser.visualise(frame_index, func = self.writeIds)
         return True
 
     @staticmethod
-    def getNearestCentroid(point, cents):
-        """
-        Finds the nearest neighbour in cents with respect to point (in 2D)
-        """
-        point = np.asarray(point)
-        cents = np.asarray(cents)
-        cents_x = cents[:,0]
-        cents_y = cents[:,1]
-        dist_x = cents_x - point[0]
-        dist_y = cents_y - point[1]
-        distances = dist_x**2 + dist_y**2
-        return np.argmin(distances)
-
-    @staticmethod
     def get_clicked_blob(point, contours):
         """
-        Get contour in which point is contained
+        Get the contour that contains point
         """
-        # print("point ", point)
-        # print("contours ", contours)
         indices = [i for i, cnt in enumerate(contours) if cv2.pointPolygonTest(cnt, tuple(point), measureDist = False) >= 0]
-        # print(indices)
         if len(indices) != 0:
             return indices[0]
         else:
@@ -939,20 +970,13 @@ class Validator(BoxLayout):
         mouse_coords = self.touches[0]
         frame_index = int(self.visualiser.video_slider.value) #get the current frame from the slider
         blobs_in_frame = self.blobs_in_video[frame_index]
-        # centroids = np.asarray([getattr(blob, "centroid") for blob in blobs_in_frame])
         contours = [getattr(blob, "contour") for blob in blobs_in_frame]
         if self.scale != 1:
-            #transforms the centroids to the visualised texture
-            # centroids = [self.apply_affine_transform_on_point(self.M, centroid) for centroid in centroids]
             contours = [self.apply_affine_transform_on_contour(self.M, cnt) for cnt in contours]
-
         mouse_coords = self.fromShowFrameToTexture(mouse_coords)
         if self.scale != 1:
             mouse_coords = self.apply_inverse_affine_transform_on_point(self.M, mouse_coords)
-        # centroid_ind = self.getNearestCentroid(mouse_coords, centroids) # compute the nearest centroid
-        # print("contours shape, ", contours[0].shape)
         blob_ind = self.get_clicked_blob(mouse_coords, contours)
-        # print("blob index ", blob_ind)
         if blob_ind is not None:
             blob_to_modify = blobs_in_frame[blob_ind]
             return blob_to_modify, mouse_coords
@@ -965,18 +989,12 @@ class Validator(BoxLayout):
         the coordinates of the original image
         """
         coords = np.asarray(coords)
-        if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction'):
-            if CHOSEN_VIDEO.video.resolution_reduction == 1:
-                original_frame_width = CHOSEN_VIDEO.video.width
-                original_frame_height = CHOSEN_VIDEO.video.height
-            else:
-                original_frame_width = int(CHOSEN_VIDEO.video.width * CHOSEN_VIDEO.video.resolution_reduction)
-                original_frame_height = int(CHOSEN_VIDEO.video.height * CHOSEN_VIDEO.video.resolution_reduction)
+        if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and  CHOSEN_VIDEO.video.resolution_reduction != 1:
+            original_frame_width = int(CHOSEN_VIDEO.video.width * CHOSEN_VIDEO.video.resolution_reduction)
+            original_frame_height = int(CHOSEN_VIDEO.video.height * CHOSEN_VIDEO.video.resolution_reduction)
         else:
             original_frame_width = int(CHOSEN_VIDEO.video.width)
             original_frame_height = int(CHOSEN_VIDEO.video.height)
-        # print("--------------------------- width and height ", original_frame_width, original_frame_height)
-
         actual_frame_width, actual_frame_height = self.visualiser.display_layout.size
         self.offset = self.visualiser.footer.height
         coords[1] = coords[1] - self.offset
@@ -995,16 +1013,11 @@ class Validator(BoxLayout):
         blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
         font = cv2.FONT_HERSHEY_SIMPLEX
         frame = self.visualiser.frame
-        # print("frame shape in write Ids ", frame.shape)
-        # cv2.putText(frame, str(self.visualiser.video_slider.value),(50,50), font, 1, [0, 0, 0], 3)
-        print("****************************************************************")
         frame_number = blobs_in_frame[0].frame_number
-        print("frame number ", frame_number)
+
         for blob in blobs_in_frame:
-            print("8<-------------------------------------------------------------")
             cur_id = blob.final_identity
             cur_id_str = str(cur_id)
-            print("final_identity ", cur_id_str)
             roots = ['a-', 'd-', 'c-','i-', 'u-']
             if blob.user_generated_identity is not None:
                 root = roots[4]
@@ -1016,8 +1029,6 @@ class Validator(BoxLayout):
                 root = roots[1]
             else:
                 root = roots[0]
-
-
             if isinstance(cur_id, int):
                 print("centroid ", blob.centroid)
                 cur_id_str = root + cur_id_str
@@ -1054,7 +1065,6 @@ class Validator(BoxLayout):
 
     def propagate_groundtruth_identity_in_individual_fragment(self):
         modified_blob = self.blob_to_modify
-        # print('********************** self.blob_to_modify.user_generated_identity, ', self.blob_to_modify.user_generated_identity)
         count_past_corrections = 1 #to take into account the modification already done in the current frame
         count_future_corrections = 0
         new_blob_identity = modified_blob.user_generated_identity
@@ -1090,22 +1100,18 @@ class Validator(BoxLayout):
         else:
             self.blob_to_modify._user_generated_centroids.append(self.user_generated_centroids)
             self.blob_to_modify._user_generated_identities.append(self.identity_update)
-            # print("assigning ids and centroids to crossings:")
-            # print(self.blob_to_modify._user_generated_identities)
-            # print(self.blob_to_modify._user_generated_centroids)
+
         self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func=self.writeIds)
 
     def on_press_show_saving(selg, *args):
         self.show_saving()
 
-    def save_groundtruth(self, *args):
+    def save_groundtruth_list_of_blobs(self, *args):
         self.go_and_save()
         self.popup_saving.dismiss()
 
     def go_and_save(self):
-        # self.list_of_fragments.update_from_list_of_blobs(CHOSEN_VIDEO.video.fragment_identifier_to_index, self.blobs_in_video)
-        # self.list_of_fragments.save(video.fragments_path)
-        self.list_of_blobs.save(CHOSEN_VIDEO.video.blobs_path)
+        self.list_of_blobs.save()
         CHOSEN_VIDEO.video.save()
 
     def modifyIdOpenPopup(self, blob_to_modify):
@@ -1118,23 +1124,16 @@ class Validator(BoxLayout):
         text = str(self.id_to_modify)
         self.old_id_box = BoxLayout(orientation="vertical")
         self.new_id_box = BoxLayout(orientation="vertical")
-        self.selected_label = Label(text='You selected animal:\n')
+        self.selected_label = CustomLabel(text='You selected animal:\n')
         self.selected_label_num = Label(text=text)
-        self.selected_label.text_size = self.selected_label.size
-        self.selected_label.texture_size = self.selected_label.size
-        self.new_id_label = Label(text='Type the new identity and press enter to confirm\n')
-        self.new_id_label.text_size = self.new_id_label.size
-        self.new_id_label.texture_size = self.new_id_label.size
+        self.new_id_label = CustomLabel(text='Type the new identity and press enter to confirm\n')
         self.container.add_widget(self.old_id_box)
         self.container.add_widget(self.new_id_box)
-
         self.old_id_box.add_widget(self.selected_label)
         self.old_id_box.add_widget(self.selected_label_num)
-
         self.new_id_box.add_widget(self.new_id_label)
         self.identityInput = TextInput(text ='', multiline=False)
         self.new_id_box.add_widget(self.identityInput)
-
         self.popup = Popup(title='Correcting identity',
             content=self.container,
             size_hint=(.4,.4))
@@ -1146,57 +1145,18 @@ class Validator(BoxLayout):
         self.container = BoxLayout()
         self.blob_to_explore = blob_to_explore
         self.show_attributes_box = BoxLayout(orientation="vertical")
-        #identity
-        if blob_to_explore.user_generated_identity is not None:
-            blob_to_explore_identity = blob_to_explore.user_generated_identity
-        elif blob_to_explore._identity_corrected_solving_duplication is not None:
-            blob_to_explore_identity = blob_to_explore._identity_corrected_solving_duplication
-        else:
-            blob_to_explore_identity = blob_to_explore.identity
-        self.id_label = Label(text='Assigned identity: ' + str(blob_to_explore_identity))
-        self.id_label.text_size = self.id_label.size
-        self.id_label.texture_size = self.id_label.size
-        #fragment identifier
-        self.frag_id_label = Label(text='Fragment identifier: ' + str(blob_to_explore.fragment_identifier))
-        self.frag_id_label.text_size = self.frag_id_label.size
-        self.frag_id_label.texture_size = self.frag_id_label.size
-        #used for training
-        self.accumulation_label = Label(text='Used for training: ' + str(blob_to_explore.used_for_training))
-        self.accumulation_label.text_size = self.accumulation_label.size
-        self.accumulation_label.texture_size = self.accumulation_label.size
-        #is in a fragment
-        self.in_a_fragment_label = Label(text='It is in an individual fragment: ' + str(blob_to_explore.is_in_a_fragment))
-        self.in_a_fragment_label.text_size = self.in_a_fragment_label.size
-        self.in_a_fragment_label.texture_size = self.in_a_fragment_label.size
-        #is a fish
-        self.fish_label = Label(text='It is a fish: ' + str(blob_to_explore.is_an_individual))
-        self.fish_label.text_size = self.fish_label.size
-        self.fish_label.texture_size = self.fish_label.size
-        #is a ghost crossing
-        self.ghost_crossing_label = Label(text='It is a ghost crossing: ' + str(blob_to_explore.is_a_ghost_crossing))
-        self.ghost_crossing_label.text_size = self.ghost_crossing_label.size
-        self.ghost_crossing_label.texture_size = self.ghost_crossing_label.size
-        #is a jump
-        self.jump_label = Label(text='It is a jump: ' + str(blob_to_explore.is_a_jump))
-        self.jump_label.text_size = self.jump_label.size
-        self.jump_label.texture_size = self.jump_label.size
-
-        self.id_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
-        self.frag_id_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
-        self.accumulation_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
-        self.jump_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
-        self.in_a_fragment_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
-        self.ghost_crossing_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
-        self.jump_label.bind(size=lambda s, w: s.setter('text_size')(s, w))
-
+        self.id_label = CustomLabel(text='Assigned identity: ' + str(blob.final_identity))
+        self.frag_id_label = CustomLabel(text='Fragment identifier: ' + str(blob_to_explore.fragment_identifier))
+        self.accumulation_label = CustomLabel(text='Used for training: ' + str(blob_to_explore.used_for_training))
+        self.in_a_fragment_label = CustomLabel(text='It is in an individual fragment: ' + str(blob_to_explore.is_in_a_fragment))
+        self.fish_label = CustomLabel(text='It is a fish: ' + str(blob_to_explore.is_an_individual))
+        self.ghost_crossing_label = CustomLabel(text='It is a ghost crossing: ' + str(blob_to_explore.is_a_ghost_crossing))
+        self.jump_label = CustomLabel(text='It is a jump: ' + str(blob_to_explore.is_a_jump))
         self.container.add_widget(self.show_attributes_box)
-        self.show_attributes_box.add_widget(self.id_label)
-        self.show_attributes_box.add_widget(self.frag_id_label)
-        self.show_attributes_box.add_widget(self.accumulation_label)
-        self.show_attributes_box.add_widget(self.in_a_fragment_label)
-        self.show_attributes_box.add_widget(self.ghost_crossing_label)
-        self.show_attributes_box.add_widget(self.jump_label)
-
+        widget_list = [self.id_label, self.frag_id_label,
+                        self.accumulation_label, self.in_a_fragment_label,
+                        self.ghost_crossing_label, self.jump_label]
+        [self.show_attributes_box.add_widget(w) for w in widget_list]
         self.popup = Popup(title='Blob attributes',
             content=self.container,
             size_hint=(.4,.4))
@@ -1211,7 +1171,6 @@ class Validator(BoxLayout):
                 self.id_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
                 if self.id_to_modify is not None:
                     self.modifyIdOpenPopup(self.id_to_modify)
-
             elif touch.button == 'scrollup':
                 self.count_scrollup += 1
                 coords = self.fromShowFrameToTexture(touch.pos)
@@ -1224,7 +1183,6 @@ class Validator(BoxLayout):
                 textureFrame = Texture.create(size=(self.dst.shape[1], self.dst.shape[0]), colorfmt='bgr')
                 textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
                 self.visualiser.display_layout.texture = textureFrame
-
             elif touch.button == 'scrolldown':
                 coords = self.fromShowFrameToTexture(touch.pos)
                 rows,cols, channels = self.visualiser.frame.shape
@@ -1236,7 +1194,6 @@ class Validator(BoxLayout):
                 self.visualiser.display_layout.texture = textureFrame
                 self.count_scrollup = 0
                 self.scale = 1
-
             elif touch.button == 'right':
                 self.touches.append(touch.pos)
                 self.id_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
@@ -1249,90 +1206,96 @@ class Validator(BoxLayout):
     def disable_touch_down_outside_collided_widget(self, touch):
         return super(Validator, self).on_touch_down(touch)
 
-    def frame_interval_popup(self):
-        # print("-----------------------------------------------------")
-        self.popup_container = BoxLayout(orientation = "vertical")
-        # self.popup_container_lbl = Label(text = "Input start and ending frame to compute accuracy against groundtruth")
-        # self.popup_container_lbl.text_size = self.popup_container_lbl.size
-        # self.popup_container_lbl.texture_size = self.popup_container_lbl.size
-        # self.popup_container.add_widget(self.popup_container_lbl)
-        # self.text_input_box = BoxLayout(orientation = "horizontal")
-        #
-        # self.start_frame_input = TextInput(text ='start', multiline=False)
-        # self.end_frame_input = TextInput(text ='end', multiline=False)
-        #
-        # self.text_input_box.add_widget(self.start_frame_input)
-        # self.text_input_box.add_widget(self.end_frame_input)
-        # self.popup_container.add_widget(self.text_input_box)
-        self.popup_start_end_groundtruth = Popup(title='Groundtruth Accuracy - Frame Interval',
-                    content=self.popup_container,
-                    size_hint=(.5,.5))
-        # self.start_frame_input.bind(on_text_validate = self.on_enter_start_end)
-        # self.end_frame_input.bind(on_text_validate = self.on_enter_start_end)
-        self.popup_start_end_groundtruth.open()
-
-    def on_enter_start_end(self,value):
-        if self.start_frame_input.text != '':
-            start = int(self.start_frame_input.text)
-        else:
-            start = 0
-
-        if self.end_frame_input.text != '':
-            end = int(self.end_frame_input.text)
-        else:
-            end = self.CHOSEN_VIDEO.video_object.number_of_frames
-        self.groundtruth_interval = [start, end]
-        self.popup_start_end_groundtruth.dismiss()
-
-
-    def compute_and_save_session_accuracy_wrt_groundtruth_APP(self, *args):
-        # self.frame_interval_popup()
-
+    def get_groundtruth_path(self):
         groundtruth_path = os.path.join(CHOSEN_VIDEO.video.video_folder, '_groundtruth.npy')
-        if os.path.isfile(groundtruth_path):
-            generate_new_groundtruth = raw_input('A groundtruth file already exists, Do you want to generate a new one? [Y/n]')
-            if generate_new_groundtruth == '' or generate_new_groundtruth == 'y':
-                start = int(raw_input('starting frame: '))
-                end = int(raw_input('end frame:'))
-                groundtruth = generate_groundtruth(CHOSEN_VIDEO.video, self.blobs_in_video, int(start), int(end))
-            else:
-                groundtruth = np.load(groundtruth_path).item()
+        return groundtruth_path if os.path.isfile(groundtruth_path) else None
+
+    def on_groundtruth_popup_button_press(self, instance):
+        if instance.text == "Use pre-existent ground truth":
+            self.groundtruth = np.load(self.groundtruth_path).item()
+            self.plot_groundtruth_statistics()
+            self.popup_start_end_groundtruth.dismiss()
         else:
-            start = int(raw_input('starting frame: '))
-            end = int(raw_input('end frame:'))
-            groundtruth = generate_groundtruth(CHOSEN_VIDEO.video, self.blobs_in_video, int(start), int(end))
+            self.gt_start_end_container.remove_widget(self.gt_start_end_btn1)
+            self.gt_start_end_container.remove_widget(self.gt_start_end_btn2)
+            self.gt_start_end_label.text = "Insert the start and ending frame (e.g. 100 - 2050) on which the ground truth has been computed"
+            self.gt_start_end_text_input = TextInput(text ='', multiline=False)
+            self.gt_start_end_container.add_widget(self.gt_start_end_text_input)
+            self.gt_start_end_text_input.bind(on_text_validate = self.on_enter_start_end)
 
-        blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
-        blobs_in_video = self.blobs_in_video[groundtruth.start:groundtruth.end]
+    def create_frame_interval_popup(self):
+        self.gt_start_end_container = BoxLayout(orientation = "vertical")
+        self.groundtruth_path = self.get_groundtruth_path()
+        if self.groundtruth_path is not None:
+            if self.save_groundtruth_btn.disabled:
+                self.groundtruth = np.load(self.groundtruth_path).item()
+                self.plot_groundtruth_statistics()
+                return True
+            if not self.save_groundtruth_btn.disabled:
+                self.gt_start_end_label = CustomLabel(text = "A pre-existent ground truth file has been detected. Do you want to use it to compute the accuracy or use a new one?")
+                self.gt_start_end_btn1 = Button(text = "Use pre-existent ground truth")
+                self.gt_start_end_btn2 = Button(text = "Generate new ground truth")
+                self.gt_start_end_container.add_widget(self.gt_start_end_label)
+                self.gt_start_end_container.add_widget(self.gt_start_end_btn1)
+                self.gt_start_end_container.add_widget(self.gt_start_end_btn2)
+                self.gt_start_end_btn1.bind(on_press = self.on_groundtruth_popup_button_press)
+                self.gt_start_end_btn2.bind(on_press = self.on_groundtruth_popup_button_press)
+        else:
+            if self.save_groundtruth_btn.disabled:
+                self.gt_start_end_label = CustomLabel(text = "No pre-existent groundtruth file has been detected. Validate the video to compute a ground truth first.\n\n Need help? To modify a wrong identity click on the badly identified animal and fill the popup. Use the mouse wheel to zoom if necessary.")
+                self.gt_start_end_container.add_widget(self.gt_start_end_label)
+            else:
+                self.gt_start_end_label = CustomLabel(text = "Insert the start and ending frame (e.g. 100 - 2050) on which the ground truth has been computed")
+                self.gt_start_end_container.add_widget(self.gt_start_end_label)
+                self.gt_start_end_text_input = TextInput(text ='', multiline=False)
+                self.gt_start_end_container.add_widget(self.gt_start_end_text_input)
+                self.gt_start_end_text_input.bind(on_text_validate = self.on_enter_start_end)
 
-        print("computting groundtrugh")
-        self.accuracy, \
-        self.individual_accuracy, \
-        self.accuracy_assigned, \
-        self.individual_accuracy_assigned, \
-        self.frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, blobs_in_video_groundtruth, blobs_in_video)
+        self.popup_start_end_groundtruth = Popup(title='Groundtruth Accuracy - Frame Interval',
+                    content=self.gt_start_end_container,
+                    size_hint=(.4,.4))
 
-        if self.individual_accuracy is not None:
+    def on_enter_start_end(self, value):
+        start, end = self.gt_start_end_text_input.text.split('-')
+        self.gt_start_frame = int(start)
+        self.gt_end_frame = int(end)
+        self.generate_groundtruth()
+        self.save_groundtruth()
+        self.plot_groundtruth_statistics()
+        if not self.prevent_open_popup:
+            self.popup_start_end_groundtruth.dismiss()
+
+    def generate_groundtruth(self):
+        self.groundtruth = generate_groundtruth(CHOSEN_VIDEO.video, self.blobs_in_video, self.gt_start_frame, self.gt_end_frame, save_gt = False)
+
+    def save_groundtruth(self):
+        self.groundtruth.save()
+
+    def plot_groundtruth_statistics(self):
+        blobs_in_video_groundtruth = self.groundtruth.blobs_in_video[self.groundtruth.start:self.groundtruth.end]
+        blobs_in_video = self.blobs_in_video[self.groundtruth.start:self.groundtruth.end]
+        gt_accuracies, _ = get_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, blobs_in_video_groundtruth, blobs_in_video)
+        if gt_accuracies is not None:
+            self.individual_accuracy = gt_accuracies['individual_accuracy']
+            self.accuracy = gt_accuracies['accuracy']
             self.plot_final_statistics()
             self.statistics_popup.open()
-
-            print("saving accuracies in video")
-            CHOSEN_VIDEO.video.gt_start_end = (groundtruth.start,groundtruth.end)
-            CHOSEN_VIDEO.video.gt_accuracy = self.accuracy
-            CHOSEN_VIDEO.video.gt_individual_accuracy = self.individual_accuracy
-            CHOSEN_VIDEO.video.gt_accuracy_assigned = self.accuracy_assigned
-            CHOSEN_VIDEO.video.gt_individual_accuracy_assigned = self.individual_accuracy_assigned
+            CHOSEN_VIDEO.video.gt_start_end = (self.groundtruth.start, self.groundtruth.end)
+            CHOSEN_VIDEO.video.gt_accuracy = gt_accuracies
             CHOSEN_VIDEO.video.save()
+
+    def compute_and_save_session_accuracy_wrt_groundtruth_APP(self, *args):
+        self.prevent_open_popup = self.create_frame_interval_popup()
+        if not self.prevent_open_popup:
+            self.popup_start_end_groundtruth.open()
 
     def plot_final_statistics(self):
         content = BoxLayout()
         self.statistics_popup = Popup(title = "Statistics",
                                     content = content,
                                     size_hint = (.5, .5))
-
         fig, ax = plt.subplots(1)
         colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals, norm = True)
-
         width = .5
         plt.bar(self.individual_accuracy.keys(), self.individual_accuracy.values(), width, color=colors)
         plt.axhline(self.accuracy, color = 'k', linewidth = .2)
@@ -1341,14 +1304,41 @@ class Validator(BoxLayout):
         content.add_widget(FigureCanvasKivyAgg(fig))
 
 class Root(TabbedPanel):
+    global DEACTIVATE_VALIDATION
+    DEACTIVATE_VALIDATION = Deactivate_Process()
 
     def __init__(self, **kwargs):
         super(Root, self).__init__(**kwargs)
-        self.bind(current_tab=self.content_changed_cb)
+        self.bind(current_tab = self.content_changed_cb)
+        self.add_welcome_tab()
+        self.add_validation_tab()
+        DEACTIVATE_VALIDATION.bind(process = self.manage_validation)
+
+    def add_welcome_tab(self):
+        self.welcome_tab = TabbedPanelItem(text = "Welcome")
+        self.select_file = SelectFile(size_hint = (1., 1.))
+        self.welcome_tab.add_widget(self.select_file)
+        self.add_widget(self.welcome_tab)
+
+    def add_validation_tab(self):
+        self.validation_tab = TabbedPanelItem(text='Global Validation')
+        self.validation_tab.disabled = True
+        self.add_widget(self.validation_tab)
+
+    def manage_validation(self, *args):
+        print("from root: ", DEACTIVATE_VALIDATION.process)
+        self.validation_tab.disabled = DEACTIVATE_VALIDATION.process
+        if not DEACTIVATE_VALIDATION.process:
+            self.validator = Validator()
+            self.validation_tab.add_widget(self.validator)
+        else:
+            if hasattr(self, 'validator'):
+                self.validation_tab.clean(self.validator)
 
     def content_changed_cb(self, obj, value):
-        print('CONTENT', value.content.id)
-        print(type(value.content.id))
+        pass
+        # print('CONTENT', value.content.id)
+        # print(type(value.content.id))
 
     def on_switch(self, header):
         super(Root, self). switch_to(header)

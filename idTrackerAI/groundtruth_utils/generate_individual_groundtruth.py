@@ -36,20 +36,20 @@ class GroundTruthBlob(object):
             else:
                 setattr(self, attribute, getattr(blob, attribute))
 
-class GroundTruth(object):
-    def __init__(self, video = [], blobs_in_video = [], start = None, end = None):
+class IndividualGroundTruth(object):
+    def __init__(self, video = [], blobs_in_video = [], start = None, end = None, validated_identity = None):
         self.video = video
         self.blobs_in_video = blobs_in_video
         self.start = start
         self.end = end
 
     def save(self):
-        path_to_save_groundtruth = os.path.join(os.path.split(self.video.video_path)[0], '_groundtruth.npy')
+        path_to_save_groundtruth = os.path.join(os.path.split(self.video.video_path)[0], '_individual_', str(validated_identity), '_groundtruth.npy')
         logger.info("saving ground truth at %s" %path_to_save_groundtruth)
         np.save(path_to_save_groundtruth, self)
         logger.info("done")
 
-def generate_groundtruth(video, blobs_in_video = None, start = None, end = None, wrong_crossing_counter = None, save_gt = True):
+def generate_individual_groundtruth(video, blobs_in_video = None, start = None, end = None, validated_identity = None, save_gt = True):
     """Generates a list of light blobs_in_video, given a video object corresponding to a
     tracked video
     """
@@ -61,9 +61,10 @@ def generate_groundtruth(video, blobs_in_video = None, start = None, end = None,
         blobs_in_frame_groundtruth = []
 
         for blob in blobs_in_frame:
-            gt_blob = GroundTruthBlob()
-            gt_blob.get_attribute(blob)
-            blobs_in_frame_groundtruth.append(gt_blob)
+            if blob.final_identity == validated_identity:
+                gt_blob = GroundTruthBlob()
+                gt_blob.get_attribute(blob)
+                blobs_in_frame_groundtruth.append(gt_blob)
 
         blobs_in_video_groundtruth.append(blobs_in_frame_groundtruth)
 
@@ -88,5 +89,5 @@ if __name__ == "__main__":
     # blobs_path = os.path.join(session_path, 'preprocessing', 'blobs_collection.npy')
     list_of_fragments = ListOfFragments.load(video.fragments_path)
     list_of_blobs = ListOfBlobs.load(video.blobs_path)
-    list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
+    list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
     groundtruth = generate_groundtruth(video, list_of_blobs.blobs_in_video, int(start), int(end))

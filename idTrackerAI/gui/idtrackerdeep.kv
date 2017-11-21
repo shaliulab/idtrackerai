@@ -41,7 +41,12 @@
         #         id: accumulator
         TabbedPanelItem:
             id: tab7
-            text:"Validation"
+            text:"Global Validation"
             disabled: select_file.enable_validation(filechooser.path,filechooser.selection)
             Validator:
                 id: validator
+        TabbedPanelItem:
+            id: tab8
+            text:"Individual Validation"
+            disabled: select_file.enable_validation(filechooser.path,filechooser.selection)
+            
