@@ -66,23 +66,6 @@ class CrossingDataset(object):
                                     and blob.is_a_sure_crossing]
             np.random.seed(0)
             np.random.shuffle(self.crossing_blobs)
-            # num_crossing_images = 0
-            # self.crossings = []
-            # frame_number = 0
-            #
-            # while (num_crossing_images <= MAX_NUMBER_OF_IMAGES * self.video.number_of_animals\
-            #     and frame_number < self.video.number_of_frames - 1):
-            #
-            #     blobs_in_frame = self.blobs[frame_number]
-            #     frame_number += 1
-            #
-            #     for blob in blobs_in_frame:
-            #         if (blob.is_a_crossing and blob.is_a_sure_crossing and not blob.is_a_ghost_crossing):
-            #             self.crossings.append(blob)
-            #             num_crossing_images += 1
-            #
-            # np.random.seed(0)
-            # np.random.shuffle(self.crossings)
             self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossing_blobs]) + 5
         else:
             self.crossing_blobs = crossings

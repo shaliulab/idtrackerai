@@ -719,6 +719,7 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
                                     'resolution_reduction',
                                     'maximum_number_of_blobs',
+                                    'number_of_channels', 
                                     'median_body_length',
                                     'model_area',
                                     'identification_image_size',
@@ -729,7 +730,8 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
                                     'ROI','bkg', 'preprocessing_folder',
                                     'fragment_identifier_to_index',
                                     'number_of_unique_images_in_global_fragments',
-                                    'maximum_number_of_images_in_global_fragments']
+                                    'maximum_number_of_images_in_global_fragments',
+                                    'gamma_fit_parameters']
         video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_preprocessing_parameters = True
     return restore_segmentation

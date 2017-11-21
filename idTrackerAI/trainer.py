@@ -36,6 +36,9 @@ def train(video,
     logger.info("Training...")
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training', scope = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation', scope = 'training')
+    print("-----------------------")
+    print("store_training_accuracy_and_loss_data", store_training_accuracy_and_loss_data.__dict__.keys())
+    print("store_validation_accuracy_and_loss_data", store_validation_accuracy_and_loss_data.__dict__.keys())
     if plot_flag:
         plt.ion()
         fig, ax_arr = plt.subplots(4)
@@ -87,12 +90,8 @@ def train(video,
         trainer._epochs_completed += 1
         validator._epochs_completed += 1
 
-        # Save network model
-        if accumulation_manager.restore_criterion == 'best':
-            net.save()
-
     global_step += trainer.epochs_completed
-    logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss))
+    logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss[global_step0:]))
     # update used_for_training flag to True for fragments used
     logger.info("Accumulation step completed. Updating global fragments used for training")
     accumulation_manager.update_fragments_used_for_training()
@@ -103,17 +102,9 @@ def train(video,
         store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b')
     # store training and validation losses and accuracies
     if store_accuracy_and_error:
-        store_training_accuracy_and_loss_data.save()
-        store_validation_accuracy_and_loss_data.save()
-    # Get best checkpoint
-    if accumulation_manager.restore_criterion == 'best':
-        logger.debug("Accumulation with best validation accuracy model")
-        net.restore_index = np.argmax(store_validation_accuracy_and_loss_data.accuracy) + global_step0 if video.accumulation_step > 0 else np.argmax(store_validation_accuracy_and_loss_data.accuracy)
-        net.restore()
-    else:
-        logger.debug("Accumulation with last model")
+        store_training_accuracy_and_loss_data.save(trainer._epochs_completed)
+        store_validation_accuracy_and_loss_data.save(trainer._epochs_completed)
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'Accumulation-' + str(video.accumulation_trial) + '-' + str(video.accumulation_step) + '.pdf'))
-    if accumulation_manager.restore_criterion == 'last':
-        net.save()
+    net.save()
     return global_step, net, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data

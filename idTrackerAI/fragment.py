@@ -299,6 +299,9 @@ class Fragment(object):
                 if max_P2 > FIXED_IDENTITY_THRESHOLD:
                     self._identity_is_fixed = True
                 self._identity = possible_identities[0]
+                self._P1_vector = np.zeros(len(self.P1_vector))
+                self._P1_vector[self.identity - 1] = 0.999999999999
+
         if recompute:
             self.recompute_P2_of_coexisting_fragments()
 

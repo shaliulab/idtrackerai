@@ -96,8 +96,8 @@ def pre_train(video, list_of_fragments,
             store_validation_accuracy_and_loss_data.plot(ax_arr, epoch_index_to_plot,'b')
             epoch_index_to_plot += trainer._epochs_completed
         if store_accuracy_and_error:
-            store_training_accuracy_and_loss_data.save()
-            store_validation_accuracy_and_loss_data.save()
+            store_training_accuracy_and_loss_data.save(trainer._epochs_completed)
+            store_validation_accuracy_and_loss_data.save(trainer._epochs_completed)
         global_epoch += trainer._epochs_completed
         net.save()
         if plot_flag:

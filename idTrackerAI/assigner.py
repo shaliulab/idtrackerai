@@ -54,6 +54,10 @@ def compute_identification_statistics_for_non_accumulated_fragments(fragments, a
             softmax_probs = assigner.softmax_probs[counter : next_counter_value]
             fragment.compute_identification_statistics(predictions, softmax_probs)
             counter = next_counter_value
+        elif fragment.used_for_training and fragment.is_an_individual:
+            identity = np.argmax(fragment.P1_vector)
+            fragment._P1_vector = np.zeros(len(fragment.P1_vector))
+            fragment._P1_vector[identity] = 0.999999999999
 
 def assign_identity(fragments):
     [fragment.assign_identity() for fragment in fragments if fragment.is_an_individual]

@@ -18,9 +18,9 @@ class Store_Accuracy_and_Loss(object):
         self.loss = []
         self.accuracy = []
         self.individual_accuracy = []
+        self.number_of_epochs_completed = []
         self.scope = scope
-        if network.is_restoring or network.is_knowledge_transfer:
-            self.load()
+        self.load()
 
     def append_data(self, loss_value, accuracy_value, individual_accuracy_value):
         self.loss.append(loss_value)
@@ -57,8 +57,11 @@ class Store_Accuracy_and_Loss(object):
         colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=black)
         attribute_to_check = 'used_for_training' if self.scope == 'training' else 'used_for_pretraining'
         for fragment in fragments:
-            if getattr(fragment, attribute_to_check):
-                blob_index = fragment.final_identity - 1
+            if getattr(fragment, attribute_to_check) and fragment.is_an_individual:
+                if fragment.final_identity is not None:
+                    blob_index = fragment.final_identity - 1
+                else:
+                    blob_index = fragment.temporary_id
                 (start, end) = fragment.start_end
                 ax4.add_patch(
                     patches.Rectangle(
@@ -80,10 +83,13 @@ class Store_Accuracy_and_Loss(object):
         ax4.set_xlim([0., video.number_of_frames])
         ax4.set_ylim([-.5, video.number_of_animals + .5 - 1])
 
-    def save(self):
+    def save(self, number_of_epochs_completed):
+        self.number_of_epochs_completed.append(number_of_epochs_completed)
         np.save(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy'), self.__dict__)
 
     def load(self):
         if os.path.isfile(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy')):
             loss_accuracy_dictionary = np.load(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy')).item()
             self.__dict__ = loss_accuracy_dictionary
+            if not hasattr(self, 'number_of_epochs_completed'):
+                self.number_of_epochs_completed = []

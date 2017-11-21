@@ -12,9 +12,16 @@ import sys
 from pprint import pprint
 import matplotlib
 import logging
+import matplotlib
+import subprocess
+
 # sys.path.append('../utils')
 
 logger = logging.getLogger("__main__.py_utils")
+
+### Git utils ###
+def get_git_revision_hash():
+    return subprocess.check_output(['git', 'rev-parse', 'HEAD'])
 
 ### Object utils ###
 def append_values_to_lists(values, list_of_lists):
@@ -269,7 +276,8 @@ def set_load_previous_dict(old_video, processes, existentFile):
                     'first_accumulation_finished',
                     'has_been_pretrained', 'second_accumulation_finished',
                     'has_been_assigned', 'has_duplications_solved',
-                    'has_crossings_solved', 'has_trajectories']
+                    'has_crossings_solved', 'has_trajectories',
+                    'has_trajectories_wo_gaps']
     for i, attribute in enumerate(attributes):
         attr_value = getattr(old_video, attribute)
         if attr_value == True:

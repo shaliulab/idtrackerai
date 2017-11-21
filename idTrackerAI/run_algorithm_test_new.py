@@ -50,12 +50,8 @@ from assigner import assigner
 from visualize_embeddings import visualize_embeddings_global_fragments
 from id_CNN import ConvNetwork
 from correct_duplications import solve_duplications, mark_fragments_as_duplications, check_for_duplications_last_pass
-from correct_impossible_velocity_jumps import correct_impossible_velocity_jumps
-from solve_crossing import give_me_identities_in_crossings
-from get_trajectories import produce_trajectories, smooth_trajectories
 from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
 from generate_groundtruth import GroundTruth, generate_groundtruth
-from compute_velocity_model import compute_model_velocity
 
 from library_utils import Dataset, BlobsListConfig, subsample_dataset_by_individuals, generate_list_of_blobs, LibraryJobConfig, check_if_repetition_has_been_computed
 
@@ -158,29 +154,30 @@ if __name__ == '__main__':
 
             for frames_in_video in job_config.frames_in_video:
 
-                for mean_number_of_frames_per_fragment in job_config.mean_number_of_frames_per_fragment:
+                for scale_parameter in job_config.scale_parameter:
 
-                    for sigma_number_of_frames_per_fragment in job_config.sigma_number_of_frames_per_fragment:
+                    for shape_parameter in job_config.shape_parameter:
 
                         repetition_path = os.path.join(job_config.condition_path,'group_size_' + str(group_size),
                                                                 'num_frames_' + str(frames_in_video),
-                                                                'mean_number_of_frames_per_fragment_' + str(mean_number_of_frames_per_fragment),
-                                                                'sigma_number_of_frames_per_fragment_' + str(sigma_number_of_frames_per_fragment),
+                                                                'scale_parameter_' + str(scale_parameter),
+                                                                'shape_parameter_' + str(shape_parameter),
                                                                 'repetition_' + str(repetition))
 
 
-                        print("\n********** group size %i - frames_in_video %i - mean_number_of_frames_per_fragment %s -  sigma_number_of_frames_per_fragment %s - repetition %i ********"
-                                %(group_size,frames_in_video,str(mean_number_of_frames_per_fragment), str(sigma_number_of_frames_per_fragment), repetition))
-                        a = mean_number_of_frames_per_fragment**2 / sigma_number_of_frames_per_fragment**2
-                        s = sigma_number_of_frames_per_fragment**2 / mean_number_of_frames_per_fragment
-                        print("a = %.2f, s = %.2f" %(a, s))
+                        print("\n********** group size %i - frames_in_video %i - scale_parameter %s -  shape_parameter %s - repetition %i ********"
+                                %(group_size,frames_in_video,str(scale_parameter), str(shape_parameter), repetition))
+                        mean_number_of_frames_per_fragment = shape_parameter * scale_parameter
+                        sigma_number_of_frames_per_fragment = np.sqrt(shape_parameter * scale_parameter ** 2)
+                        print("mean_number_of_frames_per_fragment %.2f" %mean_number_of_frames_per_fragment)
+                        print("sigma_number_of_frames_per_fragment %.2f" %sigma_number_of_frames_per_fragment)
                         already_computed = False
                         if os.path.isfile('./library/results_data_frame.pkl'):
                             already_computed = check_if_repetition_has_been_computed(results_data_frame,
                                                                                     job_config, group_size,
                                                                                     frames_in_video,
-                                                                                    mean_number_of_frames_per_fragment,
-                                                                                    sigma_number_of_frames_per_fragment,
+                                                                                    scale_parameter,
+                                                                                    shape_parameter,
                                                                                     repetition)
                             print("already_computed flag: ", already_computed)
                         if already_computed:
@@ -207,38 +204,43 @@ if __name__ == '__main__':
                             #############################################################
                             video.create_preprocessing_folder()
                             list_of_blobs_config = BlobsListConfig(number_of_animals = group_size,
-                                                    mean_number_of_frames_per_fragment = mean_number_of_frames_per_fragment,
-                                                    sigma_number_of_frames_per_fragment = sigma_number_of_frames_per_fragment,
+                                                    scale_parameter = scale_parameter,
+                                                    shape_parameter = shape_parameter,
                                                     number_of_frames = frames_in_video,
                                                     repetition = repetition)
                             identification_images, centroids = subsample_dataset_by_individuals(dataset, list_of_blobs_config)
                             blobs = generate_list_of_blobs(identification_images, centroids, list_of_blobs_config)
                             video._has_been_segmented = True
-                            list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
+                            list_of_blobs = ListOfBlobs(blobs_in_video = blobs)
                             logger.info("Computing maximum number of blobs detected in the video")
-                            list_of_blobs.check_maximal_number_of_blob()
+                            list_of_blobs.check_maximal_number_of_blob(video.number_of_animals)
                             logger.info("Computing a model of the area of the individuals")
                             list_of_blobs.video = video
                             #assign an identifier to each blob belonging to an individual fragment
-                            list_of_blobs.compute_fragment_identifier_and_blob_index()
+                            list_of_blobs.compute_fragment_identifier_and_blob_index(video.number_of_animals)
                             #assign an identifier to each blob belonging to a crossing fragment
                             list_of_blobs.compute_crossing_fragment_identifier()
                             #create list of fragments
                             fragments = create_list_of_fragments(list_of_blobs.blobs_in_video,
                                                                 video.number_of_animals)
                             # plot_fragments_generated(fragments)
-                            list_of_fragments = ListOfFragments(video, fragments)
+                            list_of_fragments = ListOfFragments(fragments)
                             video._fragment_identifier_to_index = list_of_fragments.get_fragment_identifier_to_index_list()
                             #compute the global fragments (all animals are visible + each animals overlaps
                             #with a single blob in the consecutive frame + the blobs respect the area model)
                             global_fragments = create_list_of_global_fragments(list_of_blobs.blobs_in_video,
                                                                                 list_of_fragments.fragments,
                                                                                 video.number_of_animals)
-                            list_of_global_fragments = ListOfGlobalFragments(video, global_fragments)
-                            video.individual_fragments_distance_travelled = compute_and_plot_fragments_statistics(video,
-                                                                                                                list_of_fragments = list_of_fragments,
-                                                                                                                list_of_global_fragments = list_of_global_fragments,
-                                                                                                                save = True, plot = False)
+                            list_of_global_fragments = ListOfGlobalFragments(global_fragments)
+                            video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
+                            list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
+                            video.number_of_global_fragments_candidates_for_accumulation = list_of_global_fragments.number_of_global_fragments
+                            video.individual_fragments_lenghts, \
+                            video.individual_fragments_distance_travelled, \
+                            video._gamma_fit_parameters = compute_and_plot_fragments_statistics(video,
+                                                                                                list_of_fragments = list_of_fragments,
+                                                                                                list_of_global_fragments = list_of_global_fragments,
+                                                                                                save = True, plot = False)
                             video.number_of_global_fragments = list_of_global_fragments.number_of_global_fragments
                             list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
                             video.number_of_global_fragments_candidates_for_accumulation = list_of_global_fragments.number_of_global_fragments
@@ -296,13 +298,12 @@ if __name__ == '__main__':
                             logger.info("Initialising accumulation manager")
                             # the list of global fragments is ordered in place from the distance (in frames) wrt
                             # the core of the first global fragment that will be accumulated
-                            video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = 0))
+                            video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = 0))
                             list_of_global_fragments.video = video
-                            list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(accumulation_trial = 0)
+                            list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = 0)
                             accumulation_manager = AccumulationManager(video, list_of_fragments,
                                                                         list_of_global_fragments,
-                                                                        threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION,
-                                                                        restore_criterion = RESTORE_CRITERION)
+                                                                        threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
                             #set global epoch counter to 0
                             logger.info("Start accumulation")
                             global_step = 0
@@ -316,15 +317,14 @@ if __name__ == '__main__':
                             ### NOTE: save all the accumulation statistics
                             video.save()
                             logger.info("Saving fragments")
-                            # list_of_fragments.save()
-                            list_of_global_fragments.save(list_of_fragments.fragments)
+                            # list_of_fragments.save(video.fragments_path)
+                            list_of_global_fragments.save(video.global_fragments_path, list_of_fragments.fragments)
                             video.first_accumulation_time = time.time() - video.first_accumulation_time
                             list_of_fragments.save_light_list(video._accumulation_folder)
                             if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                                 if isinstance(video.first_frame_first_global_fragment, list):
                                     video.protocol = 1 if video.accumulation_step <= 1 else 2
                                     video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[video.accumulation_trial]
-                                    list_of_fragments.video = video
                                     list_of_global_fragments.video = video
                                 video.assignment_time = time.time()
                                 #### Assigner ####
@@ -387,13 +387,12 @@ if __name__ == '__main__':
                                     net.reinitialize_softmax_and_fully_connected()
                                     #instantiate accumulation manager
                                     logger.info("Initialising accumulation manager")
-                                    video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(accumulation_trial = i - 1))
+                                    video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1))
                                     list_of_global_fragments.video = video
-                                    list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(accumulation_trial = i - 1)
+                                    list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1)
                                     accumulation_manager = AccumulationManager(video,
                                                                                 list_of_fragments, list_of_global_fragments,
-                                                                                threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION,
-                                                                                restore_criterion = RESTORE_CRITERION)
+                                                                                threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
                                     #set global epoch counter to 0
                                     logger.info("Start accumulation")
                                     global_step = 0
@@ -403,25 +402,26 @@ if __name__ == '__main__':
                                                                                 net,
                                                                                 video.knowledge_transfer_from_same_animals)
                                     logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
+                                    percentage_of_accumulated_images.append(video.ratio_accumulated_images)
+                                    list_of_fragments.save_light_list(video._accumulation_folder)
                                     if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                                         break
                                     else:
-                                        percentage_of_accumulated_images.append(video.ratio_accumulated_images)
+
                                         logger.info("This accumulation was not satisfactory. Try to start from a different global fragment")
-                                        list_of_fragments.save_light_list(video._accumulation_folder)
+
 
                                 video.accumulation_trial = np.argmax(percentage_of_accumulated_images)
                                 video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[video.accumulation_trial]
                                 video._ratio_accumulated_images = percentage_of_accumulated_images[video.accumulation_trial]
-                                list_of_fragments.video = video
                                 list_of_global_fragments.video = video
                                 accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
                                 video._accumulation_folder = os.path.join(video.session_folder, accumulation_folder_name)
                                 list_of_fragments.load_light_list(video._accumulation_folder)
                                 video._second_accumulation_finished = True
                                 logger.info("Saving global fragments")
-                                # list_of_fragments.save()
-                                list_of_global_fragments.save(list_of_fragments.fragments)
+                                # list_of_fragments.save(video.fragments_path)
+                                list_of_global_fragments.save(video.global_fragments_path, list_of_fragments.fragments)
                                 ### NOTE: save second_accumulation statistics
                                 video.save()
                                 video.second_accumulation_time = time.time() - video.second_accumulation_time
@@ -436,15 +436,15 @@ if __name__ == '__main__':
 
                             # finish and save
                             logger.debug("Saving list of fragments, list of global fragments and video object")
-                            # list_of_fragments.save()
-                            list_of_global_fragments.save(list_of_fragments.fragments)
+                            # list_of_fragments.save(video.fragments_path)
+                            list_of_global_fragments.save(video.global_fragments_path, list_of_fragments.fragments)
                             video.save()
 
                             #############################################################
                             ##############   Update list of blobs   #####################
                             ####
                             #############################################################
-                            list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
+                            list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
 
                             #############################################################
                             ############   Generate generate_groundtruth_file ###########
@@ -479,7 +479,7 @@ if __name__ == '__main__':
                             # mark fragments as duplications
                             mark_fragments_as_duplications(list_of_fragments.fragments)
                             # solve duplications
-                            solve_duplications(list_of_fragments)
+                            solve_duplications(list_of_fragments, video.first_frame_first_global_fragment)
                             video._has_duplications_solved = True
                             logger.info("Done")
                             # finish and save
@@ -497,15 +497,15 @@ if __name__ == '__main__':
                             video.compute_overall_P2(list_of_fragments.fragments)
                             print("individual overall_P2 ", video.individual_P2)
                             print("overall_P2 ", video.overall_P2)
-                            list_of_fragments.plot_stats()
+                            list_of_fragments.plot_stats(video)
                             list_of_fragments.save_light_list(video._accumulation_folder)
 
                             #############################################################
                             ##############   Update list of blobs   #####################
                             ####
                             #############################################################
-                            list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
-                            list_of_blobs.save(number_of_chunks = video.number_of_frames)
+                            list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
+                            list_of_blobs.save(video.blobs_path, number_of_chunks = video.number_of_frames, video_has_been_segmented = video.has_been_segmented)
 
                             #############################################################
                             ##########  Accuracies after solving duplications ##########
@@ -546,12 +546,13 @@ if __name__ == '__main__':
                                     'ids_codes': job_config.ids_codes,
                                     'group_size': int(group_size),
                                     'frames_in_video': int(frames_in_video),
+                                    'scale_parameter': scale_parameter,
+                                    'shape_parameter': shape_parameter,
                                     'mean_number_of_frames_per_fragment': mean_number_of_frames_per_fragment,
                                     'sigma_number_of_frames_per_fragment': sigma_number_of_frames_per_fragment,
-                                    'mean_frames_per_fragment': sigma_number_of_frames_per_fragment * mean_number_of_frames_per_fragment,
-                                    'var_frames_per_fragment': sigma_number_of_frames_per_fragment * mean_number_of_frames_per_fragment**2,
                                     'repetition': int(repetition),
                                     'protocol': video.protocol,
+                                    'overall_P2': video.overall_P2,
                                     'individual_accuracy_before_duplications': video.gt_accuracy_before_duplications['individual_accuracy'],
                                     'accuracy_before_duplications': video.gt_accuracy_before_duplications['accuracy'],
                                     'individual_accuracy_assigned_before_duplications': video.gt_accuracy_before_duplications['individual_accuracy_assigned'],
@@ -567,6 +568,7 @@ if __name__ == '__main__':
                                     'individual_accuracy_after_accumulation': video.gt_accuracy['individual_accuracy_after_accumulation'],
                                     'accuracy_after_accumulation': video.gt_accuracy['accuracy_after_accumulation'],
                                     'crossing_detector_accuracy': video.gt_accuracy['crossing_detector_accuracy'],
+                                    'individual_fragments_lengths': video.individual_fragments_lenghts,
                                     'number_of_global_fragments': list_of_global_fragments.number_of_global_fragments,
                                     'number_of_fragments': video.individual_fragments_stats['number_of_fragments'],
                                     'number_of_crossing_fragments': video.individual_fragments_stats['number_of_crossing_fragments'],

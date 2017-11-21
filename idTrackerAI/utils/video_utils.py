@@ -47,10 +47,11 @@ def computeBkgParSegmVideo(video_path, bkg):
     for ind in frameInds:
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
         ret, frameBkg = cap.read()
-        gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
-        gray = np.true_divide(gray,np.mean(gray))
-        bkg = bkg + gray
-        numFramesBkg += 1
+        if ret:
+            gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
+            gray = np.true_divide(gray,np.mean(gray))
+            bkg = bkg + gray
+            numFramesBkg += 1
 
     return bkg, numFramesBkg
 

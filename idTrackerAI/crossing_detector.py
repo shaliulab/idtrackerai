@@ -14,14 +14,14 @@ logger = logging.getLogger("__main__.crossing_detector")
 
 def detect_crossings(list_of_blobs, video, model_area, use_network = True):
     logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
-    list_of_blobs.apply_model_area_to_video(model_area, video.identification_image_size[0])
+    list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0], video.number_of_animals)
     if use_network:
         video.create_crossings_detector_folder()
         logger.info("Get individual and crossing images labelled data")
         training_set = CrossingDataset(list_of_blobs.blobs_in_video, video, scope = 'training')
         training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)
         validation_set = CrossingDataset(list_of_blobs.blobs_in_video, video, scope = 'validation',
-                                                        crossings = training_set.crossings,
+                                                        crossings = training_set.crossing_blobs,
                                                         individual_blobs = training_set.individual_blobs,
                                                         image_size = training_set.image_size)
         validation_set.get_data(sampling_ratio_start = .9, sampling_ratio_end = 1.)
@@ -52,7 +52,7 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True):
         crossings_predictor = GetPredictionCrossigns(net)
         predictions = crossings_predictor.get_all_predictions(test_set)
         [(setattr(blob,'_is_a_crossing', True), setattr(blob, '_is_an_individual', False)) if prediction == 1
-            else (setattr(blob,'_is_a_crossing', False), setattr(blob, '_is_an_individual', True))
+            else (setattr(blob,'_is_a_crossing', False), setattr(blob, '_is_an_individual', True), blob.set_image_for_identification(video))
             for blob, prediction in zip(test_set.test, predictions)]
         logger.debug("Freeing memory. Test crossings set deleted")
         test_set = None
