@@ -21,10 +21,6 @@ from fragment import Fragment
 from GUI_utils import selectDir
 from py_utils import get_spaced_colors_util
 
-
-LABELS = ['crossing', 'assigned', 'not assigned']
-COLORS = ['k', 'g', 'r']
-
 def get_object_type(object_to_evaluate):
 
     if object_to_evaluate.is_a_crossing:
