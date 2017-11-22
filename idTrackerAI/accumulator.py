@@ -43,7 +43,7 @@ def accumulate(accumulation_manager,
                                                         check_for_loss_plateau = True,
                                                         save_summaries = True,
                                                         print_flag = False,
-                                                        plot_flag = True,
+                                                        plot_flag = False,
                                                         global_step = global_step,
                                                         knowledge_transfer_from_same_animals = knowledge_transfer_from_same_animals,
                                                         accumulation_manager = accumulation_manager)

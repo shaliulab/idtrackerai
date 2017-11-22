@@ -109,7 +109,7 @@ def plot_accuracy_step(ax, accumulation_step, training_dict, validation_dict):
 
 def plot_individual_certainty(video, ax, colors, identity_to_blob_hierarchy_list):
     # ax.bar(np.arange(video.number_of_animals)+1, video.individual_P2, color = colors[1:])
-    ax.barh(np.asarray(identity_to_blob_hierarchy_list) + 1, video.individual_P2, height = 0.3, color = colors)
+    ax.barh(np.asarray(identity_to_blob_hierarchy_list) + 1, video.individual_P2, height = 0.5, color = colors)
     ax.axvline(1., color = 'k', linestyle = '--', alpha = .4)
 
 def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps, list_of_accumulation_steps, zoomed_frames):
@@ -239,7 +239,7 @@ def get_no_gaps_fragments(list_of_blobs_no_gaps, number_of_animals):
 
     return no_gaps_fragments
 
-def plot_accumulation_steps(video, list_of_fragments, list_of_blobs_no_gaps, training_dict, validation_dict):
+def plot_accumulation_steps(video, list_of_fragments, list_of_blobs, list_of_blobs_no_gaps, training_dict, validation_dict):
 
     no_gaps_fragments = get_no_gaps_fragments(list_of_blobs_no_gaps, video.number_of_animals)
 
@@ -268,7 +268,7 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs_no_gaps, tra
         ax = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i, 0), colspan=3)
         ax_arr_fragments.append(ax)
         ax.add_patch(patches.Rectangle((0, 0 - 0.5),   # (x,y)
-                                        video.number_of_frames,  # width
+                                        video.number_of_frames-1,  # width
                                         video.number_of_animals, # height
                                         fill = True,
                                         facecolor = 'k',
@@ -282,7 +282,7 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs_no_gaps, tra
     ### Zoomed dentification
     ax_zoomed_assignment = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 1, 0), colspan=3)
     ax_zoomed_assignment.add_patch(patches.Rectangle((0, 0 - 0.5),   # (x,y)
-                                    video.number_of_frames,  # width
+                                    video.number_of_frames-1,  # width
                                     video.number_of_animals, # height
                                     fill = True,
                                     facecolor = 'k',
@@ -306,7 +306,8 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs_no_gaps, tra
 
     set_properties_crossigns(video, fig1, ax_crossings, number_of_accumulation_steps, zoom = zoomed_frames)
 
-    fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps_1.pdf'), transparent=False)
+    fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps_1.pdf'), transparent=True)
+    fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps_1.png'), transparent=False)
     plt.show()
 
 if __name__ == '__main__':
@@ -315,10 +316,11 @@ if __name__ == '__main__':
     video_path = os.path.join(session_path,'video_object.npy')
     video = np.load(video_path).item(0)
     list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_no_gaps_path, video_has_been_segmented = False)
+    list_of_blobs = ListOfBlobs.load(video.blobs_path, video_has_been_segmented = False)
     list_of_fragments_dictionaries = np.load(os.path.join(video._accumulation_folder,'light_list_of_fragments.npy'))
     fragments = [Fragment(number_of_animals = video.number_of_animals) for fragment_dictionary in list_of_fragments_dictionaries]
     [fragment.__dict__.update(fragment_dictionary) for fragment, fragment_dictionary in zip(fragments, list_of_fragments_dictionaries)]
     light_list_of_fragments = ListOfFragments(fragments)
     training_dict = np.load(os.path.join(video.accumulation_folder, 'training_loss_acc_dict.npy')).item()
     validation_dict = np.load(os.path.join(video.accumulation_folder, 'validation_loss_acc_dict.npy')).item()
-    plot_accumulation_steps(video, light_list_of_fragments, list_of_blobs_no_gaps, training_dict, validation_dict)
+    plot_accumulation_steps(video, light_list_of_fragments, list_of_blobs, list_of_blobs_no_gaps, training_dict, validation_dict)

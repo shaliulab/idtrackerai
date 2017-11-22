@@ -497,7 +497,7 @@ if __name__ == '__main__':
                             video.compute_overall_P2(list_of_fragments.fragments)
                             print("individual overall_P2 ", video.individual_P2)
                             print("overall_P2 ", video.overall_P2)
-                            list_of_fragments.plot_stats(video)
+                            # list_of_fragments.plot_stats(video)
                             list_of_fragments.save_light_list(video._accumulation_folder)
 
                             #############################################################
