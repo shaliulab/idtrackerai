@@ -39,7 +39,7 @@ def smooth_trajectories(t, sigma = 1.5, truncate = 4.0, derivative = 0):
 
 def assign_point_to_identity(centroid, identity, frame_number, centroid_trajectories):
     if identity is not None and identity != 0:
-        centroid_trajectories[identity - 1, frame_number, :] = centroid
+        centroid_trajectories[frame_number, identity - 1, :] = centroid
     return centroid_trajectories
 
 def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
@@ -47,7 +47,7 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
     :param blob_file: ListOfBlobs instance
     :returns: A dictionary with np.array as values
     """
-    centroid_trajectories = np.ones((number_of_animals,number_of_frames, 2))*np.NaN
+    centroid_trajectories = np.ones((number_of_frames, number_of_animals, 2))*np.NaN
 
     for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video)):
 
