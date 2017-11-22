@@ -51,7 +51,7 @@ from id_CNN import ConvNetwork
 from correct_duplications import solve_duplications,\
                                     mark_fragments_as_duplications
 from correct_impossible_velocity_jumps import correct_impossible_velocity_jumps
-from get_trajectories import produce_trajectories, save_trajectories
+from get_trajectories import produce_output_dict
 from generate_groundtruth import GroundTruth, GroundTruthBlob
 from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
 from compute_velocity_model import compute_model_velocity
@@ -580,9 +580,9 @@ if __name__ == '__main__':
     video.generate_trajectories_time = time.time()
     if not loadPreviousDict['trajectories']:
         video.create_trajectories_folder()
-        logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_folder)
-        trajectories = produce_trajectories(list_of_blobs.blobs_in_video, video.number_of_frames, video.number_of_animals)
-        save_trajectories(trajectories, video.trajectories_folder)
+        trajectories_file = os.path.join(video.trajectories_folder, 'trajectories.npy')
+        trajectories = produce_output_dict(list_of_blobs.blobs_in_video, video)
+        np.save(trajectories_file, trajectories)
         logger.info("Saving trajectories")
         video._has_trajectories = True
         video.save()
@@ -644,8 +644,9 @@ if __name__ == '__main__':
     if not loadPreviousDict['trajectories_wo_gaps']:
         video.create_trajectories_wo_gaps_folder()
         logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_wo_gaps_folder)
-        trajectories_wo_gaps = produce_trajectories(list_of_blobs_no_gaps.blobs_in_video, video.number_of_frames, video.number_of_animals)
-        save_trajectories(trajectories_wo_gaps, video.trajectories_wo_gaps_folder)
+        trajectories_wo_gaps_file = os.path.join(video.trajectories_wo_gaps_folder, 'trajectories_wo_gaps.npy')
+        trajectories_wo_gaps = produce_output_dict(list_of_blobs.blobs_in_video, video)
+        np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
         logger.info("Saving trajectories")
         video._has_trajectories_wo_gaps = True
         video.save()
