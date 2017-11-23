@@ -167,7 +167,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, video_object_path):
     print("computting groundtrugh")
     accuracies, frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
 
-    if accuracy is not None:
+    if accuracies is not None:
         print("saving accuracies in video")
         video.gt_start_end = (groundtruth.start,groundtruth.end)
         video.gt_accuracies = accuracies

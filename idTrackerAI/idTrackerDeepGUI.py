@@ -632,7 +632,7 @@ if __name__ == '__main__':
         video._has_crossings_solved = True
         video.save()
     else:
-        video.copy_attributes_between_two_video_objects(old_video, ['blobs_no_gaps_path'])
+        video.copy_attributes_between_two_video_objects(old_video, ['blobs_no_gaps_path'], [False])
         list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_no_gaps_path)
         video._has_crossings_solved = True
         video.save()
@@ -645,7 +645,7 @@ if __name__ == '__main__':
         video.create_trajectories_wo_gaps_folder()
         logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_wo_gaps_folder)
         trajectories_wo_gaps_file = os.path.join(video.trajectories_wo_gaps_folder, 'trajectories_wo_gaps.npy')
-        trajectories_wo_gaps = produce_output_dict(list_of_blobs.blobs_in_video, video)
+        trajectories_wo_gaps = produce_output_dict(list_of_blobs_no_gaps.blobs_in_video, video)
         np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
         logger.info("Saving trajectories")
         video._has_trajectories_wo_gaps = True
