@@ -80,7 +80,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
 
     return results
 
-def check_ground_truth_consistensy(blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment):
+def check_ground_truth_consistency(blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment):
 
     if first_frame_first_global_fragment is not None \
         and first_frame_first_global_fragment > len(blobs_in_video_groundtruth):
@@ -97,7 +97,7 @@ def check_ground_truth_consistensy(blobs_in_video_groundtruth, blobs_in_video, f
 
 def get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video = None, first_frame_first_global_fragment = None):
 
-    check_ground_truth_consistensy(blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment)
+    check_ground_truth_consistency(blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment)
 
     if first_frame_first_global_fragment is not None:
         groundtruth_identities_in_first_frame = [blob.identity for blob in blobs_in_video_groundtruth[first_frame_first_global_fragment]]
@@ -164,7 +164,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, video_object_path):
     blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
     blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
 
-    print("computting groundtrugh")
+    print("computing groundtruth")
     accuracies, frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
 
     if accuracies is not None:
