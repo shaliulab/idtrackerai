@@ -50,7 +50,7 @@ class Validator(BoxLayout):
             size_hint=(.3,.3))
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
-        
+
 
     def show_saving(self, *args):
         self.popup_saving = Popup(title='Saving',
@@ -150,10 +150,10 @@ class Validator(BoxLayout):
         self.colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals)
         self.button_box = BoxLayout(orientation='vertical', size_hint=(.3,1.))
         self.add_widget(self.button_box)
-        self.next_cross_button = Button(id='crossing_btn', text='Next fucking crossing', size_hint=(1,1))
+        self.next_cross_button = Button(id='crossing_btn', text='Go to next crossing', size_hint=(1,1))
         self.next_cross_button.bind(on_press=self.go_to_next_crossing)
         self.button_box.add_widget(self.next_cross_button)
-        self.previous_cross_button = Button(id='crossing_btn', text='Previous fucking crossing', size_hint=(1,1))
+        self.previous_cross_button = Button(id='crossing_btn', text='Go to previous crossing', size_hint=(1,1))
         self.previous_cross_button.bind(on_press=self.go_to_previous_crossing)
         self.button_box.add_widget(self.previous_cross_button)
         self.go_to_first_global_fragment_button = Button(id='back_to_first_gf_btn', text='First global fragment', size_hint=(1,1))
