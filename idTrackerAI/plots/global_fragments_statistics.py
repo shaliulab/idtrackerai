@@ -94,9 +94,9 @@ def compute_and_plot_fragments_statistics(video, model_area = None,
     gamma_fitted_logpdf = pdf2logpdf(gamma_fitted.pdf)
     ######### number of images in individual fragments ########
     nbins = 25
-    ax = plt.subplot(4,5,2)
-    MIN = np.min(number_of_images_in_individual_fragments)
-    MAX = np.max(number_of_images_in_individual_fragments)
+    ax = plt.subplot(2,5,2)
+    MIN = 1
+    MAX = video.number_of_frames
     logbins = np.linspace(np.log10(MIN), np.log10(MAX), nbins)
     n, _, _  = ax.hist(np.log10(number_of_images_in_individual_fragments), bins = logbins, normed = True)
     logbins2 = np.linspace(np.log10(MIN), np.log10(MAX), 100)
@@ -105,20 +105,9 @@ def compute_and_plot_fragments_statistics(video, model_area = None,
     title = 'shape = %.2f, scale = %.2f' %(shape, scale)
     ax.set_title(title)
     ax.set_ylim((0, np.max(n)))
+    ax.set_xlim((np.log10(MIN),np.log10(MAX)))
     ax.set_xlabel('log_num_frames')
     ax.set_ylabel('logpdf')
-
-    ax = plt.subplot(4,5,7)
-    MIN = np.min(number_of_images_in_individual_fragments)
-    MAX = np.max(number_of_images_in_individual_fragments)
-    hist, bin_edges = np.histogram(number_of_images_in_individual_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
-    hist_gamma, bin_edges_gamma = np.histogram(gamma_values, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
-    ax.semilogx(bin_edges[:-1], hist, '-ob' ,markersize = 5)
-    ax.semilogx(bin_edges_gamma[:-1], hist_gamma, '-og' ,markersize = 5)
-    title = 'shape = %.2f, scale = %.2f' %(shape, scale)
-    ax.set_xlim((-1,MAX))
-    ax.set_xlabel('number of frames')
-    ax.set_ylabel('number of \nind. fragments')
     ######### distance travelled in individual fragments ########
     non_zero_indices = np.where(distance_travelled_individual_fragments != 0)[0]
     distance_travelled_individual_fragments_non_zero = distance_travelled_individual_fragments[non_zero_indices]

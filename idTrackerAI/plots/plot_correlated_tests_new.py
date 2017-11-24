@@ -99,16 +99,16 @@ if __name__ == '__main__':
                             gamma_simulation = gamma(shape_parameter, loc = 0.99, scale = scale_parameter)
                             gamma_simulation_logpdf = pdf2logpdf(gamma_simulation.pdf)
                             ax = ax_arr[j,i]
-                            MIN = np.min(number_of_images_in_individual_fragments)
-                            MAX = np.max(number_of_images_in_individual_fragments)
+                            MIN = 1
+                            MAX = 10000
                             logbins = np.linspace(np.log10(MIN), np.log10(MAX), nbins)
                             ax.hist(np.log10(number_of_images_in_individual_fragments), bins = logbins, normed = True)
                             logbins_pdf = np.linspace(np.log10(MIN), np.log10(MAX), 100)
                             ax.plot(logbins_pdf, gamma_simulation_logpdf(np.power(10,logbins_pdf)))
                             # ax.plot(logbins[:-1] + np.diff(logbins)/2, gamma_simulation_logpdf(np.power(10,logbins[:-1] + np.diff(logbins)/2)))
                             ax.set_xlim((np.log10(MIN), np.log10(MAX)))
-                            ax.set_xticks([1,2,3])
-                            ax.set_xticklabels([10,100,1000])
+                            ax.set_xticks([1,2,3,4])
+                            ax.set_xticklabels([10,100,1000,10000])
 
                             # MIN = np.min(number_of_images_in_individual_fragments)
                             # MAX = np.max(number_of_images_in_individual_fragments)
@@ -209,7 +209,7 @@ if __name__ == '__main__':
     [fig.set_size_inches((screen_x/100,screen_y/100)) for fig in fig_statistics_list + fig_distributions_list]
     [fig.savefig(os.path.join(path_to_save_figure, 'distributions_%i.pdf' %video_length), transparent = True) for video_length, fig in zip(results_data_frame.frames_in_video.unique(), fig_distributions_list)]
     [fig.savefig(os.path.join(path_to_save_figure, 'statistics_%i.pdf' %video_length), transparent = True) for video_length, fig in zip(results_data_frame.frames_in_video.unique(), fig_statistics_list)]
-    [fig.savefig(os.path.join(path_to_save_figure, 'mean_std_%i.pdf' %video_length), transparent = True) for video_length, fig in zip(results_data_frame.frames_in_video.unique(), fig_statistics_list)]
+    [fig.savefig(os.path.join(path_to_save_figure, 'mean_std_%i.pdf' %video_length), transparent = True) for video_length, fig in zip(results_data_frame.frames_in_video.unique(), fig_mean_std)]
 
 
     plt.show()

@@ -121,13 +121,10 @@ def subsample_dataset_by_individuals(dataset, config):
 
     return np.concatenate(subsampled_images, axis = 1), np.concatenate(subsampled_centroids, axis = 1)
 
-def get_next_number_of_blobs_in_fragment(config):
-    scale = config.scale_parameter
-    shape = config.shape_parameter
-    X = gamma(a = shape, loc = .99, scale = scale)
-    number_of_frames_per_fragment = int(X.rvs(1))
-    while number_of_frames_per_fragment <= config.min_number_of_frames_per_fragment or number_of_frames_per_fragment > config.max_number_of_frames_per_fragment:
-        number_of_frames_per_fragment = int(X.rvs(1))
+def get_next_number_of_blobs_in_fragment(gamma_sim, config):
+    number_of_frames_per_fragment = int(np.floor(gamma_sim.rvs(1)))
+    while number_of_frames_per_fragment < config.min_number_of_frames_per_fragment or number_of_frames_per_fragment > config.max_number_of_frames_per_fragment:
+        number_of_frames_per_fragment = int(np.floor(gamma_sim.rvs(1)))
 
     return number_of_frames_per_fragment
 
@@ -138,9 +135,11 @@ def generate_list_of_blobs(identification_images, centroids, config):
     print("\n***********Generating list of blobs")
     print("centroids shape ", centroids.shape)
     print("identification_images shape", identification_images.shape)
+    gamma_sim = gamma(a = config.shape_parameter, loc = 0.99, scale = config.scale_parameter)
     for identity in range(config.number_of_animals):
         # decide length of first individual fragment for this identity
-        number_of_blobs_per_fragment = get_next_number_of_blobs_in_fragment(config)
+        number_of_blobs_per_fragment = get_next_number_of_blobs_in_fragment(gamma_sim, config)
+        # print("****number_of_blobs_per_fragment ", number_of_blobs_per_fragment)
         number_of_fragments += 1
         number_of_frames_per_crossing_fragment = 3
         blobs_in_fragment = 0
@@ -154,7 +153,7 @@ def generate_list_of_blobs(identification_images, centroids, config):
                         number_of_animals = config.number_of_animals)
             blob.frame_number = frame_number
 
-            if blobs_in_fragment <= number_of_blobs_per_fragment:
+            if blobs_in_fragment < number_of_blobs_per_fragment:
                 blob._is_an_individual = True
                 blob._is_a_crossing = False
                 blob._image_for_identification = ((image - np.mean(image))/np.std(image)).astype("float16")
@@ -163,20 +162,28 @@ def generate_list_of_blobs(identification_images, centroids, config):
                     blob.previous = [blobs_in_identity[frame_number-1]]
                     blobs_in_identity[frame_number-1].next = [blob]
                 blobs_in_fragment += 1
+                # print("blobs_in_fragment ", blobs_in_fragment)
             elif blobs_in_crossing_fragment < number_of_frames_per_crossing_fragment:
                 blobs_in_crossing_fragment += 1
                 blob = None
+                # print("blobs_in_crossing_fragment ", blobs_in_crossing_fragment)
             else:
+                blobs_in_fragment = 0
+                blobs_in_crossing_fragment = 0
+                number_of_fragments += 1
+
+                number_of_blobs_per_fragment = get_next_number_of_blobs_in_fragment(gamma_sim, config)
+                # print("*****number_of_blobs_per_fragment ", number_of_blobs_per_fragment)
+
                 blob._is_an_individual = True
                 blob._is_a_crossing = False
                 blob._image_for_identification = ((image - np.mean(image))/np.std(image)).astype("float16")
                 blob._user_generated_identity = identity + 1
-                blob.previous = []
-
-                blobs_in_fragment = 1
-                blobs_in_crossing_fragment = 0
-                number_of_fragments += 1
-                number_of_blobs_per_fragment = get_next_number_of_blobs_in_fragment(config)
+                if blobs_in_fragment != 0:
+                    blob.previous = [blobs_in_identity[frame_number-1]]
+                    blobs_in_identity[frame_number-1].next = [blob]
+                blobs_in_fragment += 1
+                # print("blobs_in_fragment ", blobs_in_fragment)
             blobs_in_identity.append(blob)
         blobs_in_video.append(blobs_in_identity)
 

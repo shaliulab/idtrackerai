@@ -253,7 +253,6 @@ if __name__ == '__main__':
                             list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
                             video._has_been_preprocessed = True
                             logger.info("Blobs detection and fragmentation finished succesfully.")
-
                             #############################################################
                             ##################   Protocols cascade   ####################
                             #############################################################
