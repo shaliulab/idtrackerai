@@ -107,10 +107,29 @@ def plot_accuracy_step(ax, accumulation_step, training_dict, validation_dict):
     ax.plot(range(total_epochs_completed_previous_step, total_epochs_completed_this_step),
                 np.asarray(validation_dict['accuracy'][total_epochs_completed_previous_step:total_epochs_completed_this_step]), '-b', label = 'validation')
 
-def plot_individual_certainty(video, ax, colors, identity_to_blob_hierarchy_list):
+def plot_individual_certainty(video, ax_P2, ax_gt_accuracy, colors, identity_to_blob_hierarchy_list):
     # ax.bar(np.arange(video.number_of_animals)+1, video.individual_P2, color = colors[1:])
-    ax.barh(np.asarray(identity_to_blob_hierarchy_list) + 1, video.individual_P2, height = 0.5, color = colors)
-    ax.axvline(1., color = 'k', linestyle = '--', alpha = .4)
+    n_bins = 20
+    # accuracy = video.gt_accuracies['individual_accuracy'].values()
+    accuracy = list(video.individual_P2)
+    minimum = np.min(accuracy + list(video.individual_P2))
+    maximum = 1.
+    n, bins, _ = ax_P2.hist(video.individual_P2, bins = np.linspace(minimum - 0.0005, maximum, n_bins), color = '.5', alpha = .5)
+    bin_width = np.diff(bins)[0]
+    for height, bin in zip(n,bins[:-1]):
+        if height != 0:
+            ax_P2.text(bin + bin_width/2, height + 0.05, str(int(height)), fontsize = 10, horizontalalignment='center')
+    P2_mean = np.mean(video.individual_P2)
+    P2_std = np.std(video.individual_P2)
+    ax_P2.text(bins[0], 25, r'$\mu \pm \sigma =$ ' + '%.4f ' %P2_mean + r'$\pm$ ' + '%.3f' %P2_std, fontsize = 12)
+
+    n_accuracy, bins_accuracy, _ = ax_gt_accuracy.hist(accuracy, bins = np.linspace(minimum - 0.0005, maximum, n_bins), color = 'g', alpha = .5)
+    for height, bin in zip(n_accuracy,bins_accuracy[:-1]):
+        if height != 0:
+            ax_gt_accuracy.text(bin + bin_width/2, height + 0.05, str(int(height)), fontsize = 10, horizontalalignment='center')
+    accuracy_mean = np.mean(video.individual_P2)
+    accuracy_std = np.std(video.individual_P2)
+    ax_gt_accuracy.text(bins[0], 25, r'$\mu \pm \sigma =$ ' + '%.4f ' %accuracy_mean + r'$\pm$ ' + '%.4f' %accuracy_std, fontsize = 12)
 
 def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps, list_of_accumulation_steps, zoomed_frames):
 
@@ -137,7 +156,7 @@ def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps, l
 
     axes_position_first_acc = ax_arr[0].get_position()
     axes_position_last_acc = ax_arr[number_of_accumulation_steps - 1].get_position()
-    text_axes = fig.add_axes([axes_position_last_acc.x0 - .07, axes_position_last_acc.y0, 0.01, (axes_position_first_acc.y0 + axes_position_first_acc.height) - axes_position_last_acc.y0])
+    text_axes = fig.add_axes([axes_position_last_acc.x0 - .1, axes_position_last_acc.y0, 0.01, (axes_position_first_acc.y0 + axes_position_first_acc.height) - axes_position_last_acc.y0])
     text_axes.text(0.5, 0.5,'Accumulation', horizontalalignment='center', verticalalignment='center', rotation=90, fontsize = 15)
     text_axes.set_xticks([])
     text_axes.set_yticks([])
@@ -146,7 +165,7 @@ def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps, l
 
 def set_properties_network_accuracy(video, fig, ax_arr, number_of_accumulation_steps, total_number_of_epochs_completed):
 
-    [ax.set_ylabel('Error', fontsize = 12) for ax in ax_arr]
+    [ax.set_ylabel('Accuracy', fontsize = 12) for ax in ax_arr]
     [ax.set_xticklabels([]) for ax in ax_arr[:-1]]
     [ax.set_xlim([0., total_number_of_epochs_completed]) for ax in ax_arr]
     [ax.set_ylim([0, 1.01]) for ax in ax_arr]
@@ -164,7 +183,7 @@ def set_properties_assignment(video, fig, ax, number_of_accumulation_steps, zoom
     sns.despine(ax = ax, left=False, bottom=False, right=True)
 
     axes_position_assignment = ax.get_position()
-    text_axes = fig.add_axes([axes_position_assignment.x0 - .07, axes_position_assignment.y0, 0.01, axes_position_assignment.height])
+    text_axes = fig.add_axes([axes_position_assignment.x0 - .1, axes_position_assignment.y0, 0.01, axes_position_assignment.height])
     text_axes.text(0.5, 0.5,'Identification', horizontalalignment='center', verticalalignment='center', rotation=90, fontsize = 15)
     text_axes.set_xticks([])
     text_axes.set_yticks([])
@@ -178,12 +197,16 @@ def set_properties_assignment(video, fig, ax, number_of_accumulation_steps, zoom
     ax.set_ylim([-.5, video.number_of_animals + .5 - 1])
     ax.set_ylabel('Individual', fontsize = 12)
 
-def set_properties_final_accuracy(video, fig, ax, number_of_accumulation_steps):
-    pos = ax.get_position()
-    ax.set_position([pos.x0 + .05, pos.y0 + 0.05, pos.width - 0.05, pos.height - 0.025])
-    ax.set_xlabel('Average certainty', fontsize = 12)
-    ax.set_ylabel('Individual', fontsize = 12)
-    sns.despine(ax = ax, left=False, bottom=False, right=True)
+def set_properties_final_accuracy(video, fig, ax_P2, ax_gt_accuracy, number_of_accumulation_steps):
+    for ax in [ax_P2, ax_gt_accuracy]:
+        pos = ax.get_position()
+        ax.set_position([pos.x0 + .05, pos.y0 + 0.05, pos.width - 0.05, pos.height - 0.025])
+
+    fig.text(pos.x0, pos.y0 + 0.075, 'Number of individuals', ha='left', va='bottom', rotation='vertical', fontsize = 12)
+    ax_P2.set_xlabel('Certainty', fontsize = 12)
+    ax_gt_accuracy.set_xlabel('Accuracy', fontsize = 12)
+    [ax.set_xlim((ax.get_xlim()[0], 1.)) for ax in [ax_P2, ax_gt_accuracy]]
+    [sns.despine(ax = ax, left=False, bottom=False, right=True) for ax in [ax_P2, ax_gt_accuracy]]
 
 def set_properties_crossigns(video, fig, ax, number_of_accumulation_steps, zoom):
     pos = ax.get_position()
@@ -191,7 +214,7 @@ def set_properties_crossigns(video, fig, ax, number_of_accumulation_steps, zoom)
     sns.despine(ax = ax, left=False, bottom=False, right=True)
 
     axes_position_assignment = ax.get_position()
-    text_axes = fig.add_axes([axes_position_assignment.x0 - .07, axes_position_assignment.y0, 0.01, axes_position_assignment.height])
+    text_axes = fig.add_axes([axes_position_assignment.x0 - .1, axes_position_assignment.y0, 0.01, axes_position_assignment.height])
     text_axes.text(0.5, 0.5,'Post \nprocessing', horizontalalignment='center', verticalalignment='center', rotation=90, fontsize = 15)
     text_axes.set_xticks([])
     text_axes.set_yticks([])
@@ -225,7 +248,6 @@ def get_no_gaps_fragments(list_of_blobs_no_gaps, number_of_animals):
     temp_fragments = {i:[None, None] for i in range(1, number_of_animals + 1)}
     for frame_number, blobs_in_frame in enumerate(list_of_blobs_no_gaps.blobs_in_video):
         identities_in_frame = list(flatten([blob.assigned_identity for blob in blobs_in_frame]))
-        print(identities_in_frame)
         for identity in range(1, number_of_animals + 1):
             if identity in identities_in_frame and temp_fragments[identity][0] is None:
                 temp_fragments[identity][0] = frame_number
@@ -251,12 +273,9 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs, list_of_blo
     identity_to_blob_hierarchy_list = range(video.number_of_animals)
 
     # list_of_accumulation_steps = get_list_of_accumulation_steps_to_plot(number_of_accumulation_steps)
+    my_dpi = 96
     list_of_accumulation_steps = [0, 1, 2, number_of_accumulation_steps - 1]
-    fig1 = plt.figure()
-    window = plt.get_current_fig_manager().window
-    screen_y = window.winfo_screenheight()
-    screen_x = window.winfo_screenwidth()
-    fig1.set_size_inches((screen_x*2/3/100,screen_y/100))
+    fig1 = plt.figure(figsize=(13, 10), dpi=my_dpi)
     colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=False)
 
     ### Deep fingerprinting
@@ -290,8 +309,9 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs, list_of_blo
     plot_accumulation_step_from_fragments(list_of_fragments.fragments, ax_zoomed_assignment, accumulation_step, True, colors, identity_to_blob_hierarchy_list)
 
     ### Final certainty
-    ax_final_accuracy = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 1, 3), colspan=2, rowspan = 2)
-    plot_individual_certainty(video, ax_final_accuracy, colors, identity_to_blob_hierarchy_list)
+    ax_P2 = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 1, 3), colspan=2)
+    ax_gt_accuracy = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 2, 3), colspan=2)
+    plot_individual_certainty(video, ax_P2, ax_gt_accuracy, colors, identity_to_blob_hierarchy_list)
 
     ax_crossings = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 2, 0), colspan=3)
     plot_crossings_step(no_gaps_fragments, ax_crossings, colors)
@@ -302,12 +322,12 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs, list_of_blo
     set_properties_network_accuracy(video, fig1, ax_arr_network_accuracy, number_of_accumulation_steps_to_plot, np.sum(training_dict['number_of_epochs_completed']))
 
     set_properties_assignment(video, fig1, ax_zoomed_assignment, number_of_accumulation_steps_to_plot, zoom = zoomed_frames)
-    set_properties_final_accuracy(video, fig1, ax_final_accuracy, number_of_accumulation_steps_to_plot)
+    set_properties_final_accuracy(video, fig1, ax_P2, ax_gt_accuracy, number_of_accumulation_steps_to_plot)
 
     set_properties_crossigns(video, fig1, ax_crossings, number_of_accumulation_steps, zoom = zoomed_frames)
 
-    fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps_1.pdf'), transparent=True)
-    fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps_1.png'), transparent=False)
+    fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps_1.pdf'), transparent=True, dpi = 600)
+    fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps_1.png'), transparent=False, dpi = 600)
     plt.show()
 
 if __name__ == '__main__':
