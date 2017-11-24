@@ -641,6 +641,7 @@ class Root(TabbedPanel):
         print("ID", value.content.id)
         if value.content.id == "validator":
             self.validator.do()
+            # individual_validator._keyboard = Window.request_keyboard(individual_validator._keyboard_closed, individual_validator)
         if value.content.id == "individual_validator":
             self.individual_validator.do()
 
