@@ -172,7 +172,7 @@ if __name__ == '__main__':
     video_path = os.path.join(session_path,'video_object.npy')
     video = np.load(video_path).item(0)
     print("loading list_of_blobs")
-    list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
     print("loading list_of_fragments")
     list_of_fragments = ListOfFragments.load(video.fragments_path)
     print("loading list_of_global_fragments")

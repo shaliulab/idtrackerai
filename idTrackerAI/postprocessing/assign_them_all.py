@@ -525,7 +525,7 @@ if __name__ == "__main__":
     # video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/conflict8Short/session_1/video_object.npy').item()
     video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_n/video_object.npy').item()
     list_of_fragments = ListOfFragments.load(video.fragments_path)
-    list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
     if len(list_of_blobs.blobs_in_video[-1]) == 0:
         list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
     list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
@@ -553,4 +553,4 @@ if __name__ == "__main__":
 
     video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
     video.save()
-    list_of_blobs.save(path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames, video_has_been_segmented = video.has_been_segmented)
+    list_of_blobs.save(video, path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)

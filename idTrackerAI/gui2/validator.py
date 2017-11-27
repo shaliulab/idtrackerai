@@ -72,6 +72,8 @@ class Validator(BoxLayout):
 
     def on_enter_wrong_crossing_identity(self, value):
         self.wrong_crossing_counter[int(self.wc_identity_input.text)] += 1
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self.wc_popup.dismiss()
 
     def create_choose_list_of_blobs_popup(self):
@@ -95,13 +97,15 @@ class Validator(BoxLayout):
 
     def on_choose_list_of_blobs_btns_press(self, instance):
         if instance.text == 'With gaps':
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path,
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path,
                                         video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
         else:
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path,
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path,
                                         video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
             blobs_path, blobs_path_extension = CHOSEN_VIDEO.video.blobs_no_gaps_path
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self.choose_list_of_blobs_popup.dismiss()
         self.populate_validation_tab()
 
@@ -135,7 +139,7 @@ class Validator(BoxLayout):
                 self.choose_list_of_blobs_popup.open()
             else:
                 self.loading_popup.open()
-                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path,
+                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path,
                                             video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
                 self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
                 self.populate_validation_tab()
@@ -344,6 +348,8 @@ class Validator(BoxLayout):
         self.identity_update = int(self.identityInput.text)
         self.overwriteIdentity()
         self.popup.dismiss()
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
     def propagate_groundtruth_identity_in_individual_fragment(self):
         modified_blob = self.blob_to_modify
@@ -384,7 +390,7 @@ class Validator(BoxLayout):
         self.popup_saving.dismiss()
 
     def go_and_save(self):
-        self.list_of_blobs.save(path_to_save = self.list_of_blobs_save_path)
+        self.list_of_blobs.save(CHOSEN_VIDEO.video, path_to_save = self.list_of_blobs_save_path)
         CHOSEN_VIDEO.video.save()
 
     def modifyIdOpenPopup(self, blob_to_modify):
@@ -537,6 +543,8 @@ class Validator(BoxLayout):
         self.plot_groundtruth_statistics()
         if not self.prevent_open_popup:
             self.popup_start_end_groundtruth.dismiss()
+            self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+            self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
     def generate_groundtruth(self):
         self.groundtruth = generate_groundtruth(CHOSEN_VIDEO.video, self.blobs_in_video, self.gt_start_frame, self.gt_end_frame, save_gt = False)
@@ -568,9 +576,9 @@ class Validator(BoxLayout):
                                     content = content,
                                     size_hint = (.5, .5))
         fig, ax = plt.subplots(1)
-        colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals, norm = True)
+        colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals, norm = True, black = True)
         width = .5
-        plt.bar(self.individual_accuracy.keys(), self.individual_accuracy.values(), width, color=colors)
+        plt.bar(self.individual_accuracy.keys(), self.individual_accuracy.values(), width, color= colors[::-1])
         plt.axhline(self.accuracy, color = 'k', linewidth = .2)
         ax.set_xlabel('individual')
         ax.set_ylabel('Individual accuracy')

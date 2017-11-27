@@ -154,12 +154,12 @@ def scanFolder(path):
         paths = natural_sort(glob.glob(folder + "/" + filename[:-1] + "*" + extension))
     return paths
 
-def get_spaced_colors_util(n, norm=False, black=True, cmap = 'jet'):
+def get_spaced_colors_util(n, norm = False, black = True, cmap = 'jet'):
     RGB_tuples = matplotlib.cm.get_cmap(cmap)
     if norm:
         colors = [RGB_tuples(i / n) for i in range(n)]
     else:
-        colors = [tuple(np.asarray(RGB_tuples(i / n))* 256) for i in range(n)]
+        colors = [tuple(np.asarray(RGB_tuples(i / n)) * 256) for i in range(n)]
     if black:
         black = (0., 0., 0.)
         colors.insert(0, black)

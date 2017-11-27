@@ -791,11 +791,11 @@ class Validator(BoxLayout):
         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
             if CHOSEN_VIDEO.video.has_been_assigned == True:
                 CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
-                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.old_video.blobs_no_gaps_path)
+                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.old_video.blobs_no_gaps_path)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             elif CHOSEN_VIDEO.old_video.has_been_assigned == True:
                 CHOSEN_VIDEO.video = CHOSEN_VIDEO.old_video
-                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path)
+                list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
                 self.blobs_in_video = list_of_blobs.blobs_in_video
             #init variables used for zooming
             self.count_scrollup = 0
@@ -1105,7 +1105,7 @@ class Validator(BoxLayout):
     def go_and_save(self):
         # self.list_of_fragments.update_from_list_of_blobs(CHOSEN_VIDEO.video.fragment_identifier_to_index, self.blobs_in_video)
         # self.list_of_fragments.save(video.fragments_path)
-        self.list_of_blobs.save(CHOSEN_VIDEO.video.blobs_path)
+        self.list_of_blobs.save(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
         CHOSEN_VIDEO.video.save()
 
     def modifyIdOpenPopup(self, blob_to_modify):

@@ -196,7 +196,7 @@ if __name__ == "__main__":
     #change this
     blobs_path = video.blobs_path
     global_fragments_path = video.global_fragments_path
-    list_of_blobs = ListOfBlobs.load(blobs_path)
+    list_of_blobs = ListOfBlobs.load(video, blobs_path)
     blobs = list_of_blobs.blobs_in_video
 
     training_set = CrossingDataset(blobs, video)

@@ -61,13 +61,13 @@ if __name__ == '__main__':
     # save frame snapshot
     save_video_frame(video, save_folder, frame_number = 0)
     # save preprocessing images
-    list_of_blobs_segmented = ListOfBlobs.load(video.blobs_path_segmented)
-    list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    list_of_blobs_segmented = ListOfBlobs.load(video, video.blobs_path_segmented)
+    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
     save_preprocesing_images(video, save_folder, list_of_blobs_segmented, list_of_blobs, frame_number = 0)
 
     list_of_fragments = ListOfFragments.load(video.fragments_path)
     list_of_fragments_dictionaries = np.load(os.path.join(video.accumulation_folder,'light_list_of_fragments.npy'))
     fragments = [Fragment(number_of_animals = video.number_of_animals) for fragment_dictionary in list_of_fragments_dictionaries]
     [fragment.__dict__.update(fragment_dictionary) for fragment, fragment_dictionary in zip(fragments, list_of_fragments_dictionaries)]
-    light_list_of_fragments = ListOfFragments(video, fragments)
+    light_list_of_fragments = ListOfFragments(fragments)
     save_identification_images(video, list_of_fragments, number_of_images)
