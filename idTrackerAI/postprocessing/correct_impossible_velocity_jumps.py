@@ -150,6 +150,8 @@ def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = Non
                 # print("corrected identity: ", fragment.assigned_identity)
 
 
+
+
 def correct_impossible_velocity_jumps(video, list_of_fragments):
     correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = 'to_the_past')
     correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = 'to_the_future')

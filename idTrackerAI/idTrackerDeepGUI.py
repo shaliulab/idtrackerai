@@ -554,6 +554,14 @@ if __name__ == '__main__':
     video.solve_impossible_jumps_time = time.time() - video.solve_impossible_jumps_time
 
     #############################################################
+    ############# Check identification consistency ##############
+    ####
+    #############################################################
+    check_identification_consistency(video, list_of_fragments)
+
+
+
+    #############################################################
     ##############   Invididual fragments stats #################
     ####
     #############################################################
@@ -621,7 +629,6 @@ if __name__ == '__main__':
     #############################################################
     print("\n**** Assign crossings ****")
     if not loadPreviousDict['crossings']:
-        list_of_blobs.disconnect()
         list_of_blobs_no_gaps = copy.deepcopy(list_of_blobs)
         video._has_crossings_solved = False
         if len(list_of_blobs_no_gaps.blobs_in_video[-1]) == 0:
