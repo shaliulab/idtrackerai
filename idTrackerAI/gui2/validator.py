@@ -149,6 +149,7 @@ class Validator(BoxLayout):
     def init_segmentZero(self):
         self.add_widget(self.visualiser)
         self.colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals)
+        print(self.colors)
         self.button_box = BoxLayout(orientation='vertical', size_hint=(.3,1.))
         self.add_widget(self.button_box)
         self.next_cross_button = Button(id='crossing_btn', text='Go to next crossing', size_hint=(1,1))
