@@ -122,6 +122,11 @@ def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = Non
             neighbour_fragment_future = fragment.get_neighbour_fragment(list_of_fragments.fragments, 'to_the_future')
             velocities_between_fragments = compute_velocities_consecutive_fragments(neighbour_fragment_past, fragment, neighbour_fragment_future)
 
+            if fragment.identifier == 141 or fragment.identifier == 139:
+                print("fragment identifier ", fragment.identifier)
+                print("velocities_between_fragments ", velocities_between_fragments)
+                print("impossible_velocity_threshold ", impossible_velocity_threshold)
+
             if all(velocity > impossible_velocity_threshold for velocity in velocities_between_fragments):
                 # print("\nidentity: ", fragment.assigned_identity)
                 if neighbour_fragment_past.identity_is_fixed or neighbour_fragment_future.identity_is_fixed:

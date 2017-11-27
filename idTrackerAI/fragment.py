@@ -384,11 +384,11 @@ class Fragment(object):
         if scope == 'to_the_past':
             neighbour = [fragment for fragment in fragments
                             if fragment.assigned_identity == self.assigned_identity
-                            and self.start_end[0] - fragment.start_end[1] == 1]
+                            and self.start_end[0] - fragment.start_end[1] == 0]
         elif scope == 'to_the_future':
             neighbour = [fragment for fragment in fragments
                             if fragment.assigned_identity == self.assigned_identity
-                            and fragment.start_end[0] - self.start_end[1] == 1]
+                            and fragment.start_end[0] - self.start_end[1] == 0]
 
         assert len(neighbour) < 2
         return neighbour[0] if len(neighbour) == 1 else None
