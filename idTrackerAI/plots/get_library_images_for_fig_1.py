@@ -69,5 +69,5 @@ if __name__ == '__main__':
     list_of_fragments_dictionaries = np.load(os.path.join(video.accumulation_folder,'light_list_of_fragments.npy'))
     fragments = [Fragment(number_of_animals = video.number_of_animals) for fragment_dictionary in list_of_fragments_dictionaries]
     [fragment.__dict__.update(fragment_dictionary) for fragment, fragment_dictionary in zip(fragments, list_of_fragments_dictionaries)]
-    light_list_of_fragments = ListOfFragments(video, fragments)
+    light_list_of_fragments = ListOfFragments(fragments)
     save_identification_images(video, list_of_fragments, number_of_images)
