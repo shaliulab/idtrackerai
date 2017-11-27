@@ -557,7 +557,6 @@ if __name__ == '__main__':
     ############# Check identification consistency ##############
     ####
     #############################################################
-    check_identification_consistency(video, list_of_fragments)
 
 
 

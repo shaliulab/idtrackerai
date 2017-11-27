@@ -97,13 +97,11 @@ class Validator(BoxLayout):
 
     def on_choose_list_of_blobs_btns_press(self, instance):
         if instance.text == 'With gaps':
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path,
-                                        video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
         else:
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path,
-                                        video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
-            blobs_path, blobs_path_extension = CHOSEN_VIDEO.video.blobs_no_gaps_path
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
+            self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self.choose_list_of_blobs_popup.dismiss()
@@ -139,8 +137,7 @@ class Validator(BoxLayout):
                 self.choose_list_of_blobs_popup.open()
             else:
                 self.loading_popup.open()
-                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path,
-                                            video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
+                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
                 self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
                 self.populate_validation_tab()
         except Exception as e:

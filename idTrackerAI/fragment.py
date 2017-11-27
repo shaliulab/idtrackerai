@@ -380,15 +380,15 @@ class Fragment(object):
         certainty = np.diff(np.multiply(sorted_p1_vector,sorted_softmax_probs)[-2:])/np.sum(sorted_p1_vector[-2:])
         return certainty[0]
 
-    def get_neighbour_fragment(self, fragments, scope):
+    def get_neighbour_fragment(self, fragments, scope, number_of_frames_in_direction = 0):
         if scope == 'to_the_past':
             neighbour = [fragment for fragment in fragments
                             if fragment.assigned_identity == self.assigned_identity
-                            and self.start_end[0] - fragment.start_end[1] == 0]
+                            and self.start_end[0] - fragment.start_end[1] == number_of_frames_in_direction]
         elif scope == 'to_the_future':
             neighbour = [fragment for fragment in fragments
                             if fragment.assigned_identity == self.assigned_identity
-                            and fragment.start_end[0] - self.start_end[1] == 0]
+                            and fragment.start_end[0] - self.start_end[1] == number_of_frames_in_direction]
 
         assert len(neighbour) < 2
         return neighbour[0] if len(neighbour) == 1 else None
