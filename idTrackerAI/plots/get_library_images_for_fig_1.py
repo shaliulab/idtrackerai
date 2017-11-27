@@ -61,8 +61,8 @@ if __name__ == '__main__':
     # save frame snapshot
     save_video_frame(video, save_folder, frame_number = 0)
     # save preprocessing images
-    list_of_blobs_segmented = ListOfBlobs.load(video.blobs_path_segmented)
-    list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    list_of_blobs_segmented = ListOfBlobs.load(video, video.blobs_path_segmented)
+    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
     save_preprocesing_images(video, save_folder, list_of_blobs_segmented, list_of_blobs, frame_number = 0)
 
     list_of_fragments = ListOfFragments.load(video.fragments_path)

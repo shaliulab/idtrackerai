@@ -66,7 +66,7 @@ if __name__ == '__main__':
     #change this
     blobs_path = video.blobs_path
     global_fragments_path = video.global_fragments_path
-    list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
     blobs = list_of_blobs.blobs_in_video
     list_of_fragments = ListOfFragments.load(video.fragments_path)
     list_of_global_fragments = ListOfGlobalFragments.load(video.global_fragments_path, list_of_fragments.fragments)

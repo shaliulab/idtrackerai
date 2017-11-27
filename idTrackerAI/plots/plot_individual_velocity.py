@@ -91,7 +91,7 @@ if __name__ == '__main__':
     print("loading video object...")
     video = np.load(video_path).item(0)
     # blobs_path = video.blobs_path
-    # list_of_blobs = ListOfBlobs.load(blobs_path)
+    # list_of_blobs = ListOfBlobs.load(video, blobs_path)
     # blobs = list_of_blobs.blobs_in_video
     try:
         # trajectories_dict = np.load(os.path.join(video.trajectories_wo_gaps_folder,'trajectories_wo_gaps.npy')).item()

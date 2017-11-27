@@ -96,7 +96,7 @@ if __name__ == "__main__":
     video_path = os.path.join(session_path,'video_object.npy')
     print("loading video object...")
     video = np.load(video_path).item(0)
-    list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
 
     video.create_trajectories_wo_gaps_folder()
     logger.info("Generating trajectories. The trajectories files are stored in %s" %video.trajectories_wo_gaps_folder)
