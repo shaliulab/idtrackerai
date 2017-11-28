@@ -115,13 +115,14 @@ class ListOfBlobs(object):
         def set_frame_number_to_blobs_in_frame(blobs_in_frame, frame_number):
             for blob in blobs_in_frame:
                 blob.frame_number = frame_number
-
+        self.disconnect()
         for frame_i in tqdm(xrange(1, self.number_of_frames), desc = 'Connecting blobs '):
             set_frame_number_to_blobs_in_frame(self.blobs_in_video[frame_i-1], frame_i-1)
 
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                 if blob_0.overlaps_with(blob_1):
                     blob_0.now_points_to(blob_1)
+
         set_frame_number_to_blobs_in_frame(self.blobs_in_video[frame_i], frame_i)
 
     def compute_model_area_and_body_length(self, number_of_animals):
@@ -162,7 +163,7 @@ class ListOfBlobs(object):
         if len(frames_with_more_blobs_than_animals) > 0:
             logger.error('There are frames with more blobs than animals, this can be detrimental for the proper functioning of the system.')
             logger.error("Frames with more blobs than animals: %s" %str(frames_with_more_blobs_than_animals))
-            raise ValueError('Please check your segmentaion')
+            # raise ValueError('Please check your segmentaion')
         return frames_with_more_blobs_than_animals
 
     def update_from_list_of_fragments(self, fragments, fragment_identifier_to_index):
