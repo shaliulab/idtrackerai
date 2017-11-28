@@ -131,14 +131,13 @@ if __name__ == '__main__':
     #############################################################
     if not bool(loadPreviousDict['use_previous_knowledge_transfer_decision']):
         knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
-        # knowledge_transfer_flag = 'n'
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
             video.knowledge_transfer_model_folder = selectDir('', text = "Select a session folder to perform knowledge transfer from the last accumulation point") #select path to video
             video.tracking_with_knowledge_transfer = True
         elif knowledge_transfer_flag.lower() == 'n':
             video.tracking_with_knowledge_transfer = False
         else:
-            raise ValueError("Invalid value, type either 'y' or 'n'")
+            raise ValueError("Invalid input, type either 'y' or 'n'")
     else:
         video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder','tracking_with_knowledge_transfer'])
         video.use_previous_knowledge_transfer_decision = True
@@ -147,9 +146,10 @@ if __name__ == '__main__':
     #### 1. detect blobs in the video                        ####
     #### 2. create a list of potential global fragments      ####
     #### in which all animals are visible.                   ####
-    #### 3. compute a model of the area of the animals       ####
-    #### (mean and variance)                                 ####
-    #### 4. identify global fragments                        ####
+    #### 3. compute a model of the area of the animals,      ####
+    #### train the Deep Crossing Detector and identify       ####
+    #### the crossings                                       ####
+    #### 4. compute global fragments                         ####
     #### 5. create a list of objects GlobalFragment()        ####
     #############################################################
     #Selection/loading preprocessing parameters
@@ -180,7 +180,7 @@ if __name__ == '__main__':
             blobs = segment(video)
             logger.debug("Segmentation finished")
             list_of_blobs = ListOfBlobs(blobs_in_video = blobs)
-            list_of_blobs.save(video.blobs_path_segmented, number_of_chunks = video.number_of_frames, video_has_been_segmented = video.has_been_segmented)
+            list_of_blobs.save(video, video.blobs_path_segmented, number_of_chunks = video.number_of_frames)
             logger.debug("Segmented blobs saved")
             video._has_been_segmented = True
         else:
@@ -193,7 +193,7 @@ if __name__ == '__main__':
                                             or 'min_' in key
                                             or 'max_' in key}
             logger.debug('The parameters used to preprocess the video are %s', preprocessing_parameters_dict)
-            list_of_blobs = ListOfBlobs.load(old_video.blobs_path_segmented)
+            list_of_blobs = ListOfBlobs.load(video, old_video.blobs_path_segmented)
             video._has_been_segmented = True
             logger.debug("Segmented blobs loaded")
         video.save()
@@ -236,10 +236,10 @@ if __name__ == '__main__':
         list_of_fragments.get_not_accumulable_individual_fragments_identifiers(list_of_global_fragments)
         list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
         #save connected blobs in video (organized frame-wise)
-        list_of_blobs.save(video.blobs_path, number_of_chunks = video.number_of_frames, video_has_been_segmented = video.has_been_segmented)
+        video._has_been_preprocessed = True
+        list_of_blobs.save(video, video.blobs_path, number_of_chunks = video.number_of_frames)
         list_of_fragments.save(video.fragments_path)
         list_of_global_fragments.save(video.global_fragments_path, list_of_fragments.fragments)
-        video._has_been_preprocessed = True
         video.save()
         logger.info("Blobs detection and fragmentation finished succesfully.")
     else:
@@ -252,7 +252,7 @@ if __name__ == '__main__':
         video.save()
         # Load blobs and global fragments
         logger.info("Loading blob objects")
-        list_of_blobs = ListOfBlobs.load(video.blobs_path)
+        list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
         logger.info("Loading list of fragments")
         list_of_fragments = ListOfFragments.load(video.fragments_path)
         logger.info("Loading list of global fragments")
@@ -554,6 +554,13 @@ if __name__ == '__main__':
     video.solve_impossible_jumps_time = time.time() - video.solve_impossible_jumps_time
 
     #############################################################
+    ############# Check identification consistency ##############
+    ####
+    #############################################################
+
+
+
+    #############################################################
     ##############   Invididual fragments stats #################
     ####
     #############################################################
@@ -572,7 +579,7 @@ if __name__ == '__main__':
     list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
     if False:
         list_of_blobs.compute_nose_and_head_coordinates()
-    list_of_blobs.save(video.blobs_path, number_of_chunks = video.number_of_frames, video_has_been_segmented = video.has_been_segmented)
+    list_of_blobs.save(video, video.blobs_path, number_of_chunks = video.number_of_frames)
 
     #############################################################
     ############ Create trajectories (w gaps) ###################
@@ -621,19 +628,18 @@ if __name__ == '__main__':
     #############################################################
     print("\n**** Assign crossings ****")
     if not loadPreviousDict['crossings']:
-        list_of_blobs.disconnect()
         list_of_blobs_no_gaps = copy.deepcopy(list_of_blobs)
         video._has_crossings_solved = False
         if len(list_of_blobs_no_gaps.blobs_in_video[-1]) == 0:
             list_of_blobs_no_gaps.blobs_in_video = list_of_blobs_no_gaps.blobs_in_video[:-1]
         list_of_blobs_no_gaps = close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
         video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
-        list_of_blobs_no_gaps.save(path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
+        list_of_blobs_no_gaps.save(video, path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
         video._has_crossings_solved = True
         video.save()
     else:
         video.copy_attributes_between_two_video_objects(old_video, ['blobs_no_gaps_path'], [False])
-        list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_no_gaps_path)
+        list_of_blobs_no_gaps = ListOfBlobs.load(video, video.blobs_no_gaps_path)
         video._has_crossings_solved = True
         video.save()
 

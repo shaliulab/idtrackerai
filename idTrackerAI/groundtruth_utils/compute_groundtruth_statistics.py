@@ -155,7 +155,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, video_object_path):
     video.check_paths_consistency_with_video_path(video_object_path)
     # change this
     print("loading list_of_blobs")
-    list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
 
     ''' select ground truth file '''
     print("loading groundtruth")

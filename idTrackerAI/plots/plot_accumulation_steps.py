@@ -335,8 +335,8 @@ if __name__ == '__main__':
     # session_path = '/home/themis/Desktop/IdTrackerDeep/videos/idTrackerDeep_LargeGroups_3/100fish/First/session_2'
     video_path = os.path.join(session_path,'video_object.npy')
     video = np.load(video_path).item(0)
-    list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_no_gaps_path, video_has_been_segmented = False)
-    list_of_blobs = ListOfBlobs.load(video.blobs_path, video_has_been_segmented = False)
+    list_of_blobs_no_gaps = ListOfBlobs.load(video, video.blobs_no_gaps_path, video_has_been_segmented = False)
+    list_of_blobs = ListOfBlobs.load(video, video.blobs_path, video_has_been_segmented = False)
     list_of_fragments_dictionaries = np.load(os.path.join(video._accumulation_folder,'light_list_of_fragments.npy'))
     fragments = [Fragment(number_of_animals = video.number_of_animals) for fragment_dictionary in list_of_fragments_dictionaries]
     [fragment.__dict__.update(fragment_dictionary) for fragment, fragment_dictionary in zip(fragments, list_of_fragments_dictionaries)]

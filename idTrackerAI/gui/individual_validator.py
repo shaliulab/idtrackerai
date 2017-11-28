@@ -81,12 +81,10 @@ class IndividualValidator(BoxLayout):
 
     def on_choose_list_of_blobs_btns_press(self, instance):
         if instance.text == 'With gaps':
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path,
-                                        video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
         else:
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path,
-                                        video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
             blobs_path, blobs_path_extension = CHOSEN_VIDEO.video.blobs_no_gaps_path
         self.choose_list_of_blobs_popup.dismiss()
         self.populate_validation_tab()
@@ -118,8 +116,7 @@ class IndividualValidator(BoxLayout):
                 self.choose_list_of_blobs_popup.open()
             else:
                 self.loading_popup.open()
-                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path,
-                                            video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
+                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
                 self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
                 self.populate_validation_tab()
         except Exception as e:

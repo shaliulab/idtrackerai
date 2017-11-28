@@ -66,7 +66,6 @@ class AccumulationManager(object):
             return True
 
     def update_counter(self):
-        """ updates the counter of the accumulation"""
         self.counter += 1
 
     def get_new_images_and_labels(self):
@@ -74,7 +73,6 @@ class AccumulationManager(object):
         to be used for training, this function checks whether the images of a individual
         fragment have been added before"""
         self.new_images, self.new_labels = self.list_of_fragments.get_new_images_and_labels_for_training()
-
         if self.new_images is not None:
             logger.info("New images for training: %s %s"  %(str(self.new_images.shape), str(self.new_labels.shape)))
         else:
@@ -328,6 +326,7 @@ class AccumulationManager(object):
                             and fragment.identifier not in self.individual_fragments_used]
         elif self.accumulation_strategy == 'partial':
             [setattr(fragment,'_acceptable_for_training', False) for fragment in global_fragment.individual_fragments]
+
             for fragment in global_fragment.individual_fragments:
                 # Check certainties of the individual fragme
                 if fragment.identifier in self.candidate_individual_fragments_identifiers:
@@ -367,7 +366,8 @@ class AccumulationManager(object):
                     or fragment.identifier in self.temporary_individual_fragments_used:
                     P1_array[index_individual_fragment,:] = 0.
                     P1_array[:,fragment.temporary_id] = 0.
-            # assign temporal identity to individual fragments by hierarchical P1
+
+            # assign temporary identity to individual fragments by hierarchical P1
             for index_individual_fragment in index_individual_fragments_sorted_by_P1_max_to_min:
                 fragment = global_fragment.individual_fragments[index_individual_fragment]
                 if fragment.temporary_id is None and fragment.acceptable_for_training:
@@ -402,7 +402,6 @@ class AccumulationManager(object):
             self.number_of_acceptable_fragments += len([fragment for fragment in global_fragment.individual_fragments
                                                     if fragment.acceptable_for_training and not fragment.used_for_training])
             global_fragment._accumulation_step = self.counter
-
         assert all([fragment.temporary_id is not None for fragment in global_fragment.individual_fragments if fragment.acceptable_for_training and fragment.is_an_individual])
 
 

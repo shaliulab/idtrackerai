@@ -30,7 +30,7 @@ def compute_and_save_individual_fragments_and_distance_travelled(video_object_pa
     print("loading blobs")
     blobs_path = video.blobs_path
     global_fragments_path = video.global_fragments_path
-    list_of_blobs = ListOfBlobs.load(blobs_path)
+    list_of_blobs = ListOfBlobs.load(video, blobs_path)
     blobs = list_of_blobs.blobs_in_video
     global_fragments = np.load(global_fragments_path)
     number_of_frames_in_individual_fragments, \

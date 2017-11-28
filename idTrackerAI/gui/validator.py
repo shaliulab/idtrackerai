@@ -97,12 +97,15 @@ class Validator(BoxLayout):
 
     def on_choose_list_of_blobs_btns_press(self, instance):
         if instance.text == 'With gaps':
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path,
-                                        video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
         else:
+<<<<<<< HEAD
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path,
                                         video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
+=======
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
+>>>>>>> b7b92177ef175eec5281c86d8e8aa259ecbb94e5
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
@@ -139,8 +142,7 @@ class Validator(BoxLayout):
                 self.choose_list_of_blobs_popup.open()
             else:
                 self.loading_popup.open()
-                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path,
-                                            video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
+                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
                 self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
                 self.populate_validation_tab()
         except Exception as e:
@@ -152,6 +154,7 @@ class Validator(BoxLayout):
     def init_segmentZero(self):
         self.add_widget(self.visualiser)
         self.colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals)
+        print(self.colors)
         self.button_box = BoxLayout(orientation='vertical', size_hint=(.3,1.))
         self.add_widget(self.button_box)
         self.next_cross_button = Button(id='crossing_btn', text='Go to next crossing', size_hint=(1,1))
@@ -390,7 +393,7 @@ class Validator(BoxLayout):
         self.popup_saving.dismiss()
 
     def go_and_save(self):
-        self.list_of_blobs.save(path_to_save = self.list_of_blobs_save_path)
+        self.list_of_blobs.save(CHOSEN_VIDEO.video, path_to_save = self.list_of_blobs_save_path)
         CHOSEN_VIDEO.video.save()
 
     def modifyIdOpenPopup(self, blob_to_modify):

@@ -31,7 +31,7 @@ if __name__ == '__main__':
     video_path = '/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_7/video_object.npy'
     video = np.load(video_path).item(0)
     blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_7/preprocessing/blobs_collection.npy'
-    list_of_blobs = ListOfBlobs.load(blobs_path)
+    list_of_blobs = ListOfBlobs.load(video, blobs_path)
     blobs = list_of_blobs.blobs_in_video
 
     blob = blobs[2675][0]

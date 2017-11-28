@@ -24,27 +24,26 @@ class ListOfBlobs(object):
             for blob in blobs_in_frame:
                 blob.next, blob.previous = [], []
 
-    def reconnect(self, video_has_been_segmented):
-        if video_has_been_segmented:
-            logger.info("Reconnecting list of blob objects")
-            for frame_i in tqdm(range(1,self.number_of_frames), desc = 'reconnecting blobs'):
-                for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
-                    if blob_0.overlaps_with(blob_1):
-                        blob_0.now_points_to(blob_1)
+    def connect(self):
+        logger.info("Connecting list of blob objects")
+        for frame_i in tqdm(range(1,self.number_of_frames), desc = 'connecting blobs'):
+            for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
+                if blob_0.overlaps_with(blob_1):
+                    blob_0.now_points_to(blob_1)
 
-    def save(self, path_to_save = None, number_of_chunks = 1, video_has_been_segmented = None):
+    def save(self, video, path_to_save = None, number_of_chunks = 1):
         """save instance"""
         self.disconnect()
         logger.info("saving blobs list at %s" %path_to_save)
         np.save(path_to_save, self)
-        self.reconnect(video_has_been_segmented)
+        if video.has_been_segmented and not video.has_been_preprocessed:
+            self.connect()
         self.blobs_are_connected = True
 
     @classmethod
-    def load(cls, path_to_load_blob_list_file, video_has_been_segmented = None):
+    def load(cls, video, path_to_load_blob_list_file):
         logger.info("loading blobs list from %s" %path_to_load_blob_list_file)
         list_of_blobs = np.load(path_to_load_blob_list_file).item()
-        list_of_blobs.reconnect(video_has_been_segmented)
         list_of_blobs.blobs_are_connected = True
         return list_of_blobs
 

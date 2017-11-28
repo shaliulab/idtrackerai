@@ -646,7 +646,7 @@ if __name__ == "__main__":
     number_of_animals = video.number_of_animals
     # list_of_blobs_path = '/home/chronos/Desktop/IdTrackerDeep/videos/8zebrafish_conflicto/session_4/preprocessing/blobs_collection.npy'
     list_of_blobs_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_1/preprocessing/blobs_collection.npy'
-    list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
+    list_of_blobs = ListOfBlobs.load(video, list_of_blobs_path)
     blobs = list_of_blobs.blobs_in_video
 
     # ''' Duplications '''

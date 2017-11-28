@@ -505,7 +505,7 @@ if __name__ == '__main__':
                             ####
                             #############################################################
                             list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
-                            list_of_blobs.save(video.blobs_path, number_of_chunks = video.number_of_frames, video_has_been_segmented = video.has_been_segmented)
+                            list_of_blobs.save(video, video.blobs_path, number_of_chunks = video.number_of_frames)
 
                             #############################################################
                             ##########  Accuracies after solving duplications ##########
