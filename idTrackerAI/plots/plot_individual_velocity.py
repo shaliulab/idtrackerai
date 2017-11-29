@@ -100,8 +100,8 @@ if __name__ == '__main__':
     # list_of_blobs = ListOfBlobs.load(video, blobs_path)
     # blobs = list_of_blobs.blobs_in_video
     try:
-        # trajectories_dict = np.load(os.path.join(video.trajectories_wo_gaps_folder,'trajectories_wo_gaps.npy')).item()
-        trajectories_dict = np.load(os.path.join(video.trajectories_folder,'trajectories.npy')).item()
+        trajectories_dict = np.load(os.path.join(video.trajectories_wo_gaps_folder,'trajectories_wo_gaps.npy')).item()
+        # trajectories_dict = np.load(os.path.join(video.trajectories_folder,'trajectories.npy')).item()
     except:
         trajectories_folder = selectDir("./")
         individual_trajectories = np.load(os.path.join(trajectories_folder,'centroid_trajectories.npy'))
