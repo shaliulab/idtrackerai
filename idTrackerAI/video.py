@@ -33,6 +33,12 @@ class Video(object):
         self._subtract_bkg = subtract_bkg #boolean: True if the user specifies to subtract the background
         self._ROI = ROI #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
         self._apply_ROI = apply_ROI #boolean: True if the user applies a ROI to the video
+        self._min_threshold = 0
+        self._max_threshold = 135
+        self._min_area = 150
+        self._max_area = 10000
+        self._resize = 1
+        self._resegmentation_parameters = []
         self._has_preprocessing_parameters = False #boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved
         self._maximum_number_of_blobs = 0 #int: the maximum number of blobs detected in the video
         self._blobs_path = None #string: path to the saved list of blob objects
@@ -44,7 +50,8 @@ class Video(object):
         self._has_been_pretrained = None
         self._pretraining_folder = None
         self._knowledge_transfer_model_folder = None
-        self.tracking_with_knowledge_transfer = False
+        self._knowledge_transfer_with_same_animals = None
+        self._tracking_with_knowledge_transfer = False
         self._first_accumulation_finished = None
         self._second_accumulation_finished = None
         self._has_been_assigned = None
@@ -171,6 +178,10 @@ class Video(object):
         return self._max_area
 
     @property
+    def resegmentation_parameters(self):
+        return self._resegmentation_parameters
+
+    @property
     def resize(self):
         return self._resize
 
@@ -234,6 +245,14 @@ class Video(object):
                 raise ValueError("The model folders " + os.path.join(new_kt_model_path, "conv") + " and " + os.path.join(new_kt_model_path, "softmax") + " are missing")
         else:
             self._knowledge_transfer_model_folder = None
+
+    @property
+    def knowledge_transfer_with_same_animals(self):
+        return self._knowledge_transfer_with_same_animals
+
+    @property
+    def tracking_with_knowledge_transfer(self):
+        return self._tracking_with_knowledge_transfer
 
     @property
     def video_path(self):
@@ -600,11 +619,11 @@ class Video(object):
         self._episodes_start_end =zip(starting_frames, ending_frames)
         self._number_of_episodes = len(starting_frames)
 
-    def in_which_episode(self, frame_index):
+    def in_which_episode(self, frame_number):
         """Check to which episode a frame index belongs in time"""
         episode_number = [i for i, episode_start_end in enumerate(self._episodes_start_end)
-                            if episode_start_end[0] <= frame_index
-                            and episode_start_end[1] >= frame_index]
+                            if episode_start_end[0] <= frame_number
+                            and episode_start_end[1] >= frame_number]
         if episode_number:
             return episode_number[0]
         else:

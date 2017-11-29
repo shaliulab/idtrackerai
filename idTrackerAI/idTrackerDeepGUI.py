@@ -32,8 +32,9 @@ from list_of_fragments import ListOfFragments, create_list_of_fragments
 from list_of_global_fragments import ListOfGlobalFragments,\
                                         create_list_of_global_fragments
 from global_fragments_statistics import compute_and_plot_fragments_statistics
-from segmentation import segment
+from segmentation import segment, resegment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview,\
+                    resegmentation_preview,\
                     selectPreprocParams, fragmentation_inspector,\
                     frame_by_frame_identity_inspector, selectDir,\
                     check_resolution_reduction
@@ -133,13 +134,24 @@ if __name__ == '__main__':
         knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
             video.knowledge_transfer_model_folder = selectDir('', text = "Select a session folder to perform knowledge transfer from the last accumulation point") #select path to video
-            video.tracking_with_knowledge_transfer = True
+            video._tracking_with_knowledge_transfer = True
+            same_animals = getInput("Same animals", "Are you tracking the same animals? y/N").lower()
+            if same_animals == 'y':
+                video._knowledge_transfer_with_same_animals = True
+            elif same_animals == 'n' or same_animals == '':
+                video._knowledge_transfer_with_same_animals = False
+            else:
+                raise ValueError("Invalid input.")
+
         elif knowledge_transfer_flag.lower() == 'n':
             video.tracking_with_knowledge_transfer = False
         else:
             raise ValueError("Invalid input, type either 'y' or 'n'")
     else:
-        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder','tracking_with_knowledge_transfer'])
+        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder',
+                                                                    'knowledge_transfer_with_same_animals',
+                                                                    'tracking_with_knowledge_transfer'],
+                                                                    [False, True, True])
         video.use_previous_knowledge_transfer_decision = True
     #############################################################
     ####################  Preprocessing   #######################
@@ -180,9 +192,26 @@ if __name__ == '__main__':
             blobs = segment(video)
             logger.debug("Segmentation finished")
             list_of_blobs = ListOfBlobs(blobs_in_video = blobs)
+            frames_with_more_blobs_than_animals = list_of_blobs.check_maximal_number_of_blob(video.number_of_animals)
+            while len(frames_with_more_blobs_than_animals) > 0:
+                new_preprocessing_parameters = {'min_threshold': video.min_threshold,
+                                            'max_threshold': video.max_threshold,
+                                            'min_area': video.min_area,
+                                            'max_area': video.max_area}
+                new_preprocessing_parameters = resegmentation_preview(video, frames_with_more_blobs_than_animals[0], new_preprocessing_parameters)
+
+                for frame_number in tqdm(frames_with_more_blobs_than_animals, desc = 'Correcting segmentation'):
+                    maximum_number_of_blobs = resegment(video, frame_number, list_of_blobs, new_preprocessing_parameters)
+                    if maximum_number_of_blobs <= video.number_of_animals:
+                        video._resegmentation_parameters.append((frame_number,new_preprocessing_parameters))
+                frames_with_more_blobs_than_animals = list_of_blobs.check_maximal_number_of_blob(video.number_of_animals)
+                cv2.namedWindow('Bars')
+
+            video._has_been_segmented = True
             list_of_blobs.save(video, video.blobs_path_segmented, number_of_chunks = video.number_of_frames)
             logger.debug("Segmented blobs saved")
-            video._has_been_segmented = True
+            logger.info("Computing maximum number of blobs detected in the video")
+
         else:
             # Load blobs and global fragments
             logger.debug("Loading previously segmented blobs")
@@ -197,8 +226,8 @@ if __name__ == '__main__':
             video._has_been_segmented = True
             logger.debug("Segmented blobs loaded")
         video.save()
-        logger.info("Computing maximum number of blobs detected in the video")
-        list_of_blobs.check_maximal_number_of_blob(video.number_of_animals)
+
+
         logger.info("Computing a model of the area of the individuals")
         video._model_area, video._median_body_length = list_of_blobs.compute_model_area_and_body_length(video.number_of_animals)
         video.compute_identification_image_size(video.median_body_length)
@@ -223,7 +252,7 @@ if __name__ == '__main__':
         video.number_of_global_fragments_candidates_for_accumulation = list_of_global_fragments.number_of_global_fragments
         video.individual_fragments_lenghts, \
         video.individual_fragments_distance_travelled, \
-        video._gamma_fit_parameters = compute_and_plot_fragments_statistics(video,
+            video._gamma_fit_parameters = compute_and_plot_fragments_statistics(video,
                                                                             video.model_area,
                                                                             list_of_blobs,
                                                                             list_of_fragments,
@@ -291,18 +320,14 @@ if __name__ == '__main__':
         logger.info("Initialising accumulation network")
         net = ConvNetwork(accumulation_network_params)
         #if knowledge transfer is performed on the same animals we don't reinitialise the classification part of the net
-        video._knowledge_transfer_from_same_animals = False #XXX
         if video.tracking_with_knowledge_transfer:
             net.restore()
-            same_animals = getInput("Same animals", "Are you tracking the same animals? y/N")
-            if same_animals.lower() == 'n' or same_animals == '':
+            if not video.knowledge_transfer_with_same_animals:
                 net.reinitialize_softmax_and_fully_connected()
-            else:
-                video._knowledge_transfer_from_same_animals = True
         logger.info("Initialising accumulation manager")
         # the list of global fragments is ordered in place from the distance (in frames) wrt
         # the core of the first global fragment that will be accumulated
-        video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = 0))
+        video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = 0))
         list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = 0)
         accumulation_manager = AccumulationManager(video, list_of_fragments,
                                                     list_of_global_fragments,
@@ -314,7 +339,7 @@ if __name__ == '__main__':
                                             video,
                                             global_step,
                                             net,
-                                            video.knowledge_transfer_from_same_animals)
+                                            video.knowledge_transfer_with_same_animals)
         logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
         video._first_accumulation_finished = True
         video.save()
@@ -420,7 +445,7 @@ if __name__ == '__main__':
                 net.restore()
                 net.reinitialize_softmax_and_fully_connected()
                 logger.info("Initialising accumulation manager")
-                video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1))
+                video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = i - 1))
                 list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1)
                 accumulation_manager = AccumulationManager(video,
                                                             list_of_fragments, list_of_global_fragments,

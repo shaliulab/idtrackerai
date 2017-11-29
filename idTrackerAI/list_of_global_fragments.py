@@ -9,8 +9,13 @@ import matplotlib.lines as mlines
 import seaborn as sns
 
 from globalfragment import GlobalFragment
+from get_predictions import GetPrediction
+from assigner import assign, compute_identification_statistics_for_non_accumulated_fragments
+from accumulation_manager import AccumulationManager
 
 logger = logging.getLogger("__main__.list_of_global_fragments")
+CERTAINTY_THRESHOLD = .1 # threshold to select a individual fragment as eligible for training
+
 
 class ListOfGlobalFragments(object):
     def __init__(self, global_fragments):
@@ -29,11 +34,64 @@ class ListOfGlobalFragments(object):
         frequencies[i] = fragment.number_of_images
         return frequencies
 
-    def set_first_global_fragment_for_accumulation(self, video, accumulation_trial):
+    @staticmethod
+    def abort_knowledge_transfer_on_same_animals(video, net):
+        identities = range(video.number_of_animals)
+        net.reinitialize_softmax_and_fully_connected()
+        logger.info("Identity transfer failed. We proceed by transferring only the convolutional filters.")
+        return identities
+
+    def set_first_global_fragment_for_accumulation(self, video, net, accumulation_trial):
         self.order_by_distance_travelled()
         self.first_global_fragment_for_accumulation = self.global_fragments[accumulation_trial]
+        if not video.knowledge_transfer_with_same_animals:
+            identities = range(video.number_of_animals)
+        else:
+            if net is None:
+                raise ValueError("In order to associate an identity to the same animals a network is needed")
+            images, _ = self.first_global_fragment_for_accumulation.get_images_and_labels()
+            images = np.asarray(images)
+            assigner = assign(net, video, images, False)
+            compute_identification_statistics_for_non_accumulated_fragments(
+                                                                    self.first_global_fragment_for_accumulation.individual_fragments,
+                                                                    assigner)
+
+            # Check certainties of the individual fragments in the global fragment
+            # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
+            [setattr(fragment,'_acceptable_for_training', True) for fragment in self.first_global_fragment_for_accumulation.individual_fragments]
+            for fragment in self.first_global_fragment_for_accumulation.individual_fragments:
+                if AccumulationManager.is_not_certain(fragment, CERTAINTY_THRESHOLD):
+                    identities = self.abort_knowledge_transfer_on_same_animals(video, net)
+                    break
+
+            P1_array, index_individual_fragments_sorted_by_P1_max_to_min = AccumulationManager.get_P1_array_and_argsort(self.first_global_fragment_for_accumulation)
+            # assign temporal identity to individual fragments by hierarchical P1
+            for index_individual_fragment in index_individual_fragments_sorted_by_P1_max_to_min:
+                fragment = self.first_global_fragment_for_accumulation.individual_fragments[index_individual_fragment]
+
+                if AccumulationManager.p1_below_random(P1_array, index_individual_fragment, fragment):
+                    identities = self.abort_knowledge_transfer_on_same_animals(video, net)
+                    break
+                else:
+                    temporary_id = np.argmax(P1_array[index_individual_fragment,:])
+                    if not fragment.check_consistency_with_coexistent_individual_fragments(temporary_id):
+                        identities = self.abort_knowledge_transfer_on_same_animals(video, net)
+                        break
+                    else:
+                        P1_array = AccumulationManager.set_fragment_temporary_id(fragment, temporary_id, P1_array, index_individual_fragment)
+
+            # Check if the global fragment is unique after assigning the identities
+
+            if not self.first_global_fragment_for_accumulation.is_unique:
+                identities = self.abort_knowledge_transfer_on_same_animals(video, net)
+            else:
+                identities = [fragment.temporary_id for fragment
+                            in self.first_global_fragment_for_accumulation.individual_fragments]
+                logger.info("Identities transferred succesfully")
+
+
         [(setattr(fragment, '_acceptable_for_training', True),
-            setattr(fragment, '_temporary_id', i),
+            setattr(fragment, '_temporary_id', identities[i]),
             setattr(fragment, '_frequencies', self.give_me_frequencies_first_fragment_accumulated(i, video.number_of_animals, fragment)),
             setattr(fragment, '_is_certain', True),
             setattr(fragment, '_certainty', 1.),
