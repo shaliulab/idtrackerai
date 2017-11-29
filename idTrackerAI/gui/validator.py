@@ -100,12 +100,7 @@ class Validator(BoxLayout):
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
         else:
-<<<<<<< HEAD
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path,
-                                        video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
-=======
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
->>>>>>> b7b92177ef175eec5281c86d8e8aa259ecbb94e5
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
