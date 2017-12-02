@@ -227,7 +227,6 @@ if __name__ == '__main__':
             logger.debug("Segmented blobs loaded")
         video.save()
 
-
         logger.info("Computing a model of the area of the individuals")
         video._model_area, video._median_body_length = list_of_blobs.compute_model_area_and_body_length(video.number_of_animals)
         video.compute_identification_image_size(video.median_body_length)
@@ -304,7 +303,7 @@ if __name__ == '__main__':
     accumulation_network_params = NetworkParams(video.number_of_animals,
                                 learning_rate = 0.005,
                                 keep_prob = 1.0,
-                                scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax'],
+                                scopes_layers_to_optimize = None,
                                 save_folder = video.accumulation_folder,
                                 image_size = video.identification_image_size)
     if not bool(loadPreviousDict['first_accumulation']):
@@ -312,20 +311,21 @@ if __name__ == '__main__':
         list_of_fragments.reset(roll_back_to = 'fragmentation')
         list_of_global_fragments.reset(roll_back_to = 'fragmentation')
         if video.tracking_with_knowledge_transfer:
-            logger.info("We will restore the network from a previous model (knowledge transfer): %s" %video.knowledge_transfer_model_folder)
-            accumulation_network_params.restore_folder = video.knowledge_transfer_model_folder
+            if video.knowledge_transfer_with_same_animals:
+                logger.info("We will restore the network from a previous model (convolutional layers and classifier): %s" %video.knowledge_transfer_model_folder)
+                accumulation_network_params.restore_folder = video.knowledge_transfer_model_folder
+                accumulation_network_params.check_identity_transfer_consistency(CNN_model_info_dict)
+            else:
+                logger.info("We will restore the network from a previous model (only convolutional layers): %s" %video.knowledge_transfer_model_folder)
+                accumulation_network_params.knowledge_transfer_folder = video.knowledge_transfer_model_folder
+            accumulation_network_params.scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax']
         else:
             logger.info("The network will be trained from scratch during accumulation")
-            accumulation_network_params.scopes_layers_to_optimize = None
         logger.info("Initialising accumulation network")
         net = ConvNetwork(accumulation_network_params)
         #if knowledge transfer is performed on the same animals we don't reinitialise the classification part of the net
         if video.tracking_with_knowledge_transfer:
             net.restore()
-            if video.knowledge_transfer_with_same_animals:
-                accumulation_network_params.check_knowledge_transfer_consistency(CNN_model_info_dict)
-            else:
-                net.reinitialize_softmax_and_fully_connected()
         logger.info("Initialising accumulation manager")
         # the list of global fragments is ordered in place from the distance (in frames) wrt
         # the core of the first global fragment that will be accumulated
