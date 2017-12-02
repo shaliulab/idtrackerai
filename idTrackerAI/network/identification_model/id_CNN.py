@@ -55,6 +55,11 @@ class ConvNetwork():
         # Build graph with the network, loss, optimizer and accuracies
         tf.reset_default_graph()
         self._build_graph()
+        knowledge_transfer_info_dict = {'input_image_size': self.params.target_image_size if self.params.target_image_size is not None else self.params.image_size,
+                                'video_path': self.params.video_path,
+                                'number_of_animals': self.params.number_of_animals,
+                                'number_of_channels': self.params.number_of_channels}
+        np.save(os.path.join(self.params.save_folder, 'info.npy'), knowledge_transfer_info_dict)
         self.set_savers()
         # Create list of operations to run during training and validation
         if self.training:
@@ -100,8 +105,16 @@ class ConvNetwork():
         self.x_pl = tf.placeholder(tf.float32, [None, self.image_width, self.image_height, self.image_channels], name = 'images')
         logger.debug('training model %i' %self.params.cnn_model)
 
+        model_image_width = self.image_width if self.params.target_image_size is None else self.params.target_image_size[0]
+        model_image_height = self.image_height if self.params.target_image_size is None else self.params.target_image_size[1]
+        print("**************************************************************")
+        print("plh image_width ", self.image_width)
+        print("plh image_height ", self.image_height)
+        print("model_image_width ", model_image_width)
+        print("model_image_height ", model_image_height)
+        print("**************************************************************")
         self.y_logits = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals,
-                                                                self.image_width, self.image_height,
+                                                                model_image_width, model_image_height,
                                                                 self.image_channels,
                                                                 self.params.action_on_image,
                                                                 self.params.pre_target_image_size)

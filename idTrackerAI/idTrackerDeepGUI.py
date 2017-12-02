@@ -134,7 +134,7 @@ if __name__ == '__main__':
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
             video.knowledge_transfer_model_folder = selectDir('', text = "Select a session folder to perform knowledge transfer from the last accumulation point") #select path to video
             video._tracking_with_knowledge_transfer = True
-            CNN_model_info_dict = np.load(os.path.join(video.knowledge_transfer_model_folder, 'info.npy'))
+            video.knowledge_transfer_info_dict = np.load(os.path.join(video.knowledge_transfer_model_folder, 'info.npy')).item()
             same_animals = getInput("Same animals", "Are you tracking the same animals? y/N").lower()
             if same_animals == 'y':
                 video._knowledge_transfer_with_same_animals = True
@@ -150,8 +150,9 @@ if __name__ == '__main__':
     else:
         video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder',
                                                                     'knowledge_transfer_with_same_animals',
-                                                                    'tracking_with_knowledge_transfer'],
-                                                                    [False, True, True])
+                                                                    'tracking_with_knowledge_transfer',
+                                                                    'knowledge_transfer_info_dict'],
+                                                                    [False, True, True,False])
         video.use_previous_knowledge_transfer_decision = True
     #############################################################
     ####################  Preprocessing   #######################
@@ -230,6 +231,7 @@ if __name__ == '__main__':
         logger.info("Computing a model of the area of the individuals")
         video._model_area, video._median_body_length = list_of_blobs.compute_model_area_and_body_length(video.number_of_animals)
         video.compute_identification_image_size(video.median_body_length)
+        # video._identification_image_size = (48, 48, 1)
         if not list_of_blobs.blobs_are_connected:
             list_of_blobs.compute_overlapping_between_subsequent_frames()
         detect_crossings(list_of_blobs, video, video.model_area, use_network = True)
@@ -305,7 +307,8 @@ if __name__ == '__main__':
                                 keep_prob = 1.0,
                                 scopes_layers_to_optimize = None,
                                 save_folder = video.accumulation_folder,
-                                image_size = video.identification_image_size)
+                                image_size = video.identification_image_size,
+                                video_path = video.video_path)
     if not bool(loadPreviousDict['first_accumulation']):
         logger.info("Starting accumulation")
         list_of_fragments.reset(roll_back_to = 'fragmentation')
@@ -314,7 +317,7 @@ if __name__ == '__main__':
             if video.knowledge_transfer_with_same_animals:
                 logger.info("We will restore the network from a previous model (convolutional layers and classifier): %s" %video.knowledge_transfer_model_folder)
                 accumulation_network_params.restore_folder = video.knowledge_transfer_model_folder
-                accumulation_network_params.check_identity_transfer_consistency(CNN_model_info_dict)
+                accumulation_network_params.check_identity_transfer_consistency(video.knowledge_transfer_info_dict)
             else:
                 logger.info("We will restore the network from a previous model (only convolutional layers): %s" %video.knowledge_transfer_model_folder)
                 accumulation_network_params.knowledge_transfer_folder = video.knowledge_transfer_model_folder
@@ -407,7 +410,8 @@ if __name__ == '__main__':
                                                 use_adam_optimiser = False,
                                                 scopes_layers_to_optimize = None,
                                                 save_folder = video.pretraining_folder,
-                                                image_size = video.identification_image_size)
+                                                image_size = video.identification_image_size,
+                                                video_path = video.video_path)
         if not loadPreviousDict['pretraining']:
             #### Pre-trainer ####
             list_of_fragments.reset(roll_back_to = 'fragmentation')
