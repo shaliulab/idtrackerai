@@ -10,12 +10,9 @@ import logging
 from math import sqrt
 
 from py_utils import append_values_to_lists, delete_attributes_from_object
+from constants import MAX_FLOAT, MIN_FLOAT, FIXED_IDENTITY_THRESHOLD
 
 logger = logging.getLogger("__main__.fragment")
-
-MAX_FLOAT = sys.float_info[0]
-MIN_FLOAT = sys.float_info[3]
-FIXED_IDENTITY_THRESHOLD = .9
 
 class Fragment(object):
     def __init__(self, fragment_identifier = None,

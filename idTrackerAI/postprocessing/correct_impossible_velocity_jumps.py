@@ -19,9 +19,7 @@ from compute_velocity_model import compute_velocity_from_list_of_fragments, comp
 from get_trajectories import produce_trajectories
 from plot_individual_velocity import plot_individual_trajectories_velocities_and_accelerations
 
-VEL_PERCENTILE = 99 #percentile used to model velocity jumps
-P2_CERTAINTY_THRESHOLD = .9
-VELOCITY_TOLERANCE = 1
+from constants import VEL_PERCENTILE #percentile used to model velocity jumps
 
 def reassign(fragment, fragments, impossible_velocity_threshold):
     def get_available_and_non_available_identities(fragment):
@@ -133,7 +131,7 @@ def check_identification_consistency(video, list_of_fragments, fragment, impossi
 
 def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = None):
     fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(scope, video.first_frame_first_global_fragment)
-    impossible_velocity_threshold = video.velocity_threshold * VELOCITY_TOLERANCE
+    impossible_velocity_threshold = video.velocity_threshold
 
     for fragment in tqdm(fragments_in_direction, desc = 'Correcting impossible velocity jumps ' + scope):
         if fragment.is_an_individual and fragment.assigned_identity != 0:

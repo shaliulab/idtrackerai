@@ -19,8 +19,7 @@ import logging
 sys.path.append('./utils')
 from py_utils import get_git_revision_hash
 
-AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg']
-FRAMES_PER_EPISODE = 500 #long videos are divided into chunks. This is the number of frame per chunk
+from constants import AVAILABLE_VIDEO_EXTENSION, FRAMES_PER_EPISODE
 
 logger = logging.getLogger("__main__.video")
 
@@ -549,6 +548,12 @@ class Video(object):
             os.makedirs(self.accumulation_folder)
         elif delete:
             rmtree(self.accumulation_folder)
+            os.makedirs(self.accumulation_folder)
+        CNN_model_info_dict = {'input_image_size': self.identification_image_size,
+                                'video_path': self.video_path,
+                                'number_of_animals': self.number_of_animals,
+                                'number_of_channels': self.number_of_channels}
+        np.save(os.path.join(self.accumulation_folder, 'info.npy'), CNN_model_info_dict)
 
     def init_accumulation_statistics_attributes(self, attributes = None):
         if attributes is None:

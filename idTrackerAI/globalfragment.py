@@ -9,7 +9,7 @@ import logging
 
 logger = logging.getLogger("__main__.globalfragment")
 
-MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = 3
+from constants import MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
 
 class GlobalFragment(object):
     def __init__(self, list_of_blobs, fragments, index_beginning_of_fragment, number_of_animals):

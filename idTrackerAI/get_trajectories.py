@@ -12,8 +12,6 @@ a NaN appears instead of the coordinates
 import os
 import sys
 import numpy as np
-#from scipy.ndimage.filters import gaussian_filter1d
-# Import application/library specifics
 sys.path.append('IdTrackerDeep/restructure')
 sys.path.append('IdTrackerDeep/tracker')
 sys.path.append('IdTrackerDeep/utils')
@@ -24,18 +22,6 @@ from list_of_blobs import ListOfBlobs
 from GUI_utils import selectDir
 
 logger = logging.getLogger("__main__.get_trajectories")
-
-#def smooth_trajectories(t, sigma = 1.5, truncate = 4.0, derivative = 0):
-#    """Smooth trajectories (and maybe perform derivatives)
-#
-#    :param t: trajectories as np.array [Individual, frame, coordinates]
-#    :param sigma: standard deviation of Gaussian kernel
-#    :param truncate: truncate filter at this number of std. Increase this if performing derivatives
-#    :param derivative: order of performed derivative (0: none, 1: first derivative ...)
-#    :returns: smoothed (and maybe derived) trajectoroes as np.array
-#    """
-#    t = gaussian_filter1d(t, sigma=sigma, axis=1, truncate = truncate, order = derivative)
-#    return t
 
 def assign_point_to_identity(centroid, identity, frame_number, centroid_trajectories):
     if identity is not None and identity != 0:

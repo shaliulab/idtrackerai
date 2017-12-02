@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division, print_function
-
 import itertools
 import tensorflow as tf
 import os
@@ -7,8 +6,9 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import logging
+sys.path.append('../../')
 
-BATCH_SIZE = 50
+from constants import BATCH_SIZE_IDCNN
 logger = logging.getLogger("__main__.epoch_runner")
 
 class EpochRunner(object):
@@ -44,7 +44,7 @@ class EpochRunner(object):
         individual_accuracy_epoch = []
         self._index_in_epoch = 0
         while self._index_in_epoch < self.data_set._num_images:
-            loss_acc_batch, feed_dict = batch_operation(self.next_batch(BATCH_SIZE))
+            loss_acc_batch, feed_dict = batch_operation(self.next_batch(BATCH_SIZE_IDCNN))
             loss_epoch.append(loss_acc_batch[0])
             accuracy_epoch.append(loss_acc_batch[1])
             individual_accuracy_epoch.append(loss_acc_batch[2])

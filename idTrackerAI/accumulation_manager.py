@@ -7,12 +7,9 @@ import logging
 
 from assigner import assign
 from trainer import train
-
-RATIO_OLD = 0.6
-RATIO_NEW = 0.4
-MAXIMAL_IMAGES_PER_ANIMAL = 3000
-CERTAINTY_THRESHOLD = .1 # threshold to select a individual fragment as eligible for training
-MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION = .5
+from constants import RATIO_OLD, RATIO_NEW, MAXIMAL_IMAGES_PER_ANIMAL, \
+                        CERTAINTY_THRESHOLD, \
+                        MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
 
 logger = logging.getLogger("__main__.accumulation_manager")
 

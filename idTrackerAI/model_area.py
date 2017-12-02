@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
-STD_TOLERANCE = 4 ### NOTE set to 1 because we changed the model area to work with the median.
+from constants import STD_TOLERANCE
+
 class ModelArea(object):
     def __init__(self, mean, median, std):
         self.median = median

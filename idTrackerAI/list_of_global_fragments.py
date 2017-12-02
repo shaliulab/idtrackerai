@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 import os
 import random
 import logging
-
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.lines as mlines
@@ -12,10 +11,9 @@ from globalfragment import GlobalFragment
 from get_predictions import GetPrediction
 from assigner import assign, compute_identification_statistics_for_non_accumulated_fragments
 from accumulation_manager import AccumulationManager
+from constants import CERTAINTY_THRESHOLD
 
 logger = logging.getLogger("__main__.list_of_global_fragments")
-CERTAINTY_THRESHOLD = .1 # threshold to select a individual fragment as eligible for training
-
 
 class ListOfGlobalFragments(object):
     def __init__(self, global_fragments):

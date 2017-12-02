@@ -2,18 +2,17 @@ from __future__ import absolute_import, division, print_function
 import sys
 import numpy as np
 
-MAX_FLOAT = sys.float_info[0]
-LEARNING_PERCENTAGE_DIFFERENCE_2 = .005
-LEARNING_PERCENTAGE_DIFFERENCE_1 = .005
-OVERFITTING_COUNTER_THRESHOLD = 5
-MAXIMUM_NUMBER_OF_EPOCHS = 10000
+sys.path.append('../../')
+from constants import MAX_FLOAT, LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN, \
+                    LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN, OVERFITTING_COUNTER_THRESHOLD_IDCNN, \
+                    MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
 
 class Stop_Training(object):
     """Stops the training of the network according to the conditions specified
     in __call__
     """
     def __init__(self, number_of_animals, epochs_before_checking_stopping_conditions = 10, check_for_loss_plateau = True, first_accumulation_flag = False):
-        self.num_epochs = MAXIMUM_NUMBER_OF_EPOCHS #maximal num of epochs
+        self.num_epochs = MAXIMUM_NUMBER_OF_EPOCHS_IDCNN #maximal num of epochs
         self.number_of_animals = number_of_animals
         self.epochs_before_checking_stopping_conditions = epochs_before_checking_stopping_conditions
         self.overfitting_counter = 0 #number of epochs in which the network is overfitting before stopping the training
@@ -41,17 +40,17 @@ class Stop_Training(object):
             #check overfitting
             if losses_difference < 0.:
                 self.overfitting_counter += 1
-                if self.overfitting_counter >= OVERFITTING_COUNTER_THRESHOLD and not self.first_accumulation_flag:
+                if self.overfitting_counter >= OVERFITTING_COUNTER_THRESHOLD_IDCNN and not self.first_accumulation_flag:
                     print('Overfitting\n')
                     return True
             else:
                 self.overfitting_counter = 0
             #check if the error is not decreasing much
             if self.check_for_loss_plateau:
-                if self.first_accumulation_flag and np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE_1*10**(int(np.log10(current_loss))-1):
+                if self.first_accumulation_flag and np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN*10**(int(np.log10(current_loss))-1):
                     print('The losses difference is very small, we stop the training\n')
                     return True
-                elif np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE_2*10**(int(np.log10(current_loss))-1):
+                elif np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN*10**(int(np.log10(current_loss))-1):
                     print('The losses difference is very small, we stop the training\n')
                     return True
             # if the individual accuracies in validation are 1. for all the animals

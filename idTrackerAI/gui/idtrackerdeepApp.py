@@ -643,6 +643,8 @@ class Root(TabbedPanel):
         if value.content.id == "individual_validator":
             self.individual_validator.do()
 
+
+
     def on_switch(self, header):
         super(Root, self). switch_to(header)
         print('switch_to, content is ', header.content)

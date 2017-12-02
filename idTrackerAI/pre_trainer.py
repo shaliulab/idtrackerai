@@ -3,7 +3,6 @@ import os
 import sys
 sys.path.append('./network')
 sys.path.append('./network/identification_model')
-
 import itertools
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -17,8 +16,7 @@ from list_of_global_fragments import ListOfGlobalFragments
 from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
-
-MAX_RATIO_OF_PRETRAINED_IMAGES = .95
+from constants import MAX_RATIO_OF_PRETRAINED_IMAGES
 
 logger = logging.getLogger("__main__.pre_trainer")
 
