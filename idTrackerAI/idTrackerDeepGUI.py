@@ -144,7 +144,7 @@ if __name__ == '__main__':
                 raise ValueError("Invalid input.")
 
         elif knowledge_transfer_flag.lower() == 'n':
-            video.tracking_with_knowledge_transfer = False
+            video._tracking_with_knowledge_transfer = False
         else:
             raise ValueError("Invalid input, type either 'y' or 'n'")
     else:
@@ -360,7 +360,7 @@ if __name__ == '__main__':
                     'training_accuracy', 'training_individual_accuracies',
                     'ratio_of_accumulated_images', 'accumulation_trial',
                     'ratio_accumulated_images', 'first_accumulation_finished',
-                    'knowledge_transfer_from_same_animals', 'accumulation_statistics',
+                    'knowledge_transfer_with_same_animals', 'accumulation_statistics',
                     'first_frame_first_global_fragment']
         is_property = [True, True, False, False,
                         False, False, False, False,
@@ -456,7 +456,7 @@ if __name__ == '__main__':
                                                             video,
                                                             global_step,
                                                             net,
-                                                            video.knowledge_transfer_from_same_animals)
+                                                            video.knowledge_transfer_with_same_animals)
                 logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
                 percentage_of_accumulated_images.append(video.ratio_accumulated_images)
                 list_of_fragments.save_light_list(video._accumulation_folder)
@@ -492,7 +492,7 @@ if __name__ == '__main__':
                         'training_accuracy', 'training_individual_accuracies',
                         'ratio_of_accumulated_images', 'accumulation_trial',
                         'ratio_accumulated_images', 'first_accumulation_finished',
-                        'knowledge_transfer_from_same_animals', 'accumulation_statistics',
+                        'knowledge_transfer_with_same_animals', 'accumulation_statistics',
                         'first_frame_first_global_fragment']
             is_property = [True, True, False, False,
                             False, False, False, False,
