@@ -150,9 +150,10 @@ if __name__ == '__main__':
     else:
         video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder',
                                                                     'knowledge_transfer_with_same_animals',
-                                                                    'tracking_with_knowledge_transfer',
-                                                                    'knowledge_transfer_info_dict'],
+                                                                    'tracking_with_knowledge_transfer'],
                                                                     [False, True, True,False])
+        if old_video.tracking_with_knowledge_transfer:
+            video.knowledge_transfer_info_dict = old_video.knowledge_transfer_info_dict
         video.use_previous_knowledge_transfer_decision = True
     #############################################################
     ####################  Preprocessing   #######################
