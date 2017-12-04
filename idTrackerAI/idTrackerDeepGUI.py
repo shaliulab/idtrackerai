@@ -134,13 +134,24 @@ if __name__ == '__main__':
         knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
             video.knowledge_transfer_model_folder = selectDir('', text = "Select a session folder to perform knowledge transfer from the last accumulation point") #select path to video
-            video.tracking_with_knowledge_transfer = True
+            video._tracking_with_knowledge_transfer = True
+            same_animals = getInput("Same animals", "Are you tracking the same animals? y/N").lower()
+            if same_animals == 'y':
+                video._knowledge_transfer_with_same_animals = True
+            elif same_animals == 'n' or same_animals == '':
+                video._knowledge_transfer_with_same_animals = False
+            else:
+                raise ValueError("Invalid input.")
+
         elif knowledge_transfer_flag.lower() == 'n':
-            video.tracking_with_knowledge_transfer = False
+            video._tracking_with_knowledge_transfer = False
         else:
             raise ValueError("Invalid input, type either 'y' or 'n'")
     else:
-        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder','tracking_with_knowledge_transfer'])
+        video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder',
+                                                                    'knowledge_transfer_with_same_animals',
+                                                                    'tracking_with_knowledge_transfer'],
+                                                                    [False, True, True])
         video.use_previous_knowledge_transfer_decision = True
     #############################################################
     ####################  Preprocessing   #######################
@@ -309,18 +320,14 @@ if __name__ == '__main__':
         logger.info("Initialising accumulation network")
         net = ConvNetwork(accumulation_network_params)
         #if knowledge transfer is performed on the same animals we don't reinitialise the classification part of the net
-        video._knowledge_transfer_from_same_animals = False #XXX
         if video.tracking_with_knowledge_transfer:
             net.restore()
-            same_animals = getInput("Same animals", "Are you tracking the same animals? y/N")
-            if same_animals.lower() == 'n' or same_animals == '':
+            if not video.knowledge_transfer_with_same_animals:
                 net.reinitialize_softmax_and_fully_connected()
-            else:
-                video._knowledge_transfer_from_same_animals = True
         logger.info("Initialising accumulation manager")
         # the list of global fragments is ordered in place from the distance (in frames) wrt
         # the core of the first global fragment that will be accumulated
-        video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = 0))
+        video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = 0))
         list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = 0)
         accumulation_manager = AccumulationManager(video, list_of_fragments,
                                                     list_of_global_fragments,
@@ -332,7 +339,7 @@ if __name__ == '__main__':
                                             video,
                                             global_step,
                                             net,
-                                            video.knowledge_transfer_from_same_animals)
+                                            video.knowledge_transfer_with_same_animals)
         logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
         video._first_accumulation_finished = True
         video.save()
@@ -353,7 +360,7 @@ if __name__ == '__main__':
                     'training_accuracy', 'training_individual_accuracies',
                     'ratio_of_accumulated_images', 'accumulation_trial',
                     'ratio_accumulated_images', 'first_accumulation_finished',
-                    'knowledge_transfer_from_same_animals', 'accumulation_statistics',
+                    'knowledge_transfer_with_same_animals', 'accumulation_statistics',
                     'first_frame_first_global_fragment']
         is_property = [True, True, False, False,
                         False, False, False, False,
@@ -438,7 +445,7 @@ if __name__ == '__main__':
                 net.restore()
                 net.reinitialize_softmax_and_fully_connected()
                 logger.info("Initialising accumulation manager")
-                video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1))
+                video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = i - 1))
                 list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1)
                 accumulation_manager = AccumulationManager(video,
                                                             list_of_fragments, list_of_global_fragments,
@@ -449,7 +456,7 @@ if __name__ == '__main__':
                                                             video,
                                                             global_step,
                                                             net,
-                                                            video.knowledge_transfer_from_same_animals)
+                                                            video.knowledge_transfer_with_same_animals)
                 logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
                 percentage_of_accumulated_images.append(video.ratio_accumulated_images)
                 list_of_fragments.save_light_list(video._accumulation_folder)
@@ -485,7 +492,7 @@ if __name__ == '__main__':
                         'training_accuracy', 'training_individual_accuracies',
                         'ratio_of_accumulated_images', 'accumulation_trial',
                         'ratio_accumulated_images', 'first_accumulation_finished',
-                        'knowledge_transfer_from_same_animals', 'accumulation_statistics',
+                        'knowledge_transfer_with_same_animals', 'accumulation_statistics',
                         'first_frame_first_global_fragment']
             is_property = [True, True, False, False,
                             False, False, False, False,

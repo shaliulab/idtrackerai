@@ -100,12 +100,7 @@ class Validator(BoxLayout):
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
         else:
-<<<<<<< HEAD
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path,
-                                        video_has_been_segmented = CHOSEN_VIDEO.video.has_been_segmented)
-=======
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
->>>>>>> b7b92177ef175eec5281c86d8e8aa259ecbb94e5
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
@@ -431,13 +426,16 @@ class Validator(BoxLayout):
         self.frag_id_label = CustomLabel(text='Fragment identifier: ' + str(blob_to_explore.fragment_identifier))
         self.accumulation_label = CustomLabel(text='Used for training: ' + str(blob_to_explore.used_for_training))
         self.in_a_fragment_label = CustomLabel(text='It is in an individual fragment: ' + str(blob_to_explore.is_in_a_fragment))
-        self.fish_label = CustomLabel(text='It is a fish: ' + str(blob_to_explore.is_an_individual))
+        self.individual_label = CustomLabel(text='It is an individual: ' + str(blob_to_explore.is_an_individual))
         self.ghost_crossing_label = CustomLabel(text='It is a ghost crossing: ' + str(blob_to_explore.is_a_ghost_crossing))
         self.jump_label = CustomLabel(text='It is a jump: ' + str(blob_to_explore.is_a_jump))
+        text_centroid_label = str(blob_to_explore.centroid) if blob_to_explore.is_an_individual else str(blob_to_explore.interpolated_centroids)
+        self.centroid_label = CustomLabel(text='Centroid: ' + text_centroid_label)
         self.container.add_widget(self.show_attributes_box)
-        widget_list = [self.id_label, self.frag_id_label,
+        widget_list = [self.id_label, self.frag_id_label, self.individual_label,
                         self.accumulation_label, self.in_a_fragment_label,
-                        self.ghost_crossing_label, self.jump_label]
+                        self.ghost_crossing_label, self.jump_label,
+                        self.centroid_label]
         [self.show_attributes_box.add_widget(w) for w in widget_list]
         self.popup = Popup(title='Blob attributes',
             content=self.container,

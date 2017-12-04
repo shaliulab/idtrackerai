@@ -85,7 +85,7 @@ class IndividualValidator(BoxLayout):
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
         else:
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
-            blobs_path, blobs_path_extension = CHOSEN_VIDEO.video.blobs_no_gaps_path
+            self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
         self.choose_list_of_blobs_popup.dismiss()
         self.populate_validation_tab()
 

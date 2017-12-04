@@ -877,12 +877,11 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         video._bkg = checkBkg(video, old_video, usePreviousBkg)
         # Resolution reduction
         video._resolution_reduction = check_resolution_reduction(video, old_video, usePreviousRR)
-
-        video._min_threshold = 0
-        video._max_threshold = 135
-        video._min_area = 150
-        video._max_area = 10000
-        video._resize = 1
+        # Preprocessing
+        if old_video is not None:
+            preprocessing_attributes = ['min_threshold', 'max_threshold',
+                                        'min_area','max_area', 'resize',]
+            video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         preprocParams = SegmentationPreview(video)
         cv2.waitKey(1)
         cv2.destroyAllWindows()
