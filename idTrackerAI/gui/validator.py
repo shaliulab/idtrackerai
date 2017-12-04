@@ -321,6 +321,9 @@ class Validator(BoxLayout):
                 int_centroid = np.asarray(blob.centroid).astype('int')
                 cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
                 cv2.putText(frame, cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
+                if blob.is_a_crossing or blob.identity_corrected_closing_gaps is not None:
+                    bounding_box = blob.bounding_box_in_frame_coordinates
+                    cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
             elif isinstance(cur_id, list):
                 for c_id, c_centroid in zip(cur_id, blob.interpolated_centroids):
                     c_id_str = root + str(c_id)
@@ -330,9 +333,9 @@ class Validator(BoxLayout):
 
                 self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
-            elif blob.is_a_crossing:
-                bounding_box = blob.bounding_box_in_frame_coordinates
-                cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
+                if blob.is_a_crossing or blob.identity_corrected_closing_gaps is not None:
+                    bounding_box = blob.bounding_box_in_frame_coordinates
+                    cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
         if self.scale != 1:
             self.dst = cv2.warpAffine(frame, self.M, (frame.shape[1], frame.shape[0]))
             buf = cv2.flip(self.dst,0)
