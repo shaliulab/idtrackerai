@@ -79,7 +79,7 @@ def get_attributes_for_ghost_crossing_assignment(fragment_to_assign, fragments, 
 
 def assign_ghost_crossings(fragments):
     for fragment in tqdm(fragments, desc = "Assigning ghost crossings"):
-        if fragment.is_a_ghost_crossing:
+        if fragment.is_a_ghost_crossing and (fragment.identity == 0 or fragment.identity is None):
             if len(fragment.next_blobs_fragment_identifier) == 1:
                 target_fragment_identifier = fragment.next_blobs_fragment_identifier[0]
             elif len(fragment.previous_blobs_fragment_identifier) == 1:
@@ -87,7 +87,6 @@ def assign_ghost_crossings(fragments):
             else:
                 target_fragment_identifier = None
             get_attributes_for_ghost_crossing_assignment(fragment, fragments, target_fragment_identifier)
-
 
 """
 ********************************************************************************
@@ -112,4 +111,11 @@ def assigner(list_of_fragments, video, net):
     logger.info("Assigning identities")
     assign_identity(list_of_fragments)
     logger.info("Assigning ghost crossings")
+    print("*******************************************************************")
+    print("*******************************************************************")
+    print(len([f.identity for f in list_of_fragments.fragments if f.is_a_ghost_crossing and (f.identity == 0 or f.identity is None)]))
+    print("*******************************************************************")
     assign_ghost_crossings(list_of_fragments.fragments)
+    print(len([f.identity for f in list_of_fragments.fragments if f.is_a_ghost_crossing and (f.identity == 0 or f.identity is None)]))
+    print("*******************************************************************")
+    print("*******************************************************************")
