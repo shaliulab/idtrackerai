@@ -331,7 +331,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                                     number_of_animals,
                                     user_generated_identity = blob.user_generated_identity)
                 fragment.next_blobs_fragment_identifier = [next_blob.fragment_identifier
-                                                            for next_blob in blob.next]
+                                                            for next_blob in current.next]
                 fragment.previous_blobs_fragment_identifier = [previous_blob.fragment_identifier
                                                             for previous_blob in blob.previous]
                 used_fragment_identifiers.add(current_fragment_identifier)

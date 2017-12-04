@@ -51,6 +51,7 @@ class Video(object):
         self._knowledge_transfer_model_folder = None
         self._knowledge_transfer_with_same_animals = None
         self._tracking_with_knowledge_transfer = False
+        self._percentage_of_accumulated_images = None
         self._first_accumulation_finished = None
         self._second_accumulation_finished = None
         self._has_been_assigned = None
@@ -111,6 +112,10 @@ class Video(object):
     @property
     def accumulation_folder(self):
         return self._accumulation_folder
+
+    @property
+    def percentage_of_accumulated_images(self):
+        return self._percentage_of_accumulated_images
 
     @property
     def has_been_assigned(self):
