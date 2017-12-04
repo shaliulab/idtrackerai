@@ -139,7 +139,10 @@ class Validator(BoxLayout):
                 self.loading_popup.open()
                 self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
                 self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
+                self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+                self._keyboard.bind(on_key_down=self._on_keyboard_down)
                 self.populate_validation_tab()
+
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]

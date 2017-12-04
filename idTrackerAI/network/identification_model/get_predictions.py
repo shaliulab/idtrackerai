@@ -6,9 +6,9 @@ import os
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
+sys.path.append('../../')
 
-BATCH_SIZE = 500 # 32x32 = 1024bytes x BATCH_SIZE ~ 100MB
-KMEANS_NUMBER_OF_STEPS = 100
+from constants import BATCH_SIZE_PREDICTIONS_IDCNN, KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN
 
 class GetPrediction(object):
     def __init__(self, data_set,
@@ -18,7 +18,7 @@ class GetPrediction(object):
         self._softmax_probs = []
         self._predictions = []
         self._fc_vectors = []
-        self.batch_size = BATCH_SIZE
+        self.batch_size = BATCH_SIZE_PREDICTIONS_IDCNN
 
     @property
     def softmax_probs(self):
@@ -51,7 +51,7 @@ class GetPrediction(object):
             # print(fc_vectors.shape)
             self._fc_vectors.append(fc_vectors)
         self._fc_vectors = np.concatenate(self._fc_vectors, axis = 0)
-        _, self._predictions = kMeansCluster(self._fc_vectors, number_of_animals, KMEANS_NUMBER_OF_STEPS)
+        _, self._predictions = kMeansCluster(self._fc_vectors, number_of_animals, KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN)
 
 def kMeansCluster(vector_values, num_clusters, max_num_steps, stop_coeficient = 0.0):
   vectors = tf.constant(vector_values)

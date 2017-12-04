@@ -1,7 +1,9 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
+import sys
+sys.path.append('../../')
+from constants import BATCH_SIZE_DCD
 
-BATCH_SIZE = 50
 class EpochRunner(object):
     def __init__(self, data_set,
                 starting_epoch = 0,
@@ -36,7 +38,7 @@ class EpochRunner(object):
         individual_accuracy_epoch = []
         self._index_in_epoch = 0
         while self._index_in_epoch < self._num_images:
-            loss_acc_batch, feed_dict = batch_operation(self.next_batch(BATCH_SIZE))
+            loss_acc_batch, feed_dict = batch_operation(self.next_batch(BATCH_SIZE_DCD))
             loss_epoch.append(loss_acc_batch[0])
             accuracy_epoch.append(loss_acc_batch[1])
             individual_accuracy_epoch.append(loss_acc_batch[2])

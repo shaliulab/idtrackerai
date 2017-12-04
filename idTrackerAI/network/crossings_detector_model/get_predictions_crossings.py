@@ -7,8 +7,8 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import psutil
-
-BATCH_SIZE = 100
+sys.path.append('../../')
+from constants import BATCH_SIZE_PREDICTIONS_DCD
 
 class GetPredictionCrossigns(object):
     def __init__(self, net):
@@ -17,7 +17,7 @@ class GetPredictionCrossigns(object):
         self._softmax_probs = []
         self._predictions = []
         self._fc_vectors = []
-        self.batch_size = BATCH_SIZE
+        self.batch_size = BATCH_SIZE_PREDICTIONS_DCD
 
 
     def next_batch_test(self, batch_size):
@@ -32,7 +32,7 @@ class GetPredictionCrossigns(object):
         self.number_of_image_predicted = 0
         predictions = []
         while self.number_of_image_predicted < len(test_images):
-            predictions.extend(self.net.prediction(self.next_batch_test(batch_size = BATCH_SIZE)))
+            predictions.extend(self.net.prediction(self.next_batch_test(batch_size = BATCH_SIZE_PREDICTIONS_DCD)))
 
         return predictions
 

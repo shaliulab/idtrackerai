@@ -13,8 +13,6 @@ from list_of_blobs import ListOfBlobs
 import matplotlib.pyplot as plt
 from get_data import duplicate_PCA_images
 
-MAX_NUMBER_OF_IMAGES = 3000
-
 class CrossingDataset(object):
     def __init__(self, blobs_list, video,
                 crossings = [], individual_blobs = [], test = [],

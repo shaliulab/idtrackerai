@@ -56,9 +56,7 @@ from generate_groundtruth import GroundTruth, generate_groundtruth
 from library_utils import Dataset, BlobsListConfig, subsample_dataset_by_individuals, generate_list_of_blobs, LibraryJobConfig, check_if_repetition_has_been_computed
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
-VEL_PERCENTILE = 99
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
-RESTORE_CRITERION = 'last'
 ###
 # seed numpy
 np.random.seed(0)

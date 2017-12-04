@@ -1,15 +1,12 @@
 from __future__ import division
-
+import sys
 import numpy as np
 import scipy.ndimage
 from scipy.signal import argrelmax
-
-#import matplotlib.pyplot as plt
-
 import cv2
+sys.path.append('./')
 
-SMOOTH_SIGMA = 10 #Parameter giving the std of gaussian filtering in the contour to calculate curvature
-HEAD_DIAMETER = 20 #Distance between nose and base of head.
+from constants import SMOOTH_SIGMA, HEAD_DIAMETER
 
 def find_max(curv,n=2):
     """Returns the nth local maximum of the array f (Default is 2nd)
