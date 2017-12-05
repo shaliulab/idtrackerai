@@ -391,11 +391,10 @@ class Validator(BoxLayout):
         # enable buttons to save corrected version and compute the accuracy
         self.save_groundtruth_btn.disabled = False
         self.compute_accuracy_button.disabled = False
-        self.blob_to_modify._user_generated_identity = self.identity_update
         if not self.blob_to_modify.is_a_crossing:
-            self.blob_to_modify._user_generated_identity = self.individual_to_follow
+            self.blob_to_modify._user_generated_identity = self.identity_update
             self.propagate_groundtruth_identity_in_individual_fragment()
-            self.modify_id_popup.dismiss()
+            self.popup.dismiss()
         self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func = self.writeIds)
 
     def on_press_show_saving(selg, *args):
