@@ -203,12 +203,21 @@ if __name__ == '__main__':
                                                 'max_area': video.max_area}
                     new_preprocessing_parameters = resegmentation_preview(video, frames_with_more_blobs_than_animals[0], new_preprocessing_parameters)
 
+<<<<<<< HEAD
                     for frame_number in tqdm(frames_with_more_blobs_than_animals, desc = 'Correcting segmentation'):
                         maximum_number_of_blobs = resegment(video, frame_number, list_of_blobs, new_preprocessing_parameters)
                         if maximum_number_of_blobs <= video.number_of_animals:
                             video._resegmentation_parameters.append((frame_number,new_preprocessing_parameters))
                     frames_with_more_blobs_than_animals = list_of_blobs.check_maximal_number_of_blob(video.number_of_animals)
                     cv2.namedWindow('Bars')
+=======
+            video._has_been_segmented = True
+            if len(list_of_blobs.blobs_in_video[-1]) == 0:
+                list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
+            list_of_blobs.save(video, video.blobs_path_segmented, number_of_chunks = video.number_of_frames)
+            logger.debug("Segmented blobs saved")
+            logger.info("Computing maximum number of blobs detected in the video")
+>>>>>>> 0915e3f88d63953dd0023b9210c078398b8eecc3
 
                 video._has_been_segmented = True
                 list_of_blobs.save(video, video.blobs_path_segmented, number_of_chunks = video.number_of_frames)
@@ -670,8 +679,6 @@ if __name__ == '__main__':
         if not loadPreviousDict['crossings']:
             list_of_blobs_no_gaps = copy.deepcopy(list_of_blobs)
             video._has_crossings_solved = False
-            if len(list_of_blobs_no_gaps.blobs_in_video[-1]) == 0:
-                list_of_blobs_no_gaps.blobs_in_video = list_of_blobs_no_gaps.blobs_in_video[:-1]
             list_of_blobs_no_gaps = close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
             video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
             list_of_blobs_no_gaps.save(video, path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
@@ -682,6 +689,9 @@ if __name__ == '__main__':
             list_of_blobs_no_gaps = ListOfBlobs.load(video, video.blobs_no_gaps_path)
             video._has_crossings_solved = True
             video.save()
+
+
+
 
         #############################################################
         ########### Create trajectories (w/o gaps) ##################
