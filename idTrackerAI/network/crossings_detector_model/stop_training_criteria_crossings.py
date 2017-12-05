@@ -2,11 +2,14 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 import numpy as np
+import logging
 
 sys.path.append('../../')
 from constants import MAX_FLOAT, LEARNING_PERCENTAGE_DIFFERENCE_2_DCD, \
                     LEARNING_PERCENTAGE_DIFFERENCE_1_DCD, OVERFITTING_COUNTER_THRESHOLD_DCD, \
                     MAXIMUM_NUMBER_OF_EPOCHS_DCD
+
+logger = logging.getLogger("__main__.stop_training_criteria_crossings")
 
 class Stop_Training(object):
     """Stops the training of the network according to the conditions specified
@@ -22,12 +25,12 @@ class Stop_Training(object):
     def __call__(self, loss_accuracy_training, loss_accuracy_validation, epochs_completed):
         #check that the model did not diverged (nan loss).
 
-        if epochs_completed > 0 and np.isnan(loss_accuracy_training.loss[-1]):
-            print("********************** The model diverged.")
+        if epochs_completed > 0 and (np.isnan(loss_accuracy_training.loss[-1]) or np.isnan(loss_accuracy_validation.loss[-1])):
+            logger.warn('The model diverged with loss NaN, falling back to detecting crossings with the model area')
             return True
         #check if it did not reached the epochs limit
         if epochs_completed > self.num_epochs-1:
-            print('The number of epochs completed is larger than the number of epochs set for training, we stop the training\n')
+            logger.warn('The number of epochs completed is larger than the number of epochs set for training, we stop the training')
             return True
         #check that the model is not overfitting or if it reached a stable saddle (minimum)
         if epochs_completed > self.epochs_before_checking_stopping_conditions:

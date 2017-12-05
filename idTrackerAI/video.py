@@ -25,6 +25,7 @@ logger = logging.getLogger("__main__.video")
 
 class Video(object):
     def __init__(self, video_path = None, number_of_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
+        logger.debug("Video object init")
         self._video_path = video_path #string: path to the video
         self._number_of_animals = number_of_animals #int: number of animals in the video
         self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split for parallel computation]

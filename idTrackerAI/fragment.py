@@ -318,14 +318,15 @@ class Fragment(object):
         coexisting_P1_vectors = np.asarray([fragment.P1_vector for fragment in self.coexisting_individual_fragments])
         numerator = np.asarray(self.P1_vector) * np.prod(1. - coexisting_P1_vectors, axis = 0)
         denominator = np.sum(numerator)
-        if denominator == 0:
-            self._P2_vector = self.P1_vector
-        else:
+        if denominator != 0:
             self._P2_vector = numerator / denominator
-        P2_vector_ordered = np.sort(self.P2_vector)
-        P2_first_max = P2_vector_ordered[-1]
-        P2_second_max = P2_vector_ordered[-2]
-        self._certainty_P2 = MAX_FLOAT if P2_second_max == 0 else P2_first_max / P2_second_max
+            P2_vector_ordered = np.sort(self.P2_vector)
+            P2_first_max = P2_vector_ordered[-1]
+            P2_second_max = P2_vector_ordered[-2]
+            self._certainty_P2 = MAX_FLOAT if P2_second_max == 0 else P2_first_max / P2_second_max
+        else:
+            self._P2_vector = np.zeros(self.number_of_animals)
+            self._certainty_P2 = 0.
 
     @staticmethod
     def compute_identification_frequencies_individual_fragment(predictions, number_of_animals):

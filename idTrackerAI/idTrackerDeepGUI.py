@@ -123,6 +123,7 @@ if __name__ == '__main__':
     #use previous values and parameters (bkg, roi, preprocessing parameters)?
     logger.debug("Video session folder: %s " %video.session_folder)
     video.save()
+    # try:
     #############################################################
     ##################   Knowledge transfer  ####################
     ####   Take the weights from a different model already   ####
@@ -212,6 +213,9 @@ if __name__ == '__main__':
             video._has_been_segmented = True
             if len(list_of_blobs.blobs_in_video[-1]) == 0:
                 list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
+                list_of_blobs.number_of_frames = len(list_of_blobs.blobs_in_video)
+                video._number_of_frames = list_of_blobs.number_of_frames
+                video.save()
             list_of_blobs.save(video, video.blobs_path_segmented, number_of_chunks = video.number_of_frames)
             logger.debug("Segmented blobs saved")
             logger.info("Computing maximum number of blobs detected in the video")
@@ -374,10 +378,10 @@ if __name__ == '__main__':
         is_property = [True, True, False, False,
                         False, False, False, False,
                         False, False, False, False,
-                        False, False, True, True,
+                        True, False, True, True,
                         True, False, True]
-        video.ratio_accumulated_images = video.percentage_of_accumulated_images[0]
         video.copy_attributes_between_two_video_objects(old_video, list_of_attributes, is_property = is_property)
+        video._ratio_accumulated_images = video.percentage_of_accumulated_images[0]
         accumulation_network_params.restore_folder = video._accumulation_folder
         net = ConvNetwork(accumulation_network_params)
         net.restore()
@@ -698,3 +702,10 @@ if __name__ == '__main__':
         video._has_trajectories_wo_gaps = True
         video.save()
     video.generate_trajectories_wogaps_time = time.time() - video.generate_trajectories_wogaps_time
+    # except Exception as e:
+    #     exc_type, exc_obj, exc_tb = sys.exc_info()
+    #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    #     print(exc_type, fname, exc_tb.tb_lineno)
+    #     if old_video is not None:
+    #         video = old_video
+    #         video.save()
