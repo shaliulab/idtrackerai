@@ -375,10 +375,10 @@ if __name__ == '__main__':
             is_property = [True, True, False, False,
                             False, False, False, False,
                             False, False, False, False,
-                            False, False, True, True,
+                            True, False, True, True,
                             True, False, True]
-            video.ratio_accumulated_images = video.percentage_of_accumulated_images[0]
             video.copy_attributes_between_two_video_objects(old_video, list_of_attributes, is_property = is_property)
+            video._ratio_accumulated_images = video.percentage_of_accumulated_images[0]
             accumulation_network_params.restore_folder = video._accumulation_folder
             net = ConvNetwork(accumulation_network_params)
             net.restore()
