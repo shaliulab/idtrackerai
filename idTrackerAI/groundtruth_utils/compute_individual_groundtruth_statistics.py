@@ -20,14 +20,12 @@ def compare_tracked_individual_against_groundtruth(blobs_in_individual_groundtru
     comparison_keys = ['accuracy', 'frames_with_errors', 'mistaken_identities']
     comparison_info = {key: [] for key in comparison_keys}
     error_counter = 0
-    print("blobs gt ", blobs_in_individual_groundtruth)
-    print("the others ", individual_blobs)
 
     for blob_gt, blob in zip(blobs_in_individual_groundtruth, individual_blobs):
         if blob_gt.identity != blob.assigned_identity:
             error_counter += 1
             comparison_info['frames_with_errors'].append(blob.frame_number)
-            comparison_info['mistaken_identities'].append(blob.identity)
+            comparison_info['mistaken_identities'].append(blob.assigned_identity)
     comparison_info['accuracy'] = 1 - error_counter / len(blobs_in_individual_groundtruth)
     comparison_info['id'] = individual_groundtruth_id
     return comparison_info
