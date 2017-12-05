@@ -117,13 +117,13 @@ if __name__ == '__main__':
                     'trajectories_wo_gaps']
     #get existent files and paths to load them
     existentFiles, old_video = getExistentFiles(video, processes_list)
+    #selecting files to load from previous session...'
+    loadPreviousDict = selectOptions(processes_list, existentFiles,
+                    text='Steps already processed in this video \n (loaded from ' + video.video_folder + ')')
+    #use previous values and parameters (bkg, roi, preprocessing parameters)?
+    logger.debug("Video session folder: %s " %video.session_folder)
+    video.save()
     try:
-        #selecting files to load from previous session...'
-        loadPreviousDict = selectOptions(processes_list, existentFiles,
-                        text='Steps already processed in this video \n (loaded from ' + video.video_folder + ')')
-        #use previous values and parameters (bkg, roi, preprocessing parameters)?
-        logger.debug("Video session folder: %s " %video.session_folder)
-        video.save()
         #############################################################
         ##################   Knowledge transfer  ####################
         ####   Take the weights from a different model already   ####
@@ -351,7 +351,7 @@ if __name__ == '__main__':
                                                 video.knowledge_transfer_with_same_animals)
             logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
             video._first_accumulation_finished = True
-            video._percentage_of_accumulated_images = [video.ratio_of_accumulated_images]
+            video._percentage_of_accumulated_images = [video.ratio_accumulated_images]
             video.save()
             logger.info("Saving fragments")
             list_of_fragments.save(video.fragments_path)
@@ -375,12 +375,11 @@ if __name__ == '__main__':
             is_property = [True, True, False, False,
                             False, False, False, False,
                             False, False, False, False,
-                            True, False, True, True,
+                            False, False, True, True,
                             True, False, True]
-
+            video.ratio_accumulated_images = video.percentage_of_accumulated_images[0]
             video.copy_attributes_between_two_video_objects(old_video, list_of_attributes, is_property = is_property)
-            video.ratio_of_accumulated_images = video.percentage_of_accumulated_images[0]
-            accumulation_network_params.restore_folder = video.accumulation_folder
+            accumulation_network_params.restore_folder = video._accumulation_folder
             net = ConvNetwork(accumulation_network_params)
             net.restore()
             logger.info("Saving video")
@@ -507,14 +506,14 @@ if __name__ == '__main__':
                             'number_of_acceptable_global_fragments',
                             'validation_accuracy', 'validation_individual_accuracies',
                             'training_accuracy', 'training_individual_accuracies',
-                            'ratio_of_accumulated_images', 'accumulation_trial',
+                            'percentage_of_accumulated_images', 'accumulation_trial',
                             'ratio_accumulated_images', 'first_accumulation_finished',
                             'knowledge_transfer_with_same_animals', 'accumulation_statistics',
                             'first_frame_first_global_fragment']
                 is_property = [True, True, False, False,
                                 False, False, False, False,
                                 False, False, False, False,
-                                False, False, True, True,
+                                True, False, True, True,
                                 True, False, True]
                 video.copy_attributes_between_two_video_objects(old_video, list_of_attributes)
                 logger.info("Restoring trained network")
@@ -682,9 +681,6 @@ if __name__ == '__main__':
             list_of_blobs_no_gaps = ListOfBlobs.load(video, video.blobs_no_gaps_path)
             video._has_crossings_solved = True
             video.save()
-
-
-
 
         #############################################################
         ########### Create trajectories (w/o gaps) ##################
