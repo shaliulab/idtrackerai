@@ -348,7 +348,7 @@ if __name__ == '__main__':
                                             video.knowledge_transfer_with_same_animals)
         logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
         video._first_accumulation_finished = True
-        video.percentage_of_accumulated_images = [video.ratio_of_accumulated_images]
+        video._percentage_of_accumulated_images = [video.ratio_accumulated_images]
         video.save()
         logger.info("Saving fragments")
         list_of_fragments.save(video.fragments_path)
@@ -374,7 +374,7 @@ if __name__ == '__main__':
                         False, False, False, False,
                         False, False, True, True,
                         True, False, True]
-        video.ratio_of_accumulated_images = video.percentage_of_accumulated_images[0]
+        video.ratio_accumulated_images = video.percentage_of_accumulated_images[0]
         video.copy_attributes_between_two_video_objects(old_video, list_of_attributes, is_property = is_property)
         accumulation_network_params.restore_folder = video._accumulation_folder
         net = ConvNetwork(accumulation_network_params)
@@ -435,7 +435,7 @@ if __name__ == '__main__':
         video.pretraining_time = time.time() - video.pretraining_time
         #### Accumulation ####
         video.second_accumulation_time = time.time()
-        video.percentage_of_accumulated_images = [video.ratio_accumulated_images]
+        video._percentage_of_accumulated_images = [video.ratio_accumulated_images]
         print("****************************************************************")
         print("**************************** loadPreviousDict ", loadPreviousDict)
         print("****************************************************************")
@@ -471,7 +471,7 @@ if __name__ == '__main__':
                                                             net,
                                                             video.knowledge_transfer_with_same_animals)
                 logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
-                video.percentage_of_accumulated_images.append(video.ratio_accumulated_images)
+                video._percentage_of_accumulated_images.append(video.ratio_accumulated_images)
                 list_of_fragments.save_light_list(video._accumulation_folder)
                 if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                     break
@@ -503,14 +503,14 @@ if __name__ == '__main__':
                         'number_of_acceptable_global_fragments',
                         'validation_accuracy', 'validation_individual_accuracies',
                         'training_accuracy', 'training_individual_accuracies',
-                        'ratio_of_accumulated_images', 'accumulation_trial',
+                        'percentage_of_accumulated_images', 'accumulation_trial',
                         'ratio_accumulated_images', 'first_accumulation_finished',
                         'knowledge_transfer_with_same_animals', 'accumulation_statistics',
                         'first_frame_first_global_fragment']
             is_property = [True, True, False, False,
                             False, False, False, False,
                             False, False, False, False,
-                            False, False, True, True,
+                            True, False, True, True,
                             True, False, True]
             video.copy_attributes_between_two_video_objects(old_video, list_of_attributes)
             logger.info("Restoring trained network")
