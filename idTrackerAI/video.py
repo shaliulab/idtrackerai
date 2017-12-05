@@ -25,6 +25,7 @@ logger = logging.getLogger("__main__.video")
 
 class Video(object):
     def __init__(self, video_path = None, number_of_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
+        logger.debug("Video object init")
         self._video_path = video_path #string: path to the video
         self._number_of_animals = number_of_animals #int: number of animals in the video
         self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split for parallel computation]
@@ -51,6 +52,7 @@ class Video(object):
         self._knowledge_transfer_model_folder = None
         self._knowledge_transfer_with_same_animals = None
         self._tracking_with_knowledge_transfer = False
+        self._percentage_of_accumulated_images = None
         self._first_accumulation_finished = None
         self._second_accumulation_finished = None
         self._has_been_assigned = None
@@ -111,6 +113,10 @@ class Video(object):
     @property
     def accumulation_folder(self):
         return self._accumulation_folder
+
+    @property
+    def percentage_of_accumulated_images(self):
+        return self._percentage_of_accumulated_images
 
     @property
     def has_been_assigned(self):
