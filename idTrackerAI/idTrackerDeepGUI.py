@@ -210,6 +210,8 @@ if __name__ == '__main__':
                 cv2.namedWindow('Bars')
 
             video._has_been_segmented = True
+            if len(list_of_blobs.blobs_in_video[-1]) == 0:
+                list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
             list_of_blobs.save(video, video.blobs_path_segmented, number_of_chunks = video.number_of_frames)
             logger.debug("Segmented blobs saved")
             logger.info("Computing maximum number of blobs detected in the video")
@@ -668,8 +670,6 @@ if __name__ == '__main__':
     if not loadPreviousDict['crossings']:
         list_of_blobs_no_gaps = copy.deepcopy(list_of_blobs)
         video._has_crossings_solved = False
-        if len(list_of_blobs_no_gaps.blobs_in_video[-1]) == 0:
-            list_of_blobs_no_gaps.blobs_in_video = list_of_blobs_no_gaps.blobs_in_video[:-1]
         list_of_blobs_no_gaps = close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
         video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
         list_of_blobs_no_gaps.save(video, path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)
