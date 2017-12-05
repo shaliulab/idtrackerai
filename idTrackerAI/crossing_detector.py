@@ -37,22 +37,23 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True):
                                                                     save_folder = video._crossings_detector_folder,
                                                                     image_size = crossing_image_shape)
         net = ConvNetwork_crossings(crossings_detector_network_params)
-        TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
-        logger.debug("crossing image size %s" %str(crossing_image_size))
-        video.crossing_image_shape = crossing_image_shape
-        video.crossing_image_size = crossing_image_size
-        video.save()
-        logger.debug("Freeing memory. Validation and training crossings sets deleted")
-        validation_set = None
-        training_set = None
-        test_set = CrossingDataset(list_of_blobs.blobs_in_video, video,
-                                    scope = 'test',
-                                    image_size = video.crossing_image_size)
-        logger.debug("Classify individuals and crossings")
-        crossings_predictor = GetPredictionCrossigns(net)
-        predictions = crossings_predictor.get_all_predictions(test_set)
-        [(setattr(blob,'_is_a_crossing', True), setattr(blob, '_is_an_individual', False)) if prediction == 1
-            else (setattr(blob,'_is_a_crossing', False), setattr(blob, '_is_an_individual', True), blob.set_image_for_identification(video))
-            for blob, prediction in zip(test_set.test, predictions)]
-        logger.debug("Freeing memory. Test crossings set deleted")
-        test_set = None
+        trainer = TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
+        if not trainer.model_diverged:
+            logger.debug("crossing image size %s" %str(crossing_image_size))
+            video.crossing_image_shape = crossing_image_shape
+            video.crossing_image_size = crossing_image_size
+            video.save()
+            logger.debug("Freeing memory. Validation and training crossings sets deleted")
+            validation_set = None
+            training_set = None
+            test_set = CrossingDataset(list_of_blobs.blobs_in_video, video,
+                                        scope = 'test',
+                                        image_size = video.crossing_image_size)
+            logger.debug("Classify individuals and crossings")
+            crossings_predictor = GetPredictionCrossigns(net)
+            predictions = crossings_predictor.get_all_predictions(test_set)
+            [(setattr(blob,'_is_a_crossing', True), setattr(blob, '_is_an_individual', False)) if prediction == 1
+                else (setattr(blob,'_is_a_crossing', False), setattr(blob, '_is_an_individual', True), blob.set_image_for_identification(video))
+                for blob, prediction in zip(test_set.test, predictions)]
+            logger.debug("Freeing memory. Test crossings set deleted")
+            test_set = None
