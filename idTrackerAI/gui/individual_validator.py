@@ -190,7 +190,7 @@ class IndividualValidator(BoxLayout):
             frame_index = int(self.visualiser.video_slider.value)
 
             while ind_is_present == True:
-                if frame_index < CHOSEN_VIDEO.video.number_of_frames and frame_index > 0:
+                if frame_index < CHOSEN_VIDEO.video.number_of_frames - 1 and frame_index > 0:
                     if direction == "next":
                         frame_index = frame_index + 1
                     elif direction == "previous":
