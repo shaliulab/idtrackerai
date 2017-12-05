@@ -184,7 +184,7 @@ class Validator(BoxLayout):
         frame_index = int(self.visualiser.video_slider.value)
 
         while non_crossing == True:
-            if frame_index < CHOSEN_VIDEO.video.number_of_frames -1:
+            if frame_index < CHOSEN_VIDEO.video.number_of_frames - 1:
                 frame_index = frame_index + 1
                 blobs_in_frame = self.blobs_in_video[frame_index]
                 for blob in blobs_in_frame:
