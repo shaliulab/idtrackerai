@@ -31,6 +31,14 @@ class ListOfBlobs(object):
                 if blob_0.overlaps_with(blob_1):
                     blob_0.now_points_to(blob_1)
 
+    def reconnect(self):
+        logger.info("Connecting list of blob objects")
+        for frame_i in tqdm(range(1,self.number_of_frames), desc = 'connecting blobs'):
+            for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
+                if blob_0.fragment_identifier == blob_1.fragment_identifier:
+                    blob_0.now_points_to(blob_1)
+        self.blobs_are_connected = True
+
     def save(self, video, path_to_save = None, number_of_chunks = 1):
         """save instance"""
         self.disconnect()
@@ -44,7 +52,7 @@ class ListOfBlobs(object):
     def load(cls, video, path_to_load_blob_list_file):
         logger.info("loading blobs list from %s" %path_to_load_blob_list_file)
         list_of_blobs = np.load(path_to_load_blob_list_file).item()
-        list_of_blobs.blobs_are_connected = True
+        list_of_blobs.blobs_are_connected = False
         return list_of_blobs
 
     def compute_fragment_identifier_and_blob_index(self, number_of_animals):
@@ -165,7 +173,6 @@ class ListOfBlobs(object):
         if len(frames_with_more_blobs_than_animals) > 0:
             logger.error('There are frames with more blobs than animals, this can be detrimental for the proper functioning of the system.')
             logger.error("Frames with more blobs than animals: %s" %str(frames_with_more_blobs_than_animals))
-            # raise ValueError('Please check your segmentaion')
         return frames_with_more_blobs_than_animals
 
     def update_from_list_of_fragments(self, fragments, fragment_identifier_to_index):

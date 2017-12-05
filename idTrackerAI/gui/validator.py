@@ -102,6 +102,8 @@ class Validator(BoxLayout):
         else:
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
+        if not self.list_of_blobs.blobs_are_connected:
+            self.list_of_blobs.reconnect()
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self.choose_list_of_blobs_popup.dismiss()
@@ -139,6 +141,8 @@ class Validator(BoxLayout):
                 self.loading_popup.open()
                 self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
                 self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
+                if not self.list_of_blobs.blobs_are_connected:
+                    self.list_of_blobs.reconnect()
                 self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
                 self.populate_validation_tab()
@@ -336,6 +340,10 @@ class Validator(BoxLayout):
                 if blob.is_a_crossing or blob.identity_corrected_closing_gaps is not None:
                     bounding_box = blob.bounding_box_in_frame_coordinates
                     cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
+            elif blob.assigned_identity is None:
+                bounding_box = blob.bounding_box_in_frame_coordinates
+                cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
+
         if self.scale != 1:
             self.dst = cv2.warpAffine(frame, self.M, (frame.shape[1], frame.shape[0]))
             buf = cv2.flip(self.dst,0)
@@ -384,6 +392,10 @@ class Validator(BoxLayout):
         self.save_groundtruth_btn.disabled = False
         self.compute_accuracy_button.disabled = False
         self.blob_to_modify._user_generated_identity = self.identity_update
+        if not self.blob_to_modify.is_a_crossing:
+            self.blob_to_modify._user_generated_identity = self.individual_to_follow
+            self.propagate_groundtruth_identity_in_individual_fragment()
+            self.modify_id_popup.dismiss()
         self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func = self.writeIds)
 
     def on_press_show_saving(selg, *args):
@@ -435,7 +447,7 @@ class Validator(BoxLayout):
         self.individual_label = CustomLabel(text='It is an individual: ' + str(blob_to_explore.is_an_individual))
         self.ghost_crossing_label = CustomLabel(text='It is a ghost crossing: ' + str(blob_to_explore.is_a_ghost_crossing))
         self.jump_label = CustomLabel(text='It is a jump: ' + str(blob_to_explore.is_a_jump))
-        text_centroid_label = str(blob_to_explore.centroid) if blob_to_explore.is_an_individual else str(blob_to_explore.interpolated_centroids)
+        text_centroid_label = str(blob_to_explore.centroid)
         self.centroid_label = CustomLabel(text='Centroid: ' + text_centroid_label)
         self.container.add_widget(self.show_attributes_box)
         widget_list = [self.id_label, self.frag_id_label, self.individual_label,

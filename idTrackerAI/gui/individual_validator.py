@@ -86,6 +86,8 @@ class IndividualValidator(BoxLayout):
         else:
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
+        if not self.list_of_blobs.blobs_are_connected:
+            self.list_of_blobs.reconnect()
         self.choose_list_of_blobs_popup.dismiss()
         self.populate_validation_tab()
 
@@ -118,6 +120,8 @@ class IndividualValidator(BoxLayout):
                 self.loading_popup.open()
                 self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
                 self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
+                if not self.list_of_blobs.blobs_are_connected:
+                    self.list_of_blobs.reconnect()
                 self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
                 self.populate_validation_tab()
@@ -345,6 +349,9 @@ class IndividualValidator(BoxLayout):
                     if blob.is_a_crossing or blob.identity_corrected_closing_gaps is not None:
                         bounding_box = blob.bounding_box_in_frame_coordinates
                         cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
+                elif blob.assigned_identity is None:
+                    bounding_box = blob.bounding_box_in_frame_coordinates
+                    cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
             if self.scale != 1:
                 self.dst = cv2.warpAffine(frame, self.M, (frame.shape[1], frame.shape[0]))
                 buf = cv2.flip(self.dst,0)
