@@ -203,23 +203,16 @@ if __name__ == '__main__':
                                                 'max_area': video.max_area}
                     new_preprocessing_parameters = resegmentation_preview(video, frames_with_more_blobs_than_animals[0], new_preprocessing_parameters)
 
-<<<<<<< HEAD
                     for frame_number in tqdm(frames_with_more_blobs_than_animals, desc = 'Correcting segmentation'):
                         maximum_number_of_blobs = resegment(video, frame_number, list_of_blobs, new_preprocessing_parameters)
                         if maximum_number_of_blobs <= video.number_of_animals:
                             video._resegmentation_parameters.append((frame_number,new_preprocessing_parameters))
                     frames_with_more_blobs_than_animals = list_of_blobs.check_maximal_number_of_blob(video.number_of_animals)
                     cv2.namedWindow('Bars')
-=======
-            video._has_been_segmented = True
-            if len(list_of_blobs.blobs_in_video[-1]) == 0:
-                list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
-            list_of_blobs.save(video, video.blobs_path_segmented, number_of_chunks = video.number_of_frames)
-            logger.debug("Segmented blobs saved")
-            logger.info("Computing maximum number of blobs detected in the video")
->>>>>>> 0915e3f88d63953dd0023b9210c078398b8eecc3
 
                 video._has_been_segmented = True
+                if len(list_of_blobs.blobs_in_video[-1]) == 0:
+                    list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
                 list_of_blobs.save(video, video.blobs_path_segmented, number_of_chunks = video.number_of_frames)
                 logger.debug("Segmented blobs saved")
                 logger.info("Computing maximum number of blobs detected in the video")
