@@ -44,8 +44,7 @@ class CrossingDataset(object):
     def get_list_of_individual_blobs_for_training(self, individual_blobs):
         if len(individual_blobs) == 0:
             self.individual_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
-                                    if (blob.is_an_individual
-                                    and blob.is_a_sure_individual)
+                                    if blob.is_a_sure_individual()
                                     or blob.in_a_global_fragment_core(blobs_in_frame)]
             np.random.shuffle(self.individual_blobs)
             ratio = 1
@@ -59,9 +58,7 @@ class CrossingDataset(object):
         if len(crossings) == 0 or image_size is None:
 
             self.crossing_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
-                                    if blob.is_a_crossing
-                                    and not blob.is_a_ghost_crossing
-                                    and blob.is_a_sure_crossing]
+                                    if blob.is_a_sure_crossing()]
             np.random.seed(0)
             np.random.shuffle(self.crossing_blobs)
             self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossing_blobs]) + 5
@@ -76,7 +73,6 @@ class CrossingDataset(object):
                                 and not blob.in_a_global_fragment_core(blobs_in_frame)
                                 and not blob.is_a_sure_individual())
                             or (blob.is_a_crossing
-                                and not blob.is_a_ghost_crossing
                                 and not blob.is_a_sure_crossing())]
         else:
             self.test = test
@@ -121,7 +117,7 @@ class CrossingDataset(object):
         crossing_images = []
 
         for crossing in self.crossings_sliced:
-            _, _, _, crossing_image = crossing.get_image_for_identification(self.video)
+            _, _, _, crossing_image = crossing.get_image_for_identification(self.video, image_size = self.image_size)
             crossing_image = cv2.resize(crossing_image, None,
                                         fx = self.downsampling_factor,
                                         fy = self.downsampling_factor,
@@ -135,15 +131,13 @@ class CrossingDataset(object):
         individual_blobs_images = []
 
         for individual_blobs in self.individual_blobs_sliced:
-            _, _, _, individual_blobs_image = individual_blobs.get_image_for_identification(self.video)
+            _, _, _, individual_blobs_image = individual_blobs.get_image_for_identification(self.video, image_size = self.image_size)
             individual_blobs_image = cv2.resize(individual_blobs_image, None,
                                                 fx = self.downsampling_factor,
                                                 fy = self.downsampling_factor,
                                                 interpolation = cv2.INTER_CUBIC)
             individual_blobs_image = ((individual_blobs_image - np.mean(individual_blobs_image))/np.std(individual_blobs_image)).astype('float32')
             individual_blobs_images.append(individual_blobs_image)
-            cv2.imshow('individual', individual_blobs_image)
-            cv2.waitKey()
 
         return individual_blobs_images
 
@@ -154,16 +148,13 @@ class CrossingDataset(object):
         else:
             blobs = self.test[interval[0]:interval[1]]
         for blob in blobs:
-            _, _, _, test_image = blob.get_image_for_identification(self.video)
+            _, _, _, test_image = blob.get_image_for_identification(self.video, image_size = self.image_size)
             test_image = cv2.resize(test_image, None,
                                     fx = self.downsampling_factor,
                                     fy = self.downsampling_factor,
                                     interpolation = cv2.INTER_CUBIC)
             test_image = ((test_image - np.mean(test_image))/np.std(test_image)).astype('float32')
             test_images.append(test_image)
-            cv2.imshow('test', test_image)
-            cv2.waitKey()
-
 
         return np.expand_dims(np.asarray(test_images), axis = 3)
 
