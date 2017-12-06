@@ -55,10 +55,10 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True):
             logger.debug("Classify individuals and crossings")
             crossings_predictor = GetPredictionCrossigns(net)
             predictions = crossings_predictor.get_all_predictions(test_set)
-            for blob, prediction in zip(test_set.test, predictions):
-                image = blob.image_for_identification if blob.is_an_individual else blob.bounding_box_image
-                cv2.imshow(str(prediction), image)
-                cv2.waitKey()
+            # for blob, prediction in zip(test_set.test, predictions):
+            #     image = blob.image_for_identification if blob.is_an_individual else blob.bounding_box_image
+            #     cv2.imshow(str(prediction), image)
+            #     cv2.waitKey()
 
             [(setattr(blob,'_is_a_crossing', True), setattr(blob, '_is_an_individual', False)) if prediction == 1
                 else (setattr(blob,'_is_a_crossing', False), setattr(blob, '_is_an_individual', True), blob.set_image_for_identification(video))

@@ -265,18 +265,20 @@ class Blob(object):
         self._extreme1_coordinates, \
         self._extreme2_coordinates, _ = self.get_image_for_identification(video)
 
-    def get_image_for_identification(self, video, folder_to_save_for_paper_figure = ''):
+    def get_image_for_identification(self, video, folder_to_save_for_paper_figure = '', image_size = None):
         if video.resolution_reduction == 1:
             height = video.height
             width = video.width
         else:
             height  = int(video.height * video.resolution_reduction)
             width  = int(video.width * video.resolution_reduction)
+        if image_size is None:
+            image_size = video.identification_image_size[0]
 
         return self._get_image_for_identification(height, width,
                                                 self.bounding_box_image, self.pixels,
                                                 self.bounding_box_in_frame_coordinates,
-                                                video.identification_image_size[0],
+                                                image_size,
                                                 folder_to_save_for_paper_figure = folder_to_save_for_paper_figure)
 
     @staticmethod
