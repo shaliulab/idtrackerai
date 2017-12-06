@@ -32,6 +32,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
     results['number_of_errors_in_blobs_assigned_during_accumulation'] = {i:0 for i in range(1, number_of_animals + 1)}
     results['number_of_errors_in_blobs_after_accumulation'] = {i:0 for i in range(1, number_of_animals + 1)}
     results['number_of_errors_in_blobs_assigned_after_accumulation'] = {i:0 for i in range(1, number_of_animals + 1)}
+    results['number_of_individual_blobs'] = 0
     results['number_of_crossing_blobs'] = 0
     results['number_of_crossings_blobs_assigned_as_individuals'] = 0
     results['frames_with_identity_errors'] = []
@@ -50,6 +51,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
                 gt_identity = groundtruth_blob.identity
 
             if groundtruth_blob.is_an_individual and gt_identity != -1: # we are not considering crossing or failures of the model area
+                results['number_of_individual_blobs'] += 1
                 if gt_identity == 0:
                     results['frames_with_zeros_in_groundtruth'].append(groundtruth_blob.frame_number)
 
@@ -116,7 +118,7 @@ def get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_vid
     if len(results['frames_with_zeros_in_groundtruth']) == 0:
         # pprint(results)
         accuracies = {}
-
+        accuracies['percentage_of_unoccluded_images'] = results['number_of_individual_blobs'] / (results['number_of_individual_blobs'] + results['number_of_crossing_blobs'])
         accuracies['individual_accuracy'] = {i : 1 - results['number_of_errors_in_all_blobs'][i] / results['number_of_blobs_per_identity'][i]
                                 for i in range(1, number_of_animals + 1)}
         accuracies['accuracy'] = np.mean(accuracies['individual_accuracy'].values())
