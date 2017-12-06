@@ -119,6 +119,7 @@ class CrossingDataset(object):
 
     def generate_crossing_images(self):
         crossing_images = []
+
         for crossing in self.crossings_sliced:
             _, _, _, crossing_image = crossing.get_image_for_identification(self.video)
             crossing_image = cv2.resize(crossing_image, None,
@@ -127,10 +128,12 @@ class CrossingDataset(object):
                                         interpolation = cv2.INTER_CUBIC)
             crossing_image = ((crossing_image - np.mean(crossing_image))/np.std(crossing_image)).astype('float32')
             crossing_images.append(crossing_image)
+
         return crossing_images
 
     def generate_individual_blobs_images(self):
         individual_blobs_images = []
+
         for individual_blobs in self.individual_blobs_sliced:
             _, _, _, individual_blobs_image = individual_blobs.get_image_for_identification(self.video)
             individual_blobs_image = cv2.resize(individual_blobs_image, None,
@@ -139,6 +142,9 @@ class CrossingDataset(object):
                                                 interpolation = cv2.INTER_CUBIC)
             individual_blobs_image = ((individual_blobs_image - np.mean(individual_blobs_image))/np.std(individual_blobs_image)).astype('float32')
             individual_blobs_images.append(individual_blobs_image)
+            cv2.imshow('individual', individual_blobs_image)
+            cv2.waitKey()
+
         return individual_blobs_images
 
     def generate_test_images(self, interval = None):
@@ -155,6 +161,9 @@ class CrossingDataset(object):
                                     interpolation = cv2.INTER_CUBIC)
             test_image = ((test_image - np.mean(test_image))/np.std(test_image)).astype('float32')
             test_images.append(test_image)
+            cv2.imshow('test', test_image)
+            cv2.waitKey()
+
 
         return np.expand_dims(np.asarray(test_images), axis = 3)
 
