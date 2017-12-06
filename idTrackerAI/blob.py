@@ -83,9 +83,12 @@ class Blob(object):
         return self._is_a_crossing
 
     def check_for_multiple_next_or_previous(self, direction = None):
+        opposite_direction = 'next' if direction == 'previous' else 'previous'
         current = getattr(self, direction)[0]
 
-        while len(getattr(current, direction)) == 1:
+        while len(getattr(current, direction)) == 1 and\
+            len(getattr(getattr(current, opposite_direction)[0], direction)) == 1 and\
+            len(getattr(getattr(current, direction)[0], opposite_direction)) == 1:
 
             current = getattr(current, direction)[0]
             if len(getattr(self, direction)) > 1:
@@ -95,7 +98,9 @@ class Blob(object):
         return False
 
     def is_a_sure_individual(self):
-        if self.is_an_individual and len(self.previous) > 0 and len(self.next) > 0:
+        if self.is_an_individual and len(self.previous) == 1 \
+            and len(self.next) == 1 and len(self.next[0].previous) == 1 and\
+            len(self.previous[0].next) == 1:
             has_multiple_previous = self.check_for_multiple_next_or_previous('previous')
             has_multiple_next = self.check_for_multiple_next_or_previous('next')
             if not has_multiple_previous and not has_multiple_next:

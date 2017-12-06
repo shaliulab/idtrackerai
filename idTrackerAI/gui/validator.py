@@ -444,12 +444,15 @@ class Validator(BoxLayout):
         self.accumulation_label = CustomLabel(text='Used for training: ' + str(blob_to_explore.used_for_training))
         self.in_a_fragment_label = CustomLabel(text='It is in an individual fragment: ' + str(blob_to_explore.is_in_a_fragment))
         self.individual_label = CustomLabel(text='It is an individual: ' + str(blob_to_explore.is_an_individual))
+        self.sure_individual_label = CustomLabel(text='sure individual: ' + str(blob_to_explore.is_a_sure_individual()))
+        self.sure_crossing_label = CustomLabel(text='sure crossing: ' + str(blob_to_explore.is_a_sure_crossing()))
         self.ghost_crossing_label = CustomLabel(text='It is a ghost crossing: ' + str(blob_to_explore.is_a_ghost_crossing))
         self.jump_label = CustomLabel(text='It is a jump: ' + str(blob_to_explore.is_a_jump))
         text_centroid_label = str(blob_to_explore.centroid)
         self.centroid_label = CustomLabel(text='Centroid: ' + text_centroid_label)
         self.container.add_widget(self.show_attributes_box)
         widget_list = [self.id_label, self.frag_id_label, self.individual_label,
+                        self.sure_individual_label, self.sure_crossing_label,
                         self.accumulation_label, self.in_a_fragment_label,
                         self.ghost_crossing_label, self.jump_label,
                         self.centroid_label]
