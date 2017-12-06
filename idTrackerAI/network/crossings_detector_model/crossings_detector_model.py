@@ -41,7 +41,7 @@ class ConvNetwork_crossings(object):
         return cross_entropy
 
     def compute_loss_weights(self, training_labels):
-        self.weights = 1. - np.sum(training_labels,axis=0) / len(training_labels)
+        self.weights = 1. - np.sum(training_labels, axis=0) / len(training_labels)
 
     @staticmethod
     def compute_accuracy(labels, logits):

@@ -32,8 +32,8 @@ class ListOfBlobs(object):
                     blob_0.now_points_to(blob_1)
 
     def reconnect(self):
-        logger.info("Connecting list of blob objects")
-        for frame_i in tqdm(range(1,self.number_of_frames), desc = 'connecting blobs'):
+        logger.info("re-Connecting list of blob objects")
+        for frame_i in tqdm(range(1,self.number_of_frames), desc = 're-connecting blobs'):
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                 if blob_0.fragment_identifier == blob_1.fragment_identifier:
                     blob_0.now_points_to(blob_1)

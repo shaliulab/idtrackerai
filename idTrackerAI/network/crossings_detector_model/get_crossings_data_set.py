@@ -93,14 +93,12 @@ class CrossingDataset(object):
         assert len(self.crossing_labels) == len(self.crossings_images)
         # negative examples (non crossings_images)
         print("Generating single individual ", self.scope, " set")
-
-
         self.individual_blobs_sliced = self.slice(self.individual_blobs, sampling_ratio_start, sampling_ratio_end)
         self.individual_blobs_images = self.generate_individual_blobs_images()
         self.individual_blobs_labels = np.zeros(len(self.individual_blobs_images))
-        if self.scope == "training":
-            # self.individual_blobs_images, self.individual_blobs_images_labels = self.data_augmentation_by_rotation(self.individual_blobs_images, self.individual_blobs_labels)
-            self.individual_blobs_images, self.individual_blobs_labels = duplicate_PCA_images(self.individual_blobs_images, self.individual_blobs_labels)
+        # if self.scope == "training":
+        #     # self.individual_blobs_images, self.individual_blobs_images_labels = self.data_augmentation_by_rotation(self.individual_blobs_images, self.individual_blobs_labels)
+        #     self.individual_blobs_images, self.individual_blobs_labels = duplicate_PCA_images(self.individual_blobs_images, self.individual_blobs_labels)
         assert len(self.individual_blobs_labels) == len(self.individual_blobs_images)
         # print("Done")
         print("Preparing images and labels")
