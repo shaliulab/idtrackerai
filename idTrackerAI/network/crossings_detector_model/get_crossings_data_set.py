@@ -46,6 +46,7 @@ class CrossingDataset(object):
             self.individual_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
                                     if blob.is_a_sure_individual()
                                     or blob.in_a_global_fragment_core(blobs_in_frame)]
+            print("________________number of individual blobs (before cut): ", len(self.individual_blobs))
             np.random.shuffle(self.individual_blobs)
             ratio = 1
             if len(self.individual_blobs) > ratio * len(self.crossing_blobs):
@@ -59,6 +60,7 @@ class CrossingDataset(object):
 
             self.crossing_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
                                     if blob.is_a_sure_crossing()]
+            print("________________number of crossing blobs (in get list): ", len(self.crossing_blobs))
             np.random.seed(0)
             np.random.shuffle(self.crossing_blobs)
             self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossing_blobs]) + 5

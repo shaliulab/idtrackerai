@@ -86,12 +86,12 @@ class Blob(object):
         opposite_direction = 'next' if direction == 'previous' else 'previous'
         current = getattr(self, direction)[0]
 
-        while len(getattr(current, direction)) == 1 and\
-            len(getattr(getattr(current, opposite_direction)[0], direction)) == 1 and\
-            len(getattr(getattr(current, direction)[0], opposite_direction)) == 1:
+        while len(getattr(current, direction)) == 1 :
 
             current = getattr(current, direction)[0]
-            if len(getattr(self, direction)) > 1:
+            if len(getattr(current, direction)) > 1:# or\
+                # (len(getattr(getattr(current, opposite_direction)[0], direction)) != 1 or\
+                # len(getattr(getattr(current, direction)[0], opposite_direction)) != 1):
                 return True
                 break
 
@@ -109,9 +109,9 @@ class Blob(object):
             return False
 
     def is_a_sure_crossing(self):
-        if len(self.previous) > 1 or len(self.next) > 1:
+        if self.is_a_crossing and (len(self.previous) > 1 or len(self.next) > 1):
             return True
-        elif len(self.previous) == 1 and len(self.next) == 1:
+        elif self.is_a_crossing and len(self.previous) == 1 and len(self.next) == 1:
             has_multiple_previous = self.check_for_multiple_next_or_previous('previous')
             has_multiple_next = self.check_for_multiple_next_or_previous('next')
             if has_multiple_previous and has_multiple_next:
