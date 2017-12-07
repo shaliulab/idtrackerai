@@ -336,7 +336,11 @@ class IndividualValidator(BoxLayout):
                     cv2.putText(frame, cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
                     if blob.is_a_crossing or blob.identity_corrected_closing_gaps is not None:
                         bounding_box = blob.bounding_box_in_frame_coordinates
-                        cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
+                        if hasattr(blob, 'rect_color'):
+                            rect_color = blob.rect_color
+                        else:
+                            rect_color = (255, 0, 0)
+                        cv2.rectangle(frame, bounding_box[0], bounding_box[1], rect_color , 2)
                 elif isinstance(cur_id, list):
                     for c_id, c_centroid in zip(cur_id, blob.interpolated_centroids):
                         c_id_str = root + str(c_id)
@@ -348,10 +352,18 @@ class IndividualValidator(BoxLayout):
                     self._keyboard.bind(on_key_down=self._on_keyboard_down)
                     if blob.is_a_crossing or blob.identity_corrected_closing_gaps is not None:
                         bounding_box = blob.bounding_box_in_frame_coordinates
-                        cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
+                        if hasattr(blob, 'rect_color'):
+                            rect_color = blob.rect_color
+                        else:
+                            rect_color = (255, 0, 0)
+                        cv2.rectangle(frame, bounding_box[0], bounding_box[1], rect_color , 2)
                 elif blob.assigned_identity is None:
                     bounding_box = blob.bounding_box_in_frame_coordinates
-                    cv2.rectangle(frame, bounding_box[0], bounding_box[1], (255, 0, 0) , 2)
+                    if hasattr(blob, 'rect_color'):
+                        rect_color = blob.rect_color
+                    else:
+                        rect_color = (255, 0, 0)
+                    cv2.rectangle(frame, bounding_box[0], bounding_box[1], rect_color , 2)
             if self.scale != 1:
                 self.dst = cv2.warpAffine(frame, self.M, (frame.shape[1], frame.shape[0]))
                 buf = cv2.flip(self.dst,0)
@@ -466,14 +478,61 @@ class IndividualValidator(BoxLayout):
         self.blob_attr_popup.color = (0.,0.,0.,0.)
         self.blob_attr_popup.open()
 
+    @staticmethod
+    def get_index_of_fragment_identifier(fragment_identifier, blobs_in_frame):
+        fragment_identifiers_in_frame = [blob.fragment_identifier for blob
+                                        in blobs_in_frame]
+        try:
+            return fragment_identifiers_in_frame.index(fragment_identifier)
+        except:
+            return None
+
+    def propagate_crossing_check_state(self):
+        modified_blob = self.detected_blob_to_modify
+        fragment_identifier = modified_blob.fragment_identifier
+        blobs_in_video = self.list_of_blobs.blobs_in_video
+        next_frame = modified_blob.frame_number + 1
+        blob_index = self.get_index_of_fragment_identifier(fragment_identifier, blobs_in_video[next_frame])
+
+        while blob_index is not None:
+            blob = blobs_in_video[next_frame][blob_index]
+            blob.rect_color = modified_blob.rect_color
+            next_frame = next_frame + 1
+            blob_index = self.get_index_of_fragment_identifier(fragment_identifier, blobs_in_video[next_frame])
+
+        previous_frame = modified_blob.frame_number - 1
+        blob_index = self.get_index_of_fragment_identifier(fragment_identifier, blobs_in_video[previous_frame])
+
+        while blob_index is not None:
+            blob = blobs_in_video[previous_frame][blob_index]
+            blob.rect_color = modified_blob.rect_color
+            previous_frame = previous_frame - 1
+            blob_index = self.get_index_of_fragment_identifier(fragment_identifier, blobs_in_video[previous_frame])
+
+        #init and bind keyboard again
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+
+
+    def change_crossing_check_state(self, touch_type):
+        if touch_type == 'left':
+            self.detected_blob_to_modify.rect_color = (0, 255, 0)
+        elif touch_type == 'right':
+            self.detected_blob_to_modify.rect_color = (255, 0, 0)
+        self.propagate_crossing_check_state()
+        self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func = self.writeIds)
+
     def on_touch_down(self, touch):
         self.touches = []
         if self.visualiser.display_layout.collide_point(*touch.pos):
             if touch.button =='left':
                 self.touches.append(touch.pos)
-                self.id_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
-                if self.id_to_modify is not None:
-                    self.modifyIdOpenPopup(self.id_to_modify)
+                self.detected_blob_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
+                if self.detected_blob_to_modify is not None:
+                    if  self.detected_blob_to_modify.is_an_individual:
+                        self.show_blob_attributes(self.detected_blob_to_modify)
+                    else:
+                        self.change_crossing_check_state(touch.button)
             elif touch.button == 'scrollup':
                 self.count_scrollup += 1
                 coords = self.fromShowFrameToTexture(touch.pos)
@@ -499,9 +558,12 @@ class IndividualValidator(BoxLayout):
                 self.scale = 1
             elif touch.button == 'right':
                 self.touches.append(touch.pos)
-                self.id_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
-                if self.id_to_modify is not None:
-                    self.show_blob_attributes(self.id_to_modify)
+                self.detected_blob_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
+                if self.detected_blob_to_modify is not None:
+                    if  self.detected_blob_to_modify.is_an_individual:
+                        self.show_blob_attributes(self.detected_blob_to_modify)
+                    else:
+                        self.change_crossing_check_state(touch.button)
         else:
             self.scale = 1
             self.disable_touch_down_outside_collided_widget(touch)
