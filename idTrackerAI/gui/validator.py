@@ -45,6 +45,9 @@ class Validator(BoxLayout):
         self.warning_popup = Popup(title = 'Warning',
                             content = CustomLabel(text = 'The video has not been tracked yet. Track it before performing validation.'),
                             size_hint = (.3,.3))
+        self.warning_popup_wrong_identity = Popup(title = 'Warning',
+                            content = CustomLabel(text = 'Input a valid identity.'),
+                            size_hint = (.3,.3))
         self.loading_popup = Popup(title='Loading',
             content=CustomLabel(text='wait ...'),
             size_hint=(.3,.3))
@@ -374,6 +377,7 @@ class Validator(BoxLayout):
             self.identity_update = int(self.identity_update)
             return self.identity_update > 0 and self.identity_update <= CHOSEN_VIDEO.video.number_of_animals
         except:
+            self.warning_popup_wrong_identity.open()
             return False
 
     def on_enter(self,value):
