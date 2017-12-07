@@ -530,7 +530,7 @@ class IndividualValidator(BoxLayout):
                 self.detected_blob_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
                 if self.detected_blob_to_modify is not None:
                     if  self.detected_blob_to_modify.is_an_individual:
-                        self.show_blob_attributes(self.detected_blob_to_modify)
+                        self.modifyIdOpenPopup(self.detected_blob_to_modify)
                     else:
                         self.change_crossing_check_state(touch.button)
             elif touch.button == 'scrollup':

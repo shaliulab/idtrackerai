@@ -369,9 +369,17 @@ class Validator(BoxLayout):
         # display image from the texture
         self.visualiser.display_layout.texture = textureFrame
 
+    def check_user_generated_identity(self):
+        try:
+            self.identity_update = int(self.identity_update)
+            return self.identity_update > 0 and self.identity_update <= CHOSEN_VIDEO.video.number_of_animals
+        except:
+            return False
+
     def on_enter(self,value):
-        self.identity_update = int(self.identityInput.text)
-        self.overwriteIdentity()
+        self.identity_update = self.identityInput.text
+        if self.check_user_generated_identity():
+            self.overwriteIdentity()
         self.popup.dismiss()
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
@@ -528,7 +536,7 @@ class Validator(BoxLayout):
                 self.detected_blob_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
                 if self.detected_blob_to_modify is not None:
                     if  self.detected_blob_to_modify.is_an_individual:
-                        self.show_blob_attributes(self.detected_blob_to_modify)
+                        self.modifyIdOpenPopup(self.detected_blob_to_modify)
                     else:
                         self.change_crossing_check_state(touch.button)
             elif touch.button == 'scrollup':
