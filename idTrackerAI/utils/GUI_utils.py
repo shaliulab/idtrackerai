@@ -1203,8 +1203,6 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                     logger.debug("is_an_individual: %s" %blob.is_an_individual)
                     logger.debug("is_in_a_fragment: %s" %blob.is_in_a_fragment)
                     logger.debug("is_an_individual_in_a_fragment: %s" %blob.is_an_individual_in_a_fragment)
-                    logger.debug("is_a_jump: %s" %blob.is_a_jump)
-                    # logger.debug("is_a_ghost_crossing: %s" %blob.is_a_ghost_crossing)
                     logger.debug("is_a_crossing: %s" %blob.is_a_crossing)
                     logger.debug("next: %s" %blob.next)
                     logger.debug("previous: %s" %blob.previous)
