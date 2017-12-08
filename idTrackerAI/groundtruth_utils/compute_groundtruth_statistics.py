@@ -24,6 +24,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
     #create dictionary to store eventual corrections made by the user
     results = {}
     results['number_of_blobs_per_identity'] = {i:0 for i in range(1, number_of_animals + 1)}
+    results['sum_individual_P2'] = {i:0 for i in range(1, number_of_animals + 1)}
     results['number_of_assigned_blobs_per_identity'] = {i:0 for i in range(1, number_of_animals + 1)}
     results['number_of_blobs_assigned_during_accumulation_per_identity'] = {i:0 for i in range(1, number_of_animals + 1)}
     results['number_of_blobs_after_accumulation_per_identity'] = {i:0 for i in range(1, number_of_animals + 1)}
@@ -56,6 +57,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
                     results['frames_with_zeros_in_groundtruth'].append(groundtruth_blob.frame_number)
 
                 else:
+                    results['sum_individual_P2'][gt_identity] += blob._P2_vector[gt_identity - 1]
                     results['number_of_blobs_per_identity'][gt_identity] += 1
                     results['number_of_assigned_blobs_per_identity'][gt_identity] += 1 if blob.assigned_identity != 0 else 0
                     results['number_of_blobs_assigned_during_accumulation_per_identity'][gt_identity] += 1 if blob.used_for_training else 0
@@ -119,6 +121,8 @@ def get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_vid
         # pprint(results)
         accuracies = {}
         accuracies['percentage_of_unoccluded_images'] = results['number_of_individual_blobs'] / (results['number_of_individual_blobs'] + results['number_of_crossing_blobs'])
+        accuracies['individual_P2_in_validated_part'] = {i : results['sum_individual_P2'][i] / results['number_of_blobs_per_identity'][i]
+                                for i in range(1, number_of_animals + 1)}
         accuracies['individual_accuracy'] = {i : 1 - results['number_of_errors_in_all_blobs'][i] / results['number_of_blobs_per_identity'][i]
                                 for i in range(1, number_of_animals + 1)}
         accuracies['accuracy'] = np.mean(accuracies['individual_accuracy'].values())
@@ -145,11 +149,11 @@ def get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_vid
 
         pprint(accuracies)
 
-        return accuracies, results['frames_with_zeros_in_groundtruth']
+        return accuracies, results
 
     else:
         print("there are fish with 0 identity in frame ", results['frames_with_zeros_in_groundtruth'])
-        return None, results['frames_with_zeros_in_groundtruth']
+        return None, results
 
 def compute_and_save_session_accuracy_wrt_groundtruth(video, video_object_path):
     video.check_paths_consistency_with_video_path(video_object_path)
@@ -165,12 +169,13 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, video_object_path):
     blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
 
     print("computing groundtruth")
-    accuracies, frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
-
+    accuracies, results = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
+    frames_with_zeros_in_groundtruth = results['frames_with_zeros_in_groundtruth']
     if accuracies is not None:
         print("saving accuracies in video")
         video.gt_start_end = (groundtruth.start,groundtruth.end)
         video.gt_accuracies = accuracies
+        video.gt_results = results
         video.save()
 
 if __name__ == '__main__':

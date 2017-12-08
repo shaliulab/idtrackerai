@@ -651,7 +651,7 @@ if __name__ == '__main__':
         groundtruth = np.load(groundtruth_path).item()
         blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
         blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
-        video.gt_accuracy, _ = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
+        video.gt_accuracy, video.gt_results = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
         video.gt_start_end = (groundtruth.start, groundtruth.end)
         video.save()
 

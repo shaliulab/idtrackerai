@@ -651,7 +651,7 @@ class Validator(BoxLayout):
     def plot_groundtruth_statistics(self):
         blobs_in_video_groundtruth = self.groundtruth.blobs_in_video[self.groundtruth.start:self.groundtruth.end]
         blobs_in_video = self.blobs_in_video[self.groundtruth.start:self.groundtruth.end]
-        gt_accuracies, _ = get_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, blobs_in_video_groundtruth, blobs_in_video)
+        gt_accuracies, results = get_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, blobs_in_video_groundtruth, blobs_in_video)
         if gt_accuracies is not None:
             self.individual_accuracy = gt_accuracies['individual_accuracy']
             self.accuracy = gt_accuracies['accuracy']
@@ -659,6 +659,7 @@ class Validator(BoxLayout):
             self.statistics_popup.open()
             CHOSEN_VIDEO.video.gt_start_end = (self.groundtruth.start, self.groundtruth.end)
             CHOSEN_VIDEO.video.gt_accuracy = gt_accuracies
+            CHOSEN_VIDEO.video.gt_results = results
             CHOSEN_VIDEO.video.save()
 
     def compute_and_save_session_accuracy_wrt_groundtruth_APP(self, *args):

@@ -111,25 +111,26 @@ def plot_individual_certainty_and_accuracy(video, ax_P2, ax_gt_accuracy, colors,
     # ax.bar(np.arange(video.number_of_animals)+1, video.individual_P2, color = colors[1:])
     n_bins = 20
     accuracy = video.gt_accuracy['individual_accuracy'].values()
+    individual_P2 = video.gt_accuracy['individual_P2_in_validated_part'].values()
     # accuracy = list(video.individual_P2)
-    minimum = np.min(accuracy + list(video.individual_P2))
+    minimum = np.min(accuracy + list(individual_P2))
     maximum = 1.
-    n, bins, _ = ax_P2.hist(video.individual_P2, bins = np.linspace(minimum - 0.0005, maximum, n_bins), color = '.5', alpha = .5)
+    n, bins, _ = ax_P2.hist(individual_P2, bins = np.linspace(minimum - 0.0005, maximum, n_bins), color = '.5', alpha = .5)
     bin_width = np.diff(bins)[0]
     for height, bin in zip(n,bins[:-1]):
         if height != 0:
             ax_P2.text(bin + bin_width/2, height + 0.05, str(int(height)), fontsize = 10, horizontalalignment='center')
-    P2_mean = np.mean(video.individual_P2)
-    P2_std = np.std(video.individual_P2)
-    ax_P2.text(bins[0], 25, r'$\mu \pm \sigma =$ ' + '%.4f ' %P2_mean + r'$\pm$ ' + '%.3f' %P2_std, fontsize = 12)
+    P2_mean = np.mean(individual_P2)
+    P2_std = np.std(individual_P2)
+    ax_P2.text(bins[0], np.max(n) - 3, r'$\mu \pm \sigma =$ ' + '%.4f ' %P2_mean + r'$\pm$ ' + '%.3f' %P2_std, fontsize = 12)
 
     n_accuracy, bins_accuracy, _ = ax_gt_accuracy.hist(accuracy, bins = np.linspace(minimum - 0.0005, maximum, n_bins), color = 'g', alpha = .5)
     for height, bin in zip(n_accuracy,bins_accuracy[:-1]):
         if height != 0:
             ax_gt_accuracy.text(bin + bin_width/2, height + 0.05, str(int(height)), fontsize = 10, horizontalalignment='center')
-    accuracy_mean = np.mean(video.individual_P2)
-    accuracy_std = np.std(video.individual_P2)
-    ax_gt_accuracy.text(bins[0], 25, r'$\mu \pm \sigma =$ ' + '%.4f ' %accuracy_mean + r'$\pm$ ' + '%.4f' %accuracy_std, fontsize = 12)
+    accuracy_mean = np.mean(accuracy)
+    accuracy_std = np.std(accuracy)
+    ax_gt_accuracy.text(bins[0], max(n_accuracy) - 3, r'$\mu \pm \sigma =$ ' + '%.4f ' %accuracy_mean + r'$\pm$ ' + '%.4f' %accuracy_std, fontsize = 12)
 
 def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps, list_of_accumulation_steps, zoomed_frames):
 
@@ -262,7 +263,6 @@ def get_no_gaps_fragments(list_of_blobs_no_gaps, number_of_animals):
     return no_gaps_fragments
 
 def plot_accumulation_steps(video, list_of_fragments, list_of_blobs, list_of_blobs_no_gaps, training_dict, validation_dict):
-
     no_gaps_fragments = get_no_gaps_fragments(list_of_blobs_no_gaps, video.number_of_animals)
 
     plt.ion()

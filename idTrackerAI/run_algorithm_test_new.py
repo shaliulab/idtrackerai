@@ -458,7 +458,7 @@ if __name__ == '__main__':
                             blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
 
                             print("computting groundtrugh")
-                            accuracies, _ = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth,
+                            accuracies, results = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth,
                                                                             blobs_in_video,
                                                                             video.first_frame_first_global_fragment)
 
@@ -466,6 +466,7 @@ if __name__ == '__main__':
                                 print("saving accuracies in video")
                                 video.gt_start_end = (groundtruth.start,groundtruth.end)
                                 video.gt_accuracy_before_duplications = accuracies
+                                video.gt_results_before_duplications = results
 
                             #############################################################
                             ###################   Solve duplications      ###############
@@ -514,13 +515,14 @@ if __name__ == '__main__':
                             blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
 
                             print("computting groundtrugh")
-                            accuracies, _ = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth,
+                            accuracies, results = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth,
                                                                             blobs_in_video,
                                                                             video.first_frame_first_global_fragment)
 
                             if accuracies is not None:
                                 print("saving accuracies in video")
                                 video.gt_accuracy = accuracies
+                                video.gt_results = results
                                 video.save()
 
                             video.total_time = sum([video.solve_duplications_time,
