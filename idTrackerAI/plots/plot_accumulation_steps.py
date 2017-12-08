@@ -107,11 +107,11 @@ def plot_accuracy_step(ax, accumulation_step, training_dict, validation_dict):
     ax.plot(range(total_epochs_completed_previous_step, total_epochs_completed_this_step),
                 np.asarray(validation_dict['accuracy'][total_epochs_completed_previous_step:total_epochs_completed_this_step]), '-b', label = 'validation')
 
-def plot_individual_certainty(video, ax_P2, ax_gt_accuracy, colors, identity_to_blob_hierarchy_list):
+def plot_individual_certainty_and_accuracy(video, ax_P2, ax_gt_accuracy, colors, identity_to_blob_hierarchy_list):
     # ax.bar(np.arange(video.number_of_animals)+1, video.individual_P2, color = colors[1:])
     n_bins = 20
-    # accuracy = video.gt_accuracies['individual_accuracy'].values()
-    accuracy = list(video.individual_P2)
+    accuracy = video.gt_accuracy['individual_accuracy'].values()
+    # accuracy = list(video.individual_P2)
     minimum = np.min(accuracy + list(video.individual_P2))
     maximum = 1.
     n, bins, _ = ax_P2.hist(video.individual_P2, bins = np.linspace(minimum - 0.0005, maximum, n_bins), color = '.5', alpha = .5)
@@ -267,7 +267,7 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs, list_of_blo
 
     plt.ion()
     sns.set_style("ticks")
-    zoomed_frames = (6000,7000)
+    zoomed_frames = video.gt_start_end
     number_of_accumulation_steps = get_number_of_accumulation_steps(list_of_fragments)
     # identity_to_blob_hierarchy_list = get_identity_to_blob_hierarchy_list(list_of_fragments)
     identity_to_blob_hierarchy_list = range(video.number_of_animals)
@@ -276,7 +276,7 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs, list_of_blo
     my_dpi = 96
     list_of_accumulation_steps = [0, 1, 2, number_of_accumulation_steps - 1]
     fig1 = plt.figure(figsize=(13, 10), dpi=my_dpi)
-    colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=False)
+    colors = get_spaced_colors_util(video.number_of_animals, norm=True, black=False)
 
     ### Deep fingerprinting
     ax_arr_fragments = []
@@ -311,7 +311,7 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs, list_of_blo
     ### Final certainty
     ax_P2 = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 1, 3), colspan=2)
     ax_gt_accuracy = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 2, 3), colspan=2)
-    plot_individual_certainty(video, ax_P2, ax_gt_accuracy, colors, identity_to_blob_hierarchy_list)
+    plot_individual_certainty_and_accuracy(video, ax_P2, ax_gt_accuracy, colors, identity_to_blob_hierarchy_list)
 
     ax_crossings = plt.subplot2grid((number_of_accumulation_steps_to_plot + 2, 5), (i + 2, 0), colspan=3)
     plot_crossings_step(no_gaps_fragments, ax_crossings, colors)
@@ -335,8 +335,8 @@ if __name__ == '__main__':
     # session_path = '/home/themis/Desktop/IdTrackerDeep/videos/idTrackerDeep_LargeGroups_3/100fish/First/session_2'
     video_path = os.path.join(session_path,'video_object.npy')
     video = np.load(video_path).item(0)
-    list_of_blobs_no_gaps = ListOfBlobs.load(video, video.blobs_no_gaps_path, video_has_been_segmented = False)
-    list_of_blobs = ListOfBlobs.load(video, video.blobs_path, video_has_been_segmented = False)
+    list_of_blobs_no_gaps = ListOfBlobs.load(video, video.blobs_no_gaps_path)
+    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
     list_of_fragments_dictionaries = np.load(os.path.join(video._accumulation_folder,'light_list_of_fragments.npy'))
     fragments = [Fragment(number_of_animals = video.number_of_animals) for fragment_dictionary in list_of_fragments_dictionaries]
     [fragment.__dict__.update(fragment_dictionary) for fragment, fragment_dictionary in zip(fragments, list_of_fragments_dictionaries)]
