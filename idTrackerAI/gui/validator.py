@@ -375,7 +375,7 @@ class Validator(BoxLayout):
     def check_user_generated_identity(self):
         try:
             self.identity_update = int(self.identity_update)
-            return self.identity_update > 0 and self.identity_update <= CHOSEN_VIDEO.video.number_of_animals
+            return self.identity_update > 0 and self.identity_update <= CHOSEN_VIDEO.video.number_of_animals or self.identity_update == -1
         except:
             self.warning_popup_wrong_identity.open()
             return False
