@@ -300,11 +300,11 @@ class Fragment(object):
             possible_identities, max_P2 = self.get_possible_identities(self.P2_vector)
             if len(possible_identities) > 1:
                 self._identity = 0
+                self.zero_identity_assigned_by_P2 = True
                 self._ambiguous_identities = possible_identities
             else:
                 if max_P2 > FIXED_IDENTITY_THRESHOLD:
                     self._identity_is_fixed = True
-                print(max_P2)
                 self._identity = possible_identities[0]
                 self._P1_vector = np.zeros(len(self.P1_vector))
                 self._P1_vector[self.identity - 1] = 1.

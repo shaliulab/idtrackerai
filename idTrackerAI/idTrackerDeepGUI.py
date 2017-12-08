@@ -560,6 +560,14 @@ if __name__ == '__main__':
     #
     #     visualise(video, net, image, label)
 
+    print("************** Before solving duplications ************************")
+    print("Number of fragments with zero identity: ", len([f for f in list_of_fragments.fragments
+                                                            if f.assigned_identity == 0]))
+    print("Number of fragments with zero identity by P2: ",
+                    len([f for f in list_of_fragments.fragments
+                    if f.assigned_identity == 0
+                    and hasattr(f, 'zero_identity_assigned_by_P2')]))
+
     #############################################################
     ###################   Solve duplications      ###############
     ####
@@ -580,6 +588,14 @@ if __name__ == '__main__':
         video.save()
     video.solve_duplications_time = time.time() - video.solve_duplications_time
 
+    print("************** After solving duplications ************************")
+    print("Number of fragments with zero identity: ", len([f for f in list_of_fragments.fragments
+                                                            if f.assigned_identity == 0]))
+    print("Number of fragments with zero identity by P2: ",
+                    len([f for f in list_of_fragments.fragments
+                    if f.assigned_identity == 0
+                    and hasattr(f, 'zero_identity_assigned_by_P2')]))
+
     #############################################################
     ###################  Solving impossible jumps    ############
     #############################################################
@@ -596,6 +612,14 @@ if __name__ == '__main__':
     video.save()
     logger.info("Done")
     video.solve_impossible_jumps_time = time.time() - video.solve_impossible_jumps_time
+
+    print("************** After solving impossible jumps ************************")
+    print("Number of fragments with zero identity: ", len([f for f in list_of_fragments.fragments
+                                                            if f.assigned_identity == 0]))
+    print("Number of fragments with zero identity by P2: ",
+                    len([f for f in list_of_fragments.fragments
+                    if f.assigned_identity == 0
+                    and hasattr(f, 'zero_identity_assigned_by_P2')]))
 
     #############################################################
     ############# Check identification consistency ##############
