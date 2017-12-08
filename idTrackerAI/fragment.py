@@ -304,6 +304,7 @@ class Fragment(object):
             else:
                 if max_P2 > FIXED_IDENTITY_THRESHOLD:
                     self._identity_is_fixed = True
+                print(max_P2)
                 self._identity = possible_identities[0]
                 self._P1_vector = np.zeros(len(self.P1_vector))
                 self._P1_vector[self.identity - 1] = 1.

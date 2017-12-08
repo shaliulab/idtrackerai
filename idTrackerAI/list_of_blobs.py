@@ -177,6 +177,7 @@ class ListOfBlobs(object):
 
     def update_from_list_of_fragments(self, fragments, fragment_identifier_to_index):
         attributes = ['identity',
+                        'P2_vector',
                         'identity_corrected_solving_duplication',
                         'user_generated_identity', 'used_for_training',
                         'accumulation_step']
@@ -184,7 +185,7 @@ class ListOfBlobs(object):
         for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'updating list of blobs from list of fragments'):
             for blob in blobs_in_frame:
                 fragment = fragments[fragment_identifier_to_index[blob.fragment_identifier]]
-                [setattr(blob, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes]
+                [setattr(blob, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes if hasattr(fragment, attribute)]
 
     def compute_nose_and_head_coordinates(self):
         for blobs_in_frame in self.blobs_in_video:
