@@ -74,9 +74,9 @@ class Blob(object):
             is_a_jumping_fragment = True
         return is_a_jumping_fragment
 
-    @property
-    def is_a_ghost_crossing(self):
-        return (self.is_an_individual and (len(self.next) != 1 or len(self.previous) != 1))
+    # @property
+    # def is_a_ghost_crossing(self):
+    #     return (self.is_an_individual and (len(self.next) != 1 or len(self.previous) != 1))
 
     @property
     def is_a_crossing(self):

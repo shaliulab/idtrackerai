@@ -327,7 +327,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                                     blob.is_a_crossing,
                                     blob.is_a_jump,
                                     blob.is_a_jumping_fragment,
-                                    blob.is_a_ghost_crossing,
+                                    # blob.is_a_ghost_crossing,
                                     number_of_animals,
                                     user_generated_identity = blob.user_generated_identity)
                 fragment.next_blobs_fragment_identifier = [next_blob.fragment_identifier

@@ -27,7 +27,7 @@ class Fragment(object):
                         is_a_crossing = None,
                         is_a_jump = None,
                         is_a_jumping_fragment = None,
-                        is_a_ghost_crossing = None,
+                        # is_a_ghost_crossing = None,
                         number_of_animals = None,
                         user_generated_identity = None):
         self.identifier = fragment_identifier
@@ -44,7 +44,7 @@ class Fragment(object):
         self.is_a_crossing = is_a_crossing
         self.is_a_jump = is_a_jump
         self.is_a_jumping_fragment = is_a_jumping_fragment
-        self.is_a_ghost_crossing = is_a_ghost_crossing
+        # self.is_a_ghost_crossing = is_a_ghost_crossing
         self.number_of_animals = number_of_animals
         self.possible_identities = range(1, self.number_of_animals + 1)
         self._is_in_a_global_fragment = False

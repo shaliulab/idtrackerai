@@ -465,12 +465,13 @@ class IndividualValidator(BoxLayout):
         self.accumulation_label = CustomLabel(text='Used for training: ' + str(blob_to_explore.used_for_training))
         self.in_a_fragment_label = CustomLabel(text='It is in an individual fragment: ' + str(blob_to_explore.is_in_a_fragment))
         self.fish_label = CustomLabel(text='It is a fish: ' + str(blob_to_explore.is_an_individual))
-        self.ghost_crossing_label = CustomLabel(text='It is a ghost crossing: ' + str(blob_to_explore.is_a_ghost_crossing))
+        # self.ghost_crossing_label = CustomLabel(text='It is a ghost crossing: ' + str(blob_to_explore.is_a_ghost_crossing))
         self.jump_label = CustomLabel(text='It is a jump: ' + str(blob_to_explore.is_a_jump))
         self.container.add_widget(self.show_attributes_box)
         widget_list = [self.id_label, self.frag_id_label,
                         self.accumulation_label, self.in_a_fragment_label,
-                        self.ghost_crossing_label, self.jump_label]
+                        # self.ghost_crossing_label, 
+                        self.jump_label]
         [self.show_attributes_box.add_widget(w) for w in widget_list]
         self.blob_attr_popup = Popup(title='Blob attributes',
             content=self.container,
