@@ -472,6 +472,7 @@ class Video(object):
         try:
             self._frames_per_second = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
         except:
+            self._frames_per_second = None
             logger.info("Cannot read frame per second")
         if self._paths_to_video_segments is None:
             self._number_of_frames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
