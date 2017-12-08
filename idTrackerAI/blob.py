@@ -23,7 +23,10 @@ save_preprocessing_step_image
 """
 
 class Blob(object):
-    def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, estimated_body_length = None, pixels = None, number_of_animals = None, frame_number = None):
+    def __init__(self, centroid, contour, area,
+                bounding_box_in_frame_coordinates, bounding_box_image = None,
+                estimated_body_length = None, pixels = None,
+                number_of_animals = None, frame_number = None):
         self.frame_number = frame_number
         self.number_of_animals = number_of_animals
         self.centroid = np.array(centroid) # numpy array (int64): coordinates of the centroid of the blob in pixels
@@ -56,27 +59,6 @@ class Blob(object):
     @property
     def is_an_individual(self):
         return self._is_an_individual
-
-    @property
-    def is_a_jump(self):
-        is_a_jump = False
-        if self.is_an_individual and len(self.next) == 0 and len(self.previous) == 0: # 1 frame jumps
-            is_a_jump = True
-        return is_a_jump
-
-    @property
-    def is_a_jumping_fragment(self):
-        # this is a fragment of 2 frames that it is not considered a individual fragment but it is also not a single frame jump
-        is_a_jumping_fragment = False
-        if self.is_an_individual and len(self.next) == 0 and len(self.previous) == 1 and len(self.previous[0].previous) == 0 and len(self.previous[0].next) == 1: # 2 frames jumps
-            is_a_jumping_fragment = True
-        elif self.is_an_individual and len(self.next) == 1 and len(self.previous) == 0 and len(self.next[0].next) == 0 and len(self.next[0].previous) == 1: # 2 frames jumps
-            is_a_jumping_fragment = True
-        return is_a_jumping_fragment
-
-    @property
-    def is_a_ghost_crossing(self):
-        return (self.is_an_individual and (len(self.next) != 1 or len(self.previous) != 1))
 
     @property
     def is_a_crossing(self):

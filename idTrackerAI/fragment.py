@@ -15,19 +15,11 @@ from constants import MAX_FLOAT, MIN_FLOAT, FIXED_IDENTITY_THRESHOLD
 logger = logging.getLogger("__main__.fragment")
 
 class Fragment(object):
-    def __init__(self, fragment_identifier = None,
-                        start_end = None,
-                        blob_hierarchy_in_starting_frame = None,
-                        images = None,
+    def __init__(self, fragment_identifier = None, start_end = None,
+                        blob_hierarchy_in_starting_frame = None, images = None,
                         bounding_box_in_frame_coordinates = None,
-                        centroids = None,
-                        areas = None,
-                        pixels = None,
-                        is_an_individual = None,
-                        is_a_crossing = None,
-                        is_a_jump = None,
-                        is_a_jumping_fragment = None,
-                        is_a_ghost_crossing = None,
+                        centroids = None, areas = None, pixels = None,
+                        is_an_individual = None, is_a_crossing = None,
                         number_of_animals = None,
                         user_generated_identity = None):
         self.identifier = fragment_identifier
@@ -42,9 +34,6 @@ class Fragment(object):
         self.pixels = pixels
         self.is_an_individual = is_an_individual
         self.is_a_crossing = is_a_crossing
-        self.is_a_jump = is_a_jump
-        self.is_a_jumping_fragment = is_a_jumping_fragment
-        self.is_a_ghost_crossing = is_a_ghost_crossing
         self.number_of_animals = number_of_animals
         self.possible_identities = range(1, self.number_of_animals + 1)
         self._is_in_a_global_fragment = False
