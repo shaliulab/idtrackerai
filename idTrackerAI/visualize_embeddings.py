@@ -5,9 +5,10 @@ from tensorflow.contrib.tensorboard.plugins import projector
 import pandas as pd
 
 class EmbeddingVisualiser(object):
-    def __init__(self, labels = None, features = None):
+    def __init__(self, video, labels = None, features = None):
         self.labels0 = labels[0]
         self.labels1 = labels[1]
+        self.number_of_animals = video.number_of_animals
         if features is not None:
             self.embedding_var0 = tf.Variable(features[0], name='features0')
             self.embedding_var1 = tf.Variable(features[1], name='features1')
@@ -19,6 +20,54 @@ class EmbeddingVisualiser(object):
         df.to_csv(self.labels0_path, sep='\t')
         df = pd.DataFrame(self.labels1)
         df.to_csv(self.labels1_path, sep='\t')
+
+    def create_sprite_file(sprite_width = 8192, sprite_height = 8192, num_indiv_to_represent = self.number_of_animals):
+        """
+        Generates sprite image and associated labels
+        """
+
+
+        indIndices = np.random.permutation(60)
+        indIndices = indIndices[:num_indiv_to_represent]
+        images, labels = getImagesAndLabels(imdbTrain, indIndices)
+        imH, imW = images[0][0].shape
+        numColumns = sprite_width / imW
+        numRows = sprite_height / imH
+        numImages = int(numColumns * numRows)
+        numImagesPerIndiv = int(np.floor(numImages / num_indiv_to_represent))
+
+        images, labels = prepareTSNEImages(images, labels,numImagesPerIndiv)
+        linearImages = np.reshape(images, [numImages, imH*imW])
+
+        imagesTSNE = []
+
+        for ind in range(num_indiv_to_represent):
+            imagesTSNE.append(images[ind][:numImagesPerIndiv])
+
+        rowSprite = []
+        sprite = []
+        i = 0
+
+        while i < numImages:
+            rowSprite.append(images[i])
+
+            if (i+1) % numColumns == 0:
+                sprite.append(np.hstack(rowSprite))
+                rowSprite = []
+            i += 1
+
+        sprite = np.vstack(sprite)
+        spriteName = str(num_indiv_to_represent) + '_fish_'+ str(numImages)+'imgs_sprite.png'
+        cv2.imwrite(spriteName, uint8caster(sprite))
+
+        imageName = str(num_indiv_to_represent) + '_fish_'+ str(numImages)+'images.pkl'
+        pickle.dump(linearImages, open(imageName, "wb"))
+
+        labelName = str(num_indiv_to_represent) + '_fish_'+ str(numImages)+'labels.tsv'
+        df = pd.DataFrame(labels)
+        df.to_csv(labelName, sep='\t')
+
+        return images, labels
 
     def visualize(self, embeddings_folder):
         step = tf.Variable(0, name='step', trainable=False)
@@ -56,12 +105,6 @@ def visualize_embeddings_global_fragments(video, global_fragments, params, print
     imagesV = np.expand_dims(np.asarray(imagesV), axis = 3)
     dataT = DataSet(params.number_of_animals, imagesT)
     dataV = DataSet(params.number_of_animals, imagesV)
-    # Instantiate data_set
-    dataT.standarize_images()
-    dataV.standarize_images()
-    # Crop images from 36x36 to 32x32 without performing data augmentation
-    # dataT.crop_images(image_size = 32)
-    # dataV.crop_images(image_size = 32)
     # Restore network
     net.restore()
     # Train network
