@@ -21,7 +21,7 @@ class EmbeddingVisualiser(object):
         df = pd.DataFrame(self.labels1)
         df.to_csv(self.labels1_path, sep='\t')
 
-    def create_sprite_file(sprite_width = 8192, sprite_height = 8192, num_indiv_to_represent = self.number_of_animals):
+    def create_sprite_file(self, sprite_width = 8192, sprite_height = 8192, num_indiv_to_represent = None):
         """
         Generates sprite image and associated labels
         """
