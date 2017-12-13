@@ -79,14 +79,12 @@ class ListOfGlobalFragments(object):
                         P1_array = AccumulationManager.set_fragment_temporary_id(fragment, temporary_id, P1_array, index_individual_fragment)
 
             # Check if the global fragment is unique after assigning the identities
-
             if not self.first_global_fragment_for_accumulation.is_unique:
                 identities = self.abort_knowledge_transfer_on_same_animals(video, net)
             else:
                 identities = [fragment.temporary_id for fragment
                             in self.first_global_fragment_for_accumulation.individual_fragments]
                 logger.info("Identities transferred succesfully")
-
 
         [(setattr(fragment, '_acceptable_for_training', True),
             setattr(fragment, '_temporary_id', identities[i]),
@@ -162,7 +160,7 @@ def detect_beginnings(boolean_array):
     return [i for i in range(0,len(boolean_array)) if (boolean_array[i] and not boolean_array[i-1])]
 
 def check_global_fragments(blobs_in_video, num_animals):
-    """Returns an array with True iff:
+    """Returns an array with True if:
     * each blob has a unique blob intersecting in the past and future
     * number of blobs equals num_animals
     """

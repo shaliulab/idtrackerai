@@ -113,7 +113,7 @@ class ConvNetwork():
         print("model_image_width ", model_image_width)
         print("model_image_height ", model_image_height)
         print("**************************************************************")
-        self.y_logits = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals,
+        self.y_logits, self.fc_vector = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals,
                                                                 model_image_width, model_image_height,
                                                                 self.image_channels,
                                                                 self.params.action_on_image,
