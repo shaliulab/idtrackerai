@@ -31,7 +31,11 @@ class ListOfGlobalFragments(object):
 
     def set_first_global_fragment_for_accumulation(self, video, accumulation_trial):
         self.order_by_distance_travelled()
-        self.first_global_fragment_for_accumulation = self.global_fragments[accumulation_trial]
+        try:
+            self.first_global_fragment_for_accumulation = self.global_fragments[accumulation_trial]
+        except:
+            return None
+
         [(setattr(fragment, '_acceptable_for_training', True),
             setattr(fragment, '_temporary_id', i),
             setattr(fragment, '_frequencies', self.give_me_frequencies_first_fragment_accumulated(i, video.number_of_animals, fragment)),
