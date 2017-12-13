@@ -57,7 +57,11 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
                     results['frames_with_zeros_in_groundtruth'].append(groundtruth_blob.frame_number)
 
                 else:
-                    results['sum_individual_P2'][gt_identity] += blob._P2_vector[gt_identity - 1]
+                    try:
+                        results['sum_individual_P2'][gt_identity] += blob._P2_vector[gt_identity - 1]
+                    except:
+                        print("individual ", blob.is_an_individual)
+                        print("fragment identifier ", blob.fragment_identifier)
                     results['number_of_blobs_per_identity'][gt_identity] += 1
                     results['number_of_assigned_blobs_per_identity'][gt_identity] += 1 if blob.assigned_identity != 0 else 0
                     results['number_of_blobs_assigned_during_accumulation_per_identity'][gt_identity] += 1 if blob.used_for_training else 0

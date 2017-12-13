@@ -33,7 +33,7 @@ class EmbeddingVisualiser(object):
         df = pd.DataFrame(self.labels1)
         df.to_csv(self.labels1_path, sep='\t')
 
-    
+
     def create_sprite_file(self, images, labels):
         """
         Generates sprite image and associated labels
