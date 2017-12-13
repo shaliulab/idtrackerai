@@ -182,37 +182,33 @@ class Validator(BoxLayout):
         self.button_box.add_widget(self.compute_accuracy_button)
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.writeIds, frame_index_to_start = self.get_first_frame())
 
-    def go_to_next_crossing(self,instance):
+    def go_to_crossing(self, direction = None, instance = None):
         non_crossing = True
         frame_index = int(self.visualiser.video_slider.value)
 
         while non_crossing == True:
-            if frame_index < CHOSEN_VIDEO.video.number_of_frames - 1:
-                frame_index = frame_index + 1
+            if frame_index < CHOSEN_VIDEO.video.number_of_frames - 1 and frame_index > 0:
+                if direction == "next":
+                    frame_index = frame_index + 1
+                elif direction == "previous":
+                    frame_index = frame_index - 1
                 blobs_in_frame = self.blobs_in_video[frame_index]
                 for blob in blobs_in_frame:
                     if not blob.is_an_individual:
                         non_crossing = False
-                        self.visualiser.video_slider.value = frame_index
-                        self.visualiser.visualise(frame_index, func = self.writeIds)
+                        if instance is not None:
+                            self.visualiser.video_slider.value = frame_index
+                            self.visualiser.visualise(frame_index, func = self.writeIds)
+                        else:
+                            return frame_index
             else:
                 break
 
-    def go_to_previous_crossing(self,instance):
-        non_crossing = True
-        frame_index = int(self.visualiser.video_slider.value)
+    def go_to_next_crossing(self, instance):
+        self.go_to_crossing("next", instance)
 
-        while non_crossing == True:
-            if frame_index > 0:
-                frame_index = frame_index - 1
-                blobs_in_frame = self.blobs_in_video[frame_index]
-                for blob in blobs_in_frame:
-                    if not blob.is_an_individual:
-                        non_crossing = False
-                        self.visualiser.video_slider.value = frame_index
-                        self.visualiser.visualise(frame_index, func = self.writeIds)
-            else:
-                break
+    def go_to_previous_crossing(self, instance):
+        self.go_to_crossing("previous", instance)
 
     def go_to_first_global_fragment(self, instance):
         self.visualiser.visualise(self.get_first_frame(), func = self.writeIds)
@@ -231,9 +227,14 @@ class Validator(BoxLayout):
             frame_index += 1
         elif keycode[1] == 'c':
             self.wc_popup.open()
+        elif keycode[1] == 'up':
+            frame_index = self.go_to_crossing(direction = 'next')
+        elif keycode[1] == 'down':
+            frame_index = self.go_to_crossing(direction = 'previous')
 
-        self.visualiser.video_slider.value = frame_index
-        self.visualiser.visualise(frame_index, func = self.writeIds)
+        if frame_index is not None:
+            self.visualiser.video_slider.value = frame_index
+            self.visualiser.visualise(frame_index, func = self.writeIds)
         return True
 
     @staticmethod
