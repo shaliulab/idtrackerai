@@ -5,11 +5,10 @@ import logging
 logger = logging.getLogger("__main__.network_params")
 
 class NetworkParams(object):
-    def __init__(self,number_of_animals,
-                cnn_model = 0,
-                learning_rate = None, keep_prob = None,
-                use_adam_optimiser = False, scopes_layers_to_optimize = None,
-                restore_folder = None, save_folder = None, knowledge_transfer_folder = None,
+    def __init__(self, number_of_animals, cnn_model = 0, learning_rate = None,
+                keep_prob = None, use_adam_optimiser = False,
+                scopes_layers_to_optimize = None, restore_folder = None,
+                save_folder = None, knowledge_transfer_folder = None,
                 image_size = None,
                 number_of_channels = None,
                 video_path = None):
