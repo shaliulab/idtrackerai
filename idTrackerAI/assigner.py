@@ -46,6 +46,8 @@ assign blobs in video
 """
 def compute_identification_statistics_for_non_accumulated_fragments(fragments, assigner):
     counter = 0
+    print("******************************************")
+    print("frequencies of identity transfer")
     for fragment in fragments:
         if not fragment.used_for_training and fragment.is_an_individual:
             next_counter_value = counter + fragment.number_of_images
@@ -53,6 +55,8 @@ def compute_identification_statistics_for_non_accumulated_fragments(fragments, a
             softmax_probs = assigner.softmax_probs[counter : next_counter_value]
             fragment.compute_identification_statistics(predictions, softmax_probs)
             counter = next_counter_value
+            print(fragment.frequencies)
+    print("******************************************")
 
 def assign_identity(list_of_fragments):
     list_of_fragments.compute_P2_vectors()

@@ -181,10 +181,11 @@ class Video(object):
         self._resolution_reduction = value
         self._height = int(self.original_height * value)
         self._width = int(self.original_width * value)
-        self._bkg = cv2.resize(self.original_bkg, None,
-                                        fx = value,
-                                        fy = value,
-                                        interpolation = cv2.INTER_CUBIC)
+        if self.subtract_bkg:
+            self._bkg = cv2.resize(self.original_bkg, None,
+                                            fx = value,
+                                            fy = value,
+                                            interpolation = cv2.INTER_CUBIC)
         self._ROI = cv2.resize(self.original_ROI, None,
                                         fx = value,
                                         fy = value,
