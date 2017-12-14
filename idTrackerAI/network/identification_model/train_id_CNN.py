@@ -6,8 +6,8 @@ import os
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
-
-BATCH_SIZE = 50
+sys.path.append('../../')
+from constants import BATCH_SIZE_IDCNN
 
 class TrainIdCNN(object):
     def __init__(self, network, data_set,

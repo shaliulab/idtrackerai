@@ -283,8 +283,8 @@ class ListOfFragments(object):
         plt.show()
 
 def create_list_of_fragments(blobs_in_video, number_of_animals):
-    attributes_to_set = ['_image_for_identification', 'bounding_box_image', 'bounding_box_in_frame_coordinates'
-                                        '_area', '_next', '_previous',]
+    attributes_to_set = ['_image_for_identification',
+                        'bounding_box_image', '_next', '_previous']
     fragments = []
     used_fragment_identifiers = set()
 
@@ -325,15 +325,8 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                                     pixels,
                                     blob.is_an_individual,
                                     blob.is_a_crossing,
-                                    blob.is_a_jump,
-                                    blob.is_a_jumping_fragment,
-                                    blob.is_a_ghost_crossing,
                                     number_of_animals,
                                     user_generated_identity = blob.user_generated_identity)
-                fragment.next_blobs_fragment_identifier = [next_blob.fragment_identifier
-                                                            for next_blob in blob.next]
-                fragment.previous_blobs_fragment_identifier = [previous_blob.fragment_identifier
-                                                            for previous_blob in blob.previous]
                 used_fragment_identifiers.add(current_fragment_identifier)
                 fragments.append(fragment)
 

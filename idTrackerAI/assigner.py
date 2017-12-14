@@ -63,32 +63,6 @@ def assign_identity(list_of_fragments):
         fragment.assign_identity()
         number_of_unidentified_individual_fragments -= 1
 
-
-"""
-********************************************************************************
-assign ghost crossings
-********************************************************************************
-"""
-def get_attributes_for_ghost_crossing_assignment(fragment_to_assign, fragments, target_fragment_identifier):
-    if target_fragment_identifier is not None:
-        attributes = ['identity', 'P1_vector', 'P2_vector']
-        for fragment in fragments:
-            if fragment.identifier == target_fragment_identifier:
-                [setattr(fragment_to_assign, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes
-                    if fragment.is_an_individual and hasattr(fragment, 'identity')]
-
-def assign_ghost_crossings(fragments):
-    for fragment in tqdm(fragments, desc = "Assigning ghost crossings"):
-        if fragment.is_a_ghost_crossing:
-            if len(fragment.next_blobs_fragment_identifier) == 1:
-                target_fragment_identifier = fragment.next_blobs_fragment_identifier[0]
-            elif len(fragment.previous_blobs_fragment_identifier) == 1:
-                target_fragment_identifier = fragment.previous_blobs_fragment_identifier[0]
-            else:
-                target_fragment_identifier = None
-            get_attributes_for_ghost_crossing_assignment(fragment, fragments, target_fragment_identifier)
-
-
 """
 ********************************************************************************
 main assigner
@@ -111,5 +85,3 @@ def assigner(list_of_fragments, video, net):
     # compute P2 for all the individual fragments (including the already accumulated)
     logger.info("Assigning identities")
     assign_identity(list_of_fragments)
-    logger.info("Assigning ghost crossings")
-    assign_ghost_crossings(list_of_fragments.fragments)

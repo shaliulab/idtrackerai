@@ -56,9 +56,7 @@ from generate_groundtruth import GroundTruth, generate_groundtruth
 from library_utils import Dataset, BlobsListConfig, subsample_dataset_by_individuals, generate_list_of_blobs, LibraryJobConfig, check_if_repetition_has_been_computed
 
 NUM_CHUNKS_BLOB_SAVING = 500 #it is necessary to split the list of connected blobs to prevent stack overflow (or change sys recursionlimit)
-VEL_PERCENTILE = 99
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
-RESTORE_CRITERION = 'last'
 ###
 # seed numpy
 np.random.seed(0)
@@ -193,8 +191,8 @@ if __name__ == '__main__':
                             video._number_of_animals = group_size #int: number of animals in the video
                             video._maximum_number_of_blobs = group_size #int: the maximum number of blobs detected in the video
                             video._number_of_frames = frames_in_video
-                            video.tracking_with_knowledge_transfer = job_config.knowledge_transfer_flag
-                            video.knowledge_transfer_model_folder = job_config.knowledge_transfer_folder
+                            video._tracking_with_knowledge_transfer = job_config.knowledge_transfer_flag
+                            video._knowledge_transfer_model_folder = job_config.knowledge_transfer_folder
                             video._identification_image_size = (imsize, imsize, 1) #NOTE: this can change if the library changes. BUILD next library with new preprocessing.
 
                             #############################################################
@@ -298,7 +296,7 @@ if __name__ == '__main__':
                                 logger.info("Initialising accumulation manager")
                                 # the list of global fragments is ordered in place from the distance (in frames) wrt
                                 # the core of the first global fragment that will be accumulated
-                                video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = 0))
+                                video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = 0))
                                 list_of_global_fragments.video = video
                                 list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = 0)
                                 accumulation_manager = AccumulationManager(video, list_of_fragments,
@@ -374,7 +372,7 @@ if __name__ == '__main__':
                                         #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
                                         list_of_fragments.reset(roll_back_to = 'fragmentation')
                                         list_of_global_fragments.reset(roll_back_to = 'fragmentation')
-                                        video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1))
+                                        video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = i - 1))
                                         if video.first_frame_first_global_fragment[-1] is not None:
                                             #create folder to store accumulation models
                                             video.create_accumulation_folder(iteration_number = i)
@@ -507,7 +505,7 @@ if __name__ == '__main__':
                                 ####
                                 #############################################################
                                 list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
-                                list_of_blobs.save(video.blobs_path, number_of_chunks = video.number_of_frames, video_has_been_segmented = video.has_been_segmented)
+                                list_of_blobs.save(video.blobs_path, number_of_chunks = video.number_of_frames)
 
                                 #############################################################
                                 ##########  Accuracies after solving duplications ##########
@@ -601,6 +599,7 @@ if __name__ == '__main__':
                                                                                 #  'number_of_individual_fragments_that_are_repetitions':individual_fragments_that_are_repetitions,
 
                             else:
+                                video.save()
                                 #############################################################
                                 ###################  Update data-frame   ####################
                                 #############################################################

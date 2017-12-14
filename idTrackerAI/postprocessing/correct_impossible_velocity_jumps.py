@@ -19,9 +19,7 @@ from compute_velocity_model import compute_velocity_from_list_of_fragments, comp
 from get_trajectories import produce_trajectories
 from plot_individual_velocity import plot_individual_trajectories_velocities_and_accelerations
 
-VEL_PERCENTILE = 99 #percentile used to model velocity jumps
-P2_CERTAINTY_THRESHOLD = .9
-VELOCITY_TOLERANCE = 1.5
+from constants import VEL_PERCENTILE #percentile used to model velocity jumps
 
 def reassign(fragment, fragments, impossible_velocity_threshold):
     def get_available_and_non_available_identities(fragment):
@@ -111,16 +109,40 @@ def compute_velocities_consecutive_fragments(neighbour_fragment_past, fragment, 
         velocities[1] = neighbour_fragment_future.compute_border_velocity(fragment)
     return velocities
 
+def get_fragment_with_same_identity(video, list_of_fragments, fragment, direction):
+    neighbour_fragment = None
+    number_of_frames_in_direction = 0
+    frame_number = fragment.start_end[0] if direction == 'to_the_past' else fragment.start_end[1]
+
+    while neighbour_fragment is None and (frame_number > 0 and frame_number < video.number_of_frames):
+        neighbour_fragment = fragment.get_neighbour_fragment(list_of_fragments.fragments, direction, number_of_frames_in_direction = number_of_frames_in_direction)
+        number_of_frames_in_direction += 1
+        frame_number += -1 if direction == 'to_the_past' else 1
+
+    return neighbour_fragment, number_of_frames_in_direction
+
+def check_identification_consistency(video, list_of_fragments, fragment, impossible_velocity_threshold):
+    neighbour_fragment_past, number_of_frames_in_past = get_fragment_with_same_identity(video, list_of_fragments, fragment, 'to_the_past')
+    neighbour_fragment_future, number_of_frames_in_future = get_fragment_with_same_identity(video, list_of_fragments, fragment, 'to_the_future')
+    velocities_between_fragments = np.asarray(compute_velocities_consecutive_fragments(neighbour_fragment_past, fragment, neighbour_fragment_future)) / \
+                                    np.asarray([number_of_frames_in_past, number_of_frames_in_future])
+
+    return neighbour_fragment_past, neighbour_fragment_future, velocities_between_fragments
+
 def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = None):
     fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(scope, video.first_frame_first_global_fragment)
-    impossible_velocity_threshold = video.velocity_threshold * VELOCITY_TOLERANCE
+    impossible_velocity_threshold = video.velocity_threshold
 
     for fragment in tqdm(fragments_in_direction, desc = 'Correcting impossible velocity jumps ' + scope):
         if fragment.is_an_individual and fragment.assigned_identity != 0:
 
-            neighbour_fragment_past = fragment.get_neighbour_fragment(list_of_fragments.fragments, 'to_the_past')
-            neighbour_fragment_future = fragment.get_neighbour_fragment(list_of_fragments.fragments, 'to_the_future')
-            velocities_between_fragments = compute_velocities_consecutive_fragments(neighbour_fragment_past, fragment, neighbour_fragment_future)
+            # neighbour_fragment_past = fragment.get_neighbour_fragment(list_of_fragments.fragments, 'to_the_past')
+            # neighbour_fragment_future = fragment.get_neighbour_fragment(list_of_fragments.fragments, 'to_the_future')
+            # velocities_between_fragments = compute_velocities_consecutive_fragments(neighbour_fragment_past, fragment, neighbour_fragment_future)
+
+            neighbour_fragment_past, \
+            neighbour_fragment_future, \
+            velocities_between_fragments = check_identification_consistency(video, list_of_fragments, fragment, impossible_velocity_threshold)
 
             if all(velocity > impossible_velocity_threshold for velocity in velocities_between_fragments):
                 # print("\nidentity: ", fragment.assigned_identity)
@@ -148,7 +170,6 @@ def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = Non
                 else:
                     reassign(neighbour_fragment_future, list_of_fragments.fragments, impossible_velocity_threshold)
                 # print("corrected identity: ", fragment.assigned_identity)
-
 
 def correct_impossible_velocity_jumps(video, list_of_fragments):
     correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = 'to_the_past')

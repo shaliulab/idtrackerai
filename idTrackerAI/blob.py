@@ -23,7 +23,10 @@ save_preprocessing_step_image
 """
 
 class Blob(object):
-    def __init__(self, centroid, contour, area, bounding_box_in_frame_coordinates, bounding_box_image = None, estimated_body_length = None, pixels = None, number_of_animals = None, frame_number = None):
+    def __init__(self, centroid, contour, area,
+                bounding_box_in_frame_coordinates, bounding_box_image = None,
+                estimated_body_length = None, pixels = None,
+                number_of_animals = None, frame_number = None):
         self.frame_number = frame_number
         self.number_of_animals = number_of_animals
         self.centroid = np.array(centroid) # numpy array (int64): coordinates of the centroid of the blob in pixels
@@ -36,7 +39,11 @@ class Blob(object):
         self.pixels = pixels # list of int's: linearized pixels of the blob
         self._is_an_individual = False
         self._is_a_crossing = False
-        self.reset_before_fragmentation('fragmentation')
+        self._is_a_misclassified_individual = False
+        self.next = [] # next blob object overlapping in pixels with current blob object
+        self.previous = [] # previous blob object overlapping in pixels with the current blob object
+        self._fragment_identifier = None # identity in individual fragment after fragmentation
+        self._blob_index = None # index of the blob to plot the individual fragments
         self._used_for_training = None
         self._accumulation_step = None
         self._generated_while_closing_the_gap = False
@@ -44,13 +51,6 @@ class Blob(object):
         self._identity_corrected_closing_gaps = None
         self._identity_corrected_solving_duplication = None
         self._identity = None
-
-    def reset_before_fragmentation(self, recovering_from):
-        if recovering_from == 'fragmentation':
-            self.next = [] # next blob object overlapping in pixels with current blob object
-            self.previous = [] # previous blob object overlapping in pixels with the current blob object
-            self._fragment_identifier = None # identity in individual fragment after fragmentation
-            self._blob_index = None # index of the blob to plot the individual fragments
 
     @property
     def fragment_identifier(self):
@@ -61,44 +61,28 @@ class Blob(object):
         return self._is_an_individual
 
     @property
-    def is_a_jump(self):
-        is_a_jump = False
-        if self.is_an_individual and len(self.next) == 0 and len(self.previous) == 0: # 1 frame jumps
-            is_a_jump = True
-        return is_a_jump
-
-    @property
-    def is_a_jumping_fragment(self):
-        # this is a fragment of 2 frames that it is not considered a individual fragment but it is also not a single frame jump
-        is_a_jumping_fragment = False
-        if self.is_an_individual and len(self.next) == 0 and len(self.previous) == 1 and len(self.previous[0].previous) == 0 and len(self.previous[0].next) == 1: # 2 frames jumps
-            is_a_jumping_fragment = True
-        elif self.is_an_individual and len(self.next) == 1 and len(self.previous) == 0 and len(self.next[0].next) == 0 and len(self.next[0].previous) == 1: # 2 frames jumps
-            is_a_jumping_fragment = True
-        return is_a_jumping_fragment
-
-    @property
-    def is_a_ghost_crossing(self):
-        return (self.is_an_individual and (len(self.next) != 1 or len(self.previous) != 1))
-
-    @property
     def is_a_crossing(self):
         return self._is_a_crossing
 
     def check_for_multiple_next_or_previous(self, direction = None):
+        opposite_direction = 'next' if direction == 'previous' else 'previous'
         current = getattr(self, direction)[0]
 
-        while len(getattr(current, direction)) == 1:
+        while len(getattr(current, direction)) == 1 :
 
             current = getattr(current, direction)[0]
-            if len(getattr(self, direction)) > 1:
+            if len(getattr(current, direction)) > 1:# or\
+                # (len(getattr(getattr(current, opposite_direction)[0], direction)) != 1 or\
+                # len(getattr(getattr(current, direction)[0], opposite_direction)) != 1):
                 return True
                 break
 
         return False
 
     def is_a_sure_individual(self):
-        if self.is_an_individual and len(self.previous) > 0 and len(self.next) > 0:
+        if self.is_an_individual and len(self.previous) == 1 \
+            and len(self.next) == 1 and len(self.next[0].previous) == 1 and\
+            len(self.previous[0].next) == 1:
             has_multiple_previous = self.check_for_multiple_next_or_previous('previous')
             has_multiple_next = self.check_for_multiple_next_or_previous('next')
             if not has_multiple_previous and not has_multiple_next:
@@ -107,9 +91,9 @@ class Blob(object):
             return False
 
     def is_a_sure_crossing(self):
-        if len(self.previous) > 1 or len(self.next) > 1:
+        if self.is_a_crossing and (len(self.previous) > 1 or len(self.next) > 1):
             return True
-        elif len(self.previous) == 1 and len(self.next) == 1:
+        elif self.is_a_crossing and len(self.previous) == 1 and len(self.next) == 1:
             has_multiple_previous = self.check_for_multiple_next_or_previous('previous')
             has_multiple_next = self.check_for_multiple_next_or_previous('next')
             if has_multiple_previous and has_multiple_next:
@@ -160,6 +144,10 @@ class Blob(object):
         return self.is_an_individual and self.is_in_a_fragment
 
     @property
+    def is_a_misclassified_individual(self):
+        return self._is_a_misclassified_individual
+
+    @property
     def blob_index(self):
         return self._blob_index
 
@@ -201,6 +189,15 @@ class Blob(object):
     @property
     def user_generated_identity(self):
         return self._user_generated_identity
+
+    @user_generated_identity.setter
+    def user_generated_identity(self, new_value):
+        if not self.is_a_crossing:
+            self.propagate_groundtruth_identity_in_individual_fragment()
+        elif self.is_a_crossing and self.assigned_identity is None:
+            self._is_an_individual = True
+            self._is_a_crossing = False
+            self._is_a_misclassified_individual = True
 
     @property
     def identity_corrected_solving_duplication(self):
@@ -255,18 +252,20 @@ class Blob(object):
         self._extreme1_coordinates, \
         self._extreme2_coordinates, _ = self.get_image_for_identification(video)
 
-    def get_image_for_identification(self, video, folder_to_save_for_paper_figure = ''):
+    def get_image_for_identification(self, video, folder_to_save_for_paper_figure = '', image_size = None):
         if video.resolution_reduction == 1:
             height = video.height
             width = video.width
         else:
             height  = int(video.height * video.resolution_reduction)
             width  = int(video.width * video.resolution_reduction)
+        if image_size is None:
+            image_size = video.identification_image_size[0]
 
         return self._get_image_for_identification(height, width,
                                                 self.bounding_box_image, self.pixels,
                                                 self.bounding_box_in_frame_coordinates,
-                                                video.identification_image_size[0],
+                                                image_size,
                                                 folder_to_save_for_paper_figure = folder_to_save_for_paper_figure)
 
     @staticmethod
@@ -335,16 +334,26 @@ def remove_background_pixels(height, width, bounding_box_image, pixels, bounding
     temp_image = np.zeros_like(bounding_box_image).astype('uint8')
     temp_image[pxs[0,:], pxs[1,:]] = 255
     if folder_to_save_for_paper_figure:
-        save_preprocessing_step_image(temp_image/255, folder_to_save_for_paper_figure, name = '1_blob_bw',  min_max = [0, 1])
+        new_thresholded_image = temp_image.copy()
+        new_bounding_box_image = bounding_box_image.copy()
+        new_bounding_box_image = cv2.cvtColor(new_bounding_box_image, cv2.COLOR_GRAY2RGB)
+        contours, hierarchy = cv2.findContours(new_thresholded_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(new_bounding_box_image, contours, -1, (255,0,0), 1)
+        save_preprocessing_step_image(new_bounding_box_image/255, folder_to_save_for_paper_figure, name = '1_blob_contour',  min_max = [0, 1])
     temp_image = cv2.dilate(temp_image, np.ones((3,3)).astype('uint8'), iterations = 1)
     if folder_to_save_for_paper_figure:
-        save_preprocessing_step_image(temp_image, folder_to_save_for_paper_figure, name = '2_blob_bw_dilated',  min_max = [0, 1])
+        new_thresholded_image = temp_image.copy()
+        new_bounding_box_image = bounding_box_image.copy()
+        new_bounding_box_image = cv2.cvtColor(new_bounding_box_image, cv2.COLOR_GRAY2RGB)
+        contours, hierarchy = cv2.findContours(new_thresholded_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(new_bounding_box_image, contours, -1, (255,0,0), 1)
+        save_preprocessing_step_image(new_bounding_box_image/255, folder_to_save_for_paper_figure, name = '2_blob_bw_dilated',  min_max = [0, 1])
     rows, columns = np.where(temp_image == 255)
     dilated_pixels = np.array([rows, columns])
 
     temp_image[dilated_pixels[0,:], dilated_pixels[1,:]] = bounding_box_image[dilated_pixels[0,:], dilated_pixels[1,:]]
     if folder_to_save_for_paper_figure:
-        save_preprocessing_step_image(temp_image/255, folder_to_save_for_paper_figure, name = '3_blob_dilated',  min_max = [0, 1])
+        save_preprocessing_step_image(temp_image/255, folder_to_save_for_paper_figure, name = '3_blob_contour_dilated',  min_max = [0, 1])
     return temp_image
 
 def full2miniframe(point, boundingBox):

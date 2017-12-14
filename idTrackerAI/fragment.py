@@ -10,27 +10,16 @@ import logging
 from math import sqrt
 
 from py_utils import append_values_to_lists, delete_attributes_from_object
+from constants import MAX_FLOAT, MIN_FLOAT, FIXED_IDENTITY_THRESHOLD
 
 logger = logging.getLogger("__main__.fragment")
 
-MAX_FLOAT = sys.float_info[0]
-MIN_FLOAT = sys.float_info[3]
-FIXED_IDENTITY_THRESHOLD = .9
-
 class Fragment(object):
-    def __init__(self, fragment_identifier = None,
-                        start_end = None,
-                        blob_hierarchy_in_starting_frame = None,
-                        images = None,
+    def __init__(self, fragment_identifier = None, start_end = None,
+                        blob_hierarchy_in_starting_frame = None, images = None,
                         bounding_box_in_frame_coordinates = None,
-                        centroids = None,
-                        areas = None,
-                        pixels = None,
-                        is_an_individual = None,
-                        is_a_crossing = None,
-                        is_a_jump = None,
-                        is_a_jumping_fragment = None,
-                        is_a_ghost_crossing = None,
+                        centroids = None, areas = None, pixels = None,
+                        is_an_individual = None, is_a_crossing = None,
                         number_of_animals = None,
                         user_generated_identity = None):
         self.identifier = fragment_identifier
@@ -45,9 +34,6 @@ class Fragment(object):
         self.pixels = pixels
         self.is_an_individual = is_an_individual
         self.is_a_crossing = is_a_crossing
-        self.is_a_jump = is_a_jump
-        self.is_a_jumping_fragment = is_a_jumping_fragment
-        self.is_a_ghost_crossing = is_a_ghost_crossing
         self.number_of_animals = number_of_animals
         self.possible_identities = range(1, self.number_of_animals + 1)
         self._is_in_a_global_fragment = False
@@ -303,6 +289,7 @@ class Fragment(object):
             possible_identities, max_P2 = self.get_possible_identities(self.P2_vector)
             if len(possible_identities) > 1:
                 self._identity = 0
+                self.zero_identity_assigned_by_P2 = True
                 self._ambiguous_identities = possible_identities
             else:
                 if max_P2 > FIXED_IDENTITY_THRESHOLD:
@@ -321,14 +308,15 @@ class Fragment(object):
         coexisting_P1_vectors = np.asarray([fragment.P1_vector for fragment in self.coexisting_individual_fragments])
         numerator = np.asarray(self.P1_vector) * np.prod(1. - coexisting_P1_vectors, axis = 0)
         denominator = np.sum(numerator)
-        if denominator == 0:
-            self._P2_vector = self.P1_vector
-        else:
+        if denominator != 0:
             self._P2_vector = numerator / denominator
-        P2_vector_ordered = np.sort(self.P2_vector)
-        P2_first_max = P2_vector_ordered[-1]
-        P2_second_max = P2_vector_ordered[-2]
-        self._certainty_P2 = MAX_FLOAT if P2_second_max == 0 else P2_first_max / P2_second_max
+            P2_vector_ordered = np.sort(self.P2_vector)
+            P2_first_max = P2_vector_ordered[-1]
+            P2_second_max = P2_vector_ordered[-2]
+            self._certainty_P2 = MAX_FLOAT if P2_second_max == 0 else P2_first_max / P2_second_max
+        else:
+            self._P2_vector = np.zeros(self.number_of_animals)
+            self._certainty_P2 = 0.
 
     @staticmethod
     def compute_identification_frequencies_individual_fragment(predictions, number_of_animals):
@@ -380,15 +368,15 @@ class Fragment(object):
         certainty = np.diff(np.multiply(sorted_p1_vector,sorted_softmax_probs)[-2:])/np.sum(sorted_p1_vector[-2:])
         return certainty[0]
 
-    def get_neighbour_fragment(self, fragments, scope):
+    def get_neighbour_fragment(self, fragments, scope, number_of_frames_in_direction = 0):
         if scope == 'to_the_past':
             neighbour = [fragment for fragment in fragments
                             if fragment.assigned_identity == self.assigned_identity
-                            and self.start_end[0] - fragment.start_end[1] == 1]
+                            and self.start_end[0] - fragment.start_end[1] == number_of_frames_in_direction]
         elif scope == 'to_the_future':
             neighbour = [fragment for fragment in fragments
                             if fragment.assigned_identity == self.assigned_identity
-                            and fragment.start_end[0] - self.start_end[1] == 1]
+                            and fragment.start_end[0] - self.start_end[1] == number_of_frames_in_direction]
 
         assert len(neighbour) < 2
         return neighbour[0] if len(neighbour) == 1 else None

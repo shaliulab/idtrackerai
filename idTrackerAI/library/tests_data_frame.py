@@ -65,8 +65,8 @@ def tests_data_frame():
                                                     "ids_codes": 'aaa',
                                                     "group_sizes": [100],
                                                     "frames_in_video": [10000],
-                                                    "scale_parameter": [2000, 1000, 500, 250, 100],
-                                                    "shape_parameter": [0.5, 0.35, 0.25, 0.15, 0.05],
+                                                    "scale_parameter": [100],#[2000, 1000, 500, 250, 100],
+                                                    "shape_parameter": [0.35],#[0.5, 0.35, 0.25, 0.15, 0.05],
                                                     "repetitions": [1],
                                                      }, ignore_index=True)
 

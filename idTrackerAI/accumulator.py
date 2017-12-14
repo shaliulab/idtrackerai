@@ -9,7 +9,7 @@ from assigner import assign
 from trainer import train
 from accumulation_manager import AccumulationManager, get_predictions_of_candidates_fragments
 
-THRESHOLD_EARLY_STOP_ACCUMULATION = .9995
+from constants import THRESHOLD_EARLY_STOP_ACCUMULATION
 logger = logging.getLogger('__main__.accumulator')
 
 def early_stop_criteria_for_accumulation(number_of_accumulated_images, number_of_unique_images_in_global_fragments):
@@ -64,7 +64,7 @@ def accumulate(accumulation_manager,
         if accumulation_manager.ratio_accumulated_images > THRESHOLD_EARLY_STOP_ACCUMULATION:
             logger.debug("Stopping accumulation by early stopping criteria")
             return accumulation_manager.ratio_accumulated_images
-        # Set accumulation params for rest of the accumulation
+        # Set accumulation parameters for rest of the accumulation
         #take images from global fragments not used in training (in the remainder test global fragments)
         logger.info("Get new global fragments for training")
         # candidates_next_global_fragments = [global_fragment for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments

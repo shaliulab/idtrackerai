@@ -21,8 +21,8 @@ import pyautogui
 import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
-from segmentation import segmentVideo, blobExtractor
-from video_utils import checkBkg
+from segmentation import segmentVideo
+from video_utils import checkBkg, blobExtractor
 from py_utils import get_spaced_colors_util, saveFile, loadFile, get_existent_preprocessing_steps
 
 from blob import Blob
@@ -383,7 +383,7 @@ def SegmentationPreview(video):
             frame = cv2.resize(frame,None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         avIntensity = np.float32(np.mean(frameGray))
-        avFrame = np.divide(frameGray,avIntensity)
+        avFrame = frameGray/avIntensity
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
@@ -471,6 +471,190 @@ def SegmentationPreview(video):
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
+
+def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
+    global cap, currentSegment
+    currentSegment = 0
+    cap = cv2.VideoCapture(video.video_path)
+    ret, frame = cap.read()
+    numFrames = video.number_of_frames
+    bkg = video.bkg
+    mask = video.ROI
+    if video.resolution_reduction != 1:
+        if bkg is not None:
+            bkg = cv2.resize(bkg, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+        mask = cv2.resize(mask, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+    subtract_bkg = video.subtract_bkg
+    if video.resolution_reduction == 1:
+        height = video.height
+        width = video.width
+    else:
+        height = int(video.height * video.resolution_reduction)
+        width = int(video.width * video.resolution_reduction)
+
+
+    def thresholder(minTh, maxTh):
+        toile = np.zeros_like(frameGray, dtype='uint8')
+        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, bkg, mask, subtract_bkg)
+        maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
+        minArea = cv2.getTrackbarPos('minArea', 'Bars')
+        segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
+        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray, minArea, maxArea)
+        cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
+        shower = cv2.addWeighted(frameGray,1,toile,.5,0)
+        showerCopy = shower.copy()
+        print(showerCopy.shape)
+        resUp = cv2.getTrackbarPos('ResUp', 'Bars') if cv2.getTrackbarPos('ResUp', 'Bars') > 0 else 1
+        resDown = cv2.getTrackbarPos('ResDown', 'Bars') if cv2.getTrackbarPos('ResDown', 'Bars') > 0 else 1
+        print(resUp, resDown)
+        print(video.resize)
+
+        showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
+        showerCopy = cv2.resize(showerCopy,None, fx = 1/resDown, fy = 1/resDown)
+        numColumns = 5
+        numGoodContours = len(goodContours)
+        numBlackImages = numColumns - numGoodContours % numColumns
+        numImages = numGoodContours + numBlackImages
+        j = 0
+        maximum_body_length = 70
+        if estimated_body_lengths:
+            maximum_body_length = np.max(estimated_body_lengths)
+        imagesMat = []
+        rowImage = []
+
+        logger.debug("num blobs detected: %i" %numGoodContours)
+        logger.debug("maximum_body_length %i " %maximum_body_length)
+        logger.debug("areas: %s" %str(areas))
+
+        identificationImageSize = int(np.sqrt(maximum_body_length ** 2 / 2))
+        identificationImageSize = identificationImageSize + identificationImageSize%2  #this is to make the identificationImageSize even
+
+        while j < numImages:
+            if j < numGoodContours:
+                _ , _, _, image_for_identification = Blob._get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize)
+            else:
+                image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
+            rowImage.append(image_for_identification)
+            if (j+1) % numColumns == 0:
+                imagesMat.append(np.hstack(rowImage))
+                rowImage = []
+            j += 1
+
+        imagesMat = np.vstack(imagesMat)
+        cv2.imshow('Bars',np.squeeze(imagesMat))
+        cv2.imshow('IdPlayer', showerCopy)
+        cv2.moveWindow('Bars', 10,10 )
+        cv2.moveWindow('IdPlayer', 200, 10 )
+
+    def visualise_frame(frame_number):
+        global frame, avFrame, frameGray, cap, currentSegment
+        # Select segment dataframe and change cap if needed
+        sNumber = video.in_which_episode(frame_number)
+        if sNumber != currentSegment: # we are changing segment
+            currentSegment = sNumber
+            if video.paths_to_video_segments:
+                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
+        #Get frame from video file
+        if video.paths_to_video_segments:
+            start = video.episodes_start_end[sNumber][0]
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, frame_number - start)
+        else:
+            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, frame_number)
+        ret, frame = cap.read()
+        print('----------------------', ret)
+        if video.resolution_reduction != 1:
+            frame = cv2.resize(frame,None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
+        frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        avIntensity = np.float32(np.mean(frameGray))
+        avFrame = frameGray/avIntensity
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+
+    def changeMinTh(minTh):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+
+    def changeMaxTh(maxTh):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+
+    def changeMinArea(x):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+
+    def changeMaxArea(maxArea):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+
+    def resizeImageUp(res):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+
+    def resizeImageDown(res):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+
+    def resizeImageDown(res):
+        minTh = cv2.getTrackbarPos('minTh', 'Bars')
+        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
+        thresholder(minTh, maxTh)
+
+    cv2.createTrackbar('minTh', 'Bars', 0, 255, changeMinTh)
+    cv2.createTrackbar('maxTh', 'Bars', 0, 255, changeMaxTh)
+    cv2.createTrackbar('minArea', 'Bars', 0, 2000, changeMinArea)
+    cv2.createTrackbar('maxArea', 'Bars', 0, 60000, changeMaxArea)
+    cv2.createTrackbar('ResUp', 'Bars', 1, 20, resizeImageUp)
+    cv2.createTrackbar('ResDown', 'Bars', 1, 20, resizeImageDown)
+    defMinTh = new_preprocessing_parameters['min_threshold']
+    defMaxTh = new_preprocessing_parameters['max_threshold']
+    defMinA = new_preprocessing_parameters['min_area']
+    defMaxA = new_preprocessing_parameters['max_area']
+    defRes = video.resize
+    visualise_frame(frame_number)
+    changeMaxArea(defMaxA)
+    cv2.setTrackbarPos('maxArea', 'Bars', defMaxA)
+    changeMinArea(defMinA)
+    cv2.setTrackbarPos('minArea', 'Bars', defMinA)
+    changeMinTh(defMinTh)
+    cv2.setTrackbarPos('minTh', 'Bars', defMinTh)
+    changeMaxTh(defMaxTh)
+    cv2.setTrackbarPos('maxTh', 'Bars', defMaxTh)
+
+    if defRes > 0:
+        resizeImageUp(defRes)
+        cv2.setTrackbarPos('ResUp', 'Bars', defRes)
+        resizeImageDown(1)
+        cv2.setTrackbarPos('ResDown', 'Bars', 1)
+    elif defRes < 0:
+        resizeImageUp(1)
+        cv2.setTrackbarPos('ResUp', 'Bars', 1)
+        resizeImageDown(abs(defRes))
+        cv2.setTrackbarPos('ResDown', 'Bars', abs(defRes))
+    else:
+        cv2.setTrackbarPos('ResDown', 'Bars', 1)
+        cv2.setTrackbarPos('ResUp', 'Bars', 1)
+
+
+    cv2.waitKey(0)
+    #update values in video
+    new_preprocessing_parameters = {}
+    new_preprocessing_parameters['min_threshold'] =  cv2.getTrackbarPos('minTh', 'Bars')
+    new_preprocessing_parameters['max_threshold'] = cv2.getTrackbarPos('maxTh', 'Bars')
+    new_preprocessing_parameters['min_area'] = cv2.getTrackbarPos('minArea', 'Bars')
+    new_preprocessing_parameters['max_area'] = cv2.getTrackbarPos('maxArea', 'Bars')
+    cap.release()
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
+    cv2.destroyAllWindows()
+    cv2.waitKey(1)
+    return new_preprocessing_parameters
 
 def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, preprocParams, frameIndices, size = 1):
 
@@ -693,12 +877,11 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         video._bkg = checkBkg(video, old_video, usePreviousBkg)
         # Resolution reduction
         video._resolution_reduction = check_resolution_reduction(video, old_video, usePreviousRR)
-
-        video._min_threshold = 0
-        video._max_threshold = 135
-        video._min_area = 150
-        video._max_area = 10000
-        video._resize = 1
+        # Preprocessing
+        if old_video is not None:
+            preprocessing_attributes = ['min_threshold', 'max_threshold',
+                                        'min_area','max_area', 'resize',]
+            video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         preprocParams = SegmentationPreview(video)
         cv2.waitKey(1)
         cv2.destroyAllWindows()
@@ -719,7 +902,7 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         preprocessing_attributes = ['apply_ROI','subtract_bkg',
                                     'resolution_reduction',
                                     'maximum_number_of_blobs',
-                                    'number_of_channels', 
+                                    'number_of_channels',
                                     'median_body_length',
                                     'model_area',
                                     'identification_image_size',
@@ -1020,8 +1203,6 @@ def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous 
                     logger.debug("is_an_individual: %s" %blob.is_an_individual)
                     logger.debug("is_in_a_fragment: %s" %blob.is_in_a_fragment)
                     logger.debug("is_an_individual_in_a_fragment: %s" %blob.is_an_individual_in_a_fragment)
-                    logger.debug("is_a_jump: %s" %blob.is_a_jump)
-                    logger.debug("is_a_ghost_crossing: %s" %blob.is_a_ghost_crossing)
                     logger.debug("is_a_crossing: %s" %blob.is_a_crossing)
                     logger.debug("next: %s" %blob.next)
                     logger.debug("previous: %s" %blob.previous)

@@ -24,6 +24,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
     #create dictionary to store eventual corrections made by the user
     results = {}
     results['number_of_blobs_per_identity'] = {i:0 for i in range(1, number_of_animals + 1)}
+    results['sum_individual_P2'] = {i:0 for i in range(1, number_of_animals + 1)}
     results['number_of_assigned_blobs_per_identity'] = {i:0 for i in range(1, number_of_animals + 1)}
     results['number_of_blobs_assigned_during_accumulation_per_identity'] = {i:0 for i in range(1, number_of_animals + 1)}
     results['number_of_blobs_after_accumulation_per_identity'] = {i:0 for i in range(1, number_of_animals + 1)}
@@ -32,6 +33,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
     results['number_of_errors_in_blobs_assigned_during_accumulation'] = {i:0 for i in range(1, number_of_animals + 1)}
     results['number_of_errors_in_blobs_after_accumulation'] = {i:0 for i in range(1, number_of_animals + 1)}
     results['number_of_errors_in_blobs_assigned_after_accumulation'] = {i:0 for i in range(1, number_of_animals + 1)}
+    results['number_of_individual_blobs'] = 0
     results['number_of_crossing_blobs'] = 0
     results['number_of_crossings_blobs_assigned_as_individuals'] = 0
     results['frames_with_identity_errors'] = []
@@ -50,25 +52,31 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
                 gt_identity = groundtruth_blob.identity
 
             if groundtruth_blob.is_an_individual and gt_identity != -1: # we are not considering crossing or failures of the model area
+                results['number_of_individual_blobs'] += 1
                 if gt_identity == 0:
                     results['frames_with_zeros_in_groundtruth'].append(groundtruth_blob.frame_number)
 
-                # print(gt_identity, blob.assigned_identity)
-
-                results['number_of_blobs_per_identity'][gt_identity] += 1
-                results['number_of_assigned_blobs_per_identity'][gt_identity] += 1 if blob.assigned_identity != 0 else 0
-                results['number_of_blobs_assigned_during_accumulation_per_identity'][gt_identity] += 1 if blob.used_for_training else 0
-                results['number_of_blobs_after_accumulation_per_identity'][gt_identity] += 1 if not blob.used_for_training else 0
-                if gt_identity != blob.assigned_identity:
-                    results['number_of_errors_in_all_blobs'][gt_identity] += 1
-                    results['number_of_errors_in_blobs_after_accumulation'][gt_identity] += 1 if not blob.used_for_training else 0
-                    if blob.assigned_identity != 0:
-                        results['number_of_errors_in_assigned_blobs'][gt_identity] += 1
-                        results['number_of_errors_in_blobs_assigned_during_accumulation'][gt_identity] += 1 if blob.used_for_training else 0
-                        results['number_of_errors_in_blobs_assigned_after_accumulation'][gt_identity] += 1 if not blob.used_for_training else 0
-                    if blob.fragment_identifier not in results['fragment_identifiers_with_identity_errors']:
-                        results['frames_with_identity_errors'].append(blob.frame_number)
-                        results['fragment_identifiers_with_identity_errors'].append(blob.fragment_identifier)
+                else:
+                    try:
+                        results['sum_individual_P2'][gt_identity] += blob._P2_vector[gt_identity - 1]
+                    except:
+                        print("P2_vector ", blob._P2_vector)
+                        print("individual ", blob.is_an_individual)
+                        print("fragment identifier ", blob.fragment_identifier)
+                    results['number_of_blobs_per_identity'][gt_identity] += 1
+                    results['number_of_assigned_blobs_per_identity'][gt_identity] += 1 if blob.assigned_identity != 0 else 0
+                    results['number_of_blobs_assigned_during_accumulation_per_identity'][gt_identity] += 1 if blob.used_for_training else 0
+                    results['number_of_blobs_after_accumulation_per_identity'][gt_identity] += 1 if not blob.used_for_training else 0
+                    if gt_identity != blob.assigned_identity:
+                        results['number_of_errors_in_all_blobs'][gt_identity] += 1
+                        results['number_of_errors_in_blobs_after_accumulation'][gt_identity] += 1 if not blob.used_for_training else 0
+                        if blob.assigned_identity != 0:
+                            results['number_of_errors_in_assigned_blobs'][gt_identity] += 1
+                            results['number_of_errors_in_blobs_assigned_during_accumulation'][gt_identity] += 1 if blob.used_for_training else 0
+                            results['number_of_errors_in_blobs_assigned_after_accumulation'][gt_identity] += 1 if not blob.used_for_training else 0
+                        if blob.fragment_identifier not in results['fragment_identifiers_with_identity_errors']:
+                            results['frames_with_identity_errors'].append(blob.frame_number)
+                            results['fragment_identifiers_with_identity_errors'].append(blob.fragment_identifier)
 
             elif groundtruth_blob.is_a_crossing or gt_identity == -1:
                 results['number_of_crossing_blobs'] += 1
@@ -80,7 +88,7 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
 
     return results
 
-def check_ground_truth_consistensy(blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment):
+def check_ground_truth_consistency(blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment):
 
     if first_frame_first_global_fragment is not None \
         and first_frame_first_global_fragment > len(blobs_in_video_groundtruth):
@@ -97,7 +105,7 @@ def check_ground_truth_consistensy(blobs_in_video_groundtruth, blobs_in_video, f
 
 def get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video = None, first_frame_first_global_fragment = None):
 
-    check_ground_truth_consistensy(blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment)
+    check_ground_truth_consistency(blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment)
 
     if first_frame_first_global_fragment is not None:
         groundtruth_identities_in_first_frame = [blob.identity for blob in blobs_in_video_groundtruth[first_frame_first_global_fragment]]
@@ -114,11 +122,13 @@ def get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_vid
         blobs_in_video = blobs_in_video_groundtruth
     results = compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groundtruth, blobs_in_video, identities_dictionary_permutation)
 
-
     if len(results['frames_with_zeros_in_groundtruth']) == 0:
         # pprint(results)
         accuracies = {}
-
+        accuracies['percentage_of_unoccluded_images'] = results['number_of_individual_blobs'] / (results['number_of_individual_blobs'] + results['number_of_crossing_blobs'])
+        accuracies['individual_P2_in_validated_part'] = {i : results['sum_individual_P2'][i] / results['number_of_blobs_per_identity'][i]
+                                for i in range(1, number_of_animals + 1)}
+        accuracies['mean_individual_P2_in_validated_part'] = np.mean(accuracies['individual_P2_in_validated_part'].values())
         accuracies['individual_accuracy'] = {i : 1 - results['number_of_errors_in_all_blobs'][i] / results['number_of_blobs_per_identity'][i]
                                 for i in range(1, number_of_animals + 1)}
         accuracies['accuracy'] = np.mean(accuracies['individual_accuracy'].values())
@@ -145,17 +155,17 @@ def get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_vid
 
         pprint(accuracies)
 
-        return accuracies, results['frames_with_zeros_in_groundtruth']
+        return accuracies, results
 
     else:
         print("there are fish with 0 identity in frame ", results['frames_with_zeros_in_groundtruth'])
-        return None, results['frames_with_zeros_in_groundtruth']
+        return None, results
 
 def compute_and_save_session_accuracy_wrt_groundtruth(video, video_object_path):
-    video.check_paths_consistency_with_video_path(video_object_path)
+    # video.check_paths_consistency_with_video_path(video_object_path)
     # change this
     print("loading list_of_blobs")
-    list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
 
     ''' select ground truth file '''
     print("loading groundtruth")
@@ -164,13 +174,14 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, video_object_path):
     blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
     blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
 
-    print("computting groundtrugh")
-    accuracies, frames_with_zeros_in_groundtruth = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
-
-    if accuracy is not None:
+    print("computing groundtruth")
+    accuracies, results = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
+    frames_with_zeros_in_groundtruth = results['frames_with_zeros_in_groundtruth']
+    if accuracies is not None:
         print("saving accuracies in video")
         video.gt_start_end = (groundtruth.start,groundtruth.end)
         video.gt_accuracies = accuracies
+        video.gt_results = results
         video.save()
 
 if __name__ == '__main__':

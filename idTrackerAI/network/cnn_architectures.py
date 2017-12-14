@@ -1,29 +1,24 @@
 from __future__ import division
 import sys
 sys.path.append('../utils')
+sys.path.append('../')
 import tensorflow as tf
-# from tf_utils import *
-from cnn_utils import *
 import numpy as np
 
-# IMAGE_SIZE = (32,32,1)
-# width = IMAGE_SIZE[0]
-# height = IMAGE_SIZE[1]
-# channels = IMAGE_SIZE[2]
-keep_prob = 1.0
+from cnn_utils import *
+from constants import KEEP_PROB
 
 ''' original model'''
-def cnn_model_0(images, classes, width, height, channels):
+def cnn_model_0(images, classes, width, height, channels, action_on_image, pre_target_image_size):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
+    # action on image
+    if action_on_image == 'pad_or_crop':
+        images = tf.image.resize_image_with_crop_or_pad(images, width, height)
+    elif action_on_image == 'resize_and_pad_or_crop':
+        images = tf.image.resize_images(images, pre_target_image_size, method = ResizeMethod.BICUBIC)
+        images = tf.image.resize_image_with_crop_or_pad(images, width, height)
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -67,12 +62,12 @@ def cnn_model_0(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
-    return y_logits
-    # return y_logits, relu, (W1, W3, W5, WFC, WSoft)
+    # return y_logits
+    return y_logits, relu
 
 ''' model with 1 convolution '''
 def cnn_model_1(images, classes, width, height, channels):
@@ -94,7 +89,7 @@ def cnn_model_1(images, classes, width, height, channels):
     conv1_flat = tf.reshape(relu1, [-1, resolutionS*n_filter1], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv1_flat, w1, h1, n_filter1, n_fc, keep_prob)
+    fc_drop, WFC = buildFc('fully-connected1', conv1_flat, w1, h1, n_filter1, n_fc, KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
@@ -135,7 +130,7 @@ def cnn_model_2(images, classes, width, height, channels):
     conv3_flat = tf.reshape(relu2, [-1, resolutionS*n_filter3], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv3_flat, w3, h3, n_filter3, n_fc, keep_prob)
+    fc_drop, WFC = buildFc('fully-connected1', conv3_flat, w3, h3, n_filter3, n_fc, KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
@@ -206,7 +201,7 @@ def cnn_model_3(images, classes, width, height, channels):
     conv7_flat = tf.reshape(relu8, [-1, resolutionS*d7], name = 'conv7_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv7_flat, w7, h7, d7, n_fc, keep_prob)
+    fc_drop, WFC = buildFc('fully-connected1', conv7_flat, w7, h7, d7, n_fc, KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
@@ -262,7 +257,7 @@ def cnn_model_4(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
@@ -312,7 +307,7 @@ def cnn_model_5(images, classes, width, height, channels):
     conv5_flat = tf.reshape(conv5, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
     y_logits, WSoft = buildSoftMax('soffully_connected_pre_softmaxtmax1', fc_drop, n_fc, classes)
 
     return y_logits
@@ -373,7 +368,7 @@ def cnn_model_6(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 50
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('soffully_connected_pre_softmaxtmax1', relu, n_fc, classes)
 
@@ -435,7 +430,7 @@ def cnn_model_7(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 200
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('soffully_connected_pre_softmaxtmax1', relu, n_fc, classes)
     return y_logits
@@ -496,7 +491,7 @@ def cnn_model_8(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc_1 = 100
-    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, keep_prob)
+    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, KEEP_PROB)
     relu = reLU('relu4', fc_drop_1)
     n_fc_2 = 100
     fc_drop_2, WFC_2 = buildSoftMax('fully-connected2', relu, n_fc_1, n_fc_2)
@@ -561,7 +556,7 @@ def cnn_model_9(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc_1 = 100
-    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, keep_prob)
+    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, KEEP_PROB)
     relu = reLU('relu4', fc_drop_1)
     n_fc_2 = 50
     fc_drop_2, WFC_2 = buildSoftMax('fully-connected2', relu, n_fc_1, n_fc_2)
@@ -626,7 +621,7 @@ def cnn_model_10(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc_1 = 100
-    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, keep_prob)
+    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, KEEP_PROB)
     relu = reLU('relu4', fc_drop_1)
     n_fc_2 = 200
     fc_drop_2, WFC_2 = buildSoftMax('fully-connected2', relu, n_fc_1, n_fc_2)
@@ -691,7 +686,7 @@ def cnn_model_11(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 10
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, keep_prob)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('soffully_connected_pre_softmaxtmax1', relu, n_fc, classes)
 
@@ -730,7 +725,7 @@ def cnn_model_crossing_detector(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu2, [-1, resolutionS*n_filter3], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w3, h3, n_filter3, n_fc, keep_prob)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w3, h3, n_filter3, n_fc, KEEP_PROB)
     relu = reLU('relu1', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
     return y_logits

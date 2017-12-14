@@ -55,6 +55,11 @@ class ConvNetwork():
         # Build graph with the network, loss, optimizer and accuracies
         tf.reset_default_graph()
         self._build_graph()
+        knowledge_transfer_info_dict = {'input_image_size': self.params.target_image_size if self.params.target_image_size is not None else self.params.image_size,
+                                'video_path': self.params.video_path,
+                                'number_of_animals': self.params.number_of_animals,
+                                'number_of_channels': self.params.number_of_channels}
+        np.save(os.path.join(self.params.save_folder, 'info.npy'), knowledge_transfer_info_dict)
         self.set_savers()
         # Create list of operations to run during training and validation
         if self.training:
@@ -64,7 +69,7 @@ class ConvNetwork():
         if self.is_restoring:
             logger.debug('Restoring...')
             # Get subfolders from where we will load the network from previous checkpoints
-            [self.restore_folder_conv,self.restore_folder_fc_softmax] = get_checkpoint_subfolders( self.params._restore_folder, ['conv', 'softmax'])
+            [self.restore_folder_conv, self.restore_folder_fc_softmax] = get_checkpoint_subfolders( self.params._restore_folder, ['conv', 'softmax'])
         elif self.is_knowledge_transfer:
             # Get subfolders from where we will load the convolutional filters to perform knowledge transfer
             logger.debug('Performing knowledge transfer...')
@@ -98,12 +103,21 @@ class ConvNetwork():
 
     def _build_graph(self):
         self.x_pl = tf.placeholder(tf.float32, [None, self.image_width, self.image_height, self.image_channels], name = 'images')
-        # self.x_pl = tf.placeholder(tf.float32, [None, None, None, self.image_channels], name = 'images')
-        # self.y_logits, self.conv_vector = cnn_model(self.x_pl,self.params.number_of_animals)
-        # self.y_logits, self.fc_vector, (self.W1, self.W2, self.W3, self.WFC, self.WSoft) = cnn_model_0(self.x_pl,self.params.number_of_animals)
-        # self.y_logits = cnn_model_0(self.x_pl,self.params.number_of_animals)
         logger.debug('training model %i' %self.params.cnn_model)
-        self.y_logits = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals, self.image_width, self.image_height, self.image_channels)
+
+        model_image_width = self.image_width if self.params.target_image_size is None else self.params.target_image_size[0]
+        model_image_height = self.image_height if self.params.target_image_size is None else self.params.target_image_size[1]
+        print("**************************************************************")
+        print("plh image_width ", self.image_width)
+        print("plh image_height ", self.image_height)
+        print("model_image_width ", model_image_width)
+        print("model_image_height ", model_image_height)
+        print("**************************************************************")
+        self.y_logits, self.fc_vector = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals,
+                                                                model_image_width, model_image_height,
+                                                                self.image_channels,
+                                                                self.params.action_on_image,
+                                                                self.params.pre_target_image_size)
 
         self.softmax_probs = tf.nn.softmax(self.y_logits)
         self.predictions = tf.cast(tf.add(tf.argmax(self.softmax_probs,1),1),tf.float32)
@@ -164,32 +178,34 @@ class ConvNetwork():
         logger.debug('Reinitializing softmax and fully connected')
         self.session.run(tf.variables_initializer([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name]))
 
+    def restore_convolutional_layers(self):
+        ckpt = tf.train.get_checkpoint_state(self.restore_folder_conv)
+        if self.restore_index is None:
+            self.saver_conv.restore(self.session, ckpt.model_checkpoint_path) # restore convolutional variables
+            logger.debug('Restoring convolutional part from %s' %ckpt.model_checkpoint_path)
+        else:
+            self.saver_conv.restore(self.session, ckpt.all_model_checkpoint_paths[self.restore_index])
+            logger.debug('Restoring convolutional part from %s' %ckpt.all_model_checkpoint_paths[self.restore_index])
+
+    def restore_classifier(self):
+        ckpt = tf.train.get_checkpoint_state(self.restore_folder_fc_softmax)
+        if self.restore_index is None:
+            self.saver_fc_softmax.restore(self.session, ckpt.model_checkpoint_path) # restore fully-conected and softmax variables
+            logger.debug('Restoring fully-connected and softmax part from %s' %ckpt.model_checkpoint_path)
+        else:
+            self.saver_fc_softmax.restore(self.session, ckpt.all_model_checkpoint_paths[self.restore_index]) # restore fully-conected and softmax variables
+            logger.debug('Restoring fully-connected and softmax part from %s' %ckpt.all_model_checkpoint_paths[self.restore_index])
+
     def restore(self):
         self.session.run(tf.global_variables_initializer())
         if self.is_restoring:
-            ckpt = tf.train.get_checkpoint_state(self.restore_folder_conv)
-            if self.restore_index is None:
-                self.saver_conv.restore(self.session, ckpt.model_checkpoint_path) # restore convolutional variables
-                logger.debug('Restoring convolutional part from %s' %ckpt.model_checkpoint_path)
-            else:
-                self.saver_conv.restore(self.session, ckpt.all_model_checkpoint_paths[self.restore_index])
-                logger.debug('Restoring convolutional part from %s' %ckpt.all_model_checkpoint_paths[self.restore_index])
-
-            ckpt = tf.train.get_checkpoint_state(self.restore_folder_fc_softmax)
-            if self.restore_index is None:
-                self.saver_fc_softmax.restore(self.session, ckpt.model_checkpoint_path) # restore fully-conected and softmax variables
-                logger.debug('Restoring fully-connected and softmax part from %s' %ckpt.model_checkpoint_path)
-            else:
-                self.saver_fc_softmax.restore(self.session, ckpt.all_model_checkpoint_paths[self.restore_index]) # restore fully-conected and softmax variables
-                logger.debug('Restoring fully-connected and softmax part from %s' %ckpt.all_model_checkpoint_paths[self.restore_index])
-
+            self.restore_convolutional_layers()
+            self.restore_classifier()
+        elif self.is_knowledge_transfer:
+            self.restore_convolutional_layers()
 
     def compute_batch_weights(self, batch_labels):
-        # if self.weighted_flag:
         batch_weights = np.sum(self.weights*batch_labels,axis=1)
-        # elif not self.weighted_flag:
-        #     batch_weights = np.ones(len(labels_feed))
-
         return batch_weights
 
     def get_feed_dict(self, batch):

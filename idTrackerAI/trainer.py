@@ -44,15 +44,8 @@ def train(video,
         fig, ax_arr = plt.subplots(4)
         fig.canvas.set_window_title('Accumulation ' + str(video.accumulation_trial) + '-' + str(video.accumulation_step))
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
-
     # Instantiate data_set
     training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images, labels)
-    # Crop images from 36x36 to 32x32 without performing data augmentation
-    # training_dataset.crop_images(image_size = net.params.image_size[0])
-    # validation_dataset.crop_images(image_size = net.params.image_size[0])
-    # Standarize images
-    # training_dataset.standarize_images()
-    # validation_dataset.standarize_images()
     # Convert labels to one hot vectors
     training_dataset.convert_labels_to_one_hot()
     validation_dataset.convert_labels_to_one_hot()
@@ -90,21 +83,24 @@ def train(video,
         trainer._epochs_completed += 1
         validator._epochs_completed += 1
 
-    global_step += trainer.epochs_completed
-    logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss[global_step0:]))
-    # update used_for_training flag to True for fragments used
-    logger.info("Accumulation step completed. Updating global fragments used for training")
-    accumulation_manager.update_fragments_used_for_training()
-    # plot if asked
-    if plot_flag:
-        store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, fragments, black = False)
-        store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r')
-        store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b')
-    # store training and validation losses and accuracies
-    if store_accuracy_and_error:
-        store_training_accuracy_and_loss_data.save(trainer._epochs_completed)
-        store_validation_accuracy_and_loss_data.save(trainer._epochs_completed)
-    if plot_flag:
-        fig.savefig(os.path.join(net.params.save_folder,'Accumulation-' + str(video.accumulation_trial) + '-' + str(video.accumulation_step) + '.pdf'))
-    net.save()
-    return global_step, net, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data
+    if (np.isnan(store_training_accuracy_and_loss_data.loss[-1]) or np.isnan(store_validation_accuracy_and_loss_data.loss[-1])):
+        raise ValueError("The model diverged")
+    else:
+        global_step += trainer.epochs_completed
+        logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss[global_step0:]))
+        # update used_for_training flag to True for fragments used
+        logger.info("Accumulation step completed. Updating global fragments used for training")
+        accumulation_manager.update_fragments_used_for_training()
+        # plot if asked
+        if plot_flag:
+            store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, fragments, black = False)
+            store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r')
+            store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b')
+        # store training and validation losses and accuracies
+        if store_accuracy_and_error:
+            store_training_accuracy_and_loss_data.save(trainer._epochs_completed)
+            store_validation_accuracy_and_loss_data.save(trainer._epochs_completed)
+        if plot_flag:
+            fig.savefig(os.path.join(net.params.save_folder,'Accumulation-' + str(video.accumulation_trial) + '-' + str(video.accumulation_step) + '.pdf'))
+        net.save()
+        return global_step, net, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data

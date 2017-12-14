@@ -87,6 +87,6 @@ if __name__ == "__main__":
     # fragments_path = os.path.join(session_path, 'preprocessing', 'fragments.npy')
     # blobs_path = os.path.join(session_path, 'preprocessing', 'blobs_collection.npy')
     list_of_fragments = ListOfFragments.load(video.fragments_path)
-    list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
     list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
     groundtruth = generate_groundtruth(video, list_of_blobs.blobs_in_video, int(start), int(end))

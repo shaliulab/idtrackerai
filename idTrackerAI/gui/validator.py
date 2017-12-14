@@ -1,48 +1,88 @@
 from __future__ import absolute_import, division, print_function
 import kivy
 
-from kivy.app import App
 from kivy.core.window import Window
-from kivy.lang import Builder
-
 from kivy.uix.boxlayout import BoxLayout
-
-from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.graphics.texture import Texture
 from kivy.uix.image import Image
-from kivy.uix.slider import Slider
 from kivy.uix.popup import Popup
-from kivy.uix.switch import Switch
+from kivy.uix.textinput import TextInput
 from kivy.graphics import *
 from kivy.graphics.transformation import Matrix
 from visualise_video import VisualiseVideo
+from kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
+
+import matplotlib
+matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
+from kivy.garden.matplotlib import FigureCanvasKivyAgg
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+import sys
+sys.path.append('../')
+sys.path.append('../utils')
+import numpy as np
 import cv2
 
-class IndividualValidator(BoxLayout):
-    def __init__(self, chosen_video = chosen_video, deactivate_video = deactivate_video **kwargs):
-        super(IndividualValidator, self).__init__(**kwargs)
+from video import Video
+from py_utils import getExistentFiles, get_spaced_colors_util
+from list_of_blobs import ListOfBlobs
+from list_of_fragments import ListOfFragments
+from generate_groundtruth import generate_groundtruth
+from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
+
+class Validator(BoxLayout):
+    def __init__(self, chosen_video = None,
+                deactivate_validation = None,
+                **kwargs):
+        super(Validator, self).__init__(**kwargs)
         global CHOSEN_VIDEO, DEACTIVATE_VALIDATION
         CHOSEN_VIDEO = chosen_video
         DEACTIVATE_VALIDATION = deactivate_validation
+
         self.visualiser = VisualiseVideo(chosen_video = CHOSEN_VIDEO)
         self.warning_popup = Popup(title = 'Warning',
                             content = CustomLabel(text = 'The video has not been tracked yet. Track it before performing validation.'),
                             size_hint = (.3,.3))
+        self.warning_popup_wrong_identity = Popup(title = 'Warning',
+                            content = CustomLabel(text = 'Input a valid identity.'),
+                            size_hint = (.3,.3))
         self.loading_popup = Popup(title='Loading',
-            content=Label(text='wait ...'),
-            size_hint=(.3,.3))
-        self.saving_popup = Popup(title = "Saving",
-            content=Label(text='wait ...'),
+            content=CustomLabel(text='wait ...'),
             size_hint=(.3,.3))
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
-        self.do()
+
+
+    def show_saving(self, *args):
+        self.popup_saving = Popup(title='Saving',
+            content=CustomLabel(text='wait ...'),
+            size_hint=(.3,.3))
+        self.popup_saving.open()
+
+    def create_count_bad_crossing_popup(self):
+        self.wc_popup_container = BoxLayout()
+        self.wc_identity_box = BoxLayout(orientation="vertical")
+        self.wc_label = CustomLabel(text='Type the identity associated to a badly corrected crossing')
+        self.wc_identity_box.add_widget(self.wc_label)
+        self.wc_identity_input = TextInput(text ='', multiline=False)
+        self.wc_identity_box.add_widget(self.wc_identity_input)
+        self.wc_popup_container.add_widget(self.wc_identity_box)
+        self.wc_popup = Popup(title = 'Count wrong crossings',
+                            content = self.wc_popup_container,
+                            size_hint = (.4, .4))
+
+    def on_enter_wrong_crossing_identity(self, value):
+        self.wrong_crossing_counter[int(self.wc_identity_input.text)] += 1
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+        self.wc_popup.dismiss()
 
     def create_choose_list_of_blobs_popup(self):
         self.lob_container = BoxLayout()
         self.lob_box = BoxLayout(orientation="vertical")
-        self.lob_label = CustomLabel(text='We detected two different trajectory files. Which one do you want to use for individual validation?')
+        self.lob_label = CustomLabel(text='We detected two different trajectory files. Which one do you want to use for validation?')
         self.lob_btns_container = BoxLayout()
         self.lob_btn1 = Button(text = "With gaps")
         self.lob_btn2 = Button(text = "Without gaps")
@@ -60,17 +100,26 @@ class IndividualValidator(BoxLayout):
 
     def on_choose_list_of_blobs_btns_press(self, instance):
         if instance.text == 'With gaps':
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_path)
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
+            self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
         else:
-            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path)
-        self.loading_popup.dismiss()
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
+            self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
+        if not self.list_of_blobs.blobs_are_connected:
+            self.list_of_blobs.reconnect()
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self.choose_list_of_blobs_popup.dismiss()
+        self.populate_validation_tab()
+
+    def populate_validation_tab(self):
         self.blobs_in_video = self.list_of_blobs.blobs_in_video
         self.count_scrollup = 0
         self.scale = 1
         self.wrong_crossing_counter = {identity: 0 for identity in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
         self.create_count_bad_crossing_popup()
         self.wc_identity_input.bind(on_text_validate = self.on_enter_wrong_crossing_identity)
+        self.loading_popup.dismiss()
         self.init_segmentZero()
 
     def get_first_frame(self):
@@ -82,7 +131,9 @@ class IndividualValidator(BoxLayout):
         try:
             if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
                 CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
-            if  CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['crossings']:
+            if  CHOSEN_VIDEO.processes_to_restore is not None\
+                and 'crossings' in CHOSEN_VIDEO.processes_to_restore\
+                and CHOSEN_VIDEO.processes_to_restore['crossings']:
                 self.create_choose_list_of_blobs_popup()
                 self.lob_btn1.bind(on_press = self.show_loading_text)
                 self.lob_btn2.bind(on_press = self.show_loading_text)
@@ -91,82 +142,73 @@ class IndividualValidator(BoxLayout):
                 self.choose_list_of_blobs_popup.open()
             else:
                 self.loading_popup.open()
-                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video.blobs_no_gaps_path)
+                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
+                self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
+                if not self.list_of_blobs.blobs_are_connected:
+                    self.list_of_blobs.reconnect()
+                self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+                self._keyboard.bind(on_key_down=self._on_keyboard_down)
+                self.populate_validation_tab()
+
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print(exc_type, fname, exc_tb.tb_lineno)
             self.warning_popup.open()
 
-    def create_choose_individual_popup(self):
-        self.choose_individual_container = BoxLayout(orientation = "vertical")
-        self.choose_individual_label = CustomLabel(text = "Choose the identity of the individual to follow")
-        self.choose_individual_input = TextInput(text ='', multiline=False)
-        self.choose_individual_popup = Popup(title='Correcting identity',
-                                            content=self.container,
-                                            size_hint=(.4,.4))
-
-    def on_enter_choose_individual(self, value):
-        self.individual_to_follow = int(value)
-        self.choose_individual_popup.dismiss()
-
-    def choose_individual(self):
-        self.create_choose_individual_popup()
-        self.choose_individual_input.bind(on_text_validate = on_enter_choose_individual)
-        self.choose_individual_popup.open()
-
-
     def init_segmentZero(self):
         self.add_widget(self.visualiser)
         self.colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals)
+        print(self.colors)
         self.button_box = BoxLayout(orientation='vertical', size_hint=(.3,1.))
         self.add_widget(self.button_box)
-        self.choose_individual_btn = Button(text = "Choose the individual to follow")
-        self.choose_individual_btn.bind(on_press=self.choose_individual)
-        self.next_cross_button = Button(text='Next fucking crossing')
+        self.next_cross_button = Button(id='crossing_btn', text='Go to next crossing', size_hint=(1,1))
         self.next_cross_button.bind(on_press=self.go_to_next_crossing)
         self.button_box.add_widget(self.next_cross_button)
-        self.previous_cross_button = Button(text='Previous fucking crossing')
+        self.previous_cross_button = Button(id='crossing_btn', text='Go to previous crossing', size_hint=(1,1))
         self.previous_cross_button.bind(on_press=self.go_to_previous_crossing)
         self.button_box.add_widget(self.previous_cross_button)
-        self.go_to_first_global_fragment_button = Button(text='First global fragment')
+        self.go_to_first_global_fragment_button = Button(id='back_to_first_gf_btn', text='First global fragment', size_hint=(1,1))
         self.go_to_first_global_fragment_button.bind(on_press = self.go_to_first_global_fragment)
         self.button_box.add_widget(self.go_to_first_global_fragment_button)
-        self.save_groundtruth_btn = Button(text='Save updated identities')
+        self.save_groundtruth_btn = Button(id='save_groundtruth_btn', text='Save updated identities',size_hint = (1,1))
         self.save_groundtruth_btn.bind(on_press=self.show_saving)
         self.save_groundtruth_btn.bind(on_release=self.save_groundtruth_list_of_blobs)
         self.save_groundtruth_btn.disabled = True
         self.button_box.add_widget(self.save_groundtruth_btn)
-        self.compute_accuracy_button = Button(text = "Compute accuracy")
+        self.compute_accuracy_button = Button(id = "compute_accuracy_button", text = "Compute accuracy", size_hint  = (1.,1.))
         self.compute_accuracy_button.disabled = False
         self.compute_accuracy_button.bind(on_press = self.compute_and_save_session_accuracy_wrt_groundtruth_APP)
         self.button_box.add_widget(self.compute_accuracy_button)
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.writeIds, frame_index_to_start = self.get_first_frame())
 
-    def go_to_crossing(self, direction = None):
-        ind_is_present = True
+    def go_to_crossing(self, direction = None, instance = None):
+        non_crossing = True
         frame_index = int(self.visualiser.video_slider.value)
 
-        while ind_is_present == True:
-            if frame_index < CHOSEN_VIDEO.video.number_of_frames:
+        while non_crossing == True:
+            if frame_index < CHOSEN_VIDEO.video.number_of_frames - 1 and frame_index > 0:
                 if direction == "next":
                     frame_index = frame_index + 1
                 elif direction == "previous":
                     frame_index = frame_index - 1
                 blobs_in_frame = self.blobs_in_video[frame_index]
-                ids_in_frame = set([blob.final_identity for blob in blob_in_frame])
-                if not self.individual_to_follow in ids_in_frame:
-                    ind_is_present = False
-                    self.visualiser.video_slider.value = frame_index
-                    self.visualiser.visualise(frame_index, func = self.writeIds)
+                for blob in blobs_in_frame:
+                    if not blob.is_an_individual:
+                        non_crossing = False
+                        if instance is not None:
+                            self.visualiser.video_slider.value = frame_index
+                            self.visualiser.visualise(frame_index, func = self.writeIds)
+                        else:
+                            return frame_index
             else:
                 break
 
-    def go_to_next_crossing(self,instance):
-        self.go_to_crossing("next")
+    def go_to_next_crossing(self, instance):
+        self.go_to_crossing("next", instance)
 
-    def go_to_previous_crossing(self,instance):
-        self.go_to_crossing("previous")
+    def go_to_previous_crossing(self, instance):
+        self.go_to_crossing("previous", instance)
 
     def go_to_first_global_fragment(self, instance):
         self.visualiser.visualise(self.get_first_frame(), func = self.writeIds)
@@ -183,8 +225,16 @@ class IndividualValidator(BoxLayout):
             frame_index -= 1
         elif keycode[1] == 'right':
             frame_index += 1
-        self.visualiser.video_slider.value = frame_index
-        self.visualiser.visualise(frame_index, func = self.writeIds)
+        elif keycode[1] == 'c':
+            self.wc_popup.open()
+        elif keycode[1] == 'up':
+            frame_index = self.go_to_crossing(direction = 'next')
+        elif keycode[1] == 'down':
+            frame_index = self.go_to_crossing(direction = 'previous')
+
+        if frame_index is not None:
+            self.visualiser.video_slider.value = frame_index
+            self.visualiser.visualise(frame_index, func = self.writeIds)
         return True
 
     @staticmethod
@@ -271,16 +321,23 @@ class IndividualValidator(BoxLayout):
                 root = roots[2]
             elif blob.identity_corrected_solving_duplication is not None:
                 root = roots[1]
-            else:
+            elif not blob.used_for_training:
                 root = roots[0]
+            else:
+                root  = ''
             if isinstance(cur_id, int):
-                print("centroid ", blob.centroid)
                 cur_id_str = root + cur_id_str
                 int_centroid = np.asarray(blob.centroid).astype('int')
                 cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
                 cv2.putText(frame, cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
+                if blob.is_a_crossing or blob.identity_corrected_closing_gaps is not None:
+                    bounding_box = blob.bounding_box_in_frame_coordinates
+                    if hasattr(blob, 'rect_color'):
+                        rect_color = blob.rect_color
+                    else:
+                        rect_color = (255, 0, 0)
+                    cv2.rectangle(frame, bounding_box[0], bounding_box[1], rect_color , 2)
             elif isinstance(cur_id, list):
-                print("centroid ", blob.interpolated_centroids)
                 for c_id, c_centroid in zip(cur_id, blob.interpolated_centroids):
                     c_id_str = root + str(c_id)
                     int_centroid = tuple([int(centroid_coordinate) for centroid_coordinate in c_centroid])
@@ -289,6 +346,20 @@ class IndividualValidator(BoxLayout):
 
                 self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
+                if blob.is_a_crossing or blob.identity_corrected_closing_gaps is not None:
+                    bounding_box = blob.bounding_box_in_frame_coordinates
+                    if hasattr(blob, 'rect_color'):
+                        rect_color = blob.rect_color
+                    else:
+                        rect_color = (255, 0, 0)
+                    cv2.rectangle(frame, bounding_box[0], bounding_box[1], rect_color , 2)
+            elif blob.assigned_identity is None:
+                bounding_box = blob.bounding_box_in_frame_coordinates
+                if hasattr(blob, 'rect_color'):
+                    rect_color = blob.rect_color
+                else:
+                    rect_color = (255, 0, 0)
+                cv2.rectangle(frame, bounding_box[0], bounding_box[1], rect_color , 2)
 
         if self.scale != 1:
             self.dst = cv2.warpAffine(frame, self.M, (frame.shape[1], frame.shape[0]))
@@ -302,6 +373,21 @@ class IndividualValidator(BoxLayout):
         # display image from the texture
         self.visualiser.display_layout.texture = textureFrame
 
+    def check_user_generated_identity(self):
+        try:
+            self.identity_update = int(self.identity_update)
+            return self.identity_update > 0 and self.identity_update <= CHOSEN_VIDEO.video.number_of_animals or self.identity_update == -1
+        except:
+            self.warning_popup_wrong_identity.open()
+            return False
+
+    def on_enter(self,value):
+        self.identity_update = self.identityInput.text
+        if self.check_user_generated_identity():
+            self.overwriteIdentity()
+        self.popup.dismiss()
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
     def propagate_groundtruth_identity_in_individual_fragment(self):
         modified_blob = self.blob_to_modify
@@ -312,16 +398,13 @@ class IndividualValidator(BoxLayout):
             current = modified_blob
 
             while current.next[0].is_an_individual_in_a_fragment:
-                # print("propagating forward")
                 current.next[0]._user_generated_identity = current.user_generated_identity
                 current = current.next[0]
                 count_future_corrections += 1
-                # print(count_future_corrections)
 
             current = modified_blob
 
             while current.previous[0].is_an_individual_in_a_fragment:
-                # print("propagating backward")
                 current.previous[0]._user_generated_identity = current.user_generated_identity
                 current = current.previous[0]
                 count_past_corrections += 1
@@ -337,50 +420,65 @@ class IndividualValidator(BoxLayout):
         if not self.blob_to_modify.is_a_crossing:
             self.blob_to_modify._user_generated_identity = self.identity_update
             self.propagate_groundtruth_identity_in_individual_fragment()
-        self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func=self.writeIds)
+            self.popup.dismiss()
+        self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func = self.writeIds)
 
     def on_press_show_saving(selg, *args):
         self.show_saving()
 
+    def save_groundtruth_list_of_blobs(self, *args):
+        self.go_and_save()
+        self.popup_saving.dismiss()
+
     def go_and_save(self):
-        self.list_of_blobs.save()
+        self.list_of_blobs.save(CHOSEN_VIDEO.video, path_to_save = self.list_of_blobs_save_path)
         CHOSEN_VIDEO.video.save()
 
     def modifyIdOpenPopup(self, blob_to_modify):
         self.container = BoxLayout()
         self.blob_to_modify = blob_to_modify
-        self.id_to_modify = self.blob_to_modify.final_identity
+        if blob_to_modify.user_generated_identity is None:
+            self.id_to_modify = blob_to_modify.identity
+        else:
+            self.id_to_modify = blob_to_modify.user_generated_identity
         text = str(self.id_to_modify)
         self.old_id_box = BoxLayout(orientation="vertical")
-        self.new_id_btn = Button(text = "Set identity to " + str(self.individual_to_follow))
+        self.new_id_box = BoxLayout(orientation="vertical")
         self.selected_label = CustomLabel(text='You selected animal:\n')
-        self.selected_label_num = Label(text=text)
+        self.selected_label_num = CustomLabel(text=text)
+        self.new_id_label = CustomLabel(text='Type the new identity and press enter to confirm\n')
         self.container.add_widget(self.old_id_box)
-        self.container.add_widget(self.new_id_btn)
+        self.container.add_widget(self.new_id_box)
         self.old_id_box.add_widget(self.selected_label)
         self.old_id_box.add_widget(self.selected_label_num)
+        self.new_id_box.add_widget(self.new_id_label)
+        self.identityInput = TextInput(text ='', multiline=False)
+        self.new_id_box.add_widget(self.identityInput)
         self.popup = Popup(title='Correcting identity',
             content=self.container,
             size_hint=(.4,.4))
         self.popup.color = (0.,0.,0.,0.)
-        self.new_id_btn.bind(on_release = self.overwriteIdentity)
+        self.identityInput.bind(on_text_validate=self.on_enter)
         self.popup.open()
 
     def show_blob_attributes(self, blob_to_explore):
         self.container = BoxLayout()
         self.blob_to_explore = blob_to_explore
         self.show_attributes_box = BoxLayout(orientation="vertical")
-        self.id_label = CustomLabel(text='Assigned identity: ' + str(blob.final_identity))
+        self.id_label = CustomLabel(text='Assigned identity: ' + str(blob_to_explore.final_identity))
         self.frag_id_label = CustomLabel(text='Fragment identifier: ' + str(blob_to_explore.fragment_identifier))
         self.accumulation_label = CustomLabel(text='Used for training: ' + str(blob_to_explore.used_for_training))
         self.in_a_fragment_label = CustomLabel(text='It is in an individual fragment: ' + str(blob_to_explore.is_in_a_fragment))
-        self.fish_label = CustomLabel(text='It is a fish: ' + str(blob_to_explore.is_an_individual))
-        self.ghost_crossing_label = CustomLabel(text='It is a ghost crossing: ' + str(blob_to_explore.is_a_ghost_crossing))
-        self.jump_label = CustomLabel(text='It is a jump: ' + str(blob_to_explore.is_a_jump))
+        self.individual_label = CustomLabel(text='It is an individual: ' + str(blob_to_explore.is_an_individual))
+        self.sure_individual_label = CustomLabel(text='sure individual: ' + str(blob_to_explore.is_a_sure_individual()))
+        self.sure_crossing_label = CustomLabel(text='sure crossing: ' + str(blob_to_explore.is_a_sure_crossing()))
+        text_centroid_label = str(blob_to_explore.centroid)
+        self.centroid_label = CustomLabel(text='Centroid: ' + text_centroid_label)
         self.container.add_widget(self.show_attributes_box)
-        widget_list = [self.id_label, self.frag_id_label,
+        widget_list = [self.id_label, self.frag_id_label, self.individual_label,
+                        self.sure_individual_label, self.sure_crossing_label,
                         self.accumulation_label, self.in_a_fragment_label,
-                        self.ghost_crossing_label, self.jump_label]
+                        self.centroid_label]
         [self.show_attributes_box.add_widget(w) for w in widget_list]
         self.popup = Popup(title='Blob attributes',
             content=self.container,
@@ -388,14 +486,61 @@ class IndividualValidator(BoxLayout):
         self.popup.color = (0.,0.,0.,0.)
         self.popup.open()
 
+    @staticmethod
+    def get_index_of_fragment_identifier(fragment_identifier, blobs_in_frame):
+        fragment_identifiers_in_frame = [blob.fragment_identifier for blob
+                                        in blobs_in_frame]
+        try:
+            return fragment_identifiers_in_frame.index(fragment_identifier)
+        except:
+            return None
+
+    def propagate_crossing_check_state(self):
+        modified_blob = self.detected_blob_to_modify
+        fragment_identifier = modified_blob.fragment_identifier
+        blobs_in_video = self.list_of_blobs.blobs_in_video
+        next_frame = modified_blob.frame_number + 1
+        blob_index = self.get_index_of_fragment_identifier(fragment_identifier, blobs_in_video[next_frame])
+
+        while blob_index is not None:
+            blob = blobs_in_video[next_frame][blob_index]
+            blob.rect_color = modified_blob.rect_color
+            next_frame = next_frame + 1
+            blob_index = self.get_index_of_fragment_identifier(fragment_identifier, blobs_in_video[next_frame])
+
+        previous_frame = modified_blob.frame_number - 1
+        blob_index = self.get_index_of_fragment_identifier(fragment_identifier, blobs_in_video[previous_frame])
+
+        while blob_index is not None:
+            blob = blobs_in_video[previous_frame][blob_index]
+            blob.rect_color = modified_blob.rect_color
+            previous_frame = previous_frame - 1
+            blob_index = self.get_index_of_fragment_identifier(fragment_identifier, blobs_in_video[previous_frame])
+
+        #init and bind keyboard again
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+
+
+    def change_crossing_check_state(self, touch_type):
+        if touch_type == 'left':
+            self.detected_blob_to_modify.rect_color = (0, 255, 0)
+        elif touch_type == 'right':
+            self.detected_blob_to_modify.rect_color = (255, 0, 0)
+        self.propagate_crossing_check_state()
+        self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func = self.writeIds)
+
     def on_touch_down(self, touch):
         self.touches = []
         if self.visualiser.display_layout.collide_point(*touch.pos):
             if touch.button =='left':
                 self.touches.append(touch.pos)
-                self.id_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
-                if self.id_to_modify is not None:
-                    self.modifyIdOpenPopup(self.id_to_modify)
+                self.detected_blob_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
+                if self.detected_blob_to_modify is not None:
+                    if  self.detected_blob_to_modify.is_an_individual:
+                        self.modifyIdOpenPopup(self.detected_blob_to_modify)
+                    else:
+                        self.change_crossing_check_state(touch.button)
             elif touch.button == 'scrollup':
                 self.count_scrollup += 1
                 coords = self.fromShowFrameToTexture(touch.pos)
@@ -421,9 +566,12 @@ class IndividualValidator(BoxLayout):
                 self.scale = 1
             elif touch.button == 'right':
                 self.touches.append(touch.pos)
-                self.id_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
-                if self.id_to_modify is not None:
-                    self.show_blob_attributes(self.id_to_modify)
+                self.detected_blob_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
+                if self.detected_blob_to_modify is not None:
+                    if  self.detected_blob_to_modify.is_an_individual:
+                        self.show_blob_attributes(self.detected_blob_to_modify)
+                    else:
+                        self.change_crossing_check_state(touch.button)
         else:
             self.scale = 1
             self.disable_touch_down_outside_collided_widget(touch)
@@ -489,9 +637,11 @@ class IndividualValidator(BoxLayout):
         self.plot_groundtruth_statistics()
         if not self.prevent_open_popup:
             self.popup_start_end_groundtruth.dismiss()
+            self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+            self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
     def generate_groundtruth(self):
-        self.groundtruth = generate_individual_groundtruth(CHOSEN_VIDEO.video, self.blobs_in_video, self.gt_start_frame, self.gt_end_frame, save_gt = False)
+        self.groundtruth = generate_groundtruth(CHOSEN_VIDEO.video, self.blobs_in_video, self.gt_start_frame, self.gt_end_frame, save_gt = False)
 
     def save_groundtruth(self):
         self.groundtruth.save()
@@ -499,7 +649,7 @@ class IndividualValidator(BoxLayout):
     def plot_groundtruth_statistics(self):
         blobs_in_video_groundtruth = self.groundtruth.blobs_in_video[self.groundtruth.start:self.groundtruth.end]
         blobs_in_video = self.blobs_in_video[self.groundtruth.start:self.groundtruth.end]
-        gt_accuracies, _ = get_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, blobs_in_video_groundtruth, blobs_in_video)
+        gt_accuracies, results = get_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, blobs_in_video_groundtruth, blobs_in_video)
         if gt_accuracies is not None:
             self.individual_accuracy = gt_accuracies['individual_accuracy']
             self.accuracy = gt_accuracies['accuracy']
@@ -507,6 +657,7 @@ class IndividualValidator(BoxLayout):
             self.statistics_popup.open()
             CHOSEN_VIDEO.video.gt_start_end = (self.groundtruth.start, self.groundtruth.end)
             CHOSEN_VIDEO.video.gt_accuracy = gt_accuracies
+            CHOSEN_VIDEO.video.gt_results = results
             CHOSEN_VIDEO.video.save()
 
     def compute_and_save_session_accuracy_wrt_groundtruth_APP(self, *args):
@@ -520,9 +671,9 @@ class IndividualValidator(BoxLayout):
                                     content = content,
                                     size_hint = (.5, .5))
         fig, ax = plt.subplots(1)
-        colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals, norm = True)
+        colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals, norm = True, black = True)
         width = .5
-        plt.bar(self.individual_accuracy.keys(), self.individual_accuracy.values(), width, color=colors)
+        plt.bar(self.individual_accuracy.keys(), self.individual_accuracy.values(), width, color= colors[::-1])
         plt.axhline(self.accuracy, color = 'k', linewidth = .2)
         ax.set_xlabel('individual')
         ax.set_ylabel('Individual accuracy')
