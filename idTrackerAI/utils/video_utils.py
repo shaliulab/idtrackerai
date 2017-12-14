@@ -61,7 +61,7 @@ def computeBkg(video):
     chunks and videos composed by a single file."""
     # This holds even if we have not selected a ROI because then the ROI is
     # initialized as the full frame
-    bkg = np.zeros((video.height, video.width))
+    bkg = np.zeros((video.original_height, video.original_width))
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
     if video.paths_to_video_segments is None: # one single video

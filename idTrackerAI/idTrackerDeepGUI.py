@@ -34,9 +34,7 @@ from list_of_global_fragments import ListOfGlobalFragments,\
 from global_fragments_statistics import compute_and_plot_fragments_statistics
 from segmentation import segment, resegment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview,\
-                    resegmentation_preview,\
-                    selectPreprocParams, fragmentation_inspector,\
-                    frame_by_frame_identity_inspector, selectDir,\
+                    resegmentation_preview, selectPreprocParams, selectDir, \
                     check_resolution_reduction
 from py_utils import getExistentFiles
 from video_utils import checkBkg
@@ -138,9 +136,13 @@ if __name__ == '__main__':
             video.knowledge_transfer_info_dict = np.load(os.path.join(video.knowledge_transfer_model_folder, 'info.npy')).item()
             same_animals = getInput("Same animals", "Are you tracking the same animals? y/N").lower()
             if same_animals == 'y':
-                video._knowledge_transfer_with_same_animals = True
+                video._identity_transfer = True
+                #we transfer identities if the number of animals to be identified is less or equal to the one providing the knowledge
+                if not video.is_identity_transfer_possible():
+                    video._identity_transfer = False
+                    logger.warn("Identity transfer is not possible. We will proceed by using standard knowledge transfer.")
             elif same_animals == 'n' or same_animals == '':
-                video._knowledge_transfer_with_same_animals = False
+                video._identity_transfer = False
             else:
                 raise ValueError("Invalid input.")
 
@@ -150,7 +152,7 @@ if __name__ == '__main__':
             raise ValueError("Invalid input, type either 'y' or 'n'")
     else:
         video.copy_attributes_between_two_video_objects(old_video, ['knowledge_transfer_model_folder',
-                                                                    'knowledge_transfer_with_same_animals',
+                                                                    'identity_transfer',
                                                                     'tracking_with_knowledge_transfer'],
                                                                     [False, True, True,False])
         if old_video.tracking_with_knowledge_transfer:
@@ -172,7 +174,10 @@ if __name__ == '__main__':
     usePreviousPrecParams = bool(loadPreviousDict['preprocessing'])
     restore_segmentation = selectPreprocParams(video, old_video, usePreviousPrecParams)
     video.save()
-    preprocessing_parameters_dict = {key: getattr(video, key) for key in video.__dict__ if 'apply_ROI' in key or 'subtract_bkg' in key or 'min' in key or 'max' in key}
+    preprocessing_parameters_dict = {key: getattr(video, key)
+                                    for key in video.__dict__ if 'apply_ROI' in key
+                                    or 'subtract_bkg' in key
+                                    or 'min' in key or 'max' in key}
     logger.info('The parameters used to preprocess the video are %s', preprocessing_parameters_dict)
     #destroy windows to prevent openCV errors
     #Loading logo during preprocessing
@@ -295,8 +300,6 @@ if __name__ == '__main__':
         logger.info("Loading list of global fragments")
         list_of_global_fragments = ListOfGlobalFragments.load(video.global_fragments_path, list_of_fragments.fragments)
     video.preprocessing_time = time.time() - video.preprocessing_time
-    #take a look to the resulting fragmentation
-    # fragmentation_inspector(video, list_of_blobs.blobs_in_video)
     cv2.waitKey(1)
     cv2.destroyAllWindows()
     cv2.waitKey(1)
@@ -321,7 +324,7 @@ if __name__ == '__main__':
         list_of_fragments.reset(roll_back_to = 'fragmentation')
         list_of_global_fragments.reset(roll_back_to = 'fragmentation')
         if video.tracking_with_knowledge_transfer:
-            if video.knowledge_transfer_with_same_animals:
+            if video.identity_transfer:
                 logger.info("We will restore the network from a previous model (convolutional layers and classifier): %s" %video.knowledge_transfer_model_folder)
                 accumulation_network_params.restore_folder = video.knowledge_transfer_model_folder
                 accumulation_network_params.check_identity_transfer_consistency(video.knowledge_transfer_info_dict)
@@ -351,7 +354,7 @@ if __name__ == '__main__':
                                             video,
                                             global_step,
                                             net,
-                                            video.knowledge_transfer_with_same_animals)
+                                            video.identity_transfer)
         logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
         video._first_accumulation_finished = True
         video._percentage_of_accumulated_images = [video.ratio_accumulated_images]
@@ -373,7 +376,7 @@ if __name__ == '__main__':
                     'training_accuracy', 'training_individual_accuracies',
                     'percentage_of_accumulated_images', 'accumulation_trial',
                     'ratio_accumulated_images', 'first_accumulation_finished',
-                    'knowledge_transfer_with_same_animals', 'accumulation_statistics',
+                    'identity_transfer', 'accumulation_statistics',
                     'first_frame_first_global_fragment']
         is_property = [True, True, False, False,
                         False, False, False, False,
@@ -475,7 +478,7 @@ if __name__ == '__main__':
                                                             video,
                                                             global_step,
                                                             net,
-                                                            video.knowledge_transfer_with_same_animals)
+                                                            video.identity_transfer)
                 logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
                 video._percentage_of_accumulated_images.append(video.ratio_accumulated_images)
                 list_of_fragments.save_light_list(video._accumulation_folder)
@@ -511,7 +514,7 @@ if __name__ == '__main__':
                         'training_accuracy', 'training_individual_accuracies',
                         'percentage_of_accumulated_images', 'accumulation_trial',
                         'ratio_accumulated_images', 'first_accumulation_finished',
-                        'knowledge_transfer_with_same_animals', 'accumulation_statistics',
+                        'identity_transfer', 'accumulation_statistics',
                         'first_frame_first_global_fragment']
             is_property = [True, True, False, False,
                             False, False, False, False,

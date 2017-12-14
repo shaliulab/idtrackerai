@@ -39,19 +39,26 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
     blobs_in_frame = []
     #Get frame from video file
     ret, frame = cap.read()
-    if video.resolution_reduction != 1 and ret:
-        frame = cv2.resize(frame, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
-
     try:
-        #Color to gray scale
+        if video.resolution_reduction != 1 and ret:
+            frame = cv2.resize(frame, None,
+                                fx = video.resolution_reduction,
+                                fy = video.resolution_reduction,
+                                interpolation = cv2.INTER_CUBIC)
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         avIntensity = np.float32(np.mean(frameGray))
-        segmentedFrame = segmentVideo(frameGray/avIntensity, segmentation_thresholds['min_threshold'], segmentation_thresholds['max_threshold'], video.bkg, video.ROI, video.subtract_bkg)
+        segmentedFrame = segmentVideo(frameGray/avIntensity,
+                                        segmentation_thresholds['min_threshold'],
+                                        segmentation_thresholds['max_threshold'],
+                                        video.bkg, video.ROI, video.subtract_bkg)
         # Fill holes in the segmented frame to avoid duplication of contours
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
         # Find contours in the segmented image
-        bounding_boxes, miniframes, centroids, areas, pixels, contours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray,
-                                                                                                segmentation_thresholds['min_area'], segmentation_thresholds['max_area'])
+        bounding_boxes, miniframes, centroids, \
+        areas, pixels, contours, estimated_body_lengths = blobExtractor(segmentedFrame,
+                                                                        frameGray,
+                                                                        segmentation_thresholds['min_area'],
+                                                                        segmentation_thresholds['max_area'])
     except:
         print("frame number, ", counter)
         print("ret, ", ret)
