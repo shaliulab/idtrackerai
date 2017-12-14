@@ -10,9 +10,11 @@ sys.path.append('./network')
 sys.path.append('./network/identification_model')
 sys.path.append('./tf_cnnvisualisation')
 
+from tf_cnnvis import *
 from video import Video
 from globalfragment import GlobalFragment
-from tf_cnnvis import *
+from id_CNN import ConvNetwork
+from network_params import NetworkParams
 
 logger = logging.getLogger("__main__.visualise_cnn")
 
@@ -77,3 +79,29 @@ def visualise(video_object, net, image, label):
 
     logger.debug("Done")
     video_object.save()
+
+if __name__ == "__main__":
+    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/video_object.npy').item()
+    list_of_global_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/preprocessing/global_fragments.npy').item()
+    list_of_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/preprocessing/fragments.npy').item()
+    list_of_global_fragments.relink_fragments_to_global_fragments(list_of_fragments.fragments)
+    params = NetworkParams(video.number_of_animals,
+                                learning_rate = 0.005,
+                                keep_prob = 1.0,
+                                scopes_layers_to_optimize = None,
+                                save_folder = video.accumulation_folder,
+                                restore_folder = video.accumulation_folder,
+                                image_size = video.identification_image_size,
+                                video_path = video.video_path)
+    net = ConvNetwork(params, training_flag = True)
+    net.restore()
+    first_global_fragment = list_of_global_fragments.global_fragments[0]
+
+    for i in range(video.number_of_animals):
+        for j in range(10):
+            image = first_global_fragment.individual_fragments[i].images[j]
+            image = np.expand_dims(image, 2)
+            image = np.expand_dims(image, 0)
+            label = first_global_fragment.individual_fragments[i].final_identity -1
+
+            visualise(video, net, image, label)

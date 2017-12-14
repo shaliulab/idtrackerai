@@ -188,7 +188,7 @@ class IndividualValidator(BoxLayout):
         self.button_box.add_widget(self.compute_accuracy_button)
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.writeIds, frame_index_to_start = self.get_first_frame())
 
-    def go_to_crossing(self, direction = None):
+    def go_to_crossing(self, direction = None, instance = None):
         if hasattr(self, 'individual_to_follow'):
             ind_is_present = True
             frame_index = int(self.visualiser.video_slider.value)
@@ -213,13 +213,11 @@ class IndividualValidator(BoxLayout):
             self.choose_individual_label.text = "Choose and individual first!"
             self.choose_individual_popup.open()
 
-
-
     def go_to_next_crossing(self,instance):
-        self.go_to_crossing("next")
+        self.go_to_crossing("next", instance)
 
     def go_to_previous_crossing(self,instance):
-        self.go_to_crossing("previous")
+        self.go_to_crossing("previous", instance)
 
     def go_to_first_global_fragment(self, instance):
         self.visualiser.visualise(self.get_first_frame(), func = self.writeIds)
@@ -236,8 +234,13 @@ class IndividualValidator(BoxLayout):
             frame_index -= 1
         elif keycode[1] == 'right':
             frame_index += 1
-        self.visualiser.video_slider.value = frame_index
-        self.visualiser.visualise(frame_index, func = self.writeIds)
+        elif keycode[1] == 'up':
+            frame_index = self.go_to_crossing(direction = 'next')
+        elif keycode[1] == 'down':
+            frame_index = self.go_to_crossing(direction = 'previous')
+        if frame_index is not None:
+            self.visualiser.video_slider.value = frame_index
+            self.visualiser.visualise(frame_index, func = self.writeIds)
         return True
 
     @staticmethod

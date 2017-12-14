@@ -90,40 +90,40 @@ if __name__ == '__main__':
                                                         'scale_parameter_' + str(scale_parameter),
                                                         'shape_parameter_' + str(shape_parameter),
                                                         'repetition_' + str(int(repetition)))
-                        # video_path = os.path.join(repetition_path, 'session', 'video_object.npy')
-                        # video = np.load(video_path).item(0)
-                        ### Plot distributions
-                        # if repetition == 1:
-                        #     nbins = 10
-                        #     number_of_images_in_individual_fragments = video.individual_fragments_lenghts
-                        #     # number_of_images_in_individual_fragments = number_of_images_in_individual_fragments[number_of_images_in_individual_fragments >= 3]
-                        #     gamma_simulation = gamma(shape_parameter, loc = 0.99, scale = scale_parameter)
-                        #     gamma_simulation_logpdf = pdf2logpdf(gamma_simulation.pdf)
-                        #     ax = ax_arr[j,i]
-                        #     MIN = np.min(number_of_images_in_individual_fragments)
-                        #     MAX = np.max(number_of_images_in_individual_fragments)
-                        #     logbins = np.linspace(np.log10(MIN), np.log10(MAX), nbins)
-                        #     ax.hist(np.log10(number_of_images_in_individual_fragments), bins = logbins, normed = True)
-                        #     logbins_pdf = np.linspace(np.log10(MIN), np.log10(MAX), 100)
-                        #     ax.plot(logbins_pdf, gamma_simulation_logpdf(np.power(10,logbins_pdf)))
-                        #     # ax.plot(logbins[:-1] + np.diff(logbins)/2, gamma_simulation_logpdf(np.power(10,logbins[:-1] + np.diff(logbins)/2)))
-                        #     ax.set_xlim((np.log10(MIN), np.log10(MAX)))
-                        #     ax.set_xticks([1,2,3])
-                        #     ax.set_xticklabels([10,100,1000])
-                        #
-                        #     # MIN = np.min(number_of_images_in_individual_fragments)
-                        #     # MAX = np.max(number_of_images_in_individual_fragments)
-                        #     # hist, bin_edges = np.histogram(number_of_images_in_individual_fragments, bins = 10 ** np.linspace(np.log10(MIN), np.log10(MAX), nbins))
-                        #     # ax.semilogx(bin_edges[:-1], hist, '-ob' ,markersize = 5)
-                        #     if j == len(shape_parameter_list)-1:
-                        #         ax.set_xlabel('number of frames \n\nscale = %.2f' %scale_parameter)
-                        #     if i == 0:
-                        #         ax.set_ylabel('shape = %.2f \n\nPDF' %shape_parameter)
-                        #     mean = shape_parameter * scale_parameter
-                        #     sigma = np.sqrt(shape_parameter * scale_parameter**2)
-                        #     title = r'$\mu$ = %.2f, $\sigma$ = %.2f' %(mean, sigma)
-                        #     ax.text(2.25, 1.15, title, horizontalalignment = 'center')
-                        #     ax.set_ylim((0,1.3))
+                        try:
+                            video_path = os.path.join(repetition_path, 'session', 'video_object.npy')
+                            video = np.load(video_path).item(0)
+                            video_object_found = True
+                            ### Plot distributions
+                            if repetition == 1:
+                                nbins = 10
+                                number_of_images_in_individual_fragments = video.individual_fragments_lenghts
+                                # number_of_images_in_individual_fragments = number_of_images_in_individual_fragments[number_of_images_in_individual_fragments >= 3]
+                                gamma_simulation = gamma(shape_parameter, loc = 0.99, scale = scale_parameter)
+                                gamma_simulation_logpdf = pdf2logpdf(gamma_simulation.pdf)
+                                ax = ax_arr[j,i]
+                                MIN = np.min(number_of_images_in_individual_fragments)
+                                MAX = np.max(number_of_images_in_individual_fragments)
+                                logbins = np.linspace(np.log10(MIN), np.log10(MAX), nbins)
+                                ax.hist(np.log10(number_of_images_in_individual_fragments), bins = logbins, normed = True)
+                                logbins_pdf = np.linspace(np.log10(MIN), np.log10(MAX), 100)
+                                ax.plot(logbins_pdf, gamma_simulation_logpdf(np.power(10,logbins_pdf)))
+                                if j == len(shape_parameter_list)-1:
+                                    ax.set_xlabel('number of frames \n\nscale = %.2f' %scale_parameter)
+                                if i == 0:
+                                    ax.set_ylabel('shape = %.2f \n\nPDF' %shape_parameter)
+                                mean = shape_parameter * scale_parameter
+                                sigma = np.sqrt(shape_parameter * scale_parameter**2)
+                                title = r'$\mu$ = %.2f, $\sigma$ = %.2f' %(mean, sigma)
+                                ax.set_xlim((np.log10(MIN), np.log10(MAX)))
+                                ax.set_xticks([1,2,3])
+                                ax.set_xticklabels([10,100,1000])
+                                ax.text(2.25, 1.15, title, horizontalalignment = 'center')
+                                ax.set_ylim((0,1.3))
+
+                        except:
+                            video_object_found = False
+                            print("video object not found")
 
                         ### Create accuracy matrix
                         results_data_frame_rep = results_data_frame.query('group_size == @group_size' +
@@ -132,8 +132,8 @@ if __name__ == '__main__':
                                                                     ' & shape_parameter == @shape_parameter' +
                                                                     ' & repetition == @repetition')
                         if len(results_data_frame_rep) != 0:
-                            protocol[j,i,k] = results_data_frame_rep.protocol
-                            total_time[j,i,k] = results_data_frame_rep.total_time
+                            protocol[j,i,k] = results_data_frame_rep.protocol.item()
+                            total_time[j,i,k] = results_data_frame_rep.total_time.item()
                             ratio_of_accumulated_images[j,i,k] = (results_data_frame_rep.number_of_partially_accumulated_individual_blobs
                                                                     + results_data_frame_rep.number_of_globally_accumulated_individual_blobs) / \
                                                                     (results_data_frame_rep.number_of_blobs -
@@ -141,13 +141,15 @@ if __name__ == '__main__':
                             ratio_of_video_accumulated[j,i,k] = (results_data_frame_rep.number_of_partially_accumulated_individual_blobs
                                                                     + results_data_frame_rep.number_of_globally_accumulated_individual_blobs) / \
                                                                     results_data_frame_rep.number_of_blobs
-                            # overall_P2[j,i,k] = video.overall_P2
-                            accuracy[j,i,k] = results_data_frame_rep.accuracy
-                            accuracy_in_accumulation[j,i,k] = results_data_frame_rep.accuracy_in_accumulation
-                            accuracy_after_accumulation[j,i,k] = results_data_frame_rep.accuracy_after_accumulation
+                            if video_object_found:
+                                overall_P2[j,i,k] = video.overall_P2
+                            accuracy[j,i,k] = results_data_frame_rep.accuracy.item()
+                            accuracy_in_accumulation[j,i,k] = results_data_frame_rep.accuracy_in_accumulation.item()
+                            accuracy_after_accumulation[j,i,k] = results_data_frame_rep.accuracy_after_accumulation.item()
 
-                            # th_mean[j,i,k] = np.mean(number_of_images_in_individual_fragments)
-                            # th_std[j,i,k] = np.std(number_of_images_in_individual_fragments)
+                            if video_object_found:
+                                th_mean[j,i,k] = np.mean(number_of_images_in_individual_fragments)
+                                th_std[j,i,k] = np.std(number_of_images_in_individual_fragments)
 
             fig_statistics, ax_arr = plt.subplots(2,4)
             fig_statistics_list.append(fig_statistics)

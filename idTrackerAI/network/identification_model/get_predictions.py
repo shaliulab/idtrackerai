@@ -17,6 +17,7 @@ class GetPrediction(object):
         self.data_set = data_set
         self._softmax_probs = []
         self._predictions = []
+        self._predictions_KNN = []
         self._fc_vectors = []
         self.batch_size = BATCH_SIZE_PREDICTIONS_IDCNN
 
@@ -51,7 +52,7 @@ class GetPrediction(object):
             # print(fc_vectors.shape)
             self._fc_vectors.append(fc_vectors)
         self._fc_vectors = np.concatenate(self._fc_vectors, axis = 0)
-        _, self._predictions = kMeansCluster(self._fc_vectors, number_of_animals, KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN)
+        _, self._predictions_KNN = kMeansCluster(self._fc_vectors, number_of_animals, KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN)
 
 def kMeansCluster(vector_values, num_clusters, max_num_steps, stop_coeficient = 0.0):
   vectors = tf.constant(vector_values)

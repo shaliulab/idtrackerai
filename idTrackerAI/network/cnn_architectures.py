@@ -66,8 +66,8 @@ def cnn_model_0(images, classes, width, height, channels, action_on_image, pre_t
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
-    return y_logits
-    # return y_logits, relu, (W1, W3, W5, WFC, WSoft)
+    # return y_logits
+    return y_logits, relu
 
 ''' model with 1 convolution '''
 def cnn_model_1(images, classes, width, height, channels):

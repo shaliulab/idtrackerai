@@ -92,7 +92,6 @@ class ListOfGlobalFragments(object):
                 identities = [fragment.temporary_id for fragment
                             in self.first_global_fragment_for_accumulation.individual_fragments]
                 logger.info("Identities transferred succesfully")
-
         self.plot_P1s_identity_transfer()
 
         [(setattr(fragment, '_acceptable_for_training', True),
@@ -196,7 +195,7 @@ def detect_beginnings(boolean_array):
     return [i for i in range(0,len(boolean_array)) if (boolean_array[i] and not boolean_array[i-1])]
 
 def check_global_fragments(blobs_in_video, num_animals):
-    """Returns an array with True iff:
+    """Returns an array with True if:
     * each blob has a unique blob intersecting in the past and future
     * number of blobs equals num_animals
     """
