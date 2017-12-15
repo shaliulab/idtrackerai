@@ -1,9 +1,12 @@
+from __future__ import division
 import os
 import time
 import datetime
 from math import ceil, sqrt
 
 import numpy as np
+import matplotlib.cm
+import matplotlib.pyplot as plt
 from scipy.misc import imsave
 
 from six.moves import range
@@ -22,7 +25,7 @@ config = {
 	"N" : 8,
 	"EPS" : 1e-7,
 	"K5X5" : K5X5,
-	"MAX_IMAGES" : 1,
+	"MAX_IMAGES" : 8,
 	"NUM_OCTAVE" : 3,
 	"STEP_SIZE" : 1.0,
 	"NUM_ITERATION" : 50,
@@ -72,7 +75,6 @@ def parse_tensors_dict(graph, layer_name, value_feed_dict):
 
 		# creating feed_dict and find input tensors
 		X_in = None
-		print("-------------------------------", X_in)
 		# find tensors of value_feed_dict
 		# in current graph by name
 		for key_op, value in iteritems(value_feed_dict):
@@ -81,9 +83,7 @@ def parse_tensors_dict(graph, layer_name, value_feed_dict):
 			x.append(tmp)
 
 		X_in = x[0]
-		print("-------------------------------", X_in)
 		feed_dict[X_in] = feed_dict[X_in][:config["MAX_IMAGES"]] # only taking first MAX_IMAGES from given images array
-		print("-------------------------------", feed_dict[X_in])
 	return op_tensor, x, X_in, feed_dict
 
 
@@ -130,6 +130,7 @@ def _write_activation(activations, layer, path_outdir, path_logdir):
 		finally:
 			file_writer.close() # close file writer
 	return is_success
+
 def _write_deconv(images, layer, path_outdir, path_logdir):
 	is_success = True
 
@@ -180,6 +181,7 @@ def _write_deconv(images, layer, path_outdir, path_logdir):
 		finally:
 			file_writer.close() # close file writer
 	return is_success
+
 def _write_deepdream(images, layer, path_outdir, path_logdir):
 	is_success = True
 
@@ -220,7 +222,6 @@ def _write_deepdream(images, layer, path_outdir, path_logdir):
 	return is_success
 def write_results(results, layer, path_outdir, path_logdir, method):
 	is_success = True
-
 	if method == "act":
 		is_success = _write_activation(results, layer, path_outdir, path_logdir)
 	elif method == "deconv":
@@ -229,28 +230,27 @@ def write_results(results, layer, path_outdir, path_logdir, method):
 		is_success = _write_deepdream(results, layer, path_outdir, path_logdir)
 	return is_success
 
-
 # if dir not exits make one
 def _is_dir_exist(path):
 	return os.path.exists(path)
+
 def make_dir(path):
 	is_success = True
-
 	# if dir is not exist make one
 	if not _is_dir_exist(path):
 		try:
 			os.makedirs(path)
 		except OSError as exc:
 			is_success = False
-	return is_success
 
+	return is_success
 
 # get operation and tensor by name
 def get_operation(graph, name):
 	return graph.get_operation_by_name(name = name)
+
 def get_tensor(graph, name):
 	return graph.get_tensor_by_name(name = name)
-
 
 # image or images normalization
 def image_normalization(image, s = 0.1, ubound = 255.0):
@@ -272,6 +272,7 @@ def image_normalization(image, s = 0.1, ubound = 255.0):
 	img_min = np.min(image)
 	img_max = np.max(image)
 	return (((image - img_min) * ubound) / (img_max - img_min + config["EPS"])).astype('uint8')
+
 def _im_normlize(images, ubound = 255.0):
 	N = len(images)
 	H, W, C = images[0][0].shape
@@ -280,7 +281,6 @@ def _im_normlize(images, ubound = 255.0):
 		for j in range(images[i].shape[0]):
 			images[i][j] = image_normalization(images[i][j], ubound = ubound)
 	return images
-
 
 # convert a array of images or list of arrays of images into grid images
 def convert_into_grid(Xs, ubound=255.0, padding=1):
@@ -303,7 +303,27 @@ def convert_into_grid(Xs, ubound=255.0, padding=1):
 		A grid of input images
 	:rtype: 3-D numpy array
 	"""
-	(N, H, W, C) = Xs.shape
+	vmin = np.min(Xs)
+	vmax = np.max(Xs)
+	new_ims = []
+
+	for image in Xs:
+		print(image.shape)
+		image = (image - vmin) / (vmax - vmin)
+		try:
+			if image.shape[1] > 1:
+				image = matplotlib.cm.inferno(np.squeeze(image), bytes = True)[...,:3]
+			new_ims.append(image)
+		except:
+			print("bah")
+			print(image.shape)
+			print(np.squeeze(image).shape)
+			print(np.min(image))
+			print(np.max(image))
+
+	new_ims = np.asarray(new_ims)
+	print(new_ims.shape)
+	(N, H, W, C) = new_ims.shape
 	grid_size = int(ceil(sqrt(N)))
 	grid_height = H * grid_size + padding * (grid_size - 1)
 	grid_width = W * grid_size + padding * (grid_size - 1)
@@ -314,13 +334,14 @@ def convert_into_grid(Xs, ubound=255.0, padding=1):
 		x0, x1 = 0, W
 		for x in range(grid_size):
 			if next_idx < N:
-				grid[y0:y1, x0:x1] = Xs[next_idx]
+				grid[y0:y1, x0:x1] = new_ims[next_idx]
 				next_idx += 1
 			x0 += W + padding
 			x1 += W + padding
 		y0 += H + padding
 		y1 += H + padding
 	return grid.astype('uint8')
+
 def _images_to_grid(images):
 	"""
 	Convert a list of arrays of images into a list of grid of images
@@ -355,6 +376,7 @@ def _lap_split(img):
 		lo2 = tf.nn.conv2d_transpose(lo, config["K5X5"] * 4, tf.shape(img), [1, 2, 2, 1])
 		hi = img-lo2
 	return lo, hi
+
 def _lap_split_n(img, n):
 	'''Build Laplacian pyramid with n splits'''
 	levels = []
@@ -363,6 +385,7 @@ def _lap_split_n(img, n):
 		levels.append(hi)
 	levels.append(img)
 	return levels[::-1]
+
 def _lap_merge(levels):
 	'''Merge Laplacian pyramid'''
 	img = levels[0]
@@ -370,11 +393,13 @@ def _lap_merge(levels):
 		with tf.name_scope('merge'):
 			img = tf.nn.conv2d_transpose(img, config["K5X5"]*4, tf.shape(hi), [1,2,2,1]) + hi
 	return img
+
 def _normalize_std(img):
 	'''Normalize image by making its standard deviation = 1.0'''
 	with tf.name_scope('normalize'):
 		std = tf.sqrt(tf.reduce_mean(tf.square(img), axis = (1, 2, 3), keep_dims=True))
 		return img/tf.maximum(std, config["EPS"])
+
 def lap_normalize(img, channels, scale_n):
 	'''Perform the Laplacian pyramid normalization.'''
 	K5X5 = k[ : , : , None , None ] / k.sum() * np.eye(channels, dtype = np.float32)
