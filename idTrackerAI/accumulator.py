@@ -19,7 +19,7 @@ def accumulate(accumulation_manager,
                 video,
                 global_step,
                 net,
-                knowledge_transfer_from_same_animals):
+                identity_transfer):
     video.init_accumulation_statistics_attributes()
     accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
 
@@ -45,7 +45,7 @@ def accumulate(accumulation_manager,
                                                         print_flag = False,
                                                         plot_flag = False,
                                                         global_step = global_step,
-                                                        knowledge_transfer_from_same_animals = knowledge_transfer_from_same_animals,
+                                                        identity_transfer = identity_transfer,
                                                         accumulation_manager = accumulation_manager)
 
         # update the set of images used for training

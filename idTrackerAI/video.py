@@ -284,6 +284,10 @@ class Video(object):
         return self.number_of_animals <= self.knowledge_transfer_info_dict['number_of_animals']
 
     @property
+    def first_global_fragment_knowledge_transfer_identities(self):
+        return _first_global_fragment_knowledge_transfer_identities
+
+    @property
     def tracking_with_knowledge_transfer(self):
         return self._tracking_with_knowledge_transfer
 
@@ -388,10 +392,6 @@ class Video(object):
     @property
     def ratio_accumulated_images(self):
         return self._ratio_accumulated_images
-
-    @property
-    def knowledge_transfer_from_same_animals(self):
-        return self._knowledge_transfer_from_same_animals
 
     def check_paths_consistency_with_video_path(self,new_video_path):
 
