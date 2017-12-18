@@ -118,7 +118,6 @@ class ConvNetwork():
                                                                 self.image_channels,
                                                                 self.params.action_on_image,
                                                                 self.params.pre_target_image_size)
-
         self.softmax_probs = tf.nn.softmax(self.y_logits)
         self.predictions = tf.cast(tf.add(tf.argmax(self.softmax_probs,1),1),tf.float32)
 

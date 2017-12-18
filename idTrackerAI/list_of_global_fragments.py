@@ -52,7 +52,7 @@ class ListOfGlobalFragments(object):
             assigner = assign(net, video, images, False)
             compute_identification_statistics_for_non_accumulated_fragments(
                 self.first_global_fragment_for_accumulation.individual_fragments,
-                assigner)
+                assigner, net.params.number_of_animals)
             # Check certainties of the individual fragments in the global fragment
             # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
             [setattr(fragment,'_acceptable_for_training', True) for fragment
@@ -88,8 +88,12 @@ class ListOfGlobalFragments(object):
                 identities = self.abort_knowledge_transfer_on_same_animals(video, net)
                 logger.info("Identity transfer is not possible. Identities will be intialized")
             else:
-                identities = [fragment.temporary_id for fragment
+                video._first_global_fragment_knowledge_transfer_identities = [fragment.temporary_id for fragment
                             in self.first_global_fragment_for_accumulation.individual_fragments]
+                if video.number_of_animals == video.knowledge_transfer_info_dict['number_of_animals']:
+                    identities = video._first_global_fragment_knowledge_transfer_identities
+                elif video.number_of_animals < video.knowledge_transfer_info_dict['number_of_animals']:
+                    identities = range(video.number_of_animals)
                 logger.info("Identities transferred succesfully")
 
         self.plot_P1s_identity_transfer(video)
@@ -114,6 +118,7 @@ class ListOfGlobalFragments(object):
         certainties_ordered[indices] = certainties
 
         fig = plt.figure()
+        sns.set_style("ticks")
         fig.suptitle('Identity transfer summary')
         ax0 = fig.add_subplot(121)
         im = ax0.imshow(P1_vectors_ordered)

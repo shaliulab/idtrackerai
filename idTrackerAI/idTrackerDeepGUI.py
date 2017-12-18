@@ -15,6 +15,7 @@ import psutil
 import logging.config
 import yaml
 import copy
+import tensorflow as tf
 # Import application/library specifics
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
@@ -312,7 +313,8 @@ if __name__ == '__main__':
     video.accumulation_trial = 0
     video.create_accumulation_folder(iteration_number = 0, delete = not bool(loadPreviousDict['first_accumulation']))
     logger.info("Set accumulation network parameters")
-    accumulation_network_params = NetworkParams(video.number_of_animals,
+    number_of_animals = video.number_of_animals if not video.identity_transfer else video.knowledge_transfer_info_dict['number_of_animals']
+    accumulation_network_params = NetworkParams(number_of_animals,
                                 learning_rate = 0.005,
                                 keep_prob = 1.0,
                                 scopes_layers_to_optimize = None,
@@ -343,6 +345,14 @@ if __name__ == '__main__':
         # the list of global fragments is ordered in place from the distance (in frames) wrt
         # the core of the first global fragment that will be accumulated
         video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = 0))
+        if video.identity_transfer and video.number_of_animals < video.knowledge_transfer_info_dict['number_of_animals']:
+            tf.reset_default_graph()
+            accumulation_network_params.number_of_animals = video.number_of_animals
+            accumulation_network_params._restore_folder = None
+            accumulation_network_params.knowledge_transfer_folder = video.knowledge_transfer_model_folder
+            net = ConvNetwork(accumulation_network_params)
+            net.restore()
+
         list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = 0)
         accumulation_manager = AccumulationManager(video, list_of_fragments,
                                                     list_of_global_fragments,
@@ -468,6 +478,13 @@ if __name__ == '__main__':
                 net.reinitialize_softmax_and_fully_connected()
                 logger.info("Initialising accumulation manager")
                 video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = i - 1))
+                if video.identity_transfer and video.number_of_animals < video.knowledge_transfer_info_dict['number_of_animals']:
+                    tf.reset_default_graph()
+                    accumulation_network_params.number_of_animals = video.number_of_animals
+                    accumulation_network_params.restore_folder = video.pretraining_folder
+                    net = ConvNetwork(accumulation_network_params)
+                    net.restore()
+                    net.reinitialize_softmax_and_fully_connected()
                 list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1)
                 accumulation_manager = AccumulationManager(video,
                                                             list_of_fragments, list_of_global_fragments,
