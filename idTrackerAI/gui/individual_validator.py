@@ -42,6 +42,7 @@ class IndividualValidator(BoxLayout):
         global CHOSEN_VIDEO, DEACTIVATE_VALIDATION
         CHOSEN_VIDEO = chosen_video
         DEACTIVATE_VALIDATION = deactivate_validation
+        self.with_gaps = True
         self.visualiser = VisualiseVideo(chosen_video = CHOSEN_VIDEO)
         self.warning_popup = Popup(title = 'Warning',
                             content = CustomLabel(text = 'The video has not been tracked yet. Track it before performing validation.'),

@@ -6,6 +6,7 @@ import sys
 sys.path.append('../')
 sys.path.append('../network')
 sys.path.append('../network/identification_model')
+sys.path.append('./tf_cnnvisualisation')
 from itertools import combinations
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 from video import Video
@@ -55,29 +56,29 @@ if __name__ == "__main__":
     first_global_fragment = list_of_global_fragments.global_fragments[0]
     images = first_global_fragment.individual_fragments[0].images
     images = np.asarray(images)
-    number_of_images = 1000
+    number_of_images = 100
     distances = compare_all_images(images[:number_of_images])
     Z = linkage(distances, 'ward')
-    # fig = plt.figure(figsize=(25, 10))
-    # ax = fig.add_subplot(111)
-    # ax.set_title('Hierarchical Clustering Dendrogram')
-    # ax.set_xlabel('sample index')
-    # ax.set_ylabel('distance')
-    # R = dendrogram(Z, leaf_rotation=90., leaf_font_size=8.)
-    # ax.set_ylim([-0.1, ax.get_ylim()[1]])
-    # positions = ax.get_xticks()
-    # labels = ax.get_xticklabels()
-    #
-    # for i in range(number_of_images):
-    #     label = labels[i].get_text()
-    #     imscatter(positions[i], 0, images[int(label)], ax=None, zoom=.2)
-    #
-    # plt.show()
+    fig = plt.figure(figsize=(25, 10))
+    ax = fig.add_subplot(111)
+    ax.set_title('Hierarchical Clustering Dendrogram')
+    ax.set_xlabel('sample index')
+    ax.set_ylabel('distance')
+    R = dendrogram(Z, leaf_rotation=90., leaf_font_size=8.)
+    ax.set_ylim([-0.1, ax.get_ylim()[1]])
+    positions = ax.get_xticks()
+    labels = ax.get_xticklabels()
+
+    for i in range(number_of_images):
+        label = labels[i].get_text()
+        imscatter(positions[i], 0, images[int(label)], ax=None, zoom=.2)
+
+    plt.show()
 
     C = fcluster(Z, 2, criterion = 'maxclust')
     im1 = np.median(images[np.where(C == 1)[0]], axis = 0)
-    # plt.imshow(im1)
-    # plt.show()
+    plt.imshow(im1)
+    plt.show()
     params = NetworkParams(video.number_of_animals,
                                 learning_rate = 0.005,
                                 keep_prob = 1.0,
