@@ -43,8 +43,11 @@ class GroundTruth(object):
         self.start = start
         self.end = end
 
-    def save(self):
-        path_to_save_groundtruth = os.path.join(os.path.split(self.video.video_path)[0], '_groundtruth.npy')
+    def save(self, name = ''):
+        if name == '':
+            path_to_save_groundtruth = os.path.join(os.path.split(self.video.video_path)[0], '_groundtruth.npy')
+        else:
+            path_to_save_groundtruth = os.path.join(os.path.split(self.video.video_path)[0], '_groundtruth_' + name + '.npy')
         logger.info("saving ground truth at %s" %path_to_save_groundtruth)
         np.save(path_to_save_groundtruth, self)
         logger.info("done")

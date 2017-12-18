@@ -40,6 +40,7 @@ class Validator(BoxLayout):
         global CHOSEN_VIDEO, DEACTIVATE_VALIDATION
         CHOSEN_VIDEO = chosen_video
         DEACTIVATE_VALIDATION = deactivate_validation
+        self.with_gaps = True
 
         self.visualiser = VisualiseVideo(chosen_video = CHOSEN_VIDEO)
         self.warning_popup = Popup(title = 'Warning',
@@ -105,6 +106,7 @@ class Validator(BoxLayout):
         else:
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
+            self.with_gaps = False
         if not self.list_of_blobs.blobs_are_connected:
             self.list_of_blobs.reconnect()
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
@@ -641,10 +643,19 @@ class Validator(BoxLayout):
             self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
     def generate_groundtruth(self):
-        self.groundtruth = generate_groundtruth(CHOSEN_VIDEO.video, self.blobs_in_video, self.gt_start_frame, self.gt_end_frame, save_gt = False)
+        self.groundtruth = generate_groundtruth(CHOSEN_VIDEO.video,
+                                                self.blobs_in_video,
+                                                self.gt_start_frame,
+                                                self.gt_end_frame,
+                                                wrong_crossing_counter = self.wrong_crossing_counter,
+                                                save_gt = False)
 
     def save_groundtruth(self):
-        self.groundtruth.save()
+        if self.with_gaps:
+            self.groundtruth.save()
+        else:
+            self.groundtruth.save(name = 'with_crossing_identified')
+
 
     def plot_groundtruth_statistics(self):
         blobs_in_video_groundtruth = self.groundtruth.blobs_in_video[self.groundtruth.start:self.groundtruth.end]

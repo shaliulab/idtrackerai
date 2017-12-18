@@ -17,6 +17,15 @@ from list_of_fragments import ListOfFragments
 from blob import Blob
 from list_of_blobs import ListOfBlobs
 
+def set_individual_with_identity_0_as_crossings(list_of_blobs_no_gaps):
+    [(setattr(blob, '_is_an_individual', False),
+        setattr(blob, '_is_a_crossing', True),
+        setattr(blob, '_identity', None),
+        setattr(blob, '_identity_corrected_solving_duplications', None))
+        for blobs_in_frame in list_of_blobs_no_gaps.blobs_in_video
+        for blob in blobs_in_frame
+        if blob.assigned_identity == 0]
+
 def flatten(l):
     for el in l:
         if isinstance(el, collections.Iterable) and not isinstance(el, basestring):
@@ -440,6 +449,7 @@ def clean_individual_blob_before_saving(blobs_in_video):
     return blobs_in_video
 
 def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
+    set_individual_with_identity_0_as_crossings(list_of_blobs)
     continue_erosion_protocol = True
     previous_number_of_non_split_crossings_blobs = sum([fragment.number_of_images
                                                     for fragment in list_of_fragments.fragments
@@ -476,7 +486,7 @@ if __name__ == "__main__":
         list_of_blobs.blobs_in_video = list_of_blobs.blobs_in_video[:-1]
     list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
     list_of_blobs = close_trajectories_gaps(video, list_of_blobs)
-    
+
     video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
     video.save()
     list_of_blobs.save(video, path_to_save = video.blobs_no_gaps_path, number_of_chunks = video.number_of_frames)

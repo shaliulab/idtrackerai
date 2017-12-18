@@ -276,10 +276,8 @@ def _visualization_by_layer_name(graph, value_feed_dict, input_tensor, layer_nam
 
 	if is_deep_dream:
 		is_success = write_results(results, layer_name, path_outdir, path_logdir, method = method)
-
 	start += time.time()
 	print("Reconstruction Completed for %s layer. Time taken = %f s" % (layer_name, start))
-
 	return is_success
 
 
@@ -382,10 +380,12 @@ def activation_visualization(graph_or_path, value_feed_dict, input_tensor = None
 	is_success = _get_visualization(graph_or_path, value_feed_dict, input_tensor = input_tensor, layers = layers, method = "act",
 		path_logdir = path_logdir, path_outdir = path_outdir)
 	return is_success
+
 def deconv_visualization(graph_or_path, value_feed_dict, input_tensor = None, layers = 'r', path_logdir = './Log', path_outdir = "./Output"):
 	is_success = _get_visualization(graph_or_path, value_feed_dict, input_tensor = input_tensor, layers = layers, method = "deconv",
 		path_logdir = path_logdir, path_outdir = path_outdir)
 	return is_success
+
 def deepdream_visualization(graph_or_path, value_feed_dict, layer, classes, input_tensor = None, path_logdir = './Log', path_outdir = "./Output"):
 	is_success = True
 	if isinstance(layer, list):

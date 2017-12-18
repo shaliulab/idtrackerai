@@ -29,7 +29,7 @@ def train(video,
             print_flag,
             plot_flag,
             global_step = 0,
-            knowledge_transfer_from_same_animals = False,
+            identity_transfer = False,
             accumulation_manager = None):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
@@ -50,7 +50,7 @@ def train(video,
     training_dataset.convert_labels_to_one_hot()
     validation_dataset.convert_labels_to_one_hot()
     # Reinitialize softmax and fully connected
-    if video.accumulation_step == 0 and not knowledge_transfer_from_same_animals:
+    if video.accumulation_step == 0 and not identity_transfer:
         net.reinitialize_softmax_and_fully_connected()
     # Train network
     #compute weights to be fed to the loss function (weighted cross entropy)

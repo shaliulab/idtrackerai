@@ -24,15 +24,17 @@ from constants import AVAILABLE_VIDEO_EXTENSION, FRAMES_PER_EPISODE
 logger = logging.getLogger("__main__.video")
 
 class Video(object):
-    def __init__(self, video_path = None, number_of_animals = None, bkg = None, subtract_bkg = False, ROI = None, apply_ROI = False):
+    def __init__(self, video_path = None):
         logger.debug("Video object init")
         self._video_path = video_path #string: path to the video
-        self._number_of_animals = number_of_animals #int: number of animals in the video
+        self._number_of_animals = None #int: number of animals in the video
         self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split for parallel computation]
-        self._bkg = bkg #matrix [shape = shape of a frame] background used to do bkg subtraction
-        self._subtract_bkg = subtract_bkg #boolean: True if the user specifies to subtract the background
-        self._ROI = ROI #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
-        self._apply_ROI = apply_ROI #boolean: True if the user applies a ROI to the video
+        self._original_bkg = None #matrix [shape = shape of a frame] background used to do bkg subtraction
+        self._bkg = None
+        self._subtract_bkg = None #boolean: True if the user specifies to subtract the background
+        self._original_ROI = None #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
+        self._ROI = None
+        self._apply_ROI = None #boolean: True if the user applies a ROI to the video
         self._min_threshold = 0
         self._max_threshold = 135
         self._min_area = 150
@@ -50,7 +52,7 @@ class Video(object):
         self._has_been_pretrained = None
         self._pretraining_folder = None
         self._knowledge_transfer_model_folder = None
-        self._knowledge_transfer_with_same_animals = None
+        self._identity_transfer = None
         self._tracking_with_knowledge_transfer = False
         self._percentage_of_accumulated_images = None
         self._first_accumulation_finished = None
@@ -151,6 +153,10 @@ class Video(object):
         return self._apply_ROI
 
     @property
+    def original_ROI(self):
+        return self._original_ROI
+
+    @property
     def ROI(self):
         return self._ROI
 
@@ -159,12 +165,31 @@ class Video(object):
         return self._subtract_bkg
 
     @property
+    def original_bkg(self):
+        return self._original_bkg
+
+    @property
     def bkg(self):
         return self._bkg
 
     @property
     def resolution_reduction(self):
         return self._resolution_reduction
+
+    @resolution_reduction.setter
+    def resolution_reduction(self, value):
+        self._resolution_reduction = value
+        self._height = int(self.original_height * value)
+        self._width = int(self.original_width * value)
+        if self.subtract_bkg:
+            self._bkg = cv2.resize(self.original_bkg, None,
+                                            fx = value,
+                                            fy = value,
+                                            interpolation = cv2.INTER_CUBIC)
+        self._ROI = cv2.resize(self.original_ROI, None,
+                                        fx = value,
+                                        fy = value,
+                                        interpolation = cv2.INTER_CUBIC)
 
     @property
     def min_threshold(self):
@@ -252,8 +277,15 @@ class Video(object):
             self._knowledge_transfer_model_folder = None
 
     @property
-    def knowledge_transfer_with_same_animals(self):
-        return self._knowledge_transfer_with_same_animals
+    def identity_transfer(self):
+        return self._identity_transfer
+
+    def is_identity_transfer_possible(self):
+        return self.number_of_animals <= self.knowledge_transfer_info_dict['number_of_animals']
+
+    @property
+    def first_global_fragment_knowledge_transfer_identities(self):
+        return _first_global_fragment_knowledge_transfer_identities
 
     @property
     def tracking_with_knowledge_transfer(self):
@@ -310,6 +342,14 @@ class Video(object):
         return self._paths_to_video_segments
 
     @property
+    def original_width(self):
+        return self._original_width
+
+    @property
+    def original_height(self):
+        return self._original_height
+
+    @property
     def width(self):
         return self._width
 
@@ -352,10 +392,6 @@ class Video(object):
     @property
     def ratio_accumulated_images(self):
         return self._ratio_accumulated_images
-
-    @property
-    def knowledge_transfer_from_same_animals(self):
-        return self._knowledge_transfer_from_same_animals
 
     def check_paths_consistency_with_video_path(self,new_video_path):
 
@@ -467,8 +503,8 @@ class Video(object):
     def get_info(self):
         self._paths_to_video_segments = self.check_split_video()
         cap = cv2.VideoCapture(self.video_path)
-        self._width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        self._height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+        self._original_width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+        self._original_height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
         try:
             self._frames_per_second = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
         except:

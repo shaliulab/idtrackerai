@@ -157,7 +157,6 @@ def check_resolution_reduction(video, old_video, usePreviousRR):
     else:
         return 1
 
-
 ''' ****************************************************************************
 ROI selector GUI
 *****************************************************************************'''
@@ -251,40 +250,6 @@ def ROISelectorPreview(video, old_video, usePreviousROI):
     mask = checkROI(video, old_video, usePreviousROI, frameGray)
     return mask
 
-
-def checkROI_library(useROI, usePreviousROI, frame, videoPath):
-    ''' Select ROI '''
-    if useROI:
-        if usePreviousROI:
-            mask = loadFile(videoPath, 'ROI')
-            mask = np.asarray(mask)
-            centers= loadFile(videoPath, 'centers')
-            centers = np.asarray(centers) ### TODO maybe we need to pass to a list of tuples
-        else:
-            logger.debug('Selecting ROI...')
-            mask, centers = getMask(frame)
-            # mask = adaptROI(mask)
-    else:
-        logger.debug('No ROI selected...')
-        mask = np.ones_like(frame)*255
-        centers = []
-    return mask, centers
-
-def ROISelectorPreview_library(videoPaths, useROI, usePreviousROI, numSegment=0):
-    """
-    loads a preview of the video for manual fine-tuning
-    """
-    cap2 = cv2.VideoCapture(videoPaths[0])
-    flag, frame = cap2.read()
-    cap2.release()
-    height = frame.shape[0]
-    width = frame.shape[1]
-    frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    mask, centers = checkROI_library(useROI, usePreviousROI, frameGray, videoPaths[0])
-    saveFile(videoPaths[0], mask, 'ROI')
-    saveFile(videoPaths[0], centers, 'centers')
-    return width, height, mask, centers
-
 ''' ****************************************************************************
 First preview numAnimals, inspect parameters for segmentation and portraying
 **************************************************************************** '''
@@ -296,26 +261,13 @@ def SegmentationPreview(video):
     if frame.shape[2] == 1 or (np.any(frame[:,:,1] == frame[:,:,2] ) and np.any(frame[:,:, 0] == frame[:,:,1])):
         video._number_of_channels = 1
     else:
-        raise NotImplementedError("Colour videos has still to be intgrated")
+        raise NotImplementedError("Colour videos has still to be integrated")
     numFrames = video.number_of_frames
-    bkg = video.bkg
-    mask = video.ROI
-    if video.resolution_reduction != 1:
-        if bkg is not None:
-            bkg = cv2.resize(bkg, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
-        mask = cv2.resize(mask, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
     subtract_bkg = video.subtract_bkg
-    if video.resolution_reduction == 1:
-        height = video.height
-        width = video.width
-    else:
-        height = int(video.height * video.resolution_reduction)
-        width = int(video.width * video.resolution_reduction)
-
 
     def thresholder(minTh, maxTh):
         toile = np.zeros_like(frameGray, dtype='uint8')
-        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, bkg, mask, subtract_bkg)
+        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, video.bkg, video.ROI, subtract_bkg)
         #contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')
@@ -348,7 +300,7 @@ def SegmentationPreview(video):
 
         while j < numImages:
             if j < numGoodContours:
-                _ , _, _, image_for_identification = Blob._get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize)
+                _ , _, _, image_for_identification = Blob._get_image_for_identification(video.height, video.width, miniFrames[j], pixels[j], bbs[j], identificationImageSize)
             else:
                 image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
             rowImage.append(image_for_identification)
@@ -478,24 +430,10 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
     cap = cv2.VideoCapture(video.video_path)
     ret, frame = cap.read()
     numFrames = video.number_of_frames
-    bkg = video.bkg
-    mask = video.ROI
-    if video.resolution_reduction != 1:
-        if bkg is not None:
-            bkg = cv2.resize(bkg, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
-        mask = cv2.resize(mask, None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
-    subtract_bkg = video.subtract_bkg
-    if video.resolution_reduction == 1:
-        height = video.height
-        width = video.width
-    else:
-        height = int(video.height * video.resolution_reduction)
-        width = int(video.width * video.resolution_reduction)
-
 
     def thresholder(minTh, maxTh):
         toile = np.zeros_like(frameGray, dtype='uint8')
-        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, bkg, mask, subtract_bkg)
+        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, video.bkg, video.ROI, video.subtract_bkg)
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
@@ -531,7 +469,7 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
 
         while j < numImages:
             if j < numGoodContours:
-                _ , _, _, image_for_identification = Blob._get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize)
+                _ , _, _, image_for_identification = Blob._get_image_for_identification(video.height, video.width, miniFrames[j], pixels[j], bbs[j], identificationImageSize)
             else:
                 image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
             rowImage.append(image_for_identification)
@@ -561,7 +499,7 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
         else:
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, frame_number)
         ret, frame = cap.read()
-        print('----------------------', ret)
+
         if video.resolution_reduction != 1:
             frame = cv2.resize(frame,None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -656,191 +594,6 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
     cv2.waitKey(1)
     return new_preprocessing_parameters
 
-def SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, preprocParams, frameIndices, size = 1):
-
-    ### FIXME Currently the scale factor of the image is not passed everytime we change the segment. It need to be changed so that we do not need to resize everytime we open a new segmen.
-    minArea = preprocParams['minArea']
-    maxArea = preprocParams['maxArea']
-    minThreshold = preprocParams['minThreshold']
-    maxThreshold = preprocParams['maxThreshold']
-    numAnimals = preprocParams['numAnimals']
-
-    if numAnimals == None:
-        numAnimals = getInput('Number of animals','Type the number of animals')
-        numAnimals = int(numAnimals)
-
-    global cap, currentSegment
-    currentSegment = 0
-    cap = cv2.VideoCapture(videoPaths[0])
-    numFrames = len(frameIndices)
-
-    def thresholder(minTh, maxTh):
-        toile = np.zeros_like(frameGray, dtype='uint8')
-        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, bkg, mask, useBkg)
-        #contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-        maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
-        minArea = cv2.getTrackbarPos('minArea', 'Bars')
-        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray, minArea, maxArea, height, width)
-        cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
-        shower = cv2.addWeighted(frameGray,1,toile,.5,0)
-        showerCopy = shower.copy()
-        resUp = cv2.getTrackbarPos('ResUp', 'Bars')
-        resDown = cv2.getTrackbarPos('ResDown', 'Bars')
-        showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
-        showerCopy = cv2.resize(showerCopy,None, fx = np.true_divide(1,resDown), fy = np.true_divide(1,resDown))
-        numColumns = 5
-        numGoodContours = len(goodContours)
-        numBlackImages = numColumns - numGoodContours % numColumns
-        numImages = numGoodContours + numBlackImages
-        j = 0
-        maximum_body_length = 70
-        if estimated_body_lengths:
-            maximum_body_length = np.max(estimated_body_lengths)
-        imagesMat = []
-        rowImage = []
-
-        logger.debug("num blobs detected: %i" %numGoodContours)
-        logger.debug("maximum_body_length: %i" %maximum_body_length)
-        logger.debug("areas: %i" %areas)
-        identificationImageSize = int(np.sqrt(maximum_body_length ** 2 / 2))
-        identificationImageSize = identificationImageSize + identificationImageSize%2  #this is to make the identificationImageSize even
-
-        while j < numImages:
-            if j < numGoodContours:
-                _, _, _, image_for_identification = Blob._get_image_for_identification(height, width, miniFrames[j], pixels[j], bbs[j], identificationImageSize, only_blob = True)
-            else:
-                image_for_identification = np.zeros((identificationImageSize,identificationImageSize),dtype='uint8')
-            rowImage.append(image_for_identification)
-            if (j+1) % numColumns == 0:
-                imagesMat.append(np.hstack(rowImage))
-                rowImage = []
-            j += 1
-
-        imagesMat = np.vstack(imagesMat)
-        cv2.imshow('Bars',np.squeeze(imagesMat))
-        cv2.imshow('IdPlayer', showerCopy)
-        cv2.moveWindow('Bars', 10,10 )
-        cv2.moveWindow('IdPlayer', 200, 10 )
-
-    def scroll(trackbarValue):
-        global frame, avFrame, frameGray, cap, currentSegment
-
-        # Select segment dataframe and change cap if needed
-        sNumber = frameIndices.loc[trackbarValue,'segment']
-        sFrame = frameIndices.loc[trackbarValue,'frame']
-
-        if sNumber != currentSegment: # we are changing segment
-            logger.debug('Changing segment...')
-            currentSegment = sNumber
-
-            if len(videoPaths) > 1:
-                cap = cv2.VideoCapture(videoPaths[sNumber-1])
-
-        #Get frame from video file
-        if len(videoPaths) > 1:
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame)
-        else:
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-        ret, frame = cap.read()
-
-        frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        avIntensity = np.float32(np.mean(frameGray))
-        avFrame = np.divide(frameGray,avIntensity)
-        minTh = cv2.getTrackbarPos('minTh', 'Bars')
-        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
-        thresholder(minTh, maxTh)
-        pass
-
-
-    def changeMinTh(minTh):
-        minTh = cv2.getTrackbarPos('minTh', 'Bars')
-        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
-        thresholder(minTh, maxTh)
-        pass
-
-    def changeMaxTh(maxTh):
-        minTh = cv2.getTrackbarPos('minTh', 'Bars')
-        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
-        thresholder(minTh, maxTh)
-        pass
-
-    def changeMinArea(x):
-        minTh = cv2.getTrackbarPos('minTh', 'Bars')
-        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
-        thresholder(minTh, maxTh)
-        pass
-
-    def changeMaxArea(maxArea):
-        minTh = cv2.getTrackbarPos('minTh', 'Bars')
-        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
-        thresholder(minTh, maxTh)
-        pass
-
-    def resizeImageUp(res):
-        minTh = cv2.getTrackbarPos('minTh', 'Bars')
-        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
-        thresholder(minTh, maxTh)
-        pass
-
-    def resizeImageDown(res):
-        minTh = cv2.getTrackbarPos('minTh', 'Bars')
-        maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
-        thresholder(minTh, maxTh)
-        pass
-
-    cv2.createTrackbar('start', 'Bars', 0, numFrames-1, scroll )
-    cv2.createTrackbar('minTh', 'Bars', 0, 255, changeMinTh)
-    cv2.createTrackbar('maxTh', 'Bars', 0, 255, changeMaxTh)
-    cv2.createTrackbar('minArea', 'Bars', 0, 1000, changeMinArea)
-    cv2.createTrackbar('maxArea', 'Bars', 0, 60000, changeMaxArea)
-    cv2.createTrackbar('ResUp', 'Bars', 1, 20, resizeImageUp)
-    cv2.createTrackbar('ResDown', 'Bars', 1, 20, resizeImageDown)
-
-    defFrame = 1
-    defMinTh = minThreshold
-    defMaxTh = maxThreshold
-    defMinA = minArea
-    defMaxA = maxArea
-    defRes = size
-
-    scroll(defFrame)
-    cv2.setTrackbarPos('start', 'Bars', defFrame)
-    changeMaxArea(defMaxA)
-    cv2.setTrackbarPos('maxArea', 'Bars', defMaxA)
-    changeMinArea(defMinA)
-    cv2.setTrackbarPos('minArea', 'Bars', defMinA)
-    changeMinTh(defMinTh)
-    cv2.setTrackbarPos('minTh', 'Bars', defMinTh)
-    changeMaxTh(defMaxTh)
-    cv2.setTrackbarPos('maxTh', 'Bars', defMaxTh)
-    resizeImageUp(defRes)
-    cv2.setTrackbarPos('ResUp', 'Bars', defRes)
-    resizeImageDown(defRes)
-    cv2.setTrackbarPos('ResDown', 'Bars', defRes)
-
-    #start = cv2.getTrackbarPos('start','Bars')
-    #minThresholdStart = cv2.getTrackbarPos('minTh', 'Bars')
-    #minAreaStart = cv2.getTrackbarPos('minArea', 'Bars')
-    #maxAreaStart = cv2.getTrackbarPos('maxArea', 'Bars')
-
-    cv2.waitKey(0)
-
-    preprocParams = {
-                'minThreshold': cv2.getTrackbarPos('minTh', 'Bars'),
-                'maxThreshold': cv2.getTrackbarPos('maxTh', 'Bars'),
-                'minArea': cv2.getTrackbarPos('minArea', 'Bars'),
-                'maxArea': cv2.getTrackbarPos('maxArea', 'Bars'),
-                'numAnimals': numAnimals}
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-    cv2.waitKey(1)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-
-    return preprocParams
-
 def selectPreprocParams(video, old_video, usePreviousPrecParams):
     restore_segmentation = False
     if not usePreviousPrecParams:
@@ -855,7 +608,6 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         prepOpts = selectOptions(['bkg', 'ROI', 'resolution_reduction'], None, text = 'Do you want to do BKG or select a ROI or reduce the resolution?', is_processes_list = False)
         video._subtract_bkg = bool(prepOpts['bkg'])
         video._apply_ROI =  bool(prepOpts['ROI'])
-        print("********************", video.apply_ROI, video.subtract_bkg)
         video.reduce_resolution = bool(prepOpts['resolution_reduction'])
         if old_video is not None:
             preprocessing_steps = ['bkg', 'ROI', 'resolution_reduction']
@@ -871,12 +623,9 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         else:
             usePreviousROI, usePreviousBkg, usePreviousRR = False, False, False
             video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
-        #ROI selection/loading
-        video._ROI = ROISelectorPreview(video, old_video, usePreviousROI)
-        #BKG computation/loading
-        video._bkg = checkBkg(video, old_video, usePreviousBkg)
-        # Resolution reduction
-        video._resolution_reduction = check_resolution_reduction(video, old_video, usePreviousRR)
+        video._original_ROI = ROISelectorPreview(video, old_video, usePreviousROI)
+        video._original_bkg = checkBkg(video, old_video, usePreviousBkg)
+        video.resolution_reduction = check_resolution_reduction(video, old_video, usePreviousRR)
         # Preprocessing
         if old_video is not None:
             preprocessing_attributes = ['min_threshold', 'max_threshold',
@@ -894,7 +643,9 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
                                     'blobs_path_segmented', 'min_threshold',
                                     'max_threshold',
                                     'min_area','max_area', 'resize',
-                                    'number_of_animals', 'ROI','bkg',
+                                    'number_of_animals', 'original_ROI',
+                                    'original_bkg', 'ROI' ,'bkg',
+                                    'width', 'height',
                                     'preprocessing_folder']
         video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_been_segmented = True
@@ -910,7 +661,9 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
                                     'min_threshold','max_threshold',
                                     'min_area','max_area',
                                     'resize', 'number_of_animals',
-                                    'ROI','bkg', 'preprocessing_folder',
+                                    'original_ROI', 'original_bkg', 'ROI',
+                                    'width', 'height',
+                                    'bkg', 'preprocessing_folder',
                                     'fragment_identifier_to_index',
                                     'number_of_unique_images_in_global_fragments',
                                     'maximum_number_of_images_in_global_fragments',
@@ -918,405 +671,3 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
         video.copy_attributes_between_two_video_objects(old_video, preprocessing_attributes)
         video._has_preprocessing_parameters = True
     return restore_segmentation
-
-def selectPreprocParams_library(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg, frameIndices):
-    if not usePreviousPrecParams:
-        videoPath = videoPaths[0]
-        preprocParams = {
-                    'minThreshold': 0,
-                    'maxThreshold': 155,
-                    'minArea': 150,
-                    'maxArea': 60000,
-                    'numAnimals': None}
-        preprocParams = SegmentationPreview_library(videoPaths, width, height, bkg, mask, useBkg, preprocParams, frameIndices)
-
-        cv2.waitKey(1)
-        cv2.destroyAllWindows()
-        cv2.waitKey(1)
-
-        saveFile(videoPaths[0], preprocParams, 'preprocparams',hdfpkl='pkl')
-    else:
-        preprocParams = loadFile(videoPaths[0], 'preprocparams',hdfpkl='pkl')
-    return preprocParams
-''' ****************************************************************************
-Fragmentation inspector
-*****************************************************************************'''
-def fragmentation_inspector(video, blobs_in_video):
-    """inputs:
-    video: object containing video info and paths
-    blobs_in_video: list of blob objects organised frame-wise:
-                    [[blob_1_in_frame_1, ..., blob_i_frame_1], .... ,
-                     [blob_1_in_frame_m, ..., blob_j_frame_m]]
-    Given a frame it loops on the fragment of each blob and labels all the blobs
-    belonging to the same fragment with a unique identifier.
-    """
-    cap = cv2.VideoCapture(video.video_path)
-    numFrames = video.number_of_frames
-    bkg = video.bkg
-    mask = video.ROI
-    subtract_bkg = video.subtract_bkg
-    height = video.height
-    width = video.width
-    global currentSegment, cap, frame
-    currentSegment = 0
-    cv2.namedWindow('fragmentInspection')
-    defFrame = 1
-
-
-    def resizer(sizeValue):
-        global frame
-        logger.debug("fragmentation visualiser, resize: %i" %sizeValue)
-        real_size = sizeValue - 5
-        logger.debug("fragmentation visualiser, real_size %i"  %real_size)
-        if real_size > 0:
-            frame = cv2.resize(frame,None,fx = real_size+1, fy = real_size+1)
-            logger.debug(frame.shape)
-        elif real_size < 0:
-            logger.debug("I should reduce")
-            frame = cv2.resize(frame,None, fx = np.true_divide(1,abs(real_size)+1), fy = np.true_divide(1,abs(real_size)+1))
-            logger.debug(frame.shape)
-        cv2.imshow('fragmentInspection', frame)
-
-    def scroll(trackbarValue):
-        global frame, currentSegment, cap
-        # Select segment dataframe and change cap if needed
-        sNumber = video.in_which_episode(trackbarValue)
-        logger.debug('seg number %i' %sNumber)
-        logger.debug('trackbarValue %i' %trackbarValue)
-        sFrame = trackbarValue
-
-        if sNumber != currentSegment: # we are changing segment
-            logger.debug('Changing segment...')
-            currentSegment = sNumber
-            if video.paths_to_video_segments:
-                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
-        #Get frame from video file
-        if video.paths_to_video_segments:
-            start = video.episodes_start_end[sNumber][0]
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
-        else:
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-        ret, frame = cap.read()
-        blobs_in_frame = blobs_in_video[trackbarValue]
-
-        for blob in blobs_in_frame:
-            #draw the centroid
-            cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, (255,0,0),1)
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            fragment_identifier = blob.fragment_identifier
-            # if blob.is_an_individual:
-            #     fragment_identifier = blob.fragment_identifier
-            # elif blob.is_a_crossing:
-            #     fragment_identifier = blob.crossing_identifier
-            cv2.putText(frame, str(fragment_identifier),tuple(blob.centroid.astype('int')), font, 1,255, 5)
-
-
-        sizeValue = cv2.getTrackbarPos('frameSize', 'Bars')
-        resizer(sizeValue)
-        cv2.imshow('fragmentInspection', frame)
-
-    cv2.createTrackbar('start', 'Bars', 0, numFrames-1, scroll )
-    cv2.createTrackbar('frameSize', 'Bars', 1, 9, resizer)
-    cv2.setTrackbarPos('start', 'Bars', defFrame)
-    cv2.setTrackbarPos('frameSize', 'Bars', 5)
-    scroll(1)
-    cv2.waitKey(0)
-    cv2.waitKey(1)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-
-def playFragmentation_library(videoPaths,segmPaths,dfGlobal,visualize = False):
-    from fragmentation import computeFrameIntersection ### FIXME For some reason it does not import well in the top and I have to import it here
-    """
-    IdInspector
-    """
-    if visualize:
-        info = loadFile(videoPaths[0], 'videoInfo', hdfpkl = 'pkl')
-        width = info['width']
-        height = info['height']
-        numAnimals = info['numAnimals']
-        maxNumBlobs = info['maxNumBlobs']
-        numSegment = 0
-        frameIndices = loadFile(videoPaths[0], 'frameIndices')
-        path = videoPaths[numSegment]
-
-        def IdPlayerFragmentation(videoPaths,segmPaths,numAnimals, width, height,frameIndices):
-
-            global segmDf, cap, currentSegment
-            segmDf,sNumber = loadFile(segmPaths[0], 'segmentation')
-            currentSegment = int(sNumber)
-            logger.debug('Visualizing video %s' % path)
-            cap = cv2.VideoCapture(videoPaths[0])
-            numFrames = len(frameIndices)
-            # numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-
-            def onChange(trackbarValue):
-                global segmDf, cap, currentSegment
-                # Select segment dataframe and change cap if needed
-                sNumber = frameIndices.loc[trackbarValue,'segment']
-                sFrame = frameIndices.loc[trackbarValue,'frame']
-                if sNumber != currentSegment: # we are changing segment
-                    logger.debug('Changing segment...')
-                    prevSegmDf, _ = loadFile(segmPaths[sNumber-2], 'segmentation')
-                    segmDf, _ = loadFile(segmPaths[sNumber-1], 'segmentation')
-                    currentSegment = sNumber
-
-                    if len(videoPaths) > 1:
-                        cap = cv2.VideoCapture(videoPaths[sNumber-1])
-                #Get frame from video file
-                if len(videoPaths) > 1:
-                    cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame)
-                else:
-                    cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-                ret, frame = cap.read()
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                frameCopy = frame.copy()
-                #Color to gray scale
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                font = cv2.FONT_HERSHEY_SIMPLEX
-
-                # Plot segmentated blobs
-                for i, pixel in enumerate(pixelsB):
-                    px = np.unravel_index(pixel,(height,width))
-                    frame[px[0],px[1]] = 255
-
-                for i, centroid in enumerate(centroids):
-                    cv2.putText(frame,'i'+ str(permutation[i]) + '|h' +str(i),centroid, font, .7,0)
-
-                cv2.putText(frame,str(trackbarValue),(50,50), font, 3,(255,0,0))
-
-                # Visualization of the process
-                cv2.imshow('IdPlayerFragmentation',frame)
-                pass
-
-            cv2.namedWindow('IdPlayerFragmentation')
-            cv2.createTrackbar( 'start', 'IdPlayerFragmentation', 0, numFrames-1, onChange )
-
-            onChange(1)
-            cv2.waitKey()
-
-        IdPlayerFragmentation(videoPaths,segmPaths,numAnimals, width, height,frameIndices)
-
-''' ****************************************************************************
-Frame by frame identification inspector
-*****************************************************************************'''
-def get_n_previous_blobs_attribute(blob,attribute_name,number_of_previous):
-    blobs_attrs = []
-    current_blob = blob
-    for i in range(number_of_previous):
-        if current_blob.is_an_individual_in_a_fragment:
-            blobs_attrs.append(getattr(current_blob,attribute_name))
-            current_blob = current_blob.previous[0]
-        else:
-            break
-    return blobs_attrs
-
-def frame_by_frame_identity_inspector(video, blobs_in_video, number_of_previous = 10, save_video = False):
-    cap = cv2.VideoCapture(video.video_path)
-    numFrames = video.number_of_frames
-    bkg = video.bkg
-    mask = video.ROI
-    subtract_bkg = video.subtract_bkg
-    height = video.height
-    width = video.width
-    global currentSegment, cap
-    currentSegment = 0
-    cv2.namedWindow('frame_by_frame_identity_inspector')
-    defFrame = 0
-    colors = get_spaced_colors_util(video.number_of_animals,black=True)
-
-    fourcc = cv2.cv.CV_FOURCC(*'XVID')
-    name = video.session_folder +'/tracked.avi'
-    out = cv2.VideoWriter(name, fourcc, 32.0, (video.width, video.height))
-
-    def scroll(trackbarValue):
-        global frame, currentSegment, cap
-
-        # Select segment dataframe and change cap if needed
-        sNumber = video.in_which_episode(trackbarValue)
-        logger.debug('seg number %i' %sNumber)
-        logger.debug('trackbarValue %i' %trackbarValue)
-        sFrame = trackbarValue
-
-        if sNumber != currentSegment: # we are changing segment
-            logger.debug('Changing segment...')
-            currentSegment = sNumber
-            if video.paths_to_video_segments:
-                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
-
-        #Get frame from video file
-        if video.paths_to_video_segments:
-            start = video.episodes_start_end[sNumber][0]
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
-        else:
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-        ret, frame = cap.read()
-        if ret:
-            if hasattr(video, 'resolution_reduction'):
-                if video.resolution_reduction != 1:
-                    frame = cv2.resize(frame, None, fx = video.resolution_reduction, fy = video.resolution_reduction)
-
-            frameCopy = frame.copy()
-            blobs_in_frame = blobs_in_video[trackbarValue]
-
-            for b, blob in enumerate(blobs_in_frame):
-                blobs_pixels = get_n_previous_blobs_attribute(blob,'pixels',number_of_previous)[::-1]
-                blobs_identities = get_n_previous_blobs_attribute(blob,'identity',number_of_previous)[::-1]
-
-                for i, (blob_pixels, blob_identity) in enumerate(zip(blobs_pixels,blobs_identities)):
-                    pxs = np.unravel_index(blob_pixels,(video.height,video.width))
-                    if i < number_of_previous-1:
-                        if type(blob_identity) is not list and blob_identity is not None and blob_identity != 0:
-                            frame[pxs[0], pxs[1], :] = np.multiply(colors[blob_identity], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
-                        elif type(blob_identity) is list or blob_identity is None or blob_identity == 0:
-                            frame[pxs[0], pxs[1], :] = np.multiply([0, 0, 0], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
-                    else:
-                        frame[pxs[0], pxs[1], :] = frameCopy[pxs[0], pxs[1], :]
-
-                #draw the centroid
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                if type(blob.identity) is int:
-                    cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, colors[blob._identity], -1)
-                elif type(blob.identity) is list:
-                    cv2.circle(frame, tuple(blob.centroid.astype('int')), 2, [255, 255, 255], -1)
-                if blob.used_for_training:
-                    cv2.putText(frame, str(blob.identity),tuple(blob.centroid.astype('int')), font, 1, colors[blob.identity], 3)
-                else:
-                    logger.debug("the current blob is a fish %s" %blob.is_an_individual)
-                    logger.debug("blob identity is integer %s" %(type(blob.identity) is int))
-                    if blob.is_an_individual and type(blob.identity) is int:
-                        cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
-                    elif not blob.is_an_individual:
-                        cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, 1, [255,255,255], 3)
-                    else:
-                        cv2.putText(frame, str(blob.identity), tuple(blob.centroid.astype('int')), font, .5, colors[blob.identity], 3)
-
-                if not save_video:
-                    logger.debug("****blob %s"  %b)
-                    logger.debug("identity: %i" %blob._identity)
-                    if hasattr(blob,"identities_before_crossing"):
-                        logger.debug("identity_before_crossing: %s" %str(blob.identities_before_crossing))
-                    if hasattr(blob,"identities_after_crossing"):
-                        logger.debug("identity_after_crossing: %s" %str(blob.identities_after_crossing))
-                    logger.debug("P1_vector:%s " %str(blob.P1_vector))
-                    logger.debug("P2_vector: %s" %str(blob.P2_vector))
-                    logger.debug("is_an_individual: %s" %blob.is_an_individual)
-                    logger.debug("is_in_a_fragment: %s" %blob.is_in_a_fragment)
-                    logger.debug("is_an_individual_in_a_fragment: %s" %blob.is_an_individual_in_a_fragment)
-                    logger.debug("is_a_crossing: %s" %blob.is_a_crossing)
-                    logger.debug("next: %s" %blob.next)
-                    logger.debug("previous: %s" %blob.previous)
-                    logger.debug("****")
-
-
-            if not save_video:
-                # frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
-                cv2.imshow('frame_by_frame_identity_inspector', frame)
-                pass
-            else:
-                out.write(frame)
-        else:
-            logger.warn("Unable to read frame number %i" %scroll)
-    cv2.createTrackbar('start', 'frame_by_frame_identity_inspector', 0, numFrames-1, scroll )
-    scroll(1)
-    cv2.setTrackbarPos('start', 'frame_by_frame_identity_inspector', defFrame)
-    if save_video:
-        for i in tqdm(range(video.number_of_frames)):
-            scroll(i)
-    cv2.waitKey(0)
-    cv2.waitKey(1)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-    save_video = getInput('Saver' , 'Do you want to save a copy of the tracked video? [y]/n')
-    if not save_video or save_video == 'y':
-        frame_by_frame_identity_inspector(video, blobs_in_video, save_video = True)
-    else:
-        return
-
-def frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, number_of_previous = 100, save_video = False):
-    cap = cv2.VideoCapture(video.video_path)
-    numFrames = video.number_of_frames
-    bkg = video.bkg
-    mask = video.ROI
-    subtract_bkg = video.subtract_bkg
-    height = video.height
-    width = video.width
-    global currentSegment, cap
-    currentSegment = 0
-    cv2.namedWindow('frame_by_frame_identity_inspector')
-    defFrame = 0
-    colors = get_spaced_colors_util(video.number_of_animals,black=True)
-    fourcc = cv2.cv.CV_FOURCC(*'XVID')
-    if save_video:
-        name = video.session_folder +'/tracked.avi'
-        out = cv2.VideoWriter(name, fourcc, 32.0, (video.width, video.height))
-
-    def scroll(trackbarValue):
-        global frame, currentSegment, cap
-        # Select segment dataframe and change cap if needed
-        sNumber = video.in_which_episode(trackbarValue)
-        logger.debug('seg number %i' %sNumber)
-        logger.debug('trackbarValue %i' %trackbarValue)
-        sFrame = trackbarValue
-
-        if sNumber != currentSegment: # we are changing segment
-            logger.debug('Changing segment...')
-            currentSegment = sNumber
-            if video.paths_to_video_segments:
-                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
-
-        #Get frame from video file
-        if video.paths_to_video_segments:
-            start = video.episodes_start_end[sNumber][0]
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
-        else:
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
-        ret, frame = cap.read()
-        if ret:
-            # frameCopy = frame.copy()
-            frame = np.zeros_like(frame)
-            blobs_in_frame = blobs_in_video[trackbarValue]
-
-            for b, blob in enumerate(blobs_in_frame):
-                blobs_pixels = get_n_previous_blobs_attribute(blob,'pixels',number_of_previous)[::-1]
-                blobs_identities = get_n_previous_blobs_attribute(blob,'identity',number_of_previous)[::-1]
-
-                for i, (blob_pixels, blob_identity) in enumerate(zip(blobs_pixels,blobs_identities)):
-                    pxs = np.unravel_index(blob_pixels,(video.height,video.width))
-                    if i < number_of_previous-1:
-                        if type(blob_identity) is not list and blob_identity is not None and blob_identity != 0:
-                            frame[pxs[0], pxs[1], :] = np.multiply(colors[blob_identity], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
-                        elif type(blob_identity) is list or blob_identity is None or blob_identity == 0:
-                            frame[pxs[0], pxs[1], :] = np.multiply([0, 0, 0], .3).astype('uint8')+np.multiply(frame[pxs[0], pxs[1], :], .7).astype('uint8')
-            if not save_video:
-                # frame = cv2.resize(frame,None, fx = np.true_divide(1,4), fy = np.true_divide(1,4))
-                cv2.imshow('frame_by_frame_identity_inspector', frame)
-                pass
-            else:
-                out.write(frame)
-        else:
-            logger.warn("Unable to read frame %i" %scroll)
-    cv2.createTrackbar('start', 'frame_by_frame_identity_inspector', 0, numFrames-1, scroll )
-
-    scroll(1)
-    cv2.setTrackbarPos('start', 'frame_by_frame_identity_inspector', defFrame)
-
-    # cv2.waitKey(0)
-    # cv2.waitKey(1)
-    # cv2.destroyAllWindows()
-    # cv2.waitKey(1)
-
-    if save_video:
-        for i in tqdm(range(video.number_of_frames)):
-            scroll(i)
-
-    cv2.waitKey(0)
-    cv2.waitKey(1)
-    cv2.destroyAllWindows()
-    cv2.waitKey(1)
-
-    save_video = getInput('Saver' , 'Do you want to save a copy of the tracked video? [y]/n')
-    if not save_video or save_video == 'y':
-        frame_by_frame_identity_inspector_for_Liad(video, blobs_in_video, save_video = True)
-    else:
-        return

@@ -63,13 +63,14 @@ class NetworkParams(object):
 
     def check_identity_transfer_consistency(self, knowledge_transfer_info_dict):
         print("***************************************************************")
-        if knowledge_transfer_info_dict['number_of_animals'] != self.number_of_animals:
+        if knowledge_transfer_info_dict['number_of_animals'] < self.number_of_animals:
             logger.info('It is not yet possible to transfer the identity because the number of ' + \
                         'animals in the video is different from the number of ouput units in the last layer of the model selected. It will be implemented in the future.')
             logger.info('Only the knowledge from the convolutional filters will be transferred')
             self.knowledge_transfer_folder = self.restore_folder
-            self.restore_folder = None
-        elif knowledge_transfer_info_dict['input_image_size'][2] != self.image_size[2]:
+            self.restore_folder = None    
+
+        if knowledge_transfer_info_dict['input_image_size'][2] != self.image_size[2]:
             logger.info('It is not yet possible to transfer the identity because the number of ' + \
                         'channels in the video is different from the one declared in the model selected.')
             raise ValueError('The algorithm cannot proceed.')

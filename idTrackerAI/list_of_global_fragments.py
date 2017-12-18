@@ -41,11 +41,12 @@ class ListOfGlobalFragments(object):
 
     def set_first_global_fragment_for_accumulation(self, video, net, accumulation_trial):
         self.order_by_distance_travelled()
+
         try:
             self.first_global_fragment_for_accumulation = self.global_fragments[accumulation_trial]
         except:
             return None
-        if not video.knowledge_transfer_with_same_animals:
+        if not video.identity_transfer:
             identities = range(video.number_of_animals)
         else:
             if net is None:
@@ -54,19 +55,22 @@ class ListOfGlobalFragments(object):
             images = np.asarray(images)
             assigner = assign(net, video, images, False)
             compute_identification_statistics_for_non_accumulated_fragments(
-                                                                    self.first_global_fragment_for_accumulation.individual_fragments,
-                                                                    assigner)
-
+                self.first_global_fragment_for_accumulation.individual_fragments,
+                assigner, net.params.number_of_animals)
             # Check certainties of the individual fragments in the global fragment
             # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
-            [setattr(fragment,'_acceptable_for_training', True) for fragment in self.first_global_fragment_for_accumulation.individual_fragments]
+            [setattr(fragment,'_acceptable_for_training', True) for fragment
+            in self.first_global_fragment_for_accumulation.individual_fragments]
+
             for fragment in self.first_global_fragment_for_accumulation.individual_fragments:
                 if AccumulationManager.is_not_certain(fragment, CERTAINTY_THRESHOLD):
                     identities = self.abort_knowledge_transfer_on_same_animals(video, net)
                     break
 
-            P1_array, index_individual_fragments_sorted_by_P1_max_to_min = AccumulationManager.get_P1_array_and_argsort(self.first_global_fragment_for_accumulation)
-            # assign temporal identity to individual fragments by hierarchical P1
+            P1_array, index_individual_fragments_sorted_by_P1_max_to_min = AccumulationManager.get_P1_array_and_argsort(
+                                    self.first_global_fragment_for_accumulation)
+
+            # assign temporary identity to individual fragments by hierarchical P1
             for index_individual_fragment in index_individual_fragments_sorted_by_P1_max_to_min:
                 fragment = self.first_global_fragment_for_accumulation.individual_fragments[index_individual_fragment]
 
@@ -79,15 +83,24 @@ class ListOfGlobalFragments(object):
                         identities = self.abort_knowledge_transfer_on_same_animals(video, net)
                         break
                     else:
-                        P1_array = AccumulationManager.set_fragment_temporary_id(fragment, temporary_id, P1_array, index_individual_fragment)
+                        P1_array = AccumulationManager.set_fragment_temporary_id(
+                                                fragment, temporary_id, P1_array,
+                                                index_individual_fragment)
 
             # Check if the global fragment is unique after assigning the identities
-            if not self.first_global_fragment_for_accumulation.is_unique:
+            if not self.first_global_fragment_for_accumulation.is_partially_unique:
                 identities = self.abort_knowledge_transfer_on_same_animals(video, net)
+                logger.info("Identity transfer is not possible. Identities will be intialized")
             else:
-                identities = [fragment.temporary_id for fragment
+                video._first_global_fragment_knowledge_transfer_identities = [fragment.temporary_id for fragment
                             in self.first_global_fragment_for_accumulation.individual_fragments]
+                if video.number_of_animals == video.knowledge_transfer_info_dict['number_of_animals']:
+                    identities = video._first_global_fragment_knowledge_transfer_identities
+                elif video.number_of_animals < video.knowledge_transfer_info_dict['number_of_animals']:
+                    identities = range(video.number_of_animals)
                 logger.info("Identities transferred succesfully")
+
+                self.plot_P1s_identity_transfer(video)
 
         [(setattr(fragment, '_acceptable_for_training', True),
             setattr(fragment, '_temporary_id', identities[i]),
@@ -96,7 +109,43 @@ class ListOfGlobalFragments(object):
             setattr(fragment, '_certainty', 1.),
             setattr(fragment, '_P1_vector', fragment.compute_P1_from_frequencies(fragment.frequencies)))
             for i, fragment in enumerate(self.first_global_fragment_for_accumulation.individual_fragments)]
+
         return self.first_global_fragment_for_accumulation.index_beginning_of_fragment
+
+    def plot_P1s_identity_transfer(self, video):
+        P1_vectors = np.asarray([fragment.P1_vector for fragment in self.first_global_fragment_for_accumulation.individual_fragments])
+        certainties = np.asarray([fragment.certainty for fragment in self.first_global_fragment_for_accumulation.individual_fragments])
+        indices = np.argmax(P1_vectors, axis = 1)
+        P1_vectors_ordered = np.zeros((video.knowledge_transfer_info_dict['number_of_animals'],video.knowledge_transfer_info_dict['number_of_animals']))
+        P1_vectors_ordered[indices, :] = P1_vectors
+        certainties_ordered = np.zeros(video.knowledge_transfer_info_dict['number_of_animals'])
+        certainties_ordered[indices] = certainties
+
+        fig = plt.figure()
+        sns.set_style("ticks")
+        fig.suptitle('Identity transfer summary')
+        ax0 = fig.add_subplot(121)
+        im = ax0.imshow(P1_vectors_ordered)
+        ax0.invert_yaxis()
+        ax0.set_ylabel('fragment')
+        ax0.set_xlabel('transferred identity')
+        im.set_clim(0.0,1.0)
+        cbar = plt.colorbar(im, orientation='horizontal', label = 'probability of assignment')
+        pos0 = ax0.get_position()
+
+        ax1 = fig.add_subplot(122)
+        pos1 = ax1.get_position()
+        ax1.set_position([pos1.x0, pos0.y0, pos1.width, pos0.height - .025])
+        ax1.barh(range(len(certainties_ordered)), certainties_ordered, height = .5)
+        ax1.set_xlim((0,1))
+        ax1.set_xlabel('certainty')
+        ax1.set_ylim(ax0.get_ylim())
+        ax1.set_yticklabels([])
+        sns.despine(ax = ax1, left=False, top = True, bottom=False, right=True)
+
+
+        fig.savefig(os.path.join(video.session_folder,'identity_transfer_summary.pdf'), transparent=True)
+
 
     def order_by_distance_to_the_first_global_fragment_for_accumulation(self, video, accumulation_trial = None):
         self.global_fragments = sorted(self.global_fragments,

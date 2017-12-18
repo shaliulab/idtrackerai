@@ -28,7 +28,7 @@ def dense_to_one_hot(labels, n_classes=2):
     labels_one_hot.flat[indices] = 1
     return labels_one_hot
 
-def visualise(video_object, net, image, label):
+def visualise(video_object, net, images, labels = None):
     video_object.cnn_visualiser_logs_folder = os.path.join(video_object._session_folder, 'cnn_visualiser_logs')
     logger.debug("logs folder :%s" %video_object.cnn_visualiser_logs_folder)
     video_object.cnn_visualiser_images_folder = os.path.join(video_object._session_folder, 'cnn_visualiser_images')
@@ -46,9 +46,10 @@ def visualise(video_object, net, image, label):
     # images = tf.placeholder(tf.float32, [None, video_object.identification_image_size[0], video_object.identification_image_size[1], video_object.identification_image_size[2]], name = 'images')
     # y_ = tf.placeholder(tf.float32, [None, video_object.number_of_animals])
 
-    layers = ["r", "p", "c"] #r : output relu layers, p : output pooling layers, c : output convolutional layers
+    layers = ["p", "r"] #r : output relu layers, p : output pooling layers, c : output convolutional layers
     logger.debug("Start deconvolution")
-    label = dense_to_one_hot([label], video_object.number_of_animals)
+    if labels is not None:
+        labels = dense_to_one_hot(labels, video_object.number_of_animals)
 
 
     # api call
@@ -57,7 +58,7 @@ def visualise(video_object, net, image, label):
     logger.debug("Default graph: %s" %tf.get_default_graph())
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        feed_dict = {net.x_pl: image, net.y_target_pl: label}
+        feed_dict = {net.x_pl: images}
         logger.debug("feed dict: %s" %feed_dict)
 
 
@@ -68,22 +69,14 @@ def visualise(video_object, net, image, label):
     is_success = activation_visualization(graph_or_path = tf.get_default_graph(), value_feed_dict = feed_dict,
                                       input_tensor = net.x_pl, layers = layers, path_logdir = video_object.cnn_visualiser_logs_folder,
                                       path_outdir = video_object.cnn_visualiser_images_folder)
-    # layer = 'saver_fc_softmax/Assign'
-    # feed_dict = {net.x_pl : image}
-    # is_success = deepdream_visualization(graph_or_path = tf.get_default_graph(),
-    #                                     value_feed_dict = feed_dict,
-    #                                     layer=layer,
-    #                                     classes = range(1, video_object.number_of_animals + 1),
-    #                                     path_logdir = video_object.cnn_visualiser_logs_folder,
-    #                                     path_outdir = video_object.cnn_visualiser_images_folder)
 
     logger.debug("Done")
     video_object.save()
 
 if __name__ == "__main__":
-    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/video_object.npy').item()
-    list_of_global_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/preprocessing/global_fragments.npy').item()
-    list_of_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_20171207/preprocessing/fragments.npy').item()
+    video = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_20171214/video_object.npy').item()
+    list_of_global_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_20171214/preprocessing/global_fragments.npy').item()
+    list_of_fragments = np.load('/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesLarge/session_20171214/preprocessing/fragments.npy').item()
     list_of_global_fragments.relink_fragments_to_global_fragments(list_of_fragments.fragments)
     params = NetworkParams(video.number_of_animals,
                                 learning_rate = 0.005,
@@ -93,15 +86,17 @@ if __name__ == "__main__":
                                 restore_folder = video.accumulation_folder,
                                 image_size = video.identification_image_size,
                                 video_path = video.video_path)
-    net = ConvNetwork(params, training_flag = True)
+    net = ConvNetwork(params, training_flag = False)
     net.restore()
     first_global_fragment = list_of_global_fragments.global_fragments[0]
+    images = []
+    labels = []
+    number_of_images_per_individual = 1
 
     for i in range(video.number_of_animals):
-        for j in range(10):
-            image = first_global_fragment.individual_fragments[i].images[j]
-            image = np.expand_dims(image, 2)
-            image = np.expand_dims(image, 0)
-            label = first_global_fragment.individual_fragments[i].final_identity -1
+        images.extend(first_global_fragment.individual_fragments[i].images[:number_of_images_per_individual])
+        labels.extend([first_global_fragment.individual_fragments[i].final_identity -1] * number_of_images_per_individual)
 
-            visualise(video, net, image, label)
+    images = np.expand_dims(np.asarray(images), 3)
+    labels = np.expand_dims(np.asarray(labels),1)
+    visualise(video,net, images, None)

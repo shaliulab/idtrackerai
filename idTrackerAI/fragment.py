@@ -260,11 +260,12 @@ class Fragment(object):
                 return False
         return True
 
-    def compute_identification_statistics(self, predictions, softmax_probs):
+    def compute_identification_statistics(self, predictions, softmax_probs, number_of_animals = None):
         assert self.is_an_individual
-        self._frequencies = self.compute_identification_frequencies_individual_fragment(predictions, self.number_of_animals)
+        number_of_animals = self.number_of_animals if number_of_animals is None else number_of_animals
+        self._frequencies = self.compute_identification_frequencies_individual_fragment(predictions, number_of_animals)
         self._P1_vector = self.compute_P1_from_frequencies(self.frequencies)
-        median_softmax = self.compute_median_softmax(softmax_probs, self.number_of_animals)
+        median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
         self._certainty = self.compute_certainty_of_individual_fragment(self._P1_vector,median_softmax)
 
     def set_P1_vector_accumulated(self):
@@ -329,22 +330,24 @@ class Fragment(object):
         computer the P1 vector. P1 is the softmax of the frequencies with base 2
         for each identity.
         """
-        # Compute numerator of P1 and check that it is not inf
-        numerator = 2.**frequencies
-        if np.any(numerator == np.inf):
-            numerator[numerator == np.inf] = MAX_FLOAT
-        # Compute denominator of P1
-        denominator = np.sum(numerator)
-        # Compute P1 and check that it is not 0. for any identity
-        P1_of_fragment = numerator / denominator
-        if np.all(P1_of_fragment == 0.):
-            P1_of_fragment[P1_of_fragment == 0.] = 1/len(P1_of_fragment) #if all the frequencies are very high then the denominator is very big and all the P1 are 0. so we set then to random.
-        else:
-            P1_of_fragment[P1_of_fragment == 0.] = MIN_FLOAT
-        # Change P1 that are 1. for 0.9999 so that we do not have problems when computing P2
-        # P1_of_fragment[P1_of_fragment == 1.] = 1. - MIN_FLOAT
-        # P1_of_fragment = P1_of_fragment / np.sum(P1_of_fragment)
-        P1_of_fragment[P1_of_fragment == 1.] = 0.999999999999
+        P1_of_fragment = 1. / np.sum(2.**(np.tile(frequencies, (len(frequencies),1)).T - np.tile(frequencies, (len(frequencies),1))), axis = 0)
+
+        # # Compute numerator of P1 and check that it is not inf
+        # numerator = 2.**frequencies
+        # if np.any(numerator == np.inf):
+        #     numerator[numerator == np.inf] = MAX_FLOAT
+        # # Compute denominator of P1
+        # denominator = np.sum(numerator)
+        # # Compute P1 and check that it is not 0. for any identity
+        # P1_of_fragment = numerator / denominator
+        # if np.all(P1_of_fragment == 0.):
+        #     P1_of_fragment[P1_of_fragment == 0.] = frequencies/np.sum(frequencies) #if all the frequencies are very high then the denominator is very big and all the P1 are 0. so we set then to random.
+        # else:
+        #     P1_of_fragment[P1_of_fragment == 0.] = MIN_FLOAT
+        # # Change P1 that are 1. for 0.9999 so that we do not have problems when computing P2
+        # # P1_of_fragment[P1_of_fragment == 1.] = 1. - MIN_FLOAT
+        # # P1_of_fragment = P1_of_fragment / np.sum(P1_of_fragment)
+        # P1_of_fragment[P1_of_fragment == 1.] = 0.999999999999
         return P1_of_fragment
 
     @staticmethod
