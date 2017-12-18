@@ -422,13 +422,12 @@ class IndividualValidator(BoxLayout):
         self.show_saving()
 
     def save_groundtruth_list_of_blobs(self, *args):
-        # self.go_and_save()
+        self.go_and_save()
         self.popup_saving.dismiss()
 
     def go_and_save(self):
-        # self.list_of_blobs.save(path_to_save = self.list_of_blobs_save_path)
-        # CHOSEN_VIDEO.video.save()
-        pass
+        self.list_of_blobs.save(CHOSEN_VIDEO.video, path_to_save = self.list_of_blobs_save_path)
+        CHOSEN_VIDEO.video.save()
 
     def create_modify_identity_popup(self):
         self.container = BoxLayout(orientation = "vertical")
