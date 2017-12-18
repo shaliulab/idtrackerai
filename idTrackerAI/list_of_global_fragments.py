@@ -96,7 +96,7 @@ class ListOfGlobalFragments(object):
                     identities = range(video.number_of_animals)
                 logger.info("Identities transferred succesfully")
 
-        self.plot_P1s_identity_transfer(video)
+                self.plot_P1s_identity_transfer(video)
 
         [(setattr(fragment, '_acceptable_for_training', True),
             setattr(fragment, '_temporary_id', identities[i]),
