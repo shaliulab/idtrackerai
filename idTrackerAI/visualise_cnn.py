@@ -92,6 +92,7 @@ if __name__ == "__main__":
     images = []
     labels = []
     number_of_images_per_individual = 1
+
     for i in range(video.number_of_animals):
         images.extend(first_global_fragment.individual_fragments[i].images[:number_of_images_per_individual])
         labels.extend([first_global_fragment.individual_fragments[i].final_identity -1] * number_of_images_per_individual)
