@@ -41,7 +41,11 @@ class ListOfGlobalFragments(object):
 
     def set_first_global_fragment_for_accumulation(self, video, net, accumulation_trial):
         self.order_by_distance_travelled()
-        self.first_global_fragment_for_accumulation = self.global_fragments[accumulation_trial]
+
+        try:
+            self.first_global_fragment_for_accumulation = self.global_fragments[accumulation_trial]
+        except:
+            return None
         if not video.identity_transfer:
             identities = range(video.number_of_animals)
         else:

@@ -61,12 +61,12 @@ def tests_data_frame():
                                                     "CNN_model": 0,
                                                     "knowledge_transfer_flag": False,
                                                     "knowledge_transfer_folder": '',
-                                                    "IMDB_codes": 'G',
-                                                    "ids_codes": 'a',
-                                                    "group_sizes": [10],
+                                                    "IMDB_codes": 'GHI',
+                                                    "ids_codes": 'aaa',
+                                                    "group_sizes": [60],
                                                     "frames_in_video": [10000],
-                                                    "scale_parameter": [4000, 2000, 1000, 500, 250],
-                                                    "shape_parameter": [0.75, 0.5, 0.25, 0.15, 0.05],
+                                                    "scale_parameter": [2000, 1000, 500, 250, 100],
+                                                    "shape_parameter": [0.5, 0.35, 0.25, 0.15, 0.05],
                                                     "repetitions": [1],
                                                      }, ignore_index=True)
 

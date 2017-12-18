@@ -24,6 +24,7 @@ def accumulate(accumulation_manager,
     accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
 
     while accumulation_manager.continue_accumulation:
+        print("****** inside the while loop ****")
         logger.info("accumulation step %s" %accumulation_manager.counter)
         video.accumulation_step = accumulation_manager.counter
         #(we do not take images from individual fragments already used)

@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 def get_next_number_of_blobs_in_fragment(gamma_sim, min_number_of_frames_per_fragment, max_number_of_frames_per_fragment):
-    number_of_frames_per_fragment = int(np.ceil(gamma_sim.rvs(1)))
+    number_of_frames_per_fragment = int(np.floor(gamma_sim.rvs(1)))
     while number_of_frames_per_fragment < min_number_of_frames_per_fragment or number_of_frames_per_fragment > max_number_of_frames_per_fragment:
         number_of_frames_per_fragment = int(np.floor(gamma_sim.rvs(1)))
 
@@ -66,3 +66,5 @@ if __name__ == '__main__':
                 ax.set_ylabel('shape = %.2f \n\nPDF' %shape_parameter)
             else:
                 ax.set_yticklabels([])
+
+    plt.show()
