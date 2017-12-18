@@ -482,11 +482,6 @@ if __name__ == '__main__':
                                 solve_duplications(list_of_fragments, video.first_frame_first_global_fragment)
                                 video._has_duplications_solved = True
                                 logger.info("Done")
-                                # finish and save
-                                logger.info("Saving")
-                                # list_of_blobs = ListOfBlobs(video, blobs_in_video = blobs)
-                                # list_of_blobs.save(video.blobs_path, NUM_CHUNKS_BLOB_SAVING)
-                                logger.info("Done")
                                 video.solve_duplications_time = time.time() - video.solve_duplications_time
 
                                 #############################################################
@@ -505,7 +500,7 @@ if __name__ == '__main__':
                                 ####
                                 #############################################################
                                 list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments, video.fragment_identifier_to_index)
-                                list_of_blobs.save(video.blobs_path, number_of_chunks = video.number_of_frames)
+                                list_of_blobs.save(video, path_to_save = video.blobs_path, number_of_chunks = video.number_of_frames)
 
                                 #############################################################
                                 ##########  Accuracies after solving duplications ##########

@@ -142,7 +142,7 @@ if __name__ == '__main__':
                                                                     + results_data_frame_rep.number_of_globally_accumulated_individual_blobs) / \
                                                                     results_data_frame_rep.number_of_blobs if video_object_found else None
 
-                            overall_P2[j,i,k] = video.overall_P2 if video_object_found else None
+                            overall_P2[j,i,k] = video.gt_accuracy['mean_individual_P2_in_validated_part'] if video_object_found else None
                             accuracy[j,i,k] = results_data_frame_rep.accuracy.item() if video_object_found else None
                             accuracy_in_accumulation[j,i,k] = results_data_frame_rep.accuracy_in_accumulation.item() if video_object_found else None
                             accuracy_after_accumulation[j,i,k] = results_data_frame_rep.accuracy_after_accumulation.item() if video_object_found else None

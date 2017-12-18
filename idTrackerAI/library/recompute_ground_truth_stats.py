@@ -87,7 +87,7 @@ if __name__ == '__main__':
                             if accuracies is not None:
                                 print("saving accuracies in video")
                                 video.gt_start_end = (groundtruth.start,groundtruth.end)
-                                video.gt_accuracy_before_duplications = accuracies
+                                video.gt_accuracy = accuracies
                             video.save()
 
                         except Exception as e:
