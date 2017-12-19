@@ -6,19 +6,20 @@ import sys
 sys.path.append('../')
 sys.path.append('../network')
 sys.path.append('../network/identification_model')
-sys.path.append('./tf_cnnvisualisation')
+sys.path.append('../tf_cnnvisualisation')
 from itertools import combinations
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 from video import Video
-import matplotlib.lines as mlines
-from matplotlib.patches import Rectangle
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import matplotlib
 font = {'family' : 'normal',
         'size'   : 18}
 matplotlib.rc('font', **font)
 import seaborn as sns
+sns.set_style("whitegrid", {'axes.grid' : False})
 from visualise_cnn import visualise
+from id_CNN import ConvNetwork
+from network_params import NetworkParams
 
 def imscatter(x, y, image, ax=None, zoom=1):
     if ax is None:
@@ -56,7 +57,7 @@ if __name__ == "__main__":
     first_global_fragment = list_of_global_fragments.global_fragments[0]
     images = first_global_fragment.individual_fragments[0].images
     images = np.asarray(images)
-    number_of_images = 100
+    number_of_images = 1200
     distances = compare_all_images(images[:number_of_images])
     Z = linkage(distances, 'ward')
     fig = plt.figure(figsize=(25, 10))
@@ -72,11 +73,12 @@ if __name__ == "__main__":
     for i in range(number_of_images):
         label = labels[i].get_text()
         imscatter(positions[i], 0, images[int(label)], ax=None, zoom=.2)
-
+    ax.grid(False)
     plt.show()
 
     C = fcluster(Z, 2, criterion = 'maxclust')
     im1 = np.median(images[np.where(C == 1)[0]], axis = 0)
+
     plt.imshow(im1)
     plt.show()
     params = NetworkParams(video.number_of_animals,
@@ -89,4 +91,5 @@ if __name__ == "__main__":
                                 video_path = video.video_path)
     net = ConvNetwork(params, training_flag = False)
     net.restore()
+    im1 = np.expand_dims(im1, 3)
     visualise(video,net, [im1], None)
