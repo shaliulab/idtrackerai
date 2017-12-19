@@ -47,31 +47,38 @@ if __name__ == '__main__':
     number_of_conditions_mean = len(test_dictionary['scale_parameter'])
     number_of_condition_var = len(test_dictionary['shape_parameter'])
     number_of_repetitions = len(results_data_frame.repetition.unique())
-    protocol = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
-    total_time = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
-    ratio_of_accumulated_images = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
-    ratio_of_video_accumulated = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
-    overall_P2 = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
-    accuracy = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
-    accuracy_in_accumulation = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
-    accuracy_after_accumulation = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
-    th_mean = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
-    th_std =np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+    # protocol = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+    # total_time = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+    # ratio_of_accumulated_images = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+    # ratio_of_video_accumulated = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+    # overall_P2 = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+    # accuracy = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+    # accuracy_in_accumulation = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+    # accuracy_after_accumulation = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+    # th_mean = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+    # th_std =np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
 
     plt.ion()
     window = plt.get_current_fig_manager().window
     screen_y = window.winfo_screenheight()
     screen_x = window.winfo_screenwidth()
     sns.set_style("ticks")
-    fig_distributions_list = []
-    fig_mean_std_list = []
-    fig_statistics_list = []
     for group_size in results_data_frame.group_size.unique():
+        print("group_size ", group_size)
+        protocol = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+        total_time = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+        ratio_of_accumulated_images = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+        ratio_of_video_accumulated = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+        overall_P2 = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+        accuracy = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+        accuracy_in_accumulation = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+        accuracy_after_accumulation = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+        th_mean = np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
+        th_std =np.zeros((number_of_condition_var, number_of_conditions_mean, number_of_repetitions))
 
         for frames_in_video in results_data_frame.frames_in_video.unique():
             fig_distributions, ax_arr = plt.subplots(len(results_data_frame.loc[:,'scale_parameter'].unique()), len(results_data_frame.loc[:,'shape_parameter'].unique()),
                                         sharex = True, sharey = True)
-            fig_distributions_list.append(fig_distributions)
             fig_distributions.suptitle('Group size %i - Frames in video %i' %(group_size, frames_in_video))
 
 
@@ -151,7 +158,6 @@ if __name__ == '__main__':
                             th_std[j,i,k] = np.std(number_of_images_in_individual_fragments)
 
             fig_statistics, ax_arr = plt.subplots(2,4)
-            fig_statistics_list.append(fig_statistics)
             fig_statistics.suptitle('Group size %i - Frames in video %i' %(group_size, frames_in_video))
 
             def plot_statistics_heatmap(ax, matrix, title, xticklabels, yticklabels, vmax = None, vmin = None, annot = True):
@@ -197,22 +203,20 @@ if __name__ == '__main__':
             ax_arr[1,3].set_yticklabels([])
 
             fig_mean_std, ax_arr2 = plt.subplots(1,2)
-            fig_mean_std_list.append(fig_mean_std)
             fig_mean_std.suptitle('Group size %i - Frames in video %i' %(group_size, frames_in_video))
 
             plot_statistics_heatmap(ax_arr2[0], th_mean, 'mean', scale_parameter_list, shape_parameter_list)
             plot_statistics_heatmap(ax_arr2[1], th_std, 'std', scale_parameter_list, shape_parameter_list)
 
 
-    path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0],
-                                    'group_size_' + str(int(group_size)))
+        path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0],
+                                        'group_size_' + str(int(group_size)))
+        print(path_to_save_figure)
 
 
+        [fig.set_size_inches((screen_x/100,screen_y/100)) for fig in [fig_distributions, fig_statistics, fig_mean_std]]
+        fig_distributions.savefig(os.path.join(path_to_save_figure, 'distributions_%i.pdf' %group_size), transparent = True)
+        fig_statistics.savefig(os.path.join(path_to_save_figure, 'statistics_%i.pdf' %group_size), transparent = True)
+        fig_mean_std.savefig(os.path.join(path_to_save_figure, 'mean_std_%i.pdf' %group_size), transparent = True)
 
-    [fig.set_size_inches((screen_x/100,screen_y/100)) for fig in fig_statistics_list + fig_distributions_list + fig_mean_std_list]
-    [fig.savefig(os.path.join(path_to_save_figure, 'distributions_%i.pdf' %video_length), transparent = True) for video_length, fig in zip(results_data_frame.frames_in_video.unique(), fig_distributions_list)]
-    [fig.savefig(os.path.join(path_to_save_figure, 'statistics_%i.pdf' %video_length), transparent = True) for video_length, fig in zip(results_data_frame.frames_in_video.unique(), fig_statistics_list)]
-    [fig.savefig(os.path.join(path_to_save_figure, 'mean_std_%i.pdf' %video_length), transparent = True) for video_length, fig in zip(results_data_frame.frames_in_video.unique(), fig_mean_std_list)]
-
-
-    plt.show()
+        plt.show()
