@@ -26,6 +26,7 @@ class GroundTruthBlob(object):
                                             'centroid', 'pixels',
                                             'frame_number',
                                             'is_an_individual', 'is_a_crossing',
+                                            'was_a_crossing',
                                             'blob_index', 'fragment_identifier']):
         self.attributes = attributes_to_get
 
@@ -52,7 +53,9 @@ class GroundTruth(object):
         np.save(path_to_save_groundtruth, self)
         logger.info("done")
 
-def generate_groundtruth(video, blobs_in_video = None, start = None, end = None, wrong_crossing_counter = None, save_gt = True):
+def generate_groundtruth(video, blobs_in_video = None, start = None, end = None,
+                        wrong_crossing_counter = None, unidentified_individuals_counter = None,
+                        save_gt = True):
     """Generates a list of light blobs_in_video, given a video object corresponding to a
     tracked video
     """
@@ -75,6 +78,7 @@ def generate_groundtruth(video, blobs_in_video = None, start = None, end = None,
                             start = start,
                             end = end)
     groundtruth.wrong_crossing_counter = wrong_crossing_counter
+    groundtruth.unidentified_individuals_counter = unidentified_individuals_counter
     if save_gt:
         groundtruth.save()
     return groundtruth

@@ -320,6 +320,7 @@ def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_iden
                         eroded_blob.centroid = centroid
                         eroded_blob._identity_corrected_closing_gaps = identity
                         eroded_blob._is_an_individual = True
+                        eroded_blob._was_a_crossing = True
                         new_original_blobs.append(eroded_blob)
                     elif count_eroded_blobs[eroded_blob] > 1:
                         if not hasattr(eroded_blob, 'interpolated_centroids'):
