@@ -31,6 +31,7 @@ from kivy.config import Config
 from kivy.uix.filechooser import FileChooserListView
 from kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
 from select_file import SelectFile
+from roi_selector import ROISelector
 from validator import Validator
 from individual_validator import IndividualValidator
 from visualise_video import VisualiseVideo
@@ -120,121 +121,6 @@ def setup_logging(
 """
 Start kivy classes
 """
-# class ROISelector(BoxLayout):
-#     def __init__(self,**kwargs):
-#         super(ROISelector, self).__init__(**kwargs)
-#         self.orientation = "vertical"
-#         self.ROIs = [] #store rectangles on the GUI
-#         self.ROIOut  = [] #pass them to opencv
-#         self.touches = [] #store touch events on the figure
-#         self.footer = BoxLayout()
-#         self.footer.size_hint = (1.,.1)
-#         self.btn_load_roi = Button(text = "load ROIs")
-#         self.btn_save_roi = Button(text = "save ROIs")
-#         self.btn_clear_roi = Button(text = "clear last ROI")
-#         self.btn_no_roi = Button(text = "do not use any ROI")
-#         self.footer.add_widget(self.btn_load_roi)
-#         self.footer.add_widget(self.btn_save_roi)
-#         self.footer.add_widget(self.btn_clear_roi)
-#         self.footer.add_widget(self.btn_no_roi)
-#         self.btn_save_roi.bind(on_press = self.save_ROI)
-#         self.btn_load_roi.bind(on_press = self.load_ROI)
-#         self.btn_no_roi.bind(on_press = self.no_ROI)
-#         self.btn_clear_roi.bind(on_press = self.delete_ROI)
-#         global CHOSEN_VIDEO
-#         CHOSEN_VIDEO.bind(chosen=self.do)
-#
-#     def do(self, *args):
-#         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
-#             self.visualiser = VisualiseVideo()
-#             self.add_widget(self.visualiser)
-#             self.add_widget(self.footer)
-#             self.window = Window
-#             self.window.bind(on_resize=self.updateROIs)
-#             self.video_object = CHOSEN_VIDEO.video
-#             self.visualiser.visualise_video(self.video_object)
-#             if hasattr(CHOSEN_VIDEO, "old_video") and CHOSEN_VIDEO.old_video.ROI is not None:
-#                 self.btn_load_roi.disabled = not hasattr(CHOSEN_VIDEO.old_video, "ROI")
-#             else:
-#                 self.btn_load_roi.disabled = True
-#
-#     def on_touch_down(self, touch):
-#         # print("touch down dispatch")
-#         self.touches = []
-#         if self.visualiser.display_layout.collide_point(*touch.pos):
-#             self.touches.append(touch.pos)
-#         else:
-#             self.disable_touch_down_outside_collided_widget(touch)
-#
-#     def disable_touch_down_outside_collided_widget(self, touch):
-#         return super(ROISelector, self).on_touch_down(touch)
-#
-#     def on_touch_up(self, touch):
-#         if self.visualiser.display_layout.collide_point(*touch.pos) and len(self.touches) > 0:
-#             try:
-#                 self.touches.append(touch.pos)
-#                 rect = [self.touches[0], self.touches[-1]]
-#                 sorted(rect, key=lambda x:x[1], reverse=True)
-#                 rectS = np.diff(rect, axis=0)[0]
-#                 with self.visualiser.display_layout.canvas:
-#                     Color(1, 1, 0,.5)
-#                     self.rect = Rectangle(pos=(rect[0][0], rect[0][1]), size=(rectS[0],rectS[1]))
-#                     self.ROIs.append(self.rect)
-#                     ratioH = self.visualiser.display_layout.height / self.visualiser.display_layout.texture.height
-#                     ratioW = self.visualiser.display_layout.width / self.visualiser.display_layout.texture.width
-#                     newRectP1 = (self.rect.pos[0] / ratioW, (self.rect.pos[0] + self.rect.size[0]) / ratioW)
-#                     newRectP2 = (self.rect.pos[1] / ratioH, (self.rect.pos[1] + self.rect.size[1]) / ratioH)
-#                     point1 = (int(newRectP1[0]), int(self.visualiser.frame.shape[1]-newRectP2[0]))
-#                     point2 = (int(newRectP1[1]), int(self.visualiser.frame.shape[1]-newRectP2[1]))
-#                     self.ROIOut.append([point1,point2])
-#
-#                 self.touches = []
-#             except:
-#                 print('stay on the figure to draw a ROI')
-#
-#     def delete_ROI(self, *args):
-#         try:
-#             rect = self.ROIs[-1] #clear from the app ROIs collection
-#             self.ROIs = self.ROIs[:-1] #clear from the cv2 ROIs collection
-#             self.ROIOut = self.ROIOut[:-1]
-#             self.visualiser.display_layout.canvas.remove(rect) #clear from the image in the visualisation
-#         except:
-#             print('Select one ROI first')
-#
-#     def updateROIs(self, window, width, height):
-#         self.cur_image_height = self.visualiser.display_layout.height
-#         self.cur_image_width = self.visualiser.display_layout.width
-#         if not (self.visualiser.initImH == 100 and self.visualiser.initImW == 100):
-#             wRatio = abs(self.cur_image_width / self.visualiser.initImW)
-#             hRatio = abs(self.cur_image_height / self.visualiser.initImH)
-#
-#             for rect in self.ROIs:
-#                 rect.pos = (rect.pos[0] * wRatio, rect.pos[1] * hRatio)
-#                 rect.size = (rect.size[0] * wRatio, rect.size[1] * hRatio)
-#
-#         self.visualiser.initImH = self.cur_image_height
-#         self.visualiser.initImW = self.cur_image_width
-#
-#     def save_ROI(self, *args):
-#         # print("saving ROI")
-#         if len(self.ROIOut) > 0:
-#             self.ROIcv2 = np.zeros_like(self.visualiser.frame,dtype='uint8')
-#             for p in self.ROIOut:
-#                 # print("adding rectangles to ROI")
-#                 # print("rect ", p)
-#                 cv2.rectangle(self.ROIcv2, p[0], p[1], 255, -1)
-#         CHOSEN_VIDEO.video.ROI = self.ROIcv2
-#         CHOSEN_VIDEO.video.save()
-#
-#     def no_ROI(self, *args):
-#         CHOSEN_VIDEO.video.ROI = np.ones_like(self.visualiser.frame ,dtype='uint8') * 255
-#         CHOSEN_VIDEO.apply_ROI = False
-#         CHOSEN_VIDEO.video.save()
-#
-#     def load_ROI(self, *args):
-#         CHOSEN_VIDEO.video.ROI = CHOSEN_VIDEO.old_video.ROI
-#
-
 # class PreprocessingPreview(BoxLayout):
 #     def __init__(self, **kwargs):
 #         super(PreprocessingPreview, self).__init__(**kwargs)
@@ -575,7 +461,8 @@ Start kivy classes
 #                 return True
 
 class Root(TabbedPanel):
-    global DEACTIVATE_VALIDATION, CHOSEN_VIDEO
+    global DEACTIVATE_ROI, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
+    DEACTIVATE_ROI = Deactivate_Process()
     DEACTIVATE_VALIDATION = Deactivate_Process()
     CHOSEN_VIDEO = Chosen_Video(processes_list = PROCESSES)
 
@@ -583,19 +470,39 @@ class Root(TabbedPanel):
         super(Root, self).__init__(**kwargs)
         self.bind(current_tab = self.content_changed_cb)
         self.add_welcome_tab()
+        self.add_ROI_selection_tab()
         self.add_validation_tab()
         self.add_individual_validator_tab()
+        DEACTIVATE_ROI.bind(process = self.manage_ROI_selection)
         DEACTIVATE_VALIDATION.bind(process = self.manage_validation)
         DEACTIVATE_VALIDATION.bind(process = self.manage_individual_validation)
-
 
     def add_welcome_tab(self):
         self.welcome_tab = TabbedPanelItem(text = "Welcome")
         self.select_file = SelectFile(chosen_video = CHOSEN_VIDEO,
+                                    deactivate_roi = DEACTIVATE_ROI,
                                     deactivate_validation = DEACTIVATE_VALIDATION,
                                     setup_logging = setup_logging)
         self.welcome_tab.add_widget(self.select_file)
         self.add_widget(self.welcome_tab)
+
+    def add_ROI_selection_tab(self):
+        self.ROI_selection_tab = TabbedPanelItem(text = 'ROI selection')
+        self.ROI_selection_tab.id = "ROI selection"
+        self.ROI_selection_tab.disabled = True
+        self.add_widget(self.ROI_selection_tab)
+
+    def manage_ROI_selection(self, *args):
+        print("from root: ", DEACTIVATE_ROI.process)
+        self.ROI_selection_tab.disabled = DEACTIVATE_ROI.process
+        if not DEACTIVATE_ROI.process:
+            self.roi_selector = ROISelector(chosen_video = CHOSEN_VIDEO,
+                                        deactivate_roi = DEACTIVATE_ROI)
+            self.roi_selector.id = "roi_selector"
+            self.ROI_selection_tab.add_widget(self.roi_selector)
+        else:
+            if hasattr(self, 'roi_selector'):
+                self.ROI_selection_tab.clean(self.roi_selector)
 
     def add_validation_tab(self):
         self.validation_tab = TabbedPanelItem(text='Global Validation')
@@ -638,6 +545,8 @@ class Root(TabbedPanel):
         print('CONTENT', value.content)
         print("OBJECT", obj)
         print("ID", value.content.id)
+        if value.content.id == 'roi_selector':
+            self.roi_selector.do()
         if value.content.id == "validator":
             self.validator.do()
         if value.content.id == "individual_validator":

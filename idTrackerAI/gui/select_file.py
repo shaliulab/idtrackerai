@@ -21,12 +21,14 @@ class SelectFile(BoxLayout):
 
     def __init__(self,
                 chosen_video = None,
+                deactivate_roi = None,
                 deactivate_validation = None,
                 setup_logging = None,
                 **kwargs):
         super(SelectFile,self).__init__(**kwargs)
-        global DEACTIVATE_VALIDATION, CHOSEN_VIDEO
+        global DEACTIVATE_ROI, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
         CHOSEN_VIDEO = chosen_video
+        DEACTIVATE_ROI = deactivate_roi
         DEACTIVATE_VALIDATION = deactivate_validation
         DEACTIVATE_VALIDATION.bind(process = self.activate_process)
         self.setup_logging = setup_logging
@@ -107,7 +109,11 @@ class SelectFile(BoxLayout):
         CHOSEN_VIDEO.processes_to_restore = {checkbox.group: checkbox.active for checkbox
                                         in self.processes_checkboxes}
 
-        if CHOSEN_VIDEO.processes_to_restore['assignment'] or CHOSEN_VIDEO.processes_to_restore['correct_duplications']:
+        if CHOSEN_VIDEO.processes_to_restore is None or CHOSEN_VIDEO.processes_to_restore == {}:
+            DEACTIVATE_ROI.setter(False)
+        elif not CHOSEN_VIDEO.processes_to_restore['preprocessing']:
+            DEACTIVATE_ROI.setter(False)
+        elif CHOSEN_VIDEO.processes_to_restore['assignment'] or CHOSEN_VIDEO.processes_to_restore['correct_duplications']:
             DEACTIVATE_VALIDATION.setter(False)
         self.restore_popup.dismiss()
 
