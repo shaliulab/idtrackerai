@@ -685,16 +685,16 @@ class Video(object):
                 setattr(self, '_' + attribute, getattr(video_object_source, attribute))
 
     def compute_overall_P2(self, fragments):
-        weighted_P2_per_individual = np.zeros(self.number_of_animals)
-        number_of_blobs_per_individual = np.zeros(self.number_of_animals)
+        weighted_P2 = 0
+        number_of_individual_blobs = 0
 
         for fragment in fragments:
-            if fragment.is_an_individual and fragment.assigned_identity != 0:
-                weighted_P2_per_individual[fragment.assigned_identity - 1] += fragment.P2_vector[fragment.assigned_identity - 1] * fragment.number_of_images
-                number_of_blobs_per_individual[fragment.assigned_identity - 1] += fragment.number_of_images
+            if fragment.is_an_individual:
+                if fragment.assigned_identity != 0:
+                    weighted_P2 += fragment.P2_vector[fragment.assigned_identity - 1] * fragment.number_of_images
+                number_of_individual_blobs += fragment.number_of_images
 
-        self.individual_P2 = weighted_P2_per_individual / number_of_blobs_per_individual
-        self.overall_P2 = np.sum(weighted_P2_per_individual) / np.sum(number_of_blobs_per_individual)
+        self.overall_P2 = weighted_P2_per_individual / number_of_individual_blobs
 
 def scanFolder(path):
     video = os.path.basename(path)

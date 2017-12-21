@@ -63,7 +63,7 @@ def tests_data_frame():
                                                     "knowledge_transfer_folder": '',
                                                     "IMDB_codes": 'G',
                                                     "ids_codes": 'a',
-                                                    "group_sizes": [10, 100],
+                                                    "group_sizes": [10, 60, 100],
                                                     "frames_in_video": [10000],
                                                     "scale_parameter": [2000, 1000, 500, 250, 100],
                                                     "shape_parameter": [0.5, 0.35, 0.25, 0.15, 0.05],
