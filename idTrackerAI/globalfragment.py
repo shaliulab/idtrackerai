@@ -80,7 +80,6 @@ class GlobalFragment(object):
             P1_mat = np.vstack(P1_individual_fragments) # stack P1 of each individual fragment in the global fragment into a matrix
             perm = np.argmax(P1_mat,axis=1) # get permutation that orders the matrix to match the identity matrix
             P1_mat = P1_mat[:,perm] # apply permutation
-            print(P1_mat)
             self._uniqueness_score = np.linalg.norm(P1_mat - identity)
 
     @property

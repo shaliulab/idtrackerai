@@ -35,8 +35,8 @@ from list_of_global_fragments import ListOfGlobalFragments, create_list_of_globa
 from global_fragments_statistics import compute_and_plot_fragments_statistics
 from segmentation import segment
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview,\
-                    selectPreprocParams, fragmentation_inspector,\
-                    frame_by_frame_identity_inspector, selectDir,\
+                    selectPreprocParams,\
+                    selectDir,\
                     check_resolution_reduction
 from py_utils import getExistentFiles
 from video_utils import checkBkg
@@ -309,7 +309,7 @@ if __name__ == '__main__':
                                                                     video,
                                                                     global_step,
                                                                     net,
-                                                                    video.knowledge_transfer_from_same_animals)
+                                                                    video.identity_transfer)
                                 logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
                                 video._first_accumulation_finished = True
                                 video._percentage_of_accumulated_images = [video.ratio_accumulated_images]
@@ -401,7 +401,7 @@ if __name__ == '__main__':
                                                                                         video,
                                                                                         global_step,
                                                                                         net,
-                                                                                        video.knowledge_transfer_from_same_animals)
+                                                                                        video.identity_transfer)
                                             logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
                                             video._percentage_of_accumulated_images.append(video.ratio_accumulated_images)
                                             list_of_fragments.save_light_list(video._accumulation_folder)
@@ -491,7 +491,6 @@ if __name__ == '__main__':
                                 #############################################################
                                 video.individual_fragments_stats = list_of_fragments.get_stats(list_of_global_fragments)
                                 video.compute_overall_P2(list_of_fragments.fragments)
-                                print("individual overall_P2 ", video.individual_P2)
                                 print("overall_P2 ", video.overall_P2)
                                 # list_of_fragments.plot_stats(video)
                                 list_of_fragments.save_light_list(video._accumulation_folder)

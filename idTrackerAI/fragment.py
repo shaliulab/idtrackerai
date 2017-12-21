@@ -283,7 +283,6 @@ class Fragment(object):
 
     def assign_identity(self, recompute = True):
         assert self.is_an_individual
-        # self.compute_P2_vector()
         if self.used_for_training and not self._identity_is_fixed:
             self._identity_is_fixed = True
         elif not self._identity_is_fixed:
