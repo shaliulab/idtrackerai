@@ -39,6 +39,7 @@ class Blob(object):
         self.pixels = pixels # list of int's: linearized pixels of the blob
         self._is_an_individual = False
         self._is_a_crossing = False
+        self._was_a_crossing = False
         self._is_a_misclassified_individual = False
         self.next = [] # next blob object overlapping in pixels with current blob object
         self.previous = [] # previous blob object overlapping in pixels with the current blob object
@@ -63,6 +64,10 @@ class Blob(object):
     @property
     def is_a_crossing(self):
         return self._is_a_crossing
+
+    @property
+    def was_a_crossing(self):
+        return self._was_a_crossing
 
     def check_for_multiple_next_or_previous(self, direction = None):
         opposite_direction = 'next' if direction == 'previous' else 'previous'

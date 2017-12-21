@@ -47,6 +47,7 @@ def compare_all_images(images):
 
     for image1, image2 in combinations(images,2):
         distances.append(compare_two_images(image1, image2))
+        
     return distances
 
 if __name__ == "__main__":

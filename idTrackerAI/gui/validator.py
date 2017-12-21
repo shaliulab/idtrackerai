@@ -30,7 +30,8 @@ from py_utils import getExistentFiles, get_spaced_colors_util
 from list_of_blobs import ListOfBlobs
 from list_of_fragments import ListOfFragments
 from generate_groundtruth import generate_groundtruth
-from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
+from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth,\
+                                            get_accuracy_wrt_groundtruth_no_gaps
 
 class Validator(BoxLayout):
     def __init__(self, chosen_video = None,
@@ -41,6 +42,7 @@ class Validator(BoxLayout):
         CHOSEN_VIDEO = chosen_video
         DEACTIVATE_VALIDATION = deactivate_validation
         self.with_gaps = True
+        self.recompute_groundtruth = False
 
         self.visualiser = VisualiseVideo(chosen_video = CHOSEN_VIDEO)
         self.warning_popup = Popup(title = 'Warning',
@@ -75,10 +77,50 @@ class Validator(BoxLayout):
                             size_hint = (.4, .4))
 
     def on_enter_wrong_crossing_identity(self, value):
-        self.wrong_crossing_counter[int(self.wc_identity_input.text)] += 1
+        try:
+            identity = int(self.wc_identity_input.text)
+            frame_number = self.visualiser.video_slider.value
+            if identity not in self.wrong_crossing_list[frame_number]:
+                self.wrong_crossing_list[frame_number].append(identity)
+                self.wrong_crossing_counter[identity] += 1
+            else:
+                print("you already added this identity, it will not be counted twice")
+            self.compute_accuracy_button.disabled = False
+            self.recompute_groundtruth = True
+        except:
+            print("oops the identity seems to be wrong, smart goose!")
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self.wc_popup.dismiss()
+
+    def create_non_identified_individual_popup(self):
+        self.unidentified_popup_container = BoxLayout()
+        self.unidentified_identity_box = BoxLayout(orientation="vertical")
+        self.unidentified_label = CustomLabel(text='Type the identity associated to the non-identified individual')
+        self.unidentified_identity_box.add_widget(self.unidentified_label)
+        self.unidentified_identity_input = TextInput(text ='', multiline=False)
+        self.unidentified_identity_box.add_widget(self.unidentified_identity_input)
+        self.unidentified_popup_container.add_widget(self.unidentified_identity_box)
+        self.unidentified_popup = Popup(title = 'Count non-identified individuals',
+                            content = self.unidentified_popup_container,
+                            size_hint = (.4, .4))
+
+    def on_enter_non_identified_individual(self, value):
+        try:
+            identity = int(self.wc_identity_input.text)
+            frame_number = self.visualiser.video_slider.value
+            if identity not in self.wrong_crossing_list[frame_number]:
+                self.wrong_crossing_list[frame_number].append(identity)
+                self.unidentified_individuals_counter[int(self.unidentified_identity_input.text)] += 1
+            else:
+                print("you already added this identity, it will not be counted twice")
+            self.compute_accuracy_button.disabled = False
+            self.recompute_groundtruth = True
+        except:
+            print("The identity does not exist")
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+        self.unidentified_popup.dismiss()
 
     def create_choose_list_of_blobs_popup(self):
         self.lob_container = BoxLayout()
@@ -119,8 +161,12 @@ class Validator(BoxLayout):
         self.count_scrollup = 0
         self.scale = 1
         self.wrong_crossing_counter = {identity: 0 for identity in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
+        self.wrong_crossing_list = [[]] * CHOSEN_VIDEO.video.number_of_frames
         self.create_count_bad_crossing_popup()
         self.wc_identity_input.bind(on_text_validate = self.on_enter_wrong_crossing_identity)
+        self.unidentified_individuals_counter = {identity: 0 for identity in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
+        self.create_non_identified_individual_popup()
+        self.unidentified_identity_input.bind(on_text_validate = self.on_enter_non_identified_individual)
         self.loading_popup.dismiss()
         self.init_segmentZero()
 
@@ -229,6 +275,8 @@ class Validator(BoxLayout):
             frame_index += 1
         elif keycode[1] == 'c':
             self.wc_popup.open()
+        elif keycode[1] == 'u':
+            self.unidentified_popup.open()
         elif keycode[1] == 'up':
             frame_index = self.go_to_crossing(direction = 'next')
         elif keycode[1] == 'down':
@@ -387,6 +435,7 @@ class Validator(BoxLayout):
         self.identity_update = self.identityInput.text
         if self.check_user_generated_identity():
             self.overwriteIdentity()
+            self.recompute_groundtruth = True
         self.popup.dismiss()
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
@@ -526,9 +575,12 @@ class Validator(BoxLayout):
 
     def change_crossing_check_state(self, touch_type):
         if touch_type == 'left':
-            self.detected_blob_to_modify.rect_color = (0, 255, 0)
-        elif touch_type == 'right':
-            self.detected_blob_to_modify.rect_color = (255, 0, 0)
+            if not hasattr(self.detected_blob_to_modify, 'rect_color'):
+                self.detected_blob_to_modify.rect_color = (0, 255, 0)
+            elif self.detected_blob_to_modify.rect_color[0] == 0:
+                self.detected_blob_to_modify.rect_color = (255, 0, 0)
+            else:
+                self.detected_blob_to_modify.rect_color = (0, 255, 0)
         self.propagate_crossing_check_state()
         self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func = self.writeIds)
 
@@ -570,10 +622,7 @@ class Validator(BoxLayout):
                 self.touches.append(touch.pos)
                 self.detected_blob_to_modify, self.user_generated_centroids = self.get_blob_to_modify_and_mouse_coordinate()
                 if self.detected_blob_to_modify is not None:
-                    if  self.detected_blob_to_modify.is_an_individual:
-                        self.show_blob_attributes(self.detected_blob_to_modify)
-                    else:
-                        self.change_crossing_check_state(touch.button)
+                    self.show_blob_attributes(self.detected_blob_to_modify)
         else:
             self.scale = 1
             self.disable_touch_down_outside_collided_widget(touch)
@@ -582,7 +631,10 @@ class Validator(BoxLayout):
         return super(Validator, self).on_touch_down(touch)
 
     def get_groundtruth_path(self):
-        groundtruth_path = os.path.join(CHOSEN_VIDEO.video.video_folder, '_groundtruth.npy')
+        if self.with_gaps:
+            groundtruth_path = os.path.join(CHOSEN_VIDEO.video.video_folder, '_groundtruth.npy')
+        else:
+            groundtruth_path = os.path.join(CHOSEN_VIDEO.video.video_folder, '_groundtruth_with_crossing_identified.npy')
         return groundtruth_path if os.path.isfile(groundtruth_path) else None
 
     def on_groundtruth_popup_button_press(self, instance):
@@ -598,15 +650,16 @@ class Validator(BoxLayout):
             self.gt_start_end_container.add_widget(self.gt_start_end_text_input)
             self.gt_start_end_text_input.bind(on_text_validate = self.on_enter_start_end)
 
+
     def create_frame_interval_popup(self):
         self.gt_start_end_container = BoxLayout(orientation = "vertical")
         self.groundtruth_path = self.get_groundtruth_path()
         if self.groundtruth_path is not None:
-            if self.save_groundtruth_btn.disabled:
+            if not self.recompute_groundtruth:
                 self.groundtruth = np.load(self.groundtruth_path).item()
                 self.plot_groundtruth_statistics()
                 return True
-            if not self.save_groundtruth_btn.disabled:
+            else:
                 self.gt_start_end_label = CustomLabel(text = "A pre-existent ground truth file has been detected. Do you want to use it to compute the accuracy or use a new one?")
                 self.gt_start_end_btn1 = Button(text = "Use pre-existent ground truth")
                 self.gt_start_end_btn2 = Button(text = "Generate new ground truth")
@@ -616,7 +669,7 @@ class Validator(BoxLayout):
                 self.gt_start_end_btn1.bind(on_press = self.on_groundtruth_popup_button_press)
                 self.gt_start_end_btn2.bind(on_press = self.on_groundtruth_popup_button_press)
         else:
-            if self.save_groundtruth_btn.disabled:
+            if self.save_groundtruth_btn.disabled and self.compute_accuracy_button.disabled:
                 self.gt_start_end_label = CustomLabel(text = "No pre-existent groundtruth file has been detected. Validate the video to compute a ground truth first.\n\n Need help? To modify a wrong identity click on the badly identified animal and fill the popup. Use the mouse wheel to zoom if necessary.")
                 self.gt_start_end_container.add_widget(self.gt_start_end_label)
             else:
@@ -648,6 +701,7 @@ class Validator(BoxLayout):
                                                 self.gt_start_frame,
                                                 self.gt_end_frame,
                                                 wrong_crossing_counter = self.wrong_crossing_counter,
+                                                unidentified_individuals_counter = self.unidentified_individuals_counter,
                                                 save_gt = False)
 
     def save_groundtruth(self):
@@ -660,7 +714,12 @@ class Validator(BoxLayout):
     def plot_groundtruth_statistics(self):
         blobs_in_video_groundtruth = self.groundtruth.blobs_in_video[self.groundtruth.start:self.groundtruth.end]
         blobs_in_video = self.blobs_in_video[self.groundtruth.start:self.groundtruth.end]
-        gt_accuracies, results = get_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, blobs_in_video_groundtruth, blobs_in_video)
+        if self.with_gaps:
+            gt_accuracies, results = get_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, blobs_in_video_groundtruth, blobs_in_video)
+        else:
+            gt_accuracies, results = get_accuracy_wrt_groundtruth_no_gaps(CHOSEN_VIDEO.video, self.groundtruth,
+                                                        blobs_in_video_groundtruth,
+                                                        blobs_in_video)
         if gt_accuracies is not None:
             self.individual_accuracy = gt_accuracies['individual_accuracy']
             self.accuracy = gt_accuracies['accuracy']
