@@ -70,9 +70,7 @@ def produce_output_dict(blobs_in_video, video):
     output_dict = {'trajectories': produce_trajectories(blobs_in_video, video.number_of_frames, video.number_of_animals),
                     'git_commit': video.git_commit,
                     'video_path': video.video_path,
-                    'frames_per_second': video.frames_per_second,
-                    'individual_P2': video.individual_P2
-                   }
+                    'frames_per_second': video.frames_per_second}
     return output_dict
 
 if __name__ == "__main__":

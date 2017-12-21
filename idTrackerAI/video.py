@@ -694,7 +694,7 @@ class Video(object):
                     weighted_P2 += fragment.P2_vector[fragment.assigned_identity - 1] * fragment.number_of_images
                 number_of_individual_blobs += fragment.number_of_images
 
-        self.overall_P2 = weighted_P2_per_individual / number_of_individual_blobs
+        self.overall_P2 = weighted_P2 / number_of_individual_blobs
 
 def scanFolder(path):
     video = os.path.basename(path)
