@@ -53,6 +53,7 @@ class ROISelector(BoxLayout):
         self.btn_load_roi.bind(on_press = self.load_ROI)
         self.btn_no_roi.bind(on_press = self.no_ROI)
         self.btn_clear_roi.bind(on_press = self.delete_ROI)
+        self.has_been_executed = False
         global CHOSEN_VIDEO
         CHOSEN_VIDEO.bind(chosen=self.do)
 
@@ -68,9 +69,9 @@ class ROISelector(BoxLayout):
                 self.btn_load_roi.disabled = not hasattr(CHOSEN_VIDEO.old_video, "ROI")
             else:
                 self.btn_load_roi.disabled = True
+            self.has_been_executed = True
 
     def on_touch_down(self, touch):
-        # print("touch down dispatch")
         self.touches = []
         if self.visualiser.display_layout.collide_point(*touch.pos):
             self.touches.append(touch.pos)
@@ -98,7 +99,6 @@ class ROISelector(BoxLayout):
                     point1 = (int(newRectP1[0]), int(self.visualiser.frame.shape[1]-newRectP2[0]))
                     point2 = (int(newRectP1[1]), int(self.visualiser.frame.shape[1]-newRectP2[1]))
                     self.ROIOut.append([point1,point2])
-
                 self.touches = []
             except:
                 print('stay on the figure to draw a ROI')
@@ -127,14 +127,11 @@ class ROISelector(BoxLayout):
         self.visualiser.initImW = self.cur_image_width
 
     def save_ROI(self, *args):
-        # print("saving ROI")
         if len(self.ROIOut) > 0:
             self.ROIcv2 = np.zeros_like(self.visualiser.frame,dtype='uint8')
             for p in self.ROIOut:
-                # print("adding rectangles to ROI")
-                # print("rect ", p)
                 cv2.rectangle(self.ROIcv2, p[0], p[1], 255, -1)
-        CHOSEN_VIDEO.video.ROI = self.ROIcv2
+        CHOSEN_VIDEO.video._ROI = self.ROIcv2
         CHOSEN_VIDEO.video.save()
 
     def no_ROI(self, *args):

@@ -22,13 +22,15 @@ class SelectFile(BoxLayout):
     def __init__(self,
                 chosen_video = None,
                 deactivate_roi = None,
+                deactivate_preprocessing = None,
                 deactivate_validation = None,
                 setup_logging = None,
                 **kwargs):
         super(SelectFile,self).__init__(**kwargs)
-        global DEACTIVATE_ROI, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
+        global DEACTIVATE_ROI, DEACTIVATE_PREPROCESSING, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
         CHOSEN_VIDEO = chosen_video
         DEACTIVATE_ROI = deactivate_roi
+        DEACTIVATE_PREPROCESSING = deactivate_preprocessing
         DEACTIVATE_VALIDATION = deactivate_validation
         DEACTIVATE_VALIDATION.bind(process = self.activate_process)
         self.setup_logging = setup_logging
@@ -59,6 +61,10 @@ class SelectFile(BoxLayout):
             CHOSEN_VIDEO.existent_files, CHOSEN_VIDEO.old_video = getExistentFiles(CHOSEN_VIDEO.video, CHOSEN_VIDEO.processes_list)
             self.create_restore_popup()
             self.restore_popup.open()
+
+    def init_chosen_video_parameters(self):
+        CHOSEN_VIDEO.video._apply_ROI = False
+        CHOSEN_VIDEO.video._subtract_bkg = False
 
     def open(self, *args):
         try:
@@ -110,9 +116,13 @@ class SelectFile(BoxLayout):
                                         in self.processes_checkboxes}
 
         if CHOSEN_VIDEO.processes_to_restore is None or CHOSEN_VIDEO.processes_to_restore == {}:
+            self.init_chosen_video_parameters()
             DEACTIVATE_ROI.setter(False)
+            DEACTIVATE_PREPROCESSING.setter(False)
         elif not CHOSEN_VIDEO.processes_to_restore['preprocessing']:
+            self.init_chosen_video_parameters()
             DEACTIVATE_ROI.setter(False)
+            DEACTIVATE_PREPROCESSING.setter(False)
         elif CHOSEN_VIDEO.processes_to_restore['assignment'] or CHOSEN_VIDEO.processes_to_restore['correct_duplications']:
             DEACTIVATE_VALIDATION.setter(False)
         self.restore_popup.dismiss()

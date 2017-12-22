@@ -186,10 +186,11 @@ class Video(object):
                                             fx = value,
                                             fy = value,
                                             interpolation = cv2.INTER_CUBIC)
-        self._ROI = cv2.resize(self.original_ROI, None,
-                                        fx = value,
-                                        fy = value,
-                                        interpolation = cv2.INTER_CUBIC)
+        if self.apply_ROI:
+            self._ROI = cv2.resize(self.original_ROI, None,
+                                            fx = value,
+                                            fy = value,
+                                            interpolation = cv2.INTER_CUBIC)
 
     @property
     def min_threshold(self):

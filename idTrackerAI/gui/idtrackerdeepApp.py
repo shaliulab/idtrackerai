@@ -31,6 +31,7 @@ from kivy.config import Config
 from kivy.uix.filechooser import FileChooserListView
 from kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
 from select_file import SelectFile
+from preprocessing_preview import PreprocessingPreview
 from roi_selector import ROISelector
 from validator import Validator
 from individual_validator import IndividualValidator
@@ -121,332 +122,7 @@ def setup_logging(
 """
 Start kivy classes
 """
-# class PreprocessingPreview(BoxLayout):
-#     def __init__(self, **kwargs):
-#         super(PreprocessingPreview, self).__init__(**kwargs)
-#         #get video path information and bind it
-#         self.visualiser = VisualiseVideo()
-#         global CHOSEN_VIDEO
-#         CHOSEN_VIDEO.bind(chosen=self.do)
-#         self.container_layout = BoxLayout(orientation = 'vertical', size_hint = (.3, 1.))
-#         self.add_widget(self.container_layout)
-#         # bkg_subtraction
-#         self.bkg_subtractor = BkgSubtraction(orientation = 'vertical')
-#         self.container_layout.add_widget(self.bkg_subtractor)
-#         #bkg sub label
-#         self.bkg_subtraction_label = Label(text = 'background subtraction')
-#         self.bkg_subtraction_label.text_size = self.bkg_subtraction_label.size
-#         self.bkg_subtraction_label.size = self.bkg_subtraction_label.texture_size
-#         self.bkg_subtraction_label.font_size = 16
-#         self.bkg_subtraction_label.halign =  "center"
-#         self.bkg_subtraction_label.valign = "middle"
-#         #bkg sub switch
-#         self.bkg_subtractor_switch = Switch()
-#         #ROI label
-#         self.ROI_label = Label(text = 'apply ROI')
-#         self.ROI_label.text_size = self.ROI_label.size
-#         self.ROI_label.size = self.ROI_label.texture_size
-#         self.ROI_label.font_size = 16
-#         self.ROI_label.halign =  "center"
-#         self.ROI_label.valign = "middle"
-#         self.container_layout.add_widget(self.ROI_label)
-#         #ROI switch
-#         self.ROI_switch = Switch()
-#         self.container_layout.add_widget(self.ROI_switch)
-#         self.container_layout.add_widget(self.bkg_subtraction_label)
-#         self.container_layout.add_widget(self.bkg_subtractor_switch)
-#         self.count_scrollup = 0
-#         self.scale = 1
-#         self.ROI_popup_text = Label(text='It seems that the ROI you are trying to apply corresponds to the entire frame. Please, go to the ROI selection tab to select and save a ROI')
-#         self.ROI_popup = Popup(title='ROI warning',
-#             content=self.ROI_popup_text,
-#             size_hint=(.5,.5))
-#         self.ROI_popup_text.text_size = self.ROI_popup.size
-#         self.ROI_popup_text.size = self.ROI_popup_text.texture_size
-#         self.ROI_popup_text.font_size = 16
-#         self.ROI_popup_text.halign =  "center"
-#         self.ROI_popup_text.valign = "middle"
-#         self.saving_popup = Popup(title='Saving',
-#             content=Label(text='wait ...'),
-#             size_hint=(.3,.3))
-#         self.ROI_popup_text.bind(size=lambda s, w: s.setter('text_size')(s, w))
-#         self.saving_popup.bind(on_open=self.save_preproc)
-#
-#     def init_preproc_parameters(self):
-#         if hasattr(CHOSEN_VIDEO, "old_video") and CHOSEN_VIDEO.old_video._has_been_preprocessed == True:
-#             self.max_threshold = CHOSEN_VIDEO.old_video.max_threshold
-#             self.min_threshold = CHOSEN_VIDEO.old_video.min_threshold
-#             self.min_area = CHOSEN_VIDEO.old_video.min_area
-#             self.max_area = CHOSEN_VIDEO.old_video.max_area
-#         else:
-#             self.max_threshold = 165
-#             self.min_threshold = 0
-#             self.min_area = 100
-#             self.max_area = 1000
-#         ###max_threshold
-#         self.max_threshold_slider = Slider(id = 'max_threhsold')
-#         self.max_threshold_slider.min = 0
-#         self.max_threshold_slider.max = 255
-#         self.max_threshold_slider.value = self.max_threshold
-#         self.max_threshold_slider.step = 1
-#
-#         self.max_threshold_lbl = Label( id = 'max_threshold_lbl')
-#         self.max_threshold_lbl.text = "Max threshold:\n" + str(int(self.max_threshold_slider.value))
-#         self.max_threshold_lbl.text_size = self.max_threshold_lbl.size
-#         self.max_threshold_lbl.size = self.max_threshold_lbl.texture_size
-#         self.max_threshold_lbl.font_size = 16
-#         self.max_threshold_lbl.halign =  "center"
-#         self.max_threshold_lbl.valign = "middle"
-#
-#         ###min_threshold
-#         self.min_threshold_slider = Slider(id='min_threshold_slider')
-#         self.min_threshold_slider.min = 0
-#         self.min_threshold_slider.max = 255
-#         self.min_threshold_slider.value = self.min_threshold
-#         self.min_threshold_slider.step = 1
-#
-#         self.min_threshold_lbl = Label(id='min_threshold_lbl')
-#         self.min_threshold_lbl.text = "Min threshold:\n" + str(int(self.min_threshold_slider.value))
-#         self.min_threshold_lbl.text_size = self.min_threshold_lbl.size
-#         self.min_threshold_lbl.size = self.min_threshold_lbl.texture_size
-#         self.min_threshold_lbl.font_size = 16
-#         self.min_threshold_lbl.halign =  "center"
-#         self.min_threshold_lbl.valign = "middle"
-#         ###max_area label
-#         self.max_area_slider = Slider(id='max_area_slider')
-#         self.max_area_slider.min = 0
-#         self.max_area_slider.max = 60000
-#         self.max_area_slider.value = self.max_area
-#         self.max_area_slider.step = 1
-#
-#         self.max_area_lbl = Label(id='max_area_lbl')
-#         self.max_area_lbl.text = "Max area:\n" + str(int(self.max_area_slider.value))
-#         self.max_area_lbl.text_size = self.max_area_lbl.size
-#         self.max_area_lbl.size = self.max_area_lbl.texture_size
-#         self.max_area_lbl.font_size = 16
-#         self.max_area_lbl.halign =  "center"
-#         self.max_area_lbl.valign = "middle"
-#         ###min_area
-#         self.min_area_slider = Slider(id='min_area_slider')
-#         self.min_area_slider.min = 0
-#         self.min_area_slider.max = 1000
-#         self.min_area_slider.value = self.min_area
-#         self.min_area_slider.step = 1
-#
-#         self.min_area_lbl = Label(id='min_area_lbl')
-#         self.min_area_lbl.text = "Min area:\n" + str(int(self.min_area_slider.value))
-#         self.min_area_lbl.text_size = self.min_area_lbl.size
-#         self.min_area_lbl.size = self.min_area_lbl.texture_size
-#         self.min_area_lbl.font_size = 16
-#         self.min_area_lbl.halign =  "center"
-#         self.min_area_lbl.valign = "middle"
-#
-#         self.w_list = [self.max_threshold_lbl, self.max_threshold_slider,
-#                         self.min_threshold_lbl, self.min_threshold_slider,
-#                         self.max_area_lbl, self.max_area_slider,
-#                         self.min_area_lbl, self.min_area_slider ]
-#         self.add_widget_list()
-#
-#         self.max_threshold_slider.bind(value=self.update_max_th_lbl)
-#         self.min_threshold_slider.bind(value=self.update_min_th_lbl)
-#         self.max_area_slider.bind(value=self.update_max_area_lbl)
-#         self.min_area_slider.bind(value=self.update_min_area_lbl)
-#
-#         #create button to load parameters
-#         self.save_prec_params_btn = Button()
-#         self.save_prec_params_btn.text = "Load preprocessing params"
-#         self.save_prec_params_btn.bind(on_press = self.save_preproc_params)
-#         #create button to save parameter
-#         self.segment_video_btn = Button()
-#         self.segment_video_btn.text = "Segment video"
-#         # self.load_prec_params_btn.bind(on_press = self.laod_preproc_params)
-#
-#     def do(self, *args):
-#         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
-#             self.init_preproc_parameters()
-#             self.ROI_switch.bind(active = self.apply_ROI)
-#             self.ROI_switch.active = CHOSEN_VIDEO.video.apply_ROI
-#             self.bkg_subtractor_switch.active = CHOSEN_VIDEO.video.subtract_bkg
-#             self.bkg_subtractor_switch.bind(active = self.apply_bkg_subtraction)
-#             self.bkg = CHOSEN_VIDEO.video.bkg
-#             self.ROI = CHOSEN_VIDEO.video.ROI if CHOSEN_VIDEO.video.ROI is not None else np.ones((CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width) ,dtype='uint8') * 255
-#             CHOSEN_VIDEO.video.ROI = self.ROI
-#             # print("ROI in do - preprocessing", self.ROI)
-#             self.init_segment_zero()
-#
-#     def apply_ROI(self, instance, active):
-#         # print("applying ROI")
-#         CHOSEN_VIDEO.video.apply_ROI = active
-#         if active  == True:
-#             num_valid_pxs_in_ROI = len(sum(np.where(CHOSEN_VIDEO.video.ROI == 255)))
-#             num_pxs_in_frame = CHOSEN_VIDEO.video.height * CHOSEN_VIDEO.video.width
-#             self.ROI_is_trivial = num_pxs_in_frame == num_valid_pxs_in_ROI
-#
-#             if CHOSEN_VIDEO.video.ROI is not None and not self.ROI_is_trivial:
-#                 self.ROI = CHOSEN_VIDEO.video.ROI
-#             elif self.ROI_is_trivial:
-#                 self.ROI_popup.open()
-#                 instance.active = False
-#                 CHOSEN_VIDEO.apply_ROI = False
-#         elif active == False:
-#             self.ROI = np.ones((CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width) ,dtype='uint8') * 255
-#         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
-#
-#     def apply_bkg_subtraction(self, instance, active):
-#         CHOSEN_VIDEO.video.subtract_bkg = active
-#         if CHOSEN_VIDEO.video.subtract_bkg == True:
-#             self.bkg_subtractor.subtract_bkg()
-#             self.bkg = self.bkg_subtractor.bkg
-#         else:
-#             self.bkg = None
-#         return active
-#
-#     def add_widget_list(self):
-#         for w in self.w_list:
-#             self.container_layout.add_widget(w)
-#
-#     def update_max_th_lbl(self,instance, value):
-#         self.max_threshold_lbl.text = "Max threshold:\n" +  str(int(value))
-#         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
-#
-#     def update_min_th_lbl(self,instance, value):
-#         self.min_threshold_lbl.text = "Min threshold:\n" + str(int(value))
-#         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
-#         # self.show_preprocessing(self.frame)
-#
-#     def update_max_area_lbl(self,instance, value):
-#         self.max_area_lbl.text = "Max area:\n" + str(int(value))
-#         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
-#
-#     def update_min_area_lbl(self,instance, value):
-#         self.min_area_lbl.text = "Min area:\n" + str(int(value))
-#         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
-#
-#     def save_preproc_params(self):
-#         self.saving_popup.open()
-#         CHOSEN_VIDEO.video.max_threshold = self.max_threshold_slider.value
-#         CHOSEN_VIDEO.video.min_threshold = self.min_threshold_slider.value
-#         CHOSEN_VIDEO.video.min_area = self.min_area_slider.value
-#         CHOSEN_VIDEO.video.max_area = self.max_area_slider.value
-#
-#     def save_preproc(self, *args):
-#         CHOSEN_VIDEO.video.save()
-#         self.saving_popup.dismiss()
-#
-#     def init_segment_zero(self):
-#         # create instance of video shower
-#         self.visualiser = VisualiseVideo()
-#         self.add_widget(self.visualiser)
-#         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.show_preprocessing)
-#         self.currentSegment = 0
-#         #create layout for video and slider
-#         # self.button_layout = BoxLayout(orientation="horizontal", size_hint=(1.,.1))
-#         # self.button_layout.add_widget(self.load_prec_params_btn)
-#         # self.button_layout.add_widget(self.segment_video_btn)
-#         # self.video_layout_preprocessing.add_widget(self.button_layout)
-#
-#     def show_preprocessing(self, frame):
-#         # pass frame to grayscale
-#         if len(frame.shape) > 2:
-#             self.frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY )
-#         else:
-#             self.frame = frame
-#         # compute average intensity
-#         avIntensity = np.float32(np.mean(self.frame))
-#         # generate a averaged frame for segmentation
-#         self.av_frame = self.frame / avIntensity
-#         # threshold the frame according to the sliders' values
-#         # print('this is the current background ', self.bkg)
-#         self.segmented_frame = segmentVideo(self.av_frame,
-#                                             int(self.min_threshold_slider.value),
-#                                             int(self.max_threshold_slider.value),
-#                                             self.bkg,
-#                                             self.ROI,
-#                                             self.bkg_subtractor_switch.active)
-#         #get information on the blobs find by thresholding
-#         boundingBoxes, miniFrames, _, _, _, goodContours, _ = blobExtractor(self.segmented_frame,
-#                                                                         self.frame,
-#                                                                         int(self.min_area_slider.value),
-#                                                                         int(self.max_area_slider.value))
-#         #draw the blobs on the original frame
-#         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)
-#         #display the segmentation
-#         if self.count_scrollup != 0:
-#             self.dst = cv2.warpAffine(self.frame, self.M, (self.frame.shape[1], self.frame.shape[1]))
-#             buf1 = cv2.flip(self.dst,0)
-#         else:
-#             buf1 = cv2.flip(self.frame, 0)
-#
-#         buf = buf1.tostring()
-#         textureFrame = Texture.create(size=(self.frame.shape[1], self.frame.shape[1]), colorfmt='luminance')
-#         textureFrame.blit_buffer(buf, colorfmt='luminance', bufferfmt='ubyte')
-#         # display image from the texture
-#         self.visualiser.display_layout.texture = textureFrame
-#
-#     def fromShowFrameToTexture(self, coords):
-#         """
-#         Maps coordinate in visualiser.display_layout (the image whose texture is the frame) to
-#         the coordinates of the original image
-#         """
-#         coords = np.asarray(coords)
-#         origFrameW = CHOSEN_VIDEO.video.width
-#         origFrameH = CHOSEN_VIDEO.video.height
-#
-#         # actualFrameW, actualFrameH = self.visualiser.display_layout.size
-#         # self.y_offset = self.sliderBox.height + self.button_layout.height
-#         # self.x_offset = self.container_layout.width
-#         # coords[0] = coords[0] - self.x_offset
-#         # coords[1] = coords[1] - self.y_offset
-#         # wRatio = abs(origFrameW / actualFrameW)
-#         # hRatio = abs(origFrameH / actualFrameH)
-#         # ratios = np.asarray([wRatio, hRatio])
-#         # coords =  np.multiply(coords, ratios)
-#         # coords[1] = origFrameH - coords[1]
-#         return coords
-#
-#     def on_touch_down(self, touch):
-#         self.touches = []
-#         # print( 'scrollup number ', self.count_scrollup)
-#         if self.parent is not None and self.visualiser.display_layout.collide_point(*touch.pos):
-#             # print( 'i think you are on the image')
-#             if touch.button == 'scrollup':
-#                 self.count_scrollup += 1
-#
-#                 coords = self.fromShowFrameToTexture(touch.pos)
-#                 rows,cols = self.frame.shape
-#                 self.scale = 1.5 * self.count_scrollup
-#                 self.M = cv2.getRotationMatrix2D((coords[0],coords[1]),0,self.scale)
-#                 self.dst = cv2.warpAffine(self.frame,self.M,(cols,rows))
-#                 buf1 = cv2.flip(self.dst, 0)
-#                 buf = buf1.tostring()
-#                 textureFrame = Texture.create(size=(self.dst.shape[1], self.dst.shape[0]),
-#                                             colorfmt='luminance')
-#                 textureFrame.blit_buffer(buf,
-#                                         colorfmt='luminance', bufferfmt='ubyte')
-#                 self.visualiser.display_layout.texture = textureFrame
-#
-#             elif touch.button == 'scrolldown':
-#                 # frame = self.parent.frame
-#                 coords = self.fromShowFrameToTexture(touch.pos)
-#                 rows,cols = self.frame.shape
-#                 self.dst = self.frame
-#                 buf1 = cv2.flip(self.dst, 0)
-#                 buf = buf1.tostring()
-#                 textureFrame = Texture.create(size=(self.dst.shape[1], self.dst.shape[0]),
-#                                             colorfmt='luminance')
-#                 textureFrame.blit_buffer(buf,
-#                                         colorfmt='luminance',
-#                                         bufferfmt='ubyte')
-#                 self.visualiser.display_layout.texture = textureFrame
-#                 self.count_scrollup = 0
-#
-#         else:
-#             self.scale = 1
-#             self.disable_touch_down_outside_collided_widget(touch)
-#
-#     def disable_touch_down_outside_collided_widget(self, touch):
-#         return super(PreprocessingPreview, self).on_touch_down(touch)
-#
+
 # class Accumulator(BoxLayout):
 #     def __init__(self, **kwargs):
 #         super(Accumulator, self).__init__(**kwargs)
@@ -461,8 +137,9 @@ Start kivy classes
 #                 return True
 
 class Root(TabbedPanel):
-    global DEACTIVATE_ROI, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
+    global DEACTIVATE_ROI, DEACTIVATE_PREPROCESSING, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
     DEACTIVATE_ROI = Deactivate_Process()
+    DEACTIVATE_PREPROCESSING = Deactivate_Process()
     DEACTIVATE_VALIDATION = Deactivate_Process()
     CHOSEN_VIDEO = Chosen_Video(processes_list = PROCESSES)
 
@@ -471,9 +148,11 @@ class Root(TabbedPanel):
         self.bind(current_tab = self.content_changed_cb)
         self.add_welcome_tab()
         self.add_ROI_selection_tab()
+        self.add_preprocessing_tab()
         self.add_validation_tab()
         self.add_individual_validator_tab()
         DEACTIVATE_ROI.bind(process = self.manage_ROI_selection)
+        DEACTIVATE_PREPROCESSING.bind(process = self.manage_preprocessing)
         DEACTIVATE_VALIDATION.bind(process = self.manage_validation)
         DEACTIVATE_VALIDATION.bind(process = self.manage_individual_validation)
 
@@ -481,6 +160,7 @@ class Root(TabbedPanel):
         self.welcome_tab = TabbedPanelItem(text = "Welcome")
         self.select_file = SelectFile(chosen_video = CHOSEN_VIDEO,
                                     deactivate_roi = DEACTIVATE_ROI,
+                                    deactivate_preprocessing = DEACTIVATE_PREPROCESSING,
                                     deactivate_validation = DEACTIVATE_VALIDATION,
                                     setup_logging = setup_logging)
         self.welcome_tab.add_widget(self.select_file)
@@ -503,6 +183,24 @@ class Root(TabbedPanel):
         else:
             if hasattr(self, 'roi_selector'):
                 self.ROI_selection_tab.clean(self.roi_selector)
+
+    def add_preprocessing_tab(self):
+        self.preprocessing_tab = TabbedPanelItem(text = 'Preprocessing')
+        self.preprocessing_tab.id = "Preprocessing"
+        self.preprocessing_tab.disabled = True
+        self.add_widget(self.preprocessing_tab)
+
+    def manage_preprocessing(self, *args):
+        print("from root: ", DEACTIVATE_PREPROCESSING.process)
+        self.preprocessing_tab.disabled = DEACTIVATE_PREPROCESSING.process
+        if not DEACTIVATE_PREPROCESSING.process:
+            self.preprocessor = PreprocessingPreview(chosen_video = CHOSEN_VIDEO,
+                                        deactivate_preprocessing = DEACTIVATE_PREPROCESSING)
+            self.preprocessor.id = "preprocessor"
+            self.preprocessing_tab.add_widget(self.preprocessor)
+        else:
+            if hasattr(self, 'preprocessor'):
+                self.preprocessing_tab.clean(self.preprocessor)
 
     def add_validation_tab(self):
         self.validation_tab = TabbedPanelItem(text='Global Validation')
@@ -546,13 +244,15 @@ class Root(TabbedPanel):
         print("OBJECT", obj)
         print("ID", value.content.id)
         if value.content.id == 'roi_selector':
-            self.roi_selector.do()
+            if not self.roi_selector.has_been_executed:
+                self.roi_selector.do()
+        if value.content.id == 'preprocessor':
+            if not self.preprocessor.has_been_executed:
+                self.preprocessor.do()
         if value.content.id == "validator":
             self.validator.do()
         if value.content.id == "individual_validator":
             self.individual_validator.do()
-
-
 
     def on_switch(self, header):
         super(Root, self). switch_to(header)
