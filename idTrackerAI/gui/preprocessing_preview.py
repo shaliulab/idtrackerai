@@ -65,6 +65,10 @@ class PreprocessingPreview(BoxLayout):
             content=CustomLabel(text='wait ...'),
             size_hint=(.3,.3))
         self.saving_popup.bind(on_open=self.save_preproc)
+        self.help_button_preprocessing = HelpButton()
+        self.help_button_preprocessing.size_hint = (1.,1.)
+        self.help_button_preprocessing.create_help_popup("Preprocessing",\
+                                                "The aim of this part of the process is to separate the animals from the background, by setting the following parameters.\n1) Apply ROI: Allows to consider only a region of interest on the frame. Select it by using the table ROI selection.\n2) background subtraction: Perform background subtraction by computing a model of the background on the fly.\n3) Max\Min intensity: Set the maximum intensity used to separate the animals from the background.\n4) Max\Min area: Filter the blob by area.")
 
     def init_preproc_parameters(self):
         if CHOSEN_VIDEO.old_video is not None and CHOSEN_VIDEO.old_video._has_been_preprocessed == True:
@@ -104,15 +108,8 @@ class PreprocessingPreview(BoxLayout):
         self.min_threshold_slider.bind(value=self.update_min_th_lbl)
         self.max_area_slider.bind(value=self.update_max_area_lbl)
         self.min_area_slider.bind(value=self.update_min_area_lbl)
-
-        #create button to load parameters
-        self.save_prec_params_btn = Button()
-        self.save_prec_params_btn.text = "Load preprocessing params"
-        self.save_prec_params_btn.bind(on_press = self.save_preproc_params)
-        #create button to save parameter
+        self.container_layout.add_widget(self.help_button_preprocessing)
         self.segment_video_btn = Button(text = "Segment video")
-        # self.load_prec_params_btn.bind(on_press = self.laod_preproc_params)
-
 
     def do(self, *args):
         if CHOSEN_VIDEO.video is not None and CHOSEN_VIDEO.video.video_path is not None:
