@@ -43,11 +43,13 @@ class PreprocessingPreview(BoxLayout):
         DEACTIVATE_PREPROCESSING = deactivate_preprocessing
         CHOSEN_VIDEO.bind(chosen=self.do)
         self.container_layout = BoxLayout(orientation = 'vertical', size_hint = (.3, 1.))
+        self.reduce_resolution_btn = Button(text = "Reduce resolution")
         self.bkg_subtractor = BkgSubtraction(orientation = 'vertical', chosen_video = CHOSEN_VIDEO)
         self.bkg_subtraction_label = CustomLabel(text = "background subtraction")
         self.bkg_subtractor_switch = Switch()
         self.ROI_label = CustomLabel(text = 'apply ROI')
         self.ROI_switch = Switch()
+        self.container_layout.add_widget(self.reduce_resolution_btn)
         self.container_layout.add_widget(self.ROI_label)
         self.container_layout.add_widget(self.ROI_switch)
         self.container_layout.add_widget(self.bkg_subtraction_label)
@@ -78,8 +80,8 @@ class PreprocessingPreview(BoxLayout):
             self.max_area = 1000
             self.resolution_reduction = 1.
             CHOSEN_VIDEO.video.resolution_reduction = 1.
-            if CHOSEN_VIDEO.video.ROI is None:
-                CHOSEN_VIDEO.video._ROI = np.ones( (CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width), dtype='uint8') * 255
+            if CHOSEN_VIDEO.video._original_ROI is None:
+                CHOSEN_VIDEO.video._original_ROI = np.ones( (CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width), dtype='uint8') * 255
 
         ###max_threshold
         self.max_threshold_slider = Slider(id = 'max_threhsold', min = 0, max = 255, value = self.max_threshold, step = 1)
@@ -93,15 +95,16 @@ class PreprocessingPreview(BoxLayout):
         ###min_area
         self.min_area_slider = Slider(id='min_area_slider', min = 0, max = 1000, value = self.min_area, step = 1)
         self.min_area_lbl = CustomLabel(id='min_area_lbl', text = "Min area:\n" + str(int(self.min_area_slider.value)))
-        self.w_list = [self.max_threshold_lbl, self.max_threshold_slider,
+        self.w_list = [ self.max_threshold_lbl, self.max_threshold_slider,
                         self.min_threshold_lbl, self.min_threshold_slider,
                         self.max_area_lbl, self.max_area_slider,
-                        self.min_area_lbl, self.min_area_slider ]
+                        self.min_area_lbl, self.min_area_slider]
         self.add_widget_list()
         self.max_threshold_slider.bind(value=self.update_max_th_lbl)
         self.min_threshold_slider.bind(value=self.update_min_th_lbl)
         self.max_area_slider.bind(value=self.update_max_area_lbl)
         self.min_area_slider.bind(value=self.update_min_area_lbl)
+
         #create button to load parameters
         self.save_prec_params_btn = Button()
         self.save_prec_params_btn.text = "Load preprocessing params"
@@ -114,6 +117,9 @@ class PreprocessingPreview(BoxLayout):
     def do(self, *args):
         if CHOSEN_VIDEO.video is not None and CHOSEN_VIDEO.video.video_path is not None:
             self.init_preproc_parameters()
+            self.create_resolution_reduction_popup()
+            self.res_red_input.bind(on_text_validate = self.on_enter_res_red_coeff)
+            self.reduce_resolution_btn.bind(on_press = self.open_resolution_reduction_popup)
             self.ROI_switch.bind(active = self.apply_ROI)
             self.ROI_switch.active = False
             self.bkg_subtractor_switch.active = False
@@ -122,6 +128,28 @@ class PreprocessingPreview(BoxLayout):
             self.ROI = CHOSEN_VIDEO.video.ROI
             self.init_segment_zero()
             self.has_been_executed = True
+
+    def create_resolution_reduction_popup(self):
+        self.res_red_popup_container = BoxLayout()
+        self.res_red_coeff = BoxLayout(orientation="vertical")
+        self.res_red_label = CustomLabel(text='Type the resolution reduction coefficient (0.5 will reduce by half).')
+        self.res_red_coeff.add_widget(self.res_red_label)
+        self.res_red_input = TextInput(text ='', multiline=False)
+        self.res_red_coeff.add_widget(self.res_red_input)
+        self.res_red_popup_container.add_widget(self.res_red_coeff)
+        self.res_red_popup = Popup(title = 'Resolution reduction',
+                            content = self.res_red_popup_container,
+                            size_hint = (.4, .4))
+
+    def open_resolution_reduction_popup(self, *args):
+        self.res_red_popup.open()
+
+    def on_enter_res_red_coeff(self, *args):
+        CHOSEN_VIDEO.video.resolution_reduction = float(self.res_red_input.text)
+        self.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
+        self.res_red_popup.dismiss()
+        self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
+
 
     def apply_ROI(self, instance, active):
         # print("applying ROI")
@@ -177,7 +205,7 @@ class PreprocessingPreview(BoxLayout):
         CHOSEN_VIDEO.video._min_threshold = self.min_threshold_slider.value
         CHOSEN_VIDEO.video._min_area = self.min_area_slider.value
         CHOSEN_VIDEO.video._max_area = self.max_area_slider.value
-        CHOSEN_VIDEO.video._resolution_reduction = self.resolution_reduction
+        CHOSEN_VIDEO.video.resolution_reduction = self.resolution_reduction
 
     def save_preproc(self, *args):
         CHOSEN_VIDEO.video.save()
@@ -189,12 +217,15 @@ class PreprocessingPreview(BoxLayout):
         self.add_widget(self.visualiser)
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.show_preprocessing)
         self.currentSegment = 0
+        self.number_of_detected_blobs = []
 
     def show_preprocessing(self, frame):
         if len(frame.shape) > 2:
             self.frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY )
         else:
             self.frame = frame
+        if hasattr(self, 'area_bars'):
+            self.visualiser.remove_widget(self.area_bars)
         avIntensity = np.float32(np.mean(self.frame))
         self.av_frame = self.frame / avIntensity
         self.segmented_frame = segmentVideo(self.av_frame,
@@ -203,10 +234,22 @@ class PreprocessingPreview(BoxLayout):
                                             CHOSEN_VIDEO.video.bkg,
                                             CHOSEN_VIDEO.video.ROI,
                                             self.bkg_subtractor_switch.active)
-        boundingBoxes, miniFrames, _, _, _, goodContours, _ = blobExtractor(self.segmented_frame,
+        boundingBoxes, miniFrames, _, areas, _, goodContours, _ = blobExtractor(self.segmented_frame,
                                                                         self.frame,
                                                                         int(self.min_area_slider.value),
                                                                         int(self.max_area_slider.value))
+        if hasattr(self, "number_of_detected_blobs"):
+            self.number_of_detected_blobs.append(len(areas))
+        fig, ax = plt.subplots(1)
+        width = .5
+        plt.bar(range(len(areas)), areas, width)
+        plt.axhline(np.mean(areas), color = 'k', linewidth = .2)
+        ax.set_xlabel('blob')
+        ax.set_ylabel('area')
+        ax.set_facecolor((.345, .345, .345))
+        self.area_bars = FigureCanvasKivyAgg(fig)
+        self.area_bars.size_hint = (1., .2)
+        self.visualiser.add_widget(self.area_bars)
         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)
         if self.count_scrollup != 0:
             self.dst = cv2.warpAffine(self.frame, self.M, (self.frame.shape[1], self.frame.shape[1]))

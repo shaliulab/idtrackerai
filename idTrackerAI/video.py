@@ -178,6 +178,8 @@ class Video(object):
 
     @resolution_reduction.setter
     def resolution_reduction(self, value):
+        print("res red value ", value)
+        print("original |ROI ", self.original_ROI)
         self._resolution_reduction = value
         self._height = int(self.original_height * value)
         self._width = int(self.original_width * value)
@@ -186,7 +188,7 @@ class Video(object):
                                             fx = value,
                                             fy = value,
                                             interpolation = cv2.INTER_CUBIC)
-        if self.apply_ROI:
+        if self.apply_ROI or self.original_ROI is not None:
             self._ROI = cv2.resize(self.original_ROI, None,
                                             fx = value,
                                             fy = value,
