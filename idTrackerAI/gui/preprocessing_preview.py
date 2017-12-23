@@ -33,6 +33,7 @@ from scipy.stats import mode
 import cv2
 
 from video import Video
+from list_of_blobs import ListOfBlobs
 
 class PreprocessingPreview(BoxLayout):
     def __init__(self, chosen_video = None,
@@ -46,9 +47,9 @@ class PreprocessingPreview(BoxLayout):
         self.container_layout = BoxLayout(orientation = 'vertical', size_hint = (.3, 1.))
         self.reduce_resolution_btn = Button(text = "Reduce resolution")
         self.bkg_subtractor = BkgSubtraction(orientation = 'vertical', chosen_video = CHOSEN_VIDEO)
-        self.bkg_subtraction_label = CustomLabel(text = "background subtraction")
+        self.bkg_subtraction_label = CustomLabel(font_size = 14, text = "background subtraction")
         self.bkg_subtractor_switch = Switch()
-        self.ROI_label = CustomLabel(text = 'apply ROI')
+        self.ROI_label = CustomLabel(font_size = 14, text = 'apply ROI')
         self.ROI_switch = Switch()
         self.container_layout.add_widget(self.reduce_resolution_btn)
         self.container_layout.add_widget(self.ROI_label)
@@ -58,12 +59,15 @@ class PreprocessingPreview(BoxLayout):
         self.count_scrollup = 0
         self.scale = 1
         self.has_been_executed = False
-        self.ROI_popup_text = CustomLabel(text='It seems that the ROI you are trying to apply corresponds to the entire frame. Please, go to the ROI selection tab to select and save a ROI')
+        self.ROI_popup_text = CustomLabel(font_size = 14, text='It seems that the ROI you are trying to apply corresponds to the entire frame. Please, go to the ROI selection tab to select and save a ROI')
         self.ROI_popup = Popup(title='ROI warning',
             content=self.ROI_popup_text,
             size_hint=(.5,.5))
         self.saving_popup = Popup(title='Saving',
             content=CustomLabel(text='wait ...'),
+            size_hint=(.3,.3))
+        self.computing_popup = Popup(title='Computing',
+            content=CustomLabel(text='This operation can take several minutes'),
             size_hint=(.3,.3))
         self.help_button_preprocessing = HelpButton()
         self.help_button_preprocessing.size_hint = (1.,1.)
@@ -89,16 +93,16 @@ class PreprocessingPreview(BoxLayout):
 
         ###max_threshold
         self.max_threshold_slider = Slider(id = 'max_threhsold', min = 0, max = 255, value = self.max_threshold, step = 1)
-        self.max_threshold_lbl = CustomLabel( id = 'max_threshold_lbl', text = "Max threshold:\n" + str(int(self.max_threshold_slider.value)))
+        self.max_threshold_lbl = CustomLabel(font_size = 14, id = 'max_threshold_lbl', text = "Max intensity: " + str(int(self.max_threshold_slider.value)))
         ###min_threshold
         self.min_threshold_slider = Slider(id='min_threshold_slider', min = 0, max = 255, value = self.min_threshold, step = 1)
-        self.min_threshold_lbl = CustomLabel(id='min_threshold_lbl', text = "Min threshold:\n" + str(int(self.min_threshold_slider.value)))
+        self.min_threshold_lbl = CustomLabel(font_size = 14, id='min_threshold_lbl', text = "Min intensity:" + str(int(self.min_threshold_slider.value)))
         ###max_area label
         self.max_area_slider = Slider(id='max_area_slider', min = 0, max = 60000, value = self.max_area, step = 1)
-        self.max_area_lbl = CustomLabel(id='max_area_lbl', text = "Max area:\n" + str(int(self.max_area_slider.value)))
+        self.max_area_lbl = CustomLabel(font_size = 14, id='max_area_lbl', text = "Max area:" + str(int(self.max_area_slider.value)))
         ###min_area
         self.min_area_slider = Slider(id='min_area_slider', min = 0, max = 1000, value = self.min_area, step = 1)
-        self.min_area_lbl = CustomLabel(id='min_area_lbl', text = "Min area:\n" + str(int(self.min_area_slider.value)))
+        self.min_area_lbl = CustomLabel(font_size = 14, id='min_area_lbl', text = "Min area:" + str(int(self.min_area_slider.value)))
         self.w_list = [ self.max_threshold_lbl, self.max_threshold_slider,
                         self.min_threshold_lbl, self.min_threshold_slider,
                         self.max_area_lbl, self.max_area_slider,
@@ -126,6 +130,8 @@ class PreprocessingPreview(BoxLayout):
             self.ROI = CHOSEN_VIDEO.video.ROI
             self.create_number_of_animals_popup()
             self.num_of_animals_input.bind(on_text_validate = self.set_number_of_animals)
+            self.num_of_animals_popup.bind(on_dismiss = self.show_computing_popup)
+            self.computing_popup.bind(on_open = self.compute_list_of_blobs)
             self.init_segment_zero()
             self.has_been_executed = True
             self.segment_video_btn.bind(on_press = self.segment)
@@ -138,13 +144,39 @@ class PreprocessingPreview(BoxLayout):
         self.num_of_animals_input = TextInput(text = '', multiline=False)
         self.num_of_animals.add_widget(self.num_of_animals_input)
         self.num_of_animals_container.add_widget(self.num_of_animals)
-        self.num_of_animals_popup = Popup(title = 'Resolution reduction',
+        self.num_of_animals_popup = Popup(title = 'Number of animals',
                             content = self.num_of_animals_container,
                             size_hint = (.4, .4))
 
     def set_number_of_animals(self, *args):
         CHOSEN_VIDEO.video._number_of_animals = int(self.num_of_animals_input.text)
+        self.num_of_animals_popup.dismiss()
+
+    def show_computing_popup(self, *args):
+        self.computing_popup.open()
+
+    def compute_list_of_blobs(self, *args):
         self.blobs = segment(CHOSEN_VIDEO.video)
+        self.list_of_blobs = ListOfBlobs(blobs_in_video = self.blobs)
+        CHOSEN_VIDEO.video.create_preprocessing_folder()
+        self.computing_popup.content.text = "Checking consistency of the segmentation ..."
+        frames_with_more_blobs_than_animals = self.list_of_blobs.check_maximal_number_of_blob(CHOSEN_VIDEO.video.number_of_animals)
+        if len(frames_with_more_blobs_than_animals) > 0:
+            self.computing_popup.content.text = "Check your segmentation parameters: " + str(frames_with_more_blobs_than_animals)
+            #XXX resegmentation to be implemented
+        else:
+            CHOSEN_VIDEO.video._has_been_segmented = True
+            if len(self.list_of_blobs.blobs_in_video[-1]) == 0:
+                self.list_of_blobs.blobs_in_video = self.list_of_blobs.blobs_in_video[:-1]
+                self.list_of_blobs.number_of_frames = len(self.list_of_blobs.blobs_in_video)
+                CHOSEN_VIDEO.video._number_of_frames = self.list_of_blobs.number_of_frames
+                CHOSEN_VIDEO.video.save()
+            CHOSEN_VIDEO.video.save()
+            self.computing_popup.content.text = "Saving the list of segmented blobs ..."
+            self.list_of_blobs.save(CHOSEN_VIDEO.video,
+                                    CHOSEN_VIDEO.video.blobs_path_segmented,
+                                    number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
+            self.computing_popup.dismiss()
 
     def segment(self, *args):
         CHOSEN_VIDEO.video._max_threshold = self.max_threshold_slider.value
