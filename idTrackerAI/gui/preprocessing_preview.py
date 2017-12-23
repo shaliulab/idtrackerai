@@ -26,9 +26,10 @@ import sys
 sys.path.append('../')
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
-from segmentation import segmentVideo
+from segmentation import segmentVideo, segment
 from video_utils import blobExtractor
 import numpy as np
+from scipy.stats import mode
 import cv2
 
 from video import Video
@@ -64,7 +65,6 @@ class PreprocessingPreview(BoxLayout):
         self.saving_popup = Popup(title='Saving',
             content=CustomLabel(text='wait ...'),
             size_hint=(.3,.3))
-        self.saving_popup.bind(on_open=self.save_preproc)
         self.help_button_preprocessing = HelpButton()
         self.help_button_preprocessing.size_hint = (1.,1.)
         self.help_button_preprocessing.create_help_popup("Preprocessing",\
@@ -108,8 +108,9 @@ class PreprocessingPreview(BoxLayout):
         self.min_threshold_slider.bind(value=self.update_min_th_lbl)
         self.max_area_slider.bind(value=self.update_max_area_lbl)
         self.min_area_slider.bind(value=self.update_min_area_lbl)
-        self.container_layout.add_widget(self.help_button_preprocessing)
         self.segment_video_btn = Button(text = "Segment video")
+        self.container_layout.add_widget(self.segment_video_btn)
+        self.container_layout.add_widget(self.help_button_preprocessing)
 
     def do(self, *args):
         if CHOSEN_VIDEO.video is not None and CHOSEN_VIDEO.video.video_path is not None:
@@ -123,8 +124,37 @@ class PreprocessingPreview(BoxLayout):
             self.bkg_subtractor_switch.bind(active = self.apply_bkg_subtraction)
             self.bkg = CHOSEN_VIDEO.video.bkg
             self.ROI = CHOSEN_VIDEO.video.ROI
+            self.create_number_of_animals_popup()
+            self.num_of_animals_input.bind(on_text_validate = self.set_number_of_animals)
             self.init_segment_zero()
             self.has_been_executed = True
+            self.segment_video_btn.bind(on_press = self.segment)
+
+    def create_number_of_animals_popup(self):
+        self.num_of_animals_container = BoxLayout()
+        self.num_of_animals = BoxLayout(orientation="vertical")
+        self.num_of_animals_label = CustomLabel(text='Type the number of animals to be tracked.')
+        self.num_of_animals.add_widget(self.num_of_animals_label)
+        self.num_of_animals_input = TextInput(text = '', multiline=False)
+        self.num_of_animals.add_widget(self.num_of_animals_input)
+        self.num_of_animals_container.add_widget(self.num_of_animals)
+        self.num_of_animals_popup = Popup(title = 'Resolution reduction',
+                            content = self.num_of_animals_container,
+                            size_hint = (.4, .4))
+
+    def set_number_of_animals(self, *args):
+        CHOSEN_VIDEO.video._number_of_animals = int(self.num_of_animals_input.text)
+        self.blobs = segment(CHOSEN_VIDEO.video)
+
+    def segment(self, *args):
+        CHOSEN_VIDEO.video._max_threshold = self.max_threshold_slider.value
+        CHOSEN_VIDEO.video._min_threshold = self.min_threshold_slider.value
+        CHOSEN_VIDEO.video._min_area = self.min_area_slider.value
+        CHOSEN_VIDEO.video._max_area = self.max_area_slider.value
+        CHOSEN_VIDEO.video.resolution_reduction = self.resolution_reduction
+        CHOSEN_VIDEO.video.save()
+        self.num_of_animals_input.text = str(mode(self.number_of_detected_blobs)[0][0])
+        self.num_of_animals_popup.open()
 
     def create_resolution_reduction_popup(self):
         self.res_red_popup_container = BoxLayout()
@@ -147,9 +177,7 @@ class PreprocessingPreview(BoxLayout):
         self.res_red_popup.dismiss()
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
-
     def apply_ROI(self, instance, active):
-        # print("applying ROI")
         CHOSEN_VIDEO.video._apply_ROI = active
         if active  == True:
             num_valid_pxs_in_ROI = len(sum(np.where(CHOSEN_VIDEO.video.ROI == 255)))
@@ -195,18 +223,6 @@ class PreprocessingPreview(BoxLayout):
     def update_min_area_lbl(self,instance, value):
         self.min_area_lbl.text = "Min area:\n" + str(int(value))
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
-
-    def save_preproc_params(self):
-        self.saving_popup.open()
-        CHOSEN_VIDEO.video._max_threshold = self.max_threshold_slider.value
-        CHOSEN_VIDEO.video._min_threshold = self.min_threshold_slider.value
-        CHOSEN_VIDEO.video._min_area = self.min_area_slider.value
-        CHOSEN_VIDEO.video._max_area = self.max_area_slider.value
-        CHOSEN_VIDEO.video.resolution_reduction = self.resolution_reduction
-
-    def save_preproc(self, *args):
-        CHOSEN_VIDEO.video.save()
-        self.saving_popup.dismiss()
 
     def init_segment_zero(self):
         self.visualiser = VisualiseVideo(chosen_video = CHOSEN_VIDEO)
