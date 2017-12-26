@@ -312,6 +312,7 @@ if __name__ == '__main__':
                                                                     video.identity_transfer)
                                 logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
                                 video._first_accumulation_finished = True
+                                video._percentage_of_accumulated_images = [video.ratio_accumulated_images]
                                 ### NOTE: save all the accumulation statistics
                                 video.save()
                                 logger.info("Saving fragments")
@@ -336,7 +337,7 @@ if __name__ == '__main__':
                                     video.save()
                                 else:
                                     video.protocol = 3
-                                    percentage_of_accumulated_images = [video._ratio_accumulated_images]
+                                    video._percentage_of_accumulated_images = [video.ratio_accumulated_images]
                                     print('\nPretraining ---------------------------------------------------------')
                                     video.pretraining_time = time.time()
                                     #create folder to store pretraining
@@ -402,7 +403,7 @@ if __name__ == '__main__':
                                                                                         net,
                                                                                         video.identity_transfer)
                                             logger.info("Accumulation finished. There are no more acceptable global_fragments for training")
-                                            percentage_of_accumulated_images.append(video.ratio_accumulated_images)
+                                            video._percentage_of_accumulated_images.append(video.ratio_accumulated_images)
                                             list_of_fragments.save_light_list(video._accumulation_folder)
                                             if video.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                                                 break
@@ -411,9 +412,9 @@ if __name__ == '__main__':
                                         else:
                                             video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[:-1]
 
-                                    video.accumulation_trial = np.argmax(percentage_of_accumulated_images)
+                                    video.accumulation_trial = np.argmax(video.percentage_of_accumulated_images)
                                     video._first_frame_first_global_fragment = video.first_frame_first_global_fragment[video.accumulation_trial]
-                                    video._ratio_accumulated_images = percentage_of_accumulated_images[video.accumulation_trial]
+                                    video._ratio_accumulated_images = video.percentage_of_accumulated_images[video.accumulation_trial]
                                     list_of_global_fragments.video = video
                                     accumulation_folder_name = 'accumulation_' + str(video.accumulation_trial)
                                     video._accumulation_folder = os.path.join(video.session_folder, accumulation_folder_name)
@@ -490,7 +491,6 @@ if __name__ == '__main__':
                                 #############################################################
                                 video.individual_fragments_stats = list_of_fragments.get_stats(list_of_global_fragments)
                                 video.compute_overall_P2(list_of_fragments.fragments)
-                                print("individual overall_P2 ", video.individual_P2)
                                 print("overall_P2 ", video.overall_P2)
                                 # list_of_fragments.plot_stats(video)
                                 list_of_fragments.save_light_list(video._accumulation_folder)
