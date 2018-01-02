@@ -13,7 +13,7 @@ from get_predictions_crossings import GetPredictionCrossigns
 
 logger = logging.getLogger("__main__.crossing_detector")
 
-def detect_crossings(list_of_blobs, video, model_area, use_network = True):
+def detect_crossings(list_of_blobs, video, model_area, use_network = True, return_store_objects = False):
     logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
     list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0], video.number_of_animals)
     if use_network:
@@ -38,7 +38,9 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True):
                                                                     save_folder = video._crossings_detector_folder,
                                                                     image_size = crossing_image_shape)
         net = ConvNetwork_crossings(crossings_detector_network_params)
-        trainer = TrainDeepCrossing(net, training_set, validation_set, num_epochs = 95, plot_flag = True)
+        trainer = TrainDeepCrossing(net, training_set, validation_set,
+                                    num_epochs = 95, plot_flag = True,
+                                    return_store_objects = return_store_objects)
         if not trainer.model_diverged:
             logger.debug("crossing image size %s" %str(crossing_image_size))
             video.crossing_image_shape = crossing_image_shape
@@ -65,3 +67,5 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True):
                 for blob, prediction in zip(test_set.test, predictions)]
             logger.debug("Freeing memory. Test crossings set deleted")
             test_set = None
+            if return_store_objects:
+                return trainer

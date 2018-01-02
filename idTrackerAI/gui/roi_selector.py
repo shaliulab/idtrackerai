@@ -12,12 +12,6 @@ from kivy.graphics import *
 from kivy.graphics.transformation import Matrix
 from visualise_video import VisualiseVideo
 from kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
-
-import matplotlib
-matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
-from kivy.garden.matplotlib import FigureCanvasKivyAgg
-import matplotlib.pyplot as plt
-import seaborn as sns
 import os
 import sys
 sys.path.append('../')

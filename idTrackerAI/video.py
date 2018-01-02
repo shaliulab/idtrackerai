@@ -15,10 +15,8 @@ from natsort import natsorted
 import cv2
 import time
 import logging
-
 sys.path.append('./utils')
 from py_utils import get_git_revision_hash
-
 from constants import AVAILABLE_VIDEO_EXTENSION, FRAMES_PER_EPISODE
 
 logger = logging.getLogger("__main__.video")

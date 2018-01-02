@@ -26,14 +26,21 @@ import sys
 sys.path.append('../')
 sys.path.append('../utils')
 sys.path.append('../preprocessing')
+sys.path.append('../network')
+sys.path.append('../network/crossings_detector_model')
+sys.path.append('../network/identification_model')
 from segmentation import segmentVideo, segment
 from video_utils import blobExtractor
 import numpy as np
 from scipy.stats import mode
 import cv2
-
 from video import Video
 from list_of_blobs import ListOfBlobs
+from list_of_fragments import ListOfFragments
+from list_of_global_fragments import ListOfGlobalFragments
+from crossing_detector import detect_crossings
+from list_of_fragments import create_list_of_fragments
+from list_of_global_fragments import create_list_of_global_fragments
 
 class PreprocessingPreview(BoxLayout):
     def __init__(self, chosen_video = None,
@@ -66,9 +73,10 @@ class PreprocessingPreview(BoxLayout):
         self.saving_popup = Popup(title='Saving',
             content=CustomLabel(text='wait ...'),
             size_hint=(.3,.3))
+        self.computing_label = CustomLabel(text='This operation can take several minutes')
         self.computing_popup = Popup(title='Computing',
-            content=CustomLabel(text='This operation can take several minutes'),
-            size_hint=(.3,.3))
+            content = self.computing_label,
+            size_hint = (.3,.3))
         self.help_button_preprocessing = HelpButton()
         self.help_button_preprocessing.size_hint = (1.,1.)
         self.help_button_preprocessing.create_help_popup("Preprocessing",\
@@ -155,14 +163,29 @@ class PreprocessingPreview(BoxLayout):
     def show_computing_popup(self, *args):
         self.computing_popup.open()
 
+    def plot_crossing_detection_statistics(self, crossing_detector_trainer):
+        self.computing_popup.dismiss()
+        content = BoxLayout()
+        fig, ax_arr = plt.subplots(3)
+        fig.subplots_adjust(left=0.5, bottom=0.5, right=1, top=1, wspace=None, hspace=0.5)
+        crossing_detector_trainer.store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r', plot_now = False)
+        crossing_detector_trainer.store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b', plot_now = False)
+        plt.tight_layout()
+        crossing_detector_accuracy = FigureCanvasKivyAgg(fig)
+        content.add_widget(crossing_detector_accuracy)
+        self.crossing_detector_accuracy_popup = Popup(title = 'CDC',
+                            content = content,
+                            size_hint = (.8, .8))
+        self.crossing_detector_accuracy_popup.open()
+
     def compute_list_of_blobs(self, *args):
         self.blobs = segment(CHOSEN_VIDEO.video)
         self.list_of_blobs = ListOfBlobs(blobs_in_video = self.blobs)
         CHOSEN_VIDEO.video.create_preprocessing_folder()
-        self.computing_popup.content.text = "Checking consistency of the segmentation ..."
+        self.computing_label = "Checking consistency of the segmentation ..."
         frames_with_more_blobs_than_animals = self.list_of_blobs.check_maximal_number_of_blob(CHOSEN_VIDEO.video.number_of_animals)
         if len(frames_with_more_blobs_than_animals) > 0:
-            self.computing_popup.content.text = "Check your segmentation parameters: " + str(frames_with_more_blobs_than_animals)
+            self.computing_label = "Check your segmentation parameters in frames: " + str(frames_with_more_blobs_than_animals)
             #XXX resegmentation to be implemented
         else:
             CHOSEN_VIDEO.video._has_been_segmented = True
@@ -172,11 +195,50 @@ class PreprocessingPreview(BoxLayout):
                 CHOSEN_VIDEO.video._number_of_frames = self.list_of_blobs.number_of_frames
                 CHOSEN_VIDEO.video.save()
             CHOSEN_VIDEO.video.save()
-            self.computing_popup.content.text = "Saving the list of segmented blobs ..."
+            self.computing_label = "Saving the list of segmented blobs ..."
             self.list_of_blobs.save(CHOSEN_VIDEO.video,
                                     CHOSEN_VIDEO.video.blobs_path_segmented,
                                     number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
-            self.computing_popup.dismiss()
+            self.computing_label = "Discriminating individual and crossing blobs ..."
+            CHOSEN_VIDEO.video._model_area, CHOSEN_VIDEO.video._median_body_length = self.list_of_blobs.compute_model_area_and_body_length(CHOSEN_VIDEO.video.number_of_animals)
+            CHOSEN_VIDEO.video.compute_identification_image_size(CHOSEN_VIDEO.video.median_body_length)
+            if not self.list_of_blobs.blobs_are_connected:
+                self.list_of_blobs.compute_overlapping_between_subsequent_frames()
+            self.computing_label = "Applying model area and training deep crossing detector"
+            crossing_detector_trainer = detect_crossings(self.list_of_blobs, CHOSEN_VIDEO.video,
+                            CHOSEN_VIDEO.video.model_area, use_network = True,
+                            return_store_objects = True)
+            self.plot_crossing_detection_statistics(crossing_detector_trainer)
+            # self.computing_popup.content.text = "Generating collection of fragments and global fragments"
+            # self.list_of_blobs.compute_overlapping_between_subsequent_frames()
+            # self.list_of_blobs.compute_fragment_identifier_and_blob_index(CHOSEN_VIDEO.video.number_of_animals)
+            # self.list_of_blobs.compute_crossing_fragment_identifier()
+            # fragments = create_list_of_fragments(self.list_of_blobs.blobs_in_video,
+            #                                     CHOSEN_VIDEO.video.number_of_animals)
+            # self.list_of_fragments = ListOfFragments(fragments)
+            # CHOSEN_VIDEO.video._fragment_identifier_to_index = self.list_of_fragments.get_fragment_identifier_to_index_list()
+            # global_fragments = create_list_of_global_fragments(self.list_of_blobs.blobs_in_video,
+            #                                                     self.list_of_fragments.fragments,
+            #                                                     CHOSEN_VIDEO.video.number_of_animals)
+            # self.list_of_global_fragments = ListOfGlobalFragments(global_fragments)
+            # CHOSEN_VIDEO.video.number_of_global_fragments = self.list_of_global_fragments.number_of_global_fragments
+            # self.list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
+            # CHOSEN_VIDEO.video.number_of_global_fragments_candidates_for_accumulation = self.list_of_global_fragments.number_of_global_fragments
+            # #XXX I skip the fit of the gamma ...
+            # self.list_of_global_fragments.relink_fragments_to_global_fragments(self.list_of_fragments.fragments)
+            # CHOSEN_VIDEO.video._number_of_unique_images_in_global_fragments = self.list_of_fragments.compute_total_number_of_images_in_global_fragments()
+            # self.list_of_global_fragments.compute_maximum_number_of_images()
+            # CHOSEN_VIDEO.video._maximum_number_of_images_in_global_fragments = self.list_of_global_fragments.maximum_number_of_images
+            # self.list_of_fragments.get_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
+            # self.list_of_fragments.get_not_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
+            # self.list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
+            # self.computing_popup.content.text = "Saving ..."
+            # CHOSEN_VIDEO.video._has_been_preprocessed = True
+            # self.list_of_blobs.save(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path, number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
+            # self.list_of_fragments.save(CHOSEN_VIDEO.video.fragments_path)
+            # self.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, self.list_of_fragments.fragments)
+            # CHOSEN_VIDEO.video.save()
+            # self.computing_popup.dismiss()
 
     def segment(self, *args):
         CHOSEN_VIDEO.video._max_threshold = self.max_threshold_slider.value
@@ -271,6 +333,11 @@ class PreprocessingPreview(BoxLayout):
             self.frame = frame
         if hasattr(self, 'area_bars'):
             self.visualiser.remove_widget(self.area_bars)
+        if not hasattr(CHOSEN_VIDEO.video, 'number_of_channels'):
+            if frame.shape[2] == 1 or (np.any(frame[:,:,1] == frame[:,:,2] ) and np.any(frame[:,:, 0] == frame[:,:,1])):
+                CHOSEN_VIDEO.video._number_of_channels = 1
+            else:
+                raise NotImplementedError("Colour videos has still to be integrated")
         avIntensity = np.float32(np.mean(self.frame))
         self.av_frame = self.frame / avIntensity
         self.segmented_frame = segmentVideo(self.av_frame,
@@ -292,6 +359,7 @@ class PreprocessingPreview(BoxLayout):
         ax.set_xlabel('blob')
         ax.set_ylabel('area')
         ax.set_facecolor((.345, .345, .345))
+        fig.subplots_adjust(left=0.0, bottom=0.0, right=1, top=1, wspace=None, hspace=0.5)
         self.area_bars = FigureCanvasKivyAgg(fig)
         self.area_bars.size_hint = (1., .2)
         self.visualiser.add_widget(self.area_bars)

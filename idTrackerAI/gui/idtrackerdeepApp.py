@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 import kivy
-
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -36,14 +35,7 @@ from roi_selector import ROISelector
 from validator import Validator
 from individual_validator import IndividualValidator
 from visualise_video import VisualiseVideo
-
-import matplotlib
-matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
-from kivy.garden.matplotlib import FigureCanvasKivyAgg
-import matplotlib.pyplot as plt
-import seaborn as sns
 from functools import partial
-
 import os
 import sys
 sys.path.append('../')
@@ -54,7 +46,6 @@ import numpy as np
 import logging.config
 import yaml
 import cv2
-
 from video import Video
 from py_utils import getExistentFiles, get_spaced_colors_util
 from video_utils import computeBkg, blobExtractor

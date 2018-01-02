@@ -119,6 +119,11 @@ class SelectFile(BoxLayout):
             self.init_chosen_video_parameters()
             DEACTIVATE_ROI.setter(False)
             DEACTIVATE_PREPROCESSING.setter(False)
+        elif CHOSEN_VIDEO.processes_to_restore.keys() == ['use_previous_knowledge_transfer_decision']:
+            self.init_chosen_video_parameters()
+            DEACTIVATE_ROI.setter(False)
+            DEACTIVATE_PREPROCESSING.setter(False)
+            #XXX here manage knowlede transfer shit
         elif not CHOSEN_VIDEO.processes_to_restore['preprocessing']:
             self.init_chosen_video_parameters()
             DEACTIVATE_ROI.setter(False)

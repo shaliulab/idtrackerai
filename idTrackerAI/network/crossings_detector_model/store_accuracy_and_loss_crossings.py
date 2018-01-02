@@ -23,7 +23,7 @@ class Store_Accuracy_and_Loss(object):
         self.accuracy.append(accuracy_value)
         self.individual_accuracy.append(individual_accuracy_value)
 
-    def plot(self, axes_handles = None, index = 0, color = 'r'):
+    def plot(self, axes_handles = None, index = 0, color = 'r', plot_now = True):
         ax1 = axes_handles[0]
         ax2 = axes_handles[1]
         ax3 = axes_handles[2]
@@ -43,8 +43,9 @@ class Store_Accuracy_and_Loss(object):
             ax1.set_ylabel('loss')
             ax2.set_ylabel('accuracy')
             ax2.set_xlabel('epochs')
-        plt.draw()
-        plt.pause(1e-8)
+        if plot_now:
+            plt.draw()
+            plt.pause(1e-8)
 
     def save(self):
         np.save(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy'), self.__dict__)

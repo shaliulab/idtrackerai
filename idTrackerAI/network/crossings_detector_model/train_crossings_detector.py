@@ -20,7 +20,8 @@ from epoch_runner_crossings import EpochRunner
 logger = logging.getLogger("__main__.train_crossing_detector")
 
 class TrainDeepCrossing(object):
-    def __init__(self, net, training_dataset, validation_dataset, num_epochs = 50, plot_flag = True):
+    def __init__(self, net, training_dataset, validation_dataset,
+                num_epochs = 50, plot_flag = True, return_store_objects = False):
         """Build the dataset and trains the model
         The dataset is built according to
         Taken from tensorflow/contrib/learn/datasets/mnist.
@@ -30,6 +31,7 @@ class TrainDeepCrossing(object):
         self.num_epochs = num_epochs
         self.plot_flag = plot_flag
         self.net = net
+        self.return_store_objects = return_store_objects
         self.train_model()
 
     def train_model(self, global_step = 0,
@@ -86,3 +88,6 @@ class TrainDeepCrossing(object):
             self.net.save(global_step = global_step)
             if self.plot_flag:
                 fig.savefig(os.path.join(self.net.params.save_folder,'crossing_detector.pdf'))
+            if self.return_store_objects:
+                self.store_training_accuracy_and_loss_data  = store_training_accuracy_and_loss_data
+                self.store_validation_accuracy_and_loss_data = store_validation_accuracy_and_loss_data
