@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import kivy
 from kivy.properties import StringProperty
-from kivy.properties import BooleanProperty
+from kivy.properties import BooleanProperty, NumericProperty
 from kivy.event import EventDispatcher
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
@@ -67,6 +67,7 @@ class Chosen_Video(EventDispatcher):
         except Exception,e:
             print(str(e))
             print("Choose a video to proceed")
+
 
 class Deactivate_Process(EventDispatcher):
     process = BooleanProperty(True)

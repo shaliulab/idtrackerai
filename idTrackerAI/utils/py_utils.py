@@ -277,7 +277,7 @@ def check_and_change_video_path(video,old_video):
     return old_video
 
 def set_load_previous_dict(old_video, processes, existentFile):
-    attributes = ['has_been_preprocessed', 'use_previous_knowledge_transfer_decision',
+    attributes = [ 'use_previous_knowledge_transfer_decision', 'has_been_preprocessed',
                     'first_accumulation_finished',
                     'has_been_pretrained', 'second_accumulation_finished',
                     'has_been_assigned', 'has_duplications_solved',

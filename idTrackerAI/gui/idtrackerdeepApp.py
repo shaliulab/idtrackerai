@@ -28,10 +28,12 @@ from kivy.graphics.transformation import Matrix
 from kivy.clock import Clock
 from kivy.config import Config
 from kivy.uix.filechooser import FileChooserListView
+import sys
 from kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
 from select_file import SelectFile
 from preprocessing_preview import PreprocessingPreview
 from roi_selector import ROISelector
+from tracker import Tracker
 from validator import Validator
 from individual_validator import IndividualValidator
 from visualise_video import VisualiseVideo
@@ -128,9 +130,10 @@ Start kivy classes
 #                 return True
 
 class Root(TabbedPanel):
-    global DEACTIVATE_ROI, DEACTIVATE_PREPROCESSING, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
+    global DEACTIVATE_ROI, DEACTIVATE_PREPROCESSING, DEACTIVATE_TRACKING, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
     DEACTIVATE_ROI = Deactivate_Process()
     DEACTIVATE_PREPROCESSING = Deactivate_Process()
+    DEACTIVATE_TRACKING = Deactivate_Process()
     DEACTIVATE_VALIDATION = Deactivate_Process()
     CHOSEN_VIDEO = Chosen_Video(processes_list = PROCESSES)
 
@@ -140,10 +143,12 @@ class Root(TabbedPanel):
         self.add_welcome_tab()
         self.add_ROI_selection_tab()
         self.add_preprocessing_tab()
+        self.add_tracking_tab()
         self.add_validation_tab()
         self.add_individual_validator_tab()
         DEACTIVATE_ROI.bind(process = self.manage_ROI_selection)
         DEACTIVATE_PREPROCESSING.bind(process = self.manage_preprocessing)
+        DEACTIVATE_TRACKING.bind(process = self.manage_tracking)
         DEACTIVATE_VALIDATION.bind(process = self.manage_validation)
         DEACTIVATE_VALIDATION.bind(process = self.manage_individual_validation)
 
@@ -152,6 +157,7 @@ class Root(TabbedPanel):
         self.select_file = SelectFile(chosen_video = CHOSEN_VIDEO,
                                     deactivate_roi = DEACTIVATE_ROI,
                                     deactivate_preprocessing = DEACTIVATE_PREPROCESSING,
+                                    deactivate_tracking = DEACTIVATE_TRACKING,
                                     deactivate_validation = DEACTIVATE_VALIDATION,
                                     setup_logging = setup_logging)
         self.welcome_tab.add_widget(self.select_file)
@@ -186,12 +192,31 @@ class Root(TabbedPanel):
         self.preprocessing_tab.disabled = DEACTIVATE_PREPROCESSING.process
         if not DEACTIVATE_PREPROCESSING.process:
             self.preprocessor = PreprocessingPreview(chosen_video = CHOSEN_VIDEO,
-                                        deactivate_preprocessing = DEACTIVATE_PREPROCESSING)
+                                        deactivate_preprocessing = DEACTIVATE_PREPROCESSING,
+                                        deactivate_tracking = DEACTIVATE_TRACKING)
             self.preprocessor.id = "preprocessor"
             self.preprocessing_tab.add_widget(self.preprocessor)
         else:
             if hasattr(self, 'preprocessor'):
                 self.preprocessing_tab.clean(self.preprocessor)
+
+    def add_tracking_tab(self):
+        self.tracking_tab = TabbedPanelItem(text = 'Tracking')
+        self.tracking_tab.id = "Tracking"
+        self.tracking_tab.disabled = True
+        self.add_widget(self.tracking_tab)
+
+    def manage_tracking(self, *args):
+        print("from root: ", DEACTIVATE_TRACKING.process)
+        self.tracking_tab.disabled = DEACTIVATE_TRACKING.process
+        if not DEACTIVATE_TRACKING.process:
+            self.tracker = Tracker(chosen_video = CHOSEN_VIDEO,
+                                deactivate_tracking = DEACTIVATE_TRACKING)
+            self.tracker.id = "tracker"
+            self.tracking_tab.add_widget(self.tracker)
+        else:
+            if hasattr(self, 'tracker'):
+                self.tracking_tab.clean(self.tracker)
 
     def add_validation_tab(self):
         self.validation_tab = TabbedPanelItem(text='Global Validation')

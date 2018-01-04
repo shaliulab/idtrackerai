@@ -9,12 +9,18 @@ from kivy.uix.checkbox import CheckBox
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.image import Image
 from kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
-
 import os
 import sys
 sys.path.append('../')
-
+sys.path.append('../utils')
+sys.path.append('../preprocessing')
+sys.path.append('../network')
+sys.path.append('../network/crossings_detector_model')
+sys.path.append('../network/identification_model')
 from video import Video
+from list_of_blobs import ListOfBlobs
+from list_of_fragments import ListOfFragments
+from list_of_global_fragments import ListOfGlobalFragments
 from py_utils import getExistentFiles
 
 class SelectFile(BoxLayout):
@@ -23,14 +29,16 @@ class SelectFile(BoxLayout):
                 chosen_video = None,
                 deactivate_roi = None,
                 deactivate_preprocessing = None,
+                deactivate_tracking = None,
                 deactivate_validation = None,
                 setup_logging = None,
                 **kwargs):
         super(SelectFile,self).__init__(**kwargs)
-        global DEACTIVATE_ROI, DEACTIVATE_PREPROCESSING, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
+        global DEACTIVATE_ROI, DEACTIVATE_PREPROCESSING, DEACTIVATE_TRACKING, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
         CHOSEN_VIDEO = chosen_video
         DEACTIVATE_ROI = deactivate_roi
         DEACTIVATE_PREPROCESSING = deactivate_preprocessing
+        DEACTIVATE_TRACKING = deactivate_tracking
         DEACTIVATE_VALIDATION = deactivate_validation
         DEACTIVATE_VALIDATION.bind(process = self.activate_process)
         self.setup_logging = setup_logging
@@ -128,6 +136,16 @@ class SelectFile(BoxLayout):
             self.init_chosen_video_parameters()
             DEACTIVATE_ROI.setter(False)
             DEACTIVATE_PREPROCESSING.setter(False)
+        elif CHOSEN_VIDEO.processes_to_restore['preprocessing']:
+            path_attributes = ['preprocessing_folder', 'blobs_path', 'global_fragments_path', 'fragments_path']
+            CHOSEN_VIDEO.video.copy_attributes_between_two_video_objects(CHOSEN_VIDEO.old_video, path_attributes)
+            CHOSEN_VIDEO.video._has_been_segmented = True
+            CHOSEN_VIDEO.video._has_been_preprocessed = True
+            CHOSEN_VIDEO.video.save()
+            CHOSEN_VIDEO.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
+            CHOSEN_VIDEO.list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
+            CHOSEN_VIDEO.list_of_global_fragments = ListOfGlobalFragments.load(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
+            DEACTIVATE_TRACKING.setter(False)
         elif CHOSEN_VIDEO.processes_to_restore['assignment'] or CHOSEN_VIDEO.processes_to_restore['correct_duplications']:
             DEACTIVATE_VALIDATION.setter(False)
         self.restore_popup.dismiss()

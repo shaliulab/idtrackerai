@@ -1,8 +1,8 @@
 import os
 import sys
-if 'linux' in sys.platform:
-    import matplotlib
-    matplotlib.use('TkAgg')
+# if 'linux' in sys.platform:
+#     import matplotlib
+#     matplotlib.use('TkAgg')
 
 # from tf_utils import *
 from py_utils import *
