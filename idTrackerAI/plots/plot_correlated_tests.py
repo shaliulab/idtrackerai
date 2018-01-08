@@ -49,23 +49,23 @@ def plot_all_statistics_figure(ax_arr, protocol, total_time, ratio_of_accumulate
                             accuracy, accuracy_in_accumulation,
                             accuracy_after_accumulation,
                             scale_parameter_list, shape_parameter_list):
-    protocol = np.nanmedian(protocol, axis = 3)
-    total_time = np.nanmean(total_time, axis = 3)
-    ratio_of_accumulated_images = np.nanmean(ratio_of_accumulated_images, axis = 3)
-    ratio_of_video_accumulated = np.nanmean(ratio_of_video_accumulated, axis = 3)
-    overall_P2 = np.nanmean(overall_P2, axis = 3)
-    accuracy = np.nanmean(accuracy, axis = 3)
-    accuracy_in_accumulation = np.nanmean(accuracy_in_accumulation, axis = 3)
-    accuracy_after_accumulation = np.nanmean(accuracy_after_accumulation, axis = 3)
+    protocol = np.nanmean(protocol, axis = 2)
+    total_time = np.nanmean(total_time, axis = 2)
+    ratio_of_accumulated_images = np.nanmean(ratio_of_accumulated_images, axis = 2)
+    ratio_of_video_accumulated = np.nanmean(ratio_of_video_accumulated, axis = 2)
+    overall_P2 = np.nanmean(overall_P2, axis = 2)
+    accuracy = np.nanmean(accuracy, axis = 2)
+    accuracy_in_accumulation = np.nanmean(accuracy_in_accumulation, axis = 2)
+    accuracy_after_accumulation = np.nanmean(accuracy_after_accumulation, axis = 2)
 
-    plot_statistics_heatmap(ax_arr[0,0], protocol[i], 'protocol', scale_parameter_list, shape_parameter_list, vmin = 1, vmax = 3)
-    plot_statistics_heatmap(ax_arr[0,1], total_time[i], 'total time', scale_parameter_list, shape_parameter_list)
-    plot_statistics_heatmap(ax_arr[0,2], ratio_of_accumulated_images[i], r'$\%$' + ' accumulated images', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0 )
-    plot_statistics_heatmap(ax_arr[0,3], ratio_of_video_accumulated[i], r'$\%$' + ' video', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
-    plot_statistics_heatmap(ax_arr[1,0], overall_P2[i], 'overall P2', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
-    plot_statistics_heatmap(ax_arr[1,1], accuracy[i], 'accuracy', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
-    plot_statistics_heatmap(ax_arr[1,2], accuracy_in_accumulation[i], 'accuracy in accumulation', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
-    plot_statistics_heatmap(ax_arr[1,3], accuracy_after_accumulation[i], 'accuracy after accumulation', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
+    plot_statistics_heatmap(ax_arr[0,0], protocol, 'protocol', scale_parameter_list, shape_parameter_list, vmin = 1, vmax = 3)
+    plot_statistics_heatmap(ax_arr[0,1], total_time, 'total time', scale_parameter_list, shape_parameter_list)
+    plot_statistics_heatmap(ax_arr[0,2], ratio_of_accumulated_images, r'$\%$' + ' accumulated images', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0 )
+    plot_statistics_heatmap(ax_arr[0,3], ratio_of_video_accumulated, r'$\%$' + ' video', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
+    plot_statistics_heatmap(ax_arr[1,0], overall_P2, 'overall P2', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
+    plot_statistics_heatmap(ax_arr[1,1], accuracy, 'accuracy', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
+    plot_statistics_heatmap(ax_arr[1,2], accuracy_in_accumulation, 'accuracy in accumulation', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
+    plot_statistics_heatmap(ax_arr[1,3], accuracy_after_accumulation, 'accuracy after accumulation', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
 
 def set_properties_all_statistics_figure(ax_arr):
     ax_arr[0,0].set_ylabel('shape\n')
@@ -191,7 +191,9 @@ if __name__ == '__main__':
         print("results_data_frame.pkl loaded \n")
     else:
         print("results_data_frame.pkl does not exist \n")
-    results_data_frame = results_data_frame[results_data_frame.repetition == 1]
+    repetition_to_plot = int(sys.argv[1]) if int(sys.argv[1]) != 0 else None
+    if repetition_to_plot is not None:
+        results_data_frame = results_data_frame[results_data_frame.repetition == repetition_to_plot]
 
     # get tests_data_frame and test to plot
     print("loading tests data frame")
@@ -289,30 +291,35 @@ if __name__ == '__main__':
         # All statistics figure
         fig_statistics, ax_arr = plt.subplots(2,4)
         fig_statistics.suptitle('Group size %i' %group_size)
-        plot_all_statistics_figure(ax_arr, protocol, total_time, ratio_of_accumulated_images,
-                                    ratio_of_video_accumulated, overall_P2,
-                                    accuracy, accuracy_in_accumulation,
-                                    accuracy_after_accumulation,
+        plot_all_statistics_figure(ax_arr, protocol[i], total_time[i], ratio_of_accumulated_images[i],
+                                    ratio_of_video_accumulated[i], overall_P2[i],
+                                    accuracy[i], accuracy_in_accumulation[i],
+                                    accuracy_after_accumulation[i],
                                     scale_parameter_list, shape_parameter_list)
         set_properties_all_statistics_figure(ax_arr)
 
         path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0],
-                                        'group_size_' + str(int(group_size)))
+                                    'group_size_' + str(int(group_size)))
+        if repetition_to_plot is not None:
+            file_name_distributions = 'distributions_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
+            file_name_statistics = 'statistics_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
+        else:
+            file_name_distributions = 'distributions_%i.pdf' %group_size
+            file_name_statistics = 'statistics_%i.pdf' %group_size
         print(path_to_save_figure)
         [fig.set_size_inches((screen_x/100,screen_y/100)) for fig in [fig_distributions, fig_statistics]]
-        fig_distributions.savefig(os.path.join(path_to_save_figure, 'distributions_%i.pdf' %group_size), transparent = True)
-        fig_statistics.savefig(os.path.join(path_to_save_figure, 'statistics_%i.pdf' %group_size), transparent = True)
-
+        fig_distributions.savefig(os.path.join(path_to_save_figure, file_name_distributions), transparent = True)
+        fig_statistics.savefig(os.path.join(path_to_save_figure, file_name_statistics), transparent = True)
 
     ### Compute average over repetitions
-    protocol = np.median(protocol, axis = 3)
-    total_time = np.mean(total_time, axis = 3)
-    ratio_of_accumulated_images = np.mean(ratio_of_accumulated_images, axis = 3)
-    ratio_of_video_accumulated = np.mean(ratio_of_video_accumulated, axis = 3)
-    overall_P2 = np.mean(overall_P2, axis = 3)
-    accuracy = np.mean(accuracy, axis = 3)
-    accuracy_in_accumulation = np.mean(accuracy_in_accumulation, axis = 3)
-    accuracy_after_accumulation = np.mean(accuracy_after_accumulation, axis = 3)
+    protocol = np.nanmedian(protocol, axis = 3)
+    total_time = np.nanmean(total_time, axis = 3)
+    ratio_of_accumulated_images = np.nanmean(ratio_of_accumulated_images, axis = 3)
+    ratio_of_video_accumulated = np.nanmean(ratio_of_video_accumulated, axis = 3)
+    overall_P2 = np.nanmean(overall_P2, axis = 3)
+    accuracy = np.nanmean(accuracy, axis = 3)
+    accuracy_in_accumulation = np.nanmean(accuracy_in_accumulation, axis = 3)
+    accuracy_after_accumulation = np.nanmean(accuracy_after_accumulation, axis = 3)
 
     ### main figure all group_sizes
     # build annotate matrices
@@ -321,50 +328,62 @@ if __name__ == '__main__':
                                                                 accuracy_in_accumulation,
                                                                 ratio_of_video_accumulated,
                                                                 ratio_of_accumulated_images)
-    fig_protocol_accuracy, ax_arr = plt.subplots(2,3)
+
+    fig, ax_arr = plt.subplots(2,3)
     plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
                 wspace=.001, hspace=None)
-    plot_protocol_accuracy_group_sizes(fig_protocol_accuracy, ax_arr,
+    plot_protocol_accuracy_group_sizes(fig, ax_arr,
                                         protocol, accuracy, group_sizes_list,
                                         scale_parameter_list, shape_parameter_list,
                                         'protocol-main', 'accuracy-main',
                                         [1,3], [0,1],
                                         protocol_annotate, accuracy_annotate)
-    fig_protocol_accuracy.set_size_inches((screen_x/100,screen_y/100))
-    set_protocol_accuracy_group_sizes(fig_protocol_accuracy, ax_arr,
+    fig.set_size_inches((screen_x/100,screen_y/100))
+    set_protocol_accuracy_group_sizes(fig, ax_arr,
                                     'protocol', 'accuracy')
+
     path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0])
-    fig_protocol_accuracy.savefig(os.path.join(path_to_save_figure, 'protocol_accuracy.pdf'), transparent = True)
+    if repetition_to_plot is not None:
+        file_name = 'protocol_accuracy_repetition_%i.pdf' %repetition_to_plot
+    else:
+        file_name = 'protocol_accuracy.pdf'
+    fig.savefig(os.path.join(path_to_save_figure, file_name), transparent = True)
 
     ### sm1 figure all group_sizes
-    fig_protocol_accuracy, ax_arr = plt.subplots(2,3)
+    fig, ax_arr = plt.subplots(2,3)
     plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
                 wspace=.001, hspace=None)
-    plot_protocol_accuracy_group_sizes(fig_protocol_accuracy, ax_arr,
+    plot_protocol_accuracy_group_sizes(fig, ax_arr,
                                         ratio_of_video_accumulated, overall_P2, group_sizes_list,
                                         scale_parameter_list, shape_parameter_list,
                                         'percentage of video accumulated', 'overal P2',
                                         [0,1], [0,1])
-    fig_protocol_accuracy.set_size_inches((screen_x/100,screen_y/100))
-    set_protocol_accuracy_group_sizes(fig_protocol_accuracy, ax_arr,
+    fig.set_size_inches((screen_x/100,screen_y/100))
+    set_protocol_accuracy_group_sizes(fig, ax_arr,
                                         'percentage of video accumulated', 'overal P2')
-    path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0])
-    fig_protocol_accuracy.savefig(os.path.join(path_to_save_figure, 'percentage_accumulated_and_P2.pdf'), transparent = True)
+    if repetition_to_plot is not None:
+        file_name = 'percentage_accumulated_and_P2_repetition_%i.pdf' %repetition_to_plot
+    else:
+        file_name = 'percentage_accumulated_and_P2.pdf'
+    fig.savefig(os.path.join(path_to_save_figure, file_name), transparent = True)
 
     ### sm2 figure all group_sizes
-    fig_protocol_accuracy, ax_arr = plt.subplots(2,3)
+    fig, ax_arr = plt.subplots(2,3)
     plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
                 wspace=.001, hspace=None)
-    plot_protocol_accuracy_group_sizes(fig_protocol_accuracy, ax_arr,
+    plot_protocol_accuracy_group_sizes(fig, ax_arr,
                                         accuracy_in_accumulation, accuracy_after_accumulation, group_sizes_list,
                                         scale_parameter_list, shape_parameter_list
                                         , 'accuracy in accumulation', 'accuracy after accumulation',
                                         [0,1], [0,1])
-    fig_protocol_accuracy.set_size_inches((screen_x/100,screen_y/100))
-    set_protocol_accuracy_group_sizes(fig_protocol_accuracy, ax_arr,
+    fig.set_size_inches((screen_x/100,screen_y/100))
+    set_protocol_accuracy_group_sizes(fig, ax_arr,
                                         'accuracy in accumulation', 'accuracy after accumulation')
-    path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0])
-    fig_protocol_accuracy.savefig(os.path.join(path_to_save_figure, 'accuracy_before_and_in_accumulation.pdf'), transparent = True)
+    if repetition_to_plot is not None:
+        file_name = 'accuracy_before_and_in_accumulation_repetition_%i.pdf' %repetition_to_plot
+    else:
+        file_name = 'accuracy_before_and_in_accumulation.pdf'
+    fig.savefig(os.path.join(path_to_save_figure, file_name), transparent = True)
 
 
     plt.show()
