@@ -103,8 +103,8 @@ class PreprocessingPreview(BoxLayout):
             self.min_threshold = 0
             self.min_area = 100
             self.max_area = 1000
-            self.resolution_reduction = 1.
             CHOSEN_VIDEO.video.resolution_reduction = 1.
+            self.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
             if CHOSEN_VIDEO.video._original_ROI is None:
                 CHOSEN_VIDEO.video._original_ROI = np.ones( (CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width), dtype='uint8') * 255
 
@@ -354,9 +354,16 @@ class PreprocessingPreview(BoxLayout):
         self.visualiser = VisualiseVideo(chosen_video = CHOSEN_VIDEO)
         self.add_widget(self.container_layout)
         self.add_widget(self.visualiser)
-        self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.show_preprocessing)
         self.currentSegment = 0
-        self.number_of_detected_blobs = []
+        self.create_areas_figure()
+        self.number_of_detected_blobs = [0]
+        self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.show_preprocessing)
+
+
+    def create_areas_figure(self):
+        self.fig, self.ax = plt.subplots(1)
+        self.fig.subplots_adjust(left=0.0, bottom=0.0, right=1, top=1, wspace=None, hspace=0.5)
+        self.area_bars_width = .5
 
     def show_preprocessing(self, frame):
         if len(frame.shape) > 2:
@@ -384,15 +391,13 @@ class PreprocessingPreview(BoxLayout):
                                                                         int(self.max_area_slider.value))
         if hasattr(self, "number_of_detected_blobs"):
             self.number_of_detected_blobs.append(len(areas))
-        fig, ax = plt.subplots(1)
-        width = .5
-        plt.bar(range(len(areas)), areas, width)
-        plt.axhline(np.mean(areas), color = 'k', linewidth = .2)
-        ax.set_xlabel('blob')
-        ax.set_ylabel('area')
-        ax.set_facecolor((.345, .345, .345))
-        fig.subplots_adjust(left=0.0, bottom=0.0, right=1, top=1, wspace=None, hspace=0.5)
-        self.area_bars = FigureCanvasKivyAgg(fig)
+        self.ax.clear()
+        self.ax.bar(range(len(areas)), areas, self.area_bars_width)
+        self.ax.axhline(np.mean(areas), color = 'k', linewidth = .2)
+        self.ax.set_xlabel('blob')
+        self.ax.set_ylabel('area')
+        self.ax.set_facecolor((.345, .345, .345))
+        self.area_bars = FigureCanvasKivyAgg(self.fig)
         self.area_bars.size_hint = (1., .2)
         self.visualiser.add_widget(self.area_bars)
         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)

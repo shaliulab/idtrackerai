@@ -27,7 +27,7 @@ class Store_Accuracy_and_Loss(object):
         self.accuracy.append(accuracy_value)
         self.individual_accuracy.append(individual_accuracy_value)
 
-    def plot(self, axes_handles = None, index = 0, color = 'r'):
+    def plot(self, axes_handles = None, index = 0, color = 'r', canvas_from_GUI = None):
         ax1 = axes_handles[0]
         ax2 = axes_handles[1]
         ax3 = axes_handles[2]
@@ -47,14 +47,18 @@ class Store_Accuracy_and_Loss(object):
             ax1.set_ylabel('loss')
             ax2.set_ylabel('accuracy')
             ax2.set_xlabel('epochs')
-        plt.draw()
-        plt.pause(1e-8)
+        if canvas_from_GUI is None:
+            plt.draw()
+            plt.pause(1e-8)
+        else:
+            print("I should be printing and not doing it!!!")
+            canvas_from_GUI.draw_idle()
 
-    def plot_global_fragments(self, ax_handles, video, fragments, black = False):
+    def plot_global_fragments(self, ax_handles, video, fragments, black = False, canvas_from_GUI = None):
         import matplotlib.patches as patches
         ax4 = ax_handles[3]
         ax4.cla()
-        colors = get_spaced_colors_util(video._maximum_number_of_blobs, norm=True, black=black)
+        colors = get_spaced_colors_util(video.number_of_animals, norm=True, black=black)
         attribute_to_check = 'used_for_training' if self.scope == 'training' else 'used_for_pretraining'
         for fragment in fragments:
             if getattr(fragment, attribute_to_check) and fragment.is_an_individual:
@@ -74,7 +78,6 @@ class Store_Accuracy_and_Loss(object):
                         alpha = 1.
                     )
                 )
-
         ax4.axis('tight')
         ax4.set_xlabel('Frame number')
         ax4.set_ylabel('Blob index')

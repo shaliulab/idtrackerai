@@ -19,7 +19,10 @@ def accumulate(accumulation_manager,
                 video,
                 global_step,
                 net,
-                identity_transfer):
+                identity_transfer,
+                GUI_axes = None,
+                canvas_from_GUI = None,
+                plot_flag = False):
     video.init_accumulation_statistics_attributes()
     accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
 
@@ -44,11 +47,12 @@ def accumulate(accumulation_manager,
                                                         check_for_loss_plateau = True,
                                                         save_summaries = True,
                                                         print_flag = False,
-                                                        plot_flag = False,
+                                                        plot_flag = plot_flag,
                                                         global_step = global_step,
                                                         identity_transfer = identity_transfer,
-                                                        accumulation_manager = accumulation_manager)
-
+                                                        accumulation_manager = accumulation_manager,
+                                                        GUI_axes = GUI_axes,
+                                                        canvas_from_GUI = canvas_from_GUI)
         # update the set of images used for training
         logger.info("Update images and labels used for training")
         accumulation_manager.update_used_images_and_labels()

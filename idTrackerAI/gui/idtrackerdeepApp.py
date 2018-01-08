@@ -1,4 +1,6 @@
 from __future__ import absolute_import, division, print_function
+import matplotlib
+matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 import kivy
 from kivy.app import App
 from kivy.core.window import Window
@@ -265,10 +267,13 @@ class Root(TabbedPanel):
         if value.content.id == 'preprocessor':
             if not self.preprocessor.has_been_executed:
                 self.preprocessor.do()
+        if value.content.id == "tracker":
+            self.tracker.do()
         if value.content.id == "validator":
             self.validator.do()
         if value.content.id == "individual_validator":
             self.individual_validator.do()
+
 
     def on_switch(self, header):
         super(Root, self). switch_to(header)

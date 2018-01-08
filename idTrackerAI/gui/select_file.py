@@ -111,7 +111,9 @@ class SelectFile(BoxLayout):
             else:
                 checkbox = BoxLayout(size_hint = (.1, 1))
                 process_container.add_widget(checkbox)
-            checkbox_label = Label(text = process.replace("_", " "), size_hint = (.9, 1))
+            checkbox_label = Label(id = process,
+                                text = process.replace("_", " "),
+                                size_hint = (.9, 1))
             process_container.add_widget(checkbox_label)
             self.restore_popup_container.add_widget(process_container)
 
@@ -122,6 +124,7 @@ class SelectFile(BoxLayout):
     def get_processes_to_restore(self, *args):
         CHOSEN_VIDEO.processes_to_restore = {checkbox.group: checkbox.active for checkbox
                                         in self.processes_checkboxes}
+
 
         if CHOSEN_VIDEO.processes_to_restore is None or CHOSEN_VIDEO.processes_to_restore == {}:
             self.init_chosen_video_parameters()
@@ -137,8 +140,25 @@ class SelectFile(BoxLayout):
             DEACTIVATE_ROI.setter(False)
             DEACTIVATE_PREPROCESSING.setter(False)
         elif CHOSEN_VIDEO.processes_to_restore['preprocessing']:
-            path_attributes = ['preprocessing_folder', 'blobs_path', 'global_fragments_path', 'fragments_path']
+            path_attributes = ['preprocessing_folder', 'blobs_path',
+                                'global_fragments_path', 'fragments_path',
+                                'apply_ROI','subtract_bkg',
+                                'resolution_reduction',
+                                'maximum_number_of_blobs',
+                                'number_of_channels', 'median_body_length',
+                                'model_area', 'identification_image_size',
+                                'blobs_path_segmented',
+                                'min_threshold','max_threshold',
+                                'min_area','max_area',
+                                'resize', 'number_of_animals',
+                                'original_ROI', 'original_bkg', 'ROI',
+                                'width', 'height', 'bkg',
+                                'preprocessing_folder',
+                                'fragment_identifier_to_index',
+                                'number_of_unique_images_in_global_fragments',
+                                'maximum_number_of_images_in_global_fragments']
             CHOSEN_VIDEO.video.copy_attributes_between_two_video_objects(CHOSEN_VIDEO.old_video, path_attributes)
+            CHOSEN_VIDEO.video._has_preprocessing_parameters = True
             CHOSEN_VIDEO.video._has_been_segmented = True
             CHOSEN_VIDEO.video._has_been_preprocessed = True
             CHOSEN_VIDEO.video.save()
