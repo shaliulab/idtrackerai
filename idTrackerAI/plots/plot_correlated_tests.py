@@ -4,6 +4,7 @@ import sys
 sys.path.append('../')
 sys.path.append('./utils')
 sys.path.append('./library')
+sys.path.append('./network/identification_model')
 
 import numpy as np
 import collections
@@ -17,6 +18,9 @@ from scipy import stats
 
 from py_utils import get_spaced_colors_util
 from library_utils import LibraryJobConfig
+from video import Video
+from globalfragment import GlobalFragment
+from list_of_global_fragments import ListOfGlobalFragments
 
 def pdf2logpdf(pdf):
     def logpdf(x):
@@ -31,7 +35,7 @@ def plot_statistics_heatmap(ax, matrix, title, xticklabels, yticklabels, vmax = 
     elif title == 'protocol':
         fmt = '.0f'
     else:
-        fmt = '.4f'
+        fmt = '.2f'
     ax = sns.heatmap(matrix,
                         ax = ax,
                         fmt = fmt,
@@ -51,21 +55,21 @@ def plot_all_statistics_figure(ax_arr, protocol, total_time, ratio_of_accumulate
                             scale_parameter_list, shape_parameter_list):
     protocol = np.nanmean(protocol, axis = 2)
     total_time = np.nanmean(total_time, axis = 2)
-    ratio_of_accumulated_images = np.nanmean(ratio_of_accumulated_images, axis = 2)
-    ratio_of_video_accumulated = np.nanmean(ratio_of_video_accumulated, axis = 2)
-    overall_P2 = np.nanmean(overall_P2, axis = 2)
-    accuracy = np.nanmean(accuracy, axis = 2)
-    accuracy_in_accumulation = np.nanmean(accuracy_in_accumulation, axis = 2)
-    accuracy_after_accumulation = np.nanmean(accuracy_after_accumulation, axis = 2)
+    ratio_of_accumulated_images = np.nanmean(ratio_of_accumulated_images, axis = 2)*100
+    ratio_of_video_accumulated = np.nanmean(ratio_of_video_accumulated, axis = 2)*100
+    overall_P2 = np.nanmean(overall_P2, axis = 2)*100
+    accuracy = np.nanmean(accuracy, axis = 2)*100
+    accuracy_in_accumulation = np.nanmean(accuracy_in_accumulation, axis = 2)*100
+    accuracy_after_accumulation = np.nanmean(accuracy_after_accumulation, axis = 2)*100
 
     plot_statistics_heatmap(ax_arr[0,0], protocol, 'protocol', scale_parameter_list, shape_parameter_list, vmin = 1, vmax = 3)
     plot_statistics_heatmap(ax_arr[0,1], total_time, 'total time', scale_parameter_list, shape_parameter_list)
-    plot_statistics_heatmap(ax_arr[0,2], ratio_of_accumulated_images, r'$\%$' + ' accumulated images', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0 )
-    plot_statistics_heatmap(ax_arr[0,3], ratio_of_video_accumulated, r'$\%$' + ' video', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
-    plot_statistics_heatmap(ax_arr[1,0], overall_P2, 'overall P2', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
-    plot_statistics_heatmap(ax_arr[1,1], accuracy, 'accuracy', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
-    plot_statistics_heatmap(ax_arr[1,2], accuracy_in_accumulation, 'accuracy in accumulation', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
-    plot_statistics_heatmap(ax_arr[1,3], accuracy_after_accumulation, 'accuracy after accumulation', scale_parameter_list, shape_parameter_list, vmax = 1, vmin = 0)
+    plot_statistics_heatmap(ax_arr[0,2], ratio_of_accumulated_images, r'$\%$' + ' accumulated images', scale_parameter_list, shape_parameter_list, vmax = 100, vmin = 0 )
+    plot_statistics_heatmap(ax_arr[0,3], ratio_of_video_accumulated, r'$\%$' + ' video', scale_parameter_list, shape_parameter_list, vmax = 100, vmin = 0)
+    plot_statistics_heatmap(ax_arr[1,0], overall_P2, 'overall P2', scale_parameter_list, shape_parameter_list, vmax = 100, vmin = 0)
+    plot_statistics_heatmap(ax_arr[1,1], accuracy, 'accuracy', scale_parameter_list, shape_parameter_list, vmax = 100, vmin = 0)
+    plot_statistics_heatmap(ax_arr[1,2], accuracy_in_accumulation, 'accuracy in accumulation', scale_parameter_list, shape_parameter_list, vmax = 100, vmin = 0)
+    plot_statistics_heatmap(ax_arr[1,3], accuracy_after_accumulation, 'accuracy after accumulation', scale_parameter_list, shape_parameter_list, vmax = 100, vmin = 0)
 
 def set_properties_all_statistics_figure(ax_arr):
     ax_arr[0,0].set_ylabel('shape\n')
@@ -90,19 +94,20 @@ def build_annotate_matrices(protocol, accuracy, accuracy_in_accumulation,
     for group_size in range(protocol.shape[0]):
         for row in range(protocol.shape[1]):
             for column in range(protocol.shape[2]):
-                if ratio_of_accumulated_images[group_size, row, column] >= .9:
+                if ratio_of_accumulated_images[group_size, row, column] >= 90:
                     protocol_annotate[group_size, row, column] = '%.0f' %protocol[group_size, row, column]
-                    accuracy_annotate[group_size, row, column] = '%.4f' %accuracy[group_size, row, column]
+                    accuracy_annotate[group_size, row, column] = '%.2f' %accuracy[group_size, row, column]
                 else:
-                    protocol_annotate[group_size, row, column] = '%.0f \n(%.1f)' %(protocol[group_size, row, column], 100*ratio_of_video_accumulated[group_size, row, column])
-                    accuracy_annotate[group_size, row, column] = '%.3f' %accuracy_in_accumulation[group_size, row, column]
+                    protocol_annotate[group_size, row, column] = '%.0f ' %protocol[group_size, row, column]
+                    accuracy_annotate[group_size, row, column] = '%.2f \n(%.2f)' %(accuracy_in_accumulation[group_size, row, column],
+                                                                                    ratio_of_video_accumulated[group_size, row, column])
                     # accuracy_annotate[group_size, row, column] = '%.4f \n(%.3f)' %(accuracy[group_size, row, column], accuracy_in_accumulation[group_size, row, column])
                     accuracy[group_size, row, column] = accuracy_in_accumulation[group_size, row, column]
 
 
     return protocol, accuracy, protocol_annotate, accuracy_annotate
 
-def plot_protocol_accuracy_group_sizes(fig_protocol_accuracy, ax_arr, stats1, stats2,
+def plot_pair_of_statistics_per_group_sizes(fig_protocol_accuracy, ax_arr, stats1, stats2,
                                         group_sizes_list, scale_parameter_list, shape_parameter_list,
                                         title1, title2,
                                         min_max_1, min_max_2,
@@ -176,11 +181,44 @@ def plot_histogram_individual_fragments(ax, number_of_images_in_individual_fragm
     ax.set_xlim((np.log10(MIN), np.log10(MAX)))
     ax.set_xticks([1,2,3])
     ax.set_xticklabels([10,100,1000])
-    ax.text(2.25, 1.15, th_title, horizontalalignment = 'center')
-    ax.text(2.25, 1.0, title, horizontalalignment = 'center')
+    ax.text(2.25, 1., th_title, horizontalalignment = 'center')
+    ax.text(2.25, 0.85, title, horizontalalignment = 'center')
     ax.set_ylim((0,1.3))
     if shape_parameter == 0.05 and scale_parameter == 100:
         ax.legend(loc = 7)
+    sns.despine(ax = ax)
+
+def plot_histogram_first_global_fragment_distribution(ax, list_of_global_fragments, video, scale_parameter, shape_parameter, accuracy, protocol):
+    list_of_global_fragments.order_by_distance_travelled()
+    global_fragment_for_accumulation = int(video.accumulation_folder[-1])
+    if global_fragment_for_accumulation > 0:
+        global_fragment_for_accumulation -= 1
+
+    number_of_images_in_fragments = list_of_global_fragments.global_fragments[global_fragment_for_accumulation].number_of_images_per_individual_fragment
+    MIN = 1
+    MAX = 10000
+    logbins = np.linspace(np.log10(MIN), np.log10(MAX), 25)
+    ax.hist(np.log10(number_of_images_in_fragments), bins = logbins, normed = False)
+
+    if k == len(shape_parameter_list)-1:
+        ax.set_xlabel('number of frames \n\nscale = %.2f' %scale_parameter)
+    if j == 0:
+        ax.set_ylabel('shape = %.2f \n\nnumber of fragments' %shape_parameter)
+    title_protocol_accuracy = 'Acc = %.2f, Protocol = %i' %(accuracy * 100, protocol)
+    mean = np.mean(number_of_images_in_fragments)
+    sigma = np.std(number_of_images_in_fragments)
+    title_mean = r'$\mu$ = %.2f, $\sigma$ = %.2f' %(mean, sigma)
+    ax.set_xlim((np.log10(MIN), np.log10(MAX)))
+    ax.set_xticks([0,1,2,3])
+    ax.set_xticklabels([1,10,100,1000])
+    ax.text(1, np.ceil(ax.get_ylim()[1]*.95), title_protocol_accuracy, horizontalalignment = 'left')
+    ax.text(1, np.floor(ax.get_ylim()[1]*.8), title_mean, horizontalalignment = 'left')
+    sns.despine(ax = ax)
+
+def create_gamma_grid_figure(results_data_frame, share_x = True, share_y = True):
+    fig_distributions, ax_arr = plt.subplots(len(results_data_frame.loc[:,'scale_parameter'].unique()), len(results_data_frame.loc[:,'shape_parameter'].unique()),
+                                sharex = share_x, sharey = share_y)
+    return fig_distributions, ax_arr
 
 if __name__ == '__main__':
 
@@ -224,12 +262,11 @@ if __name__ == '__main__':
     window = plt.get_current_fig_manager().window
     screen_y = window.winfo_screenheight()
     screen_x = window.winfo_screenwidth()
-    # sns.set_style("white")
+    sns.set_style("ticks")
     for i, group_size in enumerate(group_sizes_list):
         print("***group_size ", group_size)
-        fig_distributions, ax_arr = plt.subplots(len(results_data_frame.loc[:,'scale_parameter'].unique()), len(results_data_frame.loc[:,'shape_parameter'].unique()),
-                                    sharex = True, sharey = True)
-        fig_distributions.suptitle('Group size %i' %group_size)
+        fig_distributions, ax_arr = create_gamma_grid_figure(results_data_frame)
+        fig_gf, ax_arr_gf = create_gamma_grid_figure(results_data_frame)
         for j, scale_parameter in enumerate(scale_parameter_list):
             if scale_parameter % 1 == 0:
                 scale_parameter = int(scale_parameter)
@@ -254,6 +291,12 @@ if __name__ == '__main__':
                         video_object_found = False
                         print("video object not found")
 
+                    try:
+                        list_of_global_fragments = np.load(video.global_fragments_path).item()
+                        list_of_global_fragments_found = True
+                    except:
+                        list_of_global_fragments_found = False
+
                     ### Create accuracy matrix
                     results_data_frame_rep = results_data_frame.query('group_size == @group_size' +
                                                                 ' & frames_in_video == @frames_in_video' +
@@ -263,15 +306,6 @@ if __name__ == '__main__':
                     if results_data_frame_rep.protocol.item() is None:
                         video_object_found = False
                         print("Algorithm did not finish")
-                    ### Plot distributions
-                    if repetition == 1:
-                        try:
-                            nbins = 25
-                            number_of_images_in_individual_fragments = results_data_frame_rep['individual_fragments_lengths'].item()
-                            ax = ax_arr[k,j]
-                            plot_histogram_individual_fragments(ax, number_of_images_in_individual_fragments, scale_parameter, shape_parameter)
-                        except:
-                            number_of_images_in_individual_fragments = np.nan
 
                     ### Get statistics
                     if len(results_data_frame_rep) != 0:
@@ -288,9 +322,36 @@ if __name__ == '__main__':
                         accuracy_in_accumulation[i,k,j,l] = results_data_frame_rep.accuracy_in_accumulation.item() if video_object_found else None
                         accuracy_after_accumulation[i,k,j,l] = results_data_frame_rep.accuracy_after_accumulation.item() if video_object_found else None
 
+                    if l == 0:
+                        ### Plot distributions
+                        try:
+                            nbins = 25
+                            number_of_images_in_individual_fragments = results_data_frame_rep['individual_fragments_lengths'].item()
+                            ax = ax_arr[k,j]
+                            plot_histogram_individual_fragments(ax, number_of_images_in_individual_fragments, scale_parameter, shape_parameter)
+                            fig_distributions.suptitle('Gamma distributions: Group size %i - repetition %i' %(group_size, repetition))
+                        except:
+                            number_of_images_in_individual_fragments = np.nan
+                        ### Plot global fragments in 3 first global fragments
+                        ax = ax_arr_gf[k,j]
+                        fig_gf.suptitle("First global fragment distribution: Group size %i - repetition %i" %(group_size, repetition))
+                        if list_of_global_fragments_found and video_object_found:
+                            plot_histogram_first_global_fragment_distribution(ax, list_of_global_fragments, video,
+                                                                                scale_parameter, shape_parameter,
+                                                                                accuracy[i,k,j,l], protocol[i,k,j,l])
+                        else:
+                            if k == len(shape_parameter_list)-1:
+                                ax.set_xlabel('number of frames \n\nscale = %.2f' %scale_parameter)
+                            if j == 0:
+                                ax.set_ylabel('shape = %.2f \n\nnumber of fragments' %shape_parameter)
+
+
         # All statistics figure
         fig_statistics, ax_arr = plt.subplots(2,4)
-        fig_statistics.suptitle('Group size %i' %group_size)
+        if repetition_to_plot is not None:
+            fig_statistics.suptitle('Statistics: Group size %i - repetition %i' %(group_size, repetition_to_plot))
+        else:
+            fig_statistics.suptitle('Statistics: Group size %i' %group_size)
         plot_all_statistics_figure(ax_arr, protocol[i], total_time[i], ratio_of_accumulated_images[i],
                                     ratio_of_video_accumulated[i], overall_P2[i],
                                     accuracy[i], accuracy_in_accumulation[i],
@@ -298,29 +359,32 @@ if __name__ == '__main__':
                                     scale_parameter_list, shape_parameter_list)
         set_properties_all_statistics_figure(ax_arr)
 
+        # saving figures
         path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0],
                                     'group_size_' + str(int(group_size)))
         if repetition_to_plot is not None:
-            file_name_distributions = 'distributions_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
+            file_name_gamma_distributions = 'gamma_distributions_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
             file_name_statistics = 'statistics_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
+            file_name_first_global_fragment_distribution = '1sGF_distribution_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
         else:
-            file_name_distributions = 'distributions_%i.pdf' %group_size
+            file_name_gamma_distributions = 'distributions_%i.pdf' %group_size
             file_name_statistics = 'statistics_%i.pdf' %group_size
+            file_name_first_global_fragment_distribution = '1sGF_distribution_%i.pdf' %group_size
         print(path_to_save_figure)
-        [fig.set_size_inches((screen_x/100,screen_y/100)) for fig in [fig_distributions, fig_statistics]]
-        fig_distributions.savefig(os.path.join(path_to_save_figure, file_name_distributions), transparent = True)
+        [fig.set_size_inches((screen_x/100,screen_y/100)) for fig in [fig_distributions, fig_statistics, fig_gf]]
+        fig_distributions.savefig(os.path.join(path_to_save_figure, file_name_gamma_distributions), transparent = True)
         fig_statistics.savefig(os.path.join(path_to_save_figure, file_name_statistics), transparent = True)
+        fig_gf.savefig(os.path.join(path_to_save_figure, file_name_first_global_fragment_distribution), transparent = True)
 
     ### Compute average over repetitions
-    protocol = np.nanmedian(protocol, axis = 3)
-    total_time = np.nanmean(total_time, axis = 3)
-    ratio_of_accumulated_images = np.nanmean(ratio_of_accumulated_images, axis = 3)
-    ratio_of_video_accumulated = np.nanmean(ratio_of_video_accumulated, axis = 3)
-    overall_P2 = np.nanmean(overall_P2, axis = 3)
-    accuracy = np.nanmean(accuracy, axis = 3)
-    accuracy_in_accumulation = np.nanmean(accuracy_in_accumulation, axis = 3)
-    accuracy_after_accumulation = np.nanmean(accuracy_after_accumulation, axis = 3)
-
+    protocol = np.nanmean(protocol, axis = 3)
+    total_time = np.nanmean(total_time, axis = 3)*100
+    ratio_of_accumulated_images = np.nanmean(ratio_of_accumulated_images, axis = 3)*100
+    ratio_of_video_accumulated = np.nanmean(ratio_of_video_accumulated, axis = 3)*100
+    overall_P2 = np.nanmean(overall_P2, axis = 3)*100
+    accuracy = np.nanmean(accuracy, axis = 3)*100
+    accuracy_in_accumulation = np.nanmean(accuracy_in_accumulation, axis = 3)*100
+    accuracy_after_accumulation = np.nanmean(accuracy_after_accumulation, axis = 3)*100
     ### main figure all group_sizes
     # build annotate matrices
     protocol, accuracy, \
@@ -328,15 +392,14 @@ if __name__ == '__main__':
                                                                 accuracy_in_accumulation,
                                                                 ratio_of_video_accumulated,
                                                                 ratio_of_accumulated_images)
-
     fig, ax_arr = plt.subplots(2,3)
     plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
                 wspace=.001, hspace=None)
-    plot_protocol_accuracy_group_sizes(fig, ax_arr,
+    plot_pair_of_statistics_per_group_sizes(fig, ax_arr,
                                         protocol, accuracy, group_sizes_list,
                                         scale_parameter_list, shape_parameter_list,
                                         'protocol-main', 'accuracy-main',
-                                        [1,3], [0,1],
+                                        [1,3], [0,100],
                                         protocol_annotate, accuracy_annotate)
     fig.set_size_inches((screen_x/100,screen_y/100))
     set_protocol_accuracy_group_sizes(fig, ax_arr,
@@ -353,11 +416,11 @@ if __name__ == '__main__':
     fig, ax_arr = plt.subplots(2,3)
     plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
                 wspace=.001, hspace=None)
-    plot_protocol_accuracy_group_sizes(fig, ax_arr,
+    plot_pair_of_statistics_per_group_sizes(fig, ax_arr,
                                         ratio_of_video_accumulated, overall_P2, group_sizes_list,
                                         scale_parameter_list, shape_parameter_list,
                                         'percentage of video accumulated', 'overal P2',
-                                        [0,1], [0,1])
+                                        [0,100], [0,100])
     fig.set_size_inches((screen_x/100,screen_y/100))
     set_protocol_accuracy_group_sizes(fig, ax_arr,
                                         'percentage of video accumulated', 'overal P2')
@@ -371,14 +434,14 @@ if __name__ == '__main__':
     fig, ax_arr = plt.subplots(2,3)
     plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
                 wspace=.001, hspace=None)
-    plot_protocol_accuracy_group_sizes(fig, ax_arr,
+    plot_pair_of_statistics_per_group_sizes(fig, ax_arr,
                                         accuracy_in_accumulation, accuracy_after_accumulation, group_sizes_list,
                                         scale_parameter_list, shape_parameter_list
-                                        , 'accuracy in accumulation', 'accuracy after accumulation',
-                                        [0,1], [0,1])
+                                        , 'accuracy in accumulation', 'accuracy in assignment',
+                                        [0,100], [0,100])
     fig.set_size_inches((screen_x/100,screen_y/100))
     set_protocol_accuracy_group_sizes(fig, ax_arr,
-                                        'accuracy in accumulation', 'accuracy after accumulation')
+                                        'accuracy in accumulation', 'accuracy in assignment')
     if repetition_to_plot is not None:
         file_name = 'accuracy_before_and_in_accumulation_repetition_%i.pdf' %repetition_to_plot
     else:
