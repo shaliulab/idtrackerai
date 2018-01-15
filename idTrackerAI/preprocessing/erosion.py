@@ -56,7 +56,7 @@ def get_eroded_blobs(video, blobs_in_frame):
 
     segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
     bounding_boxes, miniframes, centroids, \
-    areas, pixels, contours, estimated_body_lengths = blobExtractor(segmented_eroded_frame, segmented_eroded_frame, video.min_area*.7, np.inf)
+    areas, pixels, contours, estimated_body_lengths = blobExtractor(segmented_eroded_frame, segmented_eroded_frame, video.min_area*.55, np.inf)
     return [Blob(centroid,
                 contour,
                 area,
@@ -73,7 +73,6 @@ def get_new_blobs_in_frame_after_erosion(video, blobs_in_frame, eroded_blobs_in_
 
     for blob in blobs_in_frame:
         new_blobs = get_eroded_blobs_with_pixels_in_original_blob(video, blob, eroded_blobs_in_frame)
-        print('new_blobs_in_frame ', len(new_blobs))
         new_blobs_in_frame.extend(new_blobs)
 
     return new_blobs_in_frame
