@@ -394,14 +394,14 @@ class IndividualValidator(BoxLayout):
         if modified_blob.is_an_individual_in_a_fragment:
             current = modified_blob
 
-            while current.next[0].is_an_individual_in_a_fragment:
+            while len(current.next) == 1 and current.next[0].fragment_identifier == modified_blob.fragment_identifier:
                 current.next[0]._user_generated_identity = current.user_generated_identity
                 current = current.next[0]
                 count_future_corrections += 1
 
             current = modified_blob
 
-            while current.previous[0].is_an_individual_in_a_fragment:
+            while len(current.previous) == 1 and current.previous[0].fragment_identifier == modified_blob.fragment_identifier:
                 current.previous[0]._user_generated_identity = current.user_generated_identity
                 current = current.previous[0]
                 count_past_corrections += 1
