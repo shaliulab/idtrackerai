@@ -25,6 +25,7 @@ sys.path.append('../utils')
 sys.path.append('../groundtruth_utils')
 import numpy as np
 import cv2
+from pprint import pprint
 
 from video import Video
 from py_utils import getExistentFiles, get_spaced_colors_util
@@ -338,7 +339,7 @@ class IndividualValidator(BoxLayout):
                     int_centroid = np.asarray(blob.centroid).astype('int')
                     cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
                     cv2.putText(frame, cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
-                    if blob.is_a_crossing or blob.identity_corrected_closing_gaps is not None:
+                    if blob.is_a_crossing or blob.identity_corrected_closing_gaps is not None or blob.assigned_identity == 0:
                         bounding_box = blob.bounding_box_in_frame_coordinates
                         if hasattr(blob, 'rect_color'):
                             rect_color = blob.rect_color
@@ -649,15 +650,13 @@ class IndividualValidator(BoxLayout):
         self.groundtruth.save()
 
     def plot_groundtruth_statistics(self):
-        blobs_in_video_groundtruth = [blob for blob in self.groundtruth.individual_blobs_in_video
+        individual_blobs_in_video_groundtruth = [blob for blob in self.groundtruth.individual_blobs_in_video
                                         if (blob.frame_number >= self.groundtruth.start
                                         or blob.frame_number <= self.groundtruth.end)]
         blobs_in_video = self.blobs_in_video[self.groundtruth.start:self.groundtruth.end]
-        individual_blobs_in_video = [blob for blobs_in_frame in blobs_in_video
-                                    for blob in blobs_in_frame
-                                    if isinstance(blob.assigned_identity, int) and blob.assigned_identity == self.individual_to_follow
-                                    or isinstance(blob.assigned_identity, list) and blob.assigned_identity in self.individual_to_follow]
-        comparison_info = get_individual_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, blobs_in_video_groundtruth)
+        comparison_info = get_individual_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, individual_blobs_in_video_groundtruth)
+        comparison_info['number_of_occluded_frames'] = self.groundtruth.end - self.groundtruth.start - len(individual_blobs_in_video_groundtruth)
+        pprint(comparison_info)
         self.frames_with_errors = comparison_info['frames_with_errors']
         self.mistaken_identities = comparison_info['mistaken_identities']
         self.accuracy = comparison_info['accuracy']
@@ -665,9 +664,9 @@ class IndividualValidator(BoxLayout):
         self.statistics_popup.open()
         comparison_info['start-end'] = (self.groundtruth.start, self.groundtruth.end)
         if not hasattr(CHOSEN_VIDEO.video, 'individual_groundtruths'):
-            CHOSEN_VIDEO.video.indiviudal_groundtruth = [comparison_info]
+            CHOSEN_VIDEO.video.individual_groundtruths = [comparison_info]
         else:
-            CHOSEN_VIDEO.video.indiviudal_groundtruth.append(comparison_info)
+            CHOSEN_VIDEO.video.individual_groundtruths.append(comparison_info)
         CHOSEN_VIDEO.video.save()
 
     def compute_and_save_session_accuracy_wrt_groundtruth_APP(self, *args):

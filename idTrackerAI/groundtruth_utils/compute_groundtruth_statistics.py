@@ -116,6 +116,8 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
     results['frames_with_crossing_errors'] = []
     results['fragment_identifiers_with_crossing_errors'] = []
     results['frames_with_zeros_in_groundtruth'] = []
+    results['number_of_crossing_fragments'] = 0
+    results['fragments_identifiers_of_crossings'] = []
 
     for groundtruth_blobs_in_frame, blobs_in_frame in zip(blobs_in_video_groundtruth, blobs_in_video):
 
@@ -154,6 +156,9 @@ def compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groun
                             results['fragment_identifiers_with_identity_errors'].append(blob.fragment_identifier)
 
             elif groundtruth_blob.is_a_crossing or gt_identity == -1:
+                if blob.fragment_identifier not in results['fragments_identifiers_of_crossings']:
+                    results['fragments_identifiers_of_crossings'].append(blob.fragment_identifier)
+                    results['number_of_crossing_fragments'] += 1
                 results['number_of_crossing_blobs'] += 1
                 results['number_of_crossings_blobs_assigned_as_individuals'] += 1 if blob.is_an_individual else 0
                 if blob.is_an_individual:
@@ -231,6 +236,8 @@ def get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_vid
             accuracies['crossing_detector_accuracy'] = None
 
         pprint(accuracies)
+        pprint("number of crossing fragments in ground truth interval: %i" %results['number_of_crossing_fragments'])
+        pprint("number of crossing blobs in ground truth interval: %i" %results['number_of_crossing_blobs'])
 
         return accuracies, results
 
