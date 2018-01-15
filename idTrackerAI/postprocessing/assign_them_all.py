@@ -140,7 +140,7 @@ def find_the_individual_gap_interval(blobs_in_video, possible_identities, identi
     gap_start = a_frame_in_the_gap
     frame_number = gap_start
 
-    while identity_is_missing and frame_number > 0:
+    while identity_is_missing and frame_number > 0 and frame_number < len(blobs_in_video) :
         blobs_in_frame = blobs_in_video[frame_number]
         occluded_identities_in_frame = list_of_occluded_identities[frame_number]
         missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame)
@@ -155,7 +155,7 @@ def find_the_individual_gap_interval(blobs_in_video, possible_identities, identi
     frame_number = a_frame_in_the_gap
     gap_end = a_frame_in_the_gap
 
-    while identity_is_missing and frame_number < len(blobs_in_video):
+    while identity_is_missing and frame_number > 0 and frame_number < len(blobs_in_video):
         blobs_in_frame = blobs_in_video[frame_number]
         occluded_identities_in_frame = list_of_occluded_identities[frame_number]
         missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame)
