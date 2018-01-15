@@ -34,6 +34,7 @@ from list_of_global_fragments import ListOfGlobalFragments,\
                                         create_list_of_global_fragments
 from global_fragments_statistics import compute_and_plot_fragments_statistics
 from segmentation import segment, resegment
+from erosion import compute_erosion_disk
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview,\
                     resegmentation_preview, selectPreprocParams, selectDir, \
                     check_resolution_reduction
@@ -240,6 +241,10 @@ if __name__ == '__main__':
             video._has_been_segmented = True
             logger.debug("Segmented blobs loaded")
         video.save()
+
+        if True:
+            video._erosion_kernel_size = compute_erosion_disk(video, list_of_blobs.blobs_in_video)
+            list_of_blobs.erode(video)
 
         logger.info("Computing a model of the area of the individuals")
         video._model_area, video._median_body_length = list_of_blobs.compute_model_area_and_body_length(video.number_of_animals)

@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from blob import Blob
 from model_area import ModelArea
+from erosion import get_eroded_blobs, get_new_blobs_in_frame_after_erosion
 
 logger = logging.getLogger("__main__.list_of_blobs")
 
@@ -191,3 +192,10 @@ class ListOfBlobs(object):
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
                 blob.get_nose_and_head_coordinates()
+
+    def erode(self, video):
+        for frame_number, blobs_in_frame in enumerate(self.blobs_in_video):
+            eroded_blobs_in_frame = get_eroded_blobs(video, blobs_in_frame)
+            print('len eroded_blobs ', len(eroded_blobs_in_frame), ' len original blobs ', len(blobs_in_frame))
+            if len(eroded_blobs_in_frame) <= video.number_of_animals:
+                self.blobs_in_video[frame_number] = get_new_blobs_in_frame_after_erosion(video, blobs_in_frame, eroded_blobs_in_frame)

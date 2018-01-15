@@ -17,23 +17,7 @@ from list_of_fragments import ListOfFragments
 from blob import Blob
 from list_of_blobs import ListOfBlobs
 
-def set_individual_with_identity_0_as_crossings(list_of_blobs_no_gaps):
-    [(setattr(blob, '_is_an_individual', False),
-        setattr(blob, '_is_a_crossing', True),
-        setattr(blob, '_identity', None),
-        setattr(blob, '_identity_corrected_solving_duplications', None))
-        for blobs_in_frame in list_of_blobs_no_gaps.blobs_in_video
-        for blob in blobs_in_frame
-        if blob.assigned_identity == 0]
-
-def flatten(l):
-    for el in l:
-        if isinstance(el, collections.Iterable) and not isinstance(el, basestring):
-            for sub in flatten(el):
-                yield sub
-        else:
-            yield el
-
+''' erosion '''
 def compute_erosion_disk(video, blobs_in_video):
     return np.ceil(np.nanmedian([compute_min_frame_distance_transform(video, blobs_in_frame)
                     for blobs_in_frame in blobs_in_video if len(blobs_in_frame) > 0])).astype(np.int)
@@ -59,6 +43,42 @@ def compute_max_distance_transform(video, blob):
     temp_image = generate_temp_image(video, blob.pixels, blob.bounding_box_in_frame_coordinates)
     return np.max(cv2.distanceTransform(temp_image, cv2.cv.CV_DIST_L2, cv2.cv.CV_DIST_MASK_PRECISE))
 
+def erode(image, kernel_size):
+    kernel = np.ones(kernel_size, np.uint8)
+    return cv2.erode(image,kernel,iterations = 1)
+
+def get_eroded_blobs(video, blobs_in_frame):
+    segmented_frame = np.zeros((video.height, video.width)).astype('uint8')
+
+    for blob in blobs_in_frame:
+        pixels = blob.eroded_pixels if hasattr(blob,'eroded_pixels') else blob.pixels
+        pxs = np.array(np.unravel_index(pixels,(video.height, video.width))).T
+        segmented_frame[pxs[:,0], pxs[:,1]] = 255
+
+    segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
+    boundingBoxes, _, centroids, _, pixels_all, contours, _ = blobExtractor(segmented_eroded_frame, segmented_eroded_frame, 0, np.inf)
+    return [Blob(centroid, contour, None, bounding_box, pixels = pixels)
+                for centroid, contour, pixels, bounding_box in zip(centroids, contours, pixels_all, boundingBoxes)]
+
+''' assign them all '''
+
+def set_individual_with_identity_0_as_crossings(list_of_blobs_no_gaps):
+    [(setattr(blob, '_is_an_individual', False),
+        setattr(blob, '_is_a_crossing', True),
+        setattr(blob, '_identity', None),
+        setattr(blob, '_identity_corrected_solving_duplications', None))
+        for blobs_in_frame in list_of_blobs_no_gaps.blobs_in_video
+        for blob in blobs_in_frame
+        if blob.assigned_identity == 0]
+
+def flatten(l):
+    for el in l:
+        if isinstance(el, collections.Iterable) and not isinstance(el, basestring):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el
+
 def find_the_gap_interval(blobs_in_video, possible_identities, gap_start, list_of_occluded_identities):
     there_are_missing_identities = True
     frame_number = gap_start + 1
@@ -76,10 +96,6 @@ def find_the_gap_interval(blobs_in_video, possible_identities, gap_start, list_o
     else:
         gap_end = gap_start
     return (gap_start, gap_end)
-
-def erode(image, kernel_size):
-    kernel = np.ones(kernel_size, np.uint8)
-    return cv2.erode(image,kernel,iterations = 1)
 
 def get_blob_by_identity(blobs_in_frame, identity):
     for blob in blobs_in_frame:
@@ -193,19 +209,6 @@ def get_previous_and_next_blob_wrt_gap(blobs_in_video, possible_identities, iden
 
     return individual_gap_interval, previous_blob_to_the_gap, next_blob_to_the_gap
 
-def get_eroded_blobs(video, blobs_in_frame):
-    segmented_frame = np.zeros((video.height, video.width)).astype('uint8')
-
-    for blob in blobs_in_frame:
-        pixels = blob.eroded_pixels if hasattr(blob,'eroded_pixels') else blob.pixels
-        pxs = np.array(np.unravel_index(pixels,(video.height, video.width))).T
-        segmented_frame[pxs[:,0], pxs[:,1]] = 255
-
-    segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
-    boundingBoxes, _, centroids, _, pixels_all, contours, _ = blobExtractor(segmented_eroded_frame, segmented_eroded_frame, 0, np.inf)
-    return [Blob(centroid, contour, None, bounding_box, pixels = pixels)
-                for centroid, contour, pixels, bounding_box in zip(centroids, contours, pixels_all, boundingBoxes)]
-
 def get_closest_contour_point_to(contour, candidate_centroid):
     return tuple(contour[np.argmin(cdist([candidate_centroid], np.squeeze(contour)))][0])
 
@@ -228,11 +231,6 @@ def plot_blob_and_centroid(video, blob, centroid):
     cv2.imshow("segmented_eroded_frame %i " %blob.frame_number, segmented_eroded_frame)
     cv2.waitKey()
 
-def centroid_is_inside_of_any_eroded_blob(candidate_eroded_blobs, candidate_centroid):
-    candidate_centroid = tuple([int(centroid_coordinate) for centroid_coordinate in candidate_centroid])
-    return [blob for blob in candidate_eroded_blobs
-            if cv2.pointPolygonTest(blob.contour, candidate_centroid, False) >= 0]
-
 def get_nearest_eroded_blob_to_candidate_centroid(eroded_blobs, candidate_centroid, identity, inner_frame_number):
     eroded_blob_index = np.argmin([blob.distance_from_countour_to(candidate_centroid) for blob in eroded_blobs])
     return eroded_blobs[eroded_blob_index]
@@ -244,6 +242,11 @@ def nearest_candidate_blob_is_near_enough(video, candidate_blob, candidate_centr
 
 def eroded_blob_overlaps_with_blob_in_border_frame(eroded_blob, blob_in_border_frame):
     return eroded_blob.overlaps_with(blob_in_border_frame)
+
+def centroid_is_inside_of_any_eroded_blob(candidate_eroded_blobs, candidate_centroid):
+    candidate_centroid = tuple([int(centroid_coordinate) for centroid_coordinate in candidate_centroid])
+    return [blob for blob in candidate_eroded_blobs
+            if cv2.pointPolygonTest(blob.contour, candidate_centroid, False) >= 0]
 
 def evaluate_candidate_blobs_and_centroid(video, candidate_eroded_blobs, candidate_centroid, blob_in_border_frame, blobs_in_frame = None, inner_frame_number = None, identity = None):
     blob_containing_candidate_centroid = centroid_is_inside_of_any_eroded_blob(candidate_eroded_blobs, candidate_centroid)
