@@ -230,18 +230,19 @@ class IndividualValidator(BoxLayout):
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
 
-        frame_index = int(self.visualiser.video_slider.value)
-        if keycode[1] == 'left':
-            frame_index -= 1
-        elif keycode[1] == 'right':
-            frame_index += 1
-        elif keycode[1] == 'up':
-            frame_index = self.go_to_crossing(direction = 'next')
-        elif keycode[1] == 'down':
-            frame_index = self.go_to_crossing(direction = 'previous')
-        if frame_index is not None:
-            self.visualiser.video_slider.value = frame_index
-            self.visualiser.visualise(frame_index, func = self.writeIds)
+        if hasattr(self.visualiser, 'video_slider'):
+            frame_index = int(self.visualiser.video_slider.value)
+            if keycode[1] == 'left':
+                frame_index -= 1
+            elif keycode[1] == 'right':
+                frame_index += 1
+            elif keycode[1] == 'up':
+                frame_index = self.go_to_crossing(direction = 'next')
+            elif keycode[1] == 'down':
+                frame_index = self.go_to_crossing(direction = 'previous')
+            if frame_index is not None:
+                self.visualiser.video_slider.value = frame_index
+                self.visualiser.visualise(frame_index, func = self.writeIds)
         return True
 
     @staticmethod

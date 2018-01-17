@@ -68,7 +68,6 @@ class Chosen_Video(EventDispatcher):
             print(str(e))
             print("Choose a video to proceed")
 
-
 class Deactivate_Process(EventDispatcher):
     process = BooleanProperty(True)
 
@@ -84,14 +83,13 @@ class Deactivate_Process(EventDispatcher):
         print("modifying validation to ", value)
         return value
 
-
 class CustomLabel(Label):
-    def __init__(self, font_size = 16, text = '', **kwargs):
+    def __init__(self, font_size = 16, text = '', halign = None, **kwargs):
         super(CustomLabel,self).__init__(**kwargs)
         self.text = text
         self.bind(size=lambda s, w: s.setter('text_size')(s, w))
         self.text_size = self.size
         self.size = self.texture_size
         self.font_size = font_size
-        self.halign = "center"
+        self.halign = "center" if halign is None else halign
         self.valign = "middle"

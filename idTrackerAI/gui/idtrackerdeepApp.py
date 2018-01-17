@@ -4,6 +4,7 @@ matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 import kivy
 from kivy.app import App
 from kivy.core.window import Window
+from kivy.logger import Logger
 from kivy.lang import Builder
 from kivy.properties import StringProperty
 from kivy.properties import BooleanProperty
@@ -78,7 +79,7 @@ Init variables
 """
 PROCESSES = ['use_previous_knowledge_transfer_decision', 'preprocessing',
             'first_accumulation', 'pretraining', 'second_accumulation',
-            'assignment', 'solving_duplications', 'crossings', 'trajectories',
+            'assignment', 'solving_duplications', 'trajectories', 'crossings',
             'trajectories_wo_gaps']
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
 RESTORE_CRITERION = 'last'
@@ -117,19 +118,6 @@ def setup_logging(
 """
 Start kivy classes
 """
-
-# class Accumulator(BoxLayout):
-#     def __init__(self, **kwargs):
-#         super(Accumulator, self).__init__(**kwargs)
-#         global CHOSEN_VIDEO
-#         CHOSEN_VIDEO.bind(chosen=self.do)
-#
-#     def do(self, *args):
-#         if hasattr(CHOSEN_VIDEO.video, "video_path") and CHOSEN_VIDEO.video.video_path is not None:
-#             if CHOSEN_VIDEO.video.has_been_assigned == True or  CHOSEN_VIDEO.old_video.has_been_assigned == True:
-#                 return False
-#             else:
-#                 return True
 
 class Root(TabbedPanel):
     global DEACTIVATE_ROI, DEACTIVATE_PREPROCESSING, DEACTIVATE_TRACKING, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
@@ -213,7 +201,8 @@ class Root(TabbedPanel):
         self.tracking_tab.disabled = DEACTIVATE_TRACKING.process
         if not DEACTIVATE_TRACKING.process:
             self.tracker = Tracker(chosen_video = CHOSEN_VIDEO,
-                                deactivate_tracking = DEACTIVATE_TRACKING)
+                                deactivate_tracking = DEACTIVATE_TRACKING,
+                                deactivate_validation = DEACTIVATE_VALIDATION)
             self.tracker.id = "tracker"
             self.tracking_tab.add_widget(self.tracker)
         else:
@@ -232,6 +221,7 @@ class Root(TabbedPanel):
         if not DEACTIVATE_VALIDATION.process:
             self.validator = Validator(chosen_video = CHOSEN_VIDEO,
                                         deactivate_validation = DEACTIVATE_VALIDATION)
+            self.tracker.go_to_validation_button.bind(on_release = partial(self.switch, self.tab_list[1]))
             self.validator.id = "validator"
             self.validation_tab.add_widget(self.validator)
         else:
@@ -274,11 +264,15 @@ class Root(TabbedPanel):
         if value.content.id == "individual_validator":
             self.individual_validator.do()
 
-
     def on_switch(self, header):
         super(Root, self). switch_to(header)
         print('switch_to, content is ', header.content)
         self.cur_content = header.content
+
+    def switch(self, tab, *args):
+        self.tracker.this_is_the_end_popup.dismiss()
+        self.switch_to(tab)
+
 
 class MainWindow(BoxLayout):
     pass
@@ -287,7 +281,6 @@ class idtrackerdeepApp(App):
     Config.set('kivy', 'keyboard_mode', '')
     Config.set('graphics', 'fullscreen', '0')
     Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
-
     Config.write()
     def build(self):
         return MainWindow()

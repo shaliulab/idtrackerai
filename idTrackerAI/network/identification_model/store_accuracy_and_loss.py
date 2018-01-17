@@ -27,43 +27,73 @@ class Store_Accuracy_and_Loss(object):
         self.accuracy.append(accuracy_value)
         self.individual_accuracy.append(individual_accuracy_value)
 
-    def plot(self, axes_handles = None, index = 0, color = 'r', canvas_from_GUI = None):
-        ax1 = axes_handles[0]
-        ax2 = axes_handles[1]
-        ax3 = axes_handles[2]
-        ax1.plot(range(index,len(self.loss)), self.loss[index:], color,label=self.name)
-        ax2.plot(range(index,len(self.loss)),self.accuracy[index:], color,label=self.name)
-        width = 0.35
-        numAnimals = len(self.individual_accuracy[-1])
-        if self.name == 'training':
-            ind = np.arange(numAnimals)+1-width
-        elif self.name == 'validation':
-            ind = np.arange(numAnimals)+1
-        ax3.bar(ind, self.individual_accuracy[-1], width, color=color, alpha=0.4,label=self.name)
-        ax3.set_xlabel('individual')
-        ax3.set_ylabel('Individual accuracy')
-        if index == 0:
-            ax1.legend()
-            ax1.set_ylabel('loss')
-            ax2.set_ylabel('accuracy')
-            ax2.set_xlabel('epochs')
+    def plot(self, axes_handles = None, index = 0, color = 'r', canvas_from_GUI = None, legend_font_color = None):
+        if canvas_from_GUI is not None:
+            ax1 = axes_handles[0]
+            ax2 = axes_handles[1]
+            ax1.plot(range(index,len(self.loss)),self.accuracy[index:], color,label=self.name)
+            width = 0.35
+            numAnimals = len(self.individual_accuracy[-1])
+            if self.name == 'training':
+                ind = np.arange(numAnimals) + 1 - width
+            elif self.name == 'validation':
+                ind = np.arange(numAnimals) + 1
+
+            ax2.bar(ind, self.individual_accuracy[-1], width, color=color, alpha=0.4,label=self.name)
+            ax2.set_xlabel('individual')
+            ax2.set_ylabel('Individual accuracy')
+            if index == 0:
+                legend = ax1.legend()
+                if legend_font_color is not None:
+                    for text in legend.get_texts():
+                        text.set_color(legend_font_color)
+                ax1.set_ylabel('accuracy')
+        else:
+            ax1 = axes_handles[0]
+            ax2 = axes_handles[1]
+            ax3 = axes_handles[2]
+            ax1.plot(range(index,len(self.loss)), self.loss[index:], color,label=self.name)
+            ax2.plot(range(index,len(self.loss)),self.accuracy[index:], color,label=self.name)
+            width = 0.35
+            numAnimals = len(self.individual_accuracy[-1])
+            if self.name == 'training':
+                ind = np.arange(numAnimals)+1-width
+            elif self.name == 'validation':
+                ind = np.arange(numAnimals)+1
+            ax3.bar(ind, self.individual_accuracy[-1], width, color=color, alpha=0.4,label=self.name)
+            ax3.set_xlabel('individual')
+            ax3.set_ylabel('Individual accuracy')
+            if index == 0:
+                legend = ax1.legend()
+                if legend_font_color is not None:
+                    for text in legend.get_texts():
+                        text.set_color(legend_font_color)
+                ax1.set_ylabel('loss')
+                ax2.set_ylabel('accuracy')
+                ax2.set_xlabel('epochs')
         if canvas_from_GUI is None:
             plt.draw()
             plt.pause(1e-8)
         else:
-            print("I should be printing and not doing it!!!")
-            canvas_from_GUI.draw_idle()
+            canvas_from_GUI.draw()
 
     def plot_global_fragments(self, ax_handles, video, fragments, black = False, canvas_from_GUI = None):
         import matplotlib.patches as patches
-        ax4 = ax_handles[3]
-        ax4.cla()
+        if canvas_from_GUI is not None:
+            ax4 = ax_handles[2]
+            ax4.cla()
+        else:
+            ax4 = ax_handles[3]
+            ax4.cla()
         colors = get_spaced_colors_util(video.number_of_animals, norm=True, black=black)
         attribute_to_check = 'used_for_training' if self.scope == 'training' else 'used_for_pretraining'
+
         for fragment in fragments:
             if getattr(fragment, attribute_to_check) and fragment.is_an_individual:
                 if fragment.final_identity is not None:
                     blob_index = fragment.final_identity - 1
+                elif self.scope == 'pretraining':
+                    blob_index = fragment.blob_hierarchy_in_starting_frame
                 else:
                     blob_index = fragment.temporary_id
                 (start, end) = fragment.start_end

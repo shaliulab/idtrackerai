@@ -32,9 +32,7 @@ def train(video,
             global_step = 0,
             identity_transfer = False,
             accumulation_manager = None,
-            batch_size = BATCH_SIZE_IDCNN,
-            GUI_axes = None,
-            canvas_from_GUI = None):
+            batch_size = BATCH_SIZE_IDCNN):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
     logger.info("Training...")
@@ -43,14 +41,12 @@ def train(video,
     print("-----------------------")
     print("store_training_accuracy_and_loss_data", store_training_accuracy_and_loss_data.__dict__.keys())
     print("store_validation_accuracy_and_loss_data", store_validation_accuracy_and_loss_data.__dict__.keys())
-    if plot_flag and GUI_axes is None:
+    if plot_flag:
         plt.ion()
         fig, ax_arr = plt.subplots(4)
         fig.canvas.set_window_title('Accumulation ' + str(video.accumulation_trial) + '-' + str(video.accumulation_step))
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
-    elif plot_flag and GUI_axes is not None:
-        ax_arr = GUI_axes
-    # Instantiate data_set
+    # Instantiate data set
     training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images, labels)
     # Convert labels to one hot vectors
     training_dataset.convert_labels_to_one_hot()
@@ -101,19 +97,15 @@ def train(video,
         logger.info("Accumulation step completed. Updating global fragments used for training")
         accumulation_manager.update_fragments_used_for_training()
         # plot if asked
-        if plot_flag and GUI_axes is None:
+        if plot_flag:
             store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, fragments, black = False)
             store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r')
             store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b')
-        elif plot_flag and GUI_axes is not None:
-            store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, fragments, black = False, canvas_from_GUI = canvas_from_GUI)
-            store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r', canvas_from_GUI = canvas_from_GUI)
-            store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b', canvas_from_GUI = canvas_from_GUI)
         # store training and validation losses and accuracies
         if store_accuracy_and_error:
             store_training_accuracy_and_loss_data.save(trainer._epochs_completed)
             store_validation_accuracy_and_loss_data.save(trainer._epochs_completed)
-        if plot_flag and GUI_axes is None:
+        if plot_flag:
             fig.savefig(os.path.join(net.params.save_folder,'Accumulation-' + str(video.accumulation_trial) + '-' + str(video.accumulation_step) + '.pdf'))
         net.save()
         return global_step, net, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data
