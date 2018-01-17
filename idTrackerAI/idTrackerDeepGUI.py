@@ -242,7 +242,7 @@ if __name__ == '__main__':
             logger.debug("Segmented blobs loaded")
         video.save()
 
-        if True:
+        if False:
             video._erosion_kernel_size = compute_erosion_disk(video, list_of_blobs.blobs_in_video)
             list_of_blobs.erode(video)
 
