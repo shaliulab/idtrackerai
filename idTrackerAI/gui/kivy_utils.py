@@ -74,13 +74,14 @@ class Deactivate_Process(EventDispatcher):
     def __init__(self, **kwargs):
         super(Deactivate_Process,self).__init__(**kwargs)
         self.process = True
+        self.restored = ''
         self.bind(process = self.on_modified)
 
     def setter(self, new_value):
         self.process = new_value
 
     def on_modified(self, instance, value):
-        print("modifying validation to ", value)
+        print("modifying to ", value)
         return value
 
 class CustomLabel(Label):

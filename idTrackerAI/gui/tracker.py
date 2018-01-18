@@ -436,6 +436,8 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO.video.compute_overall_P2(CHOSEN_VIDEO.list_of_fragments.fragments)
         CHOSEN_VIDEO.list_of_fragments.save_light_list(CHOSEN_VIDEO.video._accumulation_folder)
         CHOSEN_VIDEO.video.save()
+        if not hasattr(CHOSEN_VIDEO, 'list_of_blobs'):
+            CHOSEN_VIDEO.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.old_video.blobs_path)
         CHOSEN_VIDEO.list_of_blobs.update_from_list_of_fragments(CHOSEN_VIDEO.list_of_fragments.fragments,
                                                     CHOSEN_VIDEO.video.fragment_identifier_to_index)
         # if False:
@@ -458,19 +460,15 @@ class Tracker(BoxLayout):
         self.interpolate_crossings_popup.open()
 
     def interpolate_crossings(self, *args):
-        if 'crossings' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['crossings']:
-            CHOSEN_VIDEO.video.copy_attributes_between_two_video_objects(CHOSEN_VIDEO.old_video, ['blobs_no_gaps_path'], [False])
-            CHOSEN_VIDEO.list_of_blobs_no_gaps = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
-        else:
-            CHOSEN_VIDEO.list_of_blobs_no_gaps = copy.deepcopy(CHOSEN_VIDEO.list_of_blobs)
-            if not hasattr(CHOSEN_VIDEO.list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
-                Logger.debug("adding attribute was_a_crossing to every blob")
-                [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
-                    CHOSEN_VIDEO.list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
-            CHOSEN_VIDEO.video._has_crossings_solved = False
-            CHOSEN_VIDEO.list_of_blobs_no_gaps = close_trajectories_gaps(CHOSEN_VIDEO.video, CHOSEN_VIDEO.list_of_blobs_no_gaps, CHOSEN_VIDEO.list_of_fragments)
-            CHOSEN_VIDEO.video.blobs_no_gaps_path = os.path.join(os.path.split(CHOSEN_VIDEO.video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
-            CHOSEN_VIDEO.list_of_blobs_no_gaps.save(CHOSEN_VIDEO.video, path_to_save = CHOSEN_VIDEO.video.blobs_no_gaps_path, number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
+        CHOSEN_VIDEO.list_of_blobs_no_gaps = copy.deepcopy(CHOSEN_VIDEO.list_of_blobs)
+        if not hasattr(CHOSEN_VIDEO.list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
+            Logger.debug("adding attribute was_a_crossing to every blob")
+            [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
+                CHOSEN_VIDEO.list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
+        CHOSEN_VIDEO.video._has_crossings_solved = False
+        CHOSEN_VIDEO.list_of_blobs_no_gaps = close_trajectories_gaps(CHOSEN_VIDEO.video, CHOSEN_VIDEO.list_of_blobs_no_gaps, CHOSEN_VIDEO.list_of_fragments)
+        CHOSEN_VIDEO.video.blobs_no_gaps_path = os.path.join(os.path.split(CHOSEN_VIDEO.video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
+        CHOSEN_VIDEO.list_of_blobs_no_gaps.save(CHOSEN_VIDEO.video, path_to_save = CHOSEN_VIDEO.video.blobs_no_gaps_path, number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
         CHOSEN_VIDEO.video._has_crossings_solved = True
         CHOSEN_VIDEO.video.save()
         self.interpolate_crossings_popup.dismiss()
@@ -491,6 +489,7 @@ class Tracker(BoxLayout):
         if not hasattr(CHOSEN_VIDEO.video, 'overall_P2'):
             CHOSEN_VIDEO.video.compute_overall_P2(CHOSEN_VIDEO.list_of_fragments.fragments)
         self.create_happy_ending_popup(CHOSEN_VIDEO.video.overall_P2)
+        CHOSEN_VIDEO.video.save()
         self.this_is_the_end_popup.open()
         DEACTIVATE_VALIDATION.setter(False)
 

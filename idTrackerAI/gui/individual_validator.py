@@ -108,9 +108,10 @@ class IndividualValidator(BoxLayout):
         try:
             if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
                 CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
-            if  CHOSEN_VIDEO.processes_to_restore is not None\
+            if  CHOSEN_VIDEO.video.has_trajectories or\
+                (CHOSEN_VIDEO.processes_to_restore is not None\
                 and 'crossings' in CHOSEN_VIDEO.processes_to_restore\
-                and CHOSEN_VIDEO.processes_to_restore['crossings']:
+                and CHOSEN_VIDEO.processes_to_restore['crossings']):
                 self.create_choose_list_of_blobs_popup()
                 self.lob_btn1.bind(on_press = self.show_loading_text)
                 self.lob_btn2.bind(on_press = self.show_loading_text)
@@ -131,7 +132,6 @@ class IndividualValidator(BoxLayout):
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print(exc_type, fname, exc_tb.tb_lineno)
             self.warning_popup.open()
-
 
     def create_choose_individual_popup(self):
         self.choose_individual_container = BoxLayout(orientation = "vertical")

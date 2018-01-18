@@ -149,9 +149,21 @@ class Root(TabbedPanel):
                                     deactivate_preprocessing = DEACTIVATE_PREPROCESSING,
                                     deactivate_tracking = DEACTIVATE_TRACKING,
                                     deactivate_validation = DEACTIVATE_VALIDATION,
-                                    setup_logging = setup_logging)
+                                    setup_logging = setup_logging,
+                                    go_to_bind = self.welcome_go_to_bind)
         self.welcome_tab.add_widget(self.select_file)
         self.add_widget(self.welcome_tab)
+
+    def welcome_go_to_bind(self):
+        self.select_file.restoring_label.text = "Click on the active button to proceed"
+        activators = [DEACTIVATE_ROI, DEACTIVATE_PREPROCESSING,
+                    DEACTIVATE_TRACKING, DEACTIVATE_VALIDATION,
+                    DEACTIVATE_VALIDATION]
+        [(self.select_file.go_to_buttons_box.add_widget(btn),
+            setattr(btn, 'disabled', activators[i].process),
+            setattr(btn, 'text', btn.text + '\n' + str(activators[i].restored)),
+            btn.bind(on_release = partial(self.switch, self.tab_list[-(i + 2) ])))
+            for i, btn in enumerate(self.select_file.restore_btns)]
 
     def add_ROI_selection_tab(self):
         self.ROI_selection_tab = TabbedPanelItem(text = 'ROI selection')
@@ -160,7 +172,7 @@ class Root(TabbedPanel):
         self.add_widget(self.ROI_selection_tab)
 
     def manage_ROI_selection(self, *args):
-        print("from root: ", DEACTIVATE_ROI.process)
+        print("from root ROI: ", DEACTIVATE_ROI.process)
         self.ROI_selection_tab.disabled = DEACTIVATE_ROI.process
         if not DEACTIVATE_ROI.process:
             self.roi_selector = ROISelector(chosen_video = CHOSEN_VIDEO,
@@ -178,7 +190,7 @@ class Root(TabbedPanel):
         self.add_widget(self.preprocessing_tab)
 
     def manage_preprocessing(self, *args):
-        print("from root: ", DEACTIVATE_PREPROCESSING.process)
+        print("from root preprocessing: ", DEACTIVATE_PREPROCESSING.process)
         self.preprocessing_tab.disabled = DEACTIVATE_PREPROCESSING.process
         if not DEACTIVATE_PREPROCESSING.process:
             self.preprocessor = PreprocessingPreview(chosen_video = CHOSEN_VIDEO,
@@ -197,7 +209,7 @@ class Root(TabbedPanel):
         self.add_widget(self.tracking_tab)
 
     def manage_tracking(self, *args):
-        print("from root: ", DEACTIVATE_TRACKING.process)
+        print("from root tracker: ", DEACTIVATE_TRACKING.process)
         self.tracking_tab.disabled = DEACTIVATE_TRACKING.process
         if not DEACTIVATE_TRACKING.process:
             self.tracker = Tracker(chosen_video = CHOSEN_VIDEO,
@@ -216,7 +228,7 @@ class Root(TabbedPanel):
         self.add_widget(self.validation_tab)
 
     def manage_validation(self, *args):
-        print("from root: ", DEACTIVATE_VALIDATION.process)
+        print("from root global validation: ", DEACTIVATE_VALIDATION.process)
         self.validation_tab.disabled = DEACTIVATE_VALIDATION.process
         if not DEACTIVATE_VALIDATION.process:
             self.validator = Validator(chosen_video = CHOSEN_VIDEO,
@@ -235,7 +247,7 @@ class Root(TabbedPanel):
         self.add_widget(self.individual_validation_tab)
 
     def manage_individual_validation(self, *args):
-        print("from root: ", DEACTIVATE_VALIDATION.process)
+        print("from root individual validation: ", DEACTIVATE_VALIDATION.process)
         self.individual_validation_tab.disabled = DEACTIVATE_VALIDATION.process
         if not DEACTIVATE_VALIDATION.process:
             self.individual_validator = IndividualValidator(chosen_video = CHOSEN_VIDEO,
@@ -264,13 +276,11 @@ class Root(TabbedPanel):
         if value.content.id == "individual_validator":
             self.individual_validator.do()
 
-    def on_switch(self, header):
-        super(Root, self). switch_to(header)
-        print('switch_to, content is ', header.content)
-        self.cur_content = header.content
-
     def switch(self, tab, *args):
-        self.tracker.this_is_the_end_popup.dismiss()
+        if hasattr(self.tracker, 'this_is_the_end_popup'):
+            self.tracker.this_is_the_end_popup.dismiss()
+        if hasattr(self.select_file, 'restoring_popup'):
+            self.select_file.restoring_popup.dismiss()
         self.switch_to(tab)
 
 

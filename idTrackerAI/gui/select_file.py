@@ -32,6 +32,7 @@ class SelectFile(BoxLayout):
                 deactivate_tracking = None,
                 deactivate_validation = None,
                 setup_logging = None,
+                go_to_bind = None,
                 **kwargs):
         super(SelectFile,self).__init__(**kwargs)
         global DEACTIVATE_ROI, DEACTIVATE_PREPROCESSING, DEACTIVATE_TRACKING, DEACTIVATE_VALIDATION, CHOSEN_VIDEO
@@ -42,6 +43,7 @@ class SelectFile(BoxLayout):
         DEACTIVATE_VALIDATION = deactivate_validation
         DEACTIVATE_VALIDATION.bind(process = self.activate_process)
         self.setup_logging = setup_logging
+        self.go_to_bind = go_to_bind
         self.update ='You did not select a video yet'
         self.main_layout = BoxLayout()
         self.main_layout.orientation = "vertical"
@@ -79,6 +81,7 @@ class SelectFile(BoxLayout):
             CHOSEN_VIDEO.set_chosen_item(self.filechooser.selection[0])
             if CHOSEN_VIDEO.video.video_path is not None:
                 self.create_welcome_popup()
+                self.create_restoring_popup()
                 self.session_name_input.bind(on_text_validate = self.on_enter_session_folder)
                 self.welcome_popup.open()
         except Exception,e:
@@ -119,12 +122,27 @@ class SelectFile(BoxLayout):
 
         self.restore_button = Button(text = "Restore selected processes")
         self.restore_popup_container.add_widget(self.restore_button)
-        self.restore_button.bind(on_press = self.get_processes_to_restore)
+        self.restore_button.bind(on_release = self.get_processes_to_restore)
+        self.restore_button.bind(on_press = self.show_restoring_popup)
+
+    def create_restoring_popup(self):
+        self.restoring_content = BoxLayout(orientation = "vertical")
+        self.restoring_label = CustomLabel(text = "Wait: Loading selected processes ...")
+        tabs_titles = ['ROI selection', 'Preprocessing', 'Tracking', 'Global\nvalidation', 'Individual\nvalidation']
+        self.restore_btns = [Button(text = process) for process in tabs_titles ]
+        self.go_to_buttons_box = BoxLayout(size_hint = (1.,1.))
+        self.restoring_content.add_widget(self.restoring_label)
+        self.restoring_content.add_widget(self.go_to_buttons_box)
+        self.restoring_popup = Popup(title = "Restoring",
+                                    content = self.restoring_content,
+                                    size_hint = (.66,.3))
+
+    def show_restoring_popup(self, *args):
+        self.restoring_popup.open()
 
     def get_processes_to_restore(self, *args):
         CHOSEN_VIDEO.processes_to_restore = {checkbox.group: checkbox.active for checkbox
                                         in self.processes_checkboxes}
-
 
         if CHOSEN_VIDEO.processes_to_restore is None or CHOSEN_VIDEO.processes_to_restore == {}:
             self.init_chosen_video_parameters()
@@ -165,9 +183,15 @@ class SelectFile(BoxLayout):
             CHOSEN_VIDEO.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             CHOSEN_VIDEO.list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
             CHOSEN_VIDEO.list_of_global_fragments = ListOfGlobalFragments.load(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
+            DEACTIVATE_ROI.restored = '(restored)'
+            DEACTIVATE_PREPROCESSING.restored = '(restored)'
             DEACTIVATE_TRACKING.setter(False)
         elif CHOSEN_VIDEO.processes_to_restore['assignment'] or CHOSEN_VIDEO.processes_to_restore['correct_duplications']:
+            DEACTIVATE_ROI.restored = '(restored)'
+            DEACTIVATE_PREPROCESSING.restored = '(restored)'
+            DEACTIVATE_TRACKING.restored = '(restored)'
             DEACTIVATE_VALIDATION.setter(False)
+        self.go_to_bind()
         self.restore_popup.dismiss()
 
     def activate_process(self, *args):
