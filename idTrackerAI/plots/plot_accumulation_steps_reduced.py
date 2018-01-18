@@ -114,7 +114,6 @@ def plot_individual_certainty_and_accuracy(video, ax_P2, ax_gt_accuracy, colors,
     individual_P2 = np.asarray(video.gt_accuracy['individual_P2_in_validated_part'].values()) * 100
     minimum = np.min(np.hstack((accuracy,individual_P2)))
     maximum = 100
-    print(minimum, maximum)
     n, bins, _ = ax_P2.hist(individual_P2, bins = np.linspace(minimum - 0.0005, maximum, n_bins), color = '.5', alpha = .5)
     bin_width = np.diff(bins)[0]
     for height, bin in zip(n,bins[:-1]):
@@ -122,7 +121,7 @@ def plot_individual_certainty_and_accuracy(video, ax_P2, ax_gt_accuracy, colors,
             ax_P2.text(bin + bin_width/2, height + 0.05, str(int(height)), fontsize = 10, horizontalalignment='center')
     P2_mean = np.mean(individual_P2)
     P2_std = np.std(individual_P2)
-    ax_P2.text(bins[0], np.max(n) - 20, 'mean = %.2f ' %P2_mean + r'%', fontsize = 12)
+    ax_P2.text(bins[0], ax_P2.get_ylim()[1]*.8, 'mean = %.2f ' %P2_mean + r'%', fontsize = 12)
 
     n_accuracy, bins_accuracy, _ = ax_gt_accuracy.hist(accuracy, bins = np.linspace(minimum - 0.0005, maximum, n_bins), color = 'g', alpha = .5)
     for height, bin in zip(n_accuracy,bins_accuracy[:-1]):
@@ -130,7 +129,7 @@ def plot_individual_certainty_and_accuracy(video, ax_P2, ax_gt_accuracy, colors,
             ax_gt_accuracy.text(bin + bin_width/2, height + 0.05, str(int(height)), fontsize = 10, horizontalalignment='center')
     accuracy_mean = np.mean(accuracy)
     accuracy_std = np.std(accuracy)
-    ax_gt_accuracy.text(bins[0], max(n_accuracy) - 20, 'mean = %.2f' %accuracy_mean + r'%', fontsize = 12)
+    ax_gt_accuracy.text(bins[0], ax_gt_accuracy.get_ylim()[1]*.8, 'mean = %.2f' %accuracy_mean + r'%', fontsize = 12)
 
 def set_properties_fragments(video, fig, ax_arr, number_of_accumulation_steps, list_of_accumulation_steps, zoomed_frames):
 
@@ -297,7 +296,7 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs, list_of_blo
 
     # list_of_accumulation_steps = get_list_of_accumulation_steps_to_plot(number_of_accumulation_steps)
     my_dpi = 96
-    list_of_accumulation_steps = [0, 1, 2, number_of_accumulation_steps - 1]
+    list_of_accumulation_steps = [0, 1, 5, number_of_accumulation_steps - 1]
     fig1 = plt.figure(figsize=(13, 10), dpi=my_dpi)
     colors = get_spaced_colors_util(video.number_of_animals, norm=True, black=False)
 
