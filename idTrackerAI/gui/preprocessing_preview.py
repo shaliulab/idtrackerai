@@ -80,8 +80,6 @@ class PreprocessingPreview(BoxLayout):
         self.help_button_preprocessing.create_help_popup("Preprocessing",\
                                                 "The aim of this part of the process is to separate the animals from the background, by setting the following parameters.\n1) Apply ROI: Allows to consider only a region of interest on the frame. Select it by using the table ROI selection.\n2) background subtraction: Perform background subtraction by computing a model of the background on the fly.\n3) Max\Min intensity: Set the maximum intensity used to separate the animals from the background.\n4) Max\Min area: Filter the blob by area.")
 
-
-
     def init_preproc_parameters(self):
         if CHOSEN_VIDEO.old_video is not None and CHOSEN_VIDEO.old_video._has_been_preprocessed == True:
             self.max_threshold = CHOSEN_VIDEO.old_video.max_threshold
@@ -90,6 +88,7 @@ class PreprocessingPreview(BoxLayout):
             self.max_area = CHOSEN_VIDEO.old_video.max_area
             self.resolution_reduction = CHOSEN_VIDEO.old_video.resolution_reduction
             self.number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
+            CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.old_video.resolution_reduction
         else:
             self.max_threshold = 135
             self.min_threshold = 0
@@ -99,17 +98,12 @@ class PreprocessingPreview(BoxLayout):
             self.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
             if CHOSEN_VIDEO.video._original_ROI is None:
                 CHOSEN_VIDEO.video._original_ROI = np.ones( (CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width), dtype='uint8') * 255
-
-        ###max_threshold
         self.max_threshold_slider = Slider(id = 'max_threhsold', min = 0, max = 255, value = self.max_threshold, step = 1)
         self.max_threshold_lbl = CustomLabel(font_size = 14, id = 'max_threshold_lbl', text = "Max intensity: " + str(int(self.max_threshold_slider.value)))
-        ###min_threshold
         self.min_threshold_slider = Slider(id='min_threshold_slider', min = 0, max = 255, value = self.min_threshold, step = 1)
         self.min_threshold_lbl = CustomLabel(font_size = 14, id='min_threshold_lbl', text = "Min intensity:" + str(int(self.min_threshold_slider.value)))
-        ###max_area label
         self.max_area_slider = Slider(id='max_area_slider', min = 0, max = 60000, value = self.max_area, step = 1)
         self.max_area_lbl = CustomLabel(font_size = 14, id='max_area_lbl', text = "Max area:" + str(int(self.max_area_slider.value)))
-        ###min_area
         self.min_area_slider = Slider(id='min_area_slider', min = 0, max = 1000, value = self.min_area, step = 1)
         self.min_area_lbl = CustomLabel(font_size = 14, id='min_area_lbl', text = "Min area:" + str(int(self.min_area_slider.value)))
         self.w_list = [ self.max_threshold_lbl, self.max_threshold_slider,
@@ -124,45 +118,6 @@ class PreprocessingPreview(BoxLayout):
         self.segment_video_btn = Button(text = "Segment video")
         self.container_layout.add_widget(self.segment_video_btn)
         self.container_layout.add_widget(self.help_button_preprocessing)
-
-    def create_computational_steps_popups(self):
-        self.segmenting_label = CustomLabel(text='Blobs are being extracted from each frame. This operation can take several minutes.')
-        self.segmenting_popup_content = BoxLayout(orientation = "vertical")
-        self.segmenting_popup_content.add_widget(self.segmenting_label)
-        # self.computing_progress_bar = ProgressBar(max = 1)
-        # self.computing_popup_content.add_widget(self.computing_progress_bar)
-        # self.computing_progress_bar.value = .25
-        self.segmenting_popup = Popup(title='Segmentation',
-            content = self.segmenting_popup_content,
-            size_hint = (.3,.3))
-
-        self.consistency_label = CustomLabel(text='Checking the consistency of the segmentation: A number of blobs in single frame higher than the number of animals to track is not admitted.')
-        self.consistency_popup_content = BoxLayout(orientation = "vertical")
-        self.consistency_popup_content.add_widget(self.consistency_label)
-        self.consistency_popup = Popup(title='Consistency',
-            content = self.consistency_popup_content,
-            size_hint = (.3,.3))
-
-        self.consistency_success_label = CustomLabel(text='The segmentation is consistent: Saving the list of blobs.')
-        self.consistency_success_popup_content = BoxLayout(orientation = "vertical")
-        self.consistency_success_popup_content.add_widget(self.consistency_success_label)
-        self.consistency_success_popup = Popup(title='Success',
-            content = self.consistency_success_popup_content,
-            size_hint = (.3,.3))
-
-        self.consistency_fail_label = CustomLabel(text='Some frame contain more blobs than animals. Please specify the parameters to be used in those frames')
-        self.consistency_fail_popup_content = BoxLayout(orientation = "vertical")
-        self.consistency_fail_popup_content.add_widget(self.consistency_fail_label)
-        self.consistency_fail_popup = Popup(title='Resegment',
-            content = self.consistency_fail_popup_content,
-            size_hint = (.3,.3))
-
-        self.DCD_label = CustomLabel(text='Discriminating individual and crossing images: Applying model area and deep crossing detector.')
-        self.DCD_popup_content = BoxLayout(orientation = "vertical")
-        self.DCD_popup_content.add_widget(self.DCD_label)
-        self.DCD_popup = Popup(title='Crossing detection',
-            content = self.DCD_popup_content,
-            size_hint = (.3,.3))
 
     def do(self, *args):
         if CHOSEN_VIDEO.video is not None and CHOSEN_VIDEO.video.video_path is not None:
@@ -190,31 +145,6 @@ class PreprocessingPreview(BoxLayout):
             self.init_segment_zero()
             self.has_been_executed = True
             self.segment_video_btn.bind(on_press = self.segment)
-
-    def create_number_of_animals_popup(self):
-        self.num_of_animals_container = BoxLayout()
-        self.num_of_animals = BoxLayout(orientation="vertical")
-        self.num_of_animals_label = CustomLabel(text='Type the number of animals to be tracked.')
-        self.num_of_animals.add_widget(self.num_of_animals_label)
-        self.num_of_animals_input = TextInput(text = '', multiline = False)
-        self.num_of_animals.add_widget(self.num_of_animals_input)
-        self.num_of_animals_container.add_widget(self.num_of_animals)
-        self.num_of_animals_popup = Popup(title = 'Number of animals',
-                            content = self.num_of_animals_container,
-                            size_hint = (.3, .3))
-
-    def set_number_of_animals(self, *args):
-        CHOSEN_VIDEO.video._number_of_animals = int(self.num_of_animals_input.text)
-        self.num_of_animals_popup.dismiss()
-
-    def show_segmenting_popup(self, *args):
-        self.segmenting_popup.open()
-
-    def show_consistency_popup(self, *args):
-        self.consistency_popup.open()
-
-    def update_computing_label(self, new_text):
-        self.computing_label.text = new_text
 
     def compute_list_of_blobs(self, *args):
         self.blobs = segment(CHOSEN_VIDEO.video)
@@ -255,7 +185,6 @@ class PreprocessingPreview(BoxLayout):
                                 CHOSEN_VIDEO.video.blobs_path_segmented,
                                 number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
         self.consistency_success_popup.dismiss()
-
 
     def model_area_and_crossing_detector(self, *args):
         CHOSEN_VIDEO.video._model_area, CHOSEN_VIDEO.video._median_body_length = self.list_of_blobs.compute_model_area_and_body_length(CHOSEN_VIDEO.video.number_of_animals)
@@ -331,18 +260,6 @@ class PreprocessingPreview(BoxLayout):
         CHOSEN_VIDEO.list_of_global_fragments = self.list_of_global_fragments
         DEACTIVATE_TRACKING.setter(False)
 
-    def create_resolution_reduction_popup(self):
-        self.res_red_popup_container = BoxLayout()
-        self.res_red_coeff = BoxLayout(orientation="vertical")
-        self.res_red_label = CustomLabel(text='Type the resolution reduction coefficient (0.5 will reduce by half).')
-        self.res_red_coeff.add_widget(self.res_red_label)
-        self.res_red_input = TextInput(text ='', multiline=False)
-        self.res_red_coeff.add_widget(self.res_red_input)
-        self.res_red_popup_container.add_widget(self.res_red_coeff)
-        self.res_red_popup = Popup(title = 'Resolution reduction',
-                            content = self.res_red_popup_container,
-                            size_hint = (.4, .4))
-
     def open_resolution_reduction_popup(self, *args):
         self.res_red_popup.open()
 
@@ -353,12 +270,16 @@ class PreprocessingPreview(BoxLayout):
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def apply_ROI(self, instance, active):
+        print("in apply ROI")
         CHOSEN_VIDEO.video._apply_ROI = active
         if active  == True:
+            print("applying ROI")
             num_valid_pxs_in_ROI = len(sum(np.where(CHOSEN_VIDEO.video.ROI == 255)))
             num_pxs_in_frame = CHOSEN_VIDEO.video.height * CHOSEN_VIDEO.video.width
             self.ROI_is_trivial = num_pxs_in_frame == num_valid_pxs_in_ROI
-
+            print("ROI is trivial: ", self.ROI_is_trivial)
+            print("num_valid_pxs_in_ROI: ", num_valid_pxs_in_ROI)
+            print("num_pxs_in_frame: ", num_pxs_in_frame)
             if CHOSEN_VIDEO.video.ROI is not None and not self.ROI_is_trivial:
                 self.ROI = CHOSEN_VIDEO.video.ROI
             elif self.ROI_is_trivial:
@@ -366,17 +287,22 @@ class PreprocessingPreview(BoxLayout):
                 instance.active = False
                 CHOSEN_VIDEO.apply_ROI = False
         elif active == False:
+            print("not applying ROI")
             self.ROI = np.ones((CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width) ,dtype='uint8') * 255
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def apply_bkg_subtraction(self, instance, active):
         CHOSEN_VIDEO.video._subtract_bkg = active
         if CHOSEN_VIDEO.video.subtract_bkg == True:
-            if CHOSEN_VIDEO.old_video.bkg is not None:
-                CHOSEN_VIDEO.video._bkg = CHOSEN_VIDEO.old_video.bkg
-            elif CHOSEN_VIDEO.video.bkg is None:
+            print("apply_bkg 1")
+            if CHOSEN_VIDEO.old_video.original_bkg is not None:
+                print("apply_bkg 2")
+                CHOSEN_VIDEO.video._original_bkg = CHOSEN_VIDEO.old_video.original_bkg
+            elif CHOSEN_VIDEO.video.original_bkg is None:
+                print("apply_bkg 3")
                 self.bkg_subtractor.computing_popup.open()
-                self.bkg_subtractor.saving_popup.open()
+                
+
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def add_widget_list(self):
@@ -408,7 +334,6 @@ class PreprocessingPreview(BoxLayout):
         self.number_of_detected_blobs = [0]
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.show_preprocessing)
 
-
     def create_areas_figure(self):
         self.fig, self.ax = plt.subplots(1)
         self.fig.subplots_adjust(left=0.0, bottom=0.0, right=1, top=1, wspace=None, hspace=0.5)
@@ -432,7 +357,7 @@ class PreprocessingPreview(BoxLayout):
                                             int(self.min_threshold_slider.value),
                                             int(self.max_threshold_slider.value),
                                             CHOSEN_VIDEO.video.bkg,
-                                            CHOSEN_VIDEO.video.ROI,
+                                            self.ROI,
                                             self.bkg_subtractor_switch.active)
         boundingBoxes, miniFrames, _, areas, _, goodContours, _ = blobExtractor(self.segmented_frame,
                                                                         self.frame,
@@ -505,3 +430,73 @@ class PreprocessingPreview(BoxLayout):
 
     def disable_touch_down_outside_collided_widget(self, touch):
         return super(PreprocessingPreview, self).on_touch_down(touch)
+
+    def create_computational_steps_popups(self):
+        self.segmenting_label = CustomLabel(text='Blobs are being extracted from each frame. This operation can take several minutes.')
+        self.segmenting_popup_content = BoxLayout(orientation = "vertical")
+        self.segmenting_popup_content.add_widget(self.segmenting_label)
+        self.segmenting_popup = Popup(title='Segmentation',
+            content = self.segmenting_popup_content,
+            size_hint = (.3,.3))
+
+        self.consistency_label = CustomLabel(text='Checking the consistency of the segmentation: A number of blobs in single frame higher than the number of animals to track is not admitted.')
+        self.consistency_popup_content = BoxLayout(orientation = "vertical")
+        self.consistency_popup_content.add_widget(self.consistency_label)
+        self.consistency_popup = Popup(title='Consistency',
+            content = self.consistency_popup_content,
+            size_hint = (.3,.3))
+
+        self.consistency_success_label = CustomLabel(text='The segmentation is consistent: Saving the list of blobs.')
+        self.consistency_success_popup_content = BoxLayout(orientation = "vertical")
+        self.consistency_success_popup_content.add_widget(self.consistency_success_label)
+        self.consistency_success_popup = Popup(title='Success',
+            content = self.consistency_success_popup_content,
+            size_hint = (.3,.3))
+
+        self.consistency_fail_label = CustomLabel(text='Some frame contain more blobs than animals. Please specify the parameters to be used in those frames')
+        self.consistency_fail_popup_content = BoxLayout(orientation = "vertical")
+        self.consistency_fail_popup_content.add_widget(self.consistency_fail_label)
+        self.consistency_fail_popup = Popup(title='Resegment',
+            content = self.consistency_fail_popup_content,
+            size_hint = (.3,.3))
+
+        self.DCD_label = CustomLabel(text='Discriminating individual and crossing images: Applying model area and deep crossing detector.')
+        self.DCD_popup_content = BoxLayout(orientation = "vertical")
+        self.DCD_popup_content.add_widget(self.DCD_label)
+        self.DCD_popup = Popup(title='Crossing detection',
+            content = self.DCD_popup_content,
+            size_hint = (.3,.3))
+
+    def create_resolution_reduction_popup(self):
+        self.res_red_popup_container = BoxLayout()
+        self.res_red_coeff = BoxLayout(orientation="vertical")
+        self.res_red_label = CustomLabel(text='Type the resolution reduction coefficient (0.5 will reduce by half).')
+        self.res_red_coeff.add_widget(self.res_red_label)
+        self.res_red_input = TextInput(text ='', multiline=False)
+        self.res_red_coeff.add_widget(self.res_red_input)
+        self.res_red_popup_container.add_widget(self.res_red_coeff)
+        self.res_red_popup = Popup(title = 'Resolution reduction',
+                            content = self.res_red_popup_container,
+                            size_hint = (.4, .4))
+
+    def create_number_of_animals_popup(self):
+        self.num_of_animals_container = BoxLayout()
+        self.num_of_animals = BoxLayout(orientation="vertical")
+        self.num_of_animals_label = CustomLabel(text='Type the number of animals to be tracked.')
+        self.num_of_animals.add_widget(self.num_of_animals_label)
+        self.num_of_animals_input = TextInput(text = '', multiline = False)
+        self.num_of_animals.add_widget(self.num_of_animals_input)
+        self.num_of_animals_container.add_widget(self.num_of_animals)
+        self.num_of_animals_popup = Popup(title = 'Number of animals',
+                            content = self.num_of_animals_container,
+                            size_hint = (.3, .3))
+
+    def set_number_of_animals(self, *args):
+        CHOSEN_VIDEO.video._number_of_animals = int(self.num_of_animals_input.text)
+        self.num_of_animals_popup.dismiss()
+
+    def show_segmenting_popup(self, *args):
+        self.segmenting_popup.open()
+
+    def show_consistency_popup(self, *args):
+        self.consistency_popup.open()

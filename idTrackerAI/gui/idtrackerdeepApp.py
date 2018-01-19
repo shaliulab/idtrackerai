@@ -277,9 +277,9 @@ class Root(TabbedPanel):
             self.individual_validator.do()
 
     def switch(self, tab, *args):
-        if hasattr(self.tracker, 'this_is_the_end_popup'):
+        if hasattr(self, 'tracker') and hasattr(self.tracker, 'this_is_the_end_popup'):
             self.tracker.this_is_the_end_popup.dismiss()
-        if hasattr(self.select_file, 'restoring_popup'):
+        if hasattr(self, 'select_file') and hasattr(self.select_file, 'restoring_popup'):
             self.select_file.restoring_popup.dismiss()
         self.switch_to(tab)
 

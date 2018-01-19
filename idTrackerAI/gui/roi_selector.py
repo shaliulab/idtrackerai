@@ -29,20 +29,19 @@ class ROISelector(BoxLayout):
         global CHOSEN_VIDEO, DEACTIVATE_ROI
         CHOSEN_VIDEO = chosen_video
         DEACTIVATE_ROI = deactivate_roi
-        self.orientation = "vertical"
         self.ROIs = [] #store rectangles on the GUI
         self.ROIOut  = [] #pass them to opencv
         self.touches = [] #store touch events on the figure
-        self.footer = BoxLayout()
-        self.footer.size_hint = (1.,.1)
+        self.control_panel = BoxLayout(orientation = "vertical")
+        self.control_panel.size_hint = (.26, 1.)
         self.btn_load_roi = Button(text = "load ROIs")
         self.btn_save_roi = Button(text = "save ROIs")
         self.btn_clear_roi = Button(text = "clear last ROI")
         self.btn_no_roi = Button(text = "do not use any ROI")
-        self.footer.add_widget(self.btn_load_roi)
-        self.footer.add_widget(self.btn_save_roi)
-        self.footer.add_widget(self.btn_clear_roi)
-        self.footer.add_widget(self.btn_no_roi)
+        self.control_panel.add_widget(self.btn_load_roi)
+        self.control_panel.add_widget(self.btn_save_roi)
+        self.control_panel.add_widget(self.btn_clear_roi)
+        self.control_panel.add_widget(self.btn_no_roi)
         self.btn_save_roi.bind(on_press = self.save_ROI)
         self.btn_load_roi.bind(on_press = self.load_ROI)
         self.btn_no_roi.bind(on_press = self.no_ROI)
@@ -53,9 +52,10 @@ class ROISelector(BoxLayout):
 
     def do(self, *args):
         if CHOSEN_VIDEO.video.video_path is not None:
+            CHOSEN_VIDEO.video.resolution_reduction = 1
             self.visualiser = VisualiseVideo(chosen_video = CHOSEN_VIDEO)
             self.add_widget(self.visualiser)
-            self.add_widget(self.footer)
+            self.add_widget(self.control_panel)
             self.window = Window
             self.window.bind(on_resize=self.updateROIs)
             self.visualiser.visualise_video(CHOSEN_VIDEO.video)
@@ -79,20 +79,26 @@ class ROISelector(BoxLayout):
         if self.visualiser.display_layout.collide_point(*touch.pos) and len(self.touches) > 0:
             try:
                 self.touches.append(touch.pos)
-                rect = [self.touches[0], self.touches[-1]]
+                rect = np.asarray([self.touches[0], self.touches[-1]])
                 sorted(rect, key=lambda x:x[1], reverse=True)
                 rectS = np.diff(rect, axis=0)[0]
                 with self.visualiser.display_layout.canvas:
                     Color(1, 1, 0,.5)
                     self.rect = Rectangle(pos=(rect[0][0], rect[0][1]), size=(rectS[0],rectS[1]))
                     self.ROIs.append(self.rect)
-                    ratioH = self.visualiser.display_layout.height / self.visualiser.display_layout.texture.height
-                    ratioW = self.visualiser.display_layout.width / self.visualiser.display_layout.texture.width
-                    newRectP1 = (self.rect.pos[0] / ratioW, (self.rect.pos[0] + self.rect.size[0]) / ratioW)
-                    newRectP2 = (self.rect.pos[1] / ratioH, (self.rect.pos[1] + self.rect.size[1]) / ratioH)
-                    point1 = (int(newRectP1[0]), int(self.visualiser.frame.shape[1]-newRectP2[0]))
-                    point2 = (int(newRectP1[1]), int(self.visualiser.frame.shape[1]-newRectP2[1]))
-                    self.ROIOut.append([point1,point2])
+                    #scale
+                    ratioH = self.visualiser.display_layout.texture.height / self.visualiser.display_layout.height
+                    ratioW = self.visualiser.display_layout.texture.width / self.visualiser.display_layout.width
+                    scale = np.asarray([[ratioW, 0], [0, ratioH]])
+                    #translate
+                    translation = np.asarray([0, - self.visualiser.footer.height])
+                    #apply transform
+                    p1_ = np.round(np.dot(scale, (rect[0].T + translation))).astype('int')
+                    p2_ = np.round(np.dot(scale, (rect[1].T + translation))).astype('int')
+                    # inverse y-axis
+                    p1_[1] = self.visualiser.display_layout.texture.height - p1_[1]
+                    p2_[1] = self.visualiser.display_layout.texture.height - p2_[1]
+                    self.ROIOut.append([tuple(p1_), tuple(p2_)])
                 self.touches = []
             except:
                 print('stay on the figure to draw a ROI')
@@ -122,10 +128,12 @@ class ROISelector(BoxLayout):
 
     def save_ROI(self, *args):
         if len(self.ROIOut) > 0:
-            self.ROIcv2 = np.zeros_like(self.visualiser.frame,dtype='uint8')
+            self.ROIcv2 = np.zeros_like(self.visualiser.frame, dtype='uint8')
             for p in self.ROIOut:
                 cv2.rectangle(self.ROIcv2, p[0], p[1], 255, -1)
-        CHOSEN_VIDEO.video._ROI = self.ROIcv2
+        else:
+            self.ROIcv2 = np.ones_like(self.visualiser.frame, dtype='uint8') * 255
+        CHOSEN_VIDEO.video._original_ROI = self.ROIcv2
         CHOSEN_VIDEO.video.save()
 
     def no_ROI(self, *args):
