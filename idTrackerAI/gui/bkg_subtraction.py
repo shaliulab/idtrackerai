@@ -35,8 +35,6 @@ class BkgSubtraction(BoxLayout):
             content=CustomLabel(text='wait ...'),
             size_hint=(.3,.3))
         self.computing_popup.bind(on_open=self.compute_bkg)
-        self.computing_popup.bind(on_dismiss = self.update_bkg)
-        global CHOSEN_VIDEO
 
     def subtract_bkg(self, *args):
         if CHOSEN_VIDEO.old_video.original_bkg is not None:
@@ -47,15 +45,16 @@ class BkgSubtraction(BoxLayout):
             self.computing_popup.open()
 
     def save_bkg(self, *args):
-        self.computing_popup.dismiss()
         CHOSEN_VIDEO.video.save()
         self.saving_popup.dismiss()
+        self.visualiser.visualise(self.visualiser.video_slider.value, func = self.shower)
 
     def compute_bkg(self, *args):
         self.bkg = computeBkg(CHOSEN_VIDEO.video)
         CHOSEN_VIDEO.video._original_bkg = self.bkg
+        self.update_bkg_and_ROI_in_CHOSEN_VIDEO()
         self.computing_popup.dismiss()
         self.saving_popup.open()
 
-    def update_bkg(self, *args):
+    def update_bkg_and_ROI_in_CHOSEN_VIDEO(self):
         CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction

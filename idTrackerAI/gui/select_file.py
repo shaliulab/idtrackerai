@@ -71,6 +71,13 @@ class SelectFile(BoxLayout):
             CHOSEN_VIDEO.existent_files, CHOSEN_VIDEO.old_video = getExistentFiles(CHOSEN_VIDEO.video, CHOSEN_VIDEO.processes_list)
             self.create_restore_popup()
             self.restore_popup.open()
+        else:
+            self.init_chosen_video_parameters()
+            DEACTIVATE_ROI.setter(False)
+            DEACTIVATE_PREPROCESSING.setter(False)
+            self.go_to_bind()
+            self.show_restoring_popup()
+
 
     def init_chosen_video_parameters(self):
         CHOSEN_VIDEO.video._apply_ROI = False
@@ -202,13 +209,11 @@ class SelectFile(BoxLayout):
         if value:
 
             for i, checkbox in enumerate(self.processes_checkboxes):
-
                 if i <= index:
                     checkbox.active = True
         else:
 
             for i, checkbox in enumerate(self.processes_checkboxes):
-
                 if i > index:
                     checkbox.active = False
 

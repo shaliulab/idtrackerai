@@ -15,6 +15,7 @@ from kivy.uix.progressbar import ProgressBar
 from visualise_video import VisualiseVideo
 from bkg_subtraction import BkgSubtraction
 from kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
+from functools import partial
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
@@ -145,6 +146,8 @@ class PreprocessingPreview(BoxLayout):
             self.init_segment_zero()
             self.has_been_executed = True
             self.segment_video_btn.bind(on_press = self.segment)
+            self.bkg_subtractor.visualiser = self.visualiser
+            self.bkg_subtractor.shower = self.show_preprocessing
 
     def compute_list_of_blobs(self, *args):
         self.blobs = segment(CHOSEN_VIDEO.video)
@@ -276,7 +279,7 @@ class PreprocessingPreview(BoxLayout):
             print("applying ROI")
             num_valid_pxs_in_ROI = len(sum(np.where(CHOSEN_VIDEO.video.ROI == 255)))
             num_pxs_in_frame = CHOSEN_VIDEO.video.height * CHOSEN_VIDEO.video.width
-            self.ROI_is_trivial = num_pxs_in_frame == num_valid_pxs_in_ROI
+            self.ROI_is_trivial = (num_pxs_in_frame == num_valid_pxs_in_ROI or num_valid_pxs_in_ROI == 0)
             print("ROI is trivial: ", self.ROI_is_trivial)
             print("num_valid_pxs_in_ROI: ", num_valid_pxs_in_ROI)
             print("num_pxs_in_frame: ", num_pxs_in_frame)
@@ -291,19 +294,22 @@ class PreprocessingPreview(BoxLayout):
             self.ROI = np.ones((CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width) ,dtype='uint8') * 255
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
+    def update_bkg_and_ROI_in_CHOSEN_VIDEO(self):
+        CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
+
     def apply_bkg_subtraction(self, instance, active):
         CHOSEN_VIDEO.video._subtract_bkg = active
         if CHOSEN_VIDEO.video.subtract_bkg == True:
-            print("apply_bkg 1")
-            if CHOSEN_VIDEO.old_video.original_bkg is not None:
-                print("apply_bkg 2")
+            if CHOSEN_VIDEO.video.bkg is not None:
+                self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
+            elif CHOSEN_VIDEO.old_video is not None and CHOSEN_VIDEO.old_video.original_bkg is not None:
                 CHOSEN_VIDEO.video._original_bkg = CHOSEN_VIDEO.old_video.original_bkg
+                self.update_bkg_and_ROI_in_CHOSEN_VIDEO()
+                self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
             elif CHOSEN_VIDEO.video.original_bkg is None:
-                print("apply_bkg 3")
                 self.bkg_subtractor.computing_popup.open()
-                
-
-        self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
+        else:
+            self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def add_widget_list(self):
         for w in self.w_list:
