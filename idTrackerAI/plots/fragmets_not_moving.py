@@ -20,12 +20,12 @@ def get_frames_and_frames_moving_for_fragments(fragments):
     return frames, frames_moving
 
 if __name__ == '__main__':
-    video_good = np.load('/home/atlas/Desktop/IdTrackerDeep/videos/100 drosophila (females)/session_20180117/video_object.npy').item()
-    list_of_fragments_good = np.load('/home/atlas/Desktop/IdTrackerDeep/videos/100 drosophila (females)/session_20180117/preprocessing/fragments.npy').item()
-    list_of_global_fragments_good = ListOfGlobalFragments.load('/home/atlas/Desktop/IdTrackerDeep/videos/100 drosophila (females)/session_20180117/preprocessing/global_fragments.npy', list_of_fragments_good.fragments)
-    video_bad = np.load('/home/atlas/Desktop/IdTrackerDeep/videos/100 drosophila (females)/session_20180117/video_object.npy').item()
-    list_of_fragments_bad = np.load('/home/atlas/Desktop/IdTrackerDeep/videos/100 drosophila (females)/session_20180117/preprocessing/fragments.npy').item()
-    list_of_global_fragments_bad = ListOfGlobalFragments.load('/home/atlas/Desktop/IdTrackerDeep/videos/100 drosophila (females)/session_20180117/preprocessing/global_fragments.npy', list_of_fragments_good.fragments)
+    video_good = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/test_flies/video_object.npy').item()
+    list_of_fragments_good = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/test_flies/fragments.npy').item()
+    list_of_global_fragments_good = ListOfGlobalFragments.load('/home/chronos/Desktop/IdTrackerDeep/videos/test_flies/global_fragments.npy', list_of_fragments_good.fragments)
+    video_bad = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/test_flies/video_object_2.npy').item()
+    list_of_fragments_bad = np.load('/home/chronos/Desktop/IdTrackerDeep/videos/test_flies/fragments_2.npy').item()
+    list_of_global_fragments_bad = ListOfGlobalFragments.load('/home/chronos/Desktop/IdTrackerDeep/videos/test_flies/global_fragments_2.npy', list_of_fragments_bad.fragments)
 
     ### Overall distribution of velocities
     nbins = 100
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     ax_arr[0].hist(np.log10(vels_good), bins = logbins, normed = True)
     ax_arr[1].set_title('bad')
     ax_arr[1].hist(np.log10(vels_bad), bins = logbins, normed = True)
-    moving_threshold = 0.05
+    moving_threshold = .17
 
     ### Compute number of frames number_of_frames
     frames_good, frames_moving_good = get_frames_and_frames_moving_for_fragments(list_of_fragments_good.fragments)
