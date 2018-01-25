@@ -17,7 +17,7 @@ from network_params import NetworkParams
 from blob import Blob
 from compute_velocity_model import compute_velocity_from_list_of_fragments, compute_model_velocity
 from get_trajectories import produce_trajectories
-from plot_individual_velocity import plot_individual_trajectories_velocities_and_accelerations
+# from plot_individual_velocity import plot_individual_trajectories_velocities_and_accelerations
 
 from constants import VEL_PERCENTILE #percentile used to model velocity jumps
 

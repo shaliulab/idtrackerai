@@ -4,7 +4,6 @@ import random
 import logging
 import numpy as np
 from globalfragment import GlobalFragment
-from get_predictions import GetPrediction
 from assigner import assign, compute_identification_statistics_for_non_accumulated_fragments
 from accumulation_manager import AccumulationManager
 from constants import CERTAINTY_THRESHOLD

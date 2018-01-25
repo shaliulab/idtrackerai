@@ -43,6 +43,7 @@ class Video(object):
         self._maximum_number_of_blobs = 0 #int: the maximum number of blobs detected in the video
         self._blobs_path = None #string: path to the saved list of blob objects
         self._blobs_path_segmented = None
+        self._blobs_path_interpolated = None
         self._has_been_segmented = None
         self._has_been_preprocessed = None #boolean: True if a video has been fragmented in a past session
         self._preprocessing_folder = None
@@ -229,6 +230,11 @@ class Video(object):
         It checks that the segmentation has been succesfully performed"""
         self._blobs_path_segmented = os.path.join(self.preprocessing_folder, 'blobs_collection_segmented.npy')
         return self._blobs_path_segmented
+
+    @property
+    def blobs_path_interpolated(self):
+        self._blobs_path_interpolated = os.path.join(self.preprocessing_folder, 'blobs_collection_interpolated.npy')
+        return self._blobs_path_interpolated
 
     @property
     def global_fragments_path(self):
@@ -688,16 +694,16 @@ class Video(object):
                 setattr(self, '_' + attribute, getattr(video_object_source, attribute))
 
     def compute_overall_P2(self, fragments):
-        weighted_P2_per_individual = np.zeros(self.number_of_animals)
-        number_of_blobs_per_individual = np.zeros(self.number_of_animals)
+        weighted_P2 = 0
+        number_of_individual_blobs = 0
 
         for fragment in fragments:
-            if fragment.is_an_individual and fragment.assigned_identity != 0:
-                weighted_P2_per_individual[fragment.assigned_identity - 1] += fragment.P2_vector[fragment.assigned_identity - 1] * fragment.number_of_images
-                number_of_blobs_per_individual[fragment.assigned_identity - 1] += fragment.number_of_images
+            if fragment.is_an_individual:
+                if fragment.assigned_identity != 0:
+                    weighted_P2 += fragment.P2_vector[fragment.assigned_identity - 1] * fragment.number_of_images
+                number_of_individual_blobs += fragment.number_of_images
 
-        self.individual_P2 = weighted_P2_per_individual / number_of_blobs_per_individual
-        self.overall_P2 = np.sum(weighted_P2_per_individual) / np.sum(number_of_blobs_per_individual)
+        self.overall_P2 = weighted_P2 / number_of_individual_blobs
 
 def scanFolder(path):
     video = os.path.basename(path)

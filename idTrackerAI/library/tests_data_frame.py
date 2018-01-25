@@ -63,11 +63,11 @@ def tests_data_frame():
                                                     "knowledge_transfer_folder": '',
                                                     "IMDB_codes": 'GHI',
                                                     "ids_codes": 'aaa',
-                                                    "group_sizes": [60],
+                                                    "group_sizes": [10, 60, 100],
                                                     "frames_in_video": [10000],
                                                     "scale_parameter": [2000, 1000, 500, 250, 100],
                                                     "shape_parameter": [0.5, 0.35, 0.25, 0.15, 0.05],
-                                                    "repetitions": [1],
+                                                    "repetitions": [1, 2, 3],
                                                      }, ignore_index=True)
 
     tests_data_frame.to_pickle('./library/tests_data_frame.pkl')

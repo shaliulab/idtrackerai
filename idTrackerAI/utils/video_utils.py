@@ -205,6 +205,6 @@ def getBlobsInfoPerFrame(frame, contours):
 
 def blobExtractor(segmentedFrame, frame, minArea, maxArea):
     contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-    goodContoursFull = filterContoursBySize(contours,minArea, maxArea)
-    boundingBoxes, miniFrames, centroids, areas, pixels, estimated_body_lengths = getBlobsInfoPerFrame(frame, goodContoursFull)
-    return boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, estimated_body_lengths
+    good_contours_in_full_frame = filterContoursBySize(contours,minArea, maxArea)
+    boundingBoxes, miniFrames, centroids, areas, pixels, estimated_body_lengths = getBlobsInfoPerFrame(frame, good_contours_in_full_frame)
+    return boundingBoxes, miniFrames, centroids, areas, pixels, good_contours_in_full_frame, estimated_body_lengths

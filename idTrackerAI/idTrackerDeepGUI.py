@@ -34,6 +34,7 @@ from list_of_global_fragments import ListOfGlobalFragments,\
                                         create_list_of_global_fragments
 from global_fragments_statistics import compute_and_plot_fragments_statistics
 from segmentation import segment, resegment
+from erosion import compute_erosion_disk
 from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview,\
                     resegmentation_preview, selectPreprocParams, selectDir, \
                     check_resolution_reduction
@@ -240,6 +241,10 @@ if __name__ == '__main__':
             video._has_been_segmented = True
             logger.debug("Segmented blobs loaded")
         video.save()
+
+        if False:
+            video._erosion_kernel_size = compute_erosion_disk(video, list_of_blobs.blobs_in_video)
+            list_of_blobs.erode(video)
 
         logger.info("Computing a model of the area of the individuals")
         video._model_area, video._median_body_length = list_of_blobs.compute_model_area_and_body_length(video.number_of_animals)
@@ -636,7 +641,7 @@ if __name__ == '__main__':
     print("************** After solving impossible jumps ************************")
     print("Number of fragments with zero identity: ", len([f for f in list_of_fragments.fragments
                                                             if f.assigned_identity == 0]))
-    print("Number of fragments with zero _was_a_crossingidentity by P2: ",
+    print("Number of fragments with zero identity by P2: ",
                     len([f for f in list_of_fragments.fragments
                     if f.assigned_identity == 0
                     and hasattr(f, 'zero_identity_assigned_by_P2')]))
@@ -654,7 +659,6 @@ if __name__ == '__main__':
     #############################################################
     video.individual_fragments_stats = list_of_fragments.get_stats(list_of_global_fragments)
     video.compute_overall_P2(list_of_fragments.fragments)
-    print("individual overall_P2 ", video.individual_P2)
     print("overall_P2 ", video.overall_P2)
     list_of_fragments.plot_stats(video)
     list_of_fragments.save_light_list(video._accumulation_folder)
