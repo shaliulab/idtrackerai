@@ -170,10 +170,10 @@ class PreprocessingPreview(BoxLayout):
     def visualise_resegmentation(self, frame_number):
         def update_resegmentation_paramenters(instance, value):
             if instance.id == "max_threshold_slider":
-                max_threshold_lbl.text = "Max threshold:\n" +  str(int(value))
+                max_threshold_lbl.text = "Upper intensity bound:\n" +  str(int(value))
                 self.new_preprocessing_parameters['max_threshold'] = value
             elif instance.id == "min_threshold_slider":
-                max_threshold_lbl.text = "Min threshold:\n" +  str(int(value))
+                max_threshold_lbl.text = "Lower intensity bound:\n" +  str(int(value))
                 self.new_preprocessing_parameters['min_threshold'] = value
             elif instance.id == "max_area_slider":
                 max_threshold_lbl.text = "Max area:\n" +  str(int(value))
@@ -247,7 +247,6 @@ class PreprocessingPreview(BoxLayout):
             if maximum_number_of_blobs <= CHOSEN_VIDEO.video.number_of_animals:
                 CHOSEN_VIDEO.video._resegmentation_parameters.append((frame_number, self.new_preprocessing_parameters))
         self.frames_with_more_blobs_than_animals = CHOSEN_VIDEO.list_of_blobs.check_maximal_number_of_blob(CHOSEN_VIDEO.video.number_of_animals)
-        print("bastard frames: ", self.frames_with_more_blobs_than_animals)
         self.resegmentation_step_finished = True
 
     def resegmentation(self, *args):
@@ -410,11 +409,11 @@ class PreprocessingPreview(BoxLayout):
             self.container_layout.add_widget(w)
 
     def update_max_th_lbl(self,instance, value):
-        self.max_threshold_lbl.text = "Max threshold:\n" +  str(int(value))
+        self.max_threshold_lbl.text = "Upper intensity bound:\n" +  str(int(value))
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def update_min_th_lbl(self,instance, value):
-        self.min_threshold_lbl.text = "Min threshold:\n" + str(int(value))
+        self.min_threshold_lbl.text = "Lower intensity bound:\n" + str(int(value))
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def update_max_area_lbl(self,instance, value):
@@ -458,6 +457,12 @@ class PreprocessingPreview(BoxLayout):
                 CHOSEN_VIDEO.video._number_of_channels = 1
             else:
                 raise NotImplementedError("Colour videos has still to be integrated")
+        if self.bkg_subtractor_switch.active:
+            self.max_threshold_slider.value = 255
+            self.max_threshold_slider.disabled = True
+        else:
+            self.max_threshold_slider.value = 0
+            self.max_threshold_slider.disabled = False
         avIntensity = np.float32(np.mean(self.frame))
         self.av_frame = self.frame / avIntensity
         self.segmented_frame = segmentVideo(self.av_frame,

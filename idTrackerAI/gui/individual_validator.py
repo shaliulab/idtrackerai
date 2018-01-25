@@ -105,32 +105,25 @@ class IndividualValidator(BoxLayout):
         return CHOSEN_VIDEO.video.first_frame_first_global_fragment
 
     def do(self, *args):
-        try:
-            if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
-                CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
-            if  CHOSEN_VIDEO.video.has_trajectories or\
-                (CHOSEN_VIDEO.processes_to_restore is not None\
-                and 'crossings' in CHOSEN_VIDEO.processes_to_restore\
-                and CHOSEN_VIDEO.processes_to_restore['crossings']):
-                self.create_choose_list_of_blobs_popup()
-                self.lob_btn1.bind(on_press = self.show_loading_text)
-                self.lob_btn2.bind(on_press = self.show_loading_text)
-                self.lob_btn1.bind(on_release = self.on_choose_list_of_blobs_btns_press)
-                self.lob_btn2.bind(on_release = self.on_choose_list_of_blobs_btns_press)
-                self.choose_list_of_blobs_popup.open()
-            else:
-                self.loading_popup.open()
-                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
-                self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
-                if not self.list_of_blobs.blobs_are_connected:
-                    self.list_of_blobs.reconnect()
-                self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
-                self._keyboard.bind(on_key_down=self._on_keyboard_down)
-                self.populate_validation_tab()
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+        if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
+            CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
+        if  CHOSEN_VIDEO.video.has_been_assigned and CHOSEN_VIDEO.video.has_crossings_solved:
+            self.create_choose_list_of_blobs_popup()
+            self.lob_btn1.bind(on_press = self.show_loading_text)
+            self.lob_btn2.bind(on_press = self.show_loading_text)
+            self.lob_btn1.bind(on_release = self.on_choose_list_of_blobs_btns_press)
+            self.lob_btn2.bind(on_release = self.on_choose_list_of_blobs_btns_press)
+            self.choose_list_of_blobs_popup.open()
+        elif CHOSEN_VIDEO.video.has_been_assigned:
+            self.loading_popup.open()
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
+            self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
+            if not self.list_of_blobs.blobs_are_connected:
+                self.list_of_blobs.reconnect()
+            self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+            self._keyboard.bind(on_key_down=self._on_keyboard_down)
+            self.populate_validation_tab()
+        else:
             self.warning_popup.open()
 
     def create_choose_individual_popup(self):

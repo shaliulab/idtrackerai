@@ -56,7 +56,7 @@ class Chosen_Video(EventDispatcher):
         self.video = Video()
         self.processes_list = processes_list
         self.bind(chosen=self.on_modified)
-        self.processes_to_restore = None
+        self.processes_to_restore = {}
         self.old_video = None
 
     def set_chosen_item(self, chosen_string):
