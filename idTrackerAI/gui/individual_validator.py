@@ -391,7 +391,7 @@ class IndividualValidator(BoxLayout):
         count_past_corrections = 1 #to take into account the modification already done in the current frame
         count_future_corrections = 0
         new_blob_identity = modified_blob.user_generated_identity
-        if modified_blob.is_an_individual_in_a_fragment:
+        if modified_blob.is_an_individual:
             current = modified_blob
 
             while len(current.next) == 1 and current.next[0].fragment_identifier == modified_blob.fragment_identifier:

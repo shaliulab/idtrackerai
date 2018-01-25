@@ -45,6 +45,7 @@ class Video(object):
         self._maximum_number_of_blobs = 0 #int: the maximum number of blobs detected in the video
         self._blobs_path = None #string: path to the saved list of blob objects
         self._blobs_path_segmented = None
+        self._blobs_path_interpolated = None
         self._has_been_segmented = None
         self._has_been_preprocessed = None #boolean: True if a video has been fragmented in a past session
         self._preprocessing_folder = None
@@ -228,6 +229,11 @@ class Video(object):
         It checks that the segmentation has been succesfully performed"""
         self._blobs_path_segmented = os.path.join(self.preprocessing_folder, 'blobs_collection_segmented.npy')
         return self._blobs_path_segmented
+
+    @property
+    def blobs_path_interpolated(self):
+        self._blobs_path_interpolated = os.path.join(self.preprocessing_folder, 'blobs_collection_interpolated.npy')
+        return self._blobs_path_interpolated
 
     @property
     def global_fragments_path(self):
