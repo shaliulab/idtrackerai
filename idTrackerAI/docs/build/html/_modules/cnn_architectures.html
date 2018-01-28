@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>cnn_architectures &mdash; idtrackerai 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai 0.0.1 documentation" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="http://www.idtracker.ai">idtracker.ai</a></li>
+        <li class="active"><a href="http://www.gitlab.com/polaviejalab/idtracker">GitLab</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai 0.0.1 documentation</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+      <li class="active">
+        <a href="../py-modindex.html" title="Python Module Index"
+           >modules</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for cnn_architectures</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../utils&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">cnn_utils</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">constants</span> <span class="k">import</span> <span class="n">KEEP_PROB</span>
+
+<span class="sd">&#39;&#39;&#39; original model&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_0"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_0">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_0</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="n">action_on_image</span><span class="p">,</span> <span class="n">pre_target_image_size</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># action on image</span>
+    <span class="k">if</span> <span class="n">action_on_image</span> <span class="o">==</span> <span class="s1">&#39;pad_or_crop&#39;</span><span class="p">:</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">resize_image_with_crop_or_pad</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">action_on_image</span> <span class="o">==</span> <span class="s1">&#39;resize_and_pad_or_crop&#39;</span><span class="p">:</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">resize_images</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">pre_target_image_size</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="n">ResizeMethod</span><span class="o">.</span><span class="n">BICUBIC</span><span class="p">)</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">resize_image_with_crop_or_pad</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">relu1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu2</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu2&#39;</span><span class="p">,</span> <span class="n">conv3</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride4</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool4</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad4</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool4</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool2&#39;</span><span class="p">,</span><span class="n">w3</span><span class="p">,</span><span class="n">h3</span><span class="p">,</span> <span class="n">relu2</span><span class="p">,</span> <span class="n">pool4</span><span class="p">,</span><span class="n">stride4</span><span class="p">,</span><span class="n">pad4</span><span class="p">)</span>
+    <span class="n">d4</span> <span class="o">=</span> <span class="n">n_filter3</span>
+    <span class="c1"># conv4</span>
+    <span class="n">filter_size5</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter5</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">stride5</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad5</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv5</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">W5</span>  <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv3&#39;</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="n">max_pool4</span><span class="p">,</span> <span class="n">filter_size5</span><span class="p">,</span> <span class="n">n_filter5</span><span class="p">,</span> <span class="n">stride5</span><span class="p">,</span> <span class="n">pad5</span><span class="p">)</span>
+    <span class="n">d5</span> <span class="o">=</span> <span class="n">n_filter5</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu3</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu3&#39;</span><span class="p">,</span> <span class="n">conv5</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w5</span> <span class="o">*</span> <span class="n">h5</span>
+    <span class="n">conv5_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu3</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">d5</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">fc_drop</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv5_flat</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">d5</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">fc_drop</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;fully_connected_pre_softmax&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+    <span class="c1"># return y_logits</span>
+    <span class="k">return</span> <span class="n">y_logits</span><span class="p">,</span> <span class="n">relu</span></div>
+
+<span class="sd">&#39;&#39;&#39; model with 1 convolution &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_1"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_1">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_1</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w1</span> <span class="o">*</span> <span class="n">h1</span>
+    <span class="n">conv1_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu1</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">n_filter1</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">fc_drop</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv1_flat</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">fc_drop</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;fully_connected_pre_softmax&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+    <span class="c1"># return y_logits, relu, (W1, W3, W5, WFC, WSoft)</span>
+
+<span class="sd">&#39;&#39;&#39; model with 2 convolutions &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_2"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_2">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_2</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">relu1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu2</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu2&#39;</span><span class="p">,</span> <span class="n">conv3</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w3</span> <span class="o">*</span> <span class="n">h3</span>
+    <span class="n">conv3_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu2</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">n_filter3</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">fc_drop</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv3_flat</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">fc_drop</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;fully_connected_pre_softmax&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+    <span class="c1"># return y_logits, relu, (W1, W3, W5, WFC, WSoft)</span>
+
+<span class="sd">&#39;&#39;&#39; original model&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_3"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_3">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_3</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">relu1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu2</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu2&#39;</span><span class="p">,</span> <span class="n">conv3</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride4</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool4</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad4</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool4</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool2&#39;</span><span class="p">,</span><span class="n">w3</span><span class="p">,</span><span class="n">h3</span><span class="p">,</span> <span class="n">relu2</span><span class="p">,</span> <span class="n">pool4</span><span class="p">,</span><span class="n">stride4</span><span class="p">,</span><span class="n">pad4</span><span class="p">)</span>
+    <span class="n">d4</span> <span class="o">=</span> <span class="n">n_filter3</span>
+    <span class="c1"># conv4</span>
+    <span class="n">filter_size5</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter5</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">stride5</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad5</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv5</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">W5</span>  <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv3&#39;</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="n">max_pool4</span><span class="p">,</span> <span class="n">filter_size5</span><span class="p">,</span> <span class="n">n_filter5</span><span class="p">,</span> <span class="n">stride5</span><span class="p">,</span> <span class="n">pad5</span><span class="p">)</span>
+    <span class="n">d5</span> <span class="o">=</span> <span class="n">n_filter5</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu3</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu3&#39;</span><span class="p">,</span> <span class="n">conv5</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride6</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool6</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad6</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool6</span><span class="p">,</span> <span class="n">w6</span><span class="p">,</span> <span class="n">h6</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool3&#39;</span><span class="p">,</span><span class="n">w5</span><span class="p">,</span><span class="n">h5</span><span class="p">,</span> <span class="n">relu3</span><span class="p">,</span> <span class="n">pool6</span><span class="p">,</span><span class="n">stride6</span><span class="p">,</span><span class="n">pad6</span><span class="p">)</span>
+    <span class="n">d6</span> <span class="o">=</span> <span class="n">n_filter5</span>
+    <span class="c1"># conv4</span>
+    <span class="n">filter_size7</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter7</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">stride7</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad7</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv7</span><span class="p">,</span> <span class="n">w7</span><span class="p">,</span> <span class="n">h7</span><span class="p">,</span> <span class="n">W7</span>  <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv4&#39;</span><span class="p">,</span> <span class="n">w6</span><span class="p">,</span> <span class="n">h6</span><span class="p">,</span> <span class="n">d6</span><span class="p">,</span> <span class="n">max_pool6</span><span class="p">,</span> <span class="n">filter_size7</span><span class="p">,</span> <span class="n">n_filter7</span><span class="p">,</span> <span class="n">stride7</span><span class="p">,</span> <span class="n">pad7</span><span class="p">)</span>
+    <span class="n">d7</span> <span class="o">=</span> <span class="n">n_filter7</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu8</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">conv7</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w7</span> <span class="o">*</span> <span class="n">h7</span>
+    <span class="n">conv7_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu8</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">d7</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv7_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">fc_drop</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv7_flat</span><span class="p">,</span> <span class="n">w7</span><span class="p">,</span> <span class="n">h7</span><span class="p">,</span> <span class="n">d7</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">fc_drop</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;fully_connected_pre_softmax&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+    <span class="c1"># return y_logits, relu, (W1, W3, W5, WFC, WSoft)</span>
+
+<span class="sd">&#39;&#39;&#39; inverted model &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_4"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_4">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_4</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">relu1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu2</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu2&#39;</span><span class="p">,</span> <span class="n">conv3</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride4</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool4</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad4</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool4</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool2&#39;</span><span class="p">,</span><span class="n">w3</span><span class="p">,</span><span class="n">h3</span><span class="p">,</span> <span class="n">relu2</span><span class="p">,</span> <span class="n">pool4</span><span class="p">,</span><span class="n">stride4</span><span class="p">,</span><span class="n">pad4</span><span class="p">)</span>
+    <span class="n">d4</span> <span class="o">=</span> <span class="n">n_filter3</span>
+    <span class="c1"># conv4</span>
+    <span class="n">filter_size5</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter5</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride5</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad5</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv5</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">W5</span>  <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv3&#39;</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="n">max_pool4</span><span class="p">,</span> <span class="n">filter_size5</span><span class="p">,</span> <span class="n">n_filter5</span><span class="p">,</span> <span class="n">stride5</span><span class="p">,</span> <span class="n">pad5</span><span class="p">)</span>
+    <span class="n">d5</span> <span class="o">=</span> <span class="n">n_filter5</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu3</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu3&#39;</span><span class="p">,</span> <span class="n">conv5</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w5</span> <span class="o">*</span> <span class="n">h5</span>
+    <span class="n">conv5_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu3</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">d5</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">fc_drop</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv5_flat</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">d5</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">fc_drop</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;fully_connected_pre_softmax&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+    <span class="c1"># return y_logits, relu, (W1, W3, W5, WFC, WSoft)</span>
+
+<span class="sd">&#39;&#39;&#39; no nonlinearlities &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_5"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_5">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_5</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">conv1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride4</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool4</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad4</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool4</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool2&#39;</span><span class="p">,</span><span class="n">w3</span><span class="p">,</span><span class="n">h3</span><span class="p">,</span> <span class="n">conv3</span><span class="p">,</span> <span class="n">pool4</span><span class="p">,</span><span class="n">stride4</span><span class="p">,</span><span class="n">pad4</span><span class="p">)</span>
+    <span class="n">d4</span> <span class="o">=</span> <span class="n">n_filter3</span>
+    <span class="c1"># conv4</span>
+    <span class="n">filter_size5</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter5</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">stride5</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad5</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv5</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">W5</span>  <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv3&#39;</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="n">max_pool4</span><span class="p">,</span> <span class="n">filter_size5</span><span class="p">,</span> <span class="n">n_filter5</span><span class="p">,</span> <span class="n">stride5</span><span class="p">,</span> <span class="n">pad5</span><span class="p">)</span>
+    <span class="n">d5</span> <span class="o">=</span> <span class="n">n_filter5</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w5</span> <span class="o">*</span> <span class="n">h5</span>
+    <span class="n">conv5_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">conv5</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">d5</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">fc_drop</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv5_flat</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">d5</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;soffully_connected_pre_softmaxtmax1&#39;</span><span class="p">,</span> <span class="n">fc_drop</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+    <span class="c1"># return y_logits, relu, (W1, W3, W5, WFC, WSoft)</span>
+
+<span class="sd">&#39;&#39;&#39; smaller fully connected &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_6"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_6">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_6</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># width = tf.to_int32(tf.shape(images)[1])</span>
+    <span class="c1"># height = tf.to_int32(tf.shape(images)[2])</span>
+    <span class="c1"># channels = tf.to_int32(tf.shape(images)[3])</span>
+    <span class="c1"># print(width, height, channels)</span>
+    <span class="c1"># width = 68</span>
+    <span class="c1"># height = 68</span>
+    <span class="c1"># channels = 1</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">relu1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu2</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu2&#39;</span><span class="p">,</span> <span class="n">conv3</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride4</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool4</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad4</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool4</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool2&#39;</span><span class="p">,</span><span class="n">w3</span><span class="p">,</span><span class="n">h3</span><span class="p">,</span> <span class="n">relu2</span><span class="p">,</span> <span class="n">pool4</span><span class="p">,</span><span class="n">stride4</span><span class="p">,</span><span class="n">pad4</span><span class="p">)</span>
+    <span class="n">d4</span> <span class="o">=</span> <span class="n">n_filter3</span>
+    <span class="c1"># conv4</span>
+    <span class="n">filter_size5</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter5</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">stride5</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad5</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv5</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">W5</span>  <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv3&#39;</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="n">max_pool4</span><span class="p">,</span> <span class="n">filter_size5</span><span class="p">,</span> <span class="n">n_filter5</span><span class="p">,</span> <span class="n">stride5</span><span class="p">,</span> <span class="n">pad5</span><span class="p">)</span>
+    <span class="n">d5</span> <span class="o">=</span> <span class="n">n_filter5</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu3</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu3&#39;</span><span class="p">,</span> <span class="n">conv5</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w5</span> <span class="o">*</span> <span class="n">h5</span>
+    <span class="n">conv5_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu3</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">d5</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">fc_drop</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv5_flat</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">d5</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">fc_drop</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;soffully_connected_pre_softmaxtmax1&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+    <span class="c1"># return y_logits, relu, (W1, W3, W5, WFC, WSoft)</span>
+
+<span class="sd">&#39;&#39;&#39; bigger fully connected &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_7"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_7">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_7</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># width = tf.to_int32(tf.shape(images)[1])</span>
+    <span class="c1"># height = tf.to_int32(tf.shape(images)[2])</span>
+    <span class="c1"># channels = tf.to_int32(tf.shape(images)[3])</span>
+    <span class="c1"># print(width, height, channels)</span>
+    <span class="c1"># width = 68</span>
+    <span class="c1"># height = 68</span>
+    <span class="c1"># channels = 1</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">relu1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu2</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu2&#39;</span><span class="p">,</span> <span class="n">conv3</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride4</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool4</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad4</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool4</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool2&#39;</span><span class="p">,</span><span class="n">w3</span><span class="p">,</span><span class="n">h3</span><span class="p">,</span> <span class="n">relu2</span><span class="p">,</span> <span class="n">pool4</span><span class="p">,</span><span class="n">stride4</span><span class="p">,</span><span class="n">pad4</span><span class="p">)</span>
+    <span class="n">d4</span> <span class="o">=</span> <span class="n">n_filter3</span>
+    <span class="c1"># conv4</span>
+    <span class="n">filter_size5</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter5</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">stride5</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad5</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv5</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">W5</span>  <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv3&#39;</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="n">max_pool4</span><span class="p">,</span> <span class="n">filter_size5</span><span class="p">,</span> <span class="n">n_filter5</span><span class="p">,</span> <span class="n">stride5</span><span class="p">,</span> <span class="n">pad5</span><span class="p">)</span>
+    <span class="n">d5</span> <span class="o">=</span> <span class="n">n_filter5</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu3</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu3&#39;</span><span class="p">,</span> <span class="n">conv5</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w5</span> <span class="o">*</span> <span class="n">h5</span>
+    <span class="n">conv5_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu3</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">d5</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc</span> <span class="o">=</span> <span class="mi">200</span>
+    <span class="n">fc_drop</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv5_flat</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">d5</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">fc_drop</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;soffully_connected_pre_softmaxtmax1&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+    <span class="c1"># return y_logits, relu, (W1, W3, W5, WFC, WSoft)</span>
+
+<span class="sd">&#39;&#39;&#39; two fully connected &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_8"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_8">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_8</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># width = tf.to_int32(tf.shape(images)[1])</span>
+    <span class="c1"># height = tf.to_int32(tf.shape(images)[2])</span>
+    <span class="c1"># channels = tf.to_int32(tf.shape(images)[3])</span>
+    <span class="c1"># print(width, height, channels)</span>
+    <span class="c1"># width = 68</span>
+    <span class="c1"># height = 68</span>
+    <span class="c1"># channels = 1</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">relu1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu2</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu2&#39;</span><span class="p">,</span> <span class="n">conv3</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride4</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool4</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad4</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool4</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool2&#39;</span><span class="p">,</span><span class="n">w3</span><span class="p">,</span><span class="n">h3</span><span class="p">,</span> <span class="n">relu2</span><span class="p">,</span> <span class="n">pool4</span><span class="p">,</span><span class="n">stride4</span><span class="p">,</span><span class="n">pad4</span><span class="p">)</span>
+    <span class="n">d4</span> <span class="o">=</span> <span class="n">n_filter3</span>
+    <span class="c1"># conv4</span>
+    <span class="n">filter_size5</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter5</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">stride5</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad5</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv5</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">W5</span>  <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv3&#39;</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="n">max_pool4</span><span class="p">,</span> <span class="n">filter_size5</span><span class="p">,</span> <span class="n">n_filter5</span><span class="p">,</span> <span class="n">stride5</span><span class="p">,</span> <span class="n">pad5</span><span class="p">)</span>
+    <span class="n">d5</span> <span class="o">=</span> <span class="n">n_filter5</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu3</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu3&#39;</span><span class="p">,</span> <span class="n">conv5</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w5</span> <span class="o">*</span> <span class="n">h5</span>
+    <span class="n">conv5_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu3</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">d5</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc_1</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">fc_drop_1</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv5_flat</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">d5</span><span class="p">,</span> <span class="n">n_fc_1</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">fc_drop_1</span><span class="p">)</span>
+    <span class="n">n_fc_2</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">fc_drop_2</span><span class="p">,</span> <span class="n">WFC_2</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;fully-connected2&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc_1</span><span class="p">,</span> <span class="n">n_fc_2</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu5&#39;</span><span class="p">,</span> <span class="n">fc_drop_2</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;soffully_connected_pre_softmaxtmax1&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc_2</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+    <span class="c1"># return y_logits, relu, (W1, W3, W5, WFC, WSoft)</span>
+
+<span class="sd">&#39;&#39;&#39; two fully smaller connected &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_9"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_9">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_9</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># width = tf.to_int32(tf.shape(images)[1])</span>
+    <span class="c1"># height = tf.to_int32(tf.shape(images)[2])</span>
+    <span class="c1"># channels = tf.to_int32(tf.shape(images)[3])</span>
+    <span class="c1"># print(width, height, channels)</span>
+    <span class="c1"># width = 68</span>
+    <span class="c1"># height = 68</span>
+    <span class="c1"># channels = 1</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">relu1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu2</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu2&#39;</span><span class="p">,</span> <span class="n">conv3</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride4</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool4</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad4</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool4</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool2&#39;</span><span class="p">,</span><span class="n">w3</span><span class="p">,</span><span class="n">h3</span><span class="p">,</span> <span class="n">relu2</span><span class="p">,</span> <span class="n">pool4</span><span class="p">,</span><span class="n">stride4</span><span class="p">,</span><span class="n">pad4</span><span class="p">)</span>
+    <span class="n">d4</span> <span class="o">=</span> <span class="n">n_filter3</span>
+    <span class="c1"># conv4</span>
+    <span class="n">filter_size5</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter5</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">stride5</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad5</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv5</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">W5</span>  <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv3&#39;</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="n">max_pool4</span><span class="p">,</span> <span class="n">filter_size5</span><span class="p">,</span> <span class="n">n_filter5</span><span class="p">,</span> <span class="n">stride5</span><span class="p">,</span> <span class="n">pad5</span><span class="p">)</span>
+    <span class="n">d5</span> <span class="o">=</span> <span class="n">n_filter5</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu3</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu3&#39;</span><span class="p">,</span> <span class="n">conv5</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w5</span> <span class="o">*</span> <span class="n">h5</span>
+    <span class="n">conv5_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu3</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">d5</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc_1</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">fc_drop_1</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv5_flat</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">d5</span><span class="p">,</span> <span class="n">n_fc_1</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">fc_drop_1</span><span class="p">)</span>
+    <span class="n">n_fc_2</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">fc_drop_2</span><span class="p">,</span> <span class="n">WFC_2</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;fully-connected2&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc_1</span><span class="p">,</span> <span class="n">n_fc_2</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu5&#39;</span><span class="p">,</span> <span class="n">fc_drop_2</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;soffully_connected_pre_softmaxtmax1&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc_2</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+    <span class="c1"># return y_logits, relu, (W1, W3, W5, WFC, WSoft)</span>
+
+<span class="sd">&#39;&#39;&#39; two fully bigger connected &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_10"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_10">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_10</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># width = tf.to_int32(tf.shape(images)[1])</span>
+    <span class="c1"># height = tf.to_int32(tf.shape(images)[2])</span>
+    <span class="c1"># channels = tf.to_int32(tf.shape(images)[3])</span>
+    <span class="c1"># print(width, height, channels)</span>
+    <span class="c1"># width = 68</span>
+    <span class="c1"># height = 68</span>
+    <span class="c1"># channels = 1</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">relu1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu2</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu2&#39;</span><span class="p">,</span> <span class="n">conv3</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride4</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool4</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad4</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool4</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool2&#39;</span><span class="p">,</span><span class="n">w3</span><span class="p">,</span><span class="n">h3</span><span class="p">,</span> <span class="n">relu2</span><span class="p">,</span> <span class="n">pool4</span><span class="p">,</span><span class="n">stride4</span><span class="p">,</span><span class="n">pad4</span><span class="p">)</span>
+    <span class="n">d4</span> <span class="o">=</span> <span class="n">n_filter3</span>
+    <span class="c1"># conv4</span>
+    <span class="n">filter_size5</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter5</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">stride5</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad5</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv5</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">W5</span>  <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv3&#39;</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="n">max_pool4</span><span class="p">,</span> <span class="n">filter_size5</span><span class="p">,</span> <span class="n">n_filter5</span><span class="p">,</span> <span class="n">stride5</span><span class="p">,</span> <span class="n">pad5</span><span class="p">)</span>
+    <span class="n">d5</span> <span class="o">=</span> <span class="n">n_filter5</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu3</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu3&#39;</span><span class="p">,</span> <span class="n">conv5</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w5</span> <span class="o">*</span> <span class="n">h5</span>
+    <span class="n">conv5_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu3</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">d5</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc_1</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">fc_drop_1</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv5_flat</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">d5</span><span class="p">,</span> <span class="n">n_fc_1</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">fc_drop_1</span><span class="p">)</span>
+    <span class="n">n_fc_2</span> <span class="o">=</span> <span class="mi">200</span>
+    <span class="n">fc_drop_2</span><span class="p">,</span> <span class="n">WFC_2</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;fully-connected2&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc_1</span><span class="p">,</span> <span class="n">n_fc_2</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu5&#39;</span><span class="p">,</span> <span class="n">fc_drop_2</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;soffully_connected_pre_softmaxtmax1&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc_2</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+    <span class="c1"># return y_logits, relu, (W1, W3, W5, WFC, WSoft)</span>
+
+<span class="sd">&#39;&#39;&#39; even smaller fully connected &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="cnn_model_11"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_11">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_11</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># width = tf.to_int32(tf.shape(images)[1])</span>
+    <span class="c1"># height = tf.to_int32(tf.shape(images)[2])</span>
+    <span class="c1"># channels = tf.to_int32(tf.shape(images)[3])</span>
+    <span class="c1"># print(width, height, channels)</span>
+    <span class="c1"># width = 68</span>
+    <span class="c1"># height = 68</span>
+    <span class="c1"># channels = 1</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">relu1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu2</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu2&#39;</span><span class="p">,</span> <span class="n">conv3</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride4</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool4</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad4</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool4</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool2&#39;</span><span class="p">,</span><span class="n">w3</span><span class="p">,</span><span class="n">h3</span><span class="p">,</span> <span class="n">relu2</span><span class="p">,</span> <span class="n">pool4</span><span class="p">,</span><span class="n">stride4</span><span class="p">,</span><span class="n">pad4</span><span class="p">)</span>
+    <span class="n">d4</span> <span class="o">=</span> <span class="n">n_filter3</span>
+    <span class="c1"># conv4</span>
+    <span class="n">filter_size5</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter5</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">stride5</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad5</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv5</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">W5</span>  <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv3&#39;</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="n">max_pool4</span><span class="p">,</span> <span class="n">filter_size5</span><span class="p">,</span> <span class="n">n_filter5</span><span class="p">,</span> <span class="n">stride5</span><span class="p">,</span> <span class="n">pad5</span><span class="p">)</span>
+    <span class="n">d5</span> <span class="o">=</span> <span class="n">n_filter5</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu3</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu3&#39;</span><span class="p">,</span> <span class="n">conv5</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w5</span> <span class="o">*</span> <span class="n">h5</span>
+    <span class="n">conv5_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu3</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">d5</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">fc_drop</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv5_flat</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">d5</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu4&#39;</span><span class="p">,</span> <span class="n">fc_drop</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;soffully_connected_pre_softmaxtmax1&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+    <span class="c1"># return y_logits, relu, (W1, W3, W5, WFC, WSoft)</span>
+
+<div class="viewcode-block" id="cnn_model_crossing_detector"><a class="viewcode-back" href="../index.html#cnn_architectures.cnn_model_crossing_detector">[docs]</a><span class="k">def</span> <span class="nf">cnn_model_crossing_detector</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">channels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gives predictions for a given set of images</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;rawImages&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">max_outputs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># conv1</span>
+    <span class="n">filter_size1</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter1</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">stride1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad1</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv1&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">filter_size1</span><span class="p">,</span> <span class="n">n_filter1</span><span class="p">,</span> <span class="n">stride1</span><span class="p">,</span> <span class="n">pad1</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu1</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">conv1</span><span class="p">)</span>
+    <span class="c1"># maxpool2d</span>
+    <span class="n">stride2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pool2</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">pad2</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">max_pool2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">maxpool2d</span><span class="p">(</span><span class="s1">&#39;maxpool1&#39;</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span> <span class="n">relu1</span><span class="p">,</span> <span class="n">pool2</span><span class="p">,</span><span class="n">stride2</span><span class="p">,</span><span class="n">pad2</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">n_filter1</span>
+    <span class="c1"># conv2</span>
+    <span class="n">filter_size3</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">n_filter3</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">stride3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pad3</span> <span class="o">=</span> <span class="s1">&#39;SAME&#39;</span>
+    <span class="n">conv3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">buildConv2D</span><span class="p">(</span><span class="s1">&#39;conv2&#39;</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">max_pool2</span><span class="p">,</span> <span class="n">filter_size3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">stride3</span><span class="p">,</span> <span class="n">pad3</span><span class="p">)</span>
+    <span class="c1"># relu</span>
+    <span class="n">relu2</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu2&#39;</span><span class="p">,</span> <span class="n">conv3</span><span class="p">)</span>
+    <span class="c1"># linearize weights for fully-connected layer</span>
+    <span class="n">resolutionS</span> <span class="o">=</span> <span class="n">w3</span> <span class="o">*</span> <span class="n">h3</span>
+    <span class="n">conv5_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">relu2</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolutionS</span><span class="o">*</span><span class="n">n_filter3</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;conv5_reshape&#39;</span><span class="p">)</span>
+    <span class="c1"># fully-connected 1</span>
+    <span class="n">n_fc</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">fc_drop</span><span class="p">,</span> <span class="n">WFC</span> <span class="o">=</span> <span class="n">buildFc</span><span class="p">(</span><span class="s1">&#39;fully-connected1&#39;</span><span class="p">,</span> <span class="n">conv5_flat</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">n_filter3</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">KEEP_PROB</span><span class="p">)</span>
+    <span class="n">relu</span> <span class="o">=</span> <span class="n">reLU</span><span class="p">(</span><span class="s1">&#39;relu1&#39;</span><span class="p">,</span> <span class="n">fc_drop</span><span class="p">)</span>
+    <span class="n">y_logits</span><span class="p">,</span> <span class="n">WSoft</span> <span class="o">=</span> <span class="n">buildSoftMax</span><span class="p">(</span><span class="s1">&#39;fully_connected_pre_softmax&#39;</span><span class="p">,</span> <span class="n">relu</span><span class="p">,</span> <span class="n">n_fc</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">y_logits</span></div>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Mattia G. Bergomi, Francisco Romero Ferrero.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>id_CNN &mdash; idtrackerai 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai 0.0.1 documentation" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="http://www.idtracker.ai">idtracker.ai</a></li>
+        <li class="active"><a href="http://www.gitlab.com/polaviejalab/idtracker">GitLab</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai 0.0.1 documentation</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+      <li class="active">
+        <a href="../py-modindex.html" title="Python Module Index"
+           >modules</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for id_CNN</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">cnn_architectures</span> <span class="k">import</span> <span class="n">cnn_model_0</span><span class="p">,</span> \
+                                <span class="n">cnn_model_1</span><span class="p">,</span> \
+                                <span class="n">cnn_model_2</span><span class="p">,</span> \
+                                <span class="n">cnn_model_3</span><span class="p">,</span> \
+                                <span class="n">cnn_model_4</span><span class="p">,</span> \
+                                <span class="n">cnn_model_5</span><span class="p">,</span> \
+                                <span class="n">cnn_model_6</span><span class="p">,</span> \
+                                <span class="n">cnn_model_7</span><span class="p">,</span> \
+                                <span class="n">cnn_model_8</span><span class="p">,</span> \
+                                <span class="n">cnn_model_9</span><span class="p">,</span> \
+                                <span class="n">cnn_model_10</span><span class="p">,</span> \
+                                <span class="n">cnn_model_11</span>
+
+<span class="n">CNN_MODELS_DICT</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">cnn_model_0</span><span class="p">,</span>
+                    <span class="mi">1</span><span class="p">:</span> <span class="n">cnn_model_1</span><span class="p">,</span>
+                    <span class="mi">2</span><span class="p">:</span> <span class="n">cnn_model_2</span><span class="p">,</span>
+                    <span class="mi">3</span><span class="p">:</span> <span class="n">cnn_model_3</span><span class="p">,</span>
+                    <span class="mi">4</span><span class="p">:</span> <span class="n">cnn_model_4</span><span class="p">,</span>
+                    <span class="mi">5</span><span class="p">:</span> <span class="n">cnn_model_5</span><span class="p">,</span>
+                    <span class="mi">6</span><span class="p">:</span> <span class="n">cnn_model_6</span><span class="p">,</span>
+                    <span class="mi">7</span><span class="p">:</span> <span class="n">cnn_model_7</span><span class="p">,</span>
+                    <span class="mi">8</span><span class="p">:</span> <span class="n">cnn_model_8</span><span class="p">,</span>
+                    <span class="mi">9</span><span class="p">:</span> <span class="n">cnn_model_9</span><span class="p">,</span>
+                    <span class="mi">10</span><span class="p">:</span> <span class="n">cnn_model_10</span><span class="p">,</span>
+                    <span class="mi">11</span><span class="p">:</span> <span class="n">cnn_model_11</span><span class="p">}</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.id_CNN&quot;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">ConvNetwork</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">training_flag</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">restore_index</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;CNN</span>
+<span class="sd">        params (NetworkParams object)</span>
+<span class="sd">        training_flag (bool)</span>
+<span class="sd">            True to backpropagate</span>
+<span class="sd">        restore_index (integer)</span>
+<span class="sd">            checkpoint to be used in restoring the network</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set main attibutes of the class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_width</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_height</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_channels</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">image_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span> <span class="o">=</span> <span class="n">restore_index</span>
+        <span class="c1"># Initialize layers to optimize to be empty. This means tha we will</span>
+        <span class="c1"># optimize all the layers of our network</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers_to_optimise</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="o">=</span> <span class="n">training_flag</span>
+        <span class="c1"># Build graph with the network, loss, optimizer and accuracies</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">reset_default_graph</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_graph</span><span class="p">()</span>
+        <span class="n">knowledge_transfer_info_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;input_image_size&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">target_image_size</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">target_image_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">image_size</span><span class="p">,</span>
+                                <span class="s1">&#39;video_path&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">video_path</span><span class="p">,</span>
+                                <span class="s1">&#39;number_of_animals&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span>
+                                <span class="s1">&#39;number_of_channels&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_channels</span><span class="p">}</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">save_folder</span><span class="p">,</span> <span class="s1">&#39;info.npy&#39;</span><span class="p">),</span> <span class="n">knowledge_transfer_info_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_savers</span><span class="p">()</span>
+        <span class="c1"># Create list of operations to run during training and validation</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ops_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">individual_accuracy</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">global_variables_initializer</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_restoring</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Restoring...&#39;</span><span class="p">)</span>
+            <span class="c1"># Get subfolders from where we will load the network from previous checkpoints</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_conv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_fc_softmax</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_checkpoint_subfolders</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_restore_folder</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;conv&#39;</span><span class="p">,</span> <span class="s1">&#39;softmax&#39;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_knowledge_transfer</span><span class="p">:</span>
+            <span class="c1"># Get subfolders from where we will load the convolutional filters to perform knowledge transfer</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Performing knowledge transfer...&#39;</span><span class="p">)</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_conv</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_checkpoint_subfolders</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_knowledge_transfer_folder</span><span class="p">,[</span><span class="s1">&#39;conv&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_step</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_summaries_writers</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_knowledge_transfer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_knowledge_transfer_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_fc_softmax</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;restore_folder_fc_softmax:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_fc_softmax</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_knowledge_transfer_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_restoring</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_restore_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="c1"># Create savers for the convolutions and the fully conected and softmax separately</span>
+    <span class="k">def</span> <span class="nf">set_savers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saver_conv</span> <span class="o">=</span> <span class="n">createSaver</span><span class="p">(</span><span class="s1">&#39;saver_conv&#39;</span><span class="p">,</span> <span class="n">exclude_fc_and_softmax</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saver_fc_softmax</span> <span class="o">=</span> <span class="n">createSaver</span><span class="p">(</span><span class="s1">&#39;saver_fc_softmax&#39;</span><span class="p">,</span> <span class="n">exclude_fc_and_softmax</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># Create subfolders where we will save the checkpoints of the trainig</span>
+        <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">save_folder_conv</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">save_folder_fc_softmax</span><span class="p">]</span> <span class="o">=</span> <span class="n">create_checkpoint_subfolders</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_save_folder</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;conv&#39;</span><span class="p">,</span> <span class="s1">&#39;softmax&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">create_summaries_writers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary_op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">merge_all</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary_writer_training</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_save_folder</span> <span class="o">+</span> <span class="s1">&#39;/train&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary_writer_validation</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_save_folder</span> <span class="o">+</span> <span class="s1">&#39;/val&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_pl</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_height</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_channels</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;images&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;training model </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">cnn_model</span><span class="p">)</span>
+
+        <span class="n">model_image_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_width</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">target_image_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">target_image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">model_image_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_height</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">target_image_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">target_image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;**************************************************************&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;plh image_width &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_width</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;plh image_height &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_height</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;model_image_width &quot;</span><span class="p">,</span> <span class="n">model_image_width</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;model_image_height &quot;</span><span class="p">,</span> <span class="n">model_image_height</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;**************************************************************&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_logits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fc_vector</span> <span class="o">=</span> <span class="n">CNN_MODELS_DICT</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">cnn_model</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">x_pl</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span>
+                                                                <span class="n">model_image_width</span><span class="p">,</span> <span class="n">model_image_height</span><span class="p">,</span>
+                                                                <span class="bp">self</span><span class="o">.</span><span class="n">image_channels</span><span class="p">,</span>
+                                                                <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">action_on_image</span><span class="p">,</span>
+                                                                <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">pre_target_image_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">softmax_probs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_logits</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">softmax_probs</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">1</span><span class="p">),</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_target_pl</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;labels&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">keep_prob_pl</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;keep_prob&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss_weights_pl</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;loss_weights&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weighted_loss</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimisation_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_optimizer</span><span class="p">()</span>
+            <span class="c1"># self.accuracy = tf.accuracy()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">individual_accuracy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluation</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_layers_to_optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">scopes_layers_to_optimize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layers_to_optimise</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">scope_layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">scopes_layers_to_optimize</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">scope_layer</span><span class="p">,</span> <span class="n">reuse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">scope</span><span class="p">:</span>
+                    <span class="n">W</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;weights&quot;</span><span class="p">)</span>
+                    <span class="n">B</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;biases&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">layers_to_optimise</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">W</span><span class="p">,</span> <span class="n">B</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers_to_optimise</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span> <span class="k">for</span> <span class="n">layers</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers_to_optimise</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">weighted_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cross_entropy</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">softmax_cross_entropy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_logits</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_target_pl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_weights_pl</span><span class="p">),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;CrossEntropyMean&#39;</span><span class="p">)</span>
+        <span class="c1"># cross_entropy = tf.reduce_mean(</span>
+        <span class="c1">#     tf.nn.softmax_cross_entropy_with_logits(logits=y_logits,labels=y), name = &#39;CrossEntropyMean&#39;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_loss_summary</span><span class="p">(</span><span class="n">cross_entropy</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cross_entropy</span>
+
+    <span class="k">def</span> <span class="nf">compute_loss_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_labels</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">training_labels</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">training_labels</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">use_adam_optimiser</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Training with SGD&#39;</span><span class="p">)</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">GradientDescentOptimizer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">use_adam_optimiser</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Training with ADAM&#39;</span><span class="p">)</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdamOptimizer</span><span class="p">(</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">,</span> <span class="n">beta1</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">beta2</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-08</span><span class="p">,</span> <span class="n">use_locking</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Adam&#39;</span><span class="p">)</span>
+        <span class="n">global_step</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;global_step&#39;</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">scopes_layers_to_optimize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Optimizing </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">scopes_layers_to_optimize</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_layers_to_optimize</span><span class="p">()</span>
+            <span class="n">train_op</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">,</span> <span class="n">var_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers_to_optimise</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Optimizing the whole network&#39;</span><span class="p">)</span>
+            <span class="n">train_op</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">train_op</span><span class="p">,</span> <span class="n">global_step</span>
+
+    <span class="k">def</span> <span class="nf">evaluation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">individual_accuracy</span> <span class="o">=</span> <span class="n">compute_individual_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_target_pl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_logits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
+        <span class="n">accuracy</span> <span class="o">=</span> <span class="n">compute_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_target_pl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_logits</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">accuracy</span><span class="p">,</span> <span class="n">individual_accuracy</span>
+
+    <span class="k">def</span> <span class="nf">reinitialize_softmax_and_fully_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Reinitializing softmax and fully connected&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">variables_initializer</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">global_variables</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;soft&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s1">&#39;full&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">restore_convolutional_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ckpt</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">get_checkpoint_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_conv</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saver_conv</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">model_checkpoint_path</span><span class="p">)</span> <span class="c1"># restore convolutional variables</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Restoring convolutional part from </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">ckpt</span><span class="o">.</span><span class="n">model_checkpoint_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saver_conv</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">all_model_checkpoint_paths</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span><span class="p">])</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Restoring convolutional part from </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">ckpt</span><span class="o">.</span><span class="n">all_model_checkpoint_paths</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">restore_classifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ckpt</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">get_checkpoint_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_fc_softmax</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saver_fc_softmax</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">model_checkpoint_path</span><span class="p">)</span> <span class="c1"># restore fully-conected and softmax variables</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Restoring fully-connected and softmax part from </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">ckpt</span><span class="o">.</span><span class="n">model_checkpoint_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saver_fc_softmax</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">all_model_checkpoint_paths</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span><span class="p">])</span> <span class="c1"># restore fully-conected and softmax variables</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Restoring fully-connected and softmax part from </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">ckpt</span><span class="o">.</span><span class="n">all_model_checkpoint_paths</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">restore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">global_variables_initializer</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_restoring</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">restore_convolutional_layers</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">restore_classifier</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_knowledge_transfer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">restore_convolutional_layers</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">compute_batch_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_labels</span><span class="p">):</span>
+        <span class="n">batch_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">*</span><span class="n">batch_labels</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">batch_weights</span>
+
+    <span class="k">def</span> <span class="nf">get_feed_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">batch_images</span><span class="p">,</span> <span class="n">batch_labels</span><span class="p">)</span> <span class="o">=</span> <span class="n">batch</span>
+        <span class="n">batch_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_batch_weights</span><span class="p">(</span><span class="n">batch_labels</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="p">{</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_pl</span><span class="p">:</span> <span class="n">batch_images</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">y_target_pl</span><span class="p">:</span> <span class="n">batch_labels</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">loss_weights_pl</span><span class="p">:</span> <span class="n">batch_weights</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">keep_prob_pl</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keep_prob</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">batch</span><span class="p">):</span>
+        <span class="n">feed_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_feed_dict</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimisation_step</span><span class="p">,</span><span class="n">feed_dict</span> <span class="o">=</span> <span class="n">feed_dict</span><span class="p">)</span>
+        <span class="n">outList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops_list</span><span class="p">,</span> <span class="n">feed_dict</span> <span class="o">=</span> <span class="n">feed_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">outList</span><span class="p">,</span> <span class="n">feed_dict</span>
+
+    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">batch</span><span class="p">):</span>
+        <span class="n">feed_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_feed_dict</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        <span class="n">outList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops_list</span><span class="p">,</span> <span class="n">feed_dict</span> <span class="o">=</span> <span class="n">feed_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">outList</span><span class="p">,</span> <span class="n">feed_dict</span>
+
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">batch</span><span class="p">):</span>
+        <span class="n">feed_dict</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x_pl</span><span class="p">:</span> <span class="n">batch</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">softmax_probs</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">],</span> <span class="n">feed_dict</span> <span class="o">=</span> <span class="n">feed_dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_fully_connected_vectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">batch</span><span class="p">):</span>
+        <span class="n">feed_dict</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x_pl</span><span class="p">:</span> <span class="n">batch</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc_vector</span><span class="p">,</span> <span class="n">feed_dict</span> <span class="o">=</span> <span class="n">feed_dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">write_summaries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">epoch_i</span><span class="p">,</span><span class="n">feed_dict_train</span><span class="p">,</span> <span class="n">feed_dict_val</span><span class="p">):</span>
+        <span class="n">summary_str_training</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary_op</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="n">feed_dict_train</span><span class="p">)</span>
+        <span class="n">summary_str_validation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary_op</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="n">feed_dict_val</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary_writer_training</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summary_str_training</span><span class="p">,</span> <span class="n">epoch_i</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary_writer_validation</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summary_str_validation</span><span class="p">,</span> <span class="n">epoch_i</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_loss_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">loss</span><span class="p">):</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saver_conv</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_folder_conv</span><span class="p">,</span> <span class="s2">&quot;conv.ckpt&quot;</span><span class="p">),</span> <span class="n">global_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_step</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saver_fc_softmax</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_folder_fc_softmax</span><span class="p">,</span> <span class="s2">&quot;softmax.ckpt&quot;</span><span class="p">),</span> <span class="n">global_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_step</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">compute_individual_accuracy</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span><span class="n">logits</span><span class="p">,</span><span class="n">classes</span><span class="p">):</span>
+    <span class="c1"># We add 1 to the labels and predictions to avoid having a 0 label</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span><span class="mi">1</span><span class="p">))[:,</span><span class="mi">1</span><span class="p">],</span><span class="mi">1</span><span class="p">),</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">1</span><span class="p">),</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">labelsRep</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="p">[</span><span class="n">classes</span><span class="p">]),</span> <span class="p">[</span><span class="n">classes</span><span class="p">,</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">labels</span><span class="p">)[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">correct</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span><span class="n">predictions</span><span class="p">),</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">indivCorrect</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span><span class="n">correct</span><span class="p">)</span>
+    <span class="n">indivRep</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">classes</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">labels</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]),</span> <span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">labels</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="n">classes</span><span class="p">])),</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">indivCorrectRep</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">indivCorrect</span><span class="p">,</span> <span class="p">[</span><span class="n">classes</span><span class="p">]),</span> <span class="p">[</span><span class="n">classes</span><span class="p">,</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">labels</span><span class="p">)[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">correctPerIndiv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">indivRep</span><span class="p">,</span><span class="n">indivCorrectRep</span><span class="p">),</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">countCorrect</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">correctPerIndiv</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">numImagesPerIndiv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">labelsRep</span><span class="p">,</span><span class="n">indivRep</span><span class="p">),</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">indivAcc</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">countCorrect</span><span class="p">,</span><span class="n">numImagesPerIndiv</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">indivAcc</span>
+
+<span class="k">def</span> <span class="nf">compute_accuracy</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">logits</span><span class="p">):</span>
+    <span class="c1"># We add 1 to the labels and predictions to avoid having a 0 label</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span><span class="mi">1</span><span class="p">))[:,</span><span class="mi">1</span><span class="p">],</span><span class="mi">1</span><span class="p">),</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">1</span><span class="p">),</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="c1"># acc = tf.metrics.accuracy(labels, predictions)</span>
+    <span class="n">correct_prediction</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;correctPrediction&#39;</span><span class="p">)</span>
+    <span class="n">acc</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">correct_prediction</span><span class="p">,</span> <span class="s1">&#39;float&#39;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;overallAccuracy&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">acc</span>
+
+
+<div class="viewcode-block" id="get_checkpoint_subfolders"><a class="viewcode-back" href="../index.html#id_CNN.get_checkpoint_subfolders">[docs]</a><span class="k">def</span> <span class="nf">get_checkpoint_subfolders</span><span class="p">(</span><span class="n">folderName</span><span class="p">,</span> <span class="n">subfoldersNameList</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    create if it does not exist the folder folderName in CNN and</span>
+<span class="sd">    the same for the subfolders in the subfoldersNameList</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">subPaths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">subfoldersNameList</span><span class="p">:</span>
+        <span class="n">subPath</span> <span class="o">=</span> <span class="n">folderName</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">subPath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">subPath</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> has been created&#39;</span> <span class="o">%</span><span class="n">subPath</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> already exists&#39;</span> <span class="o">%</span><span class="n">subPath</span><span class="p">)</span>
+        <span class="n">subPaths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subPath</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">subPaths</span></div>
+
+<div class="viewcode-block" id="create_checkpoint_subfolders"><a class="viewcode-back" href="../index.html#id_CNN.create_checkpoint_subfolders">[docs]</a><span class="k">def</span> <span class="nf">create_checkpoint_subfolders</span><span class="p">(</span><span class="n">folderName</span><span class="p">,</span> <span class="n">subfoldersNameList</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    create if it does not exist the folder folderName in CNN and</span>
+<span class="sd">    the same for the subfolders in the subfoldersNameList</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">subPaths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">subfoldersNameList</span><span class="p">:</span>
+        <span class="n">subPath</span> <span class="o">=</span> <span class="n">folderName</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">subPath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">subPath</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">subPath</span> <span class="o">+</span> <span class="s1">&#39; has been created&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">subPath</span> <span class="o">+</span> <span class="s1">&#39; already exists&#39;</span><span class="p">)</span>
+        <span class="n">subPaths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subPath</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">subPaths</span></div>
+
+<span class="k">def</span> <span class="nf">createSaver</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">exclude_fc_and_softmax</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">exclude_fc_and_softmax</span><span class="p">:</span>
+        <span class="n">saver</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Saver</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">global_variables</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;soft&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s1">&#39;full&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">,</span> <span class="n">max_to_keep</span> <span class="o">=</span> <span class="mi">1000000</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">exclude_fc_and_softmax</span><span class="p">:</span>
+        <span class="n">saver</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Saver</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">global_variables</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;conv&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">,</span> <span class="n">max_to_keep</span> <span class="o">=</span> <span class="mi">1000000</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The second argument has to be a boolean&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">saver</span>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Mattia G. Bergomi, Francisco Romero Ferrero.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

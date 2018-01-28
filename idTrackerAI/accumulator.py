@@ -3,16 +3,34 @@ import numpy as np
 import random
 import psutil
 import logging
-
-
 from assigner import assign
 from trainer import train
 from accumulation_manager import AccumulationManager, get_predictions_of_candidates_fragments
-
 from constants import THRESHOLD_EARLY_STOP_ACCUMULATION
+
+"""
+The accumulator module contains the main routine used to compute the accumulation process, which
+is an essential part of both the second and third fingerprint protocol.
+"""
 logger = logging.getLogger('__main__.accumulator')
 
 def early_stop_criteria_for_accumulation(number_of_accumulated_images, number_of_unique_images_in_global_fragments):
+    """Short summary.
+
+    Parameters
+    ----------
+    number_of_accumulated_images : int
+        Number of images used during the accumulation process (the labelled dataset used to train the network
+        is subsampled from this set of images).
+    number_of_unique_images_in_global_fragments : int
+        Total number of accumulable images.
+
+    Returns
+    -------
+    float
+        Ratio of accumulated images over accumulable images
+
+    """
     return number_of_accumulated_images / number_of_unique_images_in_global_fragments
 
 def accumulate(accumulation_manager,
@@ -20,11 +38,35 @@ def accumulate(accumulation_manager,
                 global_step,
                 net,
                 identity_transfer):
+    """Short summary.
+
+    Parameters
+    ----------
+    accumulation_manager : <accumulation_manager.AccumulationManager object>
+        Description of parameter `accumulation_manager`.
+    video : <video.Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+    global_step : int
+        network epoch counter
+    net : <net.ConvNetwork object>
+        Convolutional neural network object created according to net.params
+    identity_transfer : bool
+        If true the identity of the individual is also tranferred
+
+    Returns
+    -------
+    float
+        Ratio of accumulated images
+
+    See Also
+    --------
+    early_stop_criteria_for_accumulation
+
+    """
     video.init_accumulation_statistics_attributes()
     accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
 
     while accumulation_manager.continue_accumulation:
-        print("****** inside the while loop ****")
         logger.info("accumulation step %s" %accumulation_manager.counter)
         video.accumulation_step = accumulation_manager.counter
         #(we do not take images from individual fragments already used)

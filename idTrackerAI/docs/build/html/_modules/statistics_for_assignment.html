@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>statistics_for_assignment &mdash; idtrackerai 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai 0.0.1 documentation" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="http://www.idtracker.ai">idtracker.ai</a></li>
+        <li class="active"><a href="http://www.gitlab.com/polaviejalab/idtracker">GitLab</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai 0.0.1 documentation</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+      <li class="active">
+        <a href="../py-modindex.html" title="Python Module Index"
+           >modules</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for statistics_for_assignment</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">constants</span> <span class="k">import</span> <span class="n">MAX_FLOAT</span><span class="p">,</span> <span class="n">MIN_FLOAT</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.statistics_for_assignment&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">normalise_frequencies</span><span class="p">(</span><span class="n">frequencies</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">frequencies</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">frequencies</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">compute_P2_of_individual_fragment_from_blob</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="n">blobs_in_video</span><span class="p">):</span>
+    <span class="c1"># logger.debug(&quot;****Computing P2&quot;)</span>
+    <span class="n">coexisting_blobs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">get_coexisting_blobs_in_fragment</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">)</span>
+    <span class="n">coexisting_blobs_P1_vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">coexisting_blob</span><span class="o">.</span><span class="n">P1_vector</span> <span class="k">for</span> <span class="n">coexisting_blob</span> <span class="ow">in</span> <span class="n">coexisting_blobs</span><span class="p">])</span>
+    <span class="c1"># logger.debug(&quot;coexisting_blobs_P1_vectors: %s&quot; %str(coexisting_blobs_P1_vectors))</span>
+    <span class="n">numerator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">P1_vector</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">coexisting_blobs_P1_vectors</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&quot;second factor in P2: %s&quot; %str(np.prod(1. - coexisting_blobs_P1_vectors, axis = 0)))</span>
+    <span class="c1"># logger.debug(&quot;numerator: %s&quot; %str(numerator))</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">numerator</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">denominator</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># logger.debug(&quot;P1 of blob: %s&quot;, %str(blob.P1_vector))</span>
+        <span class="c1"># logger.debug(&quot;coexisting_blobs_P1_vectors: %s&quot; %str(coexisting_blobs_P1_vectors))</span>
+        <span class="c1"># raise ValueError(&#39;denominator of P2 is 0&#39;)</span>
+        <span class="n">P2</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">P1_vector</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">P2</span> <span class="o">=</span> <span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span>
+    <span class="k">return</span> <span class="n">P2</span>
+
+<div class="viewcode-block" id="is_assignment_ambiguous"><a class="viewcode-back" href="../index.html#statistics_for_assignment.is_assignment_ambiguous">[docs]</a><span class="k">def</span> <span class="nf">is_assignment_ambiguous</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if P2 has two identical maxima. In that case returns the indices.</span>
+<span class="sd">    Else return false.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxima_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">P2_vector</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">maxima_indices</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">maxima_indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span></div>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Mattia G. Bergomi, Francisco Romero Ferrero.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

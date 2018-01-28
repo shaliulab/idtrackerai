@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>video_utils &mdash; idtrackerai 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai 0.0.1 documentation" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="http://www.idtracker.ai">idtracker.ai</a></li>
+        <li class="active"><a href="http://www.gitlab.com/polaviejalab/idtracker">GitLab</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai 0.0.1 documentation</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+      <li class="active">
+        <a href="../py-modindex.html" title="Python Module Index"
+           >modules</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for video_utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="c1"># Import standard libraries</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+
+<span class="c1"># Import third party libraries</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
+
+<span class="c1"># Import application/library specifics</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../utils&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../IdTrackerDeep&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">py_utils</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">video</span> <span class="k">import</span> <span class="n">Video</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compute background and threshold</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">computeBkgParSingleVideo</span><span class="p">(</span><span class="n">starting_frame</span><span class="p">,</span> <span class="n">ending_frame</span><span class="p">,</span> <span class="n">video_path</span><span class="p">,</span> <span class="n">bkg</span><span class="p">):</span>
+    <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video_path</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Adding from starting frame </span><span class="si">%i</span><span class="s1"> to background&#39;</span> <span class="o">%</span><span class="n">starting_frame</span><span class="p">)</span>
+    <span class="n">numFramesBkg</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">frameInds</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">starting_frame</span><span class="p">,</span><span class="n">ending_frame</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">frameInds</span><span class="p">:</span>
+        <span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">cv</span><span class="o">.</span><span class="n">CV_CAP_PROP_POS_FRAMES</span><span class="p">,</span><span class="n">ind</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">,</span> <span class="n">frameBkg</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+            <span class="n">gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frameBkg</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+            <span class="n">gray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">true_divide</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">gray</span><span class="p">))</span>
+            <span class="n">bkg</span> <span class="o">=</span> <span class="n">bkg</span> <span class="o">+</span> <span class="n">gray</span>
+            <span class="n">numFramesBkg</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">bkg</span><span class="p">,</span> <span class="n">numFramesBkg</span>
+
+<span class="k">def</span> <span class="nf">computeBkgParSegmVideo</span><span class="p">(</span><span class="n">video_path</span><span class="p">,</span> <span class="n">bkg</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Adding video </span><span class="si">%s</span><span class="s1"> to background&#39;</span> <span class="o">%</span> <span class="n">video_path</span><span class="p">)</span>
+    <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video_path</span><span class="p">)</span>
+    <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">numFrame</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">cv</span><span class="o">.</span><span class="n">CV_CAP_PROP_FRAME_COUNT</span><span class="p">))</span>
+    <span class="n">numFramesBkg</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">frameInds</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">numFrame</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">frameInds</span><span class="p">:</span>
+        <span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">cv</span><span class="o">.</span><span class="n">CV_CAP_PROP_POS_FRAMES</span><span class="p">,</span><span class="n">ind</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">,</span> <span class="n">frameBkg</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+            <span class="n">gray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frameBkg</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+            <span class="n">gray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">true_divide</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">gray</span><span class="p">))</span>
+            <span class="n">bkg</span> <span class="o">=</span> <span class="n">bkg</span> <span class="o">+</span> <span class="n">gray</span>
+            <span class="n">numFramesBkg</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">bkg</span><span class="p">,</span> <span class="n">numFramesBkg</span>
+
+<div class="viewcode-block" id="computeBkg"><a class="viewcode-back" href="../index.html#video_utils.computeBkg">[docs]</a><span class="k">def</span> <span class="nf">computeBkg</span><span class="p">(</span><span class="n">video</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute background to perform background subtraction.</span>
+<span class="sd">    At this stage the function treats differently videos already segmented in</span>
+<span class="sd">    chunks and videos composed by a single file.&quot;&quot;&quot;</span>
+    <span class="c1"># This holds even if we have not selected a ROI because then the ROI is</span>
+    <span class="c1"># initialized as the full frame</span>
+    <span class="n">bkg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">video</span><span class="o">.</span><span class="n">original_height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">original_width</span><span class="p">))</span>
+    <span class="n">num_cores</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+    <span class="c1"># num_cores = 1</span>
+    <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># one single video</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;one single video, computing bkg in parallel from single video&#39;</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">num_cores</span><span class="p">)(</span><span class="n">delayed</span><span class="p">(</span><span class="n">computeBkgParSingleVideo</span><span class="p">)(</span><span class="n">starting_frame</span><span class="p">,</span> <span class="n">ending_frame</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">video_path</span><span class="p">,</span> <span class="n">bkg</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">starting_frame</span><span class="p">,</span> <span class="n">ending_frame</span><span class="p">)</span> <span class="ow">in</span> <span class="n">video</span><span class="o">.</span><span class="n">episodes_start_end</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># multiple segments video</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">num_cores</span><span class="p">)(</span><span class="n">delayed</span><span class="p">(</span><span class="n">computeBkgParSegmVideo</span><span class="p">)(</span><span class="n">videoPath</span><span class="p">,</span><span class="n">bkg</span><span class="p">)</span> <span class="k">for</span> <span class="n">videoPath</span> <span class="ow">in</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span><span class="p">)</span>
+
+    <span class="n">partialBkg</span> <span class="o">=</span> <span class="p">[</span><span class="n">bkg</span> <span class="k">for</span> <span class="p">(</span><span class="n">bkg</span><span class="p">,</span><span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="n">output</span><span class="p">]</span>
+    <span class="n">totNumFrame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">numFrame</span> <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="n">numFrame</span><span class="p">)</span> <span class="ow">in</span> <span class="n">output</span><span class="p">])</span>
+    <span class="n">bkg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">partialBkg</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">bkg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">true_divide</span><span class="p">(</span><span class="n">bkg</span><span class="p">,</span> <span class="n">totNumFrame</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">bkg</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">checkBkg</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">old_video</span><span class="p">,</span> <span class="n">usePreviousBkg</span><span class="p">):</span>
+    <span class="n">bkg</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">subtract_bkg</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">usePreviousBkg</span> <span class="ow">and</span> <span class="n">old_video</span><span class="o">.</span><span class="n">bkg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bkg</span> <span class="o">=</span> <span class="n">old_video</span><span class="o">.</span><span class="n">bkg</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bkg</span> <span class="o">=</span> <span class="n">computeBkg</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bkg</span>
+
+<div class="viewcode-block" id="segmentVideo"><a class="viewcode-back" href="../index.html#video_utils.segmentVideo">[docs]</a><span class="k">def</span> <span class="nf">segmentVideo</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">minThreshold</span><span class="p">,</span> <span class="n">maxThreshold</span><span class="p">,</span> <span class="n">bkg</span><span class="p">,</span> <span class="n">ROI</span><span class="p">,</span> <span class="n">useBkg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Applies background substraction if requested and thresholds image</span>
+<span class="sd">    :param frame: original frame normalised by the mean. Must be float32</span>
+<span class="sd">    :param minThreshold: minimum intensity threshold (0-255)</span>
+<span class="sd">    :param maxThreshold: maximum intensity threshold (0-255)</span>
+<span class="sd">    :param bkg: background frame (normalised by mean???). Must be float32</span>
+<span class="sd">    :param mask: boolean mask of region of interest where thresholding is performed. uint8, 255 valid, 0 invalid.</span>
+<span class="sd">    :param useBkg: boolean determining if background subtraction is performed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">useBkg</span><span class="p">:</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">absdiff</span><span class="p">(</span><span class="n">bkg</span><span class="p">,</span><span class="n">frame</span><span class="p">)</span> <span class="c1">#only step where frame normalization is important, because the background is normalised</span>
+
+    <span class="n">frameSegmented</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">inRange</span><span class="p">(</span><span class="n">frame</span> <span class="o">*</span> <span class="p">(</span><span class="mf">255.0</span><span class="o">/</span><span class="n">frame</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">minThreshold</span><span class="p">,</span> <span class="n">maxThreshold</span><span class="p">)</span> <span class="c1">#output: 255 in range, else 0</span>
+    <span class="c1"># print(&quot;frame segmented frame &quot;, frameSegmented.shape)</span>
+    <span class="c1"># print(&quot;ROI shape: &quot;, ROI.shape)</span>
+    <span class="n">frameSegmentedMasked</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">(</span><span class="n">frameSegmented</span><span class="p">,</span><span class="n">frameSegmented</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">ROI</span><span class="p">)</span> <span class="c1">#Applying the mask</span>
+    <span class="k">return</span> <span class="n">frameSegmentedMasked</span></div>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Get information from blobs</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">filterContoursBySize</span><span class="p">(</span><span class="n">contours</span><span class="p">,</span><span class="n">minArea</span><span class="p">,</span><span class="n">maxArea</span><span class="p">):</span>
+    <span class="n">goodContours</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">contour</span> <span class="ow">in</span> <span class="n">contours</span><span class="p">:</span>
+        <span class="n">area</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">contourArea</span><span class="p">(</span><span class="n">contour</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">area</span> <span class="o">&gt;</span> <span class="n">minArea</span> <span class="ow">and</span> <span class="n">area</span> <span class="o">&lt;</span> <span class="n">maxArea</span><span class="p">:</span>
+            <span class="n">goodContours</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">contour</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">goodContours</span>
+
+<span class="k">def</span> <span class="nf">coordROI2Full</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">ROI</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">ROI</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">ROI</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">ROI</span> <span class="o">=</span> <span class="p">[</span><span class="n">ROI</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">ROI</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">ROI</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">ROI</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+
+<span class="k">def</span> <span class="nf">cntROI2OriginalFrame</span><span class="p">(</span><span class="n">contours</span><span class="p">,</span><span class="n">ROI</span><span class="p">):</span>
+    <span class="n">contoursFull</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">cnt</span> <span class="ow">in</span> <span class="n">contours</span><span class="p">:</span>
+        <span class="n">cnt</span> <span class="o">=</span> <span class="n">cnt</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">ROI</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">ROI</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">contoursFull</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">contoursFull</span>
+
+<span class="k">def</span> <span class="nf">cnt2BoundingBox</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span><span class="n">boundingBox</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">cnt</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+
+<span class="k">def</span> <span class="nf">full2BoundingBox</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">boundingBox</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">point</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+
+<span class="k">def</span> <span class="nf">cntBB2Full</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span><span class="n">boundingBox</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">cnt</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+
+<span class="k">def</span> <span class="nf">getBoundigBox</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">crossing_detector</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="n">h</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
+    <span class="n">original_diagonal</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">w</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">h</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">45</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">crossing_detector</span> <span class="k">else</span> <span class="mi">55</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">-</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># We only expand the</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">y</span> <span class="o">-</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">+</span> <span class="n">w</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="o">&lt;</span> <span class="n">width</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">w</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">width</span> <span class="o">-</span> <span class="n">x</span>
+    <span class="k">if</span> <span class="n">y</span> <span class="o">+</span> <span class="n">h</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="o">&lt;</span> <span class="n">height</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">h</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">height</span> <span class="o">-</span> <span class="n">y</span>
+    <span class="k">return</span> <span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),(</span><span class="n">x</span> <span class="o">+</span> <span class="n">w</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">h</span><span class="p">)),</span> <span class="n">original_diagonal</span>
+
+<div class="viewcode-block" id="boundingBox_ROI2Full"><a class="viewcode-back" href="../index.html#video_utils.boundingBox_ROI2Full">[docs]</a><span class="k">def</span> <span class="nf">boundingBox_ROI2Full</span><span class="p">(</span><span class="n">bb</span><span class="p">,</span> <span class="n">ROI</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gives back only the first point of bb translated in the full frame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">((</span><span class="n">bb</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">ROI</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">bb</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">ROI</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]),(</span><span class="n">bb</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">ROI</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">bb</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">ROI</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span></div>
+
+<span class="k">def</span> <span class="nf">getCentroid</span><span class="p">(</span><span class="n">cnt</span><span class="p">):</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">moments</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="s1">&#39;m10&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">M</span><span class="p">[</span><span class="s1">&#39;m00&#39;</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="s1">&#39;m01&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">M</span><span class="p">[</span><span class="s1">&#39;m00&#39;</span><span class="p">]</span>
+    <span class="c1"># print(x,y)</span>
+
+    <span class="c1"># x, y = coordROI2Full(x,y,ROI)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">getPixelsList</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+    <span class="n">cimg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">))</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">drawContours</span><span class="p">(</span><span class="n">cimg</span><span class="p">,</span> <span class="p">[</span><span class="n">cnt</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">thickness</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Access the image pixels and create a 1D numpy array then add to list</span>
+    <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cimg</span> <span class="o">==</span> <span class="mi">255</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">sampleBkg</span><span class="p">(</span><span class="n">cntBB</span><span class="p">,</span> <span class="n">miniFrame</span><span class="p">):</span>
+    <span class="c1">#FIXME TO BE REMOVED</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">500</span><span class="p">,</span><span class="mi">500</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">drawContours</span><span class="p">(</span><span class="n">miniFrame</span><span class="p">,</span> <span class="p">[</span><span class="n">cntBB</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">thickness</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Access the image pixels and create a 1D numpy array then add to list</span>
+    <span class="n">bkgSample</span> <span class="o">=</span> <span class="n">miniFrame</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">miniFrame</span> <span class="o">!=</span> <span class="mi">255</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">bkgSample</span>
+
+<span class="k">def</span> <span class="nf">getMiniFrame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cnt</span><span class="p">):</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">boundingBox</span><span class="p">,</span> <span class="n">estimated_body_length</span> <span class="o">=</span> <span class="n">getBoundigBox</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span> <span class="c1"># the estimated body length is the diagonal of the original boundingBox</span>
+    <span class="n">miniFrame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">cntBB</span> <span class="o">=</span> <span class="n">cnt2BoundingBox</span><span class="p">(</span><span class="n">cnt</span><span class="p">,</span><span class="n">boundingBox</span><span class="p">)</span>
+    <span class="c1">#miniFrameBkg = miniFrame.copy()</span>
+    <span class="c1"># bkgSample = sampleBkg(cntBB, miniFrameBkg)</span>
+    <span class="n">pixelsInBB</span> <span class="o">=</span> <span class="n">getPixelsList</span><span class="p">(</span><span class="n">cntBB</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">boundingBox</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">boundingBox</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">pixelsInFullF</span> <span class="o">=</span> <span class="n">pixelsInBB</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">pixelsInFullFF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">([</span><span class="n">pixelsInFullF</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">pixelsInFullF</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]],(</span><span class="n">height</span><span class="p">,</span><span class="n">width</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">boundingBox</span><span class="p">,</span> <span class="n">miniFrame</span><span class="p">,</span> <span class="n">pixelsInFullFF</span><span class="p">,</span> <span class="n">estimated_body_length</span>
+
+<span class="k">def</span> <span class="nf">getBlobsInfoPerFrame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">contours</span><span class="p">):</span>
+    <span class="n">boundingBoxes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">miniFrames</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">centroids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">areas</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">pixels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">estimated_body_lengths</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cnt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">contours</span><span class="p">):</span>
+        <span class="n">boundingBox</span><span class="p">,</span> <span class="n">miniFrame</span><span class="p">,</span> <span class="n">pixelsInFullF</span><span class="p">,</span> <span class="n">estimated_body_length</span> <span class="o">=</span> <span class="n">getMiniFrame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cnt</span><span class="p">)</span>
+        <span class="c1">#bounding boxes</span>
+        <span class="n">boundingBoxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">boundingBox</span><span class="p">)</span>
+        <span class="c1"># miniframes</span>
+        <span class="n">miniFrames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">miniFrame</span><span class="p">)</span>
+        <span class="c1"># centroids</span>
+        <span class="n">centroids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">getCentroid</span><span class="p">(</span><span class="n">cnt</span><span class="p">))</span>
+        <span class="c1"># areas</span>
+        <span class="n">areas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">contourArea</span><span class="p">(</span><span class="n">cnt</span><span class="p">))</span>
+        <span class="c1"># pixels lists</span>
+        <span class="n">pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pixelsInFullF</span><span class="p">)</span>
+        <span class="c1"># estimated body lengths list</span>
+        <span class="n">estimated_body_lengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">estimated_body_length</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">boundingBoxes</span><span class="p">,</span> <span class="n">miniFrames</span><span class="p">,</span> <span class="n">centroids</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">estimated_body_lengths</span>
+
+<span class="k">def</span> <span class="nf">blobExtractor</span><span class="p">(</span><span class="n">segmentedFrame</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">minArea</span><span class="p">,</span> <span class="n">maxArea</span><span class="p">):</span>
+    <span class="n">contours</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">segmentedFrame</span><span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">RETR_TREE</span><span class="p">,</span><span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_NONE</span><span class="p">)</span>
+    <span class="c1"># Filter contours by size</span>
+    <span class="n">good_contours_in_full_frame</span> <span class="o">=</span> <span class="n">filterContoursBySize</span><span class="p">(</span><span class="n">contours</span><span class="p">,</span><span class="n">minArea</span><span class="p">,</span> <span class="n">maxArea</span><span class="p">)</span>
+    <span class="c1"># get contours properties</span>
+    <span class="n">boundingBoxes</span><span class="p">,</span> <span class="n">miniFrames</span><span class="p">,</span> <span class="n">centroids</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">estimated_body_lengths</span> <span class="o">=</span> <span class="n">getBlobsInfoPerFrame</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">good_contours_in_full_frame</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">boundingBoxes</span><span class="p">,</span> <span class="n">miniFrames</span><span class="p">,</span> <span class="n">centroids</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">good_contours_in_full_frame</span><span class="p">,</span> <span class="n">estimated_body_lengths</span>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Mattia G. Bergomi, Francisco Romero Ferrero.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>
