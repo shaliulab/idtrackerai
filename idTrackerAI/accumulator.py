@@ -8,14 +8,12 @@ from trainer import train
 from accumulation_manager import AccumulationManager, get_predictions_of_candidates_fragments
 from constants import THRESHOLD_EARLY_STOP_ACCUMULATION
 
-"""
-The accumulator module contains the main routine used to compute the accumulation process, which
-is an essential part of both the second and third fingerprint protocol.
-"""
 logger = logging.getLogger('__main__.accumulator')
 
 def early_stop_criteria_for_accumulation(number_of_accumulated_images, number_of_unique_images_in_global_fragments):
-    """Short summary.
+    """A particularly succesful accumulation causes an early stop of the training
+    and accumulaton process. This function returns the value, expressed as a ratio
+    that is evaluated to trigger this behaviour.
 
     Parameters
     ----------
@@ -38,7 +36,9 @@ def accumulate(accumulation_manager,
                 global_step,
                 net,
                 identity_transfer):
-    """Short summary.
+    """take care of managing  the process of accumulation
+    of labelled images. Such process, in complex video, allows us to train  the
+    idCNN (or whatever function approximator passed in input as `net`).
 
     Parameters
     ----------

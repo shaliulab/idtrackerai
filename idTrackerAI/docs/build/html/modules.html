@@ -80,7 +80,7 @@
   <ul>
 <li><a class="reference internal" href="#">Modules</a><ul>
 <li><a class="reference internal" href="#module-accumulation_manager">Accumulation manager</a></li>
-<li><a class="reference internal" href="#module-accumulator">Accumulator</a></li>
+<li><a class="reference internal" href="#accumulator">Accumulator</a></li>
 <li><a class="reference internal" href="#module-assigner">Assigner</a></li>
 </ul>
 </li>
@@ -544,12 +544,16 @@ idCNN in an accumulation’s iteration</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-accumulator">
-<span id="accumulator"></span><h2>Accumulator<a class="headerlink" href="#module-accumulator" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<div class="section" id="accumulator">
+<h2>Accumulator<a class="headerlink" href="#accumulator" title="Permalink to this headline">¶</a></h2>
+<p>The accumulator module contains the main routine used to compute the accumulation process, which
+is an essential part of both the second and third fingerprint protocol.</p>
+<span class="target" id="module-accumulator"></span><dl class="function">
 <dt id="accumulator.accumulate">
 <code class="descclassname">accumulator.</code><code class="descname">accumulate</code><span class="sig-paren">(</span><em>accumulation_manager</em>, <em>video</em>, <em>global_step</em>, <em>net</em>, <em>identity_transfer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/accumulator.html#accumulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accumulator.accumulate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Short summary.</p>
+<dd><p>take care of managing  the process of accumulation
+of labelled images. Such process, in complex video, allows us to train  the
+idCNN (or whatever function approximator passed in input as <cite>net</cite>).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -593,7 +597,9 @@ idCNN in an accumulation’s iteration</p>
 <dl class="function">
 <dt id="accumulator.early_stop_criteria_for_accumulation">
 <code class="descclassname">accumulator.</code><code class="descname">early_stop_criteria_for_accumulation</code><span class="sig-paren">(</span><em>number_of_accumulated_images</em>, <em>number_of_unique_images_in_global_fragments</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/accumulator.html#early_stop_criteria_for_accumulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#accumulator.early_stop_criteria_for_accumulation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Short summary.</p>
+<dd><p>A particularly succesful accumulation causes an early stop of the training
+and accumulaton process. This function returns the value, expressed as a ratio
+that is evaluated to trigger this behaviour.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
