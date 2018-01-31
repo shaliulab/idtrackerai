@@ -409,10 +409,10 @@
         <span class="n">sFrame</span> <span class="o">=</span> <span class="n">trackbarValue</span>
         <span class="k">if</span> <span class="n">sNumber</span> <span class="o">!=</span> <span class="n">currentSegment</span><span class="p">:</span> <span class="c1"># we are changing segment</span>
             <span class="n">currentSegment</span> <span class="o">=</span> <span class="n">sNumber</span>
-            <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span><span class="p">:</span>
-                <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span><span class="p">[</span><span class="n">sNumber</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_episodes</span><span class="p">:</span>
+                <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_episodes</span><span class="p">[</span><span class="n">sNumber</span><span class="p">])</span>
         <span class="c1">#Get frame from video file</span>
-        <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_episodes</span><span class="p">:</span>
             <span class="n">start</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">episodes_start_end</span><span class="p">[</span><span class="n">sNumber</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">cv</span><span class="o">.</span><span class="n">CV_CAP_PROP_POS_FRAMES</span><span class="p">,</span><span class="n">sFrame</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -577,10 +577,10 @@
         <span class="n">sNumber</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">in_which_episode</span><span class="p">(</span><span class="n">frame_number</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">sNumber</span> <span class="o">!=</span> <span class="n">currentSegment</span><span class="p">:</span> <span class="c1"># we are changing segment</span>
             <span class="n">currentSegment</span> <span class="o">=</span> <span class="n">sNumber</span>
-            <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span><span class="p">:</span>
-                <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span><span class="p">[</span><span class="n">sNumber</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_episodes</span><span class="p">:</span>
+                <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_episodes</span><span class="p">[</span><span class="n">sNumber</span><span class="p">])</span>
         <span class="c1">#Get frame from video file</span>
-        <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_episodes</span><span class="p">:</span>
             <span class="n">start</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">episodes_start_end</span><span class="p">[</span><span class="n">sNumber</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">cv</span><span class="o">.</span><span class="n">CV_CAP_PROP_POS_FRAMES</span><span class="p">,</span> <span class="n">frame_number</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>

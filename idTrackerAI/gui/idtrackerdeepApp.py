@@ -55,8 +55,8 @@ import cv2
 
 from video import Video
 from py_utils import getExistentFiles, get_spaced_colors_util
-from video_utils import computeBkg, blobExtractor
-from segmentation import segmentVideo
+from video_utils import computeBkg, blob_extractor
+from segmentation import segment_frame
 from list_of_blobs import ListOfBlobs
 from list_of_fragments import ListOfFragments
 from generate_groundtruth import generate_groundtruth
@@ -471,14 +471,14 @@ Start kivy classes
 #         self.av_frame = self.frame / avIntensity
 #         # threshold the frame according to the sliders' values
 #         # print('this is the current background ', self.bkg)
-#         self.segmented_frame = segmentVideo(self.av_frame,
+#         self.segmented_frame = segment_frame(self.av_frame,
 #                                             int(self.min_threshold_slider.value),
 #                                             int(self.max_threshold_slider.value),
 #                                             self.bkg,
 #                                             self.ROI,
 #                                             self.bkg_subtractor_switch.active)
 #         #get information on the blobs find by thresholding
-#         boundingBoxes, miniFrames, _, _, _, goodContours, _ = blobExtractor(self.segmented_frame,
+#         boundingBoxes, miniFrames, _, _, _, goodContours, _ = blob_extractor(self.segmented_frame,
 #                                                                         self.frame,
 #                                                                         int(self.min_area_slider.value),
 #                                                                         int(self.max_area_slider.value))

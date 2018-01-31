@@ -330,16 +330,16 @@ class Video(object):
 
     def check_split_video(self):
         """If the video is divided in chunks retrieves the path to each chunk"""
-        paths_to_video_segments = scanFolder(self.video_path)
+        paths_to_video_episodes = scanFolder(self.video_path)
 
-        if len(paths_to_video_segments) > 1:
-            return paths_to_video_segments
+        if len(paths_to_video_episodes) > 1:
+            return paths_to_video_episodes
         else:
             return None
 
     @property
-    def paths_to_video_segments(self):
-        return self._paths_to_video_segments
+    def paths_to_video_episodes(self):
+        return self._paths_to_video_episodes
 
     @property
     def original_width(self):
@@ -501,7 +501,7 @@ class Video(object):
         self.save()
 
     def get_info(self):
-        self._paths_to_video_segments = self.check_split_video()
+        self._paths_to_video_episodes = self.check_split_video()
         cap = cv2.VideoCapture(self.video_path)
         self._original_width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         self._original_height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
@@ -510,14 +510,14 @@ class Video(object):
         except:
             self._frames_per_second = None
             logger.info("Cannot read frame per second")
-        if self._paths_to_video_segments is None:
+        if self._paths_to_video_episodes is None:
             self._number_of_frames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
             self.get_episodes()
         else:
-            chunks_lengths = [int(cv2.VideoCapture(chunk).get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) for chunk in self._paths_to_video_segments]
+            chunks_lengths = [int(cv2.VideoCapture(chunk).get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) for chunk in self._paths_to_video_episodes]
             self._episodes_start_end = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])) for i in range(1,len(chunks_lengths)+1)]
             self._number_of_frames = np.sum(chunks_lengths)
-            self._number_of_episodes = len(self._paths_to_video_segments)
+            self._number_of_episodes = len(self._paths_to_video_episodes)
         cap.release()
 
     @property
@@ -659,7 +659,7 @@ class Video(object):
         for parallelisation"""
         starting_frames = np.arange(0, self.number_of_frames, FRAMES_PER_EPISODE)
         ending_frames = np.hstack((starting_frames[1:]-1, self.number_of_frames))
-        self._episodes_start_end =zip(starting_frames, ending_frames)
+        self._episodes_start_end = zip(starting_frames, ending_frames)
         self._number_of_episodes = len(starting_frames)
 
     def in_which_episode(self, frame_number):

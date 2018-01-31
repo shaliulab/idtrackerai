@@ -12,7 +12,7 @@ import cv2
 from pprint import pprint
 from scipy.spatial.distance import cdist
 
-from video_utils import blobExtractor
+from video_utils import blob_extractor
 from list_of_fragments import ListOfFragments
 from blob import Blob
 from list_of_blobs import ListOfBlobs
@@ -56,7 +56,7 @@ def get_eroded_blobs(video, blobs_in_frame):
         segmented_frame[pxs[:,0], pxs[:,1]] = 255
 
     segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
-    boundingBoxes, _, centroids, _, pixels_all, contours, _ = blobExtractor(segmented_eroded_frame, segmented_eroded_frame, 0, np.inf)
+    boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(segmented_eroded_frame, segmented_eroded_frame, 0, np.inf)
     return [Blob(centroid, contour, None, bounding_box, pixels = pixels)
                 for centroid, contour, pixels, bounding_box in zip(centroids, contours, pixels_all, boundingBoxes)]
 

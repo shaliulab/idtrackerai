@@ -64,11 +64,11 @@ def computeBkg(video):
     bkg = np.zeros((video.original_height, video.original_width))
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
-    if video.paths_to_video_segments is None: # one single video
+    if video.paths_to_video_episodes is None: # one single video
         print('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSingleVideo)(starting_frame, ending_frame, video.video_path, bkg) for (starting_frame, ending_frame) in video.episodes_start_end)
     else: # multiple segments video
-        output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSegmVideo)(videoPath,bkg) for videoPath in video.paths_to_video_segments)
+        output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSegmVideo)(videoPath,bkg) for videoPath in video.paths_to_video_episodes)
 
     partialBkg = [bkg for (bkg,_) in output]
     totNumFrame = np.sum([numFrame for (_,numFrame) in output])
@@ -87,7 +87,7 @@ def checkBkg(video, old_video, usePreviousBkg):
 
     return bkg
 
-def segmentVideo(frame, minThreshold, maxThreshold, bkg, ROI, useBkg):
+def segment_frame(frame, minThreshold, maxThreshold, bkg, ROI, useBkg):
     """Applies background substraction if requested and thresholds image
     :param frame: original frame normalised by the mean. Must be float32
     :param minThreshold: minimum intensity threshold (0-255)
@@ -230,7 +230,7 @@ def getBlobsInfoPerFrame(frame, contours):
 
     return boundingBoxes, miniFrames, centroids, areas, pixels, estimated_body_lengths
 
-def blobExtractor(segmentedFrame, frame, minArea, maxArea):
+def blob_extractor(segmentedFrame, frame, minArea, maxArea):
     contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
     # Filter contours by size
     good_contours_in_full_frame = filterContoursBySize(contours,minArea, maxArea)

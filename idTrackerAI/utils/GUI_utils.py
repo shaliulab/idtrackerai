@@ -21,8 +21,8 @@ import pyautogui
 import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
-from segmentation import segmentVideo
-from video_utils import checkBkg, blobExtractor
+from segmentation import segment_frame
+from video_utils import checkBkg, blob_extractor
 from py_utils import get_spaced_colors_util, saveFile, loadFile, get_existent_preprocessing_steps
 
 from blob import Blob
@@ -261,18 +261,19 @@ def SegmentationPreview(video):
     if frame.shape[2] == 1 or (np.any(frame[:,:,1] == frame[:,:,2] ) and np.any(frame[:,:, 0] == frame[:,:,1])):
         video._number_of_channels = 1
     else:
-        raise NotImplementedError("Colour videos has still to be integrated")
+        video._number_of_channels = 1
+        # raise NotImplementedError("Colour videos has still to be integrated")
     numFrames = video.number_of_frames
     subtract_bkg = video.subtract_bkg
 
     def thresholder(minTh, maxTh):
         toile = np.zeros_like(frameGray, dtype='uint8')
-        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, video.bkg, video.ROI, subtract_bkg)
+        segmentedFrame = segment_frame(avFrame, minTh, maxTh, video.bkg, video.ROI, subtract_bkg)
         #contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
-        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray, minArea, maxArea)
+        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blob_extractor(segmentedFrame, frameGray, minArea, maxArea)
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()
@@ -322,10 +323,10 @@ def SegmentationPreview(video):
         sFrame = trackbarValue
         if sNumber != currentSegment: # we are changing segment
             currentSegment = sNumber
-            if video.paths_to_video_segments:
-                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
+            if video.paths_to_video_episodes:
+                cap = cv2.VideoCapture(video.paths_to_video_episodes[sNumber])
         #Get frame from video file
-        if video.paths_to_video_segments:
+        if video.paths_to_video_episodes:
             start = video.episodes_start_end[sNumber][0]
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
@@ -433,11 +434,11 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
 
     def thresholder(minTh, maxTh):
         toile = np.zeros_like(frameGray, dtype='uint8')
-        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, video.bkg, video.ROI, video.subtract_bkg)
+        segmentedFrame = segment_frame(avFrame, minTh, maxTh, video.bkg, video.ROI, video.subtract_bkg)
         maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
         minArea = cv2.getTrackbarPos('minArea', 'Bars')
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
-        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray, minArea, maxArea)
+        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blob_extractor(segmentedFrame, frameGray, minArea, maxArea)
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()
@@ -490,10 +491,10 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
         sNumber = video.in_which_episode(frame_number)
         if sNumber != currentSegment: # we are changing segment
             currentSegment = sNumber
-            if video.paths_to_video_segments:
-                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
+            if video.paths_to_video_episodes:
+                cap = cv2.VideoCapture(video.paths_to_video_episodes[sNumber])
         #Get frame from video file
-        if video.paths_to_video_segments:
+        if video.paths_to_video_episodes:
             start = video.episodes_start_end[sNumber][0]
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, frame_number - start)
         else:
