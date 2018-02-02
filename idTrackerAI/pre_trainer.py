@@ -16,7 +16,7 @@ from list_of_global_fragments import ListOfGlobalFragments
 from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
-from constants import MAX_RATIO_OF_PRETRAINED_IMAGES
+from constants import MAX_RATIO_OF_PRETRAINED_IMAGES, BATCH_SIZE_IDCNN
 
 logger = logging.getLogger("__main__.pre_trainer")
 
@@ -56,7 +56,8 @@ def pre_train(video, list_of_fragments, list_of_global_fragments,
                                                                             save_summaries, store_training_accuracy_and_loss_data,
                                                                             store_validation_accuracy_and_loss_data,
                                                                             print_flag = print_flag,
-                                                                            plot_flag = plot_flag)
+                                                                            plot_flag = plot_flag,
+                                                                            batch_size = BATCH_SIZE_IDCNN)
         if ratio_of_pretrained_images > MAX_RATIO_OF_PRETRAINED_IMAGES:
             logger.info("pre-training ended: The network has been pre-trained on more than %.2f of the images in global fragment" %MAX_RATIO_OF_PRETRAINED_IMAGES)
             break
