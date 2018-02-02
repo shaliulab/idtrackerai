@@ -721,10 +721,10 @@ if __name__ == '__main__':
     print("\n**** Assign crossings ****")
     if not loadPreviousDict['crossings']:
         list_of_blobs_no_gaps = copy.deepcopy(list_of_blobs)
-        if not hasattr(list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
-            logger.debug("adding attribute was_a_crossing to every blob")
-            [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
-                list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
+        # if not hasattr(list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
+        #     logger.debug("adding attribute was_a_crossing to every blob")
+        #     [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
+        #         list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
         video._has_crossings_solved = False
         list_of_blobs_no_gaps = close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
         video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
