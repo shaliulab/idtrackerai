@@ -15,7 +15,7 @@ from sklearn.decomposition import PCA
 # Import application/library specifics
 sys.path.append('IdTrackerDeep/utils')
 from py_utils import loadFile, saveFile
-from video_utils import cntBB2Full, full2BoundingBox
+from video_utils import cntBB2Full
 
 from fishcontour import FishContour
 

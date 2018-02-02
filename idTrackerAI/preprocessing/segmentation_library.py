@@ -19,7 +19,7 @@ from py_utils import flatten, loadFile, saveFile
 from video_utils_library import collectAndSaveVideoInfo, generateVideoTOC, getVideoInfo
 from video_utils import segment_frame, blob_extractor
 
-def segment_episode(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea, episode_start_end_frames = None,framesPerSegment=None):
+def segment_episode(path, height, width, mask, useBkg, bkg, EQ, min_threshold, max_threshold, min_area, max_area, episode_start_end_frames = None,framesPerSegment=None):
     # locally called
 
     cap = cv2.VideoCapture(path)
@@ -48,10 +48,10 @@ def segment_episode(path, height, width, mask, useBkg, bkg, EQ, minThreshold, ma
         avIntensity = np.float32(np.mean(frameGray))
         # print avIntensity
         # print frameGray.shape
-        segmentedFrame = segment_frame(frameGray/avIntensity, minThreshold, maxThreshold, bkg, mask, useBkg)
+        segmentedFrame = segment_frame(frameGray/avIntensity, min_threshold, max_threshold, bkg, mask, useBkg)
         # segmentedFrameCopy = segmentedFrame.copy()
         # Find contours in the segmented image
-        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blob_extractor(segmentedFrame, frameGray, minArea, maxArea, height, width)
+        boundingBoxes, miniFrames, centroids, areas, pixels, goodContoursFull, bkgSamples = blob_extractor(segmentedFrame, frameGray, min_area, max_area, height, width)
         if len(centroids) > maxNumBlobs:
             maxNumBlobs = len(centroids)
         ### UNCOMMENT TO PLOT ##################################################
@@ -76,10 +76,10 @@ def segment_episode(path, height, width, mask, useBkg, bkg, EQ, minThreshold, ma
 def segment(videoPaths,preprocParams, mask, centers, useBkg, bkg, EQ):
     # this func is called from idTrackerDeepGUI
     numAnimals = preprocParams['numAnimals']
-    minThreshold = preprocParams['minThreshold']
-    maxThreshold = preprocParams['maxThreshold']
-    minArea = preprocParams['minArea']
-    maxArea = preprocParams['maxArea']
+    min_threshold = preprocParams['min_threshold']
+    max_threshold = preprocParams['max_threshold']
+    min_area = preprocParams['min_area']
+    max_area = preprocParams['max_area']
 
     width, height = getVideoInfo(videoPaths)
 
@@ -106,7 +106,7 @@ def segment(videoPaths,preprocParams, mask, centers, useBkg, bkg, EQ):
         numBlobs = []
         path = videoPaths[0]
         for segmFramesIndicesSubList in segmFramesIndicesSubLists:
-            OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segment_episode)(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea, episode_start_end_frames, framesPerSegment) for episode_start_end_frames in segmFramesIndicesSubList)
+            OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segment_episode)(path, height, width, mask, useBkg, bkg, EQ, min_threshold, max_threshold, min_area, max_area, episode_start_end_frames, framesPerSegment) for episode_start_end_frames in segmFramesIndicesSubList)
             allSegmentsSubList = [(out[0],out[1]) for out in OupPutParallel]
             allSegments.append(allSegmentsSubList)
             numBlobs.append([out[2] for out in OupPutParallel])
@@ -119,18 +119,18 @@ def segment(videoPaths,preprocParams, mask, centers, useBkg, bkg, EQ):
         allSegments = []
         numBlobs = []
         for pathsSubList in pathsSubLists:
-            OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segment_episode)(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea) for path in pathsSubList)
+            OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segment_episode)(path, height, width, mask, useBkg, bkg, EQ, min_threshold, max_threshold, min_area, max_area) for path in pathsSubList)
             allSegmentsSubList = [(out[0],out[1]) for out in OupPutParallel]
             allSegments.append(allSegmentsSubList)
             numBlobs.append([out[2] for out in OupPutParallel])
 
     allSegments = flatten(allSegments)
     maxNumBlobs = max(flatten(numBlobs))
-    # OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segment_episode)(path, height, width, mask, useBkg, bkg, EQ, minThreshold, maxThreshold, minArea, maxArea) for path in videoPaths)
+    # OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segment_episode)(path, height, width, mask, useBkg, bkg, EQ, min_threshold, max_threshold, min_area, max_area) for path in videoPaths)
     # allSegments = [(out[0],out[1]) for out in OupPutParallel]
     # # print allSegments
     # maxNumBlobs = max([out[2] for out in OupPutParallel])
     # # print maxNumBlobs
     allSegments = sorted(allSegments, key=lambda x: x[0][0])
     numFrames = generateVideoTOC(allSegments, videoPaths[0])
-    collectAndSaveVideoInfo(videoPaths[0], numFrames, height, width, numAnimals, num_cores, minThreshold,maxThreshold,maxArea,maxNumBlobs)
+    collectAndSaveVideoInfo(videoPaths[0], numFrames, height, width, numAnimals, num_cores, min_threshold,max_threshold,max_area,maxNumBlobs)

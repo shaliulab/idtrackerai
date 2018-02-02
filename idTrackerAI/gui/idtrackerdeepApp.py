@@ -55,7 +55,7 @@ import cv2
 
 from video import Video
 from py_utils import getExistentFiles, get_spaced_colors_util
-from video_utils import computeBkg, blob_extractor
+from video_utils import cumpute_background, blob_extractor
 from segmentation import segment_frame
 from list_of_blobs import ListOfBlobs
 from list_of_fragments import ListOfFragments
@@ -478,12 +478,12 @@ Start kivy classes
 #                                             self.ROI,
 #                                             self.bkg_subtractor_switch.active)
 #         #get information on the blobs find by thresholding
-#         boundingBoxes, miniFrames, _, _, _, goodContours, _ = blob_extractor(self.segmented_frame,
+#         boundingBoxes, miniFrames, _, _, _, good_contours, _ = blob_extractor(self.segmented_frame,
 #                                                                         self.frame,
 #                                                                         int(self.min_area_slider.value),
 #                                                                         int(self.max_area_slider.value))
 #         #draw the blobs on the original frame
-#         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)
+#         cv2.drawContours(self.frame, good_contours, -1, color=255, thickness = -1)
 #         #display the segmentation
 #         if self.count_scrollup != 0:
 #             self.dst = cv2.warpAffine(self.frame, self.M, (self.frame.shape[1], self.frame.shape[1]))
