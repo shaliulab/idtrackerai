@@ -30,6 +30,6 @@ class BkgSubtraction(BoxLayout):
         self.saving_popup.dismiss()
 
     def compute_bkg(self, *args):
-        self.bkg = computeBkg(CHOSEN_VIDEO.video)
+        self.bkg = cumpute_background(CHOSEN_VIDEO.video)
         self.save_bkg()
         self.computing_popup.dismiss()

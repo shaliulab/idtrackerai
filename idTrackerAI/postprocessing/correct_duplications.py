@@ -12,7 +12,7 @@ from pprint import pprint
 
 from list_of_blobs import ListOfBlobs
 from blob import Blob
-from video_utils import segment_frame, filterContoursBySize, getPixelsList, getBoundigBox
+from video_utils import segment_frame, filter_contours_by_area, get_pixels, get_bounding_box
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob
 
 def solve_duplications_loop(list_of_fragments, first_frame_first_global_fragment, scope = None):

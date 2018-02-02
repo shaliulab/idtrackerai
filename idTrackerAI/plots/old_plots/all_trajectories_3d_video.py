@@ -44,7 +44,7 @@ from GUI_utils import selectFile,\
                     frame_by_frame_identity_inspector,\
                     selectDir
 from py_utils import getExistentFiles, get_spaced_colors_util
-from video_utils import checkBkg
+from video_utils import check_background_substraction
 from pre_trainer import pre_train
 from accumulation_manager import AccumulationManager
 from network_params import NetworkParams
