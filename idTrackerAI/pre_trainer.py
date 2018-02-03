@@ -47,7 +47,7 @@ def pre_train(video, list_of_fragments, list_of_global_fragments,
         epoch_index_to_plot = 0
 
     for i, pretraining_global_fragment in enumerate(tqdm(list_of_global_fragments.global_fragments, desc = '\nPretraining network')):
-        net, ratio_of_pretrained_images, global_epoch, _, _ = pre_train_global_fragment(net,
+        net, ratio_of_pretrained_images, global_epoch, _, _, _ = pre_train_global_fragment(net,
                                                                             pretraining_global_fragment,
                                                                             list_of_fragments,
                                                                             global_epoch,
@@ -145,7 +145,7 @@ def pre_train_global_fragment(net,
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'pretraining_gf%i.pdf'%i))
     ratio_of_pretrained_images = list_of_fragments.compute_ratio_of_images_used_for_pretraining()
-    logger.debug("limit ratio of images to be used during pretraining: %.2f (if higher than %.2f we stop)" %(ratio_of_pretrained_images, MAX_RATIO_OF_PRETRAINED_IMAGES))
+    logger.debug("limit ratio of images to be used during pretraining: %.4f (if higher than %.2f we stop)" %(ratio_of_pretrained_images, MAX_RATIO_OF_PRETRAINED_IMAGES))
     return net, ratio_of_pretrained_images, global_epoch, store_training_accuracy_and_loss_data, store_validation_accuracy_and_loss_data, list_of_fragments
 
 def pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, pretrain_network_params):
@@ -166,5 +166,5 @@ def pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, p
                     store_accuracy_and_error = True,
                     check_for_loss_plateau = True,
                     save_summaries = False,
-                    print_flag = False,
+                    print_flag = True,
                     plot_flag = False)
