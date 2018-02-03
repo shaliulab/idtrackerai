@@ -59,7 +59,7 @@ def pre_train(video, list_of_fragments, list_of_global_fragments,
                                                                             plot_flag = plot_flag,
                                                                             batch_size = BATCH_SIZE_IDCNN)
         if ratio_of_pretrained_images > MAX_RATIO_OF_PRETRAINED_IMAGES:
-            logger.info("pre-training ended: The network has been pre-trained on more than %.2f of the images in global fragment" %MAX_RATIO_OF_PRETRAINED_IMAGES)
+            logger.info("pre-training ended: The network has been pre-trained on more than %.4f of the images in global fragment" %MAX_RATIO_OF_PRETRAINED_IMAGES)
             break
 
     return net
