@@ -106,7 +106,6 @@ if __name__ == '__main__':
     logger.info("Log files saved in %s" %video.logs_folder)
     #Asking user whether to reuse preprocessing steps...'
     processes_list = ['preprocessing',
-                    'use_previous_knowledge_transfer_decision',
                     'first_accumulation',
                     'pretraining',
                     'second_accumulation',
@@ -130,6 +129,7 @@ if __name__ == '__main__':
     ####   trained. Works better when transfering to similar ####
     ####   conditions (light, animal type, age, ...)         ####
     #############################################################
+    loadPreviousDict['use_previous_knowledge_transfer_decision'] = True
     if not bool(loadPreviousDict['use_previous_knowledge_transfer_decision']):
         knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
