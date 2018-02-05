@@ -391,6 +391,7 @@ class PreprocessingPreview(BoxLayout):
         CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
 
     def apply_bkg_subtraction(self, instance, active):
+        self.areas_plotted = False
         CHOSEN_VIDEO.video._subtract_bkg = active
         if CHOSEN_VIDEO.video.subtract_bkg == True:
             if CHOSEN_VIDEO.video.bkg is not None:
@@ -400,7 +401,9 @@ class PreprocessingPreview(BoxLayout):
                 self.update_bkg_and_ROI_in_CHOSEN_VIDEO()
                 self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
             elif CHOSEN_VIDEO.video.original_bkg is None:
+
                 self.bkg_subtractor.computing_popup.open()
+
         else:
             self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
@@ -429,14 +432,50 @@ class PreprocessingPreview(BoxLayout):
         self.add_widget(self.container_layout)
         self.add_widget(self.visualiser)
         self.currentSegment = 0
+        self.areas_plotted = False
         self.create_areas_figure()
         self.number_of_detected_blobs = [0]
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.show_preprocessing)
 
-    def create_areas_figure(self):
+    @staticmethod
+    def set_matplotlib_params(font_size = 8):
+        matplotlib.rcParams.update({'font.size': font_size, 'axes.labelsize': font_size,
+                                    'xtick.labelsize' : font_size, 'ytick.labelsize' : font_size,
+                                    'legend.fontsize': font_size})
+
+    def create_areas_figure(self, visualiser = None):
+        self.set_matplotlib_params()
         self.fig, self.ax = plt.subplots(1)
-        self.fig.subplots_adjust(left=0.0, bottom=0.0, right=1, top=1, wspace=None, hspace=0.5)
+        self.fig.subplots_adjust(left=.1, bottom=.1, right=1, top=1, wspace=None, hspace=0.5)
+        self.fig.set_facecolor((.188, .188, .188))
+        self.ax.set_xlabel('blob')
+        self.ax.set_ylabel('area')
+        self.fig.canvas.set_window_title('Areas')
+        self.ax.set_facecolor((.188, .188, .188))
+        self.ax.tick_params(color='white', labelcolor='white')
+        self.ax.xaxis.label.set_color('white')
+        self.ax.yaxis.label.set_color('white')
+        [spine.set_edgecolor('white') for spine in self.ax.spines.values()]
+        self.area_bars = FigureCanvasKivyAgg(self.fig)
+        self.area_bars.size_hint = (1., .2)
         self.area_bars_width = .5
+        if visualiser is None:
+            visualiser = self.visualiser
+
+    def plot_areas_figure(self, areas, visualiser):
+        self.ax.clear()
+        self.ax.bar(range(len(areas)), areas, self.area_bars_width)
+        if len(areas) > 0:
+            self.ax.axhline(np.min(areas), color = 'w', linewidth = .3)
+        self.area_bars.draw()
+        has_child = False
+
+        for c in list(visualiser.children):
+            if isinstance(c, FigureCanvasKivyAgg):
+                has_child = True
+
+        if not has_child:
+            visualiser.add_widget(self.area_bars)
 
     def show_preprocessing(self, frame, visualiser = None, sliders = None, hide_video_slider = False):
         visualiser = self.visualiser if visualiser is None else visualiser
@@ -461,7 +500,6 @@ class PreprocessingPreview(BoxLayout):
             self.max_threshold_slider.value = 255
             self.max_threshold_slider.disabled = True
         else:
-            self.max_threshold_slider.value = 0
             self.max_threshold_slider.disabled = False
         avIntensity = np.float32(np.mean(self.frame))
         self.av_frame = self.frame / avIntensity
@@ -477,15 +515,9 @@ class PreprocessingPreview(BoxLayout):
                                                                         int(max_area_slider.value))
         if hasattr(self, "number_of_detected_blobs"):
             self.number_of_detected_blobs.append(len(areas))
-        self.ax.clear()
-        self.ax.bar(range(len(areas)), areas, self.area_bars_width)
-        self.ax.axhline(np.mean(areas), color = 'k', linewidth = .2)
-        self.ax.set_xlabel('blob')
-        self.ax.set_ylabel('area')
-        self.ax.set_facecolor((.118, .118, .118))
-        self.area_bars = FigureCanvasKivyAgg(self.fig)
-        self.area_bars.size_hint = (1., .2)
-        visualiser.add_widget(self.area_bars)
+
+
+        self.plot_areas_figure(areas, visualiser)
         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)
         if self.count_scrollup != 0:
             self.dst = cv2.warpAffine(self.frame, self.M, (self.frame.shape[1], self.frame.shape[1]))

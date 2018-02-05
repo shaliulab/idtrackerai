@@ -12,6 +12,7 @@ sys.path.append('../utils')
 sys.path.append('../IdTrackerDeep')
 from py_utils import *
 from video import Video
+from constants import BACKGROUND_SUBTRACTION_PERIOD
 
 """
 Compute background and threshold
@@ -20,7 +21,7 @@ def computeBkgParSingleVideo(starting_frame, ending_frame, video_path, bkg):
     cap = cv2.VideoCapture(video_path)
     print('Adding from starting frame %i to background' %starting_frame)
     numFramesBkg = 0
-    frameInds = range(starting_frame,ending_frame, 100)
+    frameInds = range(starting_frame,ending_frame, BACKGROUND_SUBTRACTION_PERIOD)
     for ind in frameInds:
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
         ret, frameBkg = cap.read()
