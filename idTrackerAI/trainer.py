@@ -15,6 +15,7 @@ from id_CNN import ConvNetwork
 from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
+from constants import BATCH_SIZE_IDCNN
 
 logger = logging.getLogger("__main__.trainer")
 
@@ -30,7 +31,8 @@ def train(video,
             plot_flag,
             global_step = 0,
             identity_transfer = False,
-            accumulation_manager = None):
+            accumulation_manager = None,
+            batch_size = BATCH_SIZE_IDCNN):
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
     logger.info("Training...")
@@ -44,7 +46,7 @@ def train(video,
         fig, ax_arr = plt.subplots(4)
         fig.canvas.set_window_title('Accumulation ' + str(video.accumulation_trial) + '-' + str(video.accumulation_step))
         fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
-    # Instantiate data_set
+    # Instantiate data set
     training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images, labels)
     # Convert labels to one hot vectors
     training_dataset.convert_labels_to_one_hot()
@@ -57,16 +59,19 @@ def train(video,
     net.compute_loss_weights(training_dataset.labels)
     trainer = EpochRunner(training_dataset,
                         starting_epoch = global_step,
-                        print_flag = print_flag)
+                        print_flag = print_flag,
+                        batch_size = batch_size)
     validator = EpochRunner(validation_dataset,
                         starting_epoch = global_step,
-                        print_flag = print_flag)
+                        print_flag = print_flag,
+                        batch_size = batch_size)
     #set criteria to stop the training
     stop_training = Stop_Training(net.params.number_of_animals,
                                 check_for_loss_plateau = check_for_loss_plateau,
                                 first_accumulation_flag = video.accumulation_step == 0)
 
     global_step0 = global_step
+
     while not stop_training(store_training_accuracy_and_loss_data,
                             store_validation_accuracy_and_loss_data,
                             trainer._epochs_completed):
@@ -78,7 +83,7 @@ def train(video,
         net.session.run(net.global_step.assign(trainer.starting_epoch + trainer._epochs_completed))
         # write summaries if asked
         if save_summaries:
-            net.write_summaries(trainer.starting_epoch + trainer._epochs_completed,feed_dict_train, feed_dict_val)
+            net.write_summaries(trainer.starting_epoch + trainer._epochs_completed, feed_dict_train, feed_dict_val)
         # Update counter
         trainer._epochs_completed += 1
         validator._epochs_completed += 1

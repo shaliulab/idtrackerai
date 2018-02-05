@@ -299,12 +299,13 @@ def check_and_change_video_path(video,old_video):
     return old_video
 
 def set_load_previous_dict(old_video, processes, existentFile):
-    attributes = ['has_been_preprocessed', 'use_previous_knowledge_transfer_decision',
+    attributes = [ 'has_been_preprocessed',
                     'first_accumulation_finished',
                     'has_been_pretrained', 'second_accumulation_finished',
                     'has_been_assigned', 'has_duplications_solved',
                     'has_crossings_solved', 'has_trajectories',
                     'has_trajectories_wo_gaps']
+
     for i, attribute in enumerate(attributes):
         attr_value = getattr(old_video, attribute)
         if attr_value == True:

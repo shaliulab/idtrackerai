@@ -357,7 +357,7 @@ def interpolate_trajectories_during_gaps(video, list_of_blobs, list_of_fragments
 
         if frame_number != 0:
             missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame)
-            if len(missing_identities) > 0:
+            if len(missing_identities) > 0 and len(blobs_in_frame) >= 1:
                 gap_interval = find_the_gap_interval(blobs_in_video, possible_identities, frame_number, list_of_occluded_identities)
                 forward_backward_list_of_frames = get_forward_backward_list_of_frames(gap_interval)
 

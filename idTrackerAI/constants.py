@@ -103,6 +103,11 @@ if equal or bigger than THRESHOLD_ACCEPTABLE_ACCUMULATION.
 (1) THRESHOLD_EARLY_STOP_ACCUMULATION is not reached
 """
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
+
+"""***MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
+***"""
+MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS = 3
+
 '''***MAXIMAL_IMAGES_PER_ANIMAL***
 Maximal number of images per indiviudal to be included in the training dataset
 of the idCNN

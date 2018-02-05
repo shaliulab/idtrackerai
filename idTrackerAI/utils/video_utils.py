@@ -4,11 +4,9 @@ import os
 import sys
 import numpy as np
 import multiprocessing
-
 # Import third party libraries
 import cv2
 from joblib import Parallel, delayed
-
 # Import application/library specifics
 sys.path.append('../utils')
 sys.path.append('../IdTrackerDeep')
@@ -19,7 +17,6 @@ from constants import BACKGROUND_SUBTRACTION_PERIOD
 """
 Compute background and threshold
 """
-
 def computeBkgParSingleVideo(starting_frame, ending_frame, video_path, bkg):
     cap = cv2.VideoCapture(video_path)
     print('Adding from starting frame %i to background' %starting_frame)
@@ -60,17 +57,13 @@ def computeBkg(video):
     """Compute background to perform background subtraction.
     At this stage the function treats differently videos already segmented in
     chunks and videos composed by a single file."""
-    # This holds even if we have not selected a ROI because then the ROI is
-    # initialized as the full frame
     bkg = np.zeros((video.original_height, video.original_width))
     num_cores = multiprocessing.cpu_count()
-    # num_cores = 1
     if video.paths_to_video_segments is None: # one single video
         print('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSingleVideo)(starting_frame, ending_frame, video.video_path, bkg) for (starting_frame, ending_frame) in video.episodes_start_end)
-    else: # multiple segments video
+    else:
         output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSegmVideo)(videoPath,bkg) for videoPath in video.paths_to_video_segments)
-
     partialBkg = [bkg for (bkg,_) in output]
     totNumFrame = np.sum([numFrame for (_,numFrame) in output])
     bkg = np.sum(np.asarray(partialBkg),axis=0)
@@ -90,7 +83,7 @@ def checkBkg(video, old_video, usePreviousBkg):
 
 def segmentVideo(frame, minThreshold, maxThreshold, bkg, ROI, useBkg):
     """Applies background substraction if requested and thresholds image
-    :param frame: original frame normalised by the mean. Must be float32
+    :param frame: original frame normalised by the mean. Float32
     :param minThreshold: minimum intensity threshold (0-255)
     :param maxThreshold: maximum intensity threshold (0-255)
     :param bkg: background frame (normalised by mean???). Must be float32
@@ -99,7 +92,6 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, ROI, useBkg):
     """
     if useBkg:
         frame = cv2.absdiff(bkg,frame) #only step where frame normalization is important, because the background is normalised
-
     frameSegmented = cv2.inRange(frame * (255.0/frame.max()), minThreshold, maxThreshold) #output: 255 in range, else 0
     # print("frame segmented frame ", frameSegmented.shape)
     # print("ROI shape: ", ROI.shape)
@@ -170,28 +162,15 @@ def boundingBox_ROI2Full(bb, ROI):
 
 def getCentroid(cnt):
     M = cv2.moments(cnt)
-
     x = M['m10']/M['m00']
     y = M['m01']/M['m00']
-    # print(x,y)
-
-    # x, y = coordROI2Full(x,y,ROI)
     return (x,y)
 
 def getPixelsList(cnt, width, height):
     cimg = np.zeros((height, width))
     cv2.drawContours(cimg, [cnt], -1, color=255, thickness = -1)
-    # Access the image pixels and create a 1D numpy array then add to list
     pts = np.where(cimg == 255)
     return zip(pts[0],pts[1])
-
-def sampleBkg(cntBB, miniFrame):
-    #FIXME TO BE REMOVED
-    frame = np.zeros((500,500)).astype('uint8')
-    cv2.drawContours(miniFrame, [cntBB], -1, color=255, thickness = -1)
-    # Access the image pixels and create a 1D numpy array then add to list
-    bkgSample = miniFrame[np.where(miniFrame != 255)]
-    return bkgSample
 
 def getMiniFrame(frame, cnt):
     height = frame.shape[0]
@@ -199,8 +178,6 @@ def getMiniFrame(frame, cnt):
     boundingBox, estimated_body_length = getBoundigBox(cnt, width, height) # the estimated body length is the diagonal of the original boundingBox
     miniFrame = frame[boundingBox[0][1]:boundingBox[1][1], boundingBox[0][0]:boundingBox[1][0]]
     cntBB = cnt2BoundingBox(cnt,boundingBox)
-    #miniFrameBkg = miniFrame.copy()
-    # bkgSample = sampleBkg(cntBB, miniFrameBkg)
     pixelsInBB = getPixelsList(cntBB, np.abs(boundingBox[0][0] - boundingBox[1][0]), np.abs(boundingBox[0][1] - boundingBox[1][1]))
     pixelsInFullF = pixelsInBB + np.asarray([boundingBox[0][1], boundingBox[0][0]])
     pixelsInFullFF = np.ravel_multi_index([pixelsInFullF[:,0], pixelsInFullF[:,1]],(height,width))
@@ -216,26 +193,17 @@ def getBlobsInfoPerFrame(frame, contours):
 
     for i, cnt in enumerate(contours):
         boundingBox, miniFrame, pixelsInFullF, estimated_body_length = getMiniFrame(frame, cnt)
-        #bounding boxes
         boundingBoxes.append(boundingBox)
-        # miniframes
         miniFrames.append(miniFrame)
-        # centroids
         centroids.append(getCentroid(cnt))
-        # areas
         areas.append(cv2.contourArea(cnt))
-        # pixels lists
         pixels.append(pixelsInFullF)
-        # estimated body lengths list
         estimated_body_lengths.append(estimated_body_length)
 
     return boundingBoxes, miniFrames, centroids, areas, pixels, estimated_body_lengths
 
 def blobExtractor(segmentedFrame, frame, minArea, maxArea):
     contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-    # Filter contours by size
     good_contours_in_full_frame = filterContoursBySize(contours,minArea, maxArea)
-    # get contours properties
     boundingBoxes, miniFrames, centroids, areas, pixels, estimated_body_lengths = getBlobsInfoPerFrame(frame, good_contours_in_full_frame)
-
     return boundingBoxes, miniFrames, centroids, areas, pixels, good_contours_in_full_frame, estimated_body_lengths

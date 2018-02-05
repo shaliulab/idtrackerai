@@ -3,12 +3,7 @@ import os
 import random
 import logging
 import numpy as np
-from matplotlib import pyplot as plt
-import matplotlib.lines as mlines
-import seaborn as sns
-
 from globalfragment import GlobalFragment
-from get_predictions import GetPrediction
 from assigner import assign, compute_identification_statistics_for_non_accumulated_fragments
 from accumulation_manager import AccumulationManager
 from constants import CERTAINTY_THRESHOLD
@@ -113,6 +108,9 @@ class ListOfGlobalFragments(object):
         return self.first_global_fragment_for_accumulation.index_beginning_of_fragment
 
     def plot_P1s_identity_transfer(self, video):
+        from matplotlib import pyplot as plt
+        import matplotlib.lines as mlines
+        import seaborn as sns
         P1_vectors = np.asarray([fragment.P1_vector for fragment in self.first_global_fragment_for_accumulation.individual_fragments])
         certainties = np.asarray([fragment.certainty for fragment in self.first_global_fragment_for_accumulation.individual_fragments])
         indices = np.argmax(P1_vectors, axis = 1)

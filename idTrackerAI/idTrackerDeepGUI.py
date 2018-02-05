@@ -106,7 +106,6 @@ if __name__ == '__main__':
     logger.info("Log files saved in %s" %video.logs_folder)
     #Asking user whether to reuse preprocessing steps...'
     processes_list = ['preprocessing',
-                    'use_previous_knowledge_transfer_decision',
                     'first_accumulation',
                     'pretraining',
                     'second_accumulation',
@@ -130,6 +129,7 @@ if __name__ == '__main__':
     ####   trained. Works better when transfering to similar ####
     ####   conditions (light, animal type, age, ...)         ####
     #############################################################
+    loadPreviousDict['use_previous_knowledge_transfer_decision'] = True
     if not bool(loadPreviousDict['use_previous_knowledge_transfer_decision']):
         knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
@@ -641,7 +641,7 @@ if __name__ == '__main__':
     print("************** After solving impossible jumps ************************")
     print("Number of fragments with zero identity: ", len([f for f in list_of_fragments.fragments
                                                             if f.assigned_identity == 0]))
-    print("Number of fragments with zero _was_a_crossingidentity by P2: ",
+    print("Number of fragments with zero identity by P2: ",
                     len([f for f in list_of_fragments.fragments
                     if f.assigned_identity == 0
                     and hasattr(f, 'zero_identity_assigned_by_P2')]))
@@ -721,10 +721,10 @@ if __name__ == '__main__':
     print("\n**** Assign crossings ****")
     if not loadPreviousDict['crossings']:
         list_of_blobs_no_gaps = copy.deepcopy(list_of_blobs)
-        if not hasattr(list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
-            logger.debug("adding attribute was_a_crossing to every blob")
-            [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
-                list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
+        # if not hasattr(list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
+        #     logger.debug("adding attribute was_a_crossing to every blob")
+        #     [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
+        #         list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
         video._has_crossings_solved = False
         list_of_blobs_no_gaps = close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
         video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')

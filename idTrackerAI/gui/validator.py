@@ -80,9 +80,11 @@ class Validator(BoxLayout):
         try:
             identity = int(self.wc_identity_input.text)
             frame_number = self.visualiser.video_slider.value
-            if identity not in self.wrong_crossing_list[frame_number]:
-                self.wrong_crossing_list[frame_number].append(identity)
-                self.wrong_crossing_counter[identity] += 1
+            print('frame_number ', frame_number)
+            if identity not in CHOSEN_VIDEO.video.wrong_crossing_list[frame_number]:
+                CHOSEN_VIDEO.video.wrong_crossing_list[frame_number].append(identity)
+                CHOSEN_VIDEO.video.wrong_crossing_counter[identity] += 1
+                self.save_groundtruth_btn.disabled = False
             else:
                 print("you already added this identity, it will not be counted twice")
             self.compute_accuracy_button.disabled = False
@@ -109,9 +111,9 @@ class Validator(BoxLayout):
         try:
             identity = int(self.wc_identity_input.text)
             frame_number = self.visualiser.video_slider.value
-            if identity not in self.wrong_crossing_list[frame_number]:
-                self.wrong_crossing_list[frame_number].append(identity)
-                self.unidentified_individuals_counter[int(self.unidentified_identity_input.text)] += 1
+            if identity not in CHOSEN_VIDEO.video.wrong_crossing_list[frame_number]:
+                CHOSEN_VIDEO.video.wrong_crossing_list[frame_number].append(identity)
+                CHOSEN_VIDEO.video.unidentified_individuals_counter[int(self.unidentified_identity_input.text)] += 1
             else:
                 print("you already added this identity, it will not be counted twice")
             self.compute_accuracy_button.disabled = False
@@ -160,11 +162,11 @@ class Validator(BoxLayout):
         self.blobs_in_video = self.list_of_blobs.blobs_in_video
         self.count_scrollup = 0
         self.scale = 1
-        self.wrong_crossing_counter = {identity: 0 for identity in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
-        self.wrong_crossing_list = [[]] * CHOSEN_VIDEO.video.number_of_frames
+        CHOSEN_VIDEO.video.wrong_crossing_counter = {identity: 0 for identity in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
+        CHOSEN_VIDEO.video.wrong_crossing_list = [[] for i in range(CHOSEN_VIDEO.video.number_of_frames)]
         self.create_count_bad_crossing_popup()
         self.wc_identity_input.bind(on_text_validate = self.on_enter_wrong_crossing_identity)
-        self.unidentified_individuals_counter = {identity: 0 for identity in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
+        CHOSEN_VIDEO.video.unidentified_individuals_counter = {identity: 0 for identity in range(1, CHOSEN_VIDEO.video.number_of_animals + 1)}
         self.create_non_identified_individual_popup()
         self.unidentified_identity_input.bind(on_text_validate = self.on_enter_non_identified_individual)
         self.loading_popup.dismiss()
@@ -175,33 +177,26 @@ class Validator(BoxLayout):
             CHOSEN_VIDEO.video._first_frame_first_global_fragment = CHOSEN_VIDEO.old_video.first_frame_first_global_fragment
         return CHOSEN_VIDEO.video.first_frame_first_global_fragment
 
-    def do(self, *args):
-        try:
-            if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
-                CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
-            if  CHOSEN_VIDEO.processes_to_restore is not None\
-                and 'crossings' in CHOSEN_VIDEO.processes_to_restore\
-                and CHOSEN_VIDEO.processes_to_restore['crossings']:
-                self.create_choose_list_of_blobs_popup()
-                self.lob_btn1.bind(on_press = self.show_loading_text)
-                self.lob_btn2.bind(on_press = self.show_loading_text)
-                self.lob_btn1.bind(on_release = self.on_choose_list_of_blobs_btns_press)
-                self.lob_btn2.bind(on_release = self.on_choose_list_of_blobs_btns_press)
-                self.choose_list_of_blobs_popup.open()
-            else:
-                self.loading_popup.open()
-                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
-                self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
-                if not self.list_of_blobs.blobs_are_connected:
-                    self.list_of_blobs.reconnect()
-                self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
-                self._keyboard.bind(on_key_down=self._on_keyboard_down)
-                self.populate_validation_tab()
-
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+    def do(self, *args):        
+        if "assignment" in CHOSEN_VIDEO.processes_to_restore.keys() and CHOSEN_VIDEO.processes_to_restore['assignment']:
+            CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
+        if  CHOSEN_VIDEO.video.has_been_assigned and CHOSEN_VIDEO.video.has_crossings_solved:
+            self.create_choose_list_of_blobs_popup()
+            self.lob_btn1.bind(on_press = self.show_loading_text)
+            self.lob_btn2.bind(on_press = self.show_loading_text)
+            self.lob_btn1.bind(on_release = self.on_choose_list_of_blobs_btns_press)
+            self.lob_btn2.bind(on_release = self.on_choose_list_of_blobs_btns_press)
+            self.choose_list_of_blobs_popup.open()
+        elif CHOSEN_VIDEO.video.has_been_assigned:
+            self.loading_popup.open()
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
+            self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
+            if not self.list_of_blobs.blobs_are_connected:
+                self.list_of_blobs.reconnect()
+            self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+            self._keyboard.bind(on_key_down=self._on_keyboard_down)
+            self.populate_validation_tab()
+        else:
             self.warning_popup.open()
 
     def init_segmentZero(self):
@@ -478,12 +473,9 @@ class Validator(BoxLayout):
         self.show_saving()
 
     def save_groundtruth_list_of_blobs(self, *args):
-        self.go_and_save()
-        self.popup_saving.dismiss()
-
-    def go_and_save(self):
         self.list_of_blobs.save(CHOSEN_VIDEO.video, path_to_save = self.list_of_blobs_save_path)
         CHOSEN_VIDEO.video.save()
+        self.popup_saving.dismiss()
 
     def modifyIdOpenPopup(self, blob_to_modify):
         self.container = BoxLayout()
@@ -700,8 +692,8 @@ class Validator(BoxLayout):
                                                 self.blobs_in_video,
                                                 self.gt_start_frame,
                                                 self.gt_end_frame,
-                                                wrong_crossing_counter = self.wrong_crossing_counter,
-                                                unidentified_individuals_counter = self.unidentified_individuals_counter,
+                                                wrong_crossing_counter = CHOSEN_VIDEO.video.wrong_crossing_counter,
+                                                unidentified_individuals_counter = CHOSEN_VIDEO.video.unidentified_individuals_counter,
                                                 save_gt = False)
 
     def save_groundtruth(self):
@@ -726,8 +718,12 @@ class Validator(BoxLayout):
             self.plot_final_statistics()
             self.statistics_popup.open()
             CHOSEN_VIDEO.video.gt_start_end = (self.groundtruth.start, self.groundtruth.end)
-            CHOSEN_VIDEO.video.gt_accuracy = gt_accuracies
-            CHOSEN_VIDEO.video.gt_results = results
+            if self.with_gaps:
+                CHOSEN_VIDEO.video.gt_accuracy = gt_accuracies
+                CHOSEN_VIDEO.video.gt_results = results
+            else:
+                CHOSEN_VIDEO.video.gt_accuracy_no_gaps = gt_accuracies
+                CHOSEN_VIDEO.video.gt_results_no_gaps = results
             CHOSEN_VIDEO.video.save()
 
     def compute_and_save_session_accuracy_wrt_groundtruth_APP(self, *args):

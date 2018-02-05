@@ -3,15 +3,9 @@ import os
 import sys
 import random
 import logging
-
 sys.path.append('./utils')
-
 import numpy as np
-from matplotlib import pyplot as plt
-import matplotlib.lines as mlines
-import seaborn as sns
 from tqdm import tqdm
-
 from fragment import Fragment
 from py_utils import set_attributes_of_object_to_value, append_values_to_lists
 
@@ -214,6 +208,9 @@ class ListOfFragments(object):
         return {key: getattr(self, key) for key in self.__dict__ if key in attributes_to_return}
 
     def plot_stats(self, video):
+        from matplotlib import pyplot as plt
+        import matplotlib.lines as mlines
+        import seaborn as sns
         plt.ion()
         fig, ax = plt.subplots(1,1)
         sns.set_style("ticks")
