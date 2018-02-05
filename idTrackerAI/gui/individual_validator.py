@@ -386,9 +386,12 @@ class IndividualValidator(BoxLayout):
         count_future_corrections = 0
         new_blob_identity = modified_blob.user_generated_identity
         if modified_blob.is_an_individual:
+            print("is and individual")
+            print("fragment_identifier ", modified_blob.fragment_identifier)
             current = modified_blob
 
             while len(current.next) == 1 and current.next[0].fragment_identifier == modified_blob.fragment_identifier:
+                print("in first while")
                 current.next[0]._user_generated_identity = current.user_generated_identity
                 current = current.next[0]
                 count_future_corrections += 1
@@ -396,6 +399,7 @@ class IndividualValidator(BoxLayout):
             current = modified_blob
 
             while len(current.previous) == 1 and current.previous[0].fragment_identifier == modified_blob.fragment_identifier:
+                print("in second while")
                 current.previous[0]._user_generated_identity = current.user_generated_identity
                 current = current.previous[0]
                 count_past_corrections += 1
@@ -410,7 +414,9 @@ class IndividualValidator(BoxLayout):
         self.compute_accuracy_button.disabled = False
         if not self.blob_to_modify.is_a_crossing:
             self.blob_to_modify._user_generated_identity = self.individual_to_follow
+            print("propagating identity")
             self.propagate_groundtruth_identity_in_individual_fragment()
+            print("end of propagating identity")
             self.modify_id_popup.dismiss()
         self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func=self.writeIds)
 
