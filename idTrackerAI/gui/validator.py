@@ -177,7 +177,7 @@ class Validator(BoxLayout):
             CHOSEN_VIDEO.video._first_frame_first_global_fragment = CHOSEN_VIDEO.old_video.first_frame_first_global_fragment
         return CHOSEN_VIDEO.video.first_frame_first_global_fragment
 
-    def do(self, *args):        
+    def do(self, *args):
         if "assignment" in CHOSEN_VIDEO.processes_to_restore.keys() and CHOSEN_VIDEO.processes_to_restore['assignment']:
             CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
         if  CHOSEN_VIDEO.video.has_been_assigned and CHOSEN_VIDEO.video.has_crossings_solved:
@@ -328,12 +328,14 @@ class Validator(BoxLayout):
         the coordinates of the original image
         """
         coords = np.asarray(coords)
-        if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and  CHOSEN_VIDEO.video.resolution_reduction != 1:
-            original_frame_width = int(CHOSEN_VIDEO.video.width * CHOSEN_VIDEO.video.resolution_reduction)
-            original_frame_height = int(CHOSEN_VIDEO.video.height * CHOSEN_VIDEO.video.resolution_reduction)
-        else:
-            original_frame_width = int(CHOSEN_VIDEO.video.width)
-            original_frame_height = int(CHOSEN_VIDEO.video.height)
+        # if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and  CHOSEN_VIDEO.video.resolution_reduction != 1:
+        #     original_frame_width = int(CHOSEN_VIDEO.video.width * CHOSEN_VIDEO.video.resolution_reduction)
+        #     original_frame_height = int(CHOSEN_VIDEO.video.height * CHOSEN_VIDEO.video.resolution_reduction)
+        # else:
+        #     original_frame_width = int(CHOSEN_VIDEO.video.width)
+        #     original_frame_height = int(CHOSEN_VIDEO.video.height)
+        original_frame_width = int(CHOSEN_VIDEO.video.width)
+        original_frame_height = int(CHOSEN_VIDEO.video.height)
         actual_frame_width, actual_frame_height = self.visualiser.display_layout.size
         self.offset = self.visualiser.footer.height
         coords[1] = coords[1] - self.offset
