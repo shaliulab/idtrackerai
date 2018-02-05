@@ -381,7 +381,7 @@ def get_bounding_box_image(frame, cnt):
     pixels_in_bounding_box = get_pixels(contour_in_bounding_box,
                             np.abs(bounding_box[0][0] - bounding_box[1][0]),
                             np.abs(bounding_box[0][1] - bounding_box[1][1]))
-    pixels_in_full_frame = pixels_in_bounding_box +
+    pixels_in_full_frame = pixels_in_bounding_box + \
                             np.asarray([bounding_box[0][1], bounding_box[0][0]])
     pixels_in_full_frame_ravelled = np.ravel_multi_index(
                                     [pixels_in_full_frame[:,0], pixels_in_full_frame[:,1]],

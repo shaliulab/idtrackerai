@@ -188,6 +188,31 @@ def plot_histogram_individual_fragments(ax, number_of_images_in_individual_fragm
         ax.legend(loc = 7)
     sns.despine(ax = ax)
 
+def get_number_of_images_in_shortest_fragment_in_first_global_fragment(list_of_global_fragments, video):
+    if hasattr(video, 'accumulation_folder'):
+        list_of_global_fragments.order_by_distance_travelled()
+        global_fragment_for_accumulation = int(video.accumulation_folder[-1])
+        if global_fragment_for_accumulation > 0:
+            global_fragment_for_accumulation -= 1
+
+        number_of_images_in_fragments = list_of_global_fragments.global_fragments[global_fragment_for_accumulation].number_of_images_per_individual_fragment
+        print('minimum number of images ', np.min(number_of_images_in_fragments))
+        return np.min(number_of_images_in_fragments)
+    else:
+        return None
+
+def get_mean_number_of_images_in_first_global_fragment(list_of_global_fragments, video):
+    if hasattr(video, 'accumulation_folder'):
+        list_of_global_fragments.order_by_distance_travelled()
+        global_fragment_for_accumulation = int(video.accumulation_folder[-1])
+        if global_fragment_for_accumulation > 0:
+            global_fragment_for_accumulation -= 1
+
+        number_of_images_in_fragments = list_of_global_fragments.global_fragments[global_fragment_for_accumulation].number_of_images_per_individual_fragment
+        return np.mean(number_of_images_in_fragments)
+    else:
+        return None
+
 def plot_histogram_first_global_fragment_distribution(ax, list_of_global_fragments, video, scale_parameter, shape_parameter, accuracy, protocol):
     list_of_global_fragments.order_by_distance_travelled()
     global_fragment_for_accumulation = int(video.accumulation_folder[-1])
@@ -257,6 +282,8 @@ if __name__ == '__main__':
     accuracy = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
     accuracy_in_accumulation = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
     accuracy_after_accumulation = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
+    images_in_shortest_fragment_in_first_global_fragment = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
+    mean_number_of_iamgse_in_first_global_fragment = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
 
     plt.ion()
     window = plt.get_current_fig_manager().window
@@ -321,6 +348,8 @@ if __name__ == '__main__':
                         accuracy[i,k,j,l] = results_data_frame_rep.accuracy.item() if video_object_found else None
                         accuracy_in_accumulation[i,k,j,l] = results_data_frame_rep.accuracy_in_accumulation.item() if video_object_found else None
                         accuracy_after_accumulation[i,k,j,l] = results_data_frame_rep.accuracy_after_accumulation.item() if video_object_found else None
+                        images_in_shortest_fragment_in_first_global_fragment[i,k,j,l] = get_number_of_images_in_shortest_fragment_in_first_global_fragment(list_of_global_fragments, video)
+                        mean_number_of_iamgse_in_first_global_fragment[i,k,j,l] = get_mean_number_of_images_in_first_global_fragment(list_of_global_fragments, video)
 
                     if l == 0:
                         ### Plot distributions
@@ -375,6 +404,27 @@ if __name__ == '__main__':
         fig_distributions.savefig(os.path.join(path_to_save_figure, file_name_gamma_distributions), transparent = True)
         fig_statistics.savefig(os.path.join(path_to_save_figure, file_name_statistics), transparent = True)
         fig_gf.savefig(os.path.join(path_to_save_figure, file_name_first_global_fragment_distribution), transparent = True)
+
+    ### plot minimun number of images in first global fragment vs accuracy
+    fig_num_images_accuracy, ax_arr_num_images_accuracy = plt.subplots(2,3, sharey = True, sharex = False)
+    fig_num_images_accuracy.set_size_inches((screen_x/100,screen_y/100))
+    fig_num_images_accuracy.suptitle('Number of images in first global fragment (min and mean) vs accuracy')
+    fig_distributions.suptitle('Gamma distributions: Group size %i - repetition %i' %(group_size, repetition))
+    for i, group_size in enumerate(group_sizes_list):
+        all_accuracies = np.ravel(accuracy[i,:,:,:])
+        minimum_number_of_images = np.ravel(images_in_shortest_fragment_in_first_global_fragment[i,:,:,:])
+        mean_number_of_images = np.ravel(mean_number_of_iamgse_in_first_global_fragment[i,:,:,:])
+        ax_arr_num_images_accuracy[0,i].semilogx(minimum_number_of_images, all_accuracies, 'o', alpha = .5)
+        ax_arr_num_images_accuracy[0,i].set_xlabel('Number of images in smaller fragment')
+        ax_arr_num_images_accuracy[0,i].set_ylabel('Accuracy')
+        ax_arr_num_images_accuracy[0,i].set_title('Group size %i' %group_size)
+
+        ax_arr_num_images_accuracy[1,i].semilogx(mean_number_of_images, all_accuracies, 'o', alpha = .5)
+        ax_arr_num_images_accuracy[1,i].set_xlabel('Mean number of images in global first fragment')
+        ax_arr_num_images_accuracy[1,i].set_ylabel('Accuracy')
+    fig_num_images_accuracy.set_size_inches((screen_x/100,screen_y/100))
+    path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0])
+    fig_num_images_accuracy.savefig(os.path.join(path_to_save_figure, 'number_of_imags_vs_accuracy.pdf'), transparent = True)
 
     ### Compute average over repetitions
     protocol = np.nanmean(protocol, axis = 3)
