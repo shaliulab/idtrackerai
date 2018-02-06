@@ -42,8 +42,7 @@ html_theme_options = {
         "sidebar": "left",
         "scipy_org_logo": True,
         "navigation_links" : True,
-        "rootlinks": [("http://www.idtracker.ai", "idtracker.ai"),
-                      ("http://www.gitlab.com/polaviejalab/idtracker", "GitLab repo")]
+        "rootlinks": [("http://www.gitlab.com/polaviejalab/idtracker", "GitLab repo")]
     }
 html_sidebars = {
             '**': [
