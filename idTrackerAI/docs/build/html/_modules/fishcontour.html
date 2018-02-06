@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
     
-    <title>fishcontour &mdash; idtrackerai 0.0.1 documentation</title>
+    <title>fishcontour &mdash; idtrackerai v0.0 Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
@@ -17,7 +17,7 @@
         VERSION:     '0.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  false
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,7 +27,7 @@
     <script type="text/javascript" src="../_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex.html" >
     <link rel="search" title="Search" href="../search.html" >
-    <link rel="top" title="idtrackerai 0.0.1 documentation" href="../index.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
     <link rel="up" title="Module code" href="index.html" > 
   </head>
   <body>
@@ -49,10 +49,9 @@
 	    <div class="spc-navbar">
               
     <ul class="nav nav-pills pull-left">
-        <li class="active"><a href="http://www.idtracker.ai">idtracker.ai</a></li>
-        <li class="active"><a href="http://www.gitlab.com/polaviejalab/idtracker">GitLab</a></li>
+        <li class="active"><a href="http://www.gitlab.com/polaviejalab/idtracker">GitLab repo</a></li>
 	
-        <li class="active"><a href="../index.html">idtrackerai 0.0.1 documentation</a></li>
+        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
 	
           <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
     </ul>
@@ -62,10 +61,6 @@
       <li class="active">
         <a href="../genindex.html" title="General Index"
            accesskey="I">index</a>
-      </li>
-      <li class="active">
-        <a href="../py-modindex.html" title="Python Module Index"
-           >modules</a>
       </li>
     </ul>
               
@@ -95,7 +90,7 @@
 
 <span class="kn">from</span> <span class="nn">constants</span> <span class="k">import</span> <span class="n">SMOOTH_SIGMA</span><span class="p">,</span> <span class="n">HEAD_DIAMETER</span>
 
-<div class="viewcode-block" id="find_max"><a class="viewcode-back" href="../index.html#fishcontour.find_max">[docs]</a><span class="k">def</span> <span class="nf">find_max</span><span class="p">(</span><span class="n">curv</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<div class="viewcode-block" id="find_max"><a class="viewcode-back" href="../modules.html#fishcontour.find_max">[docs]</a><span class="k">def</span> <span class="nf">find_max</span><span class="p">(</span><span class="n">curv</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns the nth local maximum of the array f (Default is 2nd)</span>
 <span class="sd">    :param f: one dimensional array</span>
 <span class="sd">    :param n: positive integer</span>
@@ -177,7 +172,7 @@
             <span class="nb">print</span> <span class="s1">&#39;Warning: M[&quot;m00&quot;] might be zero&#39;</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">cX</span><span class="p">,</span><span class="n">cY</span><span class="p">)</span>
 
-<div class="viewcode-block" id="smooth"><a class="viewcode-back" href="../index.html#fishcontour.smooth">[docs]</a><span class="k">def</span> <span class="nf">smooth</span><span class="p">(</span><span class="n">contour</span><span class="p">):</span>
+<div class="viewcode-block" id="smooth"><a class="viewcode-back" href="../modules.html#fishcontour.smooth">[docs]</a><span class="k">def</span> <span class="nf">smooth</span><span class="p">(</span><span class="n">contour</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns a smoother FishContour() with the same length.</span>
 <span class="sd">    Care is taken to make indeces invariant (i.e. no offset caused by filtering)</span>
 
@@ -203,7 +198,10 @@
     <div class="row-fluid">
     <ul class="inline pull-left">
       <li>
-        &copy; Copyright 2018, Mattia G. Bergomi, Francisco Romero Ferrero.
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Feb 05, 2018.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.

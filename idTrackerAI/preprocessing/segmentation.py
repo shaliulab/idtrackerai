@@ -26,6 +26,7 @@ from video_utils import segment_frame, blob_extractor
 The segmentation module
 """
 logger = logging.getLogger("__main__.segmentation")
+
 def get_videoCapture(video, path, episode_start_end_frames):
     """Gives the VideoCapture (OpenCV) object to read the frames for the segmentation
     and the number of frames to read. If `episode_start_end_frames` is None then a `path` must be
