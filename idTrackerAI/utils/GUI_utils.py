@@ -378,7 +378,7 @@ def SegmentationPreview(video):
     cv2.createTrackbar('start', 'Bars', 0, numFrames-1, scroll )
     cv2.createTrackbar('minTh', 'Bars', 0, 255, changeMinTh)
     cv2.createTrackbar('maxTh', 'Bars', 0, 255, changeMaxTh)
-    cv2.createTrackbar('minArea', 'Bars', 0, 2000, changeMinArea)
+    cv2.createTrackbar('minArea', 'Bars', 0, 5000, changeMinArea)
     cv2.createTrackbar('maxArea', 'Bars', 0, 60000, changeMaxArea)
     cv2.createTrackbar('ResUp', 'Bars', 1, 20, resizeImageUp)
     cv2.createTrackbar('ResDown', 'Bars', 1, 20, resizeImageDown)
