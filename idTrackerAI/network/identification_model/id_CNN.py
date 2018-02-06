@@ -69,10 +69,12 @@ class ConvNetwork():
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
         if self.is_restoring:
+            print("Restoring")
             logger.debug('Restoring...')
             # Get subfolders from where we will load the network from previous checkpoints
             [self.restore_folder_conv, self.restore_folder_fc_softmax] = get_checkpoint_subfolders( self.params._restore_folder, ['conv', 'softmax'])
         elif self.is_knowledge_transfer:
+            print("Knowledge transfer")
             # Get subfolders from where we will load the convolutional filters to perform knowledge transfer
             logger.debug('Performing knowledge transfer...')
             [self.restore_folder_conv] = get_checkpoint_subfolders(self.params._knowledge_transfer_folder,['conv'])
