@@ -177,7 +177,7 @@ class Validator(BoxLayout):
             CHOSEN_VIDEO.video._first_frame_first_global_fragment = CHOSEN_VIDEO.old_video.first_frame_first_global_fragment
         return CHOSEN_VIDEO.video.first_frame_first_global_fragment
 
-    def do(self, *args):        
+    def do(self, *args):
         if "assignment" in CHOSEN_VIDEO.processes_to_restore.keys() and CHOSEN_VIDEO.processes_to_restore['assignment']:
             CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
         if  CHOSEN_VIDEO.video.has_been_assigned and CHOSEN_VIDEO.video.has_crossings_solved:
@@ -237,7 +237,7 @@ class Validator(BoxLayout):
                     frame_index = frame_index - 1
                 blobs_in_frame = self.blobs_in_video[frame_index]
                 for blob in blobs_in_frame:
-                    if not blob.is_an_individual:
+                    if not blob.is_an_individual or blob.assigned_identity == 0:
                         non_crossing = False
                         if instance is not None:
                             self.visualiser.video_slider.value = frame_index
