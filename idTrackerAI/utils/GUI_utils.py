@@ -23,11 +23,15 @@ from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
 from segmentation import segmentVideo
 from video_utils import checkBkg, blobExtractor
-from py_utils import get_spaced_colors_util, saveFile, loadFile, get_existent_preprocessing_steps
-
+from py_utils import get_existent_preprocessing_steps
 from blob import Blob
 
-logger = logging.getLogger("__main__.GUI_utils")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.GUI_utils")
 
 """
 Display messages and errors
@@ -79,11 +83,9 @@ def selectOptions(optionsList, loadPreviousDict=None, text="Select preprocessing
     if is_processes_list:
         loadPreviousDict = load_previous_dict_check(optionsList, dict((key, value) for (key, value) in zip(optionsList, varValues)))
     else:
-        print("varvalues ", varValues)
         loadPreviousDict = dict((key, value) for (key, value) in zip(optionsList, varValues))
 
     master.destroy()
-    print("")
     return loadPreviousDict
 
 def selectFile():
@@ -441,12 +443,8 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
         cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()
-        print(showerCopy.shape)
         resUp = cv2.getTrackbarPos('ResUp', 'Bars') if cv2.getTrackbarPos('ResUp', 'Bars') > 0 else 1
         resDown = cv2.getTrackbarPos('ResDown', 'Bars') if cv2.getTrackbarPos('ResDown', 'Bars') > 0 else 1
-        print(resUp, resDown)
-        print(video.resize)
-
         showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
         showerCopy = cv2.resize(showerCopy,None, fx = 1/resDown, fy = 1/resDown)
         numColumns = 5

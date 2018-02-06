@@ -1,24 +1,26 @@
 from __future__ import absolute_import, division, print_function
-# Import standard libraries
 import os
 import sys
 import numpy as np
 import multiprocessing
-# Import third party libraries
 import cv2
 from joblib import Parallel, delayed
-# Import application/library specifics
 sys.path.append('../utils')
 sys.path.append('../IdTrackerDeep')
 from py_utils import *
 from video import Video
-
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.video_utils")
 """
 Compute background and threshold
 """
 def computeBkgParSingleVideo(starting_frame, ending_frame, video_path, bkg):
     cap = cv2.VideoCapture(video_path)
-    print('Adding from starting frame %i to background' %starting_frame)
+    logger.info('Adding from starting frame %i to background' %starting_frame)
     numFramesBkg = 0
     frameInds = range(starting_frame,ending_frame, 100)
     for ind in frameInds:
@@ -35,7 +37,7 @@ def computeBkgParSingleVideo(starting_frame, ending_frame, video_path, bkg):
     return bkg, numFramesBkg
 
 def computeBkgParSegmVideo(video_path, bkg):
-    print('Adding video %s to background' % video_path)
+    logger.info('Adding video %s to background' % video_path)
     cap = cv2.VideoCapture(video_path)
     counter = 0
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
@@ -59,7 +61,6 @@ def computeBkg(video):
     bkg = np.zeros((video.original_height, video.original_width))
     num_cores = multiprocessing.cpu_count()
     if video.paths_to_video_segments is None: # one single video
-        print('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSingleVideo)(starting_frame, ending_frame, video.video_path, bkg) for (starting_frame, ending_frame) in video.episodes_start_end)
     else:
         output = Parallel(n_jobs=num_cores)(delayed(computeBkgParSegmVideo)(videoPath,bkg) for videoPath in video.paths_to_video_segments)
@@ -71,7 +72,6 @@ def computeBkg(video):
 
 def checkBkg(video, old_video, usePreviousBkg):
     bkg = None
-
     if video.subtract_bkg:
         if usePreviousBkg and old_video.bkg is not None:
             bkg = old_video.bkg
@@ -91,10 +91,12 @@ def segmentVideo(frame, minThreshold, maxThreshold, bkg, ROI, useBkg):
     """
     if useBkg:
         frame = cv2.absdiff(bkg,frame) #only step where frame normalization is important, because the background is normalised
-    frameSegmented = cv2.inRange(frame * (255.0/frame.max()), minThreshold, maxThreshold) #output: 255 in range, else 0
-    # print("frame segmented frame ", frameSegmented.shape)
-    # print("ROI shape: ", ROI.shape)
-    frameSegmentedMasked = cv2.bitwise_and(frameSegmented,frameSegmented, mask=ROI) #Applying the mask
+        frame = frame * (255.0/frame.max())
+        frame = 255 - frame
+    else:
+        frame = frame * (255.0/frame.max())
+    frameSegmented = cv2.inRange(frame, minThreshold, maxThreshold) #output: 255 in range, else 0
+    frameSegmentedMasked = cv2.bitwise_and(frameSegmented,frameSegmented, mask = ROI) #Applying the mask
     return frameSegmentedMasked
 
 """

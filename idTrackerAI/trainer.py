@@ -3,12 +3,9 @@ import os
 import sys
 sys.path.append('./network')
 sys.path.append('./network/identification_model')
-
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
-import logging
-
 from network_params import NetworkParams
 from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
@@ -16,8 +13,12 @@ from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 from constants import BATCH_SIZE_IDCNN
-
-logger = logging.getLogger("__main__.trainer")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.trainer")
 
 def train(video,
             fragments,
@@ -38,9 +39,6 @@ def train(video,
     logger.info("Training...")
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training', scope = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation', scope = 'training')
-    print("-----------------------")
-    print("store_training_accuracy_and_loss_data", store_training_accuracy_and_loss_data.__dict__.keys())
-    print("store_validation_accuracy_and_loss_data", store_validation_accuracy_and_loss_data.__dict__.keys())
     if plot_flag:
         plt.ion()
         fig, ax_arr = plt.subplots(4)

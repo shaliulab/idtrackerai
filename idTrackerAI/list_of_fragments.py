@@ -2,14 +2,17 @@ from __future__ import absolute_import, division, print_function
 import os
 import sys
 import random
-import logging
 sys.path.append('./utils')
 import numpy as np
 from tqdm import tqdm
 from fragment import Fragment
 from py_utils import set_attributes_of_object_to_value, append_values_to_lists
-
-logger = logging.getLogger("__main__.list_of_fragments")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.list_of_fragments")
 
 class ListOfFragments(object):
     def __init__(self, fragments):
@@ -328,7 +331,6 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                 fragments.append(fragment)
 
             set_attributes_of_object_to_value(blob, attributes_to_set, value = None)
-    print("getting coexisting individual fragments indices")
+    logger.info("getting coexisting individual fragments indices")
     [fragment.get_coexisting_individual_fragments_indices(fragments) for fragment in fragments]
-    print("coexisting fragments done")
     return fragments

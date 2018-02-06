@@ -4,15 +4,17 @@ import logging
 import sys
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
-
 import numpy as np
 from tqdm import tqdm
-
 from blob import Blob
 from model_area import ModelArea
 from erosion import get_eroded_blobs, get_new_blobs_in_frame_after_erosion
-
-logger = logging.getLogger("__main__.list_of_blobs")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.list_of_blobs")
 
 class ListOfBlobs(object):
     def __init__(self, blobs_in_video = None, number_of_frames = None):
@@ -90,7 +92,7 @@ class ListOfBlobs(object):
                     counter += 1
 
         self.number_of_individual_fragments = counter
-        print("number_of_individual_fragments, ", counter)
+        logger.info("number_of_individual_fragments, %i" %counter)
 
     def compute_crossing_fragment_identifier(self):
         """we define a crossing fragment as a crossing that in subsequent frames
@@ -117,14 +119,15 @@ class ListOfBlobs(object):
                 if blob.is_a_crossing and blob.fragment_identifier is None:
                     propagate_crossing_identifier(blob, fragment_identifier)
                     fragment_identifier += 1
-        print("number_of_crossing_fragments, ", fragment_identifier - self.number_of_individual_fragments)
-        print("total number of fragments, ", fragment_identifier)
+        logger.info("number_of_crossing_fragments: %i" %(fragment_identifier - self.number_of_individual_fragments))
+        logger.info("total number of fragments: %i" %fragment_identifier)
 
     def compute_overlapping_between_subsequent_frames(self):
         def set_frame_number_to_blobs_in_frame(blobs_in_frame, frame_number):
             for blob in blobs_in_frame:
                 blob.frame_number = frame_number
         self.disconnect()
+
         for frame_i in tqdm(xrange(1, self.number_of_frames), desc = 'Connecting blobs '):
             set_frame_number_to_blobs_in_frame(self.blobs_in_video[frame_i-1], frame_i-1)
 

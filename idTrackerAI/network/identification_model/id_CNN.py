@@ -1,11 +1,8 @@
 from __future__ import absolute_import, division, print_function
 import os
 import sys
-
 import tensorflow as tf
 import numpy as np
-import logging
-
 from cnn_architectures import cnn_model_0, \
                                 cnn_model_1, \
                                 cnn_model_2, \
@@ -31,7 +28,12 @@ CNN_MODELS_DICT = {0: cnn_model_0,
                     9: cnn_model_9,
                     10: cnn_model_10,
                     11: cnn_model_11}
-logger = logging.getLogger("__main__.id_CNN")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.id_CNN")
 
 class ConvNetwork():
     def __init__(self, params, training_flag = True, restore_index = None):
@@ -107,12 +109,10 @@ class ConvNetwork():
 
         model_image_width = self.image_width if self.params.target_image_size is None else self.params.target_image_size[0]
         model_image_height = self.image_height if self.params.target_image_size is None else self.params.target_image_size[1]
-        print("**************************************************************")
-        print("plh image_width ", self.image_width)
-        print("plh image_height ", self.image_height)
-        print("model_image_width ", model_image_width)
-        print("model_image_height ", model_image_height)
-        print("**************************************************************")
+        logger.debug("plh image_width %s" %str(self.image_width))
+        logger.debug("plh image_height %s" %str(self.image_height))
+        logger.debug("model_image_width %s" %str(model_image_width))
+        logger.debug("model_image_height %s" %str(model_image_height))
         self.y_logits, self.fc_vector = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals,
                                                                 model_image_width, model_image_height,
                                                                 self.image_channels,
@@ -298,9 +298,9 @@ def create_checkpoint_subfolders(folderName, subfoldersNameList):
         subPath = folderName + '/' + name
         if not os.path.exists(subPath):
             os.makedirs(subPath)
-            print(subPath + ' has been created')
+            logger.debug('%s has been created' %subPath)
         else:
-            print(subPath + ' already exists')
+            logger.debug('%s already exists' %subPath)
         subPaths.append(subPath)
     return subPaths
 

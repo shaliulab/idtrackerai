@@ -4,18 +4,23 @@ import sys
 sys.path.append('../utils')
 sys.path.append('../')
 sys.path.append('../preprocessing')
-
 from tqdm import tqdm
 import collections
 import numpy as np
 import cv2
 from pprint import pprint
 from scipy.spatial.distance import cdist
-
 from video_utils import blobExtractor
 from list_of_fragments import ListOfFragments
 from blob import Blob
 from list_of_blobs import ListOfBlobs
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.assign_them_all")
+
 
 ''' erosion '''
 def compute_erosion_disk(video, blobs_in_video):

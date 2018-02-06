@@ -1,30 +1,29 @@
 from __future__ import absolute_import, division, print_function
-# Import standard libraries
 import os
 import sys
 import numpy as np
 import multiprocessing
-
-# Import third party libraries
 import cv2
 import cPickle as pickle
 from joblib import Parallel, delayed
 import gc
 from tqdm import tqdm
 from scipy import ndimage
-
-# Import application/library specifics
 sys.path.append('../utils')
 sys.path.append('../IdTrackerDeep')
 from blob import Blob
-
 from py_utils import flatten
 from video_utils import segmentVideo, blobExtractor
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.segmentation")
 
 def get_videoCapture(video, path, segmFrameInd):
     if segmFrameInd == None:
         cap = cv2.VideoCapture(path)
-        # print 'Segmenting video %s' % path
         video_name = os.path.basename(path)
         filename, extension = os.path.splitext(video_name)
         number_of_frames_in_segment = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
@@ -37,8 +36,8 @@ def get_videoCapture(video, path, segmFrameInd):
 
 def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs, counter):
     blobs_in_frame = []
-    #Get frame from video file
     ret, frame = cap.read()
+
     try:
         if video.resolution_reduction != 1 and ret:
             frame = cv2.resize(frame, None,
@@ -60,9 +59,9 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
                                                                         segmentation_thresholds['min_area'],
                                                                         segmentation_thresholds['max_area'])
     except:
-        print("frame number, ", counter)
-        print("ret, ", ret)
-        print("frame, ", frame)
+        logger.info("An error occurred while reading frame number : %i" %counter)
+        logger.info("ret: %s" %str(ret))
+        logger.info("frame: %s" %str(frame))
         bounding_boxes = []
         miniframes = []
         centroids = []
@@ -108,7 +107,7 @@ def segmentAndSave(video, segmentation_thresholds, path = None, segmFrameInd = N
 def segment(video):
     # avoid computing with all the cores in very large videos:
     # num_cores = multiprocessing.cpu_count()
-    num_cores = 6
+    num_cores = int(np.ceil(2 * multiprocessing.cpu_count() / 3))
     #init variables to store data
     blobs_in_video = []
     number_of_blobs = []
@@ -120,9 +119,7 @@ def segment(video):
                                 'max_area': video.max_area}
     videoPaths = video.paths_to_video_segments
     if not videoPaths:
-        print('**************************************')
-        print('There is only one path, segmenting by frame indices')
-        print('**************************************')
+        logger.debug('There is only one path, segmenting by frame indices')
         #Define list of starting and ending frames
         segmFramesIndices = video.episodes_start_end
         #Spliting frames list into sublists
@@ -143,7 +140,6 @@ def segment(video):
             blobs_in_video.append(blobs_in_episode)
 
     video._maximum_number_of_blobs = max(flatten(number_of_blobs))
-    print("video.maximum_number_of_blobs ", video.maximum_number_of_blobs)
     #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
     blobs_in_video = flatten(flatten(blobs_in_video))
     return blobs_in_video
