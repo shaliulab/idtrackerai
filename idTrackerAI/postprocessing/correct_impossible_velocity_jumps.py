@@ -15,26 +15,117 @@ from network_params import NetworkParams
 from blob import Blob
 from compute_velocity_model import compute_velocity_from_list_of_fragments, compute_model_velocity
 from get_trajectories import produce_trajectories
-from constants import VEL_PERCENTILE
+from constants import VEL_PERCENTILE #percentile used to model velocity jumps
+"""
+The correct_impossible_velocity_jumps module
+"""
 
 def reassign(fragment, fragments, impossible_velocity_threshold):
+    """Reassigns the identity of a given `fragment` considering the identity of the
+    `fragments` coexisting with it and the `impossible_velocity_threshold`
+
+    Parameters
+    ----------
+    fragment : <Fragment object>
+        Object collecting all the information for a consecutive set of overlapping
+        blobs that are considered to be the same animal
+    fragments : list
+        List with all the `Fragment` objects of the video
+    impossible_velocity_threshold : float
+        If the velocity needed to link two fragments is higher than this threshold
+        the identiy of one of the fragments is considerd to be wrong as it would be
+        physically impossible for an animal to move so much. See `video.velocity_threshold`
+        for each definition
+
+    See Also
+    --------
+    Fragment
+    get_available_and_non_available_identities
+    get_candidate_identities_by_minimum_speed
+    get_candidate_identities_above_random_P2
+
+    """
     def get_available_and_non_available_identities(fragment):
-        non_available_identities = set([coexisting_fragment.assigned_identity for coexisting_fragment in fragment.coexisting_individual_fragments])
-        available_identities = set(range(1, fragment.number_of_animals + 1)) - non_available_identities
+        """Computes the available and non available identities of a given fragment
+        taking into consideration the identities of the fragments that coexist with it
+
+        Parameters
+        ----------
+        fragment : <Fragment object>
+            Object collecting all the information for a consecutive set of overlapping
+            blobs that are considered to be the same animal
+
+        Returns
+        -------
+        non_available_identities : nd.array
+            Array with the non available identities for the `fragment`
+        available_identities : set
+            Set with the available idenities for the `fragment`
+        See Also
+        --------
+        Fragment
+
+        """
+        non_available_identities = set([coexisting_fragment.assigned_identity
+                            for coexisting_fragment in fragment.coexisting_individual_fragments])
+        available_identities = set(range(1, fragment.number_of_animals + 1)) - \
+                            non_available_identities
         if fragment.assigned_identity is not None and fragment.assigned_identity != 0:
             available_identities = available_identities | set([fragment.assigned_identity])
         if 0 in non_available_identities: non_available_identities.remove(0)
         non_available_identities = np.array(list(non_available_identities))
         return non_available_identities, available_identities
 
+    def get_candidate_identities_by_minimum_speed(fragment,
+                                                fragments,
+                                                available_identities,
+                                                impossible_velocity_threshold):
+        """Computes the candidate identities for a given `fragment` taking into
+        consideration the velocities needed to join the `fragment` with its neighbour
+        fragments in the past and in the future
 
-    def get_candidate_identities_by_minimum_speed(fragment, fragments, available_identities, impossible_velocity_threshold):
+        Parameters
+        ----------
+        fragment : <Fragment object>
+            Object collecting all the information for a consecutive set of overlapping
+            blobs that are considered to be the same animal
+        fragments : list
+            List with all the `Fragment` objects of the video
+        available_identities : set
+            Set with the available idenities for the `fragment`
+        impossible_velocity_threshold : float
+            If the velocity needed to link two fragments is higher than this threshold
+            the identiy of one of the fragments is considerd to be wrong as it would be
+            physically impossible for an animal to move so much. See `video.velocity_threshold`
+            for each definition
+
+        Returns
+        -------
+        candidate_identities_by_speed : nd.array
+            Array with the identities that fullfill the `impossible_velocity_threshold`
+            ordered from minimum to maximum velocity
+
+        speed_of_candidate_identities : nd.array
+            Array with the maximum velocity needed to link the given `fragment`
+            with its neighbours assuming a given identity. Ordered from minimum to maximum
+            velocity
+
+        See Also
+        --------
+        Fragment
+        compute_velocities_consecutive_fragments
+
+        """
         speed_of_candidate_identities = []
         for identity in available_identities:
             fragment._user_generated_identity = identity
-            neighbour_fragment_past = fragment.get_neighbour_fragment(fragments, 'to_the_past')
-            neighbour_fragment_future = fragment.get_neighbour_fragment(fragments, 'to_the_future')
-            velocities_between_fragments = compute_velocities_consecutive_fragments(neighbour_fragment_past, fragment, neighbour_fragment_future)
+            neighbour_fragment_past = fragment.get_neighbour_fragment(fragments,
+                                                                        'to_the_past')
+            neighbour_fragment_future = fragment.get_neighbour_fragment(fragments,
+                                                                        'to_the_future')
+            velocities_between_fragments = compute_velocities_consecutive_fragments(neighbour_fragment_past,
+                                                                        fragment,
+                                                                        neighbour_fragment_future)
 
             if np.all(np.isnan(velocities_between_fragments)):
                 speed_of_candidate_identities.append(impossible_velocity_threshold)
@@ -44,7 +135,48 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
         argsort_identities_by_speed = np.argsort(speed_of_candidate_identities)
         return np.asarray(list(available_identities))[argsort_identities_by_speed], np.asarray(speed_of_candidate_identities)[argsort_identities_by_speed]
 
-    def get_candidate_identities_above_random_P2(fragment, fragments, non_available_identities, available_identities, impossible_velocity_threshold):
+    def get_candidate_identities_above_random_P2(fragment, fragments,
+                                            non_available_identities,
+                                            available_identities,
+                                            impossible_velocity_threshold):
+        """Computes the candidate identities of a `fragment` taking into consideration
+        the probability of identification given by its `fragment.P2_vector`. An identity
+        is a potential candidate if the probability of identification is above random.
+
+        Parameters
+        ----------
+        fragment : <Fragment object>
+            Object collecting all the information for a consecutive set of overlapping
+            blobs that are considered to be the same animal
+        fragments : list
+            List with all the `Fragment` objects of the video
+        non_available_identities : nd.array
+            Array with the non available identities for the `fragment`
+        available_identities : set
+            Set with the available idenities for the `fragment`
+        impossible_velocity_threshold : float
+            If the velocity needed to link two fragments is higher than this threshold
+            the identiy of one of the fragments is considerd to be wrong as it would be
+            physically impossible for an animal to move so much. See `video.velocity_threshold`
+            for each definition
+
+        Returns
+        -------
+        candidate_identities_by_speed : nd.array
+            Array with the identities that fullfill the `impossible_velocity_threshold`
+            ordered from minimum to maximum velocity
+
+        speed_of_candidate_identities : nd.array
+            Array with the maximum velocity needed to link the given `fragment`
+            with its neighbours assuming a given identity. Ordered from minimum to maximum
+            velocity
+
+        See Also
+        --------
+        Fragment
+        get_candidate_identities_by_minimum_speed
+
+        """
         P2_vector = fragment.P2_vector
         if len(non_available_identities) > 0:
             P2_vector[non_available_identities - 1] = 0
@@ -58,13 +190,16 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
                 random_threshold = 1/fragment.number_of_images
             return np.where(P2_vector > random_threshold)[0] + 1
 
-    non_available_identities, available_identities = get_available_and_non_available_identities(fragment)
+    non_available_identities, \
+    available_identities = get_available_and_non_available_identities(fragment)
     if len(available_identities) == 1:
         candidate_id = list(available_identities)[0]
-    # elif len(available_identities) == 0:
-    #     candidate_id = fragment.assigned_identity
     else:
-        candidate_identities_speed, speed_of_candidate_identities = get_candidate_identities_by_minimum_speed(fragment, fragments, available_identities, impossible_velocity_threshold)
+        candidate_identities_speed, \
+        speed_of_candidate_identities = get_candidate_identities_by_minimum_speed(fragment,
+                                                                    fragments,
+                                                                    available_identities,
+                                                                    impossible_velocity_threshold)
         candidate_identities_P2 = get_candidate_identities_above_random_P2(fragment,
                                                                     fragments,
                                                                     non_available_identities,
@@ -97,7 +232,35 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
     else:
         fragment._identity = candidate_id
 
-def compute_velocities_consecutive_fragments(neighbour_fragment_past, fragment, neighbour_fragment_future):
+def compute_velocities_consecutive_fragments(neighbour_fragment_past,
+                                                fragment,
+                                                neighbour_fragment_future):
+    """Compute velocities in the extremes of a `fragment` with respecto to its
+    `neighbour_fragment_past` and `neighbour_fragment_future`
+
+    Parameters
+    ----------
+    neighbour_fragment_past : <Fragment object>
+        `Fragment` object with the same identity as the current fragment in the
+        past
+    fragment : <Fragment object>
+        Object collecting all the information for a consecutive set of overlapping
+        blobs that are considered to be the same animal
+    neighbour_fragment_future : <Fragment object>
+        `Fragment` object with the same identity as the current fragment in the
+        future
+
+    Returns
+    -------
+    velocities : list
+        List with the velocity needed to link the fragment with its fragment in
+        the past and in the future
+
+    See Also
+    --------
+    Fragment
+
+    """
     velocities = [np.nan, np.nan]
     if neighbour_fragment_past is not None:
         velocities[0] = fragment.compute_border_velocity(neighbour_fragment_past)
@@ -106,26 +269,127 @@ def compute_velocities_consecutive_fragments(neighbour_fragment_past, fragment, 
     return velocities
 
 def get_fragment_with_same_identity(video, list_of_fragments, fragment, direction):
+    """Get the `neighbour_fragment` with the same identity in a given `direction`
+
+    Parameters
+    ----------
+    video : <Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+    list_of_fragments : <ListOfFragments object>
+        Object collecting the list of fragments and all the statistics and methods
+        related to them
+    fragment : <Fragment object>
+        Object collecting all the information for a consecutive set of overlapping
+        blobs that are considered to be the same animal
+    direction : string
+        If `direction` = `to_the_past` gets the `neighbour_fragment` in the past
+        `direction` = `to_the_future` gets the `neighbour_fragment` in the future
+
+    Returns
+    -------
+    neighbour_fragment : <Fragment object>
+        `Fragment` object with the same identity in a given `direction`
+    number_of_frames_in_direction : int
+        Number of frames to find the `neighbour_fragment` from a given extreme
+        of the `fragment`
+
+    See Also
+    --------
+    Fragment
+
+    """
     neighbour_fragment = None
     number_of_frames_in_direction = 0
     frame_number = fragment.start_end[0] if direction == 'to_the_past' else fragment.start_end[1]
 
-    while neighbour_fragment is None and (frame_number > 0 and frame_number < video.number_of_frames):
-        neighbour_fragment = fragment.get_neighbour_fragment(list_of_fragments.fragments, direction, number_of_frames_in_direction = number_of_frames_in_direction)
+    while neighbour_fragment is None\
+        and (frame_number > 0 and frame_number < video.number_of_frames):
+        neighbour_fragment = fragment.get_neighbour_fragment(list_of_fragments.fragments,
+                                        direction,
+                                        number_of_frames_in_direction = number_of_frames_in_direction)
         number_of_frames_in_direction += 1
         frame_number += -1 if direction == 'to_the_past' else 1
 
     return neighbour_fragment, number_of_frames_in_direction
 
-def check_identification_consistency(video, list_of_fragments, fragment, impossible_velocity_threshold):
-    neighbour_fragment_past, number_of_frames_in_past = get_fragment_with_same_identity(video, list_of_fragments, fragment, 'to_the_past')
-    neighbour_fragment_future, number_of_frames_in_future = get_fragment_with_same_identity(video, list_of_fragments, fragment, 'to_the_future')
-    velocities_between_fragments = np.asarray(compute_velocities_consecutive_fragments(neighbour_fragment_past, fragment, neighbour_fragment_future)) / \
-                                    np.asarray([number_of_frames_in_past, number_of_frames_in_future])
+def compute_neighbour_fragments_and_velocities(video, list_of_fragments, fragment):
+    """Computes the fragments with the same identities to the past and to the
+    future of a given `fragment` and gives the velocities at the extremes of the
+    current `fragment`
+
+    Parameters
+    ----------
+    video : <Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+    list_of_fragments : <ListOfFragments object>
+        Object collecting the list of fragments and all the statistics and methods
+        related to them
+    fragment : <Fragment object>
+        Object collecting all the information for a consecutive set of overlapping
+        blobs that are considered to be the same animal
+
+    Returns
+    -------
+    neighbour_fragment_past : <Fragment object>
+        `Fragment` object with the same identity as the current fragment in the
+        past
+    neighbour_fragment_future : <Fragment object>
+        `Fragment` object with the same identity as the current fragment in the
+        future
+    velocities_between_fragments : nd.array
+        Velocities needed to connect the current fragment to its consecutive
+        fragments in the past and in the future.
+
+    See Also
+    --------
+    get_fragment_with_same_identity
+    compute_velocities_consecutive_fragments
+
+    """
+    neighbour_fragment_past, \
+    number_of_frames_in_past = get_fragment_with_same_identity(video,
+                                                            list_of_fragments,
+                                                            fragment,
+                                                            'to_the_past')
+    neighbour_fragment_future, \
+    number_of_frames_in_future = get_fragment_with_same_identity(video,
+                                                                list_of_fragments,
+                                                                fragment,
+                                                                'to_the_future')
+    velocities = compute_velocities_consecutive_fragments(neighbour_fragment_past,
+                                                            fragment,
+                                                            neighbour_fragment_future)
+    velocities_between_fragments = np.asarray(velocities) / np.asarray([number_of_frames_in_past, number_of_frames_in_future])
 
     return neighbour_fragment_past, neighbour_fragment_future, velocities_between_fragments
 
 def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = None):
+    """Checks whether the velocity needed to join two consecutive fragments with
+    the same identity is consistent with the typical velocity of the animals in
+    the video (`video.velocity_threshold`). If the velocity is not consistent the
+    identity of one of the fragments is reassigned. The check is performed from the
+    `video.first_frame_first_global_fragment` to the past or to the future according
+    to the `scope`
+
+    Parameters
+    ----------
+    video : <Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+    list_of_fragments : <ListOfFragments object>
+        Object collecting the list of fragments and all the statistics and methods
+        related to them
+    scope : string
+        If `scope` = `to_the_past` the check is performed to the past and if
+        `scope` = `to_the_future` the check is performed to the future.
+
+    See Also
+    --------
+    Fragment
+    compute_neighbour_fragments_and_velocities
+    compute_velocities_consecutive_fragments
+    reassign
+
+    """
     fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(scope, video.first_frame_first_global_fragment)
     impossible_velocity_threshold = video.velocity_threshold
 
@@ -133,7 +397,7 @@ def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = Non
         if fragment.is_an_individual and fragment.assigned_identity != 0:
             neighbour_fragment_past, \
             neighbour_fragment_future, \
-            velocities_between_fragments = check_identification_consistency(video, list_of_fragments, fragment, impossible_velocity_threshold)
+            velocities_between_fragments = compute_neighbour_fragments_and_velocities(video, list_of_fragments, fragment)
 
             if all(velocity > impossible_velocity_threshold for velocity in velocities_between_fragments):
                 if neighbour_fragment_past.identity_is_fixed or neighbour_fragment_future.identity_is_fixed:
@@ -157,5 +421,23 @@ def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = Non
                     reassign(neighbour_fragment_future, list_of_fragments.fragments, impossible_velocity_threshold)
 
 def correct_impossible_velocity_jumps(video, list_of_fragments):
+    """Corrects the parts of the video where the velocity of any individual is
+    higher than a particular velocty threshold given by `video.velocity_threshold`.
+    This check is done from the `video.first_frame_first_global_fragment` to the
+    past and to the future
+
+    Parameters
+    ----------
+    video : <Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+    list_of_fragments : <ListOfFragments object>
+        Object collecting the list of fragments and all the statistics and methods
+        related to them
+
+    See Also
+    --------
+    correct_impossible_velocity_jumps_loop
+
+    """
     correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = 'to_the_past')
     correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = 'to_the_future')

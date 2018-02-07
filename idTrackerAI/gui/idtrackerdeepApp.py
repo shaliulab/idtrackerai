@@ -53,8 +53,8 @@ import yaml
 import cv2
 from video import Video
 from py_utils import getExistentFiles, get_spaced_colors_util
-from video_utils import computeBkg, blobExtractor
-from segmentation import segmentVideo
+from video_utils import cumpute_background, blob_extractor
+from segmentation import segment_frame
 from list_of_blobs import ListOfBlobs
 from list_of_fragments import ListOfFragments
 from generate_groundtruth import generate_groundtruth

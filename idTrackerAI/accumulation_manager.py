@@ -9,6 +9,10 @@ from constants import RATIO_OLD, RATIO_NEW, MAXIMAL_IMAGES_PER_ANIMAL, \
                         CERTAINTY_THRESHOLD, \
                         MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
 import sys
+
+"""
+The accumulation manager module
+"""
 if sys.argv[0] == 'idtrackerdeepApp.py':
     from kivy.logger import Logger
     logger = Logger
@@ -17,23 +21,45 @@ else:
     logger = logging.getLogger("__main__.accumulation_manager")
 
 class AccumulationManager(object):
+    """ Manages the accumulation process.
+
+    Attributes
+    ----------
+
+    video : Video
+        Object containing all the parameters of the video.
+    number_of_animals : int
+        Number of animals to be tracked
+    list_of_fragments : ListOfFragments
+        Collection of individual and crossing fragments with associated methods
+    list_of_global_fragments: ListOfGlobalFragments
+        Collection of global fragments
+    counter : int
+        Number of iterations for an instantiation
+    certainty_threshold: float
+        Value $\in [0,1]$ to establish if the identitification of a fragment is certain.
+    threshold_acceptable_accumulation: float
+        Value $\in [0,1]$ to establish if an accumulation is acceptable
+    accumulation_strategy: string
+        Accepts "global" and "partial" in order to perform either partial or global accumulation.
+    individual_fragments_used: list
+        list with the individual_fragments_identifiers of the individual fragments used for training
+    used_images : nd.array
+        images used for training the network
+    used_labels : nd.array
+        labels for the images used for training
+    new_images : nd.array
+        set of images that will be added to the new training
+    new_labels : nd.array
+        labels for the set of images that will be added for training
+    _continue_accumulation : bool
+        allows the accumulation to continue according to the stopping criteria
+    """
     def __init__(self, video,
                 list_of_fragments, list_of_global_fragments,
                 certainty_threshold = CERTAINTY_THRESHOLD,
                 allow_partial_accumulation = False,
                 threshold_acceptable_accumulation = None):
-        """ This class manages the selection of global fragments for accumulation,
-        the retrieval of images from the new global fragments, the selection of
-        of images for training, the final assignment of identities to the global fragments
-        used for training, the temporary assignment of identities to the candidates global fragments
-        and the computation of the certainty levels of the individual fragments to check the
-        eligability of the candidates global fragments for accumulation.
-
-        :list_of_fragments: list of individual and crossing fragments
-        :list_of_global_fragments:  object
-        :number_of_animals param: number of animals in the video
-        :certainty_threshold param: threshold to set a individual fragment as certain for accumulation
-        """
         self.video = video
         self.number_of_animals = video.number_of_animals
         self.list_of_fragments = list_of_fragments
@@ -42,12 +68,12 @@ class AccumulationManager(object):
         self.certainty_threshold = certainty_threshold
         self.threshold_acceptable_accumulation = threshold_acceptable_accumulation
         self.accumulation_strategy = 'global'
-        self.individual_fragments_used = [] # list with the individual_fragments_identifiers of the individual fragments used for training
-        self.used_images = None # images used for training the network
-        self.used_labels = None # labels for the images used for training
-        self.new_images = None # set of images that will be added to the new training
-        self.new_labels = None # labels for the set of images that will be added for training
-        self._continue_accumulation = True # flag to continue_accumulation or not
+        self.individual_fragments_used = []
+        self.used_images = None
+        self.used_labels = None
+        self.new_images = None
+        self.new_labels = None
+        self._continue_accumulation = True
 
     @property
     def continue_accumulation(self):
@@ -65,6 +91,8 @@ class AccumulationManager(object):
             return True
 
     def update_counter(self):
+        """ Update iteration counter
+        """
         self.counter += 1
 
     def get_new_images_and_labels(self):
@@ -80,9 +108,11 @@ class AccumulationManager(object):
             logger.info("Old images for training: %s %s" %(str(self.used_images.shape), str(self.used_labels.shape)))
 
     def get_images_and_labels_for_training(self):
-        """ We limit the number of images per animal that are used for training
-        to MAXIMAL_IMAGES_PER_ANIMAL. We take a percentage RATIO_NEW of the new
-        images and a percentage RATIO_OLD of the images already used. """
+        """ Create a new dataset of labelled images to train the idCNN in the following way:
+        Per individual select MAXIMAL_IMAGES_PER_ANIMAL images. Such collection of images is composed
+        of a ratio corresponding to RATIO_NEW of new images (acquired in the current evaluation of the
+        global fragments) and RATIO_OLD of images already used
+        in the previous iteration. """
         logger.info("Getting images for training...")
         random.seed(0)
         images = []
@@ -131,7 +161,8 @@ class AccumulationManager(object):
         return np.asarray(images), np.asarray(labels)
 
     def update_used_images_and_labels(self):
-        """ we add the images that were in the set of new_images to the set of used_images"""
+        """Sets as used the images already used for training
+        """
         logger.debug("Updating used_images...")
         if self.counter == 0:
             self.used_images = self.new_images
@@ -142,7 +173,7 @@ class AccumulationManager(object):
         logger.info("number of images used for training: %s %s" %(str(self.used_images.shape), str(self.used_labels.shape)))
 
     def update_fragments_used_for_training(self):
-        """ Once a global fragment has been used for training we set the flags
+        """ Once a global fragment has been used for training, sets the flags
         used_for_training to TRUE and acceptable_for_training to FALSE"""
         logger.debug("Setting used_for_training to TRUE and acceptable for training to FALSE for the global fragments already used...")
         [(setattr(fragment,'_used_for_training',True),
@@ -154,31 +185,44 @@ class AccumulationManager(object):
             and not fragment.used_for_training]
 
     def assign_identities_to_fragments_used_for_training(self):
-        """ assign the identities to the global fragments used for training and
-        to the blobs that belong to these global fragments. This function checks
-        that the identities of the individual fragments in the global fragment
-        are consistent with the previously assigned identities"""
+        """ assign the identities to the global fragments used for training and their individual fragments.
+        This function checks that the identities of the individual fragments in the global fragment
+        are consistent with the previously assigned identities
+        """
         [(setattr(fragment, '_identity', getattr(fragment, 'temporary_id') + 1),
         fragment.set_P1_vector_accumulated())
             for fragment in self.list_of_fragments.fragments
             if fragment.used_for_training]
 
     def update_individual_fragments_used_for_training(self):
+        """Returns the individual fragments used for training.
+
+        Returns
+        -------
+        individual_fragments_used_for_training : list
+            List of Fragment objects.
+
+        """
         return list(set([fragment.identifier for fragment in self.list_of_fragments.fragments
                 if fragment.used_for_training
                 and fragment.identifier not in self.individual_fragments_used]))
 
     def update_list_of_individual_fragments_used(self):
-        """ Updates the list of individual fragments used in training and their identities.
-        If a individual fragment was added before is not added again.
+        """ Updates the list of individual fragments used for training and their identities.
+        If an individual fragment was added before is not added again.
         """
         logger.info("Updating list of individual fragments used for training")
         new_individual_fragments_identifiers = self.update_individual_fragments_used_for_training()
         self.individual_fragments_used.extend(new_individual_fragments_identifiers)
         logger.info("number of individual fragments used for training: %i" %sum([fragment.used_for_training for fragment in self.list_of_fragments.fragments]))
 
-    def split_predictions_after_network_assignment(self, predictions, softmax_probs, indices_to_split, candidate_individual_fragments_identifiers):
-        """Go back to the CPU"""
+    def split_predictions_after_network_assignment(self, predictions,
+                                                    softmax_probs,
+                                                    indices_to_split,
+                                                    candidate_individual_fragments_identifiers):
+        """Gathers predictions relative to fragment images from the GPU and
+        splits them according to their organisation in fragments.
+        """
         logger.info("Un-stacking predictions for the CPU")
         individual_fragments_predictions = np.split(predictions, indices_to_split)
         individual_fragments_softmax_probs = np.split(softmax_probs, indices_to_split)
@@ -198,6 +242,9 @@ class AccumulationManager(object):
                                                                             individual_fragment_softmax_probs)
 
     def reset_accumulation_variables(self):
+        """After an accumulation is finished reinitialise the variables involved
+        in the process.
+        """
         self.temporary_individual_fragments_used = []
         if self.accumulation_strategy == 'global' :
             self.number_of_noncertain_global_fragments = 0
@@ -212,7 +259,7 @@ class AccumulationManager(object):
         self.number_of_acceptable_fragments = 0
 
     def get_acceptable_global_fragments_for_training(self, candidate_individual_fragments_identifiers):
-        """Assigns identities during test to blobs in global fragments and rank them
+        """Assigns identities during test to individual fragments and rank them
         according to the score computed from the certainty of identification and the
         minimum distance travelled"""
         self.accumulation_strategy = 'global'
@@ -242,21 +289,69 @@ class AccumulationManager(object):
             logger.info('The ratio of accumulated images is too small and a partial accumulation might fail.')
 
     def reset_non_acceptable_fragment(self, fragment):
+        """Resets the collection of non-acceptable fragments.
+
+        Parameters
+        ----------
+        fragment : Fragment object
+            Collection of images related to the same individual
+
+        """
         if fragment.identifier not in self.temporary_individual_fragments_used \
         and fragment.identifier not in self.individual_fragments_used:
             fragment._temporary_id = None
             fragment._acceptable_for_training = False
 
     def reset_non_acceptable_global_fragment(self, global_fragment):
+        """Reset the flag for non-accpetable global fragments.
+
+        Parameters
+        ----------
+        global_fragment : GlobalFragment object
+            Collection of images relative to a part of the video in which all the animals are visible.
+
+
+        """
         for fragment in global_fragment.individual_fragments:
             self.reset_non_acceptable_fragment(fragment)
 
     @staticmethod
     def is_not_certain(fragment, certainty_threshold):
+        """State if a fragment has been assigned with sufficient certainty
+
+        Parameters
+        ----------
+        fragment : Fragment object
+            Collection of images related to the same individual
+        certainty_threshold : float
+            Lower boundary in [0,1] for the certainty of a fragment
+
+        Returns
+        -------
+        is_not_certain_flag : bool
+            True if the fragment is assigned with high enough certainty
+
+        """
         return fragment.certainty < certainty_threshold
 
     @staticmethod
     def get_P1_array_and_argsort(global_fragment):
+        """Given a global fragment computes P1 for each of its individual fragments and returns a
+        matrix of sorted indices according to P1
+
+        Parameters
+        ----------
+        global_fragment : GlobalFragment object
+            Collection of images relative to a part of the video in which all the animals are visible.
+
+        Returns
+        -------
+        P1_array : nd.array
+            P1 computed for every individual fragment in the global fragment
+        index_individual_fragments_sorted_by_P1_max_to_min : nd.array
+            Argsort of P1 array of each individual fragment
+
+        """
         # get array of P1 values for the global fragment
         P1_array = np.asarray([fragment.P1_vector for fragment in global_fragment.individual_fragments])
         # get the maximum P1 of each individual fragment
@@ -268,16 +363,63 @@ class AccumulationManager(object):
 
     @staticmethod
     def p1_below_random(P1_array, index_individual_fragment, fragment):
+        """Evaluate if a fragment has been assigned with a certainty lower than
+        random (wrt the number of possible identities)
+
+        Parameters
+        ----------
+        P1_array  : nd.array
+            P1 vector of a fragment object
+        index_individual_fragment  : nd.array
+            Argsort of the P1 array of fragment
+        fragment : Fragment
+            Fragment object containing images associated with a single individual
+
+        Returns
+        -------
+        p1_below_random_flag : bool
+            True if a fragment has been identified with a certainty below random
+
+        """
         return np.max(P1_array[index_individual_fragment,:]) < 1. / fragment.number_of_images
 
     @staticmethod
     def set_fragment_temporary_id(fragment, temporary_id, P1_array, index_individual_fragment):
+        """Given a P1 array relative to a global fragment sets to 0 the row relative to fragment
+        which is temporarily identified with identity temporary_id
+
+        Parameters
+        ----------
+        fragment : Fragment
+            Fragment object containing images associated with a single individual
+        temporary_id : int
+            temporary identifier associated to fragment
+        P1_array  : nd.array
+            P1 vector of fragment
+        index_individual_fragment : int
+            Index of fragment with respect to a global fragment in which it is contained
+
+        Returns
+        -------
+        P1_array  : nd.array
+            updated P1 array
+
+        """
         fragment._temporary_id = int(temporary_id)
         P1_array[index_individual_fragment,:] = 0.
         P1_array[:,temporary_id] = 0.
         return P1_array
 
     def check_if_is_acceptable_for_training(self, global_fragment):
+        """Check if global_fragment is acceptable for training
+
+        Parameters
+        ----------
+        global_fragment : GlobalFragment
+            Object collecting the individual fragments relative to a part of the
+            video in which all the animals are visible
+
+        """
         if self.accumulation_strategy == 'global':
             # Check certainties of the individual fragments in the global fragment
             # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
@@ -420,22 +562,31 @@ class AccumulationManager(object):
             global_fragment._accumulation_step = self.counter
         assert all([fragment.temporary_id is not None for fragment in global_fragment.individual_fragments if fragment.acceptable_for_training and fragment.is_an_individual])
 
-
-def sample_images_and_labels(images, labels, ratio):
-    subsampled_images = []
-    subsampled_labels = []
-    for i in np.unique(labels):
-        if len(images[np.where(labels == i)[0]]) > NUMBER_OF_SAMPLES:
-            subsampled_images.append(random.sample(images[np.where(labels == i)[0]],NUMBER_OF_SAMPLES))
-            subsampled_labels.append([i] * NUMBER_OF_SAMPLES)
-        else:
-            subsampled_images.append(images[np.where(labels == i)[0]])
-            subsampled_labels.append([i] * len(images[np.where(labels == i)[0]]))
-
-    return np.concatenate(subsampled_images, axis = 0), np.concatenate(subsampled_labels, axis = 0)
-
-""" Get predictions of individual fragments in candidates global fragments"""
 def get_predictions_of_candidates_fragments(net, video, fragments):
+    """Get predictions of individual fragments that have been used to train the
+    idCNN in an accumulation's iteration
+
+    Parameters
+    ----------
+    net : ConvNetwork object
+        network used to identify the animals
+    video : Video object
+        Object containing all the parameters of the video.
+    fragments : list
+        List of fragment objects
+
+    Returns
+    -------
+    assigner._predictions  : nd.array
+        predictions associated to each image organised by individual fragments
+    assigner._softmax_probs : np.array
+        softmax vector associated to each image organised by individual fragments
+    np.cumsum(lengths)[:-1]  : nd.array
+        cumulative sum of the number of images contained in every fragment (used to rebuild the collection of images per fragment after gathering predicions and softmax vectors from the gpu)
+    candidate_individual_fragments_identifiers : list
+        list of fragment identifiers
+
+    """
     images = []
     lengths = []
     candidate_individual_fragments_identifiers = []

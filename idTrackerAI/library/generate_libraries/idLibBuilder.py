@@ -20,7 +20,7 @@ sys.path.append('./')
 from segmentation_library import segment
 # from fragmentation import *
 from get_portraits import portrait
-from video_utils_library import getSegmPaths, checkBkg
+from video_utils_library import getSegmPaths, check_background_substraction
 from py_utils import scanFolder, getExistentFiles_library, loadFile, saveFile, natural_sort, createFolder
 from GUI_utils import selectDir, getInput, selectOptions, ROISelectorPreview_library, selectPreprocParams_library, playFragmentation_library
 from library_utils import portraitsToIMDB, retrieveInfoLib, assignCenters
@@ -92,16 +92,16 @@ if __name__ == '__main__':
                 loadPreviousDict = selectOptions(processesList, existentFiles, text='Steps already processed in this video \n (check to load from ' + srcSubFolder + ')')
 
                 usePreviousROI = loadPreviousDict['ROI']
-                usePreviousBkg = loadPreviousDict['bkg']
+                use_previous_background = loadPreviousDict['bkg']
                 usePreviousPrecParams = loadPreviousDict['preprocparams']
                 print 'usePreviousROI set to ', usePreviousROI
-                print 'usePreviousBkg set to ', usePreviousBkg
+                print 'use_previous_background set to ', use_previous_background
                 print 'usePreviousPrecParams set to ', usePreviousPrecParams
 
                 ''' ROI selection/loading '''
                 width, height, mask, centers = ROISelectorPreview_library(videoPaths, useROI, usePreviousROI, numSegment=0)
                 ''' BKG computation/loading '''
-                bkg = checkBkg(videoPaths, useBkg, usePreviousBkg, 0, width, height)
+                bkg = check_background_substraction(videoPaths, useBkg, use_previous_background, 0, width, height)
 
                 ''' Selection/loading preprocessing parameters '''
                 preprocParams = selectPreprocParams_library(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg, frameIndices)

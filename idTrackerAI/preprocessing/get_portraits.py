@@ -10,7 +10,7 @@ from joblib import Parallel, delayed
 from sklearn.decomposition import PCA
 sys.path.append('IdTrackerDeep/utils')
 from py_utils import loadFile, saveFile
-from video_utils import cntBB2Full, full2BoundingBox
+from video_utils import cntBB2Full
 from fishcontour import FishContour
 if sys.argv[0] == 'idtrackerdeepApp.py':
     from kivy.logger import Logger

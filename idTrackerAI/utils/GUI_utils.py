@@ -21,8 +21,8 @@ import pyautogui
 import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
-from segmentation import segmentVideo
-from video_utils import checkBkg, blobExtractor
+from segmentation import segment_frame
+from video_utils import check_background_substraction, blob_extractor
 from py_utils import get_existent_preprocessing_steps
 from blob import Blob
 
@@ -271,13 +271,13 @@ def SegmentationPreview(video):
 
     def thresholder(minTh, maxTh):
         toile = np.zeros_like(frameGray, dtype='uint8')
-        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, video.bkg, video.ROI, subtract_bkg)
+        segmentedFrame = segment_frame(avFrame, minTh, maxTh, video.bkg, video.ROI, subtract_bkg)
         #contours, hierarchy = cv2.findContours(segmentedFrame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-        maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
-        minArea = cv2.getTrackbarPos('minArea', 'Bars')
+        max_area = cv2.getTrackbarPos('max_area', 'Bars')
+        min_area = cv2.getTrackbarPos('min_area', 'Bars')
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
-        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray, minArea, maxArea)
-        cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
+        bbs, miniFrames, _, areas, pixels, good_contours, estimated_body_lengths = blob_extractor(segmentedFrame, frameGray, min_area, max_area)
+        cv2.drawContours(toile, good_contours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()
         resUp = cv2.getTrackbarPos('ResUp', 'Bars')
@@ -285,7 +285,7 @@ def SegmentationPreview(video):
         showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
         showerCopy = cv2.resize(showerCopy,None, fx = np.true_divide(1,resDown), fy = np.true_divide(1,resDown))
         numColumns = 5
-        numGoodContours = len(goodContours)
+        numGoodContours = len(good_contours)
         numBlackImages = numColumns - numGoodContours % numColumns
         numImages = numGoodContours + numBlackImages
         j = 0
@@ -326,10 +326,10 @@ def SegmentationPreview(video):
         sFrame = trackbarValue
         if sNumber != currentSegment: # we are changing segment
             currentSegment = sNumber
-            if video.paths_to_video_segments:
-                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
+            if video.paths_to_video_episodes:
+                cap = cv2.VideoCapture(video.paths_to_video_episodes[sNumber])
         #Get frame from video file
-        if video.paths_to_video_segments:
+        if video.paths_to_video_episodes:
             start = video.episodes_start_end[sNumber][0]
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
@@ -359,7 +359,7 @@ def SegmentationPreview(video):
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
 
-    def changeMaxArea(maxArea):
+    def changeMaxArea(max_area):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
@@ -395,9 +395,9 @@ def SegmentationPreview(video):
     scroll(defFrame)
     cv2.setTrackbarPos('start', 'Bars', defFrame)
     changeMaxArea(defMaxA)
-    cv2.setTrackbarPos('maxArea', 'Bars', defMaxA)
+    cv2.setTrackbarPos('max_area', 'Bars', defMaxA)
     changeMinArea(defMinA)
-    cv2.setTrackbarPos('minArea', 'Bars', defMinA)
+    cv2.setTrackbarPos('min_area', 'Bars', defMinA)
     changeMinTh(defMinTh)
     cv2.setTrackbarPos('minTh', 'Bars', defMinTh)
     changeMaxTh(defMaxTh)
@@ -418,8 +418,8 @@ def SegmentationPreview(video):
     #update values in video
     video._min_threshold =  cv2.getTrackbarPos('minTh', 'Bars')
     video._max_threshold = cv2.getTrackbarPos('maxTh', 'Bars')
-    video._min_area = cv2.getTrackbarPos('minArea', 'Bars')
-    video._max_area = cv2.getTrackbarPos('maxArea', 'Bars')
+    video._min_area = cv2.getTrackbarPos('min_area', 'Bars')
+    video._max_area = cv2.getTrackbarPos('max_area', 'Bars')
     video._resize =  - cv2.getTrackbarPos('ResDown', 'Bars') + cv2.getTrackbarPos('ResUp', 'Bars')
     video._has_preprocessing_parameters = True
     cap.release()
@@ -437,12 +437,12 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
 
     def thresholder(minTh, maxTh):
         toile = np.zeros_like(frameGray, dtype='uint8')
-        segmentedFrame = segmentVideo(avFrame, minTh, maxTh, video.bkg, video.ROI, video.subtract_bkg)
-        maxArea = cv2.getTrackbarPos('maxArea', 'Bars')
-        minArea = cv2.getTrackbarPos('minArea', 'Bars')
+        segmentedFrame = segment_frame(avFrame, minTh, maxTh, video.bkg, video.ROI, video.subtract_bkg)
+        max_area = cv2.getTrackbarPos('max_area', 'Bars')
+        min_area = cv2.getTrackbarPos('min_area', 'Bars')
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
-        bbs, miniFrames, _, areas, pixels, goodContours, estimated_body_lengths = blobExtractor(segmentedFrame, frameGray, minArea, maxArea)
-        cv2.drawContours(toile, goodContours, -1, color=255, thickness = -1)
+        bbs, miniFrames, _, areas, pixels, good_contours, estimated_body_lengths = blob_extractor(segmentedFrame, frameGray, min_area, max_area)
+        cv2.drawContours(toile, good_contours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()
         resUp = cv2.getTrackbarPos('ResUp', 'Bars') if cv2.getTrackbarPos('ResUp', 'Bars') > 0 else 1
@@ -450,7 +450,7 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
         showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
         showerCopy = cv2.resize(showerCopy,None, fx = 1/resDown, fy = 1/resDown)
         numColumns = 5
-        numGoodContours = len(goodContours)
+        numGoodContours = len(good_contours)
         numBlackImages = numColumns - numGoodContours % numColumns
         numImages = numGoodContours + numBlackImages
         j = 0
@@ -490,10 +490,10 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
         sNumber = video.in_which_episode(frame_number)
         if sNumber != currentSegment: # we are changing segment
             currentSegment = sNumber
-            if video.paths_to_video_segments:
-                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
+            if video.paths_to_video_episodes:
+                cap = cv2.VideoCapture(video.paths_to_video_episodes[sNumber])
         #Get frame from video file
-        if video.paths_to_video_segments:
+        if video.paths_to_video_episodes:
             start = video.episodes_start_end[sNumber][0]
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, frame_number - start)
         else:
@@ -524,7 +524,7 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
 
-    def changeMaxArea(maxArea):
+    def changeMaxArea(max_area):
         minTh = cv2.getTrackbarPos('minTh', 'Bars')
         maxTh = cv2.getTrackbarPos('maxTh', 'Bars')
         thresholder(minTh, maxTh)
@@ -546,8 +546,8 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
 
     cv2.createTrackbar('minTh', 'Bars', 0, 255, changeMinTh)
     cv2.createTrackbar('maxTh', 'Bars', 0, 255, changeMaxTh)
-    cv2.createTrackbar('minArea', 'Bars', 0, 2000, changeMinArea)
-    cv2.createTrackbar('maxArea', 'Bars', 0, 60000, changeMaxArea)
+    cv2.createTrackbar('min_area', 'Bars', 0, 2000, changeMinArea)
+    cv2.createTrackbar('max_area', 'Bars', 0, 60000, changeMaxArea)
     cv2.createTrackbar('ResUp', 'Bars', 1, 20, resizeImageUp)
     cv2.createTrackbar('ResDown', 'Bars', 1, 20, resizeImageDown)
     defMinTh = new_preprocessing_parameters['min_threshold']
@@ -557,9 +557,9 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
     defRes = video.resize
     visualise_frame(frame_number)
     changeMaxArea(defMaxA)
-    cv2.setTrackbarPos('maxArea', 'Bars', defMaxA)
+    cv2.setTrackbarPos('max_area', 'Bars', defMaxA)
     changeMinArea(defMinA)
-    cv2.setTrackbarPos('minArea', 'Bars', defMinA)
+    cv2.setTrackbarPos('min_area', 'Bars', defMinA)
     changeMinTh(defMinTh)
     cv2.setTrackbarPos('minTh', 'Bars', defMinTh)
     changeMaxTh(defMaxTh)
@@ -585,8 +585,8 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
     new_preprocessing_parameters = {}
     new_preprocessing_parameters['min_threshold'] =  cv2.getTrackbarPos('minTh', 'Bars')
     new_preprocessing_parameters['max_threshold'] = cv2.getTrackbarPos('maxTh', 'Bars')
-    new_preprocessing_parameters['min_area'] = cv2.getTrackbarPos('minArea', 'Bars')
-    new_preprocessing_parameters['max_area'] = cv2.getTrackbarPos('maxArea', 'Bars')
+    new_preprocessing_parameters['min_area'] = cv2.getTrackbarPos('min_area', 'Bars')
+    new_preprocessing_parameters['max_area'] = cv2.getTrackbarPos('max_area', 'Bars')
     cap.release()
     cv2.destroyAllWindows()
     cv2.waitKey(1)
@@ -618,13 +618,13 @@ def selectPreprocParams(video, old_video, usePreviousPrecParams):
             else:
                 video._number_of_animals = old_video.number_of_animals
             usePreviousROI = bool(load_previous_preprocessing_steps['ROI'])
-            usePreviousBkg = bool(load_previous_preprocessing_steps['bkg'])
+            use_previous_background = bool(load_previous_preprocessing_steps['bkg'])
             usePreviousRR = bool(load_previous_preprocessing_steps['resolution_reduction'])
         else:
-            usePreviousROI, usePreviousBkg, usePreviousRR = False, False, False
+            usePreviousROI, use_previous_background, usePreviousRR = False, False, False
             video._number_of_animals = int(getInput('Number of animals','Type the number of animals'))
         video._original_ROI = ROISelectorPreview(video, old_video, usePreviousROI)
-        video._original_bkg = checkBkg(video, old_video, usePreviousBkg)
+        video._original_bkg = check_background_substraction(video, old_video, use_previous_background)
         video.resolution_reduction = check_resolution_reduction(video, old_video, usePreviousRR)
         # Preprocessing
         if old_video is not None:

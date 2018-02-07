@@ -39,7 +39,7 @@ from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview,\
                     resegmentation_preview, selectPreprocParams, selectDir, \
                     check_resolution_reduction
 from py_utils import getExistentFiles
-from video_utils import checkBkg
+from video_utils import check_background_substraction
 from crossing_detector import detect_crossings
 from pre_trainer import pre_trainer
 from accumulation_manager import AccumulationManager

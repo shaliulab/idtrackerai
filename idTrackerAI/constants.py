@@ -11,7 +11,7 @@ AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg', '.MOV']
 '''***FRAMES_PER_EPISODE***
 Number of frames per video chunk. Used to parallelise processes
 '''
-FRAMES_PER_EPISODE = 500
+FRAMES_PER_EPISODE = 100
 
 #######################################
 ##########   preprocessing  ###########
