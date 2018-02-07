@@ -2,13 +2,17 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import random
 import psutil
-import logging
 from assigner import assign
 from trainer import train
 from accumulation_manager import AccumulationManager, get_predictions_of_candidates_fragments
-
 from constants import THRESHOLD_EARLY_STOP_ACCUMULATION
-logger = logging.getLogger('__main__.accumulator')
+import sys
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger('__main__.accumulator')
 
 def early_stop_criteria_for_accumulation(number_of_accumulated_images, number_of_unique_images_in_global_fragments):
     return number_of_accumulated_images / number_of_unique_images_in_global_fragments
@@ -22,7 +26,6 @@ def perform_one_accumulation_step(accumulation_manager,
                                     net_properties = None,
                                     plot_flag = False,
                                     save_summaries = False):
-    print("****** inside the while loop ****")
     logger.info("accumulation step %s" %accumulation_manager.counter)
     video.accumulation_step = accumulation_manager.counter
     #(we do not take images from individual fragments already used)

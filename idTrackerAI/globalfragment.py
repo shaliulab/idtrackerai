@@ -5,11 +5,14 @@ import random
 from matplotlib import pyplot as plt
 import matplotlib.lines as mlines
 import seaborn as sns
-import logging
-
-logger = logging.getLogger("__main__.globalfragment")
-
 from constants import MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+import sys
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.globalfragment")
 
 class GlobalFragment(object):
     def __init__(self, list_of_blobs, fragments, index_beginning_of_fragment, number_of_animals):

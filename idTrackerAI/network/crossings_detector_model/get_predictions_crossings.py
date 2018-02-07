@@ -9,6 +9,12 @@ import numpy as np
 import psutil
 sys.path.append('../../')
 from constants import BATCH_SIZE_PREDICTIONS_DCD
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logging.getLogger("__main__.get_predictions_crossings")
 
 class GetPredictionCrossigns(object):
     def __init__(self, net):
@@ -42,7 +48,7 @@ class GetPredictionCrossigns(object):
         number_of_images_to_be_fitted_in_RAM = len(test_set.test)
         num_images_that_can_fit_in_RAM = 100000#int(psutil.virtual_memory().available*.2/image_size_bytes)
         if number_of_images_to_be_fitted_in_RAM > num_images_that_can_fit_in_RAM:
-            print("There is NOT enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
+            logger.debug("There is NOT enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
             number_of_predictions_retrieved = 0
             predictions = []
             i = 0
@@ -52,8 +58,8 @@ class GetPredictionCrossigns(object):
                 number_of_predictions_retrieved = len(predictions)
                 i += 1
         else:
-            print("There is enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
-            print("getting predictions...")
+            logger.debug("There is enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
+            logger.info("getting predictions...")
             test_images = test_set.generate_test_images()
             predictions = self.predict(test_images)
         return predictions
@@ -63,7 +69,7 @@ class GetPredictionCrossigns(object):
         number_of_images_to_be_fitted_in_RAM = len(images)
         num_images_that_can_fit_in_RAM = int(psutil.virtual_memory().available*.9/image_size_bytes)
         if number_of_images_to_be_fitted_in_RAM > num_images_that_can_fit_in_RAM:
-            print("There is NOT enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
+            logger.debug("There is NOT enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
             number_of_predictions_retrieved = 0
             predictions = []
             i = 0
@@ -73,7 +79,7 @@ class GetPredictionCrossigns(object):
                 number_of_predictions_retrieved = len(predictions)
                 i += 1
         else:
-            print("There is enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
-            print("getting predictions...")
+            logger.debug("There is enough RAM to host %i images" %number_of_images_to_be_fitted_in_RAM)
+            logger.info("getting predictions...")
             predictions = self.predict(images)
         return predictions

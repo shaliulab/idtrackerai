@@ -1,14 +1,18 @@
 from __future__ import absolute_import, division, print_function
 import os
 import random
-import logging
 import numpy as np
 from globalfragment import GlobalFragment
 from assigner import assign, compute_identification_statistics_for_non_accumulated_fragments
 from accumulation_manager import AccumulationManager
 from constants import CERTAINTY_THRESHOLD
-
-logger = logging.getLogger("__main__.list_of_global_fragments")
+import sys
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.list_of_global_fragments")
 
 class ListOfGlobalFragments(object):
     def __init__(self, global_fragments):

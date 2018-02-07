@@ -5,7 +5,6 @@ sys.path.append('../')
 sys.path.append('../preprocessing')
 sys.path.append('../utils')
 import numpy as np
-import logging
 from pprint import pprint
 
 from GUI_utils import selectDir
@@ -13,7 +12,13 @@ from list_of_blobs import ListOfBlobs
 from blob import Blob
 from generate_individual_groundtruth import IndividualGroundTruth, GroundTruthBlob
 
-logger = logging.getLogger("__main__.compute_statistics_against_groundtruth")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.compute_statistics_against_groundtruth")
+
 
 def compare_tracked_individual_against_groundtruth(blobs_in_individual_groundtruth,
                                                     individual_blobs, individual_groundtruth_id):

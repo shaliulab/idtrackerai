@@ -1,9 +1,15 @@
 from __future__ import absolute_import, division, print_function
-
 import os
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import sys
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logging.getLogger("__main__.store_accuracy_and_loss_crossings")
 
 class Store_Accuracy_and_Loss(object):
     """Store the loss, accuracy and individual accuracy values computed during

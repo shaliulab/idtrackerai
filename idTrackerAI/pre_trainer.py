@@ -7,8 +7,6 @@ import itertools
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import logging
-
 from network_params import NetworkParams
 from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
@@ -17,8 +15,12 @@ from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 from constants import MAX_RATIO_OF_PRETRAINED_IMAGES, BATCH_SIZE_IDCNN
-
-logger = logging.getLogger("__main__.pre_trainer")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.pre_trainer")
 
 def pre_train(video, list_of_fragments, list_of_global_fragments,
                 params, store_accuracy_and_error,
@@ -78,8 +80,6 @@ def pre_train_global_fragment(net,
                                 canvas_from_GUI = None):
     # Get images and labels from the current global fragment
     images, labels = pretraining_global_fragment.get_images_and_labels()
-    print("---------------", len(images), images[0].shape)
-    print("---------------", len(labels), labels[0])
     # Instantiate data_set
     training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals,
                                                                             images, labels)

@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division, print_function
-
 import itertools
 import tensorflow as tf
 import os
@@ -7,8 +6,13 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 sys.path.append('../../')
-
 from constants import BATCH_SIZE_PREDICTIONS_IDCNN, KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.get_predictions")
 
 class GetPrediction(object):
     def __init__(self, data_set,
@@ -49,7 +53,6 @@ class GetPrediction(object):
         self._index_in_epoch = 0
         while self._index_in_epoch < self.data_set._num_images:
             fc_vectors = batch_operation(self.next_batch(self.batch_size))
-            # print(fc_vectors.shape)
             self._fc_vectors.append(fc_vectors)
         self._fc_vectors = np.concatenate(self._fc_vectors, axis = 0)
         _, self._predictions_KNN = kMeansCluster(self._fc_vectors, number_of_animals, KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN)
@@ -80,7 +83,7 @@ def kMeansCluster(vector_values, num_clusters, max_num_steps, stop_coeficient = 
   with tf.Session() as sess:
     sess.run(init_op)
     for step in xrange(max_num_steps):
-      print("KMeanClustering: Running step " + str(step))
+      logger.info("KMeanClustering: Running step %s" %str(step))
       sess.run(save_old_centroids)
       _, centroid_values, assignment_values = sess.run([update_centroids,
                                                         centroids,
