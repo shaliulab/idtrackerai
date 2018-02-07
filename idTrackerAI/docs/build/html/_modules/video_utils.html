@@ -81,23 +81,22 @@
             
   <h1>Source code for video_utils</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
-<span class="c1"># Import standard libraries</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">multiprocessing</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-
-<span class="c1"># Import third party libraries</span>
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
-
-<span class="c1"># Import application/library specifics</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../utils&#39;</span><span class="p">)</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../IdTrackerDeep&#39;</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">py_utils</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">video</span> <span class="k">import</span> <span class="n">Video</span>
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.video_utils&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.video_utils&quot;</span><span class="p">)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">The utilities to segment and extract the blob information</span>
 <span class="sd">&quot;&quot;&quot;</span>
@@ -243,7 +242,6 @@
 <span class="sd">    cumpute_background</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">bkg</span> <span class="o">=</span> <span class="kc">None</span>
-
     <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">subtract_bkg</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">use_previous_background</span> <span class="ow">and</span> <span class="n">old_video</span><span class="o">.</span><span class="n">bkg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">bkg</span> <span class="o">=</span> <span class="n">old_video</span><span class="o">.</span><span class="n">bkg</span>
@@ -420,7 +418,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">cimg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">))</span>
     <span class="n">cv2</span><span class="o">.</span><span class="n">drawContours</span><span class="p">(</span><span class="n">cimg</span><span class="p">,</span> <span class="p">[</span><span class="n">cnt</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">thickness</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-    <span class="c1"># Access the image pixels and create a 1D numpy array then add to list</span>
     <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cimg</span> <span class="o">==</span> <span class="mi">255</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
 
@@ -519,7 +516,6 @@
         <span class="n">bounding_box_images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bounding_box_image</span><span class="p">)</span>
         <span class="c1"># centroids</span>
         <span class="n">centroids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">getCentroid</span><span class="p">(</span><span class="n">cnt</span><span class="p">))</span>
-        <span class="c1"># areas</span>
         <span class="n">areas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">contourArea</span><span class="p">(</span><span class="n">cnt</span><span class="p">))</span>
         <span class="c1"># pixels lists</span>
         <span class="n">pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pixels_in_full_frame_ravelled</span><span class="p">)</span>
@@ -597,7 +593,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 05, 2018.
+      Last updated on Feb 07, 2018.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.

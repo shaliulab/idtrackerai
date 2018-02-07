@@ -3,18 +3,24 @@ from pprint import pprint
 import numpy as np
 import random
 import psutil
-import logging
-
 from assigner import assign
 from trainer import train
 from constants import RATIO_OLD, RATIO_NEW, MAXIMAL_IMAGES_PER_ANIMAL, \
                         CERTAINTY_THRESHOLD, \
                         MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
 
+import sys
+
 """
 The accumulation manager module
 """
-logger = logging.getLogger("__main__.accumulation_manager")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.accumulation_manager")
+
 class AccumulationManager(object):
     """ Manages the accumulation process.
 
@@ -206,10 +212,10 @@ class AccumulationManager(object):
         """ Updates the list of individual fragments used for training and their identities.
         If an individual fragment was added before is not added again.
         """
-        logging.info("Updating list of individual fragments used for training")
+        logger.info("Updating list of individual fragments used for training")
         new_individual_fragments_identifiers = self.update_individual_fragments_used_for_training()
         self.individual_fragments_used.extend(new_individual_fragments_identifiers)
-        logging.info("number of individual fragments used for training: %i" %sum([fragment.used_for_training for fragment in self.list_of_fragments.fragments]))
+        logger.info("number of individual fragments used for training: %i" %sum([fragment.used_for_training for fragment in self.list_of_fragments.fragments]))
 
     def split_predictions_after_network_assignment(self, predictions,
                                                     softmax_probs,
@@ -436,7 +442,7 @@ class AccumulationManager(object):
                     # and it is in the list of individual_fragments_used. We set the certainty to 1. And we
                     fragment._is_certain = True
                 else:
-                    logging.warn("Individual fragment not in candidates or in used, this should not happen")
+                    logger.warn("Individual fragment not in candidates or in used, this should not happen")
             # Compute identities if the global_fragment is certain
             if global_fragment.acceptable_for_training(self.accumulation_strategy):
                 P1_array, index_individual_fragments_sorted_by_P1_max_to_min = self.get_P1_array_and_argsort(global_fragment)
@@ -503,7 +509,7 @@ class AccumulationManager(object):
                     # and it is in the list of individual_fragments_used. We set the certainty to 1. And we
                     fragment._is_certain = True
                 else:
-                    logging.warn("Individual fragment not in candidates or in used, this should not happen")
+                    logger.warn("Individual fragment not in candidates or in used, this should not happen")
 
             # Compute identities if the global_fragment is certain
             # get array of P1 values for the global fragment

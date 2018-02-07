@@ -1,21 +1,20 @@
 from __future__ import absolute_import, division, print_function
-# Import standard libraries
 import os
 import sys
 import numpy as np
 import multiprocessing
-import logging
-
-# Import third party libraries
 import cv2
 from joblib import Parallel, delayed
-
-# Import application/library specifics
 sys.path.append('../utils')
 sys.path.append('../IdTrackerDeep')
 from py_utils import *
 from video import Video
-logger = logging.getLogger("__main__.video_utils")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.video_utils")
 """
 The utilities to segment and extract the blob information
 """
@@ -161,7 +160,6 @@ def check_background_substraction(video, old_video, use_previous_background):
     cumpute_background
     """
     bkg = None
-
     if video.subtract_bkg:
         if use_previous_background and old_video.bkg is not None:
             bkg = old_video.bkg
@@ -338,7 +336,6 @@ def get_pixels(cnt, width, height):
     """
     cimg = np.zeros((height, width))
     cv2.drawContours(cimg, [cnt], -1, color=255, thickness = -1)
-    # Access the image pixels and create a 1D numpy array then add to list
     pts = np.where(cimg == 255)
     return zip(pts[0],pts[1])
 
@@ -437,7 +434,6 @@ def get_blobs_information_per_frame(frame, contours):
         bounding_box_images.append(bounding_box_image)
         # centroids
         centroids.append(getCentroid(cnt))
-        # areas
         areas.append(cv2.contourArea(cnt))
         # pixels lists
         pixels.append(pixels_in_full_frame_ravelled)

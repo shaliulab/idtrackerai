@@ -1,3 +1,19 @@
+import os
+import sys
+import numpy as np
+sys.path.append('IdTrackerDeep/restructure')
+sys.path.append('IdTrackerDeep/tracker')
+sys.path.append('IdTrackerDeep/utils')
+from tqdm import tqdm
+from list_of_blobs import ListOfBlobs
+from GUI_utils import selectDir
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.get_trajectories")
+
 """
 Usage: get_trajectories.py
 
@@ -9,19 +25,6 @@ and output trajectories as numpy files with dimensions:
 When a certain individual was not identified in the frame
 a NaN appears instead of the coordinates
 """
-import os
-import sys
-import numpy as np
-sys.path.append('IdTrackerDeep/restructure')
-sys.path.append('IdTrackerDeep/tracker')
-sys.path.append('IdTrackerDeep/utils')
-from tqdm import tqdm
-import logging
-
-from list_of_blobs import ListOfBlobs
-from GUI_utils import selectDir
-
-logger = logging.getLogger("__main__.get_trajectories")
 
 def assign_point_to_identity(centroid, identity, frame_number, centroid_trajectories):
     if identity is not None and identity != 0:
@@ -54,18 +57,6 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
 
     return centroid_trajectories
 
-#def save_output_dict(trajectories, trajectories_folder):
-#    """
-#    params:
-#        trajectories: dictionary of trajectories
-#        trajectories_folder: path to save trajectories
-#    """
-#    for name in trajectories:
-#        np.save(os.path.join(trajectories_folder, name + '_trajectories.npy'), trajectories[name])
-#        np.save(os.path.join(trajectories_folder, name + '_smooth_trajectories.npy'), smooth_trajectories(trajectories[name]))
-#        np.save(os.path.join(trajectories_folder, name + '_smooth_velocities.npy'), smooth_trajectories(trajectories[name], derivative = 1))
-#        np.save(os.path.join(trajectories_folder, name + '_smooth_accelerations.npy'), smooth_trajectories(trajectories[name], derivative = 2))
-
 def produce_output_dict(blobs_in_video, video):
     output_dict = {'trajectories': produce_trajectories(blobs_in_video, video.number_of_frames, video.number_of_animals),
                     'git_commit': video.git_commit,
@@ -78,7 +69,7 @@ if __name__ == "__main__":
     # BLOB_FILE_NAME = "blobs_collection.npy"
     session_path = selectDir('./') #select path to video
     video_path = os.path.join(session_path,'video_object.npy')
-    print("loading video object...")
+    logger.info("loading video object...")
     video = np.load(video_path).item(0)
     list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
 

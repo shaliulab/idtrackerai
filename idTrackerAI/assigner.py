@@ -7,13 +7,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
-import logging
 from network_params import NetworkParams
 from get_data import DataSet
 from id_CNN import ConvNetwork
 from get_predictions import GetPrediction
 from visualize_embeddings import EmbeddingVisualiser
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.assigner")
 
 """
 Identification of individual fragments given the predictions generate by the idCNN
@@ -51,6 +56,10 @@ def assign(net, video, images, print_flag):
     images = np.expand_dims(np.asarray(images), axis = 3)
     logger.info("generating data set. Images shape %s" %str(images.shape))
     data = DataSet(net.params.number_of_animals, images)
+<<<<<<< HEAD
+=======
+    logger.debug("images shape %s" %str(images.shape))
+>>>>>>> f469521e6ad5510ede818ba5173be61f0022cedd
     logger.info("getting predictions")
     assigner = GetPrediction(data, print_flag = print_flag)
     assigner.get_predictions_softmax(net.predict)

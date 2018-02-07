@@ -1,18 +1,18 @@
 from __future__ import absolute_import, division, print_function
 import os
 import random
-import logging
 import numpy as np
-from matplotlib import pyplot as plt
-import matplotlib.lines as mlines
-import seaborn as sns
-
 from globalfragment import GlobalFragment
 from assigner import assign, compute_identification_statistics_for_non_accumulated_fragments
 from accumulation_manager import AccumulationManager
 from constants import CERTAINTY_THRESHOLD
-
-logger = logging.getLogger("__main__.list_of_global_fragments")
+import sys
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.list_of_global_fragments")
 
 class ListOfGlobalFragments(object):
     def __init__(self, global_fragments):
@@ -112,6 +112,9 @@ class ListOfGlobalFragments(object):
         return self.first_global_fragment_for_accumulation.index_beginning_of_fragment
 
     def plot_P1s_identity_transfer(self, video):
+        from matplotlib import pyplot as plt
+        import matplotlib.lines as mlines
+        import seaborn as sns
         P1_vectors = np.asarray([fragment.P1_vector for fragment in self.first_global_fragment_for_accumulation.individual_fragments])
         certainties = np.asarray([fragment.certainty for fragment in self.first_global_fragment_for_accumulation.individual_fragments])
         indices = np.argmax(P1_vectors, axis = 1)

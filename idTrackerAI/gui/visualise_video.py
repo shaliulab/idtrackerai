@@ -17,11 +17,12 @@ from kivy.graphics.transformation import Matrix
 import cv2
 
 class VisualiseVideo(BoxLayout):
-    def __init__(self,chosen_video = None, **kwargs):
+    def __init__(self,
+                chosen_video = None,
+                **kwargs):
         super(VisualiseVideo, self).__init__(**kwargs)
         global CHOSEN_VIDEO
         CHOSEN_VIDEO = chosen_video
-        print("--------------------> ", CHOSEN_VIDEO)
         self.orientation = "vertical"
         self.display_layout = Image(keep_ratio=False,
                                     allow_stretch=True,
@@ -71,7 +72,7 @@ class VisualiseVideo(BoxLayout):
             self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbar_value)
         ret, self.frame = self.cap.read()
         if ret == True:
-            if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction'):
+            if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and CHOSEN_VIDEO.video.resolution_reduction != 1:
                 self.frame = cv2.resize(self.frame, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
             if self.func is None:
                 self.func = self.simple_visualisation

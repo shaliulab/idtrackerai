@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import kivy
 from kivy.properties import StringProperty
-from kivy.properties import BooleanProperty
+from kivy.properties import BooleanProperty, NumericProperty
 from kivy.event import EventDispatcher
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
@@ -56,7 +56,8 @@ class Chosen_Video(EventDispatcher):
         self.video = Video()
         self.processes_list = processes_list
         self.bind(chosen=self.on_modified)
-        self.processes_to_restore = None
+        self.processes_to_restore = {}
+        self.old_video = None
 
     def set_chosen_item(self, chosen_string):
         self.chosen = chosen_string
@@ -74,23 +75,23 @@ class Deactivate_Process(EventDispatcher):
     def __init__(self, **kwargs):
         super(Deactivate_Process,self).__init__(**kwargs)
         self.process = True
+        self.restored = ''
         self.bind(process = self.on_modified)
 
     def setter(self, new_value):
         self.process = new_value
 
     def on_modified(self, instance, value):
-        print("modifying validation to ", value)
+        print("modifying to ", value)
         return value
 
-
 class CustomLabel(Label):
-    def __init__(self, font_size = 16, text = '', **kwargs):
+    def __init__(self, font_size = 16, text = '', halign = None, **kwargs):
         super(CustomLabel,self).__init__(**kwargs)
         self.text = text
         self.bind(size=lambda s, w: s.setter('text_size')(s, w))
         self.text_size = self.size
         self.size = self.texture_size
         self.font_size = font_size
-        self.halign = "center"
+        self.halign = "center" if halign is None else halign
         self.valign = "middle"

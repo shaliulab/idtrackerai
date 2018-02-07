@@ -90,11 +90,14 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="k">import</span> <span class="n">PCA</span>
 <span class="kn">from</span> <span class="nn">fishcontour</span> <span class="k">import</span> <span class="n">FishContour</span>
-
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.blob&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.blob&quot;</span><span class="p">)</span>
 
 <span class="c1">### NOTE : variables and functions to delete that are only used for the paper</span>
 <span class="c1"># folder_to_save_for_paper_figure</span>
@@ -629,7 +632,6 @@
         <span class="n">rot_ang_rad</span> <span class="o">=</span> <span class="n">rot_ang</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span>
         <span class="n">h_or_t_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rot_ang_rad</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rot_ang_rad</span><span class="p">)])</span> <span class="o">*</span> <span class="n">rot_ang_rad</span>
         <span class="n">h_or_t_2</span> <span class="o">=</span> <span class="o">-</span> <span class="n">h_or_t_1</span>
-        <span class="c1"># print(h_or_t_1,h_or_t_2,image_for_identification.shape)</span>
         <span class="k">if</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">:</span>
             <span class="n">save_preprocessing_step_image</span><span class="p">(</span><span class="n">image_for_identification</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;5_blob_dilated_rotated&#39;</span><span class="p">,</span> <span class="n">min_max</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
         <span class="n">image_for_identification_standarised</span> <span class="o">=</span> <span class="p">((</span><span class="n">image_for_identification</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">image_for_identification</span><span class="p">))</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">image_for_identification</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
@@ -646,7 +648,6 @@
 <span class="sd">            PloS one 11.4 (2016): e0154714.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
-            <span class="c1"># Calculating nose coordinates in the full frame reference</span>
             <span class="n">contour_cnt</span> <span class="o">=</span> <span class="n">FishContour</span><span class="o">.</span><span class="n">fromcv2contour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contour</span><span class="p">)</span>
             <span class="n">noseFull</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">head_centroid_full</span> <span class="o">=</span> <span class="n">contour_cnt</span><span class="o">.</span><span class="n">find_nose_and_orientation</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_nose_coordinates</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">noseFull</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">))</span>
@@ -767,7 +768,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 05, 2018.
+      Last updated on Feb 07, 2018.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.

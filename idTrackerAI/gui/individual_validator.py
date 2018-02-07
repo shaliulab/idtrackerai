@@ -106,33 +106,26 @@ class IndividualValidator(BoxLayout):
         return CHOSEN_VIDEO.video.first_frame_first_global_fragment
 
     def do(self, *args):
-        try:
-            if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
-                CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
-            if  CHOSEN_VIDEO.processes_to_restore is not None\
-                and 'crossings' in CHOSEN_VIDEO.processes_to_restore\
-                and CHOSEN_VIDEO.processes_to_restore['crossings']:
-                self.create_choose_list_of_blobs_popup()
-                self.lob_btn1.bind(on_press = self.show_loading_text)
-                self.lob_btn2.bind(on_press = self.show_loading_text)
-                self.lob_btn1.bind(on_release = self.on_choose_list_of_blobs_btns_press)
-                self.lob_btn2.bind(on_release = self.on_choose_list_of_blobs_btns_press)
-                self.choose_list_of_blobs_popup.open()
-            else:
-                self.loading_popup.open()
-                self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
-                self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
-                if not self.list_of_blobs.blobs_are_connected:
-                    self.list_of_blobs.reconnect()
-                self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
-                self._keyboard.bind(on_key_down=self._on_keyboard_down)
-                self.populate_validation_tab()
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
+        if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
+            CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
+        if  CHOSEN_VIDEO.video.has_been_assigned and CHOSEN_VIDEO.video.has_crossings_solved:
+            self.create_choose_list_of_blobs_popup()
+            self.lob_btn1.bind(on_press = self.show_loading_text)
+            self.lob_btn2.bind(on_press = self.show_loading_text)
+            self.lob_btn1.bind(on_release = self.on_choose_list_of_blobs_btns_press)
+            self.lob_btn2.bind(on_release = self.on_choose_list_of_blobs_btns_press)
+            self.choose_list_of_blobs_popup.open()
+        elif CHOSEN_VIDEO.video.has_been_assigned:
+            self.loading_popup.open()
+            self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
+            self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
+            if not self.list_of_blobs.blobs_are_connected:
+                self.list_of_blobs.reconnect()
+            self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+            self._keyboard.bind(on_key_down=self._on_keyboard_down)
+            self.populate_validation_tab()
+        else:
             self.warning_popup.open()
-
 
     def create_choose_individual_popup(self):
         self.choose_individual_container = BoxLayout(orientation = "vertical")
@@ -231,18 +224,19 @@ class IndividualValidator(BoxLayout):
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
 
-        frame_index = int(self.visualiser.video_slider.value)
-        if keycode[1] == 'left':
-            frame_index -= 1
-        elif keycode[1] == 'right':
-            frame_index += 1
-        elif keycode[1] == 'up':
-            frame_index = self.go_to_crossing(direction = 'next')
-        elif keycode[1] == 'down':
-            frame_index = self.go_to_crossing(direction = 'previous')
-        if frame_index is not None:
-            self.visualiser.video_slider.value = frame_index
-            self.visualiser.visualise(frame_index, func = self.writeIds)
+        if hasattr(self.visualiser, 'video_slider'):
+            frame_index = int(self.visualiser.video_slider.value)
+            if keycode[1] == 'left':
+                frame_index -= 1
+            elif keycode[1] == 'right':
+                frame_index += 1
+            elif keycode[1] == 'up':
+                frame_index = self.go_to_crossing(direction = 'next')
+            elif keycode[1] == 'down':
+                frame_index = self.go_to_crossing(direction = 'previous')
+            if frame_index is not None:
+                self.visualiser.video_slider.value = frame_index
+                self.visualiser.visualise(frame_index, func = self.writeIds)
         return True
 
     @staticmethod
@@ -391,10 +385,13 @@ class IndividualValidator(BoxLayout):
         count_past_corrections = 1 #to take into account the modification already done in the current frame
         count_future_corrections = 0
         new_blob_identity = modified_blob.user_generated_identity
-        if modified_blob.is_an_individual_in_a_fragment:
+        if modified_blob.is_an_individual:
+            print("is and individual")
+            print("fragment_identifier ", modified_blob.fragment_identifier)
             current = modified_blob
 
             while len(current.next) == 1 and current.next[0].fragment_identifier == modified_blob.fragment_identifier:
+                print("in first while")
                 current.next[0]._user_generated_identity = current.user_generated_identity
                 current = current.next[0]
                 count_future_corrections += 1
@@ -402,6 +399,7 @@ class IndividualValidator(BoxLayout):
             current = modified_blob
 
             while len(current.previous) == 1 and current.previous[0].fragment_identifier == modified_blob.fragment_identifier:
+                print("in second while")
                 current.previous[0]._user_generated_identity = current.user_generated_identity
                 current = current.previous[0]
                 count_past_corrections += 1
@@ -416,7 +414,9 @@ class IndividualValidator(BoxLayout):
         self.compute_accuracy_button.disabled = False
         if not self.blob_to_modify.is_a_crossing:
             self.blob_to_modify._user_generated_identity = self.individual_to_follow
+            print("propagating identity")
             self.propagate_groundtruth_identity_in_individual_fragment()
+            print("end of propagating identity")
             self.modify_id_popup.dismiss()
         self.visualiser.visualise(trackbar_value = int(self.visualiser.video_slider.value), func=self.writeIds)
 

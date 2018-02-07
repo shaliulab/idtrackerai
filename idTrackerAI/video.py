@@ -1,27 +1,22 @@
 from __future__ import absolute_import, division, print_function
 import sys
-#from collections import namedtuple
-import itertools
 import numpy as np
 import os
 from tempfile import mkstemp
 from shutil import move, rmtree
 import glob
-try:
-    import cPickle as pickle
-except:
-    import pickle
 from natsort import natsorted
 import cv2
 import time
-import logging
-
 sys.path.append('./utils')
 from py_utils import get_git_revision_hash
-
-from constants import AVAILABLE_VIDEO_EXTENSION, FRAMES_PER_EPISODE
-
-logger = logging.getLogger("__main__.video")
+from constants import AVAILABLE_VIDEO_EXTENSION, FRAMES_PER_EPISODE, MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.video")
 
 class Video(object):
     def __init__(self, video_path = None):
@@ -45,6 +40,7 @@ class Video(object):
         self._maximum_number_of_blobs = 0 #int: the maximum number of blobs detected in the video
         self._blobs_path = None #string: path to the saved list of blob objects
         self._blobs_path_segmented = None
+        self._blobs_path_interpolated = None
         self._has_been_segmented = None
         self._has_been_preprocessed = None #boolean: True if a video has been fragmented in a past session
         self._preprocessing_folder = None
@@ -186,10 +182,11 @@ class Video(object):
                                             fx = value,
                                             fy = value,
                                             interpolation = cv2.INTER_CUBIC)
-        self._ROI = cv2.resize(self.original_ROI, None,
-                                        fx = value,
-                                        fy = value,
-                                        interpolation = cv2.INTER_CUBIC)
+        if self.apply_ROI or self.original_ROI is not None:
+            self._ROI = cv2.resize(self.original_ROI, None,
+                                            fx = value,
+                                            fy = value,
+                                            interpolation = cv2.INTER_CUBIC)
 
     @property
     def min_threshold(self):
@@ -228,6 +225,11 @@ class Video(object):
         It checks that the segmentation has been succesfully performed"""
         self._blobs_path_segmented = os.path.join(self.preprocessing_folder, 'blobs_collection_segmented.npy')
         return self._blobs_path_segmented
+
+    @property
+    def blobs_path_interpolated(self):
+        self._blobs_path_interpolated = os.path.join(self.preprocessing_folder, 'blobs_collection_interpolated.npy')
+        return self._blobs_path_interpolated
 
     @property
     def global_fragments_path(self):
@@ -574,13 +576,17 @@ class Video(object):
             logger.info("the folder %s has been created" %self.crossings_detector_folder)
             os.makedirs(self.crossings_detector_folder)
 
-    def create_pretraining_folder(self):
+    def create_pretraining_folder(self, delete = False):
         """Creates a folder named pretraining in video_folder where the model
         trained during the pretraining is stored
         """
         self._pretraining_folder = os.path.join(self.session_folder, 'pretraining')
         if not os.path.isdir(self.pretraining_folder):
             os.makedirs(self.pretraining_folder)
+        elif delete:
+            rmtree(self.pretraining_folder)
+            os.makedirs(self.pretraining_folder)
+
 
     def create_accumulation_folder(self, iteration_number = 0, delete = False):
         """Folder in which the model generated while accumulating is stored (after pretraining)
@@ -610,12 +616,10 @@ class Video(object):
     def store_accumulation_step_statistics_data(self, new_values):
         [getattr(self, attr).append(value) for attr, value in zip(self.accumulation_statistics_attributes_list, new_values)]
 
-    def store_accumulation_statistics_data(self, accumulation_trial, number_of_possible_accumulation = 4):
+    def store_accumulation_statistics_data(self, accumulation_trial, number_of_possible_accumulation = MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1):
         if not hasattr(self, 'accumulation_statistics'): self.accumulation_statistics = [None] * number_of_possible_accumulation
         self.accumulation_statistics[accumulation_trial] = [getattr(self, stat_attr)
                                                             for stat_attr in self.accumulation_statistics_attributes_list]
-        # attribute = "accumulation_statistics" + str(accumulation_trial)
-        # setattr(self, attribute, [getattr(self, stat_attr) for stat_attr in self.accumulation_statistics_attributes_list])
 
     @property
     def final_training_folder(self):

@@ -8,11 +8,14 @@ import itertools
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
-import logging
 from sklearn.decomposition import PCA
 from fishcontour import FishContour
-
-logger = logging.getLogger("__main__.blob")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.blob")
 
 ### NOTE : variables and functions to delete that are only used for the paper
 # folder_to_save_for_paper_figure
@@ -547,7 +550,6 @@ class Blob(object):
         rot_ang_rad = rot_ang * np.pi / 180
         h_or_t_1 = np.array([np.cos(rot_ang_rad), np.sin(rot_ang_rad)]) * rot_ang_rad
         h_or_t_2 = - h_or_t_1
-        # print(h_or_t_1,h_or_t_2,image_for_identification.shape)
         if folder_to_save_for_paper_figure:
             save_preprocessing_step_image(image_for_identification/255, folder_to_save_for_paper_figure, name = '5_blob_dilated_rotated', min_max = [0, 1])
         image_for_identification_standarised = ((image_for_identification - np.mean(image_for_identification))/np.std(image_for_identification)).astype('float32')
@@ -564,7 +566,6 @@ class Blob(object):
             PloS one 11.4 (2016): e0154714.
         """
         if self.is_an_individual:
-            # Calculating nose coordinates in the full frame reference
             contour_cnt = FishContour.fromcv2contour(self.contour)
             noseFull, _, head_centroid_full = contour_cnt.find_nose_and_orientation()
             self._nose_coordinates = tuple(noseFull.astype('float32'))

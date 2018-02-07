@@ -5,27 +5,28 @@ import os
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
-import logging
 sys.path.append('../../')
-
-from constants import BATCH_SIZE_IDCNN
-logger = logging.getLogger("__main__.epoch_runner")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.epoch_runner")
 
 class EpochRunner(object):
     def __init__(self, data_set,
                 starting_epoch = 0,
-                print_flag = True):
+                print_flag = True,
+                batch_size = None):
         """Runs training a model given the network and the data set
         """
         # Counters
         self._epochs_completed = 0
         self.starting_epoch= starting_epoch
-        # self._index_in_epoch_train = 0
-        # self._index_in_epoch_val = 0
-        # Number of epochs
         self.print_flag = print_flag
         # Data set
         self.data_set = data_set
+        self.batch_size = batch_size
 
     @property
     def epochs_completed(self):
@@ -44,7 +45,7 @@ class EpochRunner(object):
         individual_accuracy_epoch = []
         self._index_in_epoch = 0
         while self._index_in_epoch < self.data_set._num_images:
-            loss_acc_batch, feed_dict = batch_operation(self.next_batch(BATCH_SIZE_IDCNN))
+            loss_acc_batch, feed_dict = batch_operation(self.next_batch(self.batch_size))
             loss_epoch.append(loss_acc_batch[0])
             accuracy_epoch.append(loss_acc_batch[1])
             individual_accuracy_epoch.append(loss_acc_batch[2])
@@ -53,7 +54,7 @@ class EpochRunner(object):
         individual_accuracy_epoch = np.nanmean(np.vstack(individual_accuracy_epoch),axis=0)
         if self.print_flag:
             # logger.info('%s (epoch %i). Loss: %f, accuracy %f, individual accuracy: %s' %(name, self.starting_epoch + self._epochs_completed, loss_epoch, accuracy_epoch , individual_accuracy_epoch))
-            print('%s (epoch %i). Loss: %f, accuracy %f, individual accuracy: %s' %(name, self.starting_epoch + self._epochs_completed, loss_epoch, accuracy_epoch , individual_accuracy_epoch))
+            logger.info('%s (epoch %i). Loss: %f, accuracy %f, individual accuracy: %s' %(name, self.starting_epoch + self._epochs_completed, loss_epoch, accuracy_epoch , individual_accuracy_epoch))
 
         # self._index_in_epoch_train = 0
         store_loss_and_accuracy.append_data(loss_epoch, accuracy_epoch, individual_accuracy_epoch)

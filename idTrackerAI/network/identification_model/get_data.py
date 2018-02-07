@@ -1,8 +1,14 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
-####
+import sys
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.get_data")
 np.random.seed(0)
-####
+
 class DataSet(object):
     def __init__(self, number_of_animals = None, images = None, labels = None):
         """Create dataset of images and labels.
@@ -27,9 +33,9 @@ class DataSet(object):
         """
         current_size = self.images.shape[1]
         shift = np.divide(current_size - image_size,2)
-        print(self.images.shape)
+        logger.debug("images shape: %s" %str(self.images.shape))
         self.images = self.images[:,shift:current_size-shift,shift:current_size-shift,:]
-        print(self.images.shape)
+        logger.debug("images shape: %s" %str(self.images.shape))
 
     def convert_labels_to_one_hot(self):
         self.labels = dense_to_one_hot(self.labels, n_classes=self.number_of_animals) # The -1 is because the labels of the classes start from one in idTrackerDeep

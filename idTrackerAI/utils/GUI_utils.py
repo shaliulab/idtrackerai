@@ -21,13 +21,17 @@ import pyautogui
 import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
-from segmentation import segment_frame
-from video_utils import check_background_substraction, blob_extractor
-from py_utils import get_spaced_colors_util, saveFile, loadFile, get_existent_preprocessing_steps
-
+from segmentation import segmentVideo
+from video_utils import checkBkg, blobExtractor
+from py_utils import get_existent_preprocessing_steps
 from blob import Blob
 
-logger = logging.getLogger("__main__.GUI_utils")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.GUI_utils")
 
 """
 Display messages and errors
@@ -79,11 +83,9 @@ def selectOptions(optionsList, loadPreviousDict=None, text="Select preprocessing
     if is_processes_list:
         loadPreviousDict = load_previous_dict_check(optionsList, dict((key, value) for (key, value) in zip(optionsList, varValues)))
     else:
-        print("varvalues ", varValues)
         loadPreviousDict = dict((key, value) for (key, value) in zip(optionsList, varValues))
 
     master.destroy()
-    print("")
     return loadPreviousDict
 
 def selectFile():
@@ -262,6 +264,7 @@ def SegmentationPreview(video):
         video._number_of_channels = 1
     else:
         video._number_of_channels = 1
+        print("this is a special case for the ants video")
         # raise NotImplementedError("Colour videos has still to be integrated")
     numFrames = video.number_of_frames
     subtract_bkg = video.subtract_bkg
@@ -379,8 +382,8 @@ def SegmentationPreview(video):
     cv2.createTrackbar('start', 'Bars', 0, numFrames-1, scroll )
     cv2.createTrackbar('minTh', 'Bars', 0, 255, changeMinTh)
     cv2.createTrackbar('maxTh', 'Bars', 0, 255, changeMaxTh)
-    cv2.createTrackbar('min_area', 'Bars', 0, 2000, changeMinArea)
-    cv2.createTrackbar('max_area', 'Bars', 0, 60000, changeMaxArea)
+    cv2.createTrackbar('minArea', 'Bars', 0, 5000, changeMinArea)
+    cv2.createTrackbar('maxArea', 'Bars', 0, 60000, changeMaxArea)
     cv2.createTrackbar('ResUp', 'Bars', 1, 20, resizeImageUp)
     cv2.createTrackbar('ResDown', 'Bars', 1, 20, resizeImageDown)
     defFrame = 1
@@ -442,12 +445,8 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
         cv2.drawContours(toile, good_contours, -1, color=255, thickness = -1)
         shower = cv2.addWeighted(frameGray,1,toile,.5,0)
         showerCopy = shower.copy()
-        print(showerCopy.shape)
         resUp = cv2.getTrackbarPos('ResUp', 'Bars') if cv2.getTrackbarPos('ResUp', 'Bars') > 0 else 1
         resDown = cv2.getTrackbarPos('ResDown', 'Bars') if cv2.getTrackbarPos('ResDown', 'Bars') > 0 else 1
-        print(resUp, resDown)
-        print(video.resize)
-
         showerCopy = cv2.resize(showerCopy,None,fx = resUp, fy = resUp)
         showerCopy = cv2.resize(showerCopy,None, fx = 1/resDown, fy = 1/resDown)
         numColumns = 5

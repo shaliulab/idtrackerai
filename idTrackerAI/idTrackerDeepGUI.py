@@ -57,6 +57,7 @@ from generate_groundtruth import GroundTruth, GroundTruthBlob
 from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
 from compute_velocity_model import compute_model_velocity
 from assign_them_all import close_trajectories_gaps
+from identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
 # from visualise_cnn import visualise
 
 from constants import THRESHOLD_ACCEPTABLE_ACCUMULATION, VEL_PERCENTILE
@@ -106,7 +107,6 @@ if __name__ == '__main__':
     logger.info("Log files saved in %s" %video.logs_folder)
     #Asking user whether to reuse preprocessing steps...'
     processes_list = ['preprocessing',
-                    'use_previous_knowledge_transfer_decision',
                     'first_accumulation',
                     'pretraining',
                     'second_accumulation',
@@ -130,6 +130,7 @@ if __name__ == '__main__':
     ####   trained. Works better when transfering to similar ####
     ####   conditions (light, animal type, age, ...)         ####
     #############################################################
+    loadPreviousDict['use_previous_knowledge_transfer_decision'] = True
     if not bool(loadPreviousDict['use_previous_knowledge_transfer_decision']):
         knowledge_transfer_flag = getInput('Knowledge transfer','Do you want to perform knowledge transfer from another model? [y]/n')
         if knowledge_transfer_flag.lower() == 'y' or knowledge_transfer_flag == '':
@@ -641,7 +642,7 @@ if __name__ == '__main__':
     print("************** After solving impossible jumps ************************")
     print("Number of fragments with zero identity: ", len([f for f in list_of_fragments.fragments
                                                             if f.assigned_identity == 0]))
-    print("Number of fragments with zero _was_a_crossingidentity by P2: ",
+    print("Number of fragments with zero identity by P2: ",
                     len([f for f in list_of_fragments.fragments
                     if f.assigned_identity == 0
                     and hasattr(f, 'zero_identity_assigned_by_P2')]))
@@ -721,10 +722,10 @@ if __name__ == '__main__':
     print("\n**** Assign crossings ****")
     if not loadPreviousDict['crossings']:
         list_of_blobs_no_gaps = copy.deepcopy(list_of_blobs)
-        if not hasattr(list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
-            logger.debug("adding attribute was_a_crossing to every blob")
-            [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
-                list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
+        # if not hasattr(list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
+        #     logger.debug("adding attribute was_a_crossing to every blob")
+        #     [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
+        #         list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
         video._has_crossings_solved = False
         list_of_blobs_no_gaps = close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
         video.blobs_no_gaps_path = os.path.join(os.path.split(video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
@@ -754,10 +755,12 @@ if __name__ == '__main__':
         video._has_trajectories_wo_gaps = True
         video.save()
     video.generate_trajectories_wogaps_time = time.time() - video.generate_trajectories_wogaps_time
-    # except Exception as e:
-    #     exc_type, exc_obj, exc_tb = sys.exc_info()
-    #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    #     print(exc_type, fname, exc_tb.tb_lineno)
-    #     if old_video is not None:
-    #         video = old_video
-    #         video.save()
+
+    #############################################################
+    ############ Create trajectories (w gaps interpolated) ######
+    #############################################################
+    list_of_blobs_interpolated = assign_zeros_with_interpolation_identities(list_of_blobs, list_of_blobs_no_gaps)
+    trajectories_file = os.path.join(video.trajectories_folder, 'trajectories_interpolated.npy')
+    trajectories = produce_output_dict(list_of_blobs_interpolated.blobs_in_video, video)
+    np.save(trajectories_file, trajectories)
+    logger.info("Saving trajectories")

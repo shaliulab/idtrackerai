@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division, print_function
-
 import itertools
 import tensorflow as tf
 import os
@@ -8,6 +7,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 sys.path.append('../../')
 from constants import BATCH_SIZE_IDCNN
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.train_id_CNN")
 
 class TrainIdCNN(object):
     def __init__(self, network, data_set,
@@ -54,8 +59,12 @@ class TrainIdCNN(object):
         accuracy_epoch = np.mean(np.vstack(accuracy_epoch))
         individual_accuracy_epoch = np.nanmean(np.vstack(individual_accuracy_epoch),axis=0)
         if self.print_flag:
-            print(name, ' (epoch %i)' %(self.starting_epoch + self._epochs_completed), ': loss, ', loss_epoch, ', accuracy, ', accuracy_epoch, ', individual accuray, ')
-            print(individual_accuracy_epoch)
+            logger.info(name)
+            logger.info('(epoch %i)' %(self.starting_epoch + self._epochs_completed)
+            logger.info('loss: %s' %str(loss_epoch))
+            logger.info('accuracy: %s' %str(straccuracy_epoch)
+            logger.info('individual accuray: %s' %str(individual_accuracy_epoch))
+
         self._index_in_epoch_train = 0
         store_loss_and_accuracy.append_data(loss_epoch, accuracy_epoch, individual_accuracy_epoch)
         return feed_dict
