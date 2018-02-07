@@ -9,6 +9,7 @@ sys.path.append('../utils')
 sys.path.append('../IdTrackerDeep')
 from py_utils import *
 from video import Video
+from constants import BACKGROUND_SUBTRACTION_PERIOD
 if sys.argv[0] == 'idtrackerdeepApp.py':
     from kivy.logger import Logger
     logger = Logger
@@ -42,7 +43,7 @@ def computeBkgParSegmVideo(video_path, bkg):
     counter = 0
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     numFramesBkg = 0
-    frameInds = range(0,numFrame,100)
+    frameInds = range(0,numFrame, BACKGROUND_SUBTRACTION_PERIOD)
     for ind in frameInds:
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
         ret, frameBkg = cap.read()
