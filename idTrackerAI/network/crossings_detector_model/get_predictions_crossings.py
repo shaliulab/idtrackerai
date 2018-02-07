@@ -14,7 +14,7 @@ if sys.argv[0] == 'idtrackerdeepApp.py':
     logger = Logger
 else:
     import logging
-    logging.getLogger("__main__.get_predictions_crossings")
+    logger = logging.getLogger("__main__.get_predictions_crossings")
 
 class GetPredictionCrossigns(object):
     def __init__(self, net):

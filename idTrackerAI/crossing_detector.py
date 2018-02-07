@@ -14,7 +14,7 @@ if sys.argv[0] == 'idtrackerdeepApp.py':
     logger = Logger
 else:
     import logging
-    logging.getLogger("__main__.crossing_detector")
+    logger = logging.getLogger("__main__.crossing_detector")
 
 def detect_crossings(list_of_blobs, video, model_area, use_network = True, return_store_objects = False, plot_flag = True):
     logger.info("Discriminating blobs representing individuals from blobs associated to crossings")

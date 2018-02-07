@@ -8,7 +8,7 @@ if sys.argv[0] == 'idtrackerdeepApp.py':
     logger = Logger
 else:
     import logging
-    logging.getLogger("__main__.network_params_crossings")
+    logger = logging.getLogger("__main__.network_params_crossings")
 
 class NetworkParams_crossings(object):
     def __init__(self,number_of_classes,

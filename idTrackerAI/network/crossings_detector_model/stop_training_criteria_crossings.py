@@ -11,7 +11,7 @@ if sys.argv[0] == 'idtrackerdeepApp.py':
     logger = Logger
 else:
     import logging
-    logging.getLogger("__main__.stop_training_criteria_crossings")
+    logger = logging.getLogger("__main__.stop_training_criteria_crossings")
 
 class Stop_Training(object):
     """Stops the training of the network according to the conditions specified
