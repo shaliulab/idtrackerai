@@ -261,7 +261,9 @@ def SegmentationPreview(video):
     if frame.shape[2] == 1 or (np.any(frame[:,:,1] == frame[:,:,2] ) and np.any(frame[:,:, 0] == frame[:,:,1])):
         video._number_of_channels = 1
     else:
-        raise NotImplementedError("Colour videos has still to be integrated")
+        video._number_of_channels = 1
+        print("this is a special case for the ants video")
+        # raise NotImplementedError("Colour videos has still to be integrated")
     numFrames = video.number_of_frames
     subtract_bkg = video.subtract_bkg
 
