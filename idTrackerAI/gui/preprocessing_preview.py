@@ -170,16 +170,16 @@ class PreprocessingPreview(BoxLayout):
     def visualise_resegmentation(self, frame_number):
         def update_resegmentation_paramenters(instance, value):
             if instance.id == "max_threshold_slider":
-                max_threshold_lbl.text = "Upper intensity bound:\n" +  str(int(value))
+                max_threshold_lbl.text = "Max intensity:\n" +  str(int(value))
                 self.new_preprocessing_parameters['max_threshold'] = value
             elif instance.id == "min_threshold_slider":
-                max_threshold_lbl.text = "Lower intensity bound:\n" +  str(int(value))
+                min_threshold_lbl.text = "Min intensity:\n" +  str(int(value))
                 self.new_preprocessing_parameters['min_threshold'] = value
             elif instance.id == "max_area_slider":
-                max_threshold_lbl.text = "Max area:\n" +  str(int(value))
+                max_area_lbl.text = "Max area:\n" +  str(int(value))
                 self.new_preprocessing_parameters['max_area'] = value
             elif instance.id == "min_area_slider":
-                max_threshold_lbl.text = "Min area:\n" +  str(int(value))
+                min_area_lbl.text = "Min area:\n" +  str(int(value))
                 self.new_preprocessing_parameters['min_area'] = value
             resegmentation_visualiser.visualise(frame_number,
                                                 func = partial(self.show_preprocessing,
@@ -412,11 +412,11 @@ class PreprocessingPreview(BoxLayout):
             self.container_layout.add_widget(w)
 
     def update_max_th_lbl(self,instance, value):
-        self.max_threshold_lbl.text = "Upper intensity bound:\n" +  str(int(value))
+        self.max_threshold_lbl.text = "Max intensity:\n" +  str(int(value))
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def update_min_th_lbl(self,instance, value):
-        self.min_threshold_lbl.text = "Lower intensity bound:\n" + str(int(value))
+        self.min_threshold_lbl.text = "Min intensity:\n" + str(int(value))
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def update_max_area_lbl(self,instance, value):

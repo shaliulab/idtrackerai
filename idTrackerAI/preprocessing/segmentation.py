@@ -220,7 +220,7 @@ def segment(video):
     """
     # avoid computing with all the cores in very large videos. It fills the RAM.
     # num_cores = multiprocessing.cpu_count()
-    num_cores = int(np.ceil(2 * multiprocessing.cpu_count() / 3))
+    num_cores = int(np.ceil(multiprocessing.cpu_count() / 2))
     #init variables to store data
     blobs_in_video = []
     maximum_number_of_blobs_in_episode = []
