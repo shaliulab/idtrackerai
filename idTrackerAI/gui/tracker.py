@@ -36,8 +36,8 @@ sys.path.append('../network/crossings_detector_model')
 sys.path.append('../network/identification_model')
 sys.path.append('../plots')
 import copy
-from segmentation import segmentVideo, segment
-from video_utils import blobExtractor
+from segmentation import segment_frame, segment
+from video_utils import blob_extractor
 import numpy as np
 from scipy.stats import mode
 import cv2

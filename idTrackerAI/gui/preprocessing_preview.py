@@ -30,8 +30,8 @@ sys.path.append('../preprocessing')
 sys.path.append('../network')
 sys.path.append('../network/crossings_detector_model')
 sys.path.append('../network/identification_model')
-from segmentation import segmentVideo, segment, resegment
-from video_utils import blobExtractor
+from segmentation import segment_frame, segment, resegment
+from video_utils import blob_extractor
 import numpy as np
 from scipy.stats import mode
 import cv2
@@ -498,13 +498,13 @@ class PreprocessingPreview(BoxLayout):
                 raise NotImplementedError("Colour videos has still to be integrated")
         avIntensity = np.float32(np.mean(self.frame))
         self.av_frame = self.frame / avIntensity
-        self.segmented_frame = segmentVideo(self.av_frame,
+        self.segmented_frame = segment_frame(self.av_frame,
                                             int(min_threshold_slider.value),
                                             int(max_threshold_slider.value),
                                             CHOSEN_VIDEO.video.bkg,
                                             self.ROI,
                                             self.bkg_subtractor_switch.active)
-        boundingBoxes, miniFrames, _, areas, _, goodContours, _ = blobExtractor(self.segmented_frame,
+        boundingBoxes, miniFrames, _, areas, _, goodContours, _ = blob_extractor(self.segmented_frame,
                                                                         self.frame,
                                                                         int(min_area_slider.value),
                                                                         int(max_area_slider.value))

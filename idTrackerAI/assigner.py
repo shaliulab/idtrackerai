@@ -56,10 +56,6 @@ def assign(net, video, images, print_flag):
     images = np.expand_dims(np.asarray(images), axis = 3)
     logger.info("generating data set. Images shape %s" %str(images.shape))
     data = DataSet(net.params.number_of_animals, images)
-<<<<<<< HEAD
-=======
-    logger.debug("images shape %s" %str(images.shape))
->>>>>>> f469521e6ad5510ede818ba5173be61f0022cedd
     logger.info("getting predictions")
     assigner = GetPrediction(data, print_flag = print_flag)
     assigner.get_predictions_softmax(net.predict)

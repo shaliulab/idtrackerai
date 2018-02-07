@@ -81,33 +81,31 @@
             
   <h1>Source code for segmentation</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
-<span class="c1"># Import standard libraries</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">multiprocessing</span>
-
-<span class="c1"># Import third party libraries</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">cPickle</span> <span class="k">as</span> <span class="nn">pickle</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 <span class="kn">import</span> <span class="nn">gc</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">ndimage</span>
-
-<span class="c1"># Import application/library specifics</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../utils&#39;</span><span class="p">)</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../IdTrackerDeep&#39;</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">blob</span> <span class="k">import</span> <span class="n">Blob</span>
-
 <span class="kn">from</span> <span class="nn">py_utils</span> <span class="k">import</span> <span class="n">flatten</span>
 <span class="kn">from</span> <span class="nn">video_utils</span> <span class="k">import</span> <span class="n">segment_frame</span><span class="p">,</span> <span class="n">blob_extractor</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.segmentation&quot;</span><span class="p">)</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">The segmentation module</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.segmentation&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="get_videoCapture"><a class="viewcode-back" href="../modules.html#segmentation.get_videoCapture">[docs]</a><span class="k">def</span> <span class="nf">get_videoCapture</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">episode_start_end_frames</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Gives the VideoCapture (OpenCV) object to read the frames for the segmentation</span>
@@ -179,8 +177,8 @@
 <span class="sd">    blob_extractor</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">blobs_in_frame</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="c1">#Get frame from video file</span>
     <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
     <span class="k">try</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">resolution_reduction</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">ret</span><span class="p">:</span>
             <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
@@ -202,7 +200,9 @@
                                                                         <span class="n">segmentation_thresholds</span><span class="p">[</span><span class="s1">&#39;min_area&#39;</span><span class="p">],</span>
                                                                         <span class="n">segmentation_thresholds</span><span class="p">[</span><span class="s1">&#39;max_area&#39;</span><span class="p">])</span>
     <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Segmentation failed for frame </span><span class="si">%i</span><span class="s2">, (ret = </span><span class="si">%r</span><span class="s2">)&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">ret</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;An error occurred while reading frame number : </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">counter</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;ret: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;frame: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">frame</span><span class="p">))</span>
         <span class="n">bounding_boxes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">miniframes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">centroids</span> <span class="o">=</span> <span class="p">[]</span>
@@ -302,7 +302,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># avoid computing with all the cores in very large videos. It fills the RAM.</span>
     <span class="c1"># num_cores = multiprocessing.cpu_count()</span>
-    <span class="n">num_cores</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">num_cores</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3</span><span class="p">))</span>
     <span class="c1">#init variables to store data</span>
     <span class="n">blobs_in_video</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">maximum_number_of_blobs_in_episode</span> <span class="o">=</span> <span class="p">[]</span>
@@ -336,7 +336,6 @@
             <span class="n">blobs_in_video</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blobs_in_episode</span><span class="p">)</span>
 
     <span class="n">video</span><span class="o">.</span><span class="n">_maximum_number_of_blobs</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">maximum_number_of_blobs_in_episode</span><span class="p">))</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Maximum number of blobs in video: </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">video</span><span class="o">.</span><span class="n">maximum_number_of_blobs</span><span class="p">)</span>
     <span class="c1">#blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs</span>
     <span class="n">blobs_in_video</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">blobs_in_video</span></div>

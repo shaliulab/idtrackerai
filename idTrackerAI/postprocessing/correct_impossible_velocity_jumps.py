@@ -15,8 +15,7 @@ from network_params import NetworkParams
 from blob import Blob
 from compute_velocity_model import compute_velocity_from_list_of_fragments, compute_model_velocity
 from get_trajectories import produce_trajectories
-from constants import VEL_PERCENTILE
-
+from constants import VEL_PERCENTILE #percentile used to model velocity jumps
 """
 The correct_impossible_velocity_jumps module
 """
@@ -208,8 +207,7 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
                                                                     impossible_velocity_threshold)
         candidate_identities = []
         candidate_speeds = []
-        for candidate_id, candidate_speed
-            in zip(candidate_identities_speed, speed_of_candidate_identities):
+        for candidate_id, candidate_speed in zip(candidate_identities_speed, speed_of_candidate_identities):
             if candidate_id in candidate_identities_P2:
                 candidate_identities.append(candidate_id)
                 candidate_speeds.append(candidate_speed)
@@ -302,10 +300,9 @@ def get_fragment_with_same_identity(video, list_of_fragments, fragment, directio
     """
     neighbour_fragment = None
     number_of_frames_in_direction = 0
-    frame_number = fragment.start_end[0] if direction == 'to_the_past'
-                                        else fragment.start_end[1]
+    frame_number = fragment.start_end[0] if direction == 'to_the_past' else fragment.start_end[1]
 
-    while neighbour_fragment is None
+    while neighbour_fragment is None\
         and (frame_number > 0 and frame_number < video.number_of_frames):
         neighbour_fragment = fragment.get_neighbour_fragment(list_of_fragments.fragments,
                                         direction,
@@ -362,8 +359,7 @@ def compute_neighbour_fragments_and_velocities(video, list_of_fragments, fragmen
     velocities = compute_velocities_consecutive_fragments(neighbour_fragment_past,
                                                             fragment,
                                                             neighbour_fragment_future)
-    velocities_between_fragments = np.asarray(velocities) / \
-                                    np.asarray([number_of_frames_in_past, number_of_frames_in_future])
+    velocities_between_fragments = np.asarray(velocities) / np.asarray([number_of_frames_in_past, number_of_frames_in_future])
 
     return neighbour_fragment_past, neighbour_fragment_future, velocities_between_fragments
 

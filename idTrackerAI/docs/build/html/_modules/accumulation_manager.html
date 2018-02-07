@@ -85,18 +85,24 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">psutil</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-
 <span class="kn">from</span> <span class="nn">assigner</span> <span class="k">import</span> <span class="n">assign</span>
 <span class="kn">from</span> <span class="nn">trainer</span> <span class="k">import</span> <span class="n">train</span>
 <span class="kn">from</span> <span class="nn">constants</span> <span class="k">import</span> <span class="n">RATIO_OLD</span><span class="p">,</span> <span class="n">RATIO_NEW</span><span class="p">,</span> <span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span><span class="p">,</span> \
                         <span class="n">CERTAINTY_THRESHOLD</span><span class="p">,</span> \
                         <span class="n">MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION</span>
 
+<span class="kn">import</span> <span class="nn">sys</span>
+
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">The accumulation manager module</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.accumulation_manager&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.accumulation_manager&quot;</span><span class="p">)</span>
+
 <div class="viewcode-block" id="AccumulationManager"><a class="viewcode-back" href="../modules.html#accumulation_manager.AccumulationManager">[docs]</a><span class="k">class</span> <span class="nc">AccumulationManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Manages the accumulation process.</span>
 
@@ -288,10 +294,10 @@
         <span class="sd">&quot;&quot;&quot; Updates the list of individual fragments used for training and their identities.</span>
 <span class="sd">        If an individual fragment was added before is not added again.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating list of individual fragments used for training&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating list of individual fragments used for training&quot;</span><span class="p">)</span>
         <span class="n">new_individual_fragments_identifiers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_individual_fragments_used_for_training</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">individual_fragments_used</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_individual_fragments_identifiers</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;number of individual fragments used for training: </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span><span class="p">]))</span></div>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;number of individual fragments used for training: </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span><span class="p">]))</span></div>
 
 <div class="viewcode-block" id="AccumulationManager.split_predictions_after_network_assignment"><a class="viewcode-back" href="../modules.html#accumulation_manager.AccumulationManager.split_predictions_after_network_assignment">[docs]</a>    <span class="k">def</span> <span class="nf">split_predictions_after_network_assignment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span>
                                                     <span class="n">softmax_probs</span><span class="p">,</span>
@@ -518,7 +524,7 @@
                     <span class="c1"># and it is in the list of individual_fragments_used. We set the certainty to 1. And we</span>
                     <span class="n">fragment</span><span class="o">.</span><span class="n">_is_certain</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Individual fragment not in candidates or in used, this should not happen&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Individual fragment not in candidates or in used, this should not happen&quot;</span><span class="p">)</span>
             <span class="c1"># Compute identities if the global_fragment is certain</span>
             <span class="k">if</span> <span class="n">global_fragment</span><span class="o">.</span><span class="n">acceptable_for_training</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accumulation_strategy</span><span class="p">):</span>
                 <span class="n">P1_array</span><span class="p">,</span> <span class="n">index_individual_fragments_sorted_by_P1_max_to_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_P1_array_and_argsort</span><span class="p">(</span><span class="n">global_fragment</span><span class="p">)</span>
@@ -585,7 +591,7 @@
                     <span class="c1"># and it is in the list of individual_fragments_used. We set the certainty to 1. And we</span>
                     <span class="n">fragment</span><span class="o">.</span><span class="n">_is_certain</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Individual fragment not in candidates or in used, this should not happen&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Individual fragment not in candidates or in used, this should not happen&quot;</span><span class="p">)</span>
 
             <span class="c1"># Compute identities if the global_fragment is certain</span>
             <span class="c1"># get array of P1 values for the global fragment</span>

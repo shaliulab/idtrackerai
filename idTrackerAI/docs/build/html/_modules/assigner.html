@@ -89,13 +89,18 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">network_params</span> <span class="k">import</span> <span class="n">NetworkParams</span>
 <span class="kn">from</span> <span class="nn">get_data</span> <span class="k">import</span> <span class="n">DataSet</span>
 <span class="kn">from</span> <span class="nn">id_CNN</span> <span class="k">import</span> <span class="n">ConvNetwork</span>
 <span class="kn">from</span> <span class="nn">get_predictions</span> <span class="k">import</span> <span class="n">GetPrediction</span>
 <span class="kn">from</span> <span class="nn">visualize_embeddings</span> <span class="k">import</span> <span class="n">EmbeddingVisualiser</span>
 <span class="kn">from</span> <span class="nn">statistics_for_assignment</span> <span class="k">import</span> <span class="n">compute_P2_of_individual_fragment_from_blob</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.assigner&quot;</span><span class="p">)</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Identification of individual fragments given the predictions generate by the idCNN</span>

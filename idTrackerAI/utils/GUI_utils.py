@@ -21,8 +21,8 @@ import pyautogui
 import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
 from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
-from segmentation import segmentVideo
-from video_utils import checkBkg, blobExtractor
+from segmentation import segment_frame
+from video_utils import check_background_substraction, blob_extractor
 from py_utils import get_existent_preprocessing_steps
 from blob import Blob
 
