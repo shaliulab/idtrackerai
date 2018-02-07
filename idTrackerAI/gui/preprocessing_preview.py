@@ -316,8 +316,8 @@ class PreprocessingPreview(BoxLayout):
             self.fig.set_facecolor((.188, .188, .188))
             [(ax.set_facecolor((.188, .188, .188)), ax.tick_params(color='white', labelcolor='white'), ax.xaxis.label.set_color('white'), ax.yaxis.label.set_color('white')) for ax in ax_arr]
             [spine.set_edgecolor('white') for ax in ax_arr for spine in ax.spines.values()]
-            self.crossing_detector_trainer.store_training_accuracy_and_loss_data.plot(ax_arr, color = 'w', plot_now = False, legend_font_color = "white")
-            self.crossing_detector_trainer.store_validation_accuracy_and_loss_data.plot(ax_arr, color ='grey', plot_now = False, legend_font_color = "white")
+            self.crossing_detector_trainer.store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r', plot_now = False, legend_font_color = "white")
+            self.crossing_detector_trainer.store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b', plot_now = False, legend_font_color = "white")
             plt.tight_layout()
             crossing_detector_accuracy = FigureCanvasKivyAgg(fig)
             content.add_widget(crossing_label)
@@ -496,11 +496,6 @@ class PreprocessingPreview(BoxLayout):
                 CHOSEN_VIDEO.video._number_of_channels = 1
             else:
                 raise NotImplementedError("Colour videos has still to be integrated")
-        if self.bkg_subtractor_switch.active:
-            self.max_threshold_slider.value = 255
-            self.max_threshold_slider.disabled = True
-        else:
-            self.max_threshold_slider.disabled = False
         avIntensity = np.float32(np.mean(self.frame))
         self.av_frame = self.frame / avIntensity
         self.segmented_frame = segmentVideo(self.av_frame,

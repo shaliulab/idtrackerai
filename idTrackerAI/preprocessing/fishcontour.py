@@ -5,8 +5,13 @@ import scipy.ndimage
 from scipy.signal import argrelmax
 import cv2
 sys.path.append('./')
-
 from constants import SMOOTH_SIGMA, HEAD_DIAMETER
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.fishcontour")
 
 def find_max(curv,n=2):
     """Returns the nth local maximum of the array f (Default is 2nd)
@@ -19,8 +24,8 @@ def find_max(curv,n=2):
         nose = b_s[-n]
         return nose
     except IndexError:
-        print ("Warning, no nose detected in a frame")
-        return b_s[-1] #No idea what to do, so return the maximum
+        logger.warn("Warning, no nose detected in a frame. The maximum is returned instead")
+        return b_s[-1]
 
 class FishContour():
     def __init__(self,curve):

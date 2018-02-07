@@ -1,25 +1,22 @@
 from __future__ import absolute_import, division, print_function
 import sys
-#from collections import namedtuple
-import itertools
 import numpy as np
 import os
 from tempfile import mkstemp
 from shutil import move, rmtree
 import glob
-try:
-    import cPickle as pickle
-except:
-    import pickle
 from natsort import natsorted
 import cv2
 import time
-import logging
 sys.path.append('./utils')
 from py_utils import get_git_revision_hash
 from constants import AVAILABLE_VIDEO_EXTENSION, FRAMES_PER_EPISODE, MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
-
-logger = logging.getLogger("__main__.video")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.video")
 
 class Video(object):
     def __init__(self, video_path = None):
@@ -177,8 +174,6 @@ class Video(object):
 
     @resolution_reduction.setter
     def resolution_reduction(self, value):
-        print("res red value ", value)
-        print("original |ROI ", self.original_ROI)
         self._resolution_reduction = value
         self._height = int(self.original_height * value)
         self._width = int(self.original_width * value)

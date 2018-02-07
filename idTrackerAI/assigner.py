@@ -3,21 +3,22 @@ import os
 import sys
 sys.path.append('./network')
 sys.path.append('./postprocessing')
-
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
-import logging
-
 from network_params import NetworkParams
 from get_data import DataSet
 from id_CNN import ConvNetwork
 from get_predictions import GetPrediction
 from visualize_embeddings import EmbeddingVisualiser
 from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob
-
-logger = logging.getLogger("__main__.assigner")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.assigner")
 
 """
 ********************************************************************************
@@ -27,12 +28,10 @@ assign blobs
 
 def assign(net, video, images, print_flag):
     logger.info("assigning identities to images...")
-    # build data object
     images = np.expand_dims(np.asarray(images), axis = 3)
     logger.info("generating data set. Images shape %s" %str(images.shape))
     data = DataSet(net.params.number_of_animals, images)
-    # logger.debug("images shape %s" %str(images.shape))
-    # data.crop_images(image_size = video.identification_image_size[0])
+    logger.debug("images shape %s" %str(images.shape))
     logger.info("getting predictions")
     assigner = GetPrediction(data, print_flag = print_flag)
     assigner.get_predictions_softmax(net.predict)

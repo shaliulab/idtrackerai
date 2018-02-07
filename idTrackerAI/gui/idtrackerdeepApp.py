@@ -291,6 +291,7 @@ class idtrackerdeepApp(App):
     Config.set('kivy', 'keyboard_mode', '')
     Config.set('graphics', 'fullscreen', '0')
     Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
+    Config.set('kivy', 'log_level', 'debug')
     Config.write()
     def build(self):
         return MainWindow()

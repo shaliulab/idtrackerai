@@ -2,17 +2,18 @@ from __future__ import absolute_import, division, print_function
 import sys
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
-
 import itertools
 import numpy as np
 from tqdm import tqdm
-import logging
 from math import sqrt
-
-from py_utils import append_values_to_lists, delete_attributes_from_object
+from py_utils import delete_attributes_from_object
 from constants import MAX_FLOAT, MIN_FLOAT, FIXED_IDENTITY_THRESHOLD
-
-logger = logging.getLogger("__main__.fragment")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.fragment")
 
 class Fragment(object):
     def __init__(self, fragment_identifier = None, start_end = None,

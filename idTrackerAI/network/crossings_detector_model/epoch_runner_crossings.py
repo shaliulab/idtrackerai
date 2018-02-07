@@ -4,6 +4,13 @@ import sys
 sys.path.append('../../')
 from constants import BATCH_SIZE_DCD
 
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.epoch_runner_crossings")
+
 class EpochRunner(object):
     def __init__(self, data_set,
                 starting_epoch = 0,
@@ -13,8 +20,6 @@ class EpochRunner(object):
         # Counters
         self._epochs_completed = 0
         self.starting_epoch= starting_epoch
-        # self._index_in_epoch_train = 0
-        # self._index_in_epoch_val = 0
         # Number of epochs
         self.print_flag = print_flag
         # Data set
@@ -46,8 +51,10 @@ class EpochRunner(object):
         accuracy_epoch = np.mean(np.vstack(accuracy_epoch))
         individual_accuracy_epoch = np.nanmean(np.vstack(individual_accuracy_epoch),axis=0)
         if self.print_flag:
-            print(name, ' (epoch %i)' %(self.starting_epoch + self._epochs_completed), ': loss, ', loss_epoch, ', accuracy, ', accuracy_epoch, ', individual accuray, ')
-            print(individual_accuracy_epoch)
-        # self._index_in_epoch_train = 0
+            logger.debug(name)
+            logger.debug('epoch: %i' %(self.starting_epoch + self._epochs_completed))
+            logger.debug('loss: %s' %str(loss_epoch))
+            logger.debug('accuracy: %s' %str(accuracy_epoch))
+            logger.debug('individual accuray: %s' %str(individual_accuracy_epoch))
         store_loss_and_accuracy.append_data(loss_epoch, accuracy_epoch, individual_accuracy_epoch)
         return feed_dict
