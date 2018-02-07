@@ -189,7 +189,7 @@ class PreprocessingPreview(BoxLayout):
                                                 hide_video_slider = True))
 
         self.resegmentation_step_finished = False
-        self.resegmetation_box = BoxLayout()
+        self.resegmentation_box = BoxLayout()
         resegmentation_controls_box = BoxLayout(orientation = "vertical", size_hint = (.3, 1.))
         max_threshold_slider = Slider(id = 'max_threshold_slider', min = 0, max = 255,
                         value = self.new_preprocessing_parameters['max_threshold'],
@@ -234,9 +234,9 @@ class PreprocessingPreview(BoxLayout):
                                             sliders = [min_threshold_slider, max_threshold_slider,
                                                     min_area_slider, max_area_slider],
                                             hide_video_slider = True))
-        self.resegmetation_box.add_widget(resegmentation_controls_box)
-        self.resegmetation_box.add_widget(resegmentation_visualiser)
-        self.consistency_fail_popup_content.add_widget(self.resegmetation_box)
+        self.resegmentation_box.add_widget(resegmentation_controls_box)
+        self.resegmentation_box.add_widget(resegmentation_visualiser)
+        self.consistency_fail_popup_content.add_widget(self.resegmentation_box)
 
     def resegment_and_update(self, *args):
         for frame_number in self.frames_with_more_blobs_than_animals:
@@ -478,7 +478,10 @@ class PreprocessingPreview(BoxLayout):
             visualiser.add_widget(self.area_bars)
 
     def show_preprocessing(self, frame, visualiser = None, sliders = None, hide_video_slider = False):
-        visualiser = self.visualiser if visualiser is None else visualiser
+        if visualiser is None:
+            visualiser = self.visualiser
+        else:
+            self.create_areas_figure(visualiser = visualiser)
         min_threshold_slider = self.min_threshold_slider if sliders is None else sliders[0]
         max_threshold_slider = self.max_threshold_slider if sliders is None else sliders[1]
         min_area_slider = self.min_area_slider if sliders is None else sliders[2]

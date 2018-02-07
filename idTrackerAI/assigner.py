@@ -23,7 +23,6 @@ else:
 """
 Identification of individual fragments given the predictions generate by the idCNN
 """
-logger = logging.getLogger("__main__.assigner")
 
 def assign(net, video, images, print_flag):
     """Gathers the predictions relative to the images contained in `images`.

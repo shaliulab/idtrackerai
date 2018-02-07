@@ -118,7 +118,7 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
                                                                         segmentation_thresholds['min_area'],
                                                                         segmentation_thresholds['max_area'])
     except:
-        logger.info("An error occurred while reading frame number : %i" %counter)
+        logger.info("An error occurred while reading frame number : %i" %frame_number)
         logger.info("ret: %s" %str(ret))
         logger.info("frame: %s" %str(frame))
         bounding_boxes = []

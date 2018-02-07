@@ -16,7 +16,7 @@ import sys
 sys.path.append('../')
 sys.path.append('../utils')
 
-from video_utils import computeBkg
+from video_utils import cumpute_background
 
 class BkgSubtraction(BoxLayout):
     def __init__(self, chosen_video = None, **kwargs):
@@ -50,7 +50,7 @@ class BkgSubtraction(BoxLayout):
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.shower)
 
     def compute_bkg(self, *args):
-        self.bkg = computeBkg(CHOSEN_VIDEO.video)
+        self.bkg = cumpute_background(CHOSEN_VIDEO.video)
         CHOSEN_VIDEO.video._original_bkg = self.bkg
         self.update_bkg_and_ROI_in_CHOSEN_VIDEO()
         self.computing_popup.dismiss()

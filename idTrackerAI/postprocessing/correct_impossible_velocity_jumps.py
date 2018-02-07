@@ -397,7 +397,7 @@ def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = Non
         if fragment.is_an_individual and fragment.assigned_identity != 0:
             neighbour_fragment_past, \
             neighbour_fragment_future, \
-            velocities_between_fragments = compute_neighbour_fragments_and_velocities(video, list_of_fragments, fragment, impossible_velocity_threshold)
+            velocities_between_fragments = compute_neighbour_fragments_and_velocities(video, list_of_fragments, fragment)
 
             if all(velocity > impossible_velocity_threshold for velocity in velocities_between_fragments):
                 if neighbour_fragment_past.identity_is_fixed or neighbour_fragment_future.identity_is_fixed:

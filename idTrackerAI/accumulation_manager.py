@@ -8,7 +8,6 @@ from trainer import train
 from constants import RATIO_OLD, RATIO_NEW, MAXIMAL_IMAGES_PER_ANIMAL, \
                         CERTAINTY_THRESHOLD, \
                         MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
-
 import sys
 
 """
@@ -224,7 +223,7 @@ class AccumulationManager(object):
         """Gathers predictions relative to fragment images from the GPU and
         splits them according to their organisation in fragments.
         """
-        logging.info("Un-stacking predictions for the CPU")
+        logger.info("Un-stacking predictions for the CPU")
         individual_fragments_predictions = np.split(predictions, indices_to_split)
         individual_fragments_softmax_probs = np.split(softmax_probs, indices_to_split)
         self.frequencies_of_candidate_individual_fragments = []
