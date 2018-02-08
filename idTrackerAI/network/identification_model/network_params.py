@@ -1,8 +1,12 @@
 from __future__ import absolute_import, division, print_function
 import os
-import logging
-
-logger = logging.getLogger("__main__.network_params")
+import sys
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.network_params")
 
 class NetworkParams(object):
     def __init__(self, number_of_animals, cnn_model = 0, learning_rate = None,
@@ -62,13 +66,12 @@ class NetworkParams(object):
         self._knowledge_transfer_folder = path
 
     def check_identity_transfer_consistency(self, knowledge_transfer_info_dict):
-        print("***************************************************************")
         if knowledge_transfer_info_dict['number_of_animals'] < self.number_of_animals:
             logger.info('It is not yet possible to transfer the identity because the number of ' + \
                         'animals in the video is different from the number of ouput units in the last layer of the model selected. It will be implemented in the future.')
             logger.info('Only the knowledge from the convolutional filters will be transferred')
             self.knowledge_transfer_folder = self.restore_folder
-            self.restore_folder = None    
+            self.restore_folder = None
 
         if knowledge_transfer_info_dict['input_image_size'][2] != self.image_size[2]:
             logger.info('It is not yet possible to transfer the identity because the number of ' + \
@@ -92,7 +95,6 @@ class NetworkParams(object):
                     self.pre_target_image_size = (int(self.target_image_size * 1.1),) * 2
                     self.action_on_image = 'resize_and_pad_or_crop'
                 logger.info('The ratio target_image_size/input_image is %.2f, we resize and pad with zeros (or crop centrally) the input image to match the size' %ratio_image_size)
-        print("image_size ", self.image_size)
-        print("target_image_size, ", self.target_image_size)
-        print("pre_target_image_size ", self.pre_target_image_size)
-        print("***************************************************************")
+        logger.debug("image_size: %s" %str(self.image_size))
+        logger.debug("target_image_size: %s" %str(self.target_image_size))
+        logger.debug("pre_target_image_size: %s" %str(self.pre_target_image_size))

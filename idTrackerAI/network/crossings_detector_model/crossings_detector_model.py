@@ -1,11 +1,15 @@
 from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 import os
-import sys
-sys.path.append('./utils')
-# from cnn_utils import *
-
 import numpy as np
+import sys
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.crossing_detector_model")
+
 
 class ConvNetwork_crossings(object):
     def __init__(self, network_params):
@@ -15,7 +19,7 @@ class ConvNetwork_crossings(object):
         self.learning_rate = network_params.learning_rate
         self.image_size = network_params.image_size
         self.number_of_classes = network_params.number_of_classes
-        print("Building graph....")
+        logger.info("Building graph....")
         self._build_graph()
         self.ops_list = [self.loss, self.accuracy, self.individual_accuracy]
         self.saver = tf.train.Saver()
@@ -109,12 +113,12 @@ class ConvNetwork_crossings(object):
         self.sesh.run(tf.global_variables_initializer())
         try:
             ckpt = tf.train.get_checkpoint_state(self.params._restore_folder)
-            print("restoring crossings detector model from %s" %ckpt.model_checkpoint_path)
+            logger.info("restoring crossings detector model from %s" %ckpt.model_checkpoint_path)
             self.saver.restore(self.sesh, ckpt.model_checkpoint_path) # restore convolutional variables
         except:
-            print('\nWarning: no checkpoints found in the folder %s' %self.params._restore_folder)
+            logger.info('\nWarning: no checkpoints found in the folder %s' %self.params._restore_folder)
 
     def save(self, global_step):
-        print("(in save) self.params._save_folder", self.params._save_folder)
+        logger.info("(in save) self.params._save_folder %s" %self.params._save_folder)
         save_path = self.saver.save(self.sesh, os.path.join(self.params._save_folder,'.ckpt'), global_step=global_step)
-        print("Model saved in file:", save_path)
+        logger.info("Model saved in file: %s" %save_path)

@@ -7,11 +7,11 @@ MAX_FLOAT = sys.float_info[0]
 #######################################
 ##########       video      ###########
 #######################################
-AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg']
+AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg', '.MOV']
 '''***FRAMES_PER_EPISODE***
 Number of frames per video chunk. Used to parallelise processes
 '''
-FRAMES_PER_EPISODE = 500
+FRAMES_PER_EPISODE = 100
 
 #######################################
 ##########   preprocessing  ###########
@@ -25,6 +25,10 @@ VEL_PERCENTILE = 99
 Tolerance coefficient in the computation of the individual model area.
 '''
 STD_TOLERANCE = 4
+"""***BACKGROUND_SUBTRACTION_PERIOD***
+Period used to sample the video to compute the background model
+"""
+BACKGROUND_SUBTRACTION_PERIOD = 100
 
 #######################################
 #########  global fragments  ##########

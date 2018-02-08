@@ -12,7 +12,12 @@ from list_of_fragments import ListOfFragments
 from blob import Blob
 from GUI_utils import selectDir, getInput
 
-logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")
 
 class GroundTruthBlob(object):
     """Lighter blob objects.

@@ -318,13 +318,6 @@ def cnn_model_6(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -380,13 +373,6 @@ def cnn_model_7(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -441,13 +427,6 @@ def cnn_model_8(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -506,13 +485,6 @@ def cnn_model_9(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -571,13 +543,6 @@ def cnn_model_10(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -636,13 +601,6 @@ def cnn_model_11(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5

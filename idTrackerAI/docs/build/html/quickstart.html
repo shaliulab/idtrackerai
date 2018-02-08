@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>Quickstart &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
+    <link rel="stylesheet" href="_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" >
+    <link rel="search" title="Search" href="search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
+    <link rel="next" title="Modules" href="modules.html" >
+    <link rel="prev" title="Installation" href="how_to_install.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="index.html">
+      <img style="border: 0;" alt="idtrackerai" src="_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="http://www.gitlab.com/polaviejalab/idtracker">GitLab repo</a></li>
+	
+        <li class="active"><a href="index.html">idtrackerai v0.0 Manual</a></li>
+	 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+      <li class="active">
+        <a href="modules.html" title="Modules"
+           accesskey="N">next</a>
+      </li>
+      <li class="active">
+        <a href="how_to_install.html" title="Installation"
+           accesskey="P">previous</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Quickstart</a><ul>
+<li><a class="reference internal" href="#step-1-start-a-tracking-session">Step 1. Start a tracking session</a></li>
+<li><a class="reference internal" href="#step-2-select-a-region-of-interests">Step 2. Select a region of interests</a></li>
+<li><a class="reference internal" href="#step-3-video-segmentation-and-preprocessing">Step 3. Video segmentation and preprocessing</a></li>
+<li><a class="reference internal" href="#step-4-start-tracking-the-video">Step 4. Start tracking the video</a></li>
+<li><a class="reference internal" href="#step-5-global-and-individual-validation">Step 5. Global and individual validation</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <div class="section" id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<p>idtrackerai is equipped with a GUI. Open it by</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">we</span> <span class="n">will</span> <span class="n">see</span>
+</pre></div>
+</div>
+<div class="section" id="step-1-start-a-tracking-session">
+<h2>Step 1. Start a tracking session<a class="headerlink" href="#step-1-start-a-tracking-session" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-right">
+<a class="reference internal image-reference" href="_images/img1.png"><img alt="welcome tab" src="_images/img1.png" style="width: 415.5px; height: 310.5px;" /></a>
+</div>
+<p>Browse to the folder containing the video you want to track. The video can either
+be a single file or split in separate files. In the latter case, each segment
+has to be named following this convention:</p>
+<blockquote>
+<div>name_of_the_video_segment_number.extension</div></blockquote>
+<p>Click on the video file (or one of its segments) to start a new tracking session.
+After clicking on the video file it is necessary to assign a name to the current
+tracking session.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/img2.png"><img alt="welcome tab" src="_images/img2.png" style="width: 159.5px; height: 118.0px;" /></a>
+</div>
+<p>By entering the name of an existing session it will be possible to load all or
+part of the processes already computed.</p>
+</div>
+<div class="section" id="step-2-select-a-region-of-interests">
+<h2>Step 2. Select a region of interests<a class="headerlink" href="#step-2-select-a-region-of-interests" title="Permalink to this headline">¶</a></h2>
+<p>If you don’t need to select a region of interest skip this tab by clicking on
+the tab preprocessing.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/img3.png"><img alt="welcome tab" src="_images/img3.png" style="width: 416.0px; height: 311.5px;" /></a>
+</div>
+<p>It is possible to select one or more region of interests on the video.
+First select the shape of the ROI, then draw it by clicking and dragging
+on the frame. In case of mistake it is possible to delete the ROI and draw a new
+one. Save the ROI by clicking the button “save ROI” before leaving the tab.
+The slider allows to browse the video in order to check the goodness of the
+selected ROIs in every frame.</p>
+<p>In case you are working on a session in which a ROI had already been created it
+is possible to load it by clicking on the button “load ROI”</p>
+</div>
+<div class="section" id="step-3-video-segmentation-and-preprocessing">
+<h2>Step 3. Video segmentation and preprocessing<a class="headerlink" href="#step-3-video-segmentation-and-preprocessing" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-right">
+<a class="reference internal image-reference" href="_images/img4.png"><img alt="welcome tab" src="_images/img4.png" style="width: 415.5px; height: 311.5px;" /></a>
+</div>
+<p>The aim of this step is to set the parameters that allow to separate the animals
+from the background. Apply the ROIs selected in the precious step by activating
+the “apply ROI” switch. The background can be subtracted by activating the
+switch “subtract background”.
+The upper and lower bound sliders allow to define a range of admissible
+intensities. In the example, since the fish are darker than the background we
+consider only pixels whose intensity is greater or equal than 135.
+Where the intensity scale ranges between 0 and 255.
+Finally the user can set the range of acceptable areas (number of pixels) for
+each blob, the bars on the bottom show the area value per detected blob.
+After setting the parameters, the segmentation of the video can be initiated by
+clicking the button “Segment video”. A popup showing an estimate of the number
+of animals present in the video will open. Modify the number if it is incorrect
+and press return on your keyboard.
+A series of popup will keep you updated with respect to the stage of the preprocessing:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/img5.png"><img alt="welcome tab" src="_images/img5.png" style="width: 718.5px; height: 110.5px;" /></a>
+</div>
+<div class="figure align-right">
+<a class="reference internal image-reference" href="_images/img6.png"><img alt="welcome tab" src="_images/img6.png" style="width: 249.6px; height: 187.5px;" /></a>
+</div>
+<p>It is possible that the segmentation will be described as “non consistent”. This
+means that in one or more frames the number of blobs detected by the algorithm
+is greater than the number of animals present in the video. In this case the
+user is asked to readjust the segmentation parameters in those frame. Those
+frames will be re-segmented and evaluated until the number of detected blobs
+will match the number of animals declared by the user in all the frames.</p>
+<p>idtrackerai uses deep learning to discriminate between segmented images
+representing single individual and multiple touching animals. A final
+preprocessing popup shows the graph of the loss function and the accuracy of
+this network, when trained on a dataset automatically extracted from the images
+segmented in the previous stages. It is now possible to start the tracking by
+closing the popup (click outside its area) and clicking on the tracking tab that
+is now active.</p>
+</div>
+<div class="section" id="step-4-start-tracking-the-video">
+<h2>Step 4. Start tracking the video<a class="headerlink" href="#step-4-start-tracking-the-video" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-right">
+<a class="reference internal image-reference" href="_images/img7.png"><img alt="welcome tab" src="_images/img7.png" style="width: 403.0px; height: 301.0px;" /></a>
+</div>
+<p>To start the tracking click on the button “Start protocols cascade”.
+The values displayed on the right of the tab are the hyperparameters used to
+initialise the artificial neural network used to identify the animals. These
+parameters can be changed by clicking on the button “Advanced idCNN controls”,
+we recommend only advanced users to access this options.
+A switch allows to save the training data to be displayed in tensorboard (we
+will discuss the output folders structure at the end of this document).</p>
+<p>After clicking on the button “Start protocols cascade” a popup will keep you
+updated with respect to the state of the algorithm:</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/img8.png"><img alt="welcome tab" src="_images/img8.png" style="width: 980.35px; height: 269.5px;" /></a>
+</div>
+<p>After the protocol has been carried out successfully and the trajectories of the
+identified animals have been saved a popup allows either to quit the program of
+proceed to the validation of the video.
+In addition the estimated accuracy of the tracking is shown. The algorithm will
+automatically recommend the user to proceed to the validation if the estimated
+accuracy is lower than expected.</p>
+</div>
+<div class="section" id="step-5-global-and-individual-validation">
+<h2>Step 5. Global and individual validation<a class="headerlink" href="#step-5-global-and-individual-validation" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-right">
+<a class="reference internal image-reference" href="_images/img9.png"><img alt="welcome tab" src="_images/img9.png" style="width: 415.0px; height: 308.0px;" /></a>
+</div>
+<p>The output of the tracking algorithm can be easily validated and corrected by
+using the global and validation tabs.
+Since the identity of the animals is preserved between crossings, it is possible
+to jump from one crossing to the next or the previous by using the “Go to next
+(previous) crossing”, or simply using the up and down arrow respectively.
+The identification is done starting from a particular part of the video called
+“first global fragment”, we suggest to start a validation from that part of the
+video that can be reached in any moment by clicking on the button “First global
+fragment”.
+In case the user modifies at least one of the assigned identities the algorithm
+gives the possibility to save the updated identities and update the trajectory
+file generated as an output accordingly.
+The individual validation allows to follow a single animal along the entire
+video. This procedure is particularly useful to evaluate the performance of the
+tracking when dealing with large groups of animals.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Feb 05, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

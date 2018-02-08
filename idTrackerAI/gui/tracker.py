@@ -36,8 +36,8 @@ sys.path.append('../network/crossings_detector_model')
 sys.path.append('../network/identification_model')
 sys.path.append('../plots')
 import copy
-from segmentation import segmentVideo, segment
-from video_utils import blobExtractor
+from segmentation import segment_frame, segment
+from video_utils import blob_extractor
 import numpy as np
 from scipy.stats import mode
 import cv2
@@ -152,7 +152,7 @@ class Tracker(BoxLayout):
                 self.accumulation_network_params.check_identity_transfer_consistency(CHOSEN_VIDEO.video.knowledge_transfer_info_dict)
             else:
                 self.accumulation_network_params.knowledge_transfer_folder = CHOSEN_VIDEO.video.knowledge_transfer_model_folder
-            self.accumulation_network_params.scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax']
+            self.accumulation_network_params.scopes_layers_to_optimize = None
         self.net = ConvNetwork(self.accumulation_network_params)
         if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
             self.net.restore()

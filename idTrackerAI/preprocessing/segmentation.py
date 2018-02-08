@@ -1,44 +1,102 @@
 from __future__ import absolute_import, division, print_function
-# Import standard libraries
 import os
 import sys
 import numpy as np
 import multiprocessing
-
-# Import third party libraries
 import cv2
 import cPickle as pickle
 from joblib import Parallel, delayed
 import gc
 from tqdm import tqdm
 from scipy import ndimage
-
-# Import application/library specifics
 sys.path.append('../utils')
 sys.path.append('../IdTrackerDeep')
 from blob import Blob
-
 from py_utils import flatten
-from video_utils import segmentVideo, blobExtractor
+from video_utils import segment_frame, blob_extractor
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.segmentation")
 
-def get_videoCapture(video, path, segmFrameInd):
-    if segmFrameInd == None:
+"""
+The segmentation module
+"""
+
+def get_videoCapture(video, path, episode_start_end_frames):
+    """Gives the VideoCapture (OpenCV) object to read the frames for the segmentation
+    and the number of frames to read. If `episode_start_end_frames` is None then a `path` must be
+    given as the video is assumed to be splitted in different files (episodes). If the `path`
+    is None the video is assumed to be in a single file and the path is read from
+    `video`, then `episode_start_end_frames` must be give.
+
+    Parameters
+    ----------
+    video : <Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+    path : string
+        Path to the video file from where to get the VideoCapture (OpenCV) object
+    episode_start_end_frames : tuple
+        Tuple (starting_frame, ending_frame) indicanting the start and end of the episode
+        when the video is given in a single file
+
+    Returns
+    -------
+    cap : <VideoCapture object>
+        OpenCV object used to read the frames of the video
+    number_of_frames_in_episode : int
+        Number of frames in the episode of video being segmented
+    """
+    if episode_start_end_frames is None:
         cap = cv2.VideoCapture(path)
-        # print 'Segmenting video %s' % path
-        video_name = os.path.basename(path)
-        filename, extension = os.path.splitext(video_name)
-        number_of_frames_in_segment = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+        number_of_frames_in_episode = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
     elif path is None:
         cap = cv2.VideoCapture(video.video_path)
-        number_of_frames_in_segment = segmFrameInd[1] - segmFrameInd[0] + 1
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,segmFrameInd[0])
+        number_of_frames_in_episode = episode_start_end_frames[1] - episode_start_end_frames[0] + 1
+        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,episode_start_end_frames[0])
 
-    return cap, number_of_frames_in_segment
+    return cap, number_of_frames_in_episode
 
-def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs, counter):
+def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs, frame_number):
+    """Segments a frame read from `cap` according to the preprocessing parameters
+    in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
+    and the `max_number_of_blobs` found in the video so far. Frames are segmented
+    in gray scale.
+
+    Parameters
+    ----------
+    cap : <VideoCapture object>
+        OpenCV object used to read the frames of the video
+    video : <Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+    segmentation_thresholds : dict
+        Dictionary with the thresholds used for the segmentation: `min_threshold`,
+        `max_threshold`, `min_area`, `max_area`
+    max_number_of_blobs : int
+        Maximum number of blobs found in the whole video so far in the segmentation process
+    frame_number : int
+        Number of the frame being segmented. It is used to print in the terminal the frames
+        where the segmentation fails
+
+    Returns
+    -------
+    blobs_in_frame : list
+        List of <Blob object> segmented in the current frame
+    max_number_of_blobs : int
+        Maximum number of blobs found in the whole video so far in the segmentation process
+
+    See Also
+    --------
+    Video
+    Blob
+    segment_frame
+    blob_extractor
+    """
     blobs_in_frame = []
-    #Get frame from video file
     ret, frame = cap.read()
+
     try:
         if video.resolution_reduction != 1 and ret:
             frame = cv2.resize(frame, None,
@@ -47,7 +105,7 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
                                 interpolation = cv2.INTER_CUBIC)
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         avIntensity = np.float32(np.mean(frameGray))
-        segmentedFrame = segmentVideo(frameGray/avIntensity,
+        segmentedFrame = segment_frame(frameGray/avIntensity,
                                         segmentation_thresholds['min_threshold'],
                                         segmentation_thresholds['max_threshold'],
                                         video.bkg, video.ROI, video.subtract_bkg)
@@ -55,14 +113,14 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
         segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype('uint8')
         # Find contours in the segmented image
         bounding_boxes, miniframes, centroids, \
-        areas, pixels, contours, estimated_body_lengths = blobExtractor(segmentedFrame,
+        areas, pixels, contours, estimated_body_lengths = blob_extractor(segmentedFrame,
                                                                         frameGray,
                                                                         segmentation_thresholds['min_area'],
                                                                         segmentation_thresholds['max_area'])
     except:
-        print("frame number, ", counter)
-        print("ret, ", ret)
-        print("frame, ", frame)
+        logger.info("An error occurred while reading frame number : %i" %frame_number)
+        logger.info("ret: %s" %str(ret))
+        logger.info("frame: %s" %str(frame))
         bounding_boxes = []
         miniframes = []
         centroids = []
@@ -87,15 +145,50 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
 
     return blobs_in_frame, max_number_of_blobs
 
-def segmentAndSave(video, segmentation_thresholds, path = None, segmFrameInd = None):
+def segment_episode(video, segmentation_thresholds, path = None, episode_start_end_frames = None):
+    """Gets list of blobs segmented in every frame of the episode of the video
+    given by `path` (if the video is splitted in different files) or by
+    `episode_start_end_frames` (if the video is given in a single file)
+
+    Parameters
+    ----------
+    video : <Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+    segmentation_thresholds : dict
+        Dictionary with the thresholds used for the segmentation: `min_threshold`,
+        `max_threshold`, `min_area`, `max_area`
+    path : string
+        Path to the video file from where to get the VideoCapture (OpenCV) object
+    episode_start_end_frames : tuple
+        Tuple (starting_frame, ending_frame) indicanting the start and end of the episode
+        when the video is given in a single file
+
+    Returns
+    -------
+    blobs_in_episode : list
+        List of `blobs_in_frame` of the episode of the video being segmented
+    max_number_of_blobs : int
+        Maximum number of blobs found in the episode of the video being segmented
+
+    See Also
+    --------
+    Video
+    Blob
+    get_videoCapture
+    segment_frame
+    blob_extractor
+    """
     blobs_in_episode = []
 
-    cap, number_of_frames_in_segment = get_videoCapture(video, path, segmFrameInd)
+    cap, number_of_frames_in_episode = get_videoCapture(video, path, episode_start_end_frames)
     max_number_of_blobs = 0
     frame_number = 0
 
-    while frame_number < number_of_frames_in_segment:
-        blobs_in_frame, maximum_number_of_blobs = get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs, frame_number)
+    while frame_number < number_of_frames_in_episode:
+        blobs_in_frame, maximum_number_of_blobs = get_blobs_in_frame(cap, video,
+                                                                    segmentation_thresholds,
+                                                                    max_number_of_blobs,
+                                                                    frame_number)
         #store all the blobs encountered in the episode
         blobs_in_episode.append(blobs_in_frame)
         frame_number += 1
@@ -106,61 +199,107 @@ def segmentAndSave(video, segmentation_thresholds, path = None, segmFrameInd = N
     return blobs_in_episode, max_number_of_blobs
 
 def segment(video):
-    # avoid computing with all the cores in very large videos:
+    """Segment the video giving a list of `blobs` for every frame in the video.
+    If a video is given as a set of files (episodes), those files are used to
+    parallelise the segmentation process. If a video is given in a single file
+    the list of indices `video.episodes_start_end` is used for the parallelisation
+
+    Parameters
+    ----------
+    video : <Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+
+    Returns
+    -------
+    blobs_in_video : list
+        List of `blobs_in_frame` for all the frames of the video
+
+    See Also
+    --------
+    segment_episode
+    """
+    # avoid computing with all the cores in very large videos. It fills the RAM.
     # num_cores = multiprocessing.cpu_count()
-    num_cores = 6
+    num_cores = int(np.ceil(multiprocessing.cpu_count() / 2))
     #init variables to store data
     blobs_in_video = []
-    number_of_blobs = []
-    #videoPaths is used to check if the video was previously split or not (it is either None or
-    #a list of paths. Check attribute paths_to_video_segments in Video)
+    maximum_number_of_blobs_in_episode = []
     segmentation_thresholds = {'min_threshold': video.min_threshold,
                                 'max_threshold': video.max_threshold,
                                 'min_area': video.min_area,
                                 'max_area': video.max_area}
-    videoPaths = video.paths_to_video_segments
-    if not videoPaths:
-        print('**************************************')
-        print('There is only one path, segmenting by frame indices')
-        print('**************************************')
-        #Define list of starting and ending frames
-        segmFramesIndices = video.episodes_start_end
-        #Spliting frames list into sublists
-        segmFramesIndicesSubLists = [segmFramesIndices[i:i+num_cores] for i in range(0,len(segmFramesIndices),num_cores)]
-        for segmFramesIndicesSubList in tqdm(segmFramesIndicesSubLists, desc = 'Segmentation progress'):
-            OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(video, segmentation_thresholds, None, segmFrameInd) for segmFrameInd in segmFramesIndicesSubList)
+    if not video.paths_to_video_episodes:
+        logger.info('There is only one path, segmenting by frame indices')
+        #Spliting episodes_start_end in sublists for parallel processing
+        episodes_start_end_sublists = [video.episodes_start_end[i:i+num_cores]
+                                        for i in range(0,len(video.episodes_start_end),num_cores)]
+        for episodes_start_end_sublist in tqdm(episodes_start_end_sublists, desc = 'Segmentation progress'):
+            OupPutParallel = Parallel(n_jobs=num_cores)(
+                                delayed(segment_episode)(video, segmentation_thresholds, None, episode_start_end_frames)
+                                for episode_start_end_frames in episodes_start_end_sublist)
             blobs_in_episode = [out[0] for out in OupPutParallel]
-            number_of_blobs.append([out[1] for out in OupPutParallel])
+            maximum_number_of_blobs_in_episode.append([out[1] for out in OupPutParallel])
             blobs_in_video.append(blobs_in_episode)
     else:
         #splitting videoPaths list into sublists
-        pathsSubLists = [videoPaths[i:i+num_cores] for i in range(0,len(videoPaths),num_cores)]
+        pathsSubLists = [video.paths_to_video_episodes[i:i+num_cores]
+                            for i in range(0,len(video.paths_to_video_episodes),num_cores)]
 
         for pathsSubList in tqdm(pathsSubLists, desc = 'Segmentation progress'):
-            OupPutParallel = Parallel(n_jobs=num_cores)(delayed(segmentAndSave)(video, segmentation_thresholds, path, None) for path in pathsSubList)
+            OupPutParallel = Parallel(n_jobs=num_cores)(
+                                delayed(segment_episode)(video, segmentation_thresholds, path, None)
+                                for path in pathsSubList)
             blobs_in_episode = [out[0] for out in OupPutParallel]
-            number_of_blobs.append([out[1] for out in OupPutParallel])
+            maximum_number_of_blobs_in_episode.append([out[1] for out in OupPutParallel])
             blobs_in_video.append(blobs_in_episode)
 
-    video._maximum_number_of_blobs = max(flatten(number_of_blobs))
-    print("video.maximum_number_of_blobs ", video.maximum_number_of_blobs)
+    video._maximum_number_of_blobs = max(flatten(maximum_number_of_blobs_in_episode))
     #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
     blobs_in_video = flatten(flatten(blobs_in_video))
     return blobs_in_video
 
-def resegment(video, frame_number, list_of_blobs, new_preprocessing_parameters):
+def resegment(video, frame_number, list_of_blobs, new_segmentation_thresholds):
+    """Updates the `list_of_blobs` for a particular `frame_number` by performing
+    a segmentation with `new_segmentation_thresholds`. This function is called for
+    the frames in which the number of blobs is higher than the number of animals
+    stated by the user.
+
+    Parameters
+    ----------
+    video : <Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+    frame_number : int
+        Number of the frame to update with the new segmentation
+    list_of_blobs : <ListOfBlobs object>
+        Object containing the list of blobs segmented in the video in each frame
+    new_segmentation_thresholds : dict
+        Dictionary with the thresholds used for the new segmentation: `min_threshold`,
+        `max_threshold`, `min_area`, `max_area`
+
+    Returns
+    -------
+    number_of_blobs_in_frame : int
+        Number of blobs found in the frame
+
+    See Also
+    --------
+    get_videoCapture
+    get_blobs_in_frame
+    """
     episode_number = video.in_which_episode(frame_number)
-    if not video.paths_to_video_segments:
+    if not video.paths_to_video_episodes:
         cap, _ = get_videoCapture(video, None, video.episodes_start_end[episode_number])
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_number)
     else:
-        path = video.paths_to_video_segments[episode_number]
+        path = video.paths_to_video_episodes[episode_number]
         cap, _ = get_videoCapture(video, path, None)
         start = video.episodes_start_end[episode_number][0]
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_number - start)
 
-    blobs_in_resegmanted_frame, maximum_number_of_blobs = get_blobs_in_frame(cap, video, new_preprocessing_parameters, 0, frame_number)
+    blobs_in_resegmanted_frame, \
+    number_of_blobs_in_frame = get_blobs_in_frame(cap, video, new_segmentation_thresholds,
+                                                0, frame_number)
     list_of_blobs.blobs_in_video[frame_number] = blobs_in_resegmanted_frame
     cap.release()
     cv2.destroyAllWindows()
-    return maximum_number_of_blobs
+    return number_of_blobs_in_frame

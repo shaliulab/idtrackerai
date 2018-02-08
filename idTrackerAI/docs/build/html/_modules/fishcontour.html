@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>fishcontour &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="http://www.gitlab.com/polaviejalab/idtracker">GitLab repo</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for fishcontour</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.ndimage</span>
+<span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="k">import</span> <span class="n">argrelmax</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;./&#39;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">constants</span> <span class="k">import</span> <span class="n">SMOOTH_SIGMA</span><span class="p">,</span> <span class="n">HEAD_DIAMETER</span>
+
+<div class="viewcode-block" id="find_max"><a class="viewcode-back" href="../modules.html#fishcontour.find_max">[docs]</a><span class="k">def</span> <span class="nf">find_max</span><span class="p">(</span><span class="n">curv</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the nth local maximum of the array f (Default is 2nd)</span>
+<span class="sd">    :param f: one dimensional array</span>
+<span class="sd">    :param n: positive integer</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="p">(</span><span class="n">max_i</span><span class="p">,)</span> <span class="o">=</span> <span class="n">argrelmax</span><span class="p">(</span><span class="n">curv</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;wrap&#39;</span><span class="p">)</span>
+    <span class="n">b_s</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">max_i</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span><span class="n">curv</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nose</span> <span class="o">=</span> <span class="n">b_s</span><span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">nose</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Warning, no nose detected in a frame&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">b_s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1">#No idea what to do, so return the maximum</span></div>
+
+<span class="k">class</span> <span class="nc">FishContour</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">curve</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;It expects a (N,2) numpy array, with (:,0) the x coordinates and (:,1) the y coordinates</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">curve</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">fromcv2contour</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span><span class="n">cv2contour</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates FishContour instance from a cv2 style single contour</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">cv2contour</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">convolve1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">],</span><span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;wrap&#39;</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">second_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">convolve1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="p">,</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;wrap&#39;</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">curvature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculates signed curvature of the planar curve.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">[</span><span class="n">x_1</span><span class="p">,</span><span class="n">y_1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">derivative</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+        <span class="p">[</span><span class="n">x_2</span><span class="p">,</span><span class="n">y_2</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">second_derivative</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x_1</span><span class="o">*</span><span class="n">y_2</span> <span class="o">-</span> <span class="n">y_1</span><span class="o">*</span><span class="n">x_2</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">x_1</span><span class="o">*</span><span class="n">x_1</span> <span class="o">+</span> <span class="n">y_1</span><span class="o">*</span><span class="n">y_1</span><span class="p">,</span><span class="mi">3</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">find_nose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;It returns coordinates of nose in the contour</span>
+<span class="sd">        It finds it by calculating a smoother version of the contour</span>
+<span class="sd">        but with the same indexing and then finding the second maximum</span>
+<span class="sd">        (in abs value) of the curvatue (first max is usually the tail)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">smoother</span> <span class="o">=</span> <span class="n">smooth</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">nose_i</span> <span class="o">=</span> <span class="n">find_max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">smoother</span><span class="o">.</span><span class="n">curvature</span><span class="p">()),</span><span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">[</span><span class="n">nose_i</span><span class="p">,:]</span>
+
+    <span class="k">def</span> <span class="nf">find_nose_and_orientation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">head_size</span> <span class="o">=</span> <span class="n">HEAD_DIAMETER</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;It returns nose coordinates, angle needed to rotate so nose points to negative y</span>
+<span class="sd">        and the centroid of the head</span>
+
+<span class="sd">        head_size gives the distance between the nose and the base of the head</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nose</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_nose</span><span class="p">()</span><span class="c1">#.astype(np.int32)</span>
+        <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">nose</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">nose</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">head_centroid</span> <span class="o">=</span> <span class="n">FishContour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">distance</span> <span class="o">&lt;</span> <span class="n">head_size</span><span class="o">*</span><span class="n">head_size</span><span class="p">)])</span><span class="o">.</span><span class="n">centroid</span><span class="p">()</span>
+        <span class="n">orvec</span> <span class="o">=</span> <span class="n">nose</span> <span class="o">-</span> <span class="n">head_centroid</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">orvec</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">orvec</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">nose</span><span class="p">,</span><span class="n">angle</span><span class="o">+</span><span class="mi">90</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">head_centroid</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">ascvcontour</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a contour in opencv style, i.e. (x,0,y).</span>
+<span class="sd">        It is needed in cv2.moments() in OpenCV 2, in version 3 not really</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the centroid of the contour</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">moments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ascvcontour</span><span class="p">())</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cX</span> <span class="o">=</span> <span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="s2">&quot;m10&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">M</span><span class="p">[</span><span class="s2">&quot;m00&quot;</span><span class="p">])</span>
+            <span class="n">cY</span> <span class="o">=</span> <span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="s2">&quot;m01&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">M</span><span class="p">[</span><span class="s2">&quot;m00&quot;</span><span class="p">])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">cX</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">cY</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="nb">print</span> <span class="s1">&#39;Warning: M[&quot;m00&quot;] might be zero&#39;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">cX</span><span class="p">,</span><span class="n">cY</span><span class="p">)</span>
+
+<div class="viewcode-block" id="smooth"><a class="viewcode-back" href="../modules.html#fishcontour.smooth">[docs]</a><span class="k">def</span> <span class="nf">smooth</span><span class="p">(</span><span class="n">contour</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a smoother FishContour() with the same length.</span>
+<span class="sd">    Care is taken to make indeces invariant (i.e. no offset caused by filtering)</span>
+
+<span class="sd">    :param contour: instance of FishContour()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">FishContour</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">gaussian_filter1d</span><span class="p">(</span><span class="n">contour</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="n">SMOOTH_SIGMA</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;wrap&#39;</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Feb 07, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

@@ -4,7 +4,6 @@ import sys
 sys.path.append('./utils')
 sys.path.append('./preprocessing')
 sys.path.append('./network')
-
 import cv2
 import numpy as np
 from GUI_utils import selectDir
@@ -12,6 +11,13 @@ from blob import Blob
 from list_of_blobs import ListOfBlobs
 import matplotlib.pyplot as plt
 from get_data import duplicate_PCA_images
+
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.get_crossing_data_set")
 
 class CrossingDataset(object):
     def __init__(self, blobs_list, video,
@@ -25,12 +31,12 @@ class CrossingDataset(object):
         if (scope == 'training' or scope == 'validation'):
             self.get_list_of_crossing_blobs_for_training(crossings, image_size)
             self.get_list_of_individual_blobs_for_training(individual_blobs)
-            print("________________number of crossing blobs: ", len(self.crossing_blobs))
-            print("________________number of individual blobs: ", len(self.individual_blobs))
+            logger.info("number of sure crossing images used for training: %i" %len(self.crossing_blobs))
+            logger.info("number of individual images used for training: %i" %len(self.individual_blobs))
         if scope == 'test':
             self.image_size = image_size
             self.get_list_of_blobs_for_test(test)
-            print("________________number of test: ", len(self.test))
+            logger.info("number of test images: %i" %len(self.test))
 
 
     def get_video_height_and_width_according_to_resolution_reduction(self):
@@ -46,7 +52,7 @@ class CrossingDataset(object):
             self.individual_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
                                     if blob.is_a_sure_individual()
                                     or blob.in_a_global_fragment_core(blobs_in_frame)]
-            print("________________number of individual blobs (before cut): ", len(self.individual_blobs))
+            logger.debug("number of individual blobs (before cut): %i" %len(self.individual_blobs))
             np.random.shuffle(self.individual_blobs)
             ratio = 1
             if len(self.individual_blobs) > ratio * len(self.crossing_blobs):
@@ -60,7 +66,7 @@ class CrossingDataset(object):
 
             self.crossing_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
                                     if blob.is_a_sure_crossing()]
-            print("________________number of crossing blobs (in get list): ", len(self.crossing_blobs))
+            logger.debug("number of crossing blobs (in get list): %i" %len(self.crossing_blobs))
             np.random.seed(0)
             np.random.shuffle(self.crossing_blobs)
             self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossing_blobs]) + 5
@@ -80,22 +86,19 @@ class CrossingDataset(object):
             self.test = test
 
     def get_data(self, sampling_ratio_start = 0, sampling_ratio_end = 1.):
-        # positive examples (crossings)
-        print("Generating crossing ", self.scope, " set.")
+        logger.info("Generating crossing %s set." %self.scope)
         self.crossings_sliced = self.slice(self.crossing_blobs, sampling_ratio_start, sampling_ratio_end)
         self.crossings_images =  self.generate_crossing_images()
         self.crossing_labels = np.ones(len(self.crossings_images))
         if self.scope == "training":
             self.crossings_images, self.crossing_labels = duplicate_PCA_images(self.crossings_images, self.crossing_labels)
         assert len(self.crossing_labels) == len(self.crossings_images)
-        # negative examples (non crossings_images)
-        print("Generating single individual ", self.scope, " set")
+        logger.info("Generating single individual %s set" %self.scope)
         self.individual_blobs_sliced = self.slice(self.individual_blobs, sampling_ratio_start, sampling_ratio_end)
         self.individual_blobs_images = self.generate_individual_blobs_images()
         self.individual_blobs_labels = np.zeros(len(self.individual_blobs_images))
         assert len(self.individual_blobs_labels) == len(self.individual_blobs_images)
-        # print("Done")
-        print("Preparing images and labels")
+        logger.info("Preparing images and labels")
         self.images = np.asarray(list(self.crossings_images) + list(self.individual_blobs_images))
         self.images = np.expand_dims(self.images, axis = 3)
         self.labels = np.concatenate([self.crossing_labels, self.individual_blobs_labels], axis = 0)
@@ -117,7 +120,7 @@ class CrossingDataset(object):
     def generate_crossing_images(self):
         crossing_images = []
         self.compute_resampling_factor()
-        print("resampling factor CROSSING", self.resampling_factor)
+        logger.debug("resampling factor crossings: %s" %str(self.resampling_factor))
 
         for crossing in self.crossings_sliced:
             _, _, _, crossing_image = crossing.get_image_for_identification(self.video, image_size = self.image_size)
@@ -133,7 +136,7 @@ class CrossingDataset(object):
     def generate_individual_blobs_images(self):
         individual_blobs_images = []
         self.compute_resampling_factor()
-        print("resampling factor INDIVIDUAL", self.resampling_factor)
+        logger.debug("resampling factor individual: %s" %str(self.resampling_factor))
 
         for individual_blobs in self.individual_blobs_sliced:
             _, _, _, individual_blobs_image = individual_blobs.get_image_for_identification(self.video, image_size = self.image_size)
@@ -149,7 +152,7 @@ class CrossingDataset(object):
     def generate_test_images(self, interval = None):
         test_images = []
         self.compute_resampling_factor()
-        print("resampling factor TEST", self.resampling_factor)
+        logger.debug("resampling factor test: %s" %str(self.resampling_factor))
         if interval is None:
             blobs = self.test
         else:
@@ -187,9 +190,8 @@ if __name__ == "__main__":
     ''' select blobs list tracked to compare against ground truth '''
     session_path = selectDir('./') #select path to video
     video_path = os.path.join(session_path,'video_object.npy')
-    print("loading video object...")
+    logger.info("loading video object...")
     video = np.load(video_path).item(0)
-    #change this
     blobs_path = video.blobs_path
     global_fragments_path = video.global_fragments_path
     list_of_blobs = ListOfBlobs.load(video, blobs_path)

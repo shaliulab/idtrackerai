@@ -1,8 +1,7 @@
 from __future__ import absolute_import, division, print_function
-import logging
 import numpy as np
 import cv2
-
+import sys
 from list_of_blobs import ListOfBlobs
 from get_crossings_data_set import CrossingDataset
 from network_params_crossings import NetworkParams_crossings
@@ -10,8 +9,12 @@ from cnn_architectures import cnn_model_crossing_detector
 from crossings_detector_model import ConvNetwork_crossings
 from train_crossings_detector import TrainDeepCrossing
 from get_predictions_crossings import GetPredictionCrossigns
-
-logger = logging.getLogger("__main__.crossing_detector")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.crossing_detector")
 
 def detect_crossings(list_of_blobs, video, model_area, use_network = True, return_store_objects = False, plot_flag = True):
     logger.info("Discriminating blobs representing individuals from blobs associated to crossings")

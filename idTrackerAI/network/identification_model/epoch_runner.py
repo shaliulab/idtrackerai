@@ -5,10 +5,13 @@ import os
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
-import logging
 sys.path.append('../../')
-
-logger = logging.getLogger("__main__.epoch_runner")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.epoch_runner")
 
 class EpochRunner(object):
     def __init__(self, data_set,
@@ -51,7 +54,7 @@ class EpochRunner(object):
         individual_accuracy_epoch = np.nanmean(np.vstack(individual_accuracy_epoch),axis=0)
         if self.print_flag:
             # logger.info('%s (epoch %i). Loss: %f, accuracy %f, individual accuracy: %s' %(name, self.starting_epoch + self._epochs_completed, loss_epoch, accuracy_epoch , individual_accuracy_epoch))
-            print('%s (epoch %i). Loss: %f, accuracy %f, individual accuracy: %s' %(name, self.starting_epoch + self._epochs_completed, loss_epoch, accuracy_epoch , individual_accuracy_epoch))
+            logger.info('%s (epoch %i). Loss: %f, accuracy %f, individual accuracy: %s' %(name, self.starting_epoch + self._epochs_completed, loss_epoch, accuracy_epoch , individual_accuracy_epoch))
 
         # self._index_in_epoch_train = 0
         store_loss_and_accuracy.append_data(loss_epoch, accuracy_epoch, individual_accuracy_epoch)

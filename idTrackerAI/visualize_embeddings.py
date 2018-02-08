@@ -8,7 +8,6 @@ import sys
 sys.path.append('./network')
 sys.path.append('./network/identification_model')
 sys.path.append('./utils')
-
 from id_CNN import ConvNetwork
 from network_params import NetworkParams
 from get_data import DataSet

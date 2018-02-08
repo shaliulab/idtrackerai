@@ -21,7 +21,7 @@ from blob import Blob
 from list_of_blobs import ListOfBlobs
 
 
-def plot_individual_trajectories_velocities_and_accelerations(individual_trajectories, velocity_threshold):
+def plot_individual_trajectories_velocities_and_accelerations(individual_trajectories):
 
     number_of_animals = individual_trajectories.shape[1]
 
@@ -61,7 +61,6 @@ def plot_individual_trajectories_velocities_and_accelerations(individual_traject
     ax = plt.subplot2grid((3, 5), (1, 0), colspan=4, sharex=ax1)
     for i in range(number_of_animals):
         ax.plot(individual_velocities_magnitude[:,i], color = colors[i], label = str(i+1))
-    ax.axhline(velocity_threshold, color = 'k', linestyle = '--')
     ax.legend()
 
     ''' individual velocities distribution '''
@@ -92,19 +91,12 @@ def plot_individual_trajectories_velocities_and_accelerations(individual_traject
 
 
 if __name__ == '__main__':
-    session_path = selectDir('./') #select path to video
-    video_path = os.path.join(session_path,'video_object.npy')
-    print("loading video object...")
-    video = np.load(video_path).item(0)
+    trajectories_folder = selectDir('./') #select path to video
     # blobs_path = video.blobs_path
     # list_of_blobs = ListOfBlobs.load(video, blobs_path)
     # blobs = list_of_blobs.blobs_in_video
-    try:
-        trajectories_dict = np.load(os.path.join(video.trajectories_wo_gaps_folder,'trajectories_wo_gaps.npy')).item()
-        # trajectories_dict = np.load(os.path.join(video.trajectories_folder,'trajectories.npy')).item()
-    except:
-        trajectories_folder = selectDir("./")
-        individual_trajectories = np.load(os.path.join(trajectories_folder,'centroid_trajectories.npy'))
+    trajectories_dict = np.load(os.path.join(trajectories_folder,'trajectories_wo_gaps.npy')).item()
+
 
     print('entering function')
-    plot_individual_trajectories_velocities_and_accelerations(trajectories_dict['trajectories'], video.velocity_threshold)
+    plot_individual_trajectories_velocities_and_accelerations(trajectories_dict['trajectories'])

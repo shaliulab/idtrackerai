@@ -1,15 +1,17 @@
 from __future__ import absolute_import, division, print_function
-
 import sys
 import numpy as np
 import logging
-
 sys.path.append('../../')
 from constants import MAX_FLOAT, LEARNING_PERCENTAGE_DIFFERENCE_2_DCD, \
                     LEARNING_PERCENTAGE_DIFFERENCE_1_DCD, OVERFITTING_COUNTER_THRESHOLD_DCD, \
                     MAXIMUM_NUMBER_OF_EPOCHS_DCD
-
-logger = logging.getLogger("__main__.stop_training_criteria_crossings")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.stop_training_criteria_crossings")
 
 class Stop_Training(object):
     """Stops the training of the network according to the conditions specified
@@ -24,7 +26,6 @@ class Stop_Training(object):
 
     def __call__(self, loss_accuracy_training, loss_accuracy_validation, epochs_completed):
         #check that the model did not diverged (nan loss).
-
         if epochs_completed > 0 and (np.isnan(loss_accuracy_training.loss[-1]) or np.isnan(loss_accuracy_validation.loss[-1])):
             logger.warn('The model diverged with loss NaN, falling back to detecting crossings with the model area')
             return True
@@ -43,22 +44,22 @@ class Stop_Training(object):
             if losses_difference < 0.:
                 self.overfitting_counter += 1
                 if self.overfitting_counter >= OVERFITTING_COUNTER_THRESHOLD_DCD and not self.first_accumulation_flag:
-                    print('Overfitting\n')
+                    logger.info('Overfitting')
                     return True
             else:
                 self.overfitting_counter = 0
             #check if the error is not decreasing much
             if self.check_for_loss_plateau:
                 if np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE_2_DCD * 10**(int(np.log10(current_loss))-1):
-                    print('The losses difference is very small, we stop the training\n')
+                    logger.info('The losses difference is very small, we stop the training\n')
                     return True
             # if the individual accuracies in validation are 1. for all the animals
             if list(loss_accuracy_validation.individual_accuracy[-1]) == list(np.ones(self.number_of_classes)):
-                print('The individual accuracies in validation is 1. for all the classes, we stop the training\n')
+                logger.info('The individual accuracies in validation is 1. for all the classes, we stop the training\n')
                 return True
             # if the validation loss is 0.
             if previous_loss == 0. or current_loss == 0.:
-                print('The validation loss is 0., we stop the training')
+                logger.info('The validation loss is 0., we stop the training')
                 return True
 
         return False

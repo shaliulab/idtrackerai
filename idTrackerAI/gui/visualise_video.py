@@ -63,9 +63,9 @@ class VisualiseVideo(BoxLayout):
         sNumber = self.video_object.in_which_episode(int(trackbar_value))
         sFrame = trackbar_value
         current_segment = sNumber
-        if self.video_object.paths_to_video_segments:
-            self.cap = cv2.VideoCapture(self.video_object.paths_to_video_segments[sNumber])
-        if self.video_object.paths_to_video_segments:
+        if self.video_object.paths_to_video_episodes:
+            self.cap = cv2.VideoCapture(self.video_object.paths_to_video_episodes[sNumber])
+        if self.video_object.paths_to_video_episodes:
             start = self.video_object._episodes_start_end[sNumber][0]
             self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
