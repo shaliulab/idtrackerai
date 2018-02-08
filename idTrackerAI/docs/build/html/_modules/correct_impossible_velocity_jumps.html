@@ -121,10 +121,10 @@
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
-<span class="sd">    Fragment</span>
-<span class="sd">    get_available_and_non_available_identities</span>
-<span class="sd">    get_candidate_identities_by_minimum_speed</span>
-<span class="sd">    get_candidate_identities_above_random_P2</span>
+<span class="sd">    :class:`fragment.Fragment`</span>
+<span class="sd">    :meth:`get_available_and_non_available_identities`</span>
+<span class="sd">    :meth:`get_candidate_identities_by_minimum_speed`</span>
+<span class="sd">    :meth:`get_candidate_identities_above_random_P2`</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">get_available_and_non_available_identities</span><span class="p">(</span><span class="n">fragment</span><span class="p">):</span>
@@ -479,7 +479,7 @@
         <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">neighbour_fragment_past</span><span class="p">,</span> \
             <span class="n">neighbour_fragment_future</span><span class="p">,</span> \
-            <span class="n">velocities_between_fragments</span> <span class="o">=</span> <span class="n">compute_neighbour_fragments_and_velocities</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">fragment</span><span class="p">,</span> <span class="n">impossible_velocity_threshold</span><span class="p">)</span>
+            <span class="n">velocities_between_fragments</span> <span class="o">=</span> <span class="n">compute_neighbour_fragments_and_velocities</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">fragment</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">velocity</span> <span class="o">&gt;</span> <span class="n">impossible_velocity_threshold</span> <span class="k">for</span> <span class="n">velocity</span> <span class="ow">in</span> <span class="n">velocities_between_fragments</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">neighbour_fragment_past</span><span class="o">.</span><span class="n">identity_is_fixed</span> <span class="ow">or</span> <span class="n">neighbour_fragment_future</span><span class="o">.</span><span class="n">identity_is_fixed</span><span class="p">:</span>
@@ -545,10 +545,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 07, 2018.
+      Last updated on Feb 08, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
       </li>
     </ul>
     </div>

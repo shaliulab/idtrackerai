@@ -90,7 +90,6 @@
 <span class="kn">from</span> <span class="nn">constants</span> <span class="k">import</span> <span class="n">RATIO_OLD</span><span class="p">,</span> <span class="n">RATIO_NEW</span><span class="p">,</span> <span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span><span class="p">,</span> \
                         <span class="n">CERTAINTY_THRESHOLD</span><span class="p">,</span> \
                         <span class="n">MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION</span>
-
 <span class="kn">import</span> <span class="nn">sys</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
@@ -109,7 +108,7 @@
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 
-<span class="sd">    video : Video</span>
+<span class="sd">    video : &lt;Video object&gt;</span>
 <span class="sd">        Object containing all the parameters of the video.</span>
 <span class="sd">    number_of_animals : int</span>
 <span class="sd">        Number of animals to be tracked</span>
@@ -306,7 +305,7 @@
         <span class="sd">&quot;&quot;&quot;Gathers predictions relative to fragment images from the GPU and</span>
 <span class="sd">        splits them according to their organisation in fragments.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Un-stacking predictions for the CPU&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Un-stacking predictions for the CPU&quot;</span><span class="p">)</span>
         <span class="n">individual_fragments_predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">indices_to_split</span><span class="p">)</span>
         <span class="n">individual_fragments_softmax_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">softmax_probs</span><span class="p">,</span> <span class="n">indices_to_split</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frequencies_of_candidate_individual_fragments</span> <span class="o">=</span> <span class="p">[]</span>
@@ -707,10 +706,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 07, 2018.
+      Last updated on Feb 08, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
       </li>
     </ul>
     </div>

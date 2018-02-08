@@ -18,3 +18,7 @@
 
 #except idTrackerDeep logo
 !idTrackerAI/utils/loadingIdDeep.png
+
+#except docs folder and subfolders
+!idTrackerAI/docs/*
+!idTrackerAI/docs/**/*
