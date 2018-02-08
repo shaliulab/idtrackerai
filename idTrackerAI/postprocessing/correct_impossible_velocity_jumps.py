@@ -39,7 +39,7 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
 
     See Also
     --------
-    :class:`~fragment.Fragment`
+    :class:`fragment.Fragment`
     :meth:`get_available_and_non_available_identities`
     :meth:`get_candidate_identities_by_minimum_speed`
     :meth:`get_candidate_identities_above_random_P2`
