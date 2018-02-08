@@ -26,7 +26,7 @@ class AccumulationManager(object):
     Attributes
     ----------
 
-    video : Video
+    video : <Video object>
         Object containing all the parameters of the video.
     number_of_animals : int
         Number of animals to be tracked

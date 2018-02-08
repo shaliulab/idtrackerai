@@ -17,6 +17,24 @@ else:
     logger = logging.getLogger("__main__.crossing_detector")
 
 def detect_crossings(list_of_blobs, video, model_area, use_network = True, return_store_objects = False, plot_flag = True):
+    """Short summary.
+
+    Parameters
+    ----------
+    list_of_blobs : <ListOfBlobs object>
+        Collection of the Blob objects extracted from the video
+    video :  <Video object>
+        Object containing all the parameters of the video.
+    model_area : function
+        Model of the area of a single individual
+    use_network : bool
+        If True the Deep Crossing Detector is used to distinguish between individuals and crossings images. Otherwise only the model area is applied
+    return_store_objects : bool
+        If True the instantiations of the class :class:`.Store_Accuracy_and_Loss` are returned by the function
+    plot_flag : bool
+        If True a figure representing the values of the loss function, accuracy and accuracy per class for both the training and validation set.
+
+    """
     logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
     list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0], video.number_of_animals)
     if use_network:

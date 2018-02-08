@@ -82,6 +82,8 @@
 <li><a class="reference internal" href="#accumulator">Accumulator</a></li>
 <li><a class="reference internal" href="#module-assigner">Assigner</a></li>
 <li><a class="reference internal" href="#module-blob">Blob</a></li>
+<li><a class="reference internal" href="#crossing-detector">Crossing detector</a></li>
+<li><a class="reference internal" href="#fragment">Fragment</a></li>
 <li><a class="reference internal" href="#module-segmentation">Segmentation</a></li>
 <li><a class="reference internal" href="#module-video_utils">Segmentation utils</a></li>
 <li><a class="reference internal" href="#module-correct_impossible_velocity_jumps">Impossible velocity jumps correction</a></li>
@@ -112,7 +114,7 @@
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><strong>video</strong></td>
-<td>(Video) Object containing all the parameters of the video.</td>
+<td>(&lt;Video object&gt;) Object containing all the parameters of the video.</td>
 </tr>
 <tr class="row-even"><td><strong>number_of_animals</strong></td>
 <td>(int) Number of animals to be tracked</td>
@@ -1299,6 +1301,702 @@ background.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="crossing-detector">
+<h2>Crossing detector<a class="headerlink" href="#crossing-detector" title="Permalink to this headline">¶</a></h2>
+<p>Given a collection of Blob objects (see <a class="reference internal" href="#blob.Blob" title="blob.Blob"><code class="xref py py-class docutils literal"><span class="pre">Blob</span></code></a>), the crossing detector module allows to apply a pre-computed model of the area to each of the blobs and, if specified,
+use a function approximator (in this case a convolutional neural network) in order to distinguish between Blob representing single individual and touching individuals.</p>
+<span class="target" id="module-crossing_detector"></span><dl class="function">
+<dt id="crossing_detector.detect_crossings">
+<code class="descclassname">crossing_detector.</code><code class="descname">detect_crossings</code><span class="sig-paren">(</span><em>list_of_blobs</em>, <em>video</em>, <em>model_area</em>, <em>use_network=True</em>, <em>return_store_objects=False</em>, <em>plot_flag=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crossing_detector.html#detect_crossings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crossing_detector.detect_crossings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Short summary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>list_of_blobs</strong> : &lt;ListOfBlobs object&gt;</p>
+<blockquote>
+<div><p>Collection of the Blob objects extracted from the video</p>
+</div></blockquote>
+<p><strong>video</strong> :  &lt;Video object&gt;</p>
+<blockquote>
+<div><p>Object containing all the parameters of the video.</p>
+</div></blockquote>
+<p><strong>model_area</strong> : function</p>
+<blockquote>
+<div><p>Model of the area of a single individual</p>
+</div></blockquote>
+<p><strong>use_network</strong> : bool</p>
+<blockquote>
+<div><p>If True the Deep Crossing Detector is used to distinguish between individuals and crossings images. Otherwise only the model area is applied</p>
+</div></blockquote>
+<p><strong>return_store_objects</strong> : bool</p>
+<blockquote>
+<div><p>If True the instantiations of the class <code class="xref py py-class docutils literal"><span class="pre">Store_Accuracy_and_Loss</span></code> are returned by the function</p>
+</div></blockquote>
+<p><strong>plot_flag</strong> : bool</p>
+<blockquote class="last">
+<div><p>If True a figure representing the values of the loss function, accuracy and accuracy per class for both the training and validation set.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="fragment">
+<h2>Fragment<a class="headerlink" href="#fragment" title="Permalink to this headline">¶</a></h2>
+<p>A fragment is a collection of Blob objects (see <a class="reference internal" href="#blob.Blob" title="blob.Blob"><code class="xref py py-class docutils literal"><span class="pre">Blob</span></code></a>) that refer to the same individual. A Fragment object manages such a collection of Blob objects
+to facilitate the fingerprint operations and later on the identification of the animal reprpresented in the fragment.</p>
+<span class="target" id="module-fragment"></span><dl class="class">
+<dt id="fragment.Fragment">
+<em class="property">class </em><code class="descclassname">fragment.</code><code class="descname">Fragment</code><span class="sig-paren">(</span><em>fragment_identifier=None</em>, <em>start_end=None</em>, <em>blob_hierarchy_in_starting_frame=None</em>, <em>images=None</em>, <em>bounding_box_in_frame_coordinates=None</em>, <em>centroids=None</em>, <em>areas=None</em>, <em>pixels=None</em>, <em>is_an_individual=None</em>, <em>is_a_crossing=None</em>, <em>number_of_animals=None</em>, <em>user_generated_identity=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collects the Blob objects (<a class="reference internal" href="#blob.Blob" title="blob.Blob"><code class="xref py py-class docutils literal"><span class="pre">Blob</span></code></a>) associated to the same individual or crossing.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="81%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>fragment_identifier</strong></td>
+<td>(int) Unique identifier of the fragment assigned with <code class="xref py py-func docutils literal"><span class="pre">compute_fragment_identifier_and_blob_index()</span></code> and <code class="xref py py-func docutils literal"><span class="pre">compute_crossing_fragment_identifier()</span></code></td>
+</tr>
+<tr class="row-even"><td><strong>start_end</strong></td>
+<td>(tuple) (starting_frame,  ending_frame) of the fragment</td>
+</tr>
+<tr class="row-odd"><td><strong>blob_hierarchy_in_starting_frame</strong></td>
+<td>(int) Hierarchy of the blob in the starting frame of the fragment (the hierarchy if compute bottom-top, left-right).</td>
+</tr>
+<tr class="row-even"><td><strong>images</strong></td>
+<td>(list) List of images associated to every blob represented in the fragment and ordered according to the frame they have been segmented from</td>
+</tr>
+<tr class="row-odd"><td><strong>bounding_box_in_frame_coordinates</strong></td>
+<td>(tuple) List of bounding boxes (see <code class="xref py py-attr docutils literal"><span class="pre">bounding_box_in_frame_coordinates</span></code>)</td>
+</tr>
+<tr class="row-even"><td><strong>centroids</strong></td>
+<td>(list) List of centroids (see <code class="xref py py-attr docutils literal"><span class="pre">centroid</span></code>)</td>
+</tr>
+<tr class="row-odd"><td><strong>areas</strong></td>
+<td>(list) List of areas (see <code class="xref py py-attr docutils literal"><span class="pre">area</span></code>)</td>
+</tr>
+<tr class="row-even"><td><strong>pixels</strong></td>
+<td>(list) List of pixels (see <code class="xref py py-attr docutils literal"><span class="pre">pixels</span></code>)</td>
+</tr>
+<tr class="row-odd"><td><strong>is_an_individual</strong></td>
+<td>(bool) True if the image has been classified as representing an individual by <a class="reference internal" href="#crossing_detector.detect_crossings" title="crossing_detector.detect_crossings"><code class="xref py py-func docutils literal"><span class="pre">detect_crossings()</span></code></a></td>
+</tr>
+<tr class="row-even"><td><strong>is_a_crossing</strong></td>
+<td>(bool) True if the image has been classified as representing a crossing by <a class="reference internal" href="#crossing_detector.detect_crossings" title="crossing_detector.detect_crossings"><code class="xref py py-func docutils literal"><span class="pre">detect_crossings()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td><strong>number_of_animals</strong></td>
+<td>(int) Number of animal to be tracked</td>
+</tr>
+<tr class="row-even"><td><strong>user_generated_identity</strong></td>
+<td>(int) Identity generated by the user during validation (if it exists, else None)</td>
+</tr>
+<tr class="row-odd"><td><strong>is_in_a_global_fragment</strong></td>
+<td>(bool) True if the fragment is contained in a global fragment (see <code class="xref py py-class docutils literal"><span class="pre">GlobalFragment</span></code>)</td>
+</tr>
+<tr class="row-even"><td><strong>used_for_training</strong></td>
+<td>(bool) True if the fragment has been used to train the idCNN in the finerprinting protocol used to track the video</td>
+</tr>
+<tr class="row-odd"><td><strong>accumulated_globally</strong></td>
+<td>(bool) True if the fragment’s images have been accumulated with global strategy as references during the fingerprinting protocol used to track the video</td>
+</tr>
+<tr class="row-even"><td><strong>accumulated_partially</strong></td>
+<td>(bool) True if the fragment’s images have been accumulated with partial strategy as references during the fingerprinting protocol used to track the video</td>
+</tr>
+<tr class="row-odd"><td><strong>accumulation_step</strong></td>
+<td>(int) Accumulation step in which the fragment’s images have been accumulated</td>
+</tr>
+<tr class="row-even"><td><strong>accumulable</strong></td>
+<td>(bool) True if the fragment is eligible for accumulation i.e. it is contained in a global fragment object (see <code class="xref py py-class docutils literal"><span class="pre">GlobalFragment</span></code>)</td>
+</tr>
+<tr class="row-odd"><td><strong>used_for_pretraining</strong></td>
+<td>(bool) True if the fragment has been used to pretrain the idCNN in the third protocol (see <code class="xref py py-func docutils literal"><span class="pre">pre_train()</span></code>)</td>
+</tr>
+<tr class="row-even"><td><strong>acceptable_for_training</strong></td>
+<td>(bool) True if the fragment satisfies the conditions in <a class="reference internal" href="#accumulation_manager.AccumulationManager.check_if_is_acceptable_for_training" title="accumulation_manager.AccumulationManager.check_if_is_acceptable_for_training"><code class="xref py py-meth docutils literal"><span class="pre">check_if_is_acceptable_for_training()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td><strong>frequencies</strong></td>
+<td>(ndarray) array with shape [1, number_of_animals]. The ith component is the number of times the fragment has been assigned by the idCNN (argmax of the softmax predictions) to the identity i</td>
+</tr>
+<tr class="row-even"><td><strong>P1_vector</strong></td>
+<td>(ndarray) array with shape [1, number_of_animals] computed from frequencies by <a class="reference internal" href="#fragment.Fragment.compute_identification_statistics" title="fragment.Fragment.compute_identification_statistics"><code class="xref py py-meth docutils literal"><span class="pre">compute_identification_statistics()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td><strong>P2_vector</strong></td>
+<td>(ndarray) array with shape [1, number_of_animals] computed from the P1_vector and considering all the identified fragment overlapping (in frames) with self by <a class="reference internal" href="#fragment.Fragment.compute_identification_statistics" title="fragment.Fragment.compute_identification_statistics"><code class="xref py py-meth docutils literal"><span class="pre">compute_identification_statistics()</span></code></a></td>
+</tr>
+<tr class="row-even"><td><strong>certainty</strong></td>
+<td>(float) certainty of the identification of the fragment computed according to meth:<cite>compute_certainty_of_individual_fragment</cite> (depends only on the predictions of the idCNN for the fragment’s images)</td>
+</tr>
+<tr class="row-odd"><td><strong>certainty_P2</strong></td>
+<td>(float) certainty of the identification of the fragment computed according to meth:<cite>compute_P2_vector</cite></td>
+</tr>
+<tr class="row-even"><td><strong>is_certain</strong></td>
+<td>(bool) True if <code class="xref py py-attr docutils literal"><span class="pre">certainty</span></code> is greater than <code class="xref py py-const docutils literal"><span class="pre">CERTAINTY_THRESHOLD</span></code></td>
+</tr>
+<tr class="row-odd"><td><strong>temporary_id</strong></td>
+<td>(int) Identity assigned to the fragment during the fingerprint protocols cascade</td>
+</tr>
+<tr class="row-even"><td><strong>identity</strong></td>
+<td>(int) Identity assigned to the fragment</td>
+</tr>
+<tr class="row-odd"><td><strong>identity_is_fixed</strong></td>
+<td>(bool) True if the <code class="xref py py-attr docutils literal"><span class="pre">certainty_P2</span></code> is greater than <code class="xref py py-const docutils literal"><span class="pre">FIXED_IDENTITY_THRESHOLD</span></code></td>
+</tr>
+<tr class="row-even"><td><strong>identity_corrected_closing_gaps</strong></td>
+<td>(int) Identity assigned to the fragment while solving the crossing if it exists else None</td>
+</tr>
+<tr class="row-odd"><td><strong>user_generated_identity</strong></td>
+<td>(int) Identity assigned to the fragment by the user during validation if it exists else None</td>
+</tr>
+<tr class="row-even"><td><strong>final_identity</strong></td>
+<td>(int) Final identity of the fragment. It corresponds to <code class="xref py py-attr docutils literal"><span class="pre">user_generated_identity</span></code> if it exist otherwise to the identity assigned by the algorithm</td>
+</tr>
+<tr class="row-odd"><td><strong>assigned_identity</strong></td>
+<td>(int) Identity assigned to the fragment by the algorithm</td>
+</tr>
+<tr class="row-even"><td><strong>ambiguous_identities</strong></td>
+<td>(list) List of possible identities in case the assignment is ambiguous (two or more identity can be assigned to the fragment with the same certainty)</td>
+</tr>
+<tr class="row-odd"><td><strong>potentially_randomly_assigned</strong></td>
+<td>(bool) True if <code class="xref py py-attr docutils literal"><span class="pre">certainty</span></code> is below random wrt the number of images in the fragment</td>
+</tr>
+<tr class="row-even"><td><strong>non_consistent</strong></td>
+<td>(bool) True if exist a fragment that overlaps in frame with self whose identity is the same as self</td>
+</tr>
+<tr class="row-odd"><td><strong>number_of_images</strong></td>
+<td>(int) number of images composing the fragment</td>
+</tr>
+<tr class="row-even"><td><strong>has_enough_accumulated_coexisting_fragments</strong></td>
+<td>(bool) the partial accumulation strategy assumes that the condition of <code class="xref py py-attr docutils literal"><span class="pre">has_enough_accumulated_coexisting_fragments</span></code> holds</td>
+</tr>
+<tr class="row-odd"><td><strong>distance_travelled</strong></td>
+<td>(float) distance travelled by the individual in the fragment</td>
+</tr>
+<tr class="row-even"><td><strong>coexisting_individual_fragments</strong></td>
+<td>(list) List of fragment objects that coexist (in frames) with self and that represent an individual</td>
+</tr>
+<tr class="row-odd"><td><strong>number_of_coexisting_individual_fragments</strong></td>
+<td>(int) Number of individual fragments coexisting with self</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#fragment.Fragment.are_overlapping" title="fragment.Fragment.are_overlapping"><code class="xref py py-obj docutils literal"><span class="pre">are_overlapping</span></code></a>(other)</td>
+<td>Short summary.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#fragment.Fragment.assign_identity" title="fragment.Fragment.assign_identity"><code class="xref py py-obj docutils literal"><span class="pre">assign_identity</span></code></a>()</td>
+<td>Assigns the identity to self by considering the fragments coexisting with it.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#fragment.Fragment.check_consistency_with_coexistent_individual_fragments" title="fragment.Fragment.check_consistency_with_coexistent_individual_fragments"><code class="xref py py-obj docutils literal"><span class="pre">check_consistency_with_coexistent_individual_fragments</span></code></a>(…)</td>
+<td>Check that the temporary identity assigned to the fragment is</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#fragment.Fragment.compute_P1_from_frequencies" title="fragment.Fragment.compute_P1_from_frequencies"><code class="xref py py-obj docutils literal"><span class="pre">compute_P1_from_frequencies</span></code></a>(frequencies)</td>
+<td>Given the frequencies of a individual fragment computer the P1 vector.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#fragment.Fragment.compute_P2_vector" title="fragment.Fragment.compute_P2_vector"><code class="xref py py-obj docutils literal"><span class="pre">compute_P2_vector</span></code></a>()</td>
+<td>Computes the P2_vector related to self.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#fragment.Fragment.compute_border_velocity" title="fragment.Fragment.compute_border_velocity"><code class="xref py py-obj docutils literal"><span class="pre">compute_border_velocity</span></code></a>(other)</td>
+<td>Velocity necessary to cover the space between two fragments</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#fragment.Fragment.compute_certainty_of_individual_fragment" title="fragment.Fragment.compute_certainty_of_individual_fragment"><code class="xref py py-obj docutils literal"><span class="pre">compute_certainty_of_individual_fragment</span></code></a>(…)</td>
+<td>Computes the certainty given the P1_vector of the fragment by</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#fragment.Fragment.compute_identification_frequencies_individual_fragment" title="fragment.Fragment.compute_identification_frequencies_individual_fragment"><code class="xref py py-obj docutils literal"><span class="pre">compute_identification_frequencies_individual_fragment</span></code></a>(…)</td>
+<td>Counts the argmax of predictions per row</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#fragment.Fragment.compute_identification_statistics" title="fragment.Fragment.compute_identification_statistics"><code class="xref py py-obj docutils literal"><span class="pre">compute_identification_statistics</span></code></a>(…[,&nbsp;…])</td>
+<td>Computes the statistics necessary to the identification of the</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#fragment.Fragment.compute_median_softmax" title="fragment.Fragment.compute_median_softmax"><code class="xref py py-obj docutils literal"><span class="pre">compute_median_softmax</span></code></a>(softmax_probs,&nbsp;…)</td>
+<td>Given the softmax of the predictions outputted by the network, it</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#fragment.Fragment.frame_by_frame_velocity" title="fragment.Fragment.frame_by_frame_velocity"><code class="xref py py-obj docutils literal"><span class="pre">frame_by_frame_velocity</span></code></a>()</td>
+<td>Short summary.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#fragment.Fragment.get_attribute_of_coexisting_fragments" title="fragment.Fragment.get_attribute_of_coexisting_fragments"><code class="xref py py-obj docutils literal"><span class="pre">get_attribute_of_coexisting_fragments</span></code></a>(attribute)</td>
+<td>Retrieve a spevific attribute from the collection of fragments</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#fragment.Fragment.get_coexisting_individual_fragments_indices" title="fragment.Fragment.get_coexisting_individual_fragments_indices"><code class="xref py py-obj docutils literal"><span class="pre">get_coexisting_individual_fragments_indices</span></code></a>(…)</td>
+<td>Get the list of fragment objects representing and individual (i.e.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#fragment.Fragment.get_fixed_identities_of_coexisting_fragments" title="fragment.Fragment.get_fixed_identities_of_coexisting_fragments"><code class="xref py py-obj docutils literal"><span class="pre">get_fixed_identities_of_coexisting_fragments</span></code></a>()</td>
+<td>Considers the fragments coexisting with self and returns their</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#fragment.Fragment.get_missing_identities_in_coexisting_fragments" title="fragment.Fragment.get_missing_identities_in_coexisting_fragments"><code class="xref py py-obj docutils literal"><span class="pre">get_missing_identities_in_coexisting_fragments</span></code></a>(…)</td>
+<td>Returns the identities that have not been assigned to the set of fragments coexisting with self</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#fragment.Fragment.get_neighbour_fragment" title="fragment.Fragment.get_neighbour_fragment"><code class="xref py py-obj docutils literal"><span class="pre">get_neighbour_fragment</span></code></a>(fragments,&nbsp;scope[,&nbsp;…])</td>
+<td>If it exist, gets the fragment in the list of all fragment whose</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#fragment.Fragment.get_possible_identities" title="fragment.Fragment.get_possible_identities"><code class="xref py py-obj docutils literal"><span class="pre">get_possible_identities</span></code></a>(P2_vector)</td>
+<td>Check if P2 has two identical maxima.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#fragment.Fragment.recompute_P2_of_coexisting_fragments" title="fragment.Fragment.recompute_P2_of_coexisting_fragments"><code class="xref py py-obj docutils literal"><span class="pre">recompute_P2_of_coexisting_fragments</span></code></a>()</td>
+<td>Updates the P2 of the fragments coexisting with self</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#fragment.Fragment.reset" title="fragment.Fragment.reset"><code class="xref py py-obj docutils literal"><span class="pre">reset</span></code></a>([roll_back_to])</td>
+<td>Reset attributes of self to a specific part of the algorithm</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#fragment.Fragment.set_P1_vector_accumulated" title="fragment.Fragment.set_P1_vector_accumulated"><code class="xref py py-obj docutils literal"><span class="pre">set_P1_vector_accumulated</span></code></a>()</td>
+<td>If self has been used for training its P1_vector is modified to be</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#fragment.Fragment.set_distance_travelled" title="fragment.Fragment.set_distance_travelled"><code class="xref py py-obj docutils literal"><span class="pre">set_distance_travelled</span></code></a>()</td>
+<td>Computes the distance travelled by the individual in the fragment.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#fragment.Fragment.set_partially_or_globally_accumualted" title="fragment.Fragment.set_partially_or_globally_accumualted"><code class="xref py py-obj docutils literal"><span class="pre">set_partially_or_globally_accumualted</span></code></a>(…)</td>
+<td>Sets <code class="xref py py-attr docutils literal"><span class="pre">accumulated_globally</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">accumulated_partially</span></code></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="fragment.Fragment.are_overlapping">
+<code class="descname">are_overlapping</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.are_overlapping"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.are_overlapping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Short summary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>other</strong> :  &lt;Fragment object&gt;</p>
+<blockquote>
+<div><p>A second fragment</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">bool</p>
+<blockquote class="last">
+<div><p>True if self and other coexist in at least one frame</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.assign_identity">
+<code class="descname">assign_identity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.assign_identity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.assign_identity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assigns the identity to self by considering the fragments coexisting
+with it. If the certainty of the identification is high enough it sets
+the identity of self to be fixed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.check_consistency_with_coexistent_individual_fragments">
+<code class="descname">check_consistency_with_coexistent_individual_fragments</code><span class="sig-paren">(</span><em>temporary_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.check_consistency_with_coexistent_individual_fragments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.check_consistency_with_coexistent_individual_fragments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the temporary identity assigned to the fragment is
+consistent with respect to the identities already assigned to the
+fragments coexisting (in frame) with it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>temporary_id</strong> : int</p>
+<blockquote>
+<div><p>Temporary identity assigned to the fragment</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">bool</p>
+<blockquote class="last">
+<div><p>True if the identification of self with <cite>temporary_id</cite> does not
+cause any duplication</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="fragment.Fragment.compute_P1_from_frequencies">
+<em class="property">static </em><code class="descname">compute_P1_from_frequencies</code><span class="sig-paren">(</span><em>frequencies</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.compute_P1_from_frequencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.compute_P1_from_frequencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given the frequencies of a individual fragment
+computer the P1 vector. P1 is the softmax of the frequencies with base 2
+for each identity.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.compute_P2_vector">
+<code class="descname">compute_P2_vector</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.compute_P2_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.compute_P2_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the P2_vector related to self. It is based on <code class="xref py py-attr docutils literal"><span class="pre">coexisting_individual_fragments</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.compute_border_velocity">
+<code class="descname">compute_border_velocity</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.compute_border_velocity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.compute_border_velocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Velocity necessary to cover the space between two fragments</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>other</strong> : &lt;Fragment object&gt;</p>
+<blockquote>
+<div><p>A second fragment</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>Returns the speed at which an individual should travel to be
+present in both self and other Fragment objects</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="fragment.Fragment.compute_certainty_of_individual_fragment">
+<em class="property">static </em><code class="descname">compute_certainty_of_individual_fragment</code><span class="sig-paren">(</span><em>P1_vector</em>, <em>median_softmax</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.compute_certainty_of_individual_fragment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.compute_certainty_of_individual_fragment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the certainty given the P1_vector of the fragment by
+using the output of <a class="reference internal" href="#fragment.Fragment.compute_median_softmax" title="fragment.Fragment.compute_median_softmax"><code class="xref py py-meth docutils literal"><span class="pre">compute_median_softmax()</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>P1_vector</strong> : ndarray</p>
+<blockquote>
+<div><p>array with shape [1, number_of_animals] computed from frequencies by <a class="reference internal" href="#fragment.Fragment.compute_identification_statistics" title="fragment.Fragment.compute_identification_statistics"><code class="xref py py-meth docutils literal"><span class="pre">compute_identification_statistics()</span></code></a></p>
+</div></blockquote>
+<p><strong>median_softmax</strong> : ndarray</p>
+<blockquote>
+<div><p>Median of argmax(softmax_probs) per image</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>Fragment’s certainty</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="fragment.Fragment.compute_identification_frequencies_individual_fragment">
+<em class="property">static </em><code class="descname">compute_identification_frequencies_individual_fragment</code><span class="sig-paren">(</span><em>predictions</em>, <em>number_of_animals</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.compute_identification_frequencies_individual_fragment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.compute_identification_frequencies_individual_fragment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Counts the argmax of predictions per row</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>predictions</strong> : ndarray</p>
+<blockquote>
+<div><p>array of shape [n, 1]</p>
+</div></blockquote>
+<p><strong>number_of_animals</strong> : int</p>
+<blockquote>
+<div><p>number of animals to be tracked</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>array of shape [1, number_of_animals], whose ith component counts how
+many predictions have maximum components at the index i</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.compute_identification_statistics">
+<code class="descname">compute_identification_statistics</code><span class="sig-paren">(</span><em>predictions</em>, <em>softmax_probs</em>, <em>number_of_animals=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.compute_identification_statistics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.compute_identification_statistics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the statistics necessary to the identification of the
+fragment</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>predictions</strong> : ndarray</p>
+<blockquote>
+<div><p>array of shape [number_of_images_in_fragment, 1] whose components
+are the argmax(softmax_probs) per image</p>
+</div></blockquote>
+<p><strong>softmax_probs</strong> : ndarray</p>
+<blockquote>
+<div><p>array of shape [number_of_images_in_fragment, number_of_animals]
+whose rows are the result of applying the softmax function to the
+predictions outputted by the idCNN per image</p>
+</div></blockquote>
+<p><strong>number_of_animals</strong> : int</p>
+<blockquote class="last">
+<div><p>Description of parameter <cite>number_of_animals</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#fragment.Fragment.compute_identification_frequencies_individual_fragment" title="fragment.Fragment.compute_identification_frequencies_individual_fragment"><code class="xref py py-meth docutils literal"><span class="pre">compute_identification_frequencies_individual_fragment()</span></code></a>, <a class="reference internal" href="#fragment.Fragment.compute_P1_from_frequencies" title="fragment.Fragment.compute_P1_from_frequencies"><code class="xref py py-meth docutils literal"><span class="pre">compute_P1_from_frequencies()</span></code></a>, <a class="reference internal" href="#fragment.Fragment.compute_median_softmax" title="fragment.Fragment.compute_median_softmax"><code class="xref py py-meth docutils literal"><span class="pre">compute_median_softmax()</span></code></a>, <a class="reference internal" href="#fragment.Fragment.compute_certainty_of_individual_fragment" title="fragment.Fragment.compute_certainty_of_individual_fragment"><code class="xref py py-meth docutils literal"><span class="pre">compute_certainty_of_individual_fragment()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="fragment.Fragment.compute_median_softmax">
+<em class="property">static </em><code class="descname">compute_median_softmax</code><span class="sig-paren">(</span><em>softmax_probs</em>, <em>number_of_animals</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.compute_median_softmax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.compute_median_softmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given the softmax of the predictions outputted by the network, it
+computes their median according to the argmax of the softmaxed
+predictions per image</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>softmax_probs</strong> : ndarray</p>
+<blockquote>
+<div><p>array of shape [number_of_images_in_fragment, number_of_animals]
+whose rows are the result of applying the softmax function to the
+predictions outputted by the idCNN per image</p>
+</div></blockquote>
+<p><strong>number_of_animals</strong> : int</p>
+<blockquote>
+<div><p>number of animals to be tracked</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">type</p>
+<blockquote class="last">
+<div><p>Median of argmax(softmax_probs) per image</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.frame_by_frame_velocity">
+<code class="descname">frame_by_frame_velocity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.frame_by_frame_velocity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.frame_by_frame_velocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Short summary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>Frame by frame speed of the individual in the fragment</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.get_attribute_of_coexisting_fragments">
+<code class="descname">get_attribute_of_coexisting_fragments</code><span class="sig-paren">(</span><em>attribute</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.get_attribute_of_coexisting_fragments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.get_attribute_of_coexisting_fragments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a spevific attribute from the collection of fragments
+coexisting (in frame) with self</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>attribute</strong> : str</p>
+<blockquote>
+<div><p>attribute to retrieve</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>attribute specified in <cite>attribute</cite> of the fragments coexisting with self</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.get_coexisting_individual_fragments_indices">
+<code class="descname">get_coexisting_individual_fragments_indices</code><span class="sig-paren">(</span><em>fragments</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.get_coexisting_individual_fragments_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.get_coexisting_individual_fragments_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of fragment objects representing and individual (i.e.
+not representing a crossing where two or more animals are touching) and
+coexisting (in frame) with self</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fragments</strong> : list</p>
+<blockquote class="last">
+<div><p>List of all the fragments in the video</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.get_fixed_identities_of_coexisting_fragments">
+<code class="descname">get_fixed_identities_of_coexisting_fragments</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.get_fixed_identities_of_coexisting_fragments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.get_fixed_identities_of_coexisting_fragments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Considers the fragments coexisting with self and returns their
+identities if they are fixed (see :attr:identity_is_fixed)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">type</p>
+<blockquote class="last">
+<div><p>Description of returned object.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.get_missing_identities_in_coexisting_fragments">
+<code class="descname">get_missing_identities_in_coexisting_fragments</code><span class="sig-paren">(</span><em>fixed_identities</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.get_missing_identities_in_coexisting_fragments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.get_missing_identities_in_coexisting_fragments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the identities that have not been assigned to the set of fragments coexisting with self</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fixed_identities</strong> : list</p>
+<blockquote>
+<div><p>List of fixed identities</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>List of missing identities in coexisting fragments</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.get_neighbour_fragment">
+<code class="descname">get_neighbour_fragment</code><span class="sig-paren">(</span><em>fragments</em>, <em>scope</em>, <em>number_of_frames_in_direction=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.get_neighbour_fragment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.get_neighbour_fragment" title="Permalink to this definition">¶</a></dt>
+<dd><p>If it exist, gets the fragment in the list of all fragment whose
+identity is the identity assigned to self and whose starting frame is
+the starting frame of self + 1, or ending frame is the ending frame of
+self - 1</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fragments</strong> : list</p>
+<blockquote>
+<div><p>List of all the fragments in the video</p>
+</div></blockquote>
+<p><strong>scope</strong> : str</p>
+<blockquote>
+<div><p>If “to_the_future” looks for the consecutive fragment wrt to self,
+if “to_the_past” looks for the fragment the precedes self</p>
+</div></blockquote>
+<p><strong>number_of_frames_in_direction</strong> : int</p>
+<blockquote>
+<div><p>Distance (in frame) at which the previous or next fragment has to
+be</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">&lt;Fragment object&gt;</p>
+<blockquote class="last">
+<div><p>The neighbouring fragment with respect to self in the direction
+specified by scope if it exists. Otherwise None</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="fragment.Fragment.get_possible_identities">
+<em class="property">static </em><code class="descname">get_possible_identities</code><span class="sig-paren">(</span><em>P2_vector</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.get_possible_identities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.get_possible_identities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if P2 has two identical maxima. In that case returns the indices.
+Else return false</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.recompute_P2_of_coexisting_fragments">
+<code class="descname">recompute_P2_of_coexisting_fragments</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.recompute_P2_of_coexisting_fragments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.recompute_P2_of_coexisting_fragments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the P2 of the fragments coexisting with self
+(see <code class="xref py py-attr docutils literal"><span class="pre">coexisting_individual_fragments</span></code>) if their identity is not
+fixed (see <code class="xref py py-attr docutils literal"><span class="pre">identity_is_fixed</span></code>)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>roll_back_to=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset attributes of self to a specific part of the algorithm</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>roll_back_to</strong> : str</p>
+<blockquote class="last">
+<div><p>Reset all the attributes up to the process specified in input.
+‘fragmentation’, ‘pretraining’, ‘accumulation’, ‘assignment’</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.set_P1_vector_accumulated">
+<code class="descname">set_P1_vector_accumulated</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.set_P1_vector_accumulated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.set_P1_vector_accumulated" title="Permalink to this definition">¶</a></dt>
+<dd><p>If self has been used for training its P1_vector is modified to be
+a vector of zeros with a single component set to 1 in the
+<code class="xref py py-attr docutils literal"><span class="pre">temporary_id</span></code> position</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.set_distance_travelled">
+<code class="descname">set_distance_travelled</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.set_distance_travelled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.set_distance_travelled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the distance travelled by the individual in the fragment.
+It is based on the position of the centroids in consecutive images. See
+<code class="xref py py-attr docutils literal"><span class="pre">centroid</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fragment.Fragment.set_partially_or_globally_accumualted">
+<code class="descname">set_partially_or_globally_accumualted</code><span class="sig-paren">(</span><em>accumulation_strategy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fragment.html#Fragment.set_partially_or_globally_accumualted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fragment.Fragment.set_partially_or_globally_accumualted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets <code class="xref py py-attr docutils literal"><span class="pre">accumulated_globally</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">accumulated_partially</span></code>
+according to <cite>accumulation_strategy</cite></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>accumulation_strategy</strong> : str</p>
+<blockquote class="last">
+<div><p>Can be “global” or “partial”</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-segmentation">
 <span id="segmentation"></span><h2>Segmentation<a class="headerlink" href="#module-segmentation" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -2285,7 +2983,7 @@ for each definition</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><code class="xref py py-obj docutils literal"><span class="pre">Fragment</span></code>, <code class="xref py py-obj docutils literal"><span class="pre">get_available_and_non_available_identities</span></code>, <code class="xref py py-obj docutils literal"><span class="pre">get_candidate_identities_by_minimum_speed</span></code>, <code class="xref py py-obj docutils literal"><span class="pre">get_candidate_identities_above_random_P2</span></code></p>
+<p class="last"><a class="reference internal" href="#fragment.Fragment" title="fragment.Fragment"><code class="xref py py-class docutils literal"><span class="pre">fragment.Fragment</span></code></a>, <code class="xref py py-meth docutils literal"><span class="pre">get_available_and_non_available_identities()</span></code>, <code class="xref py py-meth docutils literal"><span class="pre">get_candidate_identities_by_minimum_speed()</span></code>, <code class="xref py py-meth docutils literal"><span class="pre">get_candidate_identities_above_random_P2()</span></code></p>
 </div>
 </dd></dl>
 
@@ -2313,10 +3011,10 @@ for each definition</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 07, 2018.
+      Last updated on Feb 08, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
       </li>
     </ul>
     </div>
