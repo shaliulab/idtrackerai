@@ -42,9 +42,9 @@ def check_groundtruth_consistency(blobs_in_individual_groundtruth,
 
 def get_individual_accuracy_wrt_groundtruth(video, blobs_in_individual_groundtruth, individual_blobs = None):
     individual_groundtruth_id = blobs_in_individual_groundtruth[0].identity
+    individual_id = individual_groundtruth_id
     if individual_blobs is None:
         individual_blobs = blobs_in_individual_groundtruth
-        individual_id = individual_groundtruth_id
     else:
         check_groundtruth_consistency(blobs_in_individual_groundtruth,
                                     individual_groundtruth_id,

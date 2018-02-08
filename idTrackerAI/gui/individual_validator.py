@@ -652,7 +652,7 @@ class IndividualValidator(BoxLayout):
     def plot_groundtruth_statistics(self):
         individual_blobs_in_video_groundtruth = [blob for blob in self.groundtruth.individual_blobs_in_video
                                         if (blob.frame_number >= self.groundtruth.start
-                                        or blob.frame_number <= self.groundtruth.end)]
+                                        and blob.frame_number <= self.groundtruth.end)]
         blobs_in_video = self.blobs_in_video[self.groundtruth.start:self.groundtruth.end]
         comparison_info = get_individual_accuracy_wrt_groundtruth(CHOSEN_VIDEO.video, individual_blobs_in_video_groundtruth)
         comparison_info['number_of_occluded_frames'] = self.groundtruth.end - self.groundtruth.start - len(individual_blobs_in_video_groundtruth)
