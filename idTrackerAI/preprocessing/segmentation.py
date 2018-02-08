@@ -228,7 +228,7 @@ def segment(video):
                                 'max_threshold': video.max_threshold,
                                 'min_area': video.min_area,
                                 'max_area': video.max_area}
-    if not video.paths_to_video_episodes:
+    if not video.paths_to_video_segments:
         logger.info('There is only one path, segmenting by frame indices')
         #Spliting episodes_start_end in sublists for parallel processing
         episodes_start_end_sublists = [video.episodes_start_end[i:i+num_cores]
@@ -242,8 +242,8 @@ def segment(video):
             blobs_in_video.append(blobs_in_episode)
     else:
         #splitting videoPaths list into sublists
-        pathsSubLists = [video.paths_to_video_episodes[i:i+num_cores]
-                            for i in range(0,len(video.paths_to_video_episodes),num_cores)]
+        pathsSubLists = [video.paths_to_video_segments[i:i+num_cores]
+                            for i in range(0,len(video.paths_to_video_segments),num_cores)]
 
         for pathsSubList in tqdm(pathsSubLists, desc = 'Segmentation progress'):
             OupPutParallel = Parallel(n_jobs=num_cores)(
@@ -287,11 +287,11 @@ def resegment(video, frame_number, list_of_blobs, new_segmentation_thresholds):
     get_blobs_in_frame
     """
     episode_number = video.in_which_episode(frame_number)
-    if not video.paths_to_video_episodes:
+    if not video.paths_to_video_segments:
         cap, _ = get_videoCapture(video, None, video.episodes_start_end[episode_number])
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_number)
     else:
-        path = video.paths_to_video_episodes[episode_number]
+        path = video.paths_to_video_segments[episode_number]
         cap, _ = get_videoCapture(video, path, None)
         start = video.episodes_start_end[episode_number][0]
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_number - start)

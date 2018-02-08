@@ -373,9 +373,7 @@ class Blob(object):
 
     @user_generated_identity.setter
     def user_generated_identity(self, new_value):
-        if not self.is_a_crossing:
-            self.propagate_groundtruth_identity_in_individual_fragment()
-        elif self.is_a_crossing and self.assigned_identity is None:
+        if self.is_a_crossing and self.assigned_identity is None:
             self._is_an_individual = True
             self._is_a_crossing = False
             self._is_a_misclassified_individual = True

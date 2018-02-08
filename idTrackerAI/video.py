@@ -332,16 +332,16 @@ class Video(object):
 
     def check_split_video(self):
         """If the video is divided in chunks retrieves the path to each chunk"""
-        paths_to_video_episodes = scanFolder(self.video_path)
+        paths_to_video_segments = scanFolder(self.video_path)
 
-        if len(paths_to_video_episodes) > 1:
-            return paths_to_video_episodes
+        if len(paths_to_video_segments) > 1:
+            return paths_to_video_segments
         else:
             return None
 
     @property
-    def paths_to_video_episodes(self):
-        return self._paths_to_video_episodes
+    def paths_to_video_segments(self):
+        return self._paths_to_video_segments
 
     @property
     def original_width(self):
@@ -503,7 +503,7 @@ class Video(object):
         self.save()
 
     def get_info(self):
-        self._paths_to_video_episodes = self.check_split_video()
+        self._paths_to_video_segments = self.check_split_video()
         cap = cv2.VideoCapture(self.video_path)
         self._original_width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         self._original_height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
@@ -512,14 +512,14 @@ class Video(object):
         except:
             self._frames_per_second = None
             logger.info("Cannot read frame per second")
-        if self._paths_to_video_episodes is None:
+        if self._paths_to_video_segments is None:
             self._number_of_frames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
             self.get_episodes()
         else:
-            chunks_lengths = [int(cv2.VideoCapture(chunk).get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) for chunk in self._paths_to_video_episodes]
+            chunks_lengths = [int(cv2.VideoCapture(chunk).get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) for chunk in self._paths_to_video_segments]
             self._episodes_start_end = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])) for i in range(1,len(chunks_lengths)+1)]
             self._number_of_frames = np.sum(chunks_lengths)
-            self._number_of_episodes = len(self._paths_to_video_episodes)
+            self._number_of_episodes = len(self._paths_to_video_segments)
         cap.release()
 
     @property

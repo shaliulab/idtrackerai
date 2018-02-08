@@ -326,10 +326,10 @@ def SegmentationPreview(video):
         sFrame = trackbarValue
         if sNumber != currentSegment: # we are changing segment
             currentSegment = sNumber
-            if video.paths_to_video_episodes:
-                cap = cv2.VideoCapture(video.paths_to_video_episodes[sNumber])
+            if video.paths_to_video_segments:
+                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
         #Get frame from video file
-        if video.paths_to_video_episodes:
+        if video.paths_to_video_segments:
             start = video.episodes_start_end[sNumber][0]
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
         else:
@@ -490,10 +490,10 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
         sNumber = video.in_which_episode(frame_number)
         if sNumber != currentSegment: # we are changing segment
             currentSegment = sNumber
-            if video.paths_to_video_episodes:
-                cap = cv2.VideoCapture(video.paths_to_video_episodes[sNumber])
+            if video.paths_to_video_segments:
+                cap = cv2.VideoCapture(video.paths_to_video_segments[sNumber])
         #Get frame from video file
-        if video.paths_to_video_episodes:
+        if video.paths_to_video_segments:
             start = video.episodes_start_end[sNumber][0]
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, frame_number - start)
         else:

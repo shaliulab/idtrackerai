@@ -9,6 +9,7 @@ sys.path.append('../utils')
 sys.path.append('../IdTrackerDeep')
 from py_utils import *
 from video import Video
+from constants import BACKGROUND_SUBTRACTION_PERIOD
 if sys.argv[0] == 'idtrackerdeepApp.py':
     from kivy.logger import Logger
     logger = Logger
@@ -82,8 +83,8 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
     cap = cv2.VideoCapture(video_path)
     counter = 0
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-    number_of_frames_for_bkg_in_episode = 0
-    frameInds = range(0,numFrame,100)
+    numFramesBkg = 0
+    frameInds = range(0,numFrame, BACKGROUND_SUBTRACTION_PERIOD)
     for ind in frameInds:
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
         ret, frameBkg = cap.read()
@@ -118,7 +119,7 @@ def cumpute_background(video):
     # initialized as the full frame
     bkg = np.zeros((video.original_height, video.original_width))
     num_cores = multiprocessing.cpu_count()
-    if video.paths_to_video_episodes is None: # one single file
+    if video.paths_to_video_segments is None: # one single file
         print('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=num_cores)(delayed(
                     sum_frames_for_bkg_per_episode_in_single_file_video)(
@@ -127,7 +128,7 @@ def cumpute_background(video):
     else: # multiple video files
         output = Parallel(n_jobs=num_cores)(delayed(
                     sum_frames_for_bkg_per_episode_in_multiple_files_video)(
-                    videoPath,bkg) for videoPath in video.paths_to_video_episodes)
+                    videoPath,bkg) for videoPath in video.paths_to_video_segments)
 
     partialBkg = [bkg for (bkg,_) in output]
     totNumFrame = np.sum([numFrame for (_,numFrame) in output])
