@@ -106,7 +106,7 @@ if __name__ == '__main__':
  '_num_frames': 30724,
  '_number_of_animals': 22,
  '_path_to_video_object': '/home/rhea/Desktop/IdTrackerDeep/videos/22flies_Bottom/session_1/video_object.npy',
- '_paths_to_video_episodes': None,
+ '_paths_to_video_segments': None,
  '_preprocessing_folder': '/home/rhea/Desktop/IdTrackerDeep/videos/22flies_Bottom/session_1/preprocessing',
  '_preprocessing_type': 'body_blob',
  '_pretraining_folder': None,

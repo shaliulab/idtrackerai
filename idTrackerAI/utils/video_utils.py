@@ -119,7 +119,7 @@ def cumpute_background(video):
     # initialized as the full frame
     bkg = np.zeros((video.original_height, video.original_width))
     num_cores = multiprocessing.cpu_count()
-    if video.paths_to_video_episodes is None: # one single file
+    if video.paths_to_video_segments is None: # one single file
         print('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=num_cores)(delayed(
                     sum_frames_for_bkg_per_episode_in_single_file_video)(
@@ -128,7 +128,7 @@ def cumpute_background(video):
     else: # multiple video files
         output = Parallel(n_jobs=num_cores)(delayed(
                     sum_frames_for_bkg_per_episode_in_multiple_files_video)(
-                    videoPath,bkg) for videoPath in video.paths_to_video_episodes)
+                    videoPath,bkg) for videoPath in video.paths_to_video_segments)
 
     partialBkg = [bkg for (bkg,_) in output]
     totNumFrame = np.sum([numFrame for (_,numFrame) in output])
