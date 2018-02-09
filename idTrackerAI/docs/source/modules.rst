@@ -11,4 +11,5 @@ Contents:
   idCNN
   fingerprint_protocol_cascade
   postprocessing
+  validation
   video_information_manager

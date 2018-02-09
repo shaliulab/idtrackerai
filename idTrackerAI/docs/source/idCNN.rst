@@ -1,11 +1,12 @@
-idCNN: identification network
+Identification network
 =============================
 
 ^^^^^
 idCNN
 ^^^^^
 
-This module contains the main Tensorflow operations needed to train and evaluate the idCNN network
+This module contains the main Tensorflow operations needed to train and
+the idCNN
 
 .. automodule:: id_CNN
   :members:

@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
     
-    <title>idCNN: identification network &mdash; idtrackerai v0.0 Manual</title>
+    <title>Identification network &mdash; idtrackerai v0.0 Manual</title>
     
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
@@ -70,16 +70,35 @@
         
 
 	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Identification network</a><ul>
+<li><a class="reference internal" href="#idcnn">idCNN</a></li>
+<li><a class="reference internal" href="#module-network_params">Network parameters</a></li>
+<li><a class="reference internal" href="#module-stop_training_criteria">Stop training criteria (idCNN)</a></li>
+<li><a class="reference internal" href="#module-store_accuracy_and_loss">Store accurcay and loss</a></li>
+<li><a class="reference internal" href="#module-get_data">Get data</a></li>
+<li><a class="reference internal" href="#epoch-runner">Epoch runner</a></li>
+<li><a class="reference internal" href="#get-predictions">Get predictions</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
           <div class="span9">
             
         <div class="bodywrapper">
           <div class="body" id="spc-section-body">
             
-  <div class="section" id="idcnn-identification-network">
-<h1>idCNN: identification network<a class="headerlink" href="#idcnn-identification-network" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="identification-network">
+<h1>Identification network<a class="headerlink" href="#identification-network" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="idcnn">
 <h2>idCNN<a class="headerlink" href="#idcnn" title="Permalink to this headline">¶</a></h2>
-<p>This module contains the main Tensorflow operations needed to train and evaluate the idCNN network</p>
+<p>This module contains the main Tensorflow operations needed to train and
+the idCNN</p>
 <span class="target" id="module-id_CNN"></span><dl class="class">
 <dt id="id_CNN.ConvNetwork">
 <em class="property">class </em><code class="descclassname">id_CNN.</code><code class="descname">ConvNetwork</code><span class="sig-paren">(</span><em>params</em>, <em>training_flag=True</em>, <em>restore_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/id_CNN.html#ConvNetwork"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#id_CNN.ConvNetwork" title="Permalink to this definition">¶</a></dt>
@@ -1112,24 +1131,6 @@ of the batch</p>
           </div>
         </div>
           </div>
-      <div class="spc-rightsidebar span3">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">idCNN: identification network</a><ul>
-<li><a class="reference internal" href="#idcnn">idCNN</a></li>
-<li><a class="reference internal" href="#module-network_params">Network parameters</a></li>
-<li><a class="reference internal" href="#module-stop_training_criteria">Stop training criteria (idCNN)</a></li>
-<li><a class="reference internal" href="#module-store_accuracy_and_loss">Store accurcay and loss</a></li>
-<li><a class="reference internal" href="#module-get_data">Get data</a></li>
-<li><a class="reference internal" href="#epoch-runner">Epoch runner</a></li>
-<li><a class="reference internal" href="#get-predictions">Get predictions</a></li>
-</ul>
-</li>
-</ul>
-
-        </div>
-      </div>
         </div>
       </div>
     </div>
