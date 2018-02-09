@@ -280,14 +280,10 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
             ax_arr_num_images_accuracy[j].semilogx(number_of_images, accuracy, alpha = 1,
                                                 markeredgecolor = 'k', markeredgewidth=1,
                                                 marker = marker, markerfacecolor = 'None')
-            # if j == 0:
-            #     subax_smaller.semilogx(number_of_images, accuracy, alpha = .3, marker = marker, markerfacecolor = 'k')
-            # elif j == 1:
-            #     subax_larger.semilogx(number_of_images, accuracy, alpha = .3, marker = marker, markerfacecolor = 'k')
 
 
     for i in range(len(tracked_videos_data_frame)):
-        species = tracked_videos_data_frame.loc[i].species
+        species = tracked_videos_data_frame.loc[i].animal_type
         if 'zebrafish' in species or 'drosophila' in species:
             if 'zebrafish' in species:
                 color = 'g'
@@ -299,7 +295,7 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
             else:
                 minimum_number_of_images = tracked_videos_data_frame.loc[i].number_of_images_in_shortest_fragment_in_first_global_fragment
             group_size = tracked_videos_data_frame.loc[i].number_of_animals
-            protocol = tracked_videos_data_frame.loc[i].protocol
+            protocol = tracked_videos_data_frame.loc[i].protocol_used
             if protocol == 1:
                 marker = '^'
             elif protocol == 2:
@@ -309,14 +305,10 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
             j = 0 if group_size <= 10 else 1
             ax_arr_num_images_accuracy[j].semilogx(minimum_number_of_images, accuracy, alpha = 1.,
                                                         marker = marker, markerfacecolor = color)
-            # if j == 0:
-            #     subax_smaller.semilogx(minimum_number_of_images, accuracy, alpha = 1, markeredgecolor=color, markeredgewidth=1, marker = marker, markerfacecolor = 'None')
-            # elif j == 1:
-            #     subax_larger.semilogx(minimum_number_of_images, accuracy, alpha = 1, markeredgecolor=color, markeredgewidth=1, marker = marker, markerfacecolor = 'None')
+
     ax_arr_num_images_accuracy[0].axvline(30, c = 'r', ls = '--')
     ax_arr_num_images_accuracy[1].axvline(30, c = 'r', ls = '--')
-    # subax_smaller.axvline(30, c = 'r', ls = '--')
-    # subax_larger.axvline(30, c = 'r', ls = '--')
+
 
 def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy):
     fig_num_images_accuracy.suptitle('Number of images in smaller fragment in the starting global fragment for accumulation', fontsize = 20)
@@ -334,20 +326,12 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
     ax_arr_num_images_accuracy[1].set_xticklabels([10, 100, 1000])
     ax_arr_num_images_accuracy[0].set_ylim((0,101))
     ax_arr_num_images_accuracy[1].set_ylim((0,101))
-    ax_arr_num_images_accuracy[0].set_xlim((5,2200))
-    ax_arr_num_images_accuracy[1].set_xlim((2,2200))
+    # ax_arr_num_images_accuracy[0].set_xlim((5,2200))
+    ax_arr_num_images_accuracy[1].set_xlim((3.5,250))
 
-    # subax_smaller.tick_params(axis='both', labelsize=12)
-    # subax_larger.tick_params(axis='both', labelsize=12)
-    # subax_smaller.set_xticks([100, 1000])
-    # subax_larger.set_xticks([10, 100])
-    # subax_smaller.set_xticklabels([100, 1000])
-    # subax_larger.set_xticklabels([10, 100])
-    # subax_smaller.set_ylim((98.7,100.05))
-    # subax_larger.set_xlim((7,500))
-    # subax_larger.set_ylim((99.74,100.01))
-    # sns.despine(ax = ax_arr_num_images_accuracy[0], right = True, top = True)
-    # sns.despine(ax = ax_arr_num_images_accuracy[1], right = True, top = True)
+
+    sns.despine(ax = ax_arr_num_images_accuracy[0], right = True, top = True)
+    sns.despine(ax = ax_arr_num_images_accuracy[1], right = True, top = True)
 
     simulated_videos = mpatches.Patch(color='k', fc = 'None', linewidth = 1, label='Simulated videos')
     real_videos = mpatches.Patch(color='k', alpha = 1., label='Real videos')
@@ -380,9 +364,9 @@ def create_gamma_grid_figure(results_data_frame, share_x = True, share_y = True)
 if __name__ == '__main__':
     tracked_videos_data_frame = pd.read_pickle('/media/chronos/ground_truth_results_backup/tracked_videos_data_frame.pkl')
     ### load global results data frame
-    if os.path.isfile('./library/results_data_frame.pkl'):
+    if os.path.isfile('./library/library_test_algorithm_test_GHI_aaa_cnn_0/results_data_frame.pkl'):
         print("loading results_data_frame.pkl...")
-        results_data_frame = pd.read_pickle('./library/results_data_frame.pkl')
+        results_data_frame = pd.read_pickle('./library/library_test_algorithm_test_GHI_aaa_cnn_0/results_data_frame.pkl')
         print("results_data_frame.pkl loaded \n")
     else:
         print("results_data_frame.pkl does not exist \n")
@@ -392,7 +376,7 @@ if __name__ == '__main__':
 
     # get tests_data_frame and test to plot
     print("loading tests data frame")
-    tests_data_frame = pd.read_pickle('./library/tests_data_frame.pkl')
+    tests_data_frame = pd.read_pickle('./library/library_test_algorithm_test_GHI_aaa_cnn_0/tests_data_frame.pkl')
     test_dictionary = tests_data_frame.loc[12].to_dict()
     frames_in_video = test_dictionary['frames_in_video'][0]
 
@@ -483,65 +467,63 @@ if __name__ == '__main__':
                         images_in_shortest_fragment_in_first_global_fragment[i,k,j,l] = get_number_of_images_in_shortest_fragment_in_first_global_fragment(list_of_global_fragments, video)
                         mean_number_of_iamgse_in_first_global_fragment[i,k,j,l] = get_mean_number_of_images_in_first_global_fragment(list_of_global_fragments, video)
 
-                    # if l == 0:
-                    #     ### Plot distributions
-                    #     try:
-                    #         nbins = 25
-                    #         number_of_images_in_individual_fragments = results_data_frame_rep['individual_fragments_lengths'].item()
-                    #         ax = ax_arr[k,j]
-                    #         plot_histogram_individual_fragments(ax, number_of_images_in_individual_fragments, scale_parameter, shape_parameter)
-                    #         fig_distributions.suptitle('Gamma distributions: Group size %i - repetition %i' %(group_size, repetition))
-                    #     except:
-                    #         number_of_images_in_individual_fragments = np.nan
-                    #     ### Plot global fragments in 3 first global fragments
-                    #     ax = ax_arr_gf[k,j]
-                    #     fig_gf.suptitle("First global fragment distribution: Group size %i - repetition %i" %(group_size, repetition))
-                    #     if list_of_global_fragments_found and video_object_found:
-                    #         plot_histogram_first_global_fragment_distribution(ax, list_of_global_fragments, video,
-                    #                                                             scale_parameter, shape_parameter,
-                    #                                                             accuracy[i,k,j,l], protocol[i,k,j,l])
-                    #     else:
-                    #         if k == len(shape_parameter_list)-1:
-                    #             ax.set_xlabel('number of frames \n\nscale = %.2f' %scale_parameter)
-                    #         if j == 0:
-                    #             ax.set_ylabel('shape = %.2f \n\nnumber of fragments' %shape_parameter)
+                    if l == 0:
+                        ### Plot distributions
+                        try:
+                            nbins = 25
+                            number_of_images_in_individual_fragments = results_data_frame_rep['individual_fragments_lengths'].item()
+                            ax = ax_arr[k,j]
+                            plot_histogram_individual_fragments(ax, number_of_images_in_individual_fragments, scale_parameter, shape_parameter)
+                            fig_distributions.suptitle('Gamma distributions: Group size %i - repetition %i' %(group_size, repetition))
+                        except:
+                            number_of_images_in_individual_fragments = np.nan
+                        ### Plot global fragments in 3 first global fragments
+                        ax = ax_arr_gf[k,j]
+                        fig_gf.suptitle("First global fragment distribution: Group size %i - repetition %i" %(group_size, repetition))
+                        if list_of_global_fragments_found and video_object_found:
+                            plot_histogram_first_global_fragment_distribution(ax, list_of_global_fragments, video,
+                                                                                scale_parameter, shape_parameter,
+                                                                                accuracy[i,k,j,l], protocol[i,k,j,l])
+                        else:
+                            if k == len(shape_parameter_list)-1:
+                                ax.set_xlabel('number of frames \n\nscale = %.2f' %scale_parameter)
+                            if j == 0:
+                                ax.set_ylabel('shape = %.2f \n\nnumber of fragments' %shape_parameter)
 
 
-        # # All statistics figure
-        # fig_statistics, ax_arr = plt.subplots(2,4)
-        # if repetition_to_plot is not None:
-        #     fig_statistics.suptitle('Statistics: Group size %i - repetition %i' %(group_size, repetition_to_plot))
-        # else:
-        #     fig_statistics.suptitle('Statistics: Group size %i' %group_size)
-        # plot_all_statistics_figure(ax_arr, protocol[i], total_time[i], ratio_of_accumulated_images[i],
-        #                             ratio_of_video_accumulated[i], overall_P2[i],
-        #                             accuracy[i], accuracy_in_accumulation[i],
-        #                             accuracy_after_accumulation[i],
-        #                             scale_parameter_list, shape_parameter_list)
-        # set_properties_all_statistics_figure(ax_arr)
-        #
-        # # saving figures
-        # path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0],
-        #                             'group_size_' + str(int(group_size)))
-        # if repetition_to_plot is not None:
-        #     file_name_gamma_distributions = 'gamma_distributions_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
-        #     file_name_statistics = 'statistics_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
-        #     file_name_first_global_fragment_distribution = '1sGF_distribution_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
-        # else:
-        #     file_name_gamma_distributions = 'distributions_%i.pdf' %group_size
-        #     file_name_statistics = 'statistics_%i.pdf' %group_size
-        #     file_name_first_global_fragment_distribution = '1sGF_distribution_%i.pdf' %group_size
-        # print(path_to_save_figure)
-        # [fig.set_size_inches((screen_x/100,screen_y/100)) for fig in [fig_distributions, fig_statistics, fig_gf]]
-        # fig_distributions.savefig(os.path.join(path_to_save_figure, file_name_gamma_distributions), transparent = True)
-        # fig_statistics.savefig(os.path.join(path_to_save_figure, file_name_statistics), transparent = True)
-        # fig_gf.savefig(os.path.join(path_to_save_figure, file_name_first_global_fragment_distribution), transparent = True)
+        # All statistics figure
+        fig_statistics, ax_arr = plt.subplots(2,4)
+        if repetition_to_plot is not None:
+            fig_statistics.suptitle('Statistics: Group size %i - repetition %i' %(group_size, repetition_to_plot))
+        else:
+            fig_statistics.suptitle('Statistics: Group size %i' %group_size)
+        plot_all_statistics_figure(ax_arr, protocol[i], total_time[i], ratio_of_accumulated_images[i],
+                                    ratio_of_video_accumulated[i], overall_P2[i],
+                                    accuracy[i], accuracy_in_accumulation[i],
+                                    accuracy_after_accumulation[i],
+                                    scale_parameter_list, shape_parameter_list)
+        set_properties_all_statistics_figure(ax_arr)
+
+        # saving figures
+        path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0],
+                                    'group_size_' + str(int(group_size)))
+        if repetition_to_plot is not None:
+            file_name_gamma_distributions = 'gamma_distributions_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
+            file_name_statistics = 'statistics_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
+            file_name_first_global_fragment_distribution = '1sGF_distribution_%i_repetition_%i.pdf' %(group_size, repetition_to_plot)
+        else:
+            file_name_gamma_distributions = 'distributions_%i.pdf' %group_size
+            file_name_statistics = 'statistics_%i.pdf' %group_size
+            file_name_first_global_fragment_distribution = '1sGF_distribution_%i.pdf' %group_size
+        print(path_to_save_figure)
+        [fig.set_size_inches((screen_x/100,screen_y/100)) for fig in [fig_distributions, fig_statistics, fig_gf]]
+        fig_distributions.savefig(os.path.join(path_to_save_figure, file_name_gamma_distributions), transparent = True)
+        fig_statistics.savefig(os.path.join(path_to_save_figure, file_name_statistics), transparent = True)
+        fig_gf.savefig(os.path.join(path_to_save_figure, file_name_first_global_fragment_distribution), transparent = True)
 
     ### plot minimun number of images in first global fragment vs accuracy
     fig_num_images_accuracy, ax_arr_num_images_accuracy = plt.subplots(1,2, sharey = False, sharex = False)
     fig_num_images_accuracy.set_size_inches((screen_x/100*2/3,screen_y/100*3/4))
-    # subax_smaller = add_subplot_axes(fig_num_images_accuracy, ax_arr_num_images_accuracy[0], [.55, .35, .4, .6], axisbg='w')
-    # subax_larger = add_subplot_axes(fig_num_images_accuracy, ax_arr_num_images_accuracy[1], [.55, .35, .4, .6], axisbg='w')
     plot_minimum_number_of_images_figure(fig_num_images_accuracy,
                                         ax_arr_num_images_accuracy,
                                         tracked_videos_data_frame,
@@ -551,79 +533,79 @@ if __name__ == '__main__':
     set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy)
 
     path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0])
-    fig_num_images_accuracy.savefig(os.path.join(path_to_save_figure, 'number_of_imags_vs_accuracy.pdf'), transparent = True)
+    fig_num_images_accuracy.savefig(os.path.join(path_to_save_figure, 'number_of_images_vs_accuracy.pdf'), transparent = True)
 
-    # ### Compute average over repetitions
-    # protocol = np.nanmean(protocol, axis = 3)
-    # total_time = np.nanmean(total_time, axis = 3)*100
-    # ratio_of_accumulated_images = np.nanmean(ratio_of_accumulated_images, axis = 3)*100
-    # ratio_of_video_accumulated = np.nanmean(ratio_of_video_accumulated, axis = 3)*100
-    # overall_P2 = np.nanmean(overall_P2, axis = 3)*100
-    # accuracy = np.nanmean(accuracy, axis = 3)*100
-    # accuracy_in_accumulation = np.nanmean(accuracy_in_accumulation, axis = 3)*100
-    # accuracy_after_accumulation = np.nanmean(accuracy_after_accumulation, axis = 3)*100
-    # ### main figure all group_sizes
-    # # build annotate matrices
-    # protocol, accuracy, \
-    # protocol_annotate, accuracy_annotate = build_annotate_matrices(protocol, accuracy,
-    #                                                             accuracy_in_accumulation,
-    #                                                             ratio_of_video_accumulated,
-    #                                                             ratio_of_accumulated_images)
-    # fig, ax_arr = plt.subplots(2,3)
-    # plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
-    #             wspace=.001, hspace=None)
-    # plot_pair_of_statistics_per_group_sizes(fig, ax_arr,
-    #                                     protocol, accuracy, group_sizes_list,
-    #                                     scale_parameter_list, shape_parameter_list,
-    #                                     'protocol-main', 'accuracy-main',
-    #                                     [1,3], [0,100],
-    #                                     protocol_annotate, accuracy_annotate)
-    # fig.set_size_inches((screen_x/100,screen_y/100))
-    # set_protocol_accuracy_group_sizes(fig, ax_arr,
-    #                                 'protocol', 'accuracy')
-    #
-    # path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0])
-    # if repetition_to_plot is not None:
-    #     file_name = 'protocol_accuracy_repetition_%i.pdf' %repetition_to_plot
-    # else:
-    #     file_name = 'protocol_accuracy.pdf'
-    # fig.savefig(os.path.join(path_to_save_figure, file_name), transparent = True)
-    #
-    # ### sm1 figure all group_sizes
-    # fig, ax_arr = plt.subplots(2,3)
-    # plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
-    #             wspace=.001, hspace=None)
-    # plot_pair_of_statistics_per_group_sizes(fig, ax_arr,
-    #                                     ratio_of_video_accumulated, overall_P2, group_sizes_list,
-    #                                     scale_parameter_list, shape_parameter_list,
-    #                                     'percentage of video accumulated', 'overal P2',
-    #                                     [0,100], [0,100])
-    # fig.set_size_inches((screen_x/100,screen_y/100))
-    # set_protocol_accuracy_group_sizes(fig, ax_arr,
-    #                                     'percentage of video accumulated', 'overal P2')
-    # if repetition_to_plot is not None:
-    #     file_name = 'percentage_accumulated_and_P2_repetition_%i.pdf' %repetition_to_plot
-    # else:
-    #     file_name = 'percentage_accumulated_and_P2.pdf'
-    # fig.savefig(os.path.join(path_to_save_figure, file_name), transparent = True)
-    #
-    # ### sm2 figure all group_sizes
-    # fig, ax_arr = plt.subplots(2,3)
-    # plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
-    #             wspace=.001, hspace=None)
-    # plot_pair_of_statistics_per_group_sizes(fig, ax_arr,
-    #                                     accuracy_in_accumulation, accuracy_after_accumulation, group_sizes_list,
-    #                                     scale_parameter_list, shape_parameter_list
-    #                                     , 'accuracy in accumulation', 'accuracy in assignment',
-    #                                     [0,100], [0,100])
-    # fig.set_size_inches((screen_x/100,screen_y/100))
-    # set_protocol_accuracy_group_sizes(fig, ax_arr,
-    #                                     'accuracy in accumulation', 'accuracy in assignment')
-    # if repetition_to_plot is not None:
-    #     file_name = 'accuracy_before_and_in_accumulation_repetition_%i.pdf' %repetition_to_plot
-    # else:
-    #     file_name = 'accuracy_before_and_in_accumulation.pdf'
-    # fig.savefig(os.path.join(path_to_save_figure, file_name), transparent = True)
+    ### Compute average over repetitions
+    protocol = np.nanmean(protocol, axis = 3)
+    total_time = np.nanmean(total_time, axis = 3)*100
+    ratio_of_accumulated_images = np.nanmean(ratio_of_accumulated_images, axis = 3)*100
+    ratio_of_video_accumulated = np.nanmean(ratio_of_video_accumulated, axis = 3)*100
+    overall_P2 = np.nanmean(overall_P2, axis = 3)*100
+    accuracy = np.nanmean(accuracy, axis = 3)*100
+    accuracy_in_accumulation = np.nanmean(accuracy_in_accumulation, axis = 3)*100
+    accuracy_after_accumulation = np.nanmean(accuracy_after_accumulation, axis = 3)*100
+    ### main figure all group_sizes
+    # build annotate matrices
+    protocol, accuracy, \
+    protocol_annotate, accuracy_annotate = build_annotate_matrices(protocol, accuracy,
+                                                                accuracy_in_accumulation,
+                                                                ratio_of_video_accumulated,
+                                                                ratio_of_accumulated_images)
+    fig, ax_arr = plt.subplots(2,3)
+    plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
+                wspace=.001, hspace=None)
+    plot_pair_of_statistics_per_group_sizes(fig, ax_arr,
+                                        protocol, accuracy, group_sizes_list,
+                                        scale_parameter_list, shape_parameter_list,
+                                        'protocol-main', 'accuracy-main',
+                                        [1,3], [0,100],
+                                        protocol_annotate, accuracy_annotate)
+    fig.set_size_inches((screen_x/100,screen_y/100))
+    set_protocol_accuracy_group_sizes(fig, ax_arr,
+                                    'protocol', 'accuracy')
+
+    path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0])
+    if repetition_to_plot is not None:
+        file_name = 'protocol_accuracy_repetition_%i.pdf' %repetition_to_plot
+    else:
+        file_name = 'protocol_accuracy.pdf'
+    fig.savefig(os.path.join(path_to_save_figure, file_name), transparent = True)
+
+    ### sm1 figure all group_sizes
+    fig, ax_arr = plt.subplots(2,3)
+    plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
+                wspace=.001, hspace=None)
+    plot_pair_of_statistics_per_group_sizes(fig, ax_arr,
+                                        ratio_of_video_accumulated, overall_P2, group_sizes_list,
+                                        scale_parameter_list, shape_parameter_list,
+                                        'percentage of video accumulated', 'overal P2',
+                                        [0,100], [0,100])
+    fig.set_size_inches((screen_x/100,screen_y/100))
+    set_protocol_accuracy_group_sizes(fig, ax_arr,
+                                        'percentage of video accumulated', 'overal P2')
+    if repetition_to_plot is not None:
+        file_name = 'percentage_accumulated_and_P2_repetition_%i.pdf' %repetition_to_plot
+    else:
+        file_name = 'percentage_accumulated_and_P2.pdf'
+    fig.savefig(os.path.join(path_to_save_figure, file_name), transparent = True)
+
+    ### sm2 figure all group_sizes
+    fig, ax_arr = plt.subplots(2,3)
+    plt.subplots_adjust(left=.15, bottom=None, right=.85, top=None,
+                wspace=.001, hspace=None)
+    plot_pair_of_statistics_per_group_sizes(fig, ax_arr,
+                                        accuracy_in_accumulation, accuracy_after_accumulation, group_sizes_list,
+                                        scale_parameter_list, shape_parameter_list
+                                        , 'accuracy in accumulation', 'accuracy in assignment',
+                                        [0,100], [0,100])
+    fig.set_size_inches((screen_x/100,screen_y/100))
+    set_protocol_accuracy_group_sizes(fig, ax_arr,
+                                        'accuracy in accumulation', 'accuracy in assignment')
+    if repetition_to_plot is not None:
+        file_name = 'accuracy_before_and_in_accumulation_repetition_%i.pdf' %repetition_to_plot
+    else:
+        file_name = 'accuracy_before_and_in_accumulation.pdf'
+    fig.savefig(os.path.join(path_to_save_figure, file_name), transparent = True)
 
 
     plt.show()
