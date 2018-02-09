@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>get_trajectories &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="http://www.gitlab.com/polaviejalab/idtracker">GitLab repo</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for get_trajectories</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;IdTrackerDeep/restructure&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;IdTrackerDeep/tracker&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;IdTrackerDeep/utils&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">list_of_blobs</span> <span class="k">import</span> <span class="n">ListOfBlobs</span>
+<span class="kn">from</span> <span class="nn">GUI_utils</span> <span class="k">import</span> <span class="n">selectDir</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.get_trajectories&quot;</span><span class="p">)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Usage: get_trajectories.py</span>
+
+<span class="sd">Contains tools to process tracked ListOfBlobs</span>
+<span class="sd">and output trajectories as numpy files with dimensions:</span>
+
+<span class="sd">    [Frame number x Individual number  x  coordinate (x,y)]</span>
+
+<span class="sd">When a certain individual was not identified in the frame</span>
+<span class="sd">a NaN appears instead of the coordinates</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="assign_point_to_identity"><a class="viewcode-back" href="../modules.html#get_trajectories.assign_point_to_identity">[docs]</a><span class="k">def</span> <span class="nf">assign_point_to_identity</span><span class="p">(</span><span class="n">centroid</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">centroid_trajectories</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Populate the matrix of individual trajectories with the centroid of a</span>
+<span class="sd">    selected Blob object (see :class:`~blob.Blob`)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    centroid : tuple</span>
+<span class="sd">        (x, y)</span>
+<span class="sd">    identity : int</span>
+<span class="sd">        Identity to be associated with the centroid</span>
+<span class="sd">    frame_number : int</span>
+<span class="sd">        Frame number in the tracked video</span>
+<span class="sd">    centroid_trajectories : ndarray</span>
+<span class="sd">        array of shape [number of frame in video x number of animals  x  2]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray</span>
+<span class="sd">        centroid_trajectories</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">centroid_trajectories</span><span class="p">[</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">identity</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">centroid</span>
+    <span class="k">return</span> <span class="n">centroid_trajectories</span></div>
+
+<div class="viewcode-block" id="produce_trajectories"><a class="viewcode-back" href="../modules.html#get_trajectories.produce_trajectories">[docs]</a><span class="k">def</span> <span class="nf">produce_trajectories</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">number_of_frames</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produce trajectories array from ListOfBlobs</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    blobs_in_video : &lt;ListOfBlobs object&gt;</span>
+<span class="sd">        See :class:`list_of_blobs.ListOfBlobs`</span>
+<span class="sd">    number_of_frames : int</span>
+<span class="sd">        Total number of frames in video</span>
+<span class="sd">    number_of_animals : int</span>
+<span class="sd">        Number of animals to be tracked</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary with np.array as values (trajectories organised by identity)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">centroid_trajectories</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">number_of_frames</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+
+    <span class="k">for</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">)):</span>
+
+        <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">centroid_trajectories</span> <span class="o">=</span> <span class="n">assign_point_to_identity</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">centroid</span><span class="p">,</span>
+                                                                <span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span>
+                                                                <span class="n">blob</span><span class="o">.</span><span class="n">frame_number</span><span class="p">,</span>
+                                                                <span class="n">centroid_trajectories</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">identity</span><span class="p">,</span> <span class="n">centroid</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">interpolated_centroids</span><span class="p">):</span>
+                    <span class="n">centroid_trajectories</span> <span class="o">=</span> <span class="n">assign_point_to_identity</span><span class="p">(</span><span class="n">centroid</span><span class="p">,</span>
+                                                                    <span class="n">identity</span><span class="p">,</span>
+                                                                    <span class="n">blob</span><span class="o">.</span><span class="n">frame_number</span><span class="p">,</span>
+                                                                    <span class="n">centroid_trajectories</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">centroid_trajectories</span></div>
+
+<div class="viewcode-block" id="produce_output_dict"><a class="viewcode-back" href="../modules.html#get_trajectories.produce_output_dict">[docs]</a><span class="k">def</span> <span class="nf">produce_output_dict</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Outputs the dictionary with keys: trajectories, git_commit, video_path,</span>
+<span class="sd">    frames_per_second</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    blobs_in_video : list</span>
+<span class="sd">        List of all blob objects (see :class:`~blob.Blobs`) generated by</span>
+<span class="sd">        considering all the blobs segmented from the video</span>
+<span class="sd">    video : &lt;Video object&gt;</span>
+<span class="sd">        See :class:`~video.Video`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Output dictionary containing trajectories as values</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;trajectories&#39;</span><span class="p">:</span> <span class="n">produce_trajectories</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">),</span>
+                    <span class="s1">&#39;git_commit&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">git_commit</span><span class="p">,</span>
+                    <span class="s1">&#39;video_path&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">video_path</span><span class="p">,</span>
+                    <span class="s1">&#39;frames_per_second&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">frames_per_second</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">output_dict</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># #SIMPLE USAGE EXAMPLE</span>
+    <span class="c1"># BLOB_FILE_NAME = &quot;blobs_collection.npy&quot;</span>
+    <span class="n">session_path</span> <span class="o">=</span> <span class="n">selectDir</span><span class="p">(</span><span class="s1">&#39;./&#39;</span><span class="p">)</span> <span class="c1">#select path to video</span>
+    <span class="n">video_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">session_path</span><span class="p">,</span><span class="s1">&#39;video_object.npy&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;loading video object...&quot;</span><span class="p">)</span>
+    <span class="n">video</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">video_path</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">list_of_blobs</span> <span class="o">=</span> <span class="n">ListOfBlobs</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">blobs_path</span><span class="p">)</span>
+
+    <span class="n">video</span><span class="o">.</span><span class="n">create_trajectories_wo_gaps_folder</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Generating trajectories. The trajectories files are stored in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">video</span><span class="o">.</span><span class="n">trajectories_wo_gaps_folder</span><span class="p">)</span>
+    <span class="n">trajectories_wo_gaps_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">trajectories_wo_gaps_folder</span><span class="p">,</span> <span class="s1">&#39;output_dict.npy&#39;</span><span class="p">)</span>
+    <span class="n">trajectories_wo_gaps</span> <span class="o">=</span> <span class="n">produce_output_dict</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">trajectories_wo_gaps_file</span><span class="p">,</span> <span class="n">trajectories_wo_gaps</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saving trajectories&quot;</span><span class="p">)</span>
+    <span class="n">video</span><span class="o">.</span><span class="n">_has_trajectories_wo_gaps</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">video</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+    <span class="c1">#trajectories = produce_trajectories(blobs_list.blobs_in_video, video.number_of_frames, video.number_of_animals)</span>
+    <span class="c1">#save_trajectories(trajectories, trajectories_folder)</span>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Feb 09, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>
