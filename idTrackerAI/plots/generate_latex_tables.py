@@ -52,7 +52,7 @@ if __name__ == '__main__':
                 'Length (min)',
                 'Frame rate (fps)',
                 'perc. of video reviewed',
-                'Area of animals (pixels)',
+                'Pixels per animal',
                 'Accuracy',
                 'Accuracy in accumulation and identification',
                 'Accuracy in residual identification',

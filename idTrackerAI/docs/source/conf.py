@@ -16,12 +16,13 @@ sys.path.insert(0, os.path.abspath('../../plots/old_plots'))
 sys.path.insert(0, os.path.abspath('../../postprocessing'))
 sys.path.insert(0, os.path.abspath('../../groundtruth_utils'))
 sys.path.insert(0, os.path.abspath('../../tf_cnnvisualisation'))
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-    'numpydoc']
+extensions = ['sphinx.ext.autodoc',
+            'sphinx.ext.autosummary',
+            'sphinx.ext.coverage',
+            'sphinx.ext.mathjax',
+            'sphinx.ext.viewcode',
+            'sphinx.ext.githubpages',
+            'numpydoc']
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
@@ -39,7 +40,7 @@ html_theme = 'scipy'
 html_theme_path = [themedir]
 html_theme_options = {
         "edit_link": False,
-        "sidebar": "left",
+        "sidebar": "right",
         "scipy_org_logo": True,
         "navigation_links" : True,
         "rootlinks": [("http://www.gitlab.com/polaviejalab/idtracker", "GitLab repo")]

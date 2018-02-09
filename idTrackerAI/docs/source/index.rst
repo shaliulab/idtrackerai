@@ -1,194 +1,19 @@
-Welcome to idtrackerai's documentation!
+Welcome to idtracker.ai's documentation!
 =======================================
 
 idtrackerai allows to track animals in videos realised in laboratory conditions.
 See *this paper* for details.
 
+
+
 Contents:
 
 .. toctree::
-   :maxdepth: 3
-
+   :maxdepth: 2
 
    how_to_install
    quickstart
    modules
-.. requirements
-
-
-.. .. automodule:: idTrackerDeepGUI
-..    :members:
-..
-
-
-.. .. automodule:: assigner
-..    :members:
-..
-.. .. automodule:: blob
-..    :members:
-..
-.. .. automodule:: constants
-..    :members:
-..
-.. .. automodule:: crossing_detector
-..    :members:
-..
-.. .. automodule:: fragment
-..    :members:
-..
-.. .. automodule:: get_trajectories
-..    :members:
-..
-.. .. automodule:: globalfragment
-..    :members:
-..
-.. .. automodule:: list_of_blobs
-..    :members:
-..
-.. .. automodule:: list_of_fragments
-..    :members:
-..
-.. .. automodule:: list_of_global_fragments
-..    :members:
-..
-.. .. automodule:: model_area
-..    :members:
-..
-.. .. automodule:: pre_trainer
-..    :members:
-..
-.. .. automodule:: statistics_for_assignment
-..    :members:
-..
-.. .. automodule:: trainer
-..    :members:
-..
-.. .. automodule:: video
-..    :members:
-..
-.. .. automodule:: visualise_cnn
-..    :members:
-..
-.. .. automodule:: visualize_embeddings
-..    :members:
-..
-.. .. automodule:: compute_groundtruth_statistics
-..    :members:
-..
-.. .. automodule:: compute_individual_groundtruth_statistics
-..    :members:
-..
-.. .. automodule:: generate_groundtruth
-..    :members:
-..
-.. .. automodule:: generate_individual_groundtruth
-..    :members:
-..
-.. .. automodule:: crossings_detector_model
-..    :members:
-..
-.. .. automodule:: epoch_runner_crossings
-..    :members:
-..
-.. .. automodule:: get_crossings_dataset
-..    :members:
-..
-.. .. automodule:: get_predictions_crossings
-..    :members:
-..
-.. .. automodule:: network_params_crossings
-..    :members:
-..
-.. .. automodule:: stop_training_criteria_crossings
-..    :members:
-..
-.. .. automodule:: store_accuracy_and_loss_crossings
-..    :members:
-..
-.. .. automodule:: train_crossings_detector
-..    :members:
-..
-.. .. automodule:: epoch_runner
-..    :members:
-..
-.. .. automodule:: get_data
-..    :members:
-..
-.. .. automodule:: get_predictions
-..    :members:
-..
-.. .. automodule:: id_CNN
-..    :members:
-..
-.. .. automodule:: network_params
-..    :members:
-..
-.. .. automodule:: stop_training_criteria
-..    :members:
-..
-.. .. automodule:: store_accuracy_and_loss
-..    :members:
-..
-.. .. automodule:: train_id_CNN
-..    :members:
-..
-.. .. automodule:: cnn_architectures
-..    :members:
-..
-.. .. automodule:: global_fragments_distribution
-..    :members:
-..
-.. .. automodule:: plot_individual_velocity
-..    :members:
-..
-.. .. automodule:: global_fragments_statistics
-..    :members:
-..
-.. .. automodule:: assign_them_all
-..    :members:
-..
-.. .. automodule:: compute_velocity_model
-..    :members:
-..
-.. .. automodule:: correct_duplications
-..    :members:
-..
-.. .. automodule:: correct_impossible velocity_jumps
-..    :members:
-..
-.. .. automodule:: erosion
-..    :members:
-..
-.. .. automodule:: fishcontour
-..    :members:
-..
-.. .. automodule:: get_portraits
-..    :members:
-..
-.. .. automodule:: segmentation
-..    :members:
-..
-.. .. automodule:: tf_cnnvis
-..    :members:
-..
-.. .. automodule:: utils
-..    :members:
-..
-.. .. automodule:: cnn_utils
-..    :members:
-..
-.. .. automodule:: GUI_utils
-..    :members:
-..
-.. .. automodule:: KNN
-..    :members:
-..
-.. .. automodule:: py_utils
-..    :members:
-..
-.. .. automodule:: video_utilss
-..    :members:
-
 
 Indices and tables
 ==================

@@ -70,10 +70,6 @@
         
 
 	<div class="row-fluid">
-      <div class="spc-rightsidebar span3">
-        <div class="sphinxsidebarwrapper">
-        </div>
-      </div>
           <div class="span9">
             
         <div class="bodywrapper">
@@ -98,7 +94,7 @@
     <span class="kn">import</span> <span class="nn">logging</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.list_of_blobs&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ListOfBlobs"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs">[docs]</a><span class="k">class</span> <span class="nc">ListOfBlobs</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs">[docs]</a><span class="k">class</span> <span class="nc">ListOfBlobs</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Collects all the instances of the class :class:`~blob.Blob` generated</span>
 <span class="sd">    from the blobs extracted from the video during segmentation</span>
 <span class="sd">    (see :mod:`~segmentation`)</span>
@@ -120,7 +116,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">number_of_frames</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">blobs_are_connected</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="ListOfBlobs.disconnect"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.disconnect">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.disconnect"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.disconnect">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Reinitialise the previous and next list of blobs</span>
 <span class="sd">        (see :attr:`~blob.Blob.next` and :attr:`~blob.Blob.previous`)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -128,7 +124,7 @@
             <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
                 <span class="n">blob</span><span class="o">.</span><span class="n">next</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">previous</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.connect"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.connect"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Connects blobs in subsequent frames by computing their overlapping</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Connecting list of blob objects&quot;</span><span class="p">)</span>
@@ -137,7 +133,7 @@
                 <span class="k">if</span> <span class="n">blob_0</span><span class="o">.</span><span class="n">overlaps_with</span><span class="p">(</span><span class="n">blob_1</span><span class="p">):</span>
                     <span class="n">blob_0</span><span class="o">.</span><span class="n">now_points_to</span><span class="p">(</span><span class="n">blob_1</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.reconnect"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.reconnect">[docs]</a>    <span class="k">def</span> <span class="nf">reconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.reconnect"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.reconnect">[docs]</a>    <span class="k">def</span> <span class="nf">reconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Connects blobs in subsequent frames by computing their overlapping</span>
 <span class="sd">        and sets blobs_are_connected to True</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -148,7 +144,7 @@
                     <span class="n">blob_0</span><span class="o">.</span><span class="n">now_points_to</span><span class="p">(</span><span class="n">blob_1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">blobs_are_connected</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.save"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">path_to_save</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">number_of_chunks</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.save"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">path_to_save</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">number_of_chunks</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;save instance&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;saving blobs list at </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">path_to_save</span><span class="p">)</span>
@@ -157,7 +153,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">blobs_are_connected</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.load"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.load">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ListOfBlobs.load"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.load">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">path_to_load_blob_list_file</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Short summary.</span>
 
@@ -179,7 +175,7 @@
         <span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_are_connected</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">list_of_blobs</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.compute_fragment_identifier_and_blob_index"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.compute_fragment_identifier_and_blob_index">[docs]</a>    <span class="k">def</span> <span class="nf">compute_fragment_identifier_and_blob_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.compute_fragment_identifier_and_blob_index"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.compute_fragment_identifier_and_blob_index">[docs]</a>    <span class="k">def</span> <span class="nf">compute_fragment_identifier_and_blob_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Associates a unique fragment identifier to the fragments computed by</span>
 <span class="sd">        overlapping see method</span>
 <span class="sd">        :meth:`compute_overlapping_between_subsequent_frames` and sets the blob</span>
@@ -226,7 +222,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">number_of_individual_fragments</span> <span class="o">=</span> <span class="n">counter</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;number_of_individual_fragments, </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">counter</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.compute_crossing_fragment_identifier"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.compute_crossing_fragment_identifier">[docs]</a>    <span class="k">def</span> <span class="nf">compute_crossing_fragment_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.compute_crossing_fragment_identifier"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.compute_crossing_fragment_identifier">[docs]</a>    <span class="k">def</span> <span class="nf">compute_crossing_fragment_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Assign a unique identifier to fragments associated to a crossing</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span> <span class="nf">propagate_crossing_identifier</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="n">fragment_identifier</span><span class="p">):</span>
@@ -265,7 +261,7 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;number_of_crossing_fragments: </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">fragment_identifier</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_individual_fragments</span><span class="p">))</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;total number of fragments: </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">fragment_identifier</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.compute_overlapping_between_subsequent_frames"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames">[docs]</a>    <span class="k">def</span> <span class="nf">compute_overlapping_between_subsequent_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.compute_overlapping_between_subsequent_frames"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames">[docs]</a>    <span class="k">def</span> <span class="nf">compute_overlapping_between_subsequent_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes overlapping between self and the blobs generated during</span>
 <span class="sd">        segmentation in the next frames</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -294,7 +290,7 @@
 
         <span class="n">set_frame_number_to_blobs_in_frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">[</span><span class="n">frame_i</span><span class="p">],</span> <span class="n">frame_i</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.compute_model_area_and_body_length"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.compute_model_area_and_body_length">[docs]</a>    <span class="k">def</span> <span class="nf">compute_model_area_and_body_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.compute_model_area_and_body_length"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.compute_model_area_and_body_length">[docs]</a>    <span class="k">def</span> <span class="nf">compute_model_area_and_body_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;computes the median and standard deviation of all the blobs of the video</span>
 <span class="sd">        and the median_body_length estimated from the diagonal of the bounding box.</span>
 <span class="sd">        These values are later used to discard blobs that are not fish and potentially</span>
@@ -312,7 +308,7 @@
         <span class="n">median_body_length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">areas_and_body_length</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">ModelArea</span><span class="p">(</span><span class="n">mean_area</span><span class="p">,</span> <span class="n">median_area</span><span class="p">,</span> <span class="n">std_area</span><span class="p">),</span> <span class="n">median_body_length</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.apply_model_area_to_video"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.apply_model_area_to_video">[docs]</a>    <span class="k">def</span> <span class="nf">apply_model_area_to_video</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">model_area</span><span class="p">,</span> <span class="n">identification_image_size</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.apply_model_area_to_video"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.apply_model_area_to_video">[docs]</a>    <span class="k">def</span> <span class="nf">apply_model_area_to_video</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">model_area</span><span class="p">,</span> <span class="n">identification_image_size</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Applies `model_area` to every blob extracted from video</span>
 
 <span class="sd">        Parameters</span>
@@ -353,7 +349,7 @@
         <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;Applying model area&#39;</span><span class="p">):</span>
             <span class="n">apply_model_area_to_blobs_in_frame</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">model_area</span><span class="p">,</span> <span class="n">identification_image_size</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.get_data_plot"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.get_data_plot">[docs]</a>    <span class="k">def</span> <span class="nf">get_data_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.get_data_plot"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.get_data_plot">[docs]</a>    <span class="k">def</span> <span class="nf">get_data_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Gets the areas of all the blobs segmented in the video</span>
 
 <span class="sd">        Returns</span>
@@ -365,7 +361,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">area</span> <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blobs_in_video</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="ListOfBlobs.check_maximal_number_of_blob"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.check_maximal_number_of_blob">[docs]</a>    <span class="k">def</span> <span class="nf">check_maximal_number_of_blob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.check_maximal_number_of_blob"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.check_maximal_number_of_blob">[docs]</a>    <span class="k">def</span> <span class="nf">check_maximal_number_of_blob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Checks that the amount of blobs per frame is not greater than the</span>
 <span class="sd">        number of animals to track</span>
 
@@ -392,7 +388,7 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Frames with more blobs than animals: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">frames_with_more_blobs_than_animals</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">frames_with_more_blobs_than_animals</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.update_from_list_of_fragments"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.update_from_list_of_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">update_from_list_of_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">fragment_identifier_to_index</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.update_from_list_of_fragments"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.update_from_list_of_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">update_from_list_of_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">fragment_identifier_to_index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates the blobs objects generated from the video with the attributes</span>
 <span class="sd">        computed for each fragment</span>
 
@@ -417,7 +413,7 @@
                 <span class="n">fragment</span> <span class="o">=</span> <span class="n">fragments</span><span class="p">[</span><span class="n">fragment_identifier_to_index</span><span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span><span class="p">]]</span>
                 <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span> <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">attributes</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)]</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.compute_nose_and_head_coordinates"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.compute_nose_and_head_coordinates">[docs]</a>    <span class="k">def</span> <span class="nf">compute_nose_and_head_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.compute_nose_and_head_coordinates"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.compute_nose_and_head_coordinates">[docs]</a>    <span class="k">def</span> <span class="nf">compute_nose_and_head_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes nose and head coordinate for all the blobs segmented from the</span>
 <span class="sd">        video</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -425,7 +421,7 @@
             <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
                 <span class="n">blob</span><span class="o">.</span><span class="n">get_nose_and_head_coordinates</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="ListOfBlobs.erode"><a class="viewcode-back" href="../modules.html#list_of_blobs.ListOfBlobs.erode">[docs]</a>    <span class="k">def</span> <span class="nf">erode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.erode"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.erode">[docs]</a>    <span class="k">def</span> <span class="nf">erode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Erodes all the blobs in the video</span>
 
 <span class="sd">        Parameters</span>
@@ -443,6 +439,10 @@
           </div>
         </div>
           </div>
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
         </div>
       </div>
     </div>
