@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>trainer &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="http://www.gitlab.com/polaviejalab/idtracker">GitLab repo</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for trainer</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;./network&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;./network/identification_model&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">network_params</span> <span class="k">import</span> <span class="n">NetworkParams</span>
+<span class="kn">from</span> <span class="nn">get_data</span> <span class="k">import</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">split_data_train_and_validation</span>
+<span class="kn">from</span> <span class="nn">id_CNN</span> <span class="k">import</span> <span class="n">ConvNetwork</span>
+<span class="kn">from</span> <span class="nn">epoch_runner</span> <span class="k">import</span> <span class="n">EpochRunner</span>
+<span class="kn">from</span> <span class="nn">stop_training_criteria</span> <span class="k">import</span> <span class="n">Stop_Training</span>
+<span class="kn">from</span> <span class="nn">store_accuracy_and_loss</span> <span class="k">import</span> <span class="n">Store_Accuracy_and_Loss</span>
+<span class="kn">from</span> <span class="nn">constants</span> <span class="k">import</span> <span class="n">BATCH_SIZE_IDCNN</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.trainer&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="train"><a class="viewcode-back" href="../modules.html#trainer.train">[docs]</a><span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">video</span><span class="p">,</span>
+            <span class="n">fragments</span><span class="p">,</span>
+            <span class="n">net</span><span class="p">,</span>
+            <span class="n">images</span><span class="p">,</span>
+            <span class="n">labels</span><span class="p">,</span>
+            <span class="n">store_accuracy_and_error</span><span class="p">,</span>
+            <span class="n">check_for_loss_plateau</span><span class="p">,</span>
+            <span class="n">save_summaries</span><span class="p">,</span>
+            <span class="n">print_flag</span><span class="p">,</span>
+            <span class="n">plot_flag</span><span class="p">,</span>
+            <span class="n">global_step</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">identity_transfer</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">accumulation_manager</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">batch_size</span> <span class="o">=</span> <span class="n">BATCH_SIZE_IDCNN</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Short summary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    video : &lt;Video object&gt;</span>
+<span class="sd">        an instance of the class :class:`~video.Video`</span>
+<span class="sd">    fragments : list</span>
+<span class="sd">        list of instances of the class :class:`~fragment.Fragment`</span>
+<span class="sd">    net : &lt;ConvNetwork object&gt;</span>
+<span class="sd">        an instance of the class :class:`~id_CNN.ConvNetwork`</span>
+<span class="sd">    images : ndarray</span>
+<span class="sd">        array of shape [number_of_images, height, width]</span>
+<span class="sd">    labels : type</span>
+<span class="sd">        array of shape [number_of_images, number_of_animals]</span>
+<span class="sd">    store_accuracy_and_error : bool</span>
+<span class="sd">        if True the values of the loss function, accuracy and individual</span>
+<span class="sd">        accuracy will be stored</span>
+<span class="sd">    check_for_loss_plateau : bool</span>
+<span class="sd">        if True the stopping criteria (see :mod:`~stop_training_criteria`) will</span>
+<span class="sd">        automatically stop the training in case the loss functin computed for</span>
+<span class="sd">        the validation set of images reaches a plateau</span>
+<span class="sd">    sasave_summaries : bool</span>
+<span class="sd">        if True tensorflow summaries will be generated and stored to allow</span>
+<span class="sd">        tensorboard visualisation of both loss and activity histograms</span>
+<span class="sd">    print_flag : bool</span>
+<span class="sd">        if True additional information are printed in the terminal</span>
+<span class="sd">    plot_flag : bool</span>
+<span class="sd">        if True training and validation loss, accuracy and individual accuracy</span>
+<span class="sd">        are plot in a graph at the end of the training session</span>
+<span class="sd">    global_epoch : int</span>
+<span class="sd">        global counter of the training epoch in pretraining</span>
+<span class="sd">    accumulation_manager : &lt;AccumulationManager object&gt;</span>
+<span class="sd">        an instance of the class</span>
+<span class="sd">        :class:`~accumulation_manager.AccumulationManager`</span>
+<span class="sd">    batch_size : int</span>
+<span class="sd">        size of the batch of images used for training</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        global epoch counter updated after the training session</span>
+<span class="sd">    &lt;ConvNetwork object&gt;</span>
+<span class="sd">        network with updated parameters after training</span>
+<span class="sd">    float</span>
+<span class="sd">        ration of images used for pretraining over the total number of</span>
+<span class="sd">        available images</span>
+<span class="sd">    &lt;Store_Accuracy_and_Loss object&gt;</span>
+<span class="sd">        updated with the values collected on the training set of labelled</span>
+<span class="sd">        images</span>
+<span class="sd">    &lt;Store_Accuracy_and_Loss object&gt;</span>
+<span class="sd">        updated with the values collected on the validation set of labelled</span>
+<span class="sd">        images</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Save accuracy and error during training and validation</span>
+    <span class="c1"># The loss and accuracy of the validation are saved to allow the automatic stopping of the training</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Training...&quot;</span><span class="p">)</span>
+    <span class="n">store_training_accuracy_and_loss_data</span> <span class="o">=</span> <span class="n">Store_Accuracy_and_Loss</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;training&#39;</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="s1">&#39;training&#39;</span><span class="p">)</span>
+    <span class="n">store_validation_accuracy_and_loss_data</span> <span class="o">=</span> <span class="n">Store_Accuracy_and_Loss</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;validation&#39;</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="s1">&#39;training&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">plot_flag</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ion</span><span class="p">()</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax_arr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">set_window_title</span><span class="p">(</span><span class="s1">&#39;Accumulation &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">accumulation_trial</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">accumulation_step</span><span class="p">))</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="c1"># Instantiate data set</span>
+    <span class="n">training_dataset</span><span class="p">,</span> <span class="n">validation_dataset</span> <span class="o">=</span> <span class="n">split_data_train_and_validation</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="c1"># Convert labels to one hot vectors</span>
+    <span class="n">training_dataset</span><span class="o">.</span><span class="n">convert_labels_to_one_hot</span><span class="p">()</span>
+    <span class="n">validation_dataset</span><span class="o">.</span><span class="n">convert_labels_to_one_hot</span><span class="p">()</span>
+    <span class="c1"># Reinitialize softmax and fully connected</span>
+    <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">accumulation_step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">net</span><span class="o">.</span><span class="n">reinitialize_softmax_and_fully_connected</span><span class="p">()</span>
+    <span class="c1"># Train network</span>
+    <span class="c1">#compute weights to be fed to the loss function (weighted cross entropy)</span>
+    <span class="n">net</span><span class="o">.</span><span class="n">compute_loss_weights</span><span class="p">(</span><span class="n">training_dataset</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">trainer</span> <span class="o">=</span> <span class="n">EpochRunner</span><span class="p">(</span><span class="n">training_dataset</span><span class="p">,</span>
+                        <span class="n">starting_epoch</span> <span class="o">=</span> <span class="n">global_step</span><span class="p">,</span>
+                        <span class="n">print_flag</span> <span class="o">=</span> <span class="n">print_flag</span><span class="p">,</span>
+                        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span><span class="p">)</span>
+    <span class="n">validator</span> <span class="o">=</span> <span class="n">EpochRunner</span><span class="p">(</span><span class="n">validation_dataset</span><span class="p">,</span>
+                        <span class="n">starting_epoch</span> <span class="o">=</span> <span class="n">global_step</span><span class="p">,</span>
+                        <span class="n">print_flag</span> <span class="o">=</span> <span class="n">print_flag</span><span class="p">,</span>
+                        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span><span class="p">)</span>
+    <span class="c1">#set criteria to stop the training</span>
+    <span class="n">stop_training</span> <span class="o">=</span> <span class="n">Stop_Training</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span>
+                                <span class="n">check_for_loss_plateau</span> <span class="o">=</span> <span class="n">check_for_loss_plateau</span><span class="p">,</span>
+                                <span class="n">first_accumulation_flag</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">accumulation_step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">global_step0</span> <span class="o">=</span> <span class="n">global_step</span>
+
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">stop_training</span><span class="p">(</span><span class="n">store_training_accuracy_and_loss_data</span><span class="p">,</span>
+                            <span class="n">store_validation_accuracy_and_loss_data</span><span class="p">,</span>
+                            <span class="n">trainer</span><span class="o">.</span><span class="n">_epochs_completed</span><span class="p">):</span>
+        <span class="c1"># --- Training</span>
+        <span class="n">feed_dict_train</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">run_epoch</span><span class="p">(</span><span class="s1">&#39;Training&#39;</span><span class="p">,</span> <span class="n">store_training_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">train</span><span class="p">)</span>
+        <span class="c1"># --- Validation</span>
+        <span class="n">feed_dict_val</span> <span class="o">=</span> <span class="n">validator</span><span class="o">.</span><span class="n">run_epoch</span><span class="p">(</span><span class="s1">&#39;Validation&#39;</span><span class="p">,</span> <span class="n">store_validation_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">validate</span><span class="p">)</span>
+        <span class="c1"># update global step</span>
+        <span class="n">net</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">global_step</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">starting_epoch</span> <span class="o">+</span> <span class="n">trainer</span><span class="o">.</span><span class="n">_epochs_completed</span><span class="p">))</span>
+        <span class="c1"># write summaries if asked</span>
+        <span class="k">if</span> <span class="n">save_summaries</span><span class="p">:</span>
+            <span class="n">net</span><span class="o">.</span><span class="n">write_summaries</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">starting_epoch</span> <span class="o">+</span> <span class="n">trainer</span><span class="o">.</span><span class="n">_epochs_completed</span><span class="p">,</span> <span class="n">feed_dict_train</span><span class="p">,</span> <span class="n">feed_dict_val</span><span class="p">)</span>
+        <span class="c1"># Update counter</span>
+        <span class="n">trainer</span><span class="o">.</span><span class="n">_epochs_completed</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">validator</span><span class="o">.</span><span class="n">_epochs_completed</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">store_training_accuracy_and_loss_data</span><span class="o">.</span><span class="n">loss</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">store_validation_accuracy_and_loss_data</span><span class="o">.</span><span class="n">loss</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The model diverged&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">global_step</span> <span class="o">+=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">epochs_completed</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;loss values in validation: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">store_validation_accuracy_and_loss_data</span><span class="o">.</span><span class="n">loss</span><span class="p">[</span><span class="n">global_step0</span><span class="p">:]))</span>
+        <span class="c1"># update used_for_training flag to True for fragments used</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Accumulation step completed. Updating global fragments used for training&quot;</span><span class="p">)</span>
+        <span class="n">accumulation_manager</span><span class="o">.</span><span class="n">update_fragments_used_for_training</span><span class="p">()</span>
+        <span class="c1"># plot if asked</span>
+        <span class="k">if</span> <span class="n">plot_flag</span><span class="p">:</span>
+            <span class="n">store_training_accuracy_and_loss_data</span><span class="o">.</span><span class="n">plot_global_fragments</span><span class="p">(</span><span class="n">ax_arr</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">black</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">store_training_accuracy_and_loss_data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax_arr</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+            <span class="n">store_validation_accuracy_and_loss_data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax_arr</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+        <span class="c1"># store training and validation losses and accuracies</span>
+        <span class="k">if</span> <span class="n">store_accuracy_and_error</span><span class="p">:</span>
+            <span class="n">store_training_accuracy_and_loss_data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">_epochs_completed</span><span class="p">)</span>
+            <span class="n">store_validation_accuracy_and_loss_data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">_epochs_completed</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">plot_flag</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">save_folder</span><span class="p">,</span><span class="s1">&#39;Accumulation-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">accumulation_trial</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">accumulation_step</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.pdf&#39;</span><span class="p">))</span>
+        <span class="n">net</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">global_step</span><span class="p">,</span> <span class="n">net</span><span class="p">,</span> <span class="n">store_validation_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">store_training_accuracy_and_loss_data</span></div>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Feb 09, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>
