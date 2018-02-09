@@ -89,6 +89,8 @@ class EpochRunner(object):
         store_loss_and_accuracy : <Store_Accuracy_and_Loss object>
             Object collecting the values of the loss, accurcay and individual accuracies
             (see :class:`store_accuracy_and_loss.Store_Accuracy_and_Loss`)
+        batch_operation : func
+            Function to be run in the epoch
 
         Returns
         -------
@@ -101,6 +103,7 @@ class EpochRunner(object):
         --------
         :class:`get_data.DataSet`
         :class:`store_accuracy_and_loss.Store_Accuracy_and_Loss`
+        :meth:`next_batch`
 
         """
         loss_epoch = []

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>get_predictions &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="http://www.gitlab.com/polaviejalab/idtracker">GitLab repo</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for get_predictions</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../../&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">constants</span> <span class="k">import</span> <span class="n">BATCH_SIZE_PREDICTIONS_IDCNN</span><span class="p">,</span> <span class="n">KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.get_predictions&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GetPrediction"><a class="viewcode-back" href="../modules.html#get_predictions.GetPrediction">[docs]</a><span class="k">class</span> <span class="nc">GetPrediction</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Manages the inference of the identities of a set of images</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    data_set : &lt;DataSet object&gt;</span>
+<span class="sd">        Object containing the images whose labels has to be predicted</span>
+<span class="sd">        (see :class:`~get_data.DataSet`)</span>
+<span class="sd">    softmax_probs : ndarray</span>
+<span class="sd">        Array of shape [number of images, number of animals] with the softmax vectors</span>
+<span class="sd">        for every image in the `data_set`</span>
+<span class="sd">    predictions : ndarray</span>
+<span class="sd">        Array of shape [number of images, 1] with the predictions computed as the argmax</span>
+<span class="sd">        of the softmax vector of every image (in dense format).</span>
+<span class="sd">    predictions_KNN : ndarray</span>
+<span class="sd">        Array of shape [number of images, 1] with the predictions for every image computed</span>
+<span class="sd">        after a clustering of the second to last fully connected layer with KNN algorithm</span>
+<span class="sd">        (in dense format)</span>
+<span class="sd">    _fc_vectors : ndarray</span>
+<span class="sd">        Array of shape [number of images, number of neurons in second to last fully connected layer]</span>
+<span class="sd">    batch_size : int</span>
+<span class="sd">        Size of the batch to send the images through the network to get the predictions</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_set</span><span class="p">):</span>
+        <span class="c1"># Data set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span> <span class="o">=</span> <span class="n">data_set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_softmax_probs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_predictions_KNN</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">BATCH_SIZE_PREDICTIONS_IDCNN</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">softmax_probs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_softmax_probs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span>
+
+<div class="viewcode-block" id="GetPrediction.next_batch"><a class="viewcode-back" href="../modules.html#get_predictions.GetPrediction.next_batch">[docs]</a>    <span class="k">def</span> <span class="nf">next_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the next `batch_size` examples from this data set.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        batch_size : int</span>
+<span class="sd">            Number of images to get for the next batch</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        images : ndarray</span>
+<span class="sd">            Array of shape [batch_size, height, width, channels] with the images</span>
+<span class="sd">            of the batch</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span> <span class="o">+=</span> <span class="n">batch_size</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="GetPrediction.get_predictions_softmax"><a class="viewcode-back" href="../modules.html#get_predictions.GetPrediction.get_predictions_softmax">[docs]</a>    <span class="k">def</span> <span class="nf">get_predictions_softmax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_operation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Runs a `batch_operation` (typically :meth:`~id_CNN.predict`)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        batch_operation : func</span>
+<span class="sd">            Function to be run in the epoch</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">_num_images</span><span class="p">:</span>
+            <span class="n">softmax_probs_batch</span><span class="p">,</span> <span class="n">predictions_batch</span> <span class="o">=</span> <span class="n">batch_operation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next_batch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_softmax_probs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">softmax_probs_batch</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predictions_batch</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_softmax_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_softmax_probs</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GetPrediction.get_predictions_fully_connected_embedding"><a class="viewcode-back" href="../modules.html#get_predictions.GetPrediction.get_predictions_fully_connected_embedding">[docs]</a>    <span class="k">def</span> <span class="nf">get_predictions_fully_connected_embedding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_operation</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Not used in the current version of the algorithm. Only for analysis.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">_num_images</span><span class="p">:</span>
+            <span class="n">fc_vectors</span> <span class="o">=</span> <span class="n">batch_operation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next_batch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fc_vectors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predictions_KNN</span> <span class="o">=</span> <span class="n">kMeansCluster</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="kMeansCluster"><a class="viewcode-back" href="../modules.html#get_predictions.kMeansCluster">[docs]</a><span class="k">def</span> <span class="nf">kMeansCluster</span><span class="p">(</span><span class="n">vector_values</span><span class="p">,</span> <span class="n">num_clusters</span><span class="p">,</span> <span class="n">max_num_steps</span><span class="p">,</span> <span class="n">stop_coeficient</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Not used in the current version of the algorithm. Only for analysis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vectors</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">vector_values</span><span class="p">)</span>
+    <span class="n">centroids</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random_shuffle</span><span class="p">(</span><span class="n">vectors</span><span class="p">),</span>
+                                   <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="n">num_clusters</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">old_centroids</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">num_clusters</span><span class="p">,</span><span class="n">vector_values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]))</span>
+    <span class="n">centroid_distance</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">num_clusters</span><span class="p">,</span><span class="n">vector_values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]))</span>
+    <span class="n">expanded_vectors</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">vectors</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">expanded_centroids</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">expanded_vectors</span><span class="p">,</span> <span class="n">expanded_centroids</span><span class="p">)),</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">means</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">boolean_mask</span><span class="p">(</span>
+                <span class="n">vectors</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">assignments</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+            <span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="n">num_clusters</span><span class="p">)])</span>
+    <span class="n">save_old_centroids</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">old_centroids</span><span class="p">,</span> <span class="n">centroids</span><span class="p">)</span>
+    <span class="n">update_centroids</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">means</span><span class="p">)</span>
+    <span class="n">init_op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">initialize_all_variables</span><span class="p">()</span>
+    <span class="n">performance</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">centroid_distance</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">old_centroids</span><span class="p">))</span>
+    <span class="n">check_stop</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">performance</span><span class="p">))</span>
+
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+        <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">init_op</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="n">max_num_steps</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;KMeanClustering: Running step </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="p">))</span>
+            <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">save_old_centroids</span><span class="p">)</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">centroid_values</span><span class="p">,</span> <span class="n">assignment_values</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">update_centroids</span><span class="p">,</span>
+                                                        <span class="n">centroids</span><span class="p">,</span>
+                                                        <span class="n">assignments</span><span class="p">])</span>
+            <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">check_stop</span><span class="p">)</span>
+            <span class="n">current_stop_coeficient</span> <span class="o">=</span> <span class="n">check_stop</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">current_stop_coeficient</span> <span class="o">&lt;=</span> <span class="n">stop_coeficient</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">centroid_values</span><span class="p">,</span> <span class="n">assignment_values</span></div>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Feb 09, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

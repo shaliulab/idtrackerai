@@ -14,7 +14,23 @@ else:
 
 class Stop_Training(object):
     """Stops the training of the network according to the conditions specified
-    in __call__
+    in :meth:`__call__`
+
+    Attributes
+    ----------
+    num_epochs : int
+        Number of epochs before starting the training
+    number_of_animals : int
+        Number of animals in the video
+    epochs_before_checking_stopping_conditions : int
+        Number of epochs before starting to check the stopping conditions
+    overfitting_counter : int
+        Counts the number of consecutive overfitting epochs during training
+    check_for_loss_plateau : bool
+        Flag to check for a plateu in the loss of the validation
+    first_accumulation_flag : bool
+        Flag to indicate that it is the first step of the accumulation
+
     """
     def __init__(self, number_of_animals, epochs_before_checking_stopping_conditions = 10, check_for_loss_plateau = True, first_accumulation_flag = False):
         self.num_epochs = MAXIMUM_NUMBER_OF_EPOCHS_IDCNN #maximal num of epochs
@@ -25,6 +41,19 @@ class Stop_Training(object):
         self.first_accumulation_flag = first_accumulation_flag
 
     def __call__(self, loss_accuracy_training, loss_accuracy_validation, epochs_completed):
+        """Returns True when one of the conditions to stop the training is satisfied,
+        otherwise it returns False
+
+        Parameters
+        ----------
+        loss_accuracy_training : list
+            List with the values of the loss in the training set for the previous epochs
+        loss_accuracy_validation : list
+            List with the values of the loss in the validation set for the previous epochs
+        epochs_completed : int
+            Number of epochs completed before checking the conditions
+
+        """
         #check that the model did not diverged (nan loss).
 
         if epochs_completed > 0 and (np.isnan(loss_accuracy_training.loss[-1]) or np.isnan(loss_accuracy_validation.loss[-1])):

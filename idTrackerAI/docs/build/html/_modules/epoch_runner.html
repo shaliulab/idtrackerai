@@ -171,6 +171,8 @@
 <span class="sd">        store_loss_and_accuracy : &lt;Store_Accuracy_and_Loss object&gt;</span>
 <span class="sd">            Object collecting the values of the loss, accurcay and individual accuracies</span>
 <span class="sd">            (see :class:`store_accuracy_and_loss.Store_Accuracy_and_Loss`)</span>
+<span class="sd">        batch_operation : func</span>
+<span class="sd">            Function to be run in the epoch</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -183,6 +185,7 @@
 <span class="sd">        --------</span>
 <span class="sd">        :class:`get_data.DataSet`</span>
 <span class="sd">        :class:`store_accuracy_and_loss.Store_Accuracy_and_Loss`</span>
+<span class="sd">        :meth:`next_batch`</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">loss_epoch</span> <span class="o">=</span> <span class="p">[]</span>
