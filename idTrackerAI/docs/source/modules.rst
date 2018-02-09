@@ -105,3 +105,19 @@ frames_per_second.
 
 .. automodule:: get_trajectories
   :members:
+
+^^^^^^^^
+Get data
+^^^^^^^^
+
+.. automodule:: get_data
+  :members:
+
+^^^^^^^^^^^^
+Epoch runner
+^^^^^^^^^^^^
+
+Computes a given operation for an entire epoch divided in batches
+
+.. automodule:: epoch_runner
+  :members:

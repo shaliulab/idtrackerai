@@ -42,6 +42,10 @@ MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = 3
 #######################################
 ##########        CNN       ###########
 #######################################
+'''***VALIDATION_PROPORTION***
+Protortion of images used for validation in the IDCNN model
+'''
+VALIDATION_PROPORTION = .1
 '''***BATCH_SIZE_DCD, BATCH_SIZE_IDCNN***
 size of the batches used to train the DCD and idCNN, respectively.
 '''

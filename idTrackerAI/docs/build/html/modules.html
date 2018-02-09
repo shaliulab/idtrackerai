@@ -90,6 +90,8 @@
 <li><a class="reference internal" href="#module-video_utils">Segmentation utils</a></li>
 <li><a class="reference internal" href="#module-correct_impossible_velocity_jumps">Impossible velocity jumps correction</a></li>
 <li><a class="reference internal" href="#get-trajectories">Get trajectories</a></li>
+<li><a class="reference internal" href="#module-get_data">Get data</a></li>
+<li><a class="reference internal" href="#epoch-runner">Epoch runner</a></li>
 </ul>
 </li>
 </ul>
@@ -3687,6 +3689,283 @@ considering all the blobs segmented from the video</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-get_data">
+<span id="get-data"></span><h2>Get data<a class="headerlink" href="#module-get_data" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="get_data.DataSet">
+<em class="property">class </em><code class="descclassname">get_data.</code><code class="descname">DataSet</code><span class="sig-paren">(</span><em>number_of_animals=None</em>, <em>images=None</em>, <em>labels=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/get_data.html#DataSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.DataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains the <cite>images</cite> and <cite>labels</cite> to be used for training a particular
+model</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="85%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>images</strong></td>
+<td>(ndarray) Array of shape [num_images, height, width, channels] containing the images of the dataset</td>
+</tr>
+<tr class="row-even"><td><strong>num_images</strong></td>
+<td>(int) Number of images in the dataset</td>
+</tr>
+<tr class="row-odd"><td><strong>labels</strong></td>
+<td>(ndarray) Array of shape [num_images, number_of_classes] containing the labels corresponding to the images in the dataset</td>
+</tr>
+<tr class="row-even"><td><strong>number_of_animals</strong></td>
+<td>(int) Number of classes in the dataset</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#get_data.DataSet.consistency_check" title="get_data.DataSet.consistency_check"><code class="xref py py-obj docutils literal"><span class="pre">consistency_check</span></code></a>()</td>
+<td>Checks that the length of <code class="xref py py-attr docutils literal"><span class="pre">images</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">labels</span></code> is the same</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#get_data.DataSet.convert_labels_to_one_hot" title="get_data.DataSet.convert_labels_to_one_hot"><code class="xref py py-obj docutils literal"><span class="pre">convert_labels_to_one_hot</span></code></a>()</td>
+<td>Converts labels from dense format to one hot format</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="get_data.DataSet.consistency_check">
+<code class="descname">consistency_check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/get_data.html#DataSet.consistency_check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.DataSet.consistency_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks that the length of <code class="xref py py-attr docutils literal"><span class="pre">images</span></code> and <code class="xref py py-attr docutils literal"><span class="pre">labels</span></code> is the same</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="get_data.DataSet.convert_labels_to_one_hot">
+<code class="descname">convert_labels_to_one_hot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/get_data.html#DataSet.convert_labels_to_one_hot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.DataSet.convert_labels_to_one_hot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts labels from dense format to one hot format
+See Also
+——–
+<a class="reference internal" href="#get_data.shuffle_images_and_labels" title="get_data.shuffle_images_and_labels"><code class="xref py py-func docutils literal"><span class="pre">shuffle_images_and_labels()</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="get_data.dense_to_one_hot">
+<code class="descclassname">get_data.</code><code class="descname">dense_to_one_hot</code><span class="sig-paren">(</span><em>labels</em>, <em>n_classes=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/get_data.html#dense_to_one_hot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.dense_to_one_hot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert class labels from scalars to one-hot vectors.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="get_data.duplicate_PCA_images">
+<code class="descclassname">get_data.</code><code class="descname">duplicate_PCA_images</code><span class="sig-paren">(</span><em>training_images</em>, <em>training_labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/get_data.html#duplicate_PCA_images"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.duplicate_PCA_images" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a copy of every image in <cite>training_images</cite> by rotating 180 degrees</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>training_images</strong> : ndarray</p>
+<blockquote>
+<div><p>Array of shape [number of images, height, width, channels] containing
+the images to be rotated</p>
+</div></blockquote>
+<p><strong>training_labels</strong> : ndarray</p>
+<blockquote>
+<div><p>Array of shape [number of images, 1] containing the labels corresponding
+to the <cite>training_images</cite></p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>training_images</strong> : ndarray</p>
+<blockquote>
+<div><p>Array of shape [2*number of images, height, width, channels] containing
+the original images and the images rotated</p>
+</div></blockquote>
+<p><strong>training_labels</strong> : ndarray</p>
+<blockquote class="last">
+<div><p>Array of shape [2*number of images, 1] containing the labels corresponding
+to the original images and the images rotated</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="get_data.shuffle_images_and_labels">
+<code class="descclassname">get_data.</code><code class="descname">shuffle_images_and_labels</code><span class="sig-paren">(</span><em>images</em>, <em>labels</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/get_data.html#shuffle_images_and_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.shuffle_images_and_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shuffles images and labels with a random
+permutation, according to the number of examples</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="get_data.split_data_train_and_validation">
+<code class="descclassname">get_data.</code><code class="descname">split_data_train_and_validation</code><span class="sig-paren">(</span><em>number_of_animals</em>, <em>images</em>, <em>labels</em>, <em>validation_proportion=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/get_data.html#split_data_train_and_validation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.split_data_train_and_validation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits a set of <cite>images</cite> and <cite>labels</cite> into training and validation sets</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>number_of_animals</strong> : int</p>
+<blockquote>
+<div><p>Number of classes in the set of images</p>
+</div></blockquote>
+<p><strong>images</strong> : list</p>
+<blockquote>
+<div><p>List of images (arrays of shape [height, width])</p>
+</div></blockquote>
+<p><strong>labels</strong> : list</p>
+<blockquote>
+<div><p>List of integers from 0 to <cite>number_of_animals</cite> - 1</p>
+</div></blockquote>
+<p><strong>validation_proportion</strong> : float</p>
+<blockquote>
+<div><p>The proportion of images that will be used to create the validation set.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>training_dataset</strong> : &lt;DataSet object&gt;</p>
+<blockquote>
+<div><p>Object containing the images and labels for training</p>
+</div></blockquote>
+<p><strong>validation_dataset</strong> : &lt;DataSet object&gt;</p>
+<blockquote class="last">
+<div><p>Object containing the images and labels for validation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#get_data.DataSet" title="get_data.DataSet"><code class="xref py py-class docutils literal"><span class="pre">get_data.DataSet</span></code></a>, <a class="reference internal" href="#get_data.duplicate_PCA_images" title="get_data.duplicate_PCA_images"><code class="xref py py-func docutils literal"><span class="pre">get_data.duplicate_PCA_images()</span></code></a>, <a class="reference internal" href="#get_data.shuffle_images_and_labels" title="get_data.shuffle_images_and_labels"><code class="xref py py-func docutils literal"><span class="pre">get_data.shuffle_images_and_labels()</span></code></a></p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="epoch-runner">
+<h2>Epoch runner<a class="headerlink" href="#epoch-runner" title="Permalink to this headline">¶</a></h2>
+<p>Computes a given operation for an entire epoch divided in batches</p>
+<span class="target" id="module-epoch_runner"></span><dl class="class">
+<dt id="epoch_runner.EpochRunner">
+<em class="property">class </em><code class="descclassname">epoch_runner.</code><code class="descname">EpochRunner</code><span class="sig-paren">(</span><em>data_set</em>, <em>starting_epoch=0</em>, <em>print_flag=True</em>, <em>batch_size=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epoch_runner.html#EpochRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epoch_runner.EpochRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs an epoch divided in batches for a given operation and a given
+data set (<a class="reference internal" href="#get_data.DataSet" title="get_data.DataSet"><code class="xref py py-class docutils literal"><span class="pre">DataSet</span></code></a>).</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="88%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>epochs_completed</strong></td>
+<td>(int) Number of epochs completed in the current step of the training</td>
+</tr>
+<tr class="row-even"><td><strong>starting_epoch</strong></td>
+<td>(int) Epoch at which the training step started</td>
+</tr>
+<tr class="row-odd"><td><strong>print_flag</strong></td>
+<td>(bool) If <cite>True</cite> prints the values of the loss, the accucacy, and the individual accuracy at the end of the epoch</td>
+</tr>
+<tr class="row-even"><td><strong>data_set</strong></td>
+<td>(&lt;DataSet object&gt;) Object containing the images and labels to be passed through the network in the current epoch (see <a class="reference internal" href="#get_data.DataSet" title="get_data.DataSet"><code class="xref py py-class docutils literal"><span class="pre">DataSet</span></code></a>)</td>
+</tr>
+<tr class="row-odd"><td><strong>batch_size</strong></td>
+<td>(int) Number of images to be passed through the network in each bach.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#epoch_runner.EpochRunner.next_batch" title="epoch_runner.EpochRunner.next_batch"><code class="xref py py-obj docutils literal"><span class="pre">next_batch</span></code></a>(batch_size)</td>
+<td>Returns the images and labels for the next batch to be computed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#epoch_runner.EpochRunner.run_epoch" title="epoch_runner.EpochRunner.run_epoch"><code class="xref py py-obj docutils literal"><span class="pre">run_epoch</span></code></a>(name,&nbsp;store_loss_and_accuracy,&nbsp;…)</td>
+<td>Performs a given <cite>batch_operation</cite> for an entire epoch and stores the</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="epoch_runner.EpochRunner.next_batch">
+<code class="descname">next_batch</code><span class="sig-paren">(</span><em>batch_size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epoch_runner.html#EpochRunner.next_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epoch_runner.EpochRunner.next_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the images and labels for the next batch to be computed. Images
+and labels are extracted from a <a class="reference internal" href="#get_data.DataSet" title="get_data.DataSet"><code class="xref py py-class docutils literal"><span class="pre">get_data.DataSet</span></code></a> object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>batch_size</strong> : int</p>
+<blockquote>
+<div><p>Number of examples to be passed through the network in this batch</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>images</strong> : ndarray</p>
+<blockquote>
+<div><p>Array of shape [batch_size, height, width, channels] containing
+the images to be used in this batch</p>
+</div></blockquote>
+<p><strong>labels</strong> : ndarray</p>
+<blockquote class="last">
+<div><p>Array of shape [batch_size, number_of_classes] containing the
+labels corresponding to the images to be used in this batch</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#get_data.DataSet" title="get_data.DataSet"><code class="xref py py-class docutils literal"><span class="pre">get_data.DataSet</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="epoch_runner.EpochRunner.run_epoch">
+<code class="descname">run_epoch</code><span class="sig-paren">(</span><em>name</em>, <em>store_loss_and_accuracy</em>, <em>batch_operation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epoch_runner.html#EpochRunner.run_epoch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#epoch_runner.EpochRunner.run_epoch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a given <cite>batch_operation</cite> for an entire epoch and stores the
+values of the loss and the accurcaies in a <code class="xref py py-class docutils literal"><span class="pre">Store_Accuracy_and_Loss</span></code>
+object for visualization</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name</strong> : string</p>
+<blockquote>
+<div><p>A string to be printed in the epoch information. Typically ‘Training’
+or ‘Validation’.</p>
+</div></blockquote>
+<p><strong>store_loss_and_accuracy</strong> : &lt;Store_Accuracy_and_Loss object&gt;</p>
+<blockquote>
+<div><p>Object collecting the values of the loss, accurcay and individual accuracies
+(see <code class="xref py py-class docutils literal"><span class="pre">store_accuracy_and_loss.Store_Accuracy_and_Loss</span></code>)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>feed_dict</strong> : dict</p>
+<blockquote class="last">
+<div><p>Dictionary with the parameters and variables needed to run the
+<cite>batch_operation</cite>. It is used to save the Tensorflow summaries
+if needed</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#get_data.DataSet" title="get_data.DataSet"><code class="xref py py-class docutils literal"><span class="pre">get_data.DataSet</span></code></a>, <code class="xref py py-class docutils literal"><span class="pre">store_accuracy_and_loss.Store_Accuracy_and_Loss</span></code></p>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 </div>
