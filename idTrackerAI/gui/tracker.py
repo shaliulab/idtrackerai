@@ -147,14 +147,11 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO.list_of_fragments.reset(roll_back_to = 'fragmentation')
         CHOSEN_VIDEO.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
         if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
-            if CHOSEN_VIDEO.video.identity_transfer:
-                self.accumulation_network_params.restore_folder = CHOSEN_VIDEO.video.knowledge_transfer_model_folder
-                self.accumulation_network_params.check_identity_transfer_consistency(CHOSEN_VIDEO.video.knowledge_transfer_info_dict)
-            else:
-                self.accumulation_network_params.knowledge_transfer_folder = CHOSEN_VIDEO.video.knowledge_transfer_model_folder
+            Logger.debug('Setting layers to optimize for knowledge_transfer')
             self.accumulation_network_params.scopes_layers_to_optimize = None
         self.net = ConvNetwork(self.accumulation_network_params)
         if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
+            Logger.debug('Restoring for knowledge transfer')
             self.net.restore()
         CHOSEN_VIDEO.video._first_frame_first_global_fragment.append(CHOSEN_VIDEO.list_of_global_fragments.set_first_global_fragment_for_accumulation(CHOSEN_VIDEO.video, accumulation_trial = 0))
         if CHOSEN_VIDEO.video.identity_transfer and\
@@ -263,7 +260,7 @@ class Tracker(BoxLayout):
         Logger.info("Starting pretraining. Checkpoints will be stored in %s" %CHOSEN_VIDEO.video.pretraining_folder)
         if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
             Logger.info("Performing knowledge transfer from %s" %CHOSEN_VIDEO.video.knowledge_transfer_model_folder)
-            pretrain_network_params.knowledge_transfer_folder = CHOSEN_VIDEO.video.knowledge_transfer_model_folder
+            self.pretrain_network_params.knowledge_transfer_folder = CHOSEN_VIDEO.video.knowledge_transfer_model_folder
         Logger.info("Start pretraining")
         self.pretraining_step_finished = True
         self.pretraining_loop()
@@ -702,6 +699,9 @@ class Tracker(BoxLayout):
     def on_enter_mod_knowledge_transfer_folder_text_input(self, *args):
         self.accumulation_network_params._knowledge_transfer_folder = self.mod_knowledge_transfer_folder_text_input.text
         self.knowledge_transfer_folder_value.text = self.mod_knowledge_transfer_folder_text_input.text
+        print("------------ ", self.accumulation_network_params.knowledge_transfer_folder)
+        if os.path.isdir(self.accumulation_network_params.knowledge_transfer_folder):
+            CHOSEN_VIDEO.video._tracking_with_knowledge_transfer = True
 
     def network_params_to_string(self):
         self.str_model = str(self.accumulation_network_params.cnn_model)
