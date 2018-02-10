@@ -94,17 +94,22 @@ class Tracker(BoxLayout):
             self.restore_crossings_solved()
             self.restore_trajectories_wo_gaps()
             self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
+            self.start_tracking_button.text = "Show estimated\naccuracy"
         elif 'residual_identification' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['residual_identification']:
+            Logger.info("Restoring residual identification")
             self.restore_identification()
             CHOSEN_VIDEO.video._has_been_assigned = True
             self.start_tracking_button.bind(on_release = self.start_from_post_processing)
+            self.start_tracking_button.text = "Start\npost-processing"
         elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
             Logger.info("Restoring second accumulation")
             self.restore_second_accumulation()
             CHOSEN_VIDEO.video._first_frame_first_global_fragment = [CHOSEN_VIDEO.video.percentage_of_accumulated_images]
             Logger.info("Starting identification")
             self.start_tracking_button.bind(on_release = self.start_from_identification)
+            self.start_tracking_button.text = "Start\nresidual identification"
         elif 'protocol3_pretraining' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_pretraining']:
+            Logger.info("Restoring pretraining")
             Logger.info("Initialising pretraining network")
             self.init_pretraining_net()
             Logger.info("Restoring pretraining")
@@ -116,6 +121,7 @@ class Tracker(BoxLayout):
             self.create_one_shot_accumulation_popup()
             Logger.info("Start accumulation parachute")
             self.start_tracking_button.bind(on_release = self.accumulate)
+            self.start_tracking_button.text = "Start\naccumulation (protocol 3)"
         elif 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
             Logger.info("Restoring protocol 1")
             self.restoring_first_accumulation = True
@@ -125,6 +131,7 @@ class Tracker(BoxLayout):
             self.accumulation_step_finished = True
             self.create_one_shot_accumulation_popup()
             self.start_tracking_button.bind(on_release = self.accumulate)
+            self.start_tracking_button.text = "Start\nidentification"
         elif 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
             Logger.info("Starting protocol cascade")
             self.start_tracking_button.bind(on_release = self.protocol1)

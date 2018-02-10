@@ -232,7 +232,8 @@ class Root(TabbedPanel):
         if not DEACTIVATE_VALIDATION.process:
             self.validator = Validator(chosen_video = CHOSEN_VIDEO,
                                         deactivate_validation = DEACTIVATE_VALIDATION)
-            self.tracker.go_to_validation_button.bind(on_release = partial(self.switch, self.tab_list[1]))
+            if hasattr(self, 'tracker'):
+                self.tracker.go_to_validation_button.bind(on_release = partial(self.switch, self.tab_list[1]))
             self.validator.id = "validator"
             self.validation_tab.add_widget(self.validator)
         else:

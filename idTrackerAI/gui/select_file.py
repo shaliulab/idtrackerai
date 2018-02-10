@@ -189,6 +189,12 @@ class SelectFile(BoxLayout):
             self.init_chosen_video_parameters()
             DEACTIVATE_ROI.setter(False)
             DEACTIVATE_PREPROCESSING.setter(False)
+        elif self.process_has_to_be_restored('post_processing'):
+            DEACTIVATE_ROI.restored = '(restored)'
+            DEACTIVATE_PREPROCESSING.restored = '(restored)'
+            DEACTIVATE_TRACKING.restored = '(restored)'
+            DEACTIVATE_VALIDATION.setter(False)
+            CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
         elif CHOSEN_VIDEO.processes_to_restore['preprocessing']:
             path_attributes = ['preprocessing_folder', 'blobs_path',
                                 'global_fragments_path', 'fragments_path',
@@ -218,11 +224,6 @@ class SelectFile(BoxLayout):
             DEACTIVATE_ROI.restored = '(restored)'
             DEACTIVATE_PREPROCESSING.restored = '(restored)'
             DEACTIVATE_TRACKING.setter(False)
-        elif CHOSEN_VIDEO.processes_to_restore['assignment'] or CHOSEN_VIDEO.processes_to_restore['correct_duplications']:
-            DEACTIVATE_ROI.restored = '(restored)'
-            DEACTIVATE_PREPROCESSING.restored = '(restored)'
-            DEACTIVATE_TRACKING.restored = '(restored)'
-            DEACTIVATE_VALIDATION.setter(False)
         self.go_to_bind()
         self.restore_popup.dismiss()
 
