@@ -3,12 +3,9 @@ import os
 import sys
 sys.path.append('./network')
 sys.path.append('./network/identification_model')
-
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
-import logging
-
 from network_params import NetworkParams
 from get_data import DataSet, split_data_train_and_validation
 from id_CNN import ConvNetwork
@@ -16,8 +13,12 @@ from epoch_runner import EpochRunner
 from stop_training_criteria import Stop_Training
 from store_accuracy_and_loss import Store_Accuracy_and_Loss
 from constants import BATCH_SIZE_IDCNN
-
-logger = logging.getLogger("__main__.trainer")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.trainer")
 
 def train(video,
             fragments,
@@ -33,14 +34,64 @@ def train(video,
             identity_transfer = False,
             accumulation_manager = None,
             batch_size = BATCH_SIZE_IDCNN):
+    """Short summary.
+
+    Parameters
+    ----------
+    video : <Video object>
+        an instance of the class :class:`~video.Video`
+    fragments : list
+        list of instances of the class :class:`~fragment.Fragment`
+    net : <ConvNetwork object>
+        an instance of the class :class:`~id_CNN.ConvNetwork`
+    images : ndarray
+        array of shape [number_of_images, height, width]
+    labels : type
+        array of shape [number_of_images, number_of_animals]
+    store_accuracy_and_error : bool
+        if True the values of the loss function, accuracy and individual
+        accuracy will be stored
+    check_for_loss_plateau : bool
+        if True the stopping criteria (see :mod:`~stop_training_criteria`) will
+        automatically stop the training in case the loss functin computed for
+        the validation set of images reaches a plateau
+    sasave_summaries : bool
+        if True tensorflow summaries will be generated and stored to allow
+        tensorboard visualisation of both loss and activity histograms
+    print_flag : bool
+        if True additional information are printed in the terminal
+    plot_flag : bool
+        if True training and validation loss, accuracy and individual accuracy
+        are plot in a graph at the end of the training session
+    global_epoch : int
+        global counter of the training epoch in pretraining
+    accumulation_manager : <AccumulationManager object>
+        an instance of the class
+        :class:`~accumulation_manager.AccumulationManager`
+    batch_size : int
+        size of the batch of images used for training
+
+    Returns
+    -------
+    int
+        global epoch counter updated after the training session
+    <ConvNetwork object>
+        network with updated parameters after training
+    float
+        ration of images used for pretraining over the total number of
+        available images
+    <Store_Accuracy_and_Loss object>
+        updated with the values collected on the training set of labelled
+        images
+    <Store_Accuracy_and_Loss object>
+        updated with the values collected on the validation set of labelled
+        images
+    """
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
     logger.info("Training...")
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training', scope = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation', scope = 'training')
-    print("-----------------------")
-    print("store_training_accuracy_and_loss_data", store_training_accuracy_and_loss_data.__dict__.keys())
-    print("store_validation_accuracy_and_loss_data", store_validation_accuracy_and_loss_data.__dict__.keys())
     if plot_flag:
         plt.ion()
         fig, ax_arr = plt.subplots(4)
@@ -52,7 +103,7 @@ def train(video,
     training_dataset.convert_labels_to_one_hot()
     validation_dataset.convert_labels_to_one_hot()
     # Reinitialize softmax and fully connected
-    if video.accumulation_step == 0 and not identity_transfer:
+    if video.accumulation_step == 0:
         net.reinitialize_softmax_and_fully_connected()
     # Train network
     #compute weights to be fed to the loss function (weighted cross entropy)

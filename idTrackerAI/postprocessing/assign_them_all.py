@@ -4,7 +4,6 @@ import sys
 sys.path.append('../utils')
 sys.path.append('../')
 sys.path.append('../preprocessing')
-
 from tqdm import tqdm
 import collections
 import numpy as np
@@ -12,10 +11,17 @@ import cv2
 from pprint import pprint
 from scipy.spatial.distance import cdist
 
-from video_utils import blobExtractor
+from video_utils import blob_extractor
 from list_of_fragments import ListOfFragments
 from blob import Blob
 from list_of_blobs import ListOfBlobs
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.assign_them_all")
+
 
 ''' erosion '''
 def compute_erosion_disk(video, blobs_in_video):
@@ -56,7 +62,7 @@ def get_eroded_blobs(video, blobs_in_frame):
         segmented_frame[pxs[:,0], pxs[:,1]] = 255
 
     segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
-    boundingBoxes, _, centroids, _, pixels_all, contours, _ = blobExtractor(segmented_eroded_frame, segmented_eroded_frame, 0, np.inf)
+    boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(segmented_eroded_frame, segmented_eroded_frame, 0, np.inf)
     return [Blob(centroid, contour, None, bounding_box, pixels = pixels)
                 for centroid, contour, pixels, bounding_box in zip(centroids, contours, pixels_all, boundingBoxes)]
 
@@ -252,7 +258,7 @@ def evaluate_candidate_blobs_and_centroid(video, candidate_eroded_blobs, candida
     blob_containing_candidate_centroid = centroid_is_inside_of_any_eroded_blob(candidate_eroded_blobs, candidate_centroid)
     if blob_containing_candidate_centroid:
         return blob_containing_candidate_centroid[0], candidate_centroid
-    else:
+    elif len(candidate_eroded_blobs) > 0:
         nearest_blob = get_nearest_eroded_blob_to_candidate_centroid(candidate_eroded_blobs, candidate_centroid, identity, inner_frame_number)
         new_centroid = get_closest_contour_point_to(nearest_blob.contour, candidate_centroid)
         if nearest_candidate_blob_is_near_enough(video, nearest_blob, candidate_centroid, blob_in_border_frame) or \
@@ -260,6 +266,8 @@ def evaluate_candidate_blobs_and_centroid(video, candidate_eroded_blobs, candida
             return nearest_blob, new_centroid
         else:
             return None, None
+    else:
+        return None, None
 
 def get_blobs_with_centroid_in_original_blob(original_blob, candidate_tuples_to_close_gap):
     candidate_tuples_with_centroids_in_original_blob = [candidate_tuple for candidate_tuple in candidate_tuples_to_close_gap
@@ -364,59 +372,60 @@ def interpolate_trajectories_during_gaps(video, list_of_blobs, list_of_fragments
                 for index, inner_frame_number in enumerate(forward_backward_list_of_frames):
                     inner_occluded_identities_in_frame = list_of_occluded_identities[inner_frame_number]
                     inner_blobs_in_frame = blobs_in_video[inner_frame_number]
-                    if erosion_counter != 0:
-                        eroded_blobs_in_frame = get_eroded_blobs(video, inner_blobs_in_frame) #list of eroded blobs!
-                        if len(eroded_blobs_in_frame) == 0:
+                    if len(inner_blobs_in_frame) != 0:
+                        if erosion_counter != 0:
+                            eroded_blobs_in_frame = get_eroded_blobs(video, inner_blobs_in_frame) #list of eroded blobs!
+                            if len(eroded_blobs_in_frame) == 0:
+                                eroded_blobs_in_frame = inner_blobs_in_frame
+                        else:
                             eroded_blobs_in_frame = inner_blobs_in_frame
-                    else:
-                        eroded_blobs_in_frame = inner_blobs_in_frame
-                    candidate_tuples_to_close_gap = []
-                    inner_missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities,
-                                                                                        inner_blobs_in_frame,
-                                                                                        inner_occluded_identities_in_frame)
+                        candidate_tuples_to_close_gap = []
+                        inner_missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities,
+                                                                                            inner_blobs_in_frame,
+                                                                                            inner_occluded_identities_in_frame)
 
-                    for identity in inner_missing_identities:
-                        individual_gap_interval,\
-                        previous_blob_to_the_gap,\
-                        next_blob_to_the_gap = get_previous_and_next_blob_wrt_gap(blobs_in_video,
-                                                                                    possible_identities,
-                                                                                    identity,
-                                                                                    inner_frame_number,
-                                                                                    list_of_occluded_identities)
-                        if previous_blob_to_the_gap is not None and next_blob_to_the_gap is not None:
-                            border = 'start' if index % 2 == 0 else 'end'
-                            candidate_centroid = get_candidate_centroid(individual_gap_interval,
-                                                                        previous_blob_to_the_gap,
-                                                                        next_blob_to_the_gap,
-                                                                        identity,
-                                                                        border = border,
-                                                                        inner_frame_number = inner_frame_number)
-                            if border == 'start':
-                                blob_in_border_frame = previous_blob_to_the_gap
-                            elif border == 'end':
-                                blob_in_border_frame = next_blob_to_the_gap
-                            candidate_eroded_blobs_by_overlapping = get_candidate_blobs_by_overlapping(blob_in_border_frame,
-                                                                                                eroded_blobs_in_frame)
-                            candidate_eroded_blobs_by_inclusion_of_centroid = centroid_is_inside_of_any_eroded_blob(eroded_blobs_in_frame, candidate_centroid)
-                            candidate_eroded_blobs = candidate_eroded_blobs_by_overlapping + candidate_eroded_blobs_by_inclusion_of_centroid
-                            candidate_blob_to_close_gap, centroid = evaluate_candidate_blobs_and_centroid(video,
-                                                                                                            candidate_eroded_blobs,
-                                                                                                            candidate_centroid,
-                                                                                                            blob_in_border_frame,
-                                                                                                            blobs_in_frame = inner_blobs_in_frame,
-                                                                                                            inner_frame_number = inner_frame_number, identity = identity)
-                            if candidate_blob_to_close_gap is not None:
-                                candidate_tuples_to_close_gap.append((candidate_blob_to_close_gap, centroid, identity))
-                            else:
+                        for identity in inner_missing_identities:
+                            individual_gap_interval,\
+                            previous_blob_to_the_gap,\
+                            next_blob_to_the_gap = get_previous_and_next_blob_wrt_gap(blobs_in_video,
+                                                                                        possible_identities,
+                                                                                        identity,
+                                                                                        inner_frame_number,
+                                                                                        list_of_occluded_identities)
+                            if previous_blob_to_the_gap is not None and next_blob_to_the_gap is not None:
+                                border = 'start' if index % 2 == 0 else 'end'
+                                candidate_centroid = get_candidate_centroid(individual_gap_interval,
+                                                                            previous_blob_to_the_gap,
+                                                                            next_blob_to_the_gap,
+                                                                            identity,
+                                                                            border = border,
+                                                                            inner_frame_number = inner_frame_number)
+                                if border == 'start':
+                                    blob_in_border_frame = previous_blob_to_the_gap
+                                elif border == 'end':
+                                    blob_in_border_frame = next_blob_to_the_gap
+                                candidate_eroded_blobs_by_overlapping = get_candidate_blobs_by_overlapping(blob_in_border_frame,
+                                                                                                    eroded_blobs_in_frame)
+                                candidate_eroded_blobs_by_inclusion_of_centroid = centroid_is_inside_of_any_eroded_blob(eroded_blobs_in_frame, candidate_centroid)
+                                candidate_eroded_blobs = candidate_eroded_blobs_by_overlapping + candidate_eroded_blobs_by_inclusion_of_centroid
+                                candidate_blob_to_close_gap, centroid = evaluate_candidate_blobs_and_centroid(video,
+                                                                                                                candidate_eroded_blobs,
+                                                                                                                candidate_centroid,
+                                                                                                                blob_in_border_frame,
+                                                                                                                blobs_in_frame = inner_blobs_in_frame,
+                                                                                                                inner_frame_number = inner_frame_number, identity = identity)
+                                if candidate_blob_to_close_gap is not None:
+                                    candidate_tuples_to_close_gap.append((candidate_blob_to_close_gap, centroid, identity))
+                                else:
+                                    list_of_occluded_identities[inner_frame_number].append(identity)
+                            else: # this manages the case in which identities are missing in the first frame or disappear without appearing anymore,
+                                # and evntual occlusions (an identified blob does not appear in the previous and/or the next frame)
                                 list_of_occluded_identities[inner_frame_number].append(identity)
-                        else: # this manages the case in which identities are missing in the first frame or disappear without appearing anymore,
-                            # and evntual occlusions (an identified blob does not appear in the previous and/or the next frame)
-                            list_of_occluded_identities[inner_frame_number].append(identity)
 
-                    blobs_in_video, list_of_occluded_identities = assign_identity_to_new_blobs(video, list_of_fragments.fragments,
-                                                                blobs_in_video, possible_identities,
-                                                                inner_blobs_in_frame, candidate_tuples_to_close_gap,
-                                                                list_of_occluded_identities)
+                        blobs_in_video, list_of_occluded_identities = assign_identity_to_new_blobs(video, list_of_fragments.fragments,
+                                                                    blobs_in_video, possible_identities,
+                                                                    inner_blobs_in_frame, candidate_tuples_to_close_gap,
+                                                                    list_of_occluded_identities)
     return blobs_in_video, list_of_occluded_identities
 
 def get_number_of_non_split_crossing(blobs_in_video):

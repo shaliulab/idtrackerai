@@ -1,8 +1,7 @@
 from __future__ import absolute_import, division, print_function
-import logging
 import numpy as np
 import cv2
-
+import sys
 from list_of_blobs import ListOfBlobs
 from get_crossings_data_set import CrossingDataset
 from network_params_crossings import NetworkParams_crossings
@@ -10,10 +9,32 @@ from cnn_architectures import cnn_model_crossing_detector
 from crossings_detector_model import ConvNetwork_crossings
 from train_crossings_detector import TrainDeepCrossing
 from get_predictions_crossings import GetPredictionCrossigns
-
-logger = logging.getLogger("__main__.crossing_detector")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.crossing_detector")
 
 def detect_crossings(list_of_blobs, video, model_area, use_network = True, return_store_objects = False, plot_flag = True):
+    """Short summary.
+
+    Parameters
+    ----------
+    list_of_blobs : <ListOfBlobs object>
+        Collection of the Blob objects extracted from the video
+    video :  <Video object>
+        Object containing all the parameters of the video.
+    model_area : function
+        Model of the area of a single individual
+    use_network : bool
+        If True the Deep Crossing Detector is used to distinguish between individuals and crossings images. Otherwise only the model area is applied
+    return_store_objects : bool
+        If True the instantiations of the class :class:`.Store_Accuracy_and_Loss` are returned by the function
+    plot_flag : bool
+        If True a figure representing the values of the loss function, accuracy and accuracy per class for both the training and validation set.
+
+    """
     logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
     list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0], video.number_of_animals)
     if use_network:

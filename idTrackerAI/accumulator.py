@@ -2,15 +2,37 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import random
 import psutil
-import logging
 from assigner import assign
 from trainer import train
 from accumulation_manager import AccumulationManager, get_predictions_of_candidates_fragments
-
 from constants import THRESHOLD_EARLY_STOP_ACCUMULATION
-logger = logging.getLogger('__main__.accumulator')
+import sys
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger('__main__.accumulator')
 
 def early_stop_criteria_for_accumulation(number_of_accumulated_images, number_of_unique_images_in_global_fragments):
+    """A particularly succesful accumulation causes an early stop of the training
+    and accumulaton process. This function returns the value, expressed as a ratio
+    that is evaluated to trigger this behaviour.
+
+    Parameters
+    ----------
+    number_of_accumulated_images : int
+        Number of images used during the accumulation process (the labelled dataset used to train the network
+        is subsampled from this set of images).
+    number_of_unique_images_in_global_fragments : int
+        Total number of accumulable images.
+
+    Returns
+    -------
+    float
+        Ratio of accumulated images over accumulable images
+
+    """
     return number_of_accumulated_images / number_of_unique_images_in_global_fragments
 
 def perform_one_accumulation_step(accumulation_manager,
@@ -22,7 +44,6 @@ def perform_one_accumulation_step(accumulation_manager,
                                     net_properties = None,
                                     plot_flag = False,
                                     save_summaries = False):
-    print("****** inside the while loop ****")
     logger.info("accumulation step %s" %accumulation_manager.counter)
     video.accumulation_step = accumulation_manager.counter
     #(we do not take images from individual fragments already used)
@@ -117,10 +138,34 @@ def accumulate(accumulation_manager,
                 video,
                 global_step,
                 net,
-                identity_transfer,
-                GUI_axes = None,
-                net_properties = None,
-                plot_flag = False):
+                identity_transfer):
+    """take care of managing  the process of accumulation
+    of labelled images. Such process, in complex video, allows us to train  the
+    idCNN (or whatever function approximator passed in input as `net`).
+
+    Parameters
+    ----------
+    accumulation_manager : <accumulation_manager.AccumulationManager object>
+        Description of parameter `accumulation_manager`.
+    video : <video.Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+    global_step : int
+        network epoch counter
+    net : <net.ConvNetwork object>
+        Convolutional neural network object created according to net.params
+    identity_transfer : bool
+        If true the identity of the individual is also tranferred
+
+    Returns
+    -------
+    float
+        Ratio of accumulated images
+
+    See Also
+    --------
+    early_stop_criteria_for_accumulation
+
+    """
     video.init_accumulation_statistics_attributes()
     accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
 

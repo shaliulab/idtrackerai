@@ -2,10 +2,13 @@ from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 import os
 import sys
-sys.path.append('./utils')
-# from cnn_utils import *
-
 import numpy as np
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.network_params_crossings")
 
 class NetworkParams_crossings(object):
     def __init__(self,number_of_classes,
@@ -21,7 +24,6 @@ class NetworkParams_crossings(object):
         self.keep_prob = keep_prob
         self._restore_folder = restore_folder
         self._save_folder = save_folder
-        print("(in network params) self.params._save_folder", self._save_folder)
         self._knowledge_transfer_folder = knowledge_transfer_folder
         self.use_adam_optimiser = use_adam_optimiser
         self.image_size = image_size

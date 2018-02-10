@@ -85,7 +85,7 @@ def getNumFrame(videoPath):
     cap = cv2.VideoCapture(videoPath)
     return int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
-def collectAndSaveVideoInfo(videoPath, numFrames, height, width, numAnimals, numCores, minThreshold,maxThreshold,maxArea,maxNumBlobs):
+def collectAndSaveVideoInfo(videoPath, numFrames, height, width, numAnimals, numCores, min_threshold,max_threshold,max_area,maxNumBlobs):
     """
     saves general info about the video in a pickle (_videoinfo.pkl)
     """
@@ -96,9 +96,9 @@ def collectAndSaveVideoInfo(videoPath, numFrames, height, width, numAnimals, num
         'width': width,
         'numAnimals':numAnimals,
         'numCores':numCores,
-        'minThreshold':minThreshold,
-        'maxThreshold':maxThreshold,
-        'maxArea': maxArea,
+        'min_threshold':min_threshold,
+        'max_threshold':max_threshold,
+        'max_area': max_area,
         'maxNumBlobs':maxNumBlobs
         }
     print 'videoInfo, ', videoInfo
@@ -160,7 +160,7 @@ Compute background and threshold
 #
 #     return bkg, numFramesBkg
 #
-# def computeBkg(videoPaths, EQ, width, height):
+# def cumpute_background(videoPaths, EQ, width, height):
 #     # This holds even if we have not selected a ROI because then the ROI is
 #     # initialized as the full frame
 #     bkg = np.zeros((height,width),dtype=np.float32)
@@ -209,7 +209,7 @@ def computeBkgParSegmVideo(videoPath,bkg):
 
     return bkg, numFramesBkg
 
-def computeBkg(videoPaths, width, height):
+def cumpute_background(videoPaths, width, height):
     # This holds even if we have not selected a ROI because then the ROI is
     # initialized as the full frame
     bkg = np.zeros((height,width))
@@ -233,13 +233,13 @@ def computeBkg(videoPaths, width, height):
     bkg = np.true_divide(bkg, totNumFrame)
     return bkg
 
-def checkBkg(videoPaths, useBkg, usePreviousBkg, EQ, width, height):
+def check_background_substraction(videoPaths, useBkg, use_previous_background, EQ, width, height):
     videoPath = videoPaths[0]
     if useBkg:
-        if usePreviousBkg:
+        if use_previous_background:
             bkg = loadFile(videoPath, 'bkg',hdfpkl='pkl')
         else:
-            bkg = computeBkg(videoPaths, width, height)
+            bkg = cumpute_background(videoPaths, width, height)
             saveFile(videoPath, bkg, 'bkg', hdfpkl='pkl')
         return bkg.astype(np.float32)
     else:

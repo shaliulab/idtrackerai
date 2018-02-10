@@ -1,16 +1,39 @@
 from __future__ import absolute_import, division, print_function
 import os
 import sys
-sys.path.append('./utils')
+sys.path.append('../utils')
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sb
-
 from py_utils import get_spaced_colors_util
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.store_accuracy_and_loss")
 
 class Store_Accuracy_and_Loss(object):
     """Store the loss, accuracy and individual accuracy values computed during
     training and validation
+
+    Parameters
+    ----------
+    _path_to_accuracy_error_data :
+        Path to save the lists :attr:`loss`, :attr:`accuracy`, :attr:`individual_accuracy`
+    name : string
+        'Training' or 'Validation'
+    loss : list
+        List with the values of the loss
+    accuracy : list
+        List with the values of the accuracy
+    individual_accuracy : list
+        List with the values of the individual accuracies
+    number_of_epochs_completed :
+        Number of epochs completed
+    scope : string
+        'Training' if the class is instantiated during the training of the accumulation.
+        'Pretraining' if the class is instantiated during the training
     """
     def __init__(self, network, name, scope = None):
         self._path_to_accuracy_error_data = network.params.save_folder
@@ -23,11 +46,16 @@ class Store_Accuracy_and_Loss(object):
         self.load()
 
     def append_data(self, loss_value, accuracy_value, individual_accuracy_value):
+        """Appends the `loss_value`, `accuracy_value` and `individual_accuracy_value`
+        to their correspoding lists
+        """
         self.loss.append(loss_value)
         self.accuracy.append(accuracy_value)
         self.individual_accuracy.append(individual_accuracy_value)
 
     def plot(self, axes_handles = None, index = 0, color = 'r', canvas_from_GUI = None, legend_font_color = None):
+        """Plots the accuracy and the individual accuracies for every epoch
+        """
         if canvas_from_GUI is not None:
             ax1 = axes_handles[0]
             ax2 = axes_handles[1]
@@ -78,6 +106,8 @@ class Store_Accuracy_and_Loss(object):
             canvas_from_GUI.draw()
 
     def plot_global_fragments(self, ax_handles, video, fragments, black = False, canvas_from_GUI = None):
+        """Plots the global fragments used for training until the current epoch
+        """
         import matplotlib.patches as patches
         if canvas_from_GUI is not None:
             ax4 = ax_handles[2]
@@ -117,10 +147,14 @@ class Store_Accuracy_and_Loss(object):
         ax4.set_ylim([-.5, video.number_of_animals + .5 - 1])
 
     def save(self, number_of_epochs_completed):
+        """Saves the values stored
+        """
         self.number_of_epochs_completed.append(number_of_epochs_completed)
         np.save(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy'), self.__dict__)
 
     def load(self):
+        """Load the values stored in case there are any saved
+        """
         if os.path.isfile(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy')):
             loss_accuracy_dictionary = np.load(os.path.join(self._path_to_accuracy_error_data, self.name + '_loss_acc_dict.npy')).item()
             self.__dict__ = loss_accuracy_dictionary

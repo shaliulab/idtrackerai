@@ -39,7 +39,7 @@ from GUI_utils import selectFile, getInput, selectOptions, ROISelectorPreview,\
                     selectDir,\
                     check_resolution_reduction
 from py_utils import getExistentFiles
-from video_utils import checkBkg
+from video_utils import check_background_substraction
 from crossing_detector import detect_crossings
 from pre_trainer import pre_trainer
 from accumulation_manager import AccumulationManager
@@ -296,7 +296,7 @@ if __name__ == '__main__':
                                 logger.info("Initialising accumulation manager")
                                 # the list of global fragments is ordered in place from the distance (in frames) wrt
                                 # the core of the first global fragment that will be accumulated
-                                video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = 0))
+                                video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = 0))
                                 list_of_global_fragments.video = video
                                 list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(video, accumulation_trial = 0)
                                 accumulation_manager = AccumulationManager(video, list_of_fragments,
@@ -373,7 +373,7 @@ if __name__ == '__main__':
                                         #Reset used_for_training and acceptable_for_training flags if the old video already had the accumulation done
                                         list_of_fragments.reset(roll_back_to = 'fragmentation')
                                         list_of_global_fragments.reset(roll_back_to = 'fragmentation')
-                                        video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = i - 1))
+                                        video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1))
                                         if video.first_frame_first_global_fragment[-1] is not None:
                                             #create folder to store accumulation models
                                             video.create_accumulation_folder(iteration_number = i)

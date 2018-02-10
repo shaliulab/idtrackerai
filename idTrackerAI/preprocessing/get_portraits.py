@@ -1,23 +1,23 @@
-# Import standard libraries
-from __future__ import division
+from __future__ import division, absolute_import, print_function
 import sys
 import numpy as np
 import multiprocessing
 import math
-
-# Import third party libraries
 from matplotlib import pyplot as plt
 import cv2
 import pandas as pd
 from joblib import Parallel, delayed
 from sklearn.decomposition import PCA
-
-# Import application/library specifics
 sys.path.append('IdTrackerDeep/utils')
 from py_utils import loadFile, saveFile
-from video_utils import cntBB2Full, full2BoundingBox
-
+from video_utils import cntBB2Full
 from fishcontour import FishContour
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.get_portraits")
 
 def full2miniframe(point, boundingBox):
     """
@@ -82,7 +82,6 @@ def cropPortrait(image, identificationImageSize, shift=(0,0)):
         if np.max(shift) > maxShift:
             raise ValueError('The shift when cropping the portrait cannot be bigger than (currentSize - identificationImageSize)/2')
         croppedPortrait = image[maxShift + shift[1] : currentSize - maxShift + shift[1], maxShift + shift[0] : currentSize - maxShift + shift[0]]
-        # print 'Portrait cropped'
         return croppedPortrait
 
 def get_portrait(miniframe, cnt, bb, identification_image_size, px_nose_above_center = 9):
@@ -139,28 +138,21 @@ def get_body(height, width, miniframe, pixels, bb, identificationImageSize):
     pca.fit(pxs1)
     rot_ang = 180 - np.arctan(pca.components_[0][1]/pca.components_[0][0])*180/np.pi - 45 # we substract 45 so that the fish is aligned in the diagonal. This say we have smaller frames
     center = (pca.mean_[1], pca.mean_[0])
-    # print("PCA center before: ", center)
     center = full2miniframe(center, bb)
     center = np.array([int(center[0]), int(center[1])])
-    # print("PCA center and angle: ", center, rot_ang)
-
     #rotate
     diag = np.sqrt(np.sum(np.asarray(miniframe.shape)**2)).astype(int)
     diag = (diag, diag)
     M = cv2.getRotationMatrix2D(tuple(center), rot_ang, 1)
     minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_CONSTANT, flags = cv2.INTER_CUBIC)
-
-
     crop_distance = int(identificationImageSize/2)
     x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
     y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
     portrait = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
     height, width = portrait.shape
-
     rot_ang_rad = rot_ang * np.pi / 180
     h_or_t_1 = np.array([np.cos(rot_ang_rad), np.sin(rot_ang_rad)]) * rot_ang_rad
     h_or_t_2 = - h_or_t_1
-    # print(h_or_t_1,h_or_t_2,portrait.shape)
     return portrait, tuple(h_or_t_1.astype('int')), tuple(h_or_t_2.astype('int'))
 
 def only_blob_pixels(height, width, miniframe, pixels, bb):
@@ -171,16 +163,11 @@ def only_blob_pixels(height, width, miniframe, pixels, bb):
     temp_image = cv2.dilate(temp_image, np.ones((3,3)).astype('uint8'), iterations = 1)
     rows, columns = np.where(temp_image == 255)
     dilated_pixels = np.array([rows, columns])
-
     temp_image[dilated_pixels[0,:], dilated_pixels[1,:]] = miniframe[dilated_pixels[0,:], dilated_pixels[1,:]]
     return temp_image
 
-
 def reaper(videoPath, frameIndices, height, width):
-    # only function called from idTrackerDeepGUI
-    print 'reaping', videoPath
     df, numSegment = loadFile(videoPath, 'segmentation')
-
     boundingboxes = np.asarray(df.loc[:, 'boundingBoxes']) #coordinate in the frame
     miniframes = np.asarray(df.loc[:, 'miniFrames']) #image containing the blob, same size
     miniframes = np.asarray(miniframes)
@@ -188,11 +175,8 @@ def reaper(videoPath, frameIndices, height, width):
     centroidsSegment = np.asarray(df.loc[:,'centroids'])
     pixels = np.asarray(df.loc[:, 'pixels'])
     areasSegment = np.asarray(df.loc[:, 'areas'])
-
     segmentIndices = frameIndices.loc[frameIndices.loc[:,'segment']==int(numSegment)]
     segmentIndices = segmentIndices.index.tolist()
-
-    """ Visualise """
     AllPortraits = pd.DataFrame(index = segmentIndices, columns= ['portraits'])
     AllBodies = pd.DataFrame(index = segmentIndices, columns= ['bodies'])
     AllBodyBlobs = pd.DataFrame(index = segmentIndices, columns= ['bodyblobs'])
@@ -200,7 +184,6 @@ def reaper(videoPath, frameIndices, height, width):
     AllCentroids= pd.DataFrame(index = segmentIndices, columns= ['centroids'])
     AllHeadCentroids = pd.DataFrame(index = segmentIndices, columns= ['head_centroids'])
     AllAreas = pd.DataFrame(index = segmentIndices, columns= ['areas'])
-
     counter = 0
     while counter < len(miniframes):
         portraits = []
@@ -214,24 +197,18 @@ def reaper(videoPath, frameIndices, height, width):
         cnts = contours[counter]
         centroids = centroidsSegment[counter]
         pxs = pixels[counter]
-        for j, miniframe in enumerate(minif):
-            ### Uncomment to plot
-            # cv2.imshow('frame', miniframe)
-            # cv2.waitKey()
 
+        for j, miniframe in enumerate(minif):
             identificationImageSize = 36
             portrait, nose_pixels, head_centroid_pixels = get_portrait(miniframe,cnts[j],bbs[j],identificationImageSize)
             portraits.append(portrait)
             noses.append(nose_pixels)
             head_centroids.append(head_centroid_pixels)
-
             identificationImageSize = 52
             body, _, _ = get_body(height, width, miniframe, pxs[j], bbs[j], identificationImageSize, only_blob = False)
             bodies.append(body)
-
             bodyblob, _, _ = get_body(height, width, miniframe, pxs[j], bbs[j], identificationImageSize, only_blob = True)
             bodyblobs.append(bodyblob)
-
 
         AllPortraits.set_value(segmentIndices[counter], 'portraits', portraits)
         AllBodies.set_value(segmentIndices[counter], 'bodies', bodies)
@@ -241,46 +218,35 @@ def reaper(videoPath, frameIndices, height, width):
         AllCentroids.set_value(segmentIndices[counter], 'centroids', centroids)
         AllAreas.set_value(segmentIndices[counter], 'areas', areas)
 
-        counter += 1
-    print 'you just reaped', videoPath
     return AllPortraits, AllBodies, AllBodyBlobs, AllNoses, AllHeadCentroids, AllCentroids, AllAreas
 
 def portrait(videoPaths, dfGlobal, height, width):
     frameIndices = loadFile(videoPaths[0], 'frameIndices')
     num_cores = multiprocessing.cpu_count()
-    # num_cores = 1
     out = Parallel(n_jobs=num_cores)(delayed(reaper)(videoPath, frameIndices, height, width) for videoPath in videoPaths)
     allPortraits = [t[0] for t in out]
     allPortraits = pd.concat(allPortraits)
     allPortraits = allPortraits.sort_index(axis=0,ascending=True)
-
     allBodies = [t[1] for t in out]
     allBodies = pd.concat(allBodies)
     allBodies = allBodies.sort_index(axis=0,ascending=True)
-
     allBodyBlobs = [t[2] for t in out]
     allBodyBlobs = pd.concat(allBodyBlobs)
     allBodyBlobs = allBodyBlobs.sort_index(axis=0,ascending=True)
-
     allNoses = [t[3] for t in out]
     allNoses = pd.concat(allNoses)
     allNoses = allNoses.sort_index(axis=0, ascending=True)
-
     allHeadCentroids = [t[4] for t in out]
     allHeadCentroids = pd.concat(allHeadCentroids)
     allHeadCentroids = allHeadCentroids.sort_index(axis=0, ascending=True)
-
     allCentroids = [t[5] for t in out]
     allCentroids = pd.concat(allCentroids)
     allCentroids = allCentroids.sort_index(axis=0, ascending=True)
-
     allAreas = [t[6] for t in out]
     allAreas = pd.concat(allAreas)
     allAreas = allAreas.sort_index(axis=0, ascending=True)
-
     if list(allPortraits.index) != list(dfGlobal.index):
         raise ValueError('The list of indexes in allPortraits and dfGlobal should be the same')
-    # dfGlobal1 = pd.DataFrame(index = range(len(dfGlobal)), columns=['images'])
     dfGlobal['identities'] = dfGlobal['permutations']
     dfGlobal['portraits'] = allPortraits
     dfGlobal['bodies'] = allBodies
@@ -289,6 +255,5 @@ def portrait(videoPaths, dfGlobal, height, width):
     dfGlobal['head_centroids'] = allHeadCentroids
     dfGlobal['centroids'] = allCentroids
     dfGlobal['areas'] = allAreas
-
     saveFile(videoPaths[0], dfGlobal, 'portraits',hdfpkl='pkl')
     return dfGlobal

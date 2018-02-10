@@ -1,27 +1,67 @@
 from __future__ import absolute_import, division, print_function
 import sys
-#from collections import namedtuple
-import itertools
 import numpy as np
 import os
 from tempfile import mkstemp
 from shutil import move, rmtree
 import glob
-try:
-    import cPickle as pickle
-except:
-    import pickle
 from natsort import natsorted
 import cv2
 import time
-import logging
 sys.path.append('./utils')
 from py_utils import get_git_revision_hash
 from constants import AVAILABLE_VIDEO_EXTENSION, FRAMES_PER_EPISODE, MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
-
-logger = logging.getLogger("__main__.video")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.video")
 
 class Video(object):
+    """
+    Attributes
+    ----------
+
+    video_path : str
+        path to the video (if the video is split in portions, the path to one
+        of the portions)
+    number_of_animals : int
+        number of animals to track
+    episodes_start_end : list
+        list of lists of the form [start, end] to parallelise processes
+    original_bkg : ndarray
+        model of the background with size the frame size
+    bkg : ndarray
+        resized bkg according to :attr:`.Video.resolution_reduction`
+    subtract_bkg : bool
+        True if bkg subtraction is performed
+    original_ROI : ndarray
+        ROI of the size of frame
+    ROI : ndarray
+        resized ROI according to :attr:`.Video.resolution_reduction`
+    apply_ROI : bool
+        True if a non-trivial ROI has been specified
+    min_threshold : int
+        minimum intensity threshold
+    max_threshold : int
+        maximum intensity threshold
+    min_area : int
+        minimum blob area
+    max_area : int
+        maximum blob area
+    resegmentation_parameters : list
+        segmentation parameters specific to a frame
+    has_preprocessing_parameters : bool
+        True if the preprocessing has been concluded succesfully
+    maximum_number_of_blobs : int
+        Maximum number of blobs segmented from a single frame
+    resolution_reduction : float
+        resolution reduction to be applied to the original frame
+    erosion_kernel_size : int
+        size of the kernel used to erode blobs while solving the crossings. See
+        :mod:`~assign_them_all`
+    """
     def __init__(self, video_path = None):
         logger.debug("Video object init")
         self._video_path = video_path #string: path to the video
@@ -177,8 +217,6 @@ class Video(object):
 
     @resolution_reduction.setter
     def resolution_reduction(self, value):
-        print("res red value ", value)
-        print("original |ROI ", self.original_ROI)
         self._resolution_reduction = value
         self._height = int(self.original_height * value)
         self._width = int(self.original_width * value)
@@ -336,9 +374,9 @@ class Video(object):
         return self._number_of_episodes
 
     def check_split_video(self):
-        """If the video is divided in chunks retrieves the path to each chunk"""
+        """If the video is divided in segments retrieves their paths
+        """
         paths_to_video_segments = scanFolder(self.video_path)
-
         if len(paths_to_video_segments) > 1:
             return paths_to_video_segments
         else:
@@ -405,16 +443,13 @@ class Video(object):
         if self.video_path != new_video_path:
             self.update_paths(new_video_path)
 
-    def update_paths(self,new_video_object_path):
+    def update_paths(self, new_video_object_path):
         if new_video_object_path == '': raise ValueError("The path to the video object is an empty string")
-
         new_session_path = os.path.split(new_video_object_path)[0]
         old_session_path = self.session_folder
-
         video_name = os.path.split(self._video_path)[1]
         self._video_folder = os.path.split(new_session_path)[0]
         self.video_path = os.path.join(self.video_folder,video_name)
-
         attributes_to_modify = {key: getattr(self, key) for key in self.__dict__
         if isinstance(getattr(self, key), basestring)
         and old_session_path in getattr(self, key) }
@@ -440,7 +475,6 @@ class Video(object):
                             self.update_tensorflow_checkpoints_file(checkpoint_path, old_session_path, new_session_path)
                         else:
                             logger.warn('No checkpoint found in %s ' %os.path.join(getattr(self,folder),sub_folder))
-
 
         logger.info("Saving video object")
         self.save()
@@ -508,6 +542,10 @@ class Video(object):
         self.save()
 
     def get_info(self):
+        """Retrieves basic information concerning the video. If the video is
+        recorded as a single file, it generates "episodes" for parallelisation
+        during segmentation
+        """
         self._paths_to_video_segments = self.check_split_video()
         cap = cv2.VideoCapture(self.video_path)
         self._original_width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
@@ -532,8 +570,12 @@ class Video(object):
         return self._identification_image_size
 
     def compute_identification_image_size(self, maximum_body_length):
+        """Uses an estimate of the body length of the animals in order to
+        compute the size of the square image that is generated from every
+        blob to identify the animals
+        """
         identification_image_size = int(np.sqrt(maximum_body_length ** 2 / 2))
-        identification_image_size = identification_image_size + identification_image_size % 2  #this is to make the identification_image_size
+        identification_image_size = identification_image_size + identification_image_size % 2
         self._identification_image_size = (identification_image_size, identification_image_size, self.number_of_channels)
 
     def init_processes_time_attributes(self):
@@ -575,6 +617,8 @@ class Video(object):
             logger.info("the folder %s has been created" %self._preprocessing_folder)
 
     def create_crossings_detector_folder(self):
+        """If it does not exist creates a folder called crossing_detector
+        in the video folder"""
         logger.info('setting path to save crossing detector model')
         self._crossings_detector_folder = os.path.join(self.session_folder, 'crossings_detector')
         if not os.path.isdir(self.crossings_detector_folder):
@@ -594,7 +638,8 @@ class Video(object):
 
 
     def create_accumulation_folder(self, iteration_number = 0, delete = False):
-        """Folder in which the model generated while accumulating is stored (after pretraining)
+        """Folder in which the model generated while accumulating is stored
+        (after pretraining)
         """
         accumulation_folder_name = 'accumulation_' + str(iteration_number)
         self._accumulation_folder = os.path.join(self.session_folder, accumulation_folder_name)
@@ -668,11 +713,12 @@ class Video(object):
         for parallelisation"""
         starting_frames = np.arange(0, self.number_of_frames, FRAMES_PER_EPISODE)
         ending_frames = np.hstack((starting_frames[1:]-1, self.number_of_frames))
-        self._episodes_start_end =zip(starting_frames, ending_frames)
+        self._episodes_start_end = zip(starting_frames, ending_frames)
         self._number_of_episodes = len(starting_frames)
 
     def in_which_episode(self, frame_number):
-        """Check to which episode a frame index belongs in time"""
+        """Check to which episode a frame index belongs
+        """
         episode_number = [i for i, episode_start_end in enumerate(self._episodes_start_end)
                             if episode_start_end[0] <= frame_number
                             and episode_start_end[1] >= frame_number]

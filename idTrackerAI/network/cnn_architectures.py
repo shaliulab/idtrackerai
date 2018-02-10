@@ -9,16 +9,10 @@ from cnn_utils import *
 from constants import KEEP_PROB
 
 ''' original model'''
-def cnn_model_0(images, classes, width, height, channels, action_on_image, pre_target_image_size):
+def cnn_model_0(images, classes, width, height, channels, pre_target_image_size):
     '''
     Gives predictions for a given set of images
     '''
-    # action on image
-    if action_on_image == 'pad_or_crop':
-        images = tf.image.resize_image_with_crop_or_pad(images, width, height)
-    elif action_on_image == 'resize_and_pad_or_crop':
-        images = tf.image.resize_images(images, pre_target_image_size, method = ResizeMethod.BICUBIC)
-        images = tf.image.resize_image_with_crop_or_pad(images, width, height)
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -318,13 +312,6 @@ def cnn_model_6(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -380,13 +367,6 @@ def cnn_model_7(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -441,13 +421,6 @@ def cnn_model_8(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -506,13 +479,6 @@ def cnn_model_9(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -571,13 +537,6 @@ def cnn_model_10(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
@@ -636,13 +595,6 @@ def cnn_model_11(images, classes, width, height, channels):
     '''
     Gives predictions for a given set of images
     '''
-    # width = tf.to_int32(tf.shape(images)[1])
-    # height = tf.to_int32(tf.shape(images)[2])
-    # channels = tf.to_int32(tf.shape(images)[3])
-    # print(width, height, channels)
-    # width = 68
-    # height = 68
-    # channels = 1
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5

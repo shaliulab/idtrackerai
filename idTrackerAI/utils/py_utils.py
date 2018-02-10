@@ -3,21 +3,16 @@ from itertools import groupby
 import os
 import glob
 import re
-import datetime
-import pandas as pd
 import numpy as np
-import shutil
-import cPickle as pickle
 import sys
-from pprint import pprint
-import matplotlib
-import logging
 import matplotlib
 import subprocess
-
-# sys.path.append('../utils')
-
-logger = logging.getLogger("__main__.py_utils")
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.py_utils")
 
 ### Git utils ###
 def get_git_revision_hash():
@@ -170,92 +165,7 @@ def get_spaced_colors_util(n, norm = False, black = True, cmap = 'jet'):
         colors.insert(0, black)
     return colors
 
-def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = '', nSegment = None):
-    import cPickle as pickle
-    """
-    All the input are strings!!!
-    path: path to the first segment of the video
-    name: string to add to the name of the video (wihtout timestamps)
-    folder: path to the folder in which the file has to be stored
-    """
-    # if os.path.exists(path)==False:
-    #     raise ValueError("the video %s does not exist!" %path)
-    video = os.path.basename(path)
-    filename, extension = os.path.splitext(video)
-    folder = os.path.dirname(path)
-    filename, extension = os.path.splitext(video)
-
-    if name == 'segment' or name == 'segmentation':
-        subfolder = '/preprocessing/segmentation/'
-        if nSegment == None:
-            nSegment = filename.split('_')[-1]# and before the number of the segment
-        if hdfpkl == 'hdf':
-            filename = 'segm_' + nSegment + '.pkl'
-            pathToSave = folder + subfolder + filename
-            variabletoSave.to_pickle(pathToSave)
-        elif hdfpkl == 'pkl':
-            filename = 'segm_' + nSegment + '.pkl'
-            pathToSave = folder + subfolder+ filename
-            pickle.dump(variabletoSave,open(pathToSave,'wb'))
-    elif name == 'trajectories':
-        filename = 'trajectories.pkl'
-        pathToSave = sessionPath + '/' + filename
-        pickle.dump(variabletoSave,open(pathToSave,'wb'))
-    else:
-        subfolder = '/preprocessing/'
-        if hdfpkl == 'hdf':
-            filename = name + '.pkl'
-            if isinstance(variabletoSave, dict):
-                variabletoSave = pd.DataFrame.from_dict(variabletoSave,orient='index')
-            elif not isinstance(variabletoSave, pd.DataFrame):
-                variabletoSave = pd.DataFrame(variabletoSave)
-            pathToSave = folder + subfolder + filename
-            variabletoSave.to_pickle(pathToSave)
-        elif hdfpkl == 'pkl':
-            filename = name + '.pkl'
-            # filename = os.path.relpath(filename)
-            pathToSave = folder + subfolder + filename
-            pickle.dump(variabletoSave,open(pathToSave,'wb'))
-
-    print 'You just saved ', pathToSave
-
-def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
-    """
-    loads a pickle. path is the path of the video, while name is a string in the
-    set {}
-    """
-    video = os.path.basename(path)
-    folder = os.path.dirname(path)
-    filename, extension = os.path.splitext(video)
-    subfolder = ''
-
-    if name  == 'segmentation':
-        subfolder = '/preprocessing/segmentation/'
-        nSegment = filename.split('_')[-1]
-        if hdfpkl == 'hdf':
-            filename = 'segm_' + nSegment + '.pkl'
-            return pd.read_pickle(folder + subfolder + filename ), nSegment
-        elif hdfpkl == 'pkl':
-            filename = 'segm_' + nSegment + '.pkl'
-            return pickle.load(open(folder + subfolder + filename) ,'rb'), nSegmen
-    elif name == 'statistics':
-        filename = 'statistics.pkl'
-        return pickle.load(open(sessionPath + '/' + filename,'rb') )
-    elif name == 'trajectories':
-        filename = 'trajectories.pkl'
-        return pickle.load(open(sessionPath + '/' + filename,'rb') )
-    else:
-        subfolder = '/preprocessing/'
-        if hdfpkl == 'hdf':
-            filename = name + '.pkl'
-            return pd.read_pickle(folder + subfolder + filename )
-        elif hdfpkl == 'pkl':
-            filename = name + '.pkl'
-            return pickle.load(open(folder + subfolder + filename,'rb') )
-
-    print 'You just loaded ', folder + subfolder + filename
-
-def check_and_change_video_path(video,old_video):
+def check_and_change_video_path(video, old_video):
     current_video_folder = os.path.split(video.video_path)[0]
     old_video_folder = os.path.split(old_video.video_path)[0]
     old_video_session_name = old_video.session_folder
@@ -284,7 +194,6 @@ def check_and_change_video_path(video,old_video):
             if hasattr(old_video, folder) and getattr(old_video, folder) is not None:
                 if folder == 'crossings_detector_folder':
                     checkpoint_path = os.path.join(old_video.crossings_detector_folder, 'checkpoint')
-                    print(checkpoint_path)
                     if os.path.isfile(checkpoint_path):
                         old_video.update_tensorflow_checkpoints_file(checkpoint_path, old_video_session_name, current_video_session_name)
                     else:
@@ -355,97 +264,10 @@ def get_existent_preprocessing_steps(old_video, listNames):
     """
     existentFile = {name:'0' for name in listNames}
     if old_video.bkg is not None:
-        print('has bkg')
         existentFile['bkg'] = '1'
     if old_video.ROI is not None:
-        print('has roi')
         existentFile['ROI'] = '1'
     if hasattr(old_video, 'resolution_reduction'):
         if old_video.resolution_reduction is not None:
-            print('has resolution_reduction')
             existentFile['resolution_reduction'] = '1'
     return existentFile
-
-def getExistentFiles_library(path, listNames, segmPaths):
-    """
-    get processes already computed in a previous session
-    """
-    existentFile = {name:'0' for name in listNames}
-    video = os.path.basename(path)
-    folder = os.path.dirname(path)
-
-    # createFolder(path)
-
-    #count how many videos we have
-    numSegments = len(segmPaths)
-
-    filename, extension = os.path.splitext(video)
-    subFolders = glob.glob(folder +"/*/")
-
-    srcSubFolder = folder + '/preprocessing/'
-    for name in listNames:
-        if name == 'segmentation':
-            segDirname = srcSubFolder + name
-            if os.path.isdir(segDirname):
-                print 'Segmentation folder exists'
-                numSegmentedVideos = len(glob.glob1(segDirname,"*.pkl"))
-                print
-                if numSegmentedVideos == numSegments:
-                    print 'The number of segments and videos is the same'
-                    existentFile[name] = '1'
-        else:
-            extensions = ['.pkl', '.hdf5']
-            for ext in extensions:
-                fullFileName = srcSubFolder + '/' + name + ext
-                if os.path.isfile(fullFileName):
-                    existentFile[name] = '1'
-
-    return existentFile, srcSubFolder
-
-
-def createFolder(path, name = '', timestamp = False):
-
-    folder = os.path.dirname(path)
-    folderName = folder +'/preprocessing'
-    if timestamp :
-        ts = '{:%Y%m%d%H%M%S}_'.format(datetime.datetime.now())
-        folderName = folderName + '_' + ts
-
-    if os.path.isdir(folderName):
-        print 'Preprocessing folder exists'
-        subFolder = folderName + '/segmentation'
-        if os.path.isdir(subFolder):
-            print 'Segmentation folder exists'
-        else:
-            os.makedirs(subFolder)
-            print subFolder + ' has been created'
-    else:
-        os.makedirs(folderName)
-        print folderName + ' has been created'
-        subFolder = folderName + '/segmentation'
-        os.makedirs(subFolder)
-        print subFolder + ' has been created'
-
-def createSessionFolder(videoPath):
-    def getLastSession(subFolders):
-        if len(subFolders) == 0:
-            lastIndex = 0
-        else:
-            subFolders = natural_sort(subFolders)[::-1]
-            lastIndex = int(subFolders[0].split('_')[-1])
-        return lastIndex
-
-    video = os.path.basename(videoPath)
-    folder = os.path.dirname(videoPath)
-    filename, extension = os.path.splitext(video)
-    subFolder = folder + '/CNN_models'
-    subSubFolders = glob.glob(subFolder +"/*")
-    lastIndex = getLastSession(subSubFolders)
-    sessionPath = subFolder + '/Session_' + str(lastIndex + 1)
-    os.makedirs(sessionPath)
-    print 'You just created ', sessionPath
-    figurePath = sessionPath + '/figures'
-    os.makedirs(figurePath)
-    print 'You just created ', figurePath
-
-    return sessionPath, figurePath

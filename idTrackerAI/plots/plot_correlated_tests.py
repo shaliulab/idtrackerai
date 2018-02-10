@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import os
 import sys
-sys.path.append('../')
+sys.path.append('./')
 sys.path.append('./utils')
 sys.path.append('./library')
 sys.path.append('./network/identification_model')
@@ -10,6 +10,8 @@ import numpy as np
 import collections
 from matplotlib import pyplot as plt
 from matplotlib.colors import to_rgba, is_color_like
+import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
 import seaborn as sns
 import pandas as pd
 from pprint import pprint
@@ -17,7 +19,6 @@ from scipy.stats import gamma
 from scipy import stats
 
 from py_utils import get_spaced_colors_util
-from library_utils import LibraryJobConfig
 from video import Video
 from globalfragment import GlobalFragment
 from list_of_global_fragments import ListOfGlobalFragments
@@ -26,6 +27,26 @@ def pdf2logpdf(pdf):
     def logpdf(x):
         return pdf(x)*x*np.log(10)
     return logpdf
+
+def add_subplot_axes(fig, ax, rect, axisbg='w'):
+    box = ax.get_position()
+    width = box.width
+    height = box.height
+    inax_position  = ax.transAxes.transform(rect[0:2])
+    transFigure = fig.transFigure.inverted()
+    infig_position = transFigure.transform(inax_position)
+    x = infig_position[0]
+    y = infig_position[1]
+    width *= rect[2]
+    height *= rect[3]  # <= Typo was here
+    subax = fig.add_axes([x,y,width,height],axisbg=axisbg)
+    x_labelsize = subax.get_xticklabels()[0].get_size()
+    y_labelsize = subax.get_yticklabels()[0].get_size()
+    x_labelsize *= rect[2]**0.5
+    y_labelsize *= rect[3]**0.5
+    subax.xaxis.set_tick_params(labelsize=x_labelsize)
+    subax.yaxis.set_tick_params(labelsize=y_labelsize)
+    return subax
 
 def plot_statistics_heatmap(ax, matrix, title, xticklabels, yticklabels, vmax = None, vmin = None, annot = True):
     if title == 'total time':
@@ -188,6 +209,31 @@ def plot_histogram_individual_fragments(ax, number_of_images_in_individual_fragm
         ax.legend(loc = 7)
     sns.despine(ax = ax)
 
+def get_number_of_images_in_shortest_fragment_in_first_global_fragment(list_of_global_fragments, video):
+    if hasattr(video, 'accumulation_folder'):
+        list_of_global_fragments.order_by_distance_travelled()
+        global_fragment_for_accumulation = int(video.accumulation_folder[-1])
+        if global_fragment_for_accumulation > 0:
+            global_fragment_for_accumulation -= 1
+
+        number_of_images_in_fragments = list_of_global_fragments.global_fragments[global_fragment_for_accumulation].number_of_images_per_individual_fragment
+        print('minimum number of images ', np.min(number_of_images_in_fragments))
+        return np.min(number_of_images_in_fragments)
+    else:
+        return None
+
+def get_mean_number_of_images_in_first_global_fragment(list_of_global_fragments, video):
+    if hasattr(video, 'accumulation_folder'):
+        list_of_global_fragments.order_by_distance_travelled()
+        global_fragment_for_accumulation = int(video.accumulation_folder[-1])
+        if global_fragment_for_accumulation > 0:
+            global_fragment_for_accumulation -= 1
+
+        number_of_images_in_fragments = list_of_global_fragments.global_fragments[global_fragment_for_accumulation].number_of_images_per_individual_fragment
+        return np.mean(number_of_images_in_fragments)
+    else:
+        return None
+
 def plot_histogram_first_global_fragment_distribution(ax, list_of_global_fragments, video, scale_parameter, shape_parameter, accuracy, protocol):
     list_of_global_fragments.order_by_distance_travelled()
     global_fragment_for_accumulation = int(video.accumulation_folder[-1])
@@ -215,17 +261,112 @@ def plot_histogram_first_global_fragment_distribution(ax, list_of_global_fragmen
     ax.text(1, np.floor(ax.get_ylim()[1]*.8), title_mean, horizontalalignment = 'left')
     sns.despine(ax = ax)
 
+def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy, \
+                                            tracked_videos_data_frame, group_sizes_list, \
+                                            accuracies, images_in_shortest_fragment_in_first_global_fragment, protocols_array):
+    accuracies = accuracies*100
+    for i, group_size in enumerate(group_sizes_list):
+        j = 0 if group_size <= 10 else 1
+        all_accuracies = np.ravel(accuracies[i,:,:,:])
+        minimum_number_of_images = np.ravel(images_in_shortest_fragment_in_first_global_fragment[i,:,:,:])
+        protocols = np.ravel(protocols_array[i,:,:,:])
+        for number_of_images, accuracy, protocol in zip(minimum_number_of_images, all_accuracies, protocols):
+            if protocol == 1:
+                marker = '^'
+            elif protocol == 2:
+                marker = 'o'
+            elif protocol == 3:
+                marker = 's'
+            ax_arr_num_images_accuracy[j].semilogx(number_of_images, accuracy, alpha = 1,
+                                                markeredgecolor = 'k', markeredgewidth=1,
+                                                marker = marker, markerfacecolor = 'None')
+
+
+    for i in range(len(tracked_videos_data_frame)):
+        species = tracked_videos_data_frame.loc[i].animal_type
+        if 'zebrafish' in species or 'drosophila' in species:
+            if 'zebrafish' in species:
+                color = 'g'
+            elif 'drosophila' in species:
+                color = 'm'
+            accuracy = tracked_videos_data_frame.loc[i].accuracy_identification_and_interpolation * 100
+            if tracked_videos_data_frame.loc[i].minimum_number_of_frames_moving_in_first_global_fragment is not None:
+                minimum_number_of_images = tracked_videos_data_frame.loc[i].minimum_number_of_frames_moving_in_first_global_fragment
+            else:
+                minimum_number_of_images = tracked_videos_data_frame.loc[i].number_of_images_in_shortest_fragment_in_first_global_fragment
+            group_size = tracked_videos_data_frame.loc[i].number_of_animals
+            protocol = tracked_videos_data_frame.loc[i].protocol_used
+            if protocol == 1:
+                marker = '^'
+            elif protocol == 2:
+                marker = 'o'
+            elif protocol == 3:
+                marker = 's'
+            j = 0 if group_size <= 10 else 1
+            ax_arr_num_images_accuracy[j].semilogx(minimum_number_of_images, accuracy, alpha = 1.,
+                                                        marker = marker, markerfacecolor = color)
+
+    ax_arr_num_images_accuracy[0].axvline(30, c = 'r', ls = '--')
+    ax_arr_num_images_accuracy[1].axvline(30, c = 'r', ls = '--')
+
+
+def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy):
+    fig_num_images_accuracy.suptitle('Number of images in smaller fragment in the starting global fragment for accumulation', fontsize = 20)
+    ax_arr_num_images_accuracy[0].set_title('Smaller groups', fontsize = 16)
+    ax_arr_num_images_accuracy[1].set_title('Larger groups', fontsize = 16)
+    ax_arr_num_images_accuracy[0].set_xlabel('Number of images', fontsize = 14)
+    ax_arr_num_images_accuracy[0].set_ylabel('Accuracy', fontsize = 14)
+    ax_arr_num_images_accuracy[1].set_xlabel('Number of images', fontsize = 14)
+    ax_arr_num_images_accuracy[1].tick_params(axis='both', labelsize=14)
+    ax_arr_num_images_accuracy[0].tick_params(axis='both', labelsize=14)
+    ax_arr_num_images_accuracy[1].set_yticklabels([])
+    ax_arr_num_images_accuracy[0].set_xticks([10, 100, 1000])
+    ax_arr_num_images_accuracy[1].set_xticks([10, 100, 1000])
+    ax_arr_num_images_accuracy[0].set_xticklabels([10, 100, 1000])
+    ax_arr_num_images_accuracy[1].set_xticklabels([10, 100, 1000])
+    ax_arr_num_images_accuracy[0].set_ylim((0,101))
+    ax_arr_num_images_accuracy[1].set_ylim((0,101))
+    # ax_arr_num_images_accuracy[0].set_xlim((5,2200))
+    ax_arr_num_images_accuracy[1].set_xlim((3.5,250))
+
+
+    sns.despine(ax = ax_arr_num_images_accuracy[0], right = True, top = True)
+    sns.despine(ax = ax_arr_num_images_accuracy[1], right = True, top = True)
+
+    simulated_videos = mpatches.Patch(color='k', fc = 'None', linewidth = 1, label='Simulated videos')
+    real_videos = mpatches.Patch(color='k', alpha = 1., label='Real videos')
+    fish_videos = mpatches.Patch(color='g', alpha = 1., label='Zebrafish')
+    flies_videos = mpatches.Patch(color='m', alpha = 1., label='Drosophila')
+    protocol_1 = mlines.Line2D([], [], color='k', marker='^', markersize=6, label='Protocol 1',
+                                markeredgecolor = 'k', markeredgewidth=1, markerfacecolor='None',
+                                linestyle = 'None')
+    protocol_2 = mlines.Line2D([], [], color='k', marker='o', markersize=6, label='Protocol 2',
+                                markeredgecolor = 'k', markeredgewidth=1, markerfacecolor='None',
+                                linestyle = 'None')
+    protocol_3 = mlines.Line2D([], [], color='k', marker='s', markersize=6, label='Protocol 3',
+                                markeredgecolor = 'k', markeredgewidth=1, markerfacecolor='None',
+                                linestyle = 'None')
+
+
+    ax_arr_num_images_accuracy[0].legend(handles=[simulated_videos, real_videos,
+                                                fish_videos, flies_videos,
+                                                protocol_1,
+                                                protocol_2,
+                                                protocol_3], loc = 4)
+
+
+
 def create_gamma_grid_figure(results_data_frame, share_x = True, share_y = True):
     fig_distributions, ax_arr = plt.subplots(len(results_data_frame.loc[:,'scale_parameter'].unique()), len(results_data_frame.loc[:,'shape_parameter'].unique()),
                                 sharex = share_x, sharey = share_y)
     return fig_distributions, ax_arr
 
 if __name__ == '__main__':
-
+    tracked_videos_data_frame = pd.read_pickle('/media/chronos/ground_truth_results_backup/tracked_videos_data_frame.pkl')
     ### load global results data frame
-    if os.path.isfile('./library/results_data_frame.pkl'):
+    if os.path.isfile('./library/library_test_algorithm_test_GHI_aaa_cnn_0/results_data_frame.pkl'):
         print("loading results_data_frame.pkl...")
-        results_data_frame = pd.read_pickle('./library/results_data_frame.pkl')
+        results_data_frame = pd.read_pickle('./library/library_test_algorithm_test_GHI_aaa_cnn_0/results_data_frame.pkl')
         print("results_data_frame.pkl loaded \n")
     else:
         print("results_data_frame.pkl does not exist \n")
@@ -235,7 +376,7 @@ if __name__ == '__main__':
 
     # get tests_data_frame and test to plot
     print("loading tests data frame")
-    tests_data_frame = pd.read_pickle('./library/tests_data_frame.pkl')
+    tests_data_frame = pd.read_pickle('./library/library_test_algorithm_test_GHI_aaa_cnn_0/tests_data_frame.pkl')
     test_dictionary = tests_data_frame.loc[12].to_dict()
     frames_in_video = test_dictionary['frames_in_video'][0]
 
@@ -257,6 +398,8 @@ if __name__ == '__main__':
     accuracy = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
     accuracy_in_accumulation = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
     accuracy_after_accumulation = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
+    images_in_shortest_fragment_in_first_global_fragment = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
+    mean_number_of_iamgse_in_first_global_fragment = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
 
     plt.ion()
     window = plt.get_current_fig_manager().window
@@ -321,6 +464,8 @@ if __name__ == '__main__':
                         accuracy[i,k,j,l] = results_data_frame_rep.accuracy.item() if video_object_found else None
                         accuracy_in_accumulation[i,k,j,l] = results_data_frame_rep.accuracy_in_accumulation.item() if video_object_found else None
                         accuracy_after_accumulation[i,k,j,l] = results_data_frame_rep.accuracy_after_accumulation.item() if video_object_found else None
+                        images_in_shortest_fragment_in_first_global_fragment[i,k,j,l] = get_number_of_images_in_shortest_fragment_in_first_global_fragment(list_of_global_fragments, video)
+                        mean_number_of_iamgse_in_first_global_fragment[i,k,j,l] = get_mean_number_of_images_in_first_global_fragment(list_of_global_fragments, video)
 
                     if l == 0:
                         ### Plot distributions
@@ -375,6 +520,20 @@ if __name__ == '__main__':
         fig_distributions.savefig(os.path.join(path_to_save_figure, file_name_gamma_distributions), transparent = True)
         fig_statistics.savefig(os.path.join(path_to_save_figure, file_name_statistics), transparent = True)
         fig_gf.savefig(os.path.join(path_to_save_figure, file_name_first_global_fragment_distribution), transparent = True)
+
+    ### plot minimun number of images in first global fragment vs accuracy
+    fig_num_images_accuracy, ax_arr_num_images_accuracy = plt.subplots(1,2, sharey = False, sharex = False)
+    fig_num_images_accuracy.set_size_inches((screen_x/100*2/3,screen_y/100*3/4))
+    plot_minimum_number_of_images_figure(fig_num_images_accuracy,
+                                        ax_arr_num_images_accuracy,
+                                        tracked_videos_data_frame,
+                                        group_sizes_list, accuracy,
+                                        images_in_shortest_fragment_in_first_global_fragment,
+                                        protocol)
+    set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy)
+
+    path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0])
+    fig_num_images_accuracy.savefig(os.path.join(path_to_save_figure, 'number_of_images_vs_accuracy.pdf'), transparent = True)
 
     ### Compute average over repetitions
     protocol = np.nanmean(protocol, axis = 3)

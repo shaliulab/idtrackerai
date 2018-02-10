@@ -1,14 +1,37 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
-####
+import sys
+sys.path.append('./')
+from constants import VALIDATION_PROPORTION
+
+if sys.argv[0] == 'idtrackerdeepApp.py':
+    from kivy.logger import Logger
+    logger = Logger
+else:
+    import logging
+    logger = logging.getLogger("__main__.get_data")
+
 np.random.seed(0)
-####
 class DataSet(object):
+    """Contains the `images` and `labels` to be used for training a particular
+    model
+
+    Attributes
+    ----------
+
+    images : ndarray
+        Array of shape [num_images, height, width, channels] containing
+        the images of the dataset
+    num_images : int
+        Number of images in the dataset
+    labels : ndarray
+        Array of shape [num_images, number_of_classes] containing the
+        labels corresponding to the images in the dataset
+    number_of_animals : int
+        Number of classes in the dataset
+
+    """
     def __init__(self, number_of_animals = None, images = None, labels = None):
-        """Create dataset of images and labels.
-        param: images shaped as [num_of_images, height, width, channels]
-        param: labels shaped as [num_of_labels, num_of_classes]
-        """
         self.images = images
         self._num_images = len(self.images)
         self.labels = labels
@@ -17,30 +40,74 @@ class DataSet(object):
         self.consistency_check()
 
     def consistency_check(self):
+        """Checks that the length of :attr:`images` and :attr:`labels` is the same
+        """
         if self.labels is not None:
             assert len(self.images) == len(self.labels)
 
-    def crop_images(self,image_size=32):
-        """
-        :param image_size (int): size of the new image_for_identification, usually 32, since the network accepts images of 32x32  pixels
-        :param shift (tuple): (x,y) displacement when cropping, it can only go from -max_shift to +max_shift
-        """
-        current_size = self.images.shape[1]
-        shift = np.divide(current_size - image_size,2)
-        print(self.images.shape)
-        self.images = self.images[:,shift:current_size-shift,shift:current_size-shift,:]
-        print(self.images.shape)
-
     def convert_labels_to_one_hot(self):
-        self.labels = dense_to_one_hot(self.labels, n_classes=self.number_of_animals) # The -1 is because the labels of the classes start from one in idTrackerDeep
+        """Converts labels from dense format to one hot format
+        See Also
+        --------
+        :func:`~get_data.shuffle_images_and_labels`
+        """
+        self.labels = dense_to_one_hot(self.labels, n_classes=self.number_of_animals)
+
 
 def duplicate_PCA_images(training_images, training_labels):
+    """Creates a copy of every image in `training_images` by rotating 180 degrees
+
+    Parameters
+    ----------
+    training_images : ndarray
+        Array of shape [number of images, height, width, channels] containing
+        the images to be rotated
+    training_labels : ndarray
+        Array of shape [number of images, 1] containing the labels corresponding
+        to the `training_images`
+
+    Returns
+    -------
+    training_images : ndarray
+        Array of shape [2*number of images, height, width, channels] containing
+        the original images and the images rotated
+    training_labels : ndarray
+        Array of shape [2*number of images, 1] containing the labels corresponding
+        to the original images and the images rotated
+    """
     augmented_images = [np.rot90(image, 2) for image in training_images]
     training_images = np.concatenate([training_images, augmented_images], axis = 0)
     training_labels = np.concatenate([training_labels, training_labels], axis = 0)
     return training_images, training_labels
 
-def split_data_train_and_validation(number_of_animals, images, labels, validation_proportion = .1):
+def split_data_train_and_validation(number_of_animals, images, labels, validation_proportion = VALIDATION_PROPORTION):
+    """Splits a set of `images` and `labels` into training and validation sets
+
+    Parameters
+    ----------
+    number_of_animals : int
+        Number of classes in the set of images
+    images : list
+        List of images (arrays of shape [height, width])
+    labels : list
+        List of integers from 0 to `number_of_animals` - 1
+    validation_proportion : float
+        The proportion of images that will be used to create the validation set.
+
+
+    Returns
+    -------
+    training_dataset : <DataSet object>
+        Object containing the images and labels for training
+    validation_dataset : <DataSet object>
+        Object containing the images and labels for validation
+
+    See Also
+    --------
+    :class:`get_data.DataSet`
+    :func:`get_data.duplicate_PCA_images`
+    :func:`get_data.shuffle_images_and_labels`
+    """
     # Init variables
     train_images = []
     train_labels = []
@@ -71,7 +138,6 @@ def split_data_train_and_validation(number_of_animals, images, labels, validatio
     validation_labels = np.vstack(validation_labels)
     return DataSet(number_of_animals, train_images, train_labels), DataSet(number_of_animals, validation_images, validation_labels)
 
-
 def shuffle_images_and_labels(images, labels):
     """Shuffles images and labels with a random
     permutation, according to the number of examples"""
@@ -80,15 +146,6 @@ def shuffle_images_and_labels(images, labels):
     images = images[perm]
     labels = labels[perm]
     return images, labels
-
-def get_possible_shifts_for_data_augmentation():
-    possibleShifts = []
-    possibleShifts.append(list(itertools.combinations_with_replacement(range(-2,3),2)))
-    possibleShifts.append(list(itertools.permutations(range(-2,3),2)))
-    possibleShifts.append(list(itertools.combinations(range(-2,3),2)))
-    possibleShifts = [shift for l in possibleShifts for shift in l]
-    possibleShifts = set(possibleShifts)
-    return possibleShifts
 
 def dense_to_one_hot(labels, n_classes=2):
     """Convert class labels from scalars to one-hot vectors."""

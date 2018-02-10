@@ -30,8 +30,8 @@ sys.path.append('../preprocessing')
 sys.path.append('../network')
 sys.path.append('../network/crossings_detector_model')
 sys.path.append('../network/identification_model')
-from segmentation import segmentVideo, segment, resegment
-from video_utils import blobExtractor
+from segmentation import segment_frame, segment, resegment
+from video_utils import blob_extractor
 import numpy as np
 from scipy.stats import mode
 import cv2
@@ -170,16 +170,16 @@ class PreprocessingPreview(BoxLayout):
     def visualise_resegmentation(self, frame_number):
         def update_resegmentation_paramenters(instance, value):
             if instance.id == "max_threshold_slider":
-                max_threshold_lbl.text = "Upper intensity bound:\n" +  str(int(value))
+                max_threshold_lbl.text = "Max intensity:\n" +  str(int(value))
                 self.new_preprocessing_parameters['max_threshold'] = value
             elif instance.id == "min_threshold_slider":
-                max_threshold_lbl.text = "Lower intensity bound:\n" +  str(int(value))
+                min_threshold_lbl.text = "Min intensity:\n" +  str(int(value))
                 self.new_preprocessing_parameters['min_threshold'] = value
             elif instance.id == "max_area_slider":
-                max_threshold_lbl.text = "Max area:\n" +  str(int(value))
+                max_area_lbl.text = "Max area:\n" +  str(int(value))
                 self.new_preprocessing_parameters['max_area'] = value
             elif instance.id == "min_area_slider":
-                max_threshold_lbl.text = "Min area:\n" +  str(int(value))
+                min_area_lbl.text = "Min area:\n" +  str(int(value))
                 self.new_preprocessing_parameters['min_area'] = value
             resegmentation_visualiser.visualise(frame_number,
                                                 func = partial(self.show_preprocessing,
@@ -189,7 +189,7 @@ class PreprocessingPreview(BoxLayout):
                                                 hide_video_slider = True))
 
         self.resegmentation_step_finished = False
-        self.resegmetation_box = BoxLayout()
+        self.resegmentation_box = BoxLayout()
         resegmentation_controls_box = BoxLayout(orientation = "vertical", size_hint = (.3, 1.))
         max_threshold_slider = Slider(id = 'max_threshold_slider', min = 0, max = 255,
                         value = self.new_preprocessing_parameters['max_threshold'],
@@ -234,9 +234,9 @@ class PreprocessingPreview(BoxLayout):
                                             sliders = [min_threshold_slider, max_threshold_slider,
                                                     min_area_slider, max_area_slider],
                                             hide_video_slider = True))
-        self.resegmetation_box.add_widget(resegmentation_controls_box)
-        self.resegmetation_box.add_widget(resegmentation_visualiser)
-        self.consistency_fail_popup_content.add_widget(self.resegmetation_box)
+        self.resegmentation_box.add_widget(resegmentation_controls_box)
+        self.resegmentation_box.add_widget(resegmentation_visualiser)
+        self.consistency_fail_popup_content.add_widget(self.resegmentation_box)
 
     def resegment_and_update(self, *args):
         for frame_number in self.frames_with_more_blobs_than_animals:
@@ -316,8 +316,8 @@ class PreprocessingPreview(BoxLayout):
             self.fig.set_facecolor((.188, .188, .188))
             [(ax.set_facecolor((.188, .188, .188)), ax.tick_params(color='white', labelcolor='white'), ax.xaxis.label.set_color('white'), ax.yaxis.label.set_color('white')) for ax in ax_arr]
             [spine.set_edgecolor('white') for ax in ax_arr for spine in ax.spines.values()]
-            self.crossing_detector_trainer.store_training_accuracy_and_loss_data.plot(ax_arr, color = 'w', plot_now = False, legend_font_color = "white")
-            self.crossing_detector_trainer.store_validation_accuracy_and_loss_data.plot(ax_arr, color ='grey', plot_now = False, legend_font_color = "white")
+            self.crossing_detector_trainer.store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r', plot_now = False, legend_font_color = "white")
+            self.crossing_detector_trainer.store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b', plot_now = False, legend_font_color = "white")
             plt.tight_layout()
             crossing_detector_accuracy = FigureCanvasKivyAgg(fig)
             content.add_widget(crossing_label)
@@ -412,11 +412,11 @@ class PreprocessingPreview(BoxLayout):
             self.container_layout.add_widget(w)
 
     def update_max_th_lbl(self,instance, value):
-        self.max_threshold_lbl.text = "Upper intensity bound:\n" +  str(int(value))
+        self.max_threshold_lbl.text = "Max intensity:\n" +  str(int(value))
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def update_min_th_lbl(self,instance, value):
-        self.min_threshold_lbl.text = "Lower intensity bound:\n" + str(int(value))
+        self.min_threshold_lbl.text = "Min intensity:\n" + str(int(value))
         self.visualiser.visualise(self.visualiser.video_slider.value, func = self.show_preprocessing)
 
     def update_max_area_lbl(self,instance, value):
@@ -478,7 +478,10 @@ class PreprocessingPreview(BoxLayout):
             visualiser.add_widget(self.area_bars)
 
     def show_preprocessing(self, frame, visualiser = None, sliders = None, hide_video_slider = False):
-        visualiser = self.visualiser if visualiser is None else visualiser
+        if visualiser is None:
+            visualiser = self.visualiser
+        else:
+            self.create_areas_figure(visualiser = visualiser)
         min_threshold_slider = self.min_threshold_slider if sliders is None else sliders[0]
         max_threshold_slider = self.max_threshold_slider if sliders is None else sliders[1]
         min_area_slider = self.min_area_slider if sliders is None else sliders[2]
@@ -496,20 +499,15 @@ class PreprocessingPreview(BoxLayout):
                 CHOSEN_VIDEO.video._number_of_channels = 1
             else:
                 raise NotImplementedError("Colour videos has still to be integrated")
-        if self.bkg_subtractor_switch.active:
-            self.max_threshold_slider.value = 255
-            self.max_threshold_slider.disabled = True
-        else:
-            self.max_threshold_slider.disabled = False
         avIntensity = np.float32(np.mean(self.frame))
         self.av_frame = self.frame / avIntensity
-        self.segmented_frame = segmentVideo(self.av_frame,
+        self.segmented_frame = segment_frame(self.av_frame,
                                             int(min_threshold_slider.value),
                                             int(max_threshold_slider.value),
                                             CHOSEN_VIDEO.video.bkg,
                                             self.ROI,
                                             self.bkg_subtractor_switch.active)
-        boundingBoxes, miniFrames, _, areas, _, goodContours, _ = blobExtractor(self.segmented_frame,
+        boundingBoxes, miniFrames, _, areas, _, goodContours, _ = blob_extractor(self.segmented_frame,
                                                                         self.frame,
                                                                         int(min_area_slider.value),
                                                                         int(max_area_slider.value))
