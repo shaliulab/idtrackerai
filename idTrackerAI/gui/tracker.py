@@ -100,7 +100,7 @@ class Tracker(BoxLayout):
             self.start_tracking_button.bind(on_release = self.start_from_trajectories)
         elif 'assignment' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['assignment']:
             self.restore_identification()
-            CHOSEN_VIDEO.video.has_been_assigned = True
+            CHOSEN_VIDEO.video._has_been_assigned = True
             self.start_tracking_button.bind(on_release = self.start_from_impossible_jumps)
         elif 'second_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['second_accumulation']:
             Logger.info("Restoring second accumulation")

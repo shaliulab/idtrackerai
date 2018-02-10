@@ -15,6 +15,7 @@ from video_utils import blob_extractor
 from list_of_fragments import ListOfFragments
 from blob import Blob
 from list_of_blobs import ListOfBlobs
+from constants import VEL_PERCENTILE
 if sys.argv[0] == 'idtrackerdeepApp.py':
     from kivy.logger import Logger
     logger = Logger
@@ -470,6 +471,10 @@ def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
     if not hasattr(video, '_erosion_kernel_size'):
         video._erosion_kernel_size = compute_erosion_disk(video, list_of_blobs.blobs_in_video)
         video.save()
+    if not hasattr(video, 'velocity_threshold'):
+        video.velocity_threshold = compute_model_velocity(list_of_fragments.fragments,
+                                                            video.number_of_animals,
+                                                            percentile = VEL_PERCENTILE)
     possible_identities = range(1, video.number_of_animals + 1)
     erosion_counter = 0
     list_of_occluded_identities = [[] for i in range(len(list_of_blobs.blobs_in_video))]
