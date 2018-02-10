@@ -147,6 +147,36 @@ class SelectFile(BoxLayout):
     def show_restoring_popup(self, *args):
         self.restoring_popup.open()
 
+    def get_attributes_for_restored_preprocessing(self):
+        path_attributes = ['preprocessing_folder', 'blobs_path',
+                            'global_fragments_path', 'fragments_path',
+                            'apply_ROI','subtract_bkg',
+                            'resolution_reduction',
+                            'maximum_number_of_blobs',
+                            'number_of_channels', 'median_body_length',
+                            'model_area', 'identification_image_size',
+                            'blobs_path_segmented',
+                            'min_threshold','max_threshold',
+                            'min_area','max_area',
+                            'resize', 'number_of_animals',
+                            'original_ROI', 'original_bkg', 'ROI',
+                            'width', 'height', 'bkg',
+                            'preprocessing_folder',
+                            'fragment_identifier_to_index',
+                            'number_of_unique_images_in_global_fragments',
+                            'maximum_number_of_images_in_global_fragments']
+        CHOSEN_VIDEO.video.copy_attributes_between_two_video_objects(CHOSEN_VIDEO.old_video, path_attributes)
+        CHOSEN_VIDEO.video._has_preprocessing_parameters = True
+        CHOSEN_VIDEO.video._has_been_segmented = True
+        CHOSEN_VIDEO.video._has_been_preprocessed = True
+        CHOSEN_VIDEO.video.save()
+        CHOSEN_VIDEO.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
+        CHOSEN_VIDEO.list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
+        CHOSEN_VIDEO.list_of_global_fragments = ListOfGlobalFragments.load(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
+
+    def process_has_to_be_restored(self, process):
+        return process in CHOSEN_VIDEO.processes_to_restore.keys() and CHOSEN_VIDEO.processes_to_restore[process]
+
     def get_processes_to_restore(self, *args):
         CHOSEN_VIDEO.processes_to_restore = {checkbox.group: checkbox.active for checkbox
                                         in self.processes_checkboxes}
@@ -195,6 +225,7 @@ class SelectFile(BoxLayout):
             DEACTIVATE_VALIDATION.setter(False)
         self.go_to_bind()
         self.restore_popup.dismiss()
+
 
     def activate_process(self, *args):
         return DEACTIVATE_VALIDATION.process

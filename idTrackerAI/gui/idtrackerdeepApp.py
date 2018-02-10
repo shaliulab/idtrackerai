@@ -77,9 +77,9 @@ Init variables
     VEL_PERCENTILE: integer [0, 100]
         percentile used to compute the maximal accpetable individual velocity
 """
-PROCESSES = ['preprocessing','first_accumulation', 'pretraining', 'second_accumulation',
-            'assignment', 'solving_duplications', 'trajectories', 'crossings',
-            'trajectories_wo_gaps']
+PROCESSES = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
+            'protocol3_accumulation', 'residual_identification',
+            'post_processing']
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
 RESTORE_CRITERION = 'last'
 VEL_PERCENTILE = 99
