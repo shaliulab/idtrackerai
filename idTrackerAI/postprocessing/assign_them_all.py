@@ -95,7 +95,7 @@ def find_the_gap_interval(blobs_in_video, possible_identities, gap_start, list_o
     frame_number = gap_start + 1
     if frame_number < len(blobs_in_video):
 
-        while there_are_missing_identities and frame_number < len(blobs_in_video):
+        while there_are_missing_identities and frame_number > 0 and frame_number < len(blobs_in_video):
             blobs_in_frame = blobs_in_video[frame_number]
             occluded_identities_in_frame = list_of_occluded_identities[frame_number]
             missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame)
@@ -131,14 +131,12 @@ def get_candidate_blobs_by_overlapping(blob_to_test, eroded_blobs_in_frame):
     return overlapping_blobs if len(overlapping_blobs) > 0 else eroded_blobs_in_frame
 
 def get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame):
-    logger.debug('Getting missing identities')
     identities_in_frame = []
     for blob in blobs_in_frame:
         if isinstance(blob.assigned_identity, int):
             identities_in_frame.append(blob.assigned_identity)
         elif isinstance(blob.assigned_identity, list):
             identities_in_frame.extend(blob.assigned_identity)
-    logger.debug('Finished getting missing identities')
     return (set(possible_identities) - set(identities_in_frame)) - set(occluded_identities_in_frame)
 
 def get_candidate_centroid(individual_gap_interval, previous_blob_to_the_gap, next_blob_to_the_gap, identity, border = '', inner_frame_number = None):
@@ -400,6 +398,7 @@ def interpolate_trajectories_during_gaps(video, list_of_blobs, list_of_fragments
     for frame_number, (blobs_in_frame, occluded_identities_in_frame) in enumerate(tqdm(zip(blobs_in_video, list_of_occluded_identities), desc = "closing gaps")):
         if frame_number != 0:
             logger.debug('-Main frame number %i' %frame_number)
+            logger.debug('Getting missing identities')
             missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame)
             if len(missing_identities) > 0 and len(blobs_in_frame) >= 1:
                 gap_interval = find_the_gap_interval(blobs_in_video, possible_identities, frame_number, list_of_occluded_identities)
@@ -417,7 +416,7 @@ def interpolate_trajectories_during_gaps(video, list_of_blobs, list_of_fragments
                                 eroded_blobs_in_frame = inner_blobs_in_frame
                         else:
                             eroded_blobs_in_frame = inner_blobs_in_frame
-
+                        logger.debug('Getting missing identities')
                         inner_missing_identities = get_missing_identities_from_blobs_in_frame(possible_identities,
                                                                                             inner_blobs_in_frame,
                                                                                             inner_occluded_identities_in_frame)
