@@ -38,6 +38,7 @@ sessions = ['10_fish_group4/first/session_20180122',
  'idTrackerDeep_LargeGroups_2/TU20170307/numberIndivs_60/First/session_20171221',
  'idTrackerDeep_LargeGroups_3/100fish/First/session_02122017',
  'idTrackerDeep_LargeGroups_3/60fish/First/session_20171225',
+ 'idTrackerVideos/8zebrafish_conflicto/session_20180130',
  'idTrackerVideos/Hipertec_pesados/Medaka/2012may31/Grupo10/session_20180201',
  'idTrackerVideos/Hipertec_pesados/Medaka/2012may31/Grupo5/session_20180131',
  'idTrackerVideos/Hipertec_pesados/Medaka/20fish_contapa/session_20180201',
@@ -53,34 +54,35 @@ sessions = ['10_fish_group4/first/session_20180122',
  'idTrackerVideos/ValidacionTracking/Moscas/Platogrande_8females/session_20180131',
  'idTrackerVideos/Zebrafish_nacreLucie/pair3ht/session_20180207']
 
-species = ['junvenile_zebrafish',
-            'junvenile_zebrafish',
-            'junvenile_zebrafish',
+animal_type = ['zebrafish (30dpf)',
+            'zebrafish (30dpf)',
+            'zebrafish (30dpf)',
             'drosophila',
             'drosophila',
             'drosophila',
             'drosophila',
             'ants',
-            'junvenile_zebrafish',
-            'junvenile_zebrafish',
-            'junvenile_zebrafish',
-            'junvenile_zebrafish',
-            'junvenile_zebrafish',
-            'junvenile_zebrafish',
+            'zebrafish (30dpf)',
+            'zebrafish (30dpf)',
+            'zebrafish (30dpf)',
+            'zebrafish (30dpf)',
+            'zebrafish (30dpf)',
+            'zebrafish (30dpf)',
+            'zebrafish',
             'medaka',
             'medaka',
             'medaka',
             'drosophila',
             'drosophila',
             'zebrafish',
-            'mice',
-            'mice',
-            'mice',
-            'mice',
-            'mice',
-            'mice',
+            'black mice',
+            'black mice',
+            'agouti mice',
+            'black mice',
+            'black mice',
+            'black mice',
             'drosophila',
-            'nacre_zebrafish']
+            'nacre zebrafish']
 
 idTracker_video = [False,
                     False,
@@ -109,7 +111,38 @@ idTracker_video = [False,
                     True,
                     True,
                     True,
+                    True,
                     True]
+
+used_for_developing = [False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    True,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    True,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False]
 
 
 def get_number_of_images_in_shortest_fragment_in_first_global_fragment(list_of_global_fragments, video):
@@ -142,7 +175,7 @@ if __name__ == '__main__':
     session_paths = [x[0] for x in os.walk(hard_drive_path) if 'session' in x[0][-16:] and 'Trash' not in x[0]]
     pprint(session_paths)
     tracked_videos_data_frame = pd.DataFrame()
-    if len(session_paths) == len(sessions) and len(session_paths) == len(species):
+    if len(session_paths) == len(sessions) and len(session_paths) == len(animal_type) and len(idTracker_video) == len(session_paths):
 
         for session_path in session_paths:
             print("\n******************************")
@@ -154,8 +187,8 @@ if __name__ == '__main__':
             session_number = [index for index in range(len(sessions)) if sessions[index] in session_path]
             assert len(session_number) == 1
             session_number = session_number[0]
-            ### give species name
-            video.species = species[session_number]
+            ### give animal type name
+            video.animal_type = animal_type[session_number]
 
             ### give if idTracker video or not
             video.idTracker_video = idTracker_video[session_number]
@@ -334,9 +367,11 @@ if __name__ == '__main__':
             tracked_videos_data_frame = \
                 tracked_videos_data_frame.append({'session_path': session_path,
                     'git_commit': video.git_commit,
+                    'video_title': str(video.number_of_animals) + ' ' + video.animal_type,
                     'video_name': os.path.split(video.video_path)[1],
-                    'species': video.species,
+                    'animal_type': video.animal_type,
                     'idTracker_video': video.idTracker_video,
+                    'used_for_developing': used_for_developing[session_number],
                     'number_of_animals': video.number_of_animals,
                     'number_of_frames': video.number_of_frames,
                     'frame_rate': video.frames_per_second,
@@ -388,13 +423,14 @@ if __name__ == '__main__':
                     'number_of_not_accumulable_individual_blobs': video.individual_fragments_stats['number_of_not_accumulable_individual_blobs'],
                     'number_of_globally_accumulated_individual_fragments': video.individual_fragments_stats['number_of_globally_accumulated_individual_fragments'],
                     'number_of_partially_accumulated_individual_blobs': video.individual_fragments_stats['number_of_partially_accumulated_individual_blobs'],
-                    'protocol': video.protocol,
+                    'protocol_used': video.protocol,
                     'accumulation_trial': video.accumulation_trial,
                     'number_of_accumulation_steps': len(video.validation_accuracy),
                     'percentage_of_accumulated_images': video.percentage_of_accumulated_images[video.accumulation_trial],
                     'estimated_accuracy': video.overall_P2,
                     'interval_of_frames_validated': video.gt_start_end,
                     'number_of_frames_validated': np.diff(video.gt_start_end)[0],
+                    'percentage_of_video_validated': np.diff(video.gt_start_end)[0]/video.number_of_frames*100,
                     'time_validated_min': np.diff(video.gt_start_end)[0]/video.frames_per_second/60,
                     'number_of_crossing_fragments_in_validated_part': video.gt_results['number_of_crossing_fragments'],
                     'number_of_crossing_images_in_validated_part': video.gt_results['number_of_crossing_blobs'],

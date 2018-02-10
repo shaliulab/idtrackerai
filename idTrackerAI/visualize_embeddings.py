@@ -127,8 +127,8 @@ def visualize_embeddings_global_fragments(video, list_of_global_fragments, list_
     # Restore network
     net.restore()
     # Train network
-    assignerT = GetPrediction(dataT, print_flag = print_flag)
-    assignerV = GetPrediction(dataV, print_flag = print_flag)
+    assignerT = GetPrediction(dataT)
+    assignerV = GetPrediction(dataV)
     # Get fully connected vectors
     assignerT.get_predictions_fully_connected_embedding(net.get_fully_connected_vectors, video.number_of_animals)
     assignerV.get_predictions_fully_connected_embedding(net.get_fully_connected_vectors, video.number_of_animals)

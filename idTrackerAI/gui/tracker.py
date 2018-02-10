@@ -100,7 +100,7 @@ class Tracker(BoxLayout):
             self.start_tracking_button.bind(on_release = self.start_from_trajectories)
         elif 'assignment' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['assignment']:
             self.restore_identification()
-            CHOSEN_VIDEO.video.has_been_assigned = True
+            CHOSEN_VIDEO.video._has_been_assigned = True
             self.start_tracking_button.bind(on_release = self.start_from_impossible_jumps)
         elif 'second_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['second_accumulation']:
             Logger.info("Restoring second accumulation")
@@ -147,16 +147,13 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO.list_of_fragments.reset(roll_back_to = 'fragmentation')
         CHOSEN_VIDEO.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
         if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
-            if CHOSEN_VIDEO.video.identity_transfer:
-                self.accumulation_network_params.restore_folder = CHOSEN_VIDEO.video.knowledge_transfer_model_folder
-                self.accumulation_network_params.check_identity_transfer_consistency(CHOSEN_VIDEO.video.knowledge_transfer_info_dict)
-            else:
-                self.accumulation_network_params.knowledge_transfer_folder = CHOSEN_VIDEO.video.knowledge_transfer_model_folder
+            Logger.debug('Setting layers to optimize for knowledge_transfer')
             self.accumulation_network_params.scopes_layers_to_optimize = None
         self.net = ConvNetwork(self.accumulation_network_params)
         if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
+            Logger.debug('Restoring for knowledge transfer')
             self.net.restore()
-        CHOSEN_VIDEO.video._first_frame_first_global_fragment.append(CHOSEN_VIDEO.list_of_global_fragments.set_first_global_fragment_for_accumulation(CHOSEN_VIDEO.video, self.net, accumulation_trial = 0))
+        CHOSEN_VIDEO.video._first_frame_first_global_fragment.append(CHOSEN_VIDEO.list_of_global_fragments.set_first_global_fragment_for_accumulation(CHOSEN_VIDEO.video, accumulation_trial = 0))
         if CHOSEN_VIDEO.video.identity_transfer and\
             CHOSEN_VIDEO.video.number_of_animals < CHOSEN_VIDEO.video.knowledge_transfer_info_dict['number_of_animals']:
             tf.reset_default_graph()
@@ -263,7 +260,7 @@ class Tracker(BoxLayout):
         Logger.info("Starting pretraining. Checkpoints will be stored in %s" %CHOSEN_VIDEO.video.pretraining_folder)
         if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
             Logger.info("Performing knowledge transfer from %s" %CHOSEN_VIDEO.video.knowledge_transfer_model_folder)
-            pretrain_network_params.knowledge_transfer_folder = CHOSEN_VIDEO.video.knowledge_transfer_model_folder
+            self.pretrain_network_params.knowledge_transfer_folder = CHOSEN_VIDEO.video.knowledge_transfer_model_folder
         Logger.info("Start pretraining")
         self.pretraining_step_finished = True
         self.pretraining_loop()
@@ -285,7 +282,7 @@ class Tracker(BoxLayout):
         self.net.restore()
         self.net.reinitialize_softmax_and_fully_connected()
         Logger.info("Initialising accumulation manager")
-        CHOSEN_VIDEO.video._first_frame_first_global_fragment.append(CHOSEN_VIDEO.list_of_global_fragments.set_first_global_fragment_for_accumulation(CHOSEN_VIDEO.video, self.net, accumulation_trial = iteration_number - 1))
+        CHOSEN_VIDEO.video._first_frame_first_global_fragment.append(CHOSEN_VIDEO.list_of_global_fragments.set_first_global_fragment_for_accumulation(CHOSEN_VIDEO.video, accumulation_trial = iteration_number - 1))
         if CHOSEN_VIDEO.video.identity_transfer and CHOSEN_VIDEO.video.number_of_animals < CHOSEN_VIDEO.video.knowledge_transfer_info_dict['number_of_animals']:
             tf.reset_default_graph()
             self.accumulation_network_params.number_of_animals = CHOSEN_VIDEO.video.number_of_animals
@@ -702,6 +699,9 @@ class Tracker(BoxLayout):
     def on_enter_mod_knowledge_transfer_folder_text_input(self, *args):
         self.accumulation_network_params._knowledge_transfer_folder = self.mod_knowledge_transfer_folder_text_input.text
         self.knowledge_transfer_folder_value.text = self.mod_knowledge_transfer_folder_text_input.text
+        print("------------ ", self.accumulation_network_params.knowledge_transfer_folder)
+        if os.path.isdir(self.accumulation_network_params.knowledge_transfer_folder):
+            CHOSEN_VIDEO.video._tracking_with_knowledge_transfer = True
 
     def network_params_to_string(self):
         self.str_model = str(self.accumulation_network_params.cnn_model)

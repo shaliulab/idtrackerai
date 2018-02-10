@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 import os
 import sys
 sys.path.append('./network')
+sys.path.append('./network/identification_model')
 sys.path.append('./postprocessing')
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,7 +13,6 @@ from get_data import DataSet
 from id_CNN import ConvNetwork
 from get_predictions import GetPrediction
 from visualize_embeddings import EmbeddingVisualiser
-from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob
 if sys.argv[0] == 'idtrackerdeepApp.py':
     from kivy.logger import Logger
     logger = Logger
@@ -56,7 +56,7 @@ def assign(net, video, images, print_flag):
     logger.info("generating data set. Images shape %s" %str(images.shape))
     data = DataSet(net.params.number_of_animals, images)
     logger.info("getting predictions")
-    assigner = GetPrediction(data, print_flag = print_flag)
+    assigner = GetPrediction(data)
     assigner.get_predictions_softmax(net.predict)
     logger.info("done")
     return assigner
