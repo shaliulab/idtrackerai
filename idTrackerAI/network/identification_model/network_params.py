@@ -22,17 +22,17 @@ class NetworkParams(object):
         Learning rate for the optimizer
     keep_prob : float
         Dropout probability
-    restore_folder : string
+    _restore_folder : string
         Path to the folder where the model to be restored is
-    save_folder : string
+    _save_folder : string
         Path to the folder where the checkpoints of the current model are stored
-    knowledge_transfer_folder : string
+    _knowledge_transfer_folder : string
         Path to the folder where the model to be used for knowledge transfer is saved
     use_adam_optimiser : bool
         Flag indicating to use the Adam optimizer with the parameters indicated in _[2]
     scopes_layers_to_optimize : list
         List with the scope names of the layers to be optimized
-    cnn_model : int
+    _cnn_model : int
         Number indicating the model number to be used from the dictionary of models
         CNN_MODELS_DICT in :mod:`id_CNN`
     image_size : tuple
@@ -54,13 +54,40 @@ class NetworkParams(object):
         self.number_of_animals = number_of_animals
         self.learning_rate = learning_rate
         self.keep_prob = keep_prob
-        self.restore_folder = restore_folder
-        self.save_folder = save_folder
-        self.knowledge_transfer_folder = knowledge_transfer_folder
+        self._restore_folder = restore_folder
+        self._save_folder = save_folder
+        self._knowledge_transfer_folder = knowledge_transfer_folder
         self.use_adam_optimiser = use_adam_optimiser
         self.scopes_layers_to_optimize = scopes_layers_to_optimize
-        self.cnn_model = cnn_model
+        self._cnn_model = cnn_model
         self.image_size = image_size
+        self.target_image_size = None
+        self.pre_target_image_size = None
+        self.action_on_image = None
+        self.number_of_channels = number_of_channels
+
+    def __init__(self, number_of_animals, cnn_model = 0, learning_rate = None,
+                keep_prob = None, use_adam_optimiser = False,
+                scopes_layers_to_optimize = None, restore_folder = None,
+                save_folder = None, knowledge_transfer_folder = None,
+                image_size = None,
+                number_of_channels = None,
+                video_path = None):
+
+        self.video_path = video_path
+        self.number_of_animals = number_of_animals
+        self.learning_rate = learning_rate
+        self.keep_prob = keep_prob
+        self._restore_folder = restore_folder
+        self._save_folder = save_folder
+        self._knowledge_transfer_folder = knowledge_transfer_folder
+        self.use_adam_optimiser = use_adam_optimiser
+        self.scopes_layers_to_optimize = scopes_layers_to_optimize
+        self._cnn_model = cnn_model
+        self.image_size = image_size
+        self.target_image_size = None
+        self.pre_target_image_size = None
+        self.action_on_image = None
         self.number_of_channels = number_of_channels
 
     @property
