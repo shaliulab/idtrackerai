@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, absolute_import
 from itertools import groupby
 import os
 import glob
@@ -6,6 +6,7 @@ import re
 import numpy as np
 import sys
 import matplotlib
+from matplotlib import cm
 import subprocess
 if sys.argv[0] == 'idtrackerdeepApp.py':
     from kivy.logger import Logger
@@ -150,7 +151,7 @@ def scanFolder(path):
     return paths
 
 def get_spaced_colors_util(n, norm = False, black = True, cmap = 'jet'):
-    RGB_tuples = matplotlib.cm.get_cmap(cmap)
+    RGB_tuples = cm.get_cmap(cmap)
     if norm:
         colors = [RGB_tuples(i / n) for i in range(n)]
     else:

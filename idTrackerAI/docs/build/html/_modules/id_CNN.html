@@ -227,12 +227,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">global_variables_initializer</span><span class="p">())</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_restoring</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Restoring&quot;</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Restoring...&#39;</span><span class="p">)</span>
             <span class="c1"># Get subfolders from where we will load the network from previous checkpoints</span>
             <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_conv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_fc_softmax</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_checkpoint_subfolders</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_restore_folder</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;conv&#39;</span><span class="p">,</span> <span class="s1">&#39;softmax&#39;</span><span class="p">])</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_knowledge_transfer</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Knowledge transfer&quot;</span><span class="p">)</span>
             <span class="c1"># Get subfolders from where we will load the convolutional filters to perform knowledge transfer</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Performing knowledge transfer...&#39;</span><span class="p">)</span>
             <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_conv</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_checkpoint_subfolders</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_knowledge_transfer_folder</span><span class="p">,[</span><span class="s1">&#39;conv&#39;</span><span class="p">])</span>
@@ -244,7 +242,7 @@
     <span class="k">def</span> <span class="nf">is_knowledge_transfer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_knowledge_transfer_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_fc_softmax</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;restore_folder_fc_softmax:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_fc_softmax</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;restore_folder_fc_softmax: </span><span class="si">%s</span><span class="s2">&quot;</span>  <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_fc_softmax</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">_knowledge_transfer_folder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
@@ -617,7 +615,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 09, 2018.
+      Last updated on Feb 10, 2018.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
