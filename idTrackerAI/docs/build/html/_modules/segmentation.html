@@ -107,7 +107,7 @@
 <span class="sd">The segmentation module</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="get_videoCapture"><a class="viewcode-back" href="../modules.html#segmentation.get_videoCapture">[docs]</a><span class="k">def</span> <span class="nf">get_videoCapture</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">episode_start_end_frames</span><span class="p">):</span>
+<div class="viewcode-block" id="get_videoCapture"><a class="viewcode-back" href="../preprocessing.html#segmentation.get_videoCapture">[docs]</a><span class="k">def</span> <span class="nf">get_videoCapture</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">episode_start_end_frames</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Gives the VideoCapture (OpenCV) object to read the frames for the segmentation</span>
 <span class="sd">    and the number of frames to read. If `episode_start_end_frames` is None then a `path` must be</span>
 <span class="sd">    given as the video is assumed to be splitted in different files (episodes). If the `path`</span>
@@ -141,7 +141,7 @@
 
     <span class="k">return</span> <span class="n">cap</span><span class="p">,</span> <span class="n">number_of_frames_in_episode</span></div>
 
-<div class="viewcode-block" id="get_blobs_in_frame"><a class="viewcode-back" href="../modules.html#segmentation.get_blobs_in_frame">[docs]</a><span class="k">def</span> <span class="nf">get_blobs_in_frame</span><span class="p">(</span><span class="n">cap</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">segmentation_thresholds</span><span class="p">,</span> <span class="n">max_number_of_blobs</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">):</span>
+<div class="viewcode-block" id="get_blobs_in_frame"><a class="viewcode-back" href="../preprocessing.html#segmentation.get_blobs_in_frame">[docs]</a><span class="k">def</span> <span class="nf">get_blobs_in_frame</span><span class="p">(</span><span class="n">cap</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">segmentation_thresholds</span><span class="p">,</span> <span class="n">max_number_of_blobs</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Segments a frame read from `cap` according to the preprocessing parameters</span>
 <span class="sd">    in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame</span>
 <span class="sd">    and the `max_number_of_blobs` found in the video so far. Frames are segmented</span>
@@ -200,7 +200,7 @@
                                                                         <span class="n">segmentation_thresholds</span><span class="p">[</span><span class="s1">&#39;min_area&#39;</span><span class="p">],</span>
                                                                         <span class="n">segmentation_thresholds</span><span class="p">[</span><span class="s1">&#39;max_area&#39;</span><span class="p">])</span>
     <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;An error occurred while reading frame number : </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">counter</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;An error occurred while reading frame number : </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">frame_number</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;ret: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;frame: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">frame</span><span class="p">))</span>
         <span class="n">bounding_boxes</span> <span class="o">=</span> <span class="p">[]</span>
@@ -227,7 +227,7 @@
 
     <span class="k">return</span> <span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">max_number_of_blobs</span></div>
 
-<div class="viewcode-block" id="segment_episode"><a class="viewcode-back" href="../modules.html#segmentation.segment_episode">[docs]</a><span class="k">def</span> <span class="nf">segment_episode</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">segmentation_thresholds</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">episode_start_end_frames</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="segment_episode"><a class="viewcode-back" href="../preprocessing.html#segmentation.segment_episode">[docs]</a><span class="k">def</span> <span class="nf">segment_episode</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">segmentation_thresholds</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">episode_start_end_frames</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Gets list of blobs segmented in every frame of the episode of the video</span>
 <span class="sd">    given by `path` (if the video is splitted in different files) or by</span>
 <span class="sd">    `episode_start_end_frames` (if the video is given in a single file)</span>
@@ -280,7 +280,7 @@
     <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">blobs_in_episode</span><span class="p">,</span> <span class="n">max_number_of_blobs</span></div>
 
-<div class="viewcode-block" id="segment"><a class="viewcode-back" href="../modules.html#segmentation.segment">[docs]</a><span class="k">def</span> <span class="nf">segment</span><span class="p">(</span><span class="n">video</span><span class="p">):</span>
+<div class="viewcode-block" id="segment"><a class="viewcode-back" href="../preprocessing.html#segmentation.segment">[docs]</a><span class="k">def</span> <span class="nf">segment</span><span class="p">(</span><span class="n">video</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Segment the video giving a list of `blobs` for every frame in the video.</span>
 <span class="sd">    If a video is given as a set of files (episodes), those files are used to</span>
 <span class="sd">    parallelise the segmentation process. If a video is given in a single file</span>
@@ -302,7 +302,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># avoid computing with all the cores in very large videos. It fills the RAM.</span>
     <span class="c1"># num_cores = multiprocessing.cpu_count()</span>
-    <span class="n">num_cores</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">num_cores</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
     <span class="c1">#init variables to store data</span>
     <span class="n">blobs_in_video</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">maximum_number_of_blobs_in_episode</span> <span class="o">=</span> <span class="p">[]</span>
@@ -340,7 +340,7 @@
     <span class="n">blobs_in_video</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">blobs_in_video</span></div>
 
-<div class="viewcode-block" id="resegment"><a class="viewcode-back" href="../modules.html#segmentation.resegment">[docs]</a><span class="k">def</span> <span class="nf">resegment</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">list_of_blobs</span><span class="p">,</span> <span class="n">new_segmentation_thresholds</span><span class="p">):</span>
+<div class="viewcode-block" id="resegment"><a class="viewcode-back" href="../preprocessing.html#segmentation.resegment">[docs]</a><span class="k">def</span> <span class="nf">resegment</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">list_of_blobs</span><span class="p">,</span> <span class="n">new_segmentation_thresholds</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Updates the `list_of_blobs` for a particular `frame_number` by performing</span>
 <span class="sd">    a segmentation with `new_segmentation_thresholds`. This function is called for</span>
 <span class="sd">    the frames in which the number of blobs is higher than the number of animals</span>
@@ -407,10 +407,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 07, 2018.
+      Last updated on Feb 09, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
       </li>
     </ul>
     </div>

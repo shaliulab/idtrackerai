@@ -9,16 +9,10 @@ from cnn_utils import *
 from constants import KEEP_PROB
 
 ''' original model'''
-def cnn_model_0(images, classes, width, height, channels, action_on_image, pre_target_image_size):
+def cnn_model_0(images, classes, width, height, channels, pre_target_image_size):
     '''
     Gives predictions for a given set of images
     '''
-    # action on image
-    if action_on_image == 'pad_or_crop':
-        images = tf.image.resize_image_with_crop_or_pad(images, width, height)
-    elif action_on_image == 'resize_and_pad_or_crop':
-        images = tf.image.resize_images(images, pre_target_image_size, method = ResizeMethod.BICUBIC)
-        images = tf.image.resize_image_with_crop_or_pad(images, width, height)
     tf.summary.image('rawImages', images, max_outputs=10)
     # conv1
     filter_size1 = 5
