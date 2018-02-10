@@ -19,11 +19,11 @@ from fragment import Fragment
 from GUI_utils import selectDir
 from py_utils import get_spaced_colors_util
 
-def save_identification_images(video, list_of_fragments, number_of_images):
+def save_identification_images(video, list_of_fragments, number_of_images, frame_number):
 
     for identity in range(1, video.number_of_animals + 1):
 
-        fragment = [fragment for fragment in list_of_fragments.fragments if fragment.final_identity == identity and fragment.start_end[0] == 0][0]
+        fragment = [fragment for fragment in list_of_fragments.fragments if fragment.assigned_identity == identity and fragment.number_of_images > number_of_images][0]
 
         for image_number in range(number_of_images):
             fig, ax = plt.subplots(1,1)
@@ -43,11 +43,12 @@ def save_video_frame(video, save_folder, frame_number = 0):
 def save_preprocesing_images(video, save_folder, list_of_blobs_segmented, list_of_blobs, frame_number = 0):
 
     for blob_segmented, blob in zip(list_of_blobs_segmented.blobs_in_video[frame_number], list_of_blobs.blobs_in_video[frame_number]):
-        folder_to_save_for_paper_figure = os.path.join(save_folder, 'identity_%i' %blob.final_identity)
-        print("***\n %i" %blob.final_identity)
-        if not os.path.isdir(folder_to_save_for_paper_figure):
-            os.makedirs(folder_to_save_for_paper_figure)
-        blob_segmented.get_image_for_identification(video, folder_to_save_for_paper_figure = folder_to_save_for_paper_figure)
+        if blob.is_an_individual:
+            folder_to_save_for_paper_figure = os.path.join(save_folder, 'identity_%i' %blob.assigned_identity)
+            print("***\n %i" %blob.final_identity)
+            if not os.path.isdir(folder_to_save_for_paper_figure):
+                os.makedirs(folder_to_save_for_paper_figure)
+            blob_segmented.get_image_for_identification(video, folder_to_save_for_paper_figure = folder_to_save_for_paper_figure)
 
 
 if __name__ == '__main__':
@@ -58,16 +59,17 @@ if __name__ == '__main__':
     save_folder = os.path.join(video.session_folder, 'identification_images_and_video_frame')
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder)
+    frame_number = video.first_frame_first_global_fragment
     # save frame snapshot
-    save_video_frame(video, save_folder, frame_number = 0)
+    save_video_frame(video, save_folder, frame_number = frame_number)
     # save preprocessing images
     list_of_blobs_segmented = ListOfBlobs.load(video, video.blobs_path_segmented)
     list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
-    save_preprocesing_images(video, save_folder, list_of_blobs_segmented, list_of_blobs, frame_number = 0)
+    save_preprocesing_images(video, save_folder, list_of_blobs_segmented, list_of_blobs, frame_number = frame_number)
 
     list_of_fragments = ListOfFragments.load(video.fragments_path)
     list_of_fragments_dictionaries = np.load(os.path.join(video.accumulation_folder,'light_list_of_fragments.npy'))
     fragments = [Fragment(number_of_animals = video.number_of_animals) for fragment_dictionary in list_of_fragments_dictionaries]
     [fragment.__dict__.update(fragment_dictionary) for fragment, fragment_dictionary in zip(fragments, list_of_fragments_dictionaries)]
     light_list_of_fragments = ListOfFragments(fragments)
-    save_identification_images(video, list_of_fragments, number_of_images)
+    save_identification_images(video, list_of_fragments, number_of_images, frame_number)

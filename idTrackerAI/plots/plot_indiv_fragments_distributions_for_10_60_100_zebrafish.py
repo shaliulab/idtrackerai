@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import os
 import sys
-sys.path.append('../')
+sys.path.append('./')
 sys.path.append('./utils')
 sys.path.append('./library')
 
@@ -16,7 +16,6 @@ from scipy.stats import gamma
 from scipy import stats
 
 from py_utils import get_spaced_colors_util
-from library_utils import LibraryJobConfig
 from video import Video
 
 def pdf2logpdf(pdf):
@@ -25,9 +24,9 @@ def pdf2logpdf(pdf):
     return logpdf
 
 if __name__ == '__main__':
-    folder_to_videos = '/home/chronos/Desktop/IdTrackerDeep/videos/videos_info_for_fig_3'
+    folder_to_videos = 'plots/videos_info_for_fig_3'
     group_sizes = [10, 60, 100]
-    conditions = ['first', 'second']
+    conditions = ['first']
     repetitions = ['group1', 'group2', 'group3']
     nbins = 25
     min = 1
@@ -39,9 +38,9 @@ if __name__ == '__main__':
     screen_y = window.winfo_screenheight()
     screen_x = window.winfo_screenwidth()
     fig1, ax_arr1 = plt.subplots(3, 3, sharey = True)
-    fig2, ax_arr2 = plt.subplots(3, 3, sharey = True)
+    # fig2, ax_arr2 = plt.subplots(3, 3, sharey = True)
     fig1.set_size_inches((screen_x/100,screen_y/100))
-    fig2.set_size_inches((screen_x/100,screen_y/100))
+    # fig2.set_size_inches((screen_x/100,screen_y/100))
 
     for i, group_size in enumerate(group_sizes):
 
@@ -101,4 +100,4 @@ if __name__ == '__main__':
                 sns.despine(ax = ax, left = False, bottom = False, right = True, top = True)
 
     fig1.savefig(os.path.join(folder_to_videos, 'distributions_individual_fragments_first.pdf'), transparent = True)
-    fig2.savefig(os.path.join(folder_to_videos, 'distributions_individual_fragments_second.pdf'), transparent = True)
+    # fig2.savefig(os.path.join(folder_to_videos, 'distributions_individual_fragments_second.pdf'), transparent = True)
