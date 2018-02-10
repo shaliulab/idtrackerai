@@ -24,7 +24,7 @@ def get_frames_and_frames_moving_for_fragments(fragments):
     return frames, frames_moving
 
 if __name__ == '__main__':
-    session_paths = ['/media/chronos/ground_truth_results_backup/10_flies_compressed_clara/session_20180207']
+    session_paths = ['/home/prometheus/Desktop/IdTrackerDeep/videos/60 drosophila (females)/Canton_N60_12-15-17_15-15-10/session_20180110']
 
     for session_path in session_paths:
         print("\nsession_path: ", session_path)
@@ -87,7 +87,8 @@ if __name__ == '__main__':
             ax_arr[1].hist(np.log10(frames_moving_good), bins = logbins, normed = True)
 
             video.minimum_number_of_frames_moving_in_first_global_fragment = np.min(frames_moving_good)
+            print(video.minimum_number_of_frames_moving_in_first_global_fragment)
 
             np.save(os.path.join(session_path, 'video_object.npy'), video)
 
-            del video, list_of_fragments, list_of_global_fragments
+            # del video, list_of_fragments, list_of_global_fragments
