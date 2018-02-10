@@ -17,17 +17,38 @@ else:
     logger = logging.getLogger("__main__.list_of_blobs")
 
 class ListOfBlobs(object):
+    """ Collects all the instances of the class :class:`~blob.Blob` generated
+    from the blobs extracted from the video during segmentation
+    (see :mod:`~segmentation`)
+
+    Attributes
+    ----------
+
+    blobs_in_video : list
+        List of instances of :class:`~blob.Blob` segmented from the video and
+        organised framewise
+    number_of_frames : int
+        number of frames in the video
+    blobs_are_connected :bool
+        True if the blobs have already being organised in fragments (see
+        :class:`~fragment.Fragment`). False otherwise
+    """
     def __init__(self, blobs_in_video = None, number_of_frames = None):
         self.blobs_in_video = blobs_in_video
         self.number_of_frames = len(self.blobs_in_video)
         self.blobs_are_connected = False
 
     def disconnect(self):
+        """Reinitialise the previous and next list of blobs
+        (see :attr:`~blob.Blob.next` and :attr:`~blob.Blob.previous`)
+        """
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
                 blob.next, blob.previous = [], []
 
     def connect(self):
+        """Connects blobs in subsequent frames by computing their overlapping
+        """
         logger.info("Connecting list of blob objects")
         for frame_i in tqdm(range(1,self.number_of_frames), desc = 'connecting blobs'):
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
@@ -35,8 +56,11 @@ class ListOfBlobs(object):
                     blob_0.now_points_to(blob_1)
 
     def reconnect(self):
+        """Connects blobs in subsequent frames by computing their overlapping
+        and sets blobs_are_connected to True
+        """
         logger.info("re-Connecting list of blob objects")
-        for frame_i in tqdm(range(1,self.number_of_frames), desc = 're-connecting blobs'):
+        for frame_i in tqdm(range(1, self.number_of_frames), desc = 're-connecting blobs'):
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):
                 if blob_0.fragment_identifier == blob_1.fragment_identifier:
                     blob_0.now_points_to(blob_1)
@@ -53,12 +77,38 @@ class ListOfBlobs(object):
 
     @classmethod
     def load(cls, video, path_to_load_blob_list_file):
+        """Short summary.
+
+        Parameters
+        ----------
+        video : <Video object>
+            See :class:`~video.Video`
+        path_to_load_blob_list_file : str
+            path to load a list of blobs
+
+        Returns
+        -------
+        <ListOfBlobs object>
+            an instance of ListOfBlobs
+
+        """
         logger.info("loading blobs list from %s" %path_to_load_blob_list_file)
         list_of_blobs = np.load(path_to_load_blob_list_file).item()
         list_of_blobs.blobs_are_connected = False
         return list_of_blobs
 
     def compute_fragment_identifier_and_blob_index(self, number_of_animals):
+        """Associates a unique fragment identifier to the fragments computed by
+        overlapping see method
+        :meth:`compute_overlapping_between_subsequent_frames` and sets the blob
+        index as the hierarchy of the blob in the first frame of the fragment to
+        which blob belongs to.
+
+        Parameters
+        ----------
+        number_of_animals : int
+            number of animals to be tracked
+        """
         counter = 0
         possible_blob_indices = range(number_of_animals)
 
@@ -95,9 +145,20 @@ class ListOfBlobs(object):
         logger.info("number_of_individual_fragments, %i" %counter)
 
     def compute_crossing_fragment_identifier(self):
-        """we define a crossing fragment as a crossing that in subsequent frames
-        involves the same individuals"""
+        """Assign a unique identifier to fragments associated to a crossing
+        """
         def propagate_crossing_identifier(blob, fragment_identifier):
+            """Propagates the identifier throughout the entire fragment to which
+            blob belongs to. It crawls by overlapping in both the past and
+            future "overlapping histories" of blob
+
+            Parameters
+            ----------
+            blob : <Blob object>
+                an instance of :class:`~blob.Blob`
+            fragment_identifier : int
+                unique fragment identifier associated
+            """
             assert blob.fragment_identifier is None
             blob._fragment_identifier = fragment_identifier
             cur_blob = blob
@@ -123,7 +184,21 @@ class ListOfBlobs(object):
         logger.info("total number of fragments: %i" %fragment_identifier)
 
     def compute_overlapping_between_subsequent_frames(self):
+        """Computes overlapping between self and the blobs generated during
+        segmentation in the next frames
+        """
         def set_frame_number_to_blobs_in_frame(blobs_in_frame, frame_number):
+            """Sets the attribute frame number to the instances of
+            :class:`~blob.Blob` collected in `blobs_in_frame`
+
+            Parameters
+            ----------
+            blobs_in_frame : list
+                list of instances of :class:`~blob.Blob`
+            frame_number : int
+                number of the frame from which `blobs_in_frame` has been
+                generated
+            """
             for blob in blobs_in_frame:
                 blob.frame_number = frame_number
         self.disconnect()
@@ -156,7 +231,40 @@ class ListOfBlobs(object):
         return ModelArea(mean_area, median_area, std_area), median_body_length
 
     def apply_model_area_to_video(self, video, model_area, identification_image_size, number_of_animals):
+        """Applies `model_area` to every blob extracted from video
+
+        Parameters
+        ----------
+        video : <Video object>
+            See :class:`~video.Video`
+        model_area : <ModelArea object>
+            See :class:`~model_area.ModelArea`
+        identification_image_size : int
+            size of the identification image (see
+            :meth:`~blob.Blob.get_image_for_identification` and
+            :attr:`~blob.Blob.image_for_identification`)
+        number_of_animals : int
+            number of animals to be tracked
+        """
         def apply_model_area_to_blobs_in_frame(video, number_of_animals, blobs_in_frame, model_area, identification_image_size):
+            """Applies `model_area` to the collection of Blob instances in
+            `blobs_in_frame`
+
+            Parameters
+            ----------
+            video : <Video object>
+                See :class:`~video.Video`
+            number_of_animals : int
+                number of animals to be tracked
+            blobs_in_frame : list
+                list of instances of :class:`~blob.Blob`
+            model_area : <ModelArea object>
+                See :class:`~model_area.ModelArea`
+            identification_image_size : int
+                size of the identification image (see
+                :meth:`~blob.Blob.get_image_for_identification` and
+                :attr:`~blob.Blob.image_for_identification`)
+            """
             number_of_blobs = len(blobs_in_frame)
             for blob in blobs_in_frame:
                 blob.apply_model_area(video, number_of_animals, model_area, identification_image_size, number_of_blobs)
@@ -164,10 +272,33 @@ class ListOfBlobs(object):
             apply_model_area_to_blobs_in_frame(video, number_of_animals, blobs_in_frame, model_area, identification_image_size)
 
     def get_data_plot(self):
+        """Gets the areas of all the blobs segmented in the video
+
+        Returns
+        -------
+        list
+            Areas of all the blobs segmented in the video
+
+        """
         return [blob.area for blobs_in_frame in self.blobs_in_video for blob in blobs_in_frame]
 
 
     def check_maximal_number_of_blob(self, number_of_animals):
+        """Checks that the amount of blobs per frame is not greater than the
+        number of animals to track
+
+        Parameters
+        ----------
+        number_of_animals : int
+            number of animals to be tracked
+
+        Returns
+        -------
+        list
+            List of indices of frames in which more blobs than animals to track
+            have been segmented
+
+        """
         frames_with_more_blobs_than_animals = []
         for frame_number, blobs_in_frame in enumerate(self.blobs_in_video):
 
@@ -180,6 +311,19 @@ class ListOfBlobs(object):
         return frames_with_more_blobs_than_animals
 
     def update_from_list_of_fragments(self, fragments, fragment_identifier_to_index):
+        """Updates the blobs objects generated from the video with the attributes
+        computed for each fragment
+
+        Parameters
+        ----------
+        fragments : list
+            List of all the fragments
+        fragment_identifier_to_index : int
+            index to retrieve the fragment corresponding to a certain fragment
+            identifier (see
+            :meth:`~blob.Blob.compute_fragment_identifier_and_blob_index`)
+
+        """
         attributes = ['identity',
                         'P2_vector',
                         'identity_corrected_solving_duplication',
@@ -192,11 +336,22 @@ class ListOfBlobs(object):
                 [setattr(blob, '_' + attribute, getattr(fragment, attribute)) for attribute in attributes if hasattr(fragment, attribute)]
 
     def compute_nose_and_head_coordinates(self):
+        """Computes nose and head coordinate for all the blobs segmented from the
+        video
+        """
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
                 blob.get_nose_and_head_coordinates()
 
     def erode(self, video):
+        """Erodes all the blobs in the video
+
+        Parameters
+        ----------
+        video : <Video object>
+            see :class:`~video.Video`
+        """
+
         for frame_number, blobs_in_frame in enumerate(tqdm(self.blobs_in_video, desc = 'eroding blobs')):
             eroded_blobs_in_frame = get_eroded_blobs(video, blobs_in_frame)
             if len(eroded_blobs_in_frame) <= video.number_of_animals:

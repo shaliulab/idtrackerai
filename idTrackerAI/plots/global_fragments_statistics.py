@@ -167,4 +167,7 @@ if __name__ == '__main__':
     print("loading list_of_global_fragments")
     list_of_global_fragments = ListOfGlobalFragments.load(video.global_fragments_path, list_of_fragments.fragments)
     print("plotting")
-    compute_and_plot_fragments_statistics(video, video.model_area, list_of_blobs, list_of_fragments, list_of_global_fragments)
+    video.individual_fragments_lenghts, \
+    video.individual_fragments_distance_travelled, \
+        video._gamma_fit_parameters = compute_and_plot_fragments_statistics(video, video.model_area, list_of_blobs, list_of_fragments, list_of_global_fragments)
+    np.save(video_path, video)

@@ -24,37 +24,12 @@ def get_frames_and_frames_moving_for_fragments(fragments):
     return frames, frames_moving
 
 if __name__ == '__main__':
-    session_paths = ['/media/themis/ground_truth_results_backup/10_fish_group4/first/session_20180122',
-             '/media/themis/ground_truth_results_backup/10_fish_group5/first/session_20180131',
-             '/media/themis/ground_truth_results_backup/10_fish_group6/first/session_20180202',
-             '/media/themis/ground_truth_results_backup/38 drosophila (females males)/Canton_N38_top_video_01-31-18_10-50-14/session_20180201',
-             '/media/themis/ground_truth_results_backup/72 drosophila (females - males)/session_20180201',
-             '/media/themis/ground_truth_results_backup/80 drosophila (females males)/Canton_N80_11-28-17_17-21-32/session_20180123',
-             '/media/themis/ground_truth_results_backup/ants_andrew_1/session_20180206',
-             '/media/themis/ground_truth_results_backup/idTrackerDeep_LargeGroups_1/100/First/session_20180102',
-             '/media/themis/ground_truth_results_backup/idTrackerDeep_LargeGroups_1/60/First/session_20180108',
-             '/media/themis/ground_truth_results_backup/idTrackerDeep_LargeGroups_2/TU20170307/numberIndivs_100/First/session_20180104',
-             '/media/themis/ground_truth_results_backup/idTrackerDeep_LargeGroups_2/TU20170307/numberIndivs_60/First/session_20171221',
-             '/media/themis/ground_truth_results_backup/idTrackerDeep_LargeGroups_3/100fish/First/session_02122017',
-             '/media/themis/ground_truth_results_backup/idTrackerDeep_LargeGroups_3/60fish/First/session_20171225',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/Hipertec_pesados/Medaka/2012may31/Grupo10/session_20180201',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/Hipertec_pesados/Medaka/2012may31/Grupo5/session_20180131',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/Hipertec_pesados/Medaka/20fish_contapa/session_20180201',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/Moscas/2011dic12/Video_4fem_2mal_bottom/session_20180130',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/Moscas/20121010/PlatoGrande_8females_2/session_20180131',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/NatureMethods/Isogenicos/Wik_8_grupo4/session_20180130',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/NatureMethods/Ratones4/session_20180205',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/NatureMethods/VideoRatonesDespeinaos3/session_20180206',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/Ratones/20121203/2aguties/session_20180204',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/Ratones/20121203/2negroscanosos/session_20180204',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/Ratones/20121203/2negroslisocanoso/session_20180205',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/Ratones/20121203/2negroslisos/session_20180205',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/ValidacionTracking/Moscas/Platogrande_8females/session_20180131',
-             '/media/themis/ground_truth_results_backup/idTrackerVideos/Zebrafish_nacreLucie/pair3ht/session_20180207']
+    session_paths = ['/home/prometheus/Desktop/IdTrackerDeep/videos/60 drosophila (females)/Canton_N60_12-15-17_15-15-10/session_20180110']
 
     for session_path in session_paths:
         print("\nsession_path: ", session_path)
         if 'drosophila' in session_path\
+            or 'flies' in session_path\
             or ('Moscas' in session_path and 'PlatoGrande' in session_path)\
             or ('Moscas' in session_path and 'Platogrande' in session_path):
 
@@ -112,7 +87,8 @@ if __name__ == '__main__':
             ax_arr[1].hist(np.log10(frames_moving_good), bins = logbins, normed = True)
 
             video.minimum_number_of_frames_moving_in_first_global_fragment = np.min(frames_moving_good)
+            print(video.minimum_number_of_frames_moving_in_first_global_fragment)
 
             np.save(os.path.join(session_path, 'video_object.npy'), video)
 
-            del video, list_of_fragments, list_of_global_fragments
+            # del video, list_of_fragments, list_of_global_fragments

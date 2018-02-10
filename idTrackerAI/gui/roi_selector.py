@@ -215,9 +215,10 @@ class ROISelector(BoxLayout):
         CHOSEN_VIDEO.video.save()
 
     def no_ROI(self, *args):
-        CHOSEN_VIDEO.video.ROI = np.ones_like(self.visualiser.frame ,dtype='uint8') * 255
+        CHOSEN_VIDEO.video._ROI = np.ones_like(self.visualiser.frame ,dtype='uint8') * 255
         CHOSEN_VIDEO.apply_ROI = False
         CHOSEN_VIDEO.video.save()
 
     def load_ROI(self, *args):
-        CHOSEN_VIDEO.video.ROI = CHOSEN_VIDEO.old_video.ROI
+        print("loading previous ROI")
+        CHOSEN_VIDEO.video._ROI = CHOSEN_VIDEO.old_video.ROI

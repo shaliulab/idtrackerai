@@ -271,7 +271,6 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs, training_di
 
 if __name__ == '__main__':
     session_path = selectDir('./') #select path to video
-    # session_path = '/home/themis/Desktop/IdTrackerDeep/videos/idTrackerDeep_LargeGroups_3/100fish/First/session_2'
     video_path = os.path.join(session_path,'video_object.npy')
     video = np.load(video_path).item(0)
     list_of_blobs = ListOfBlobs.load(video, video.blobs_path)

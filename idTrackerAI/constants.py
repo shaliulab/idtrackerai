@@ -11,7 +11,7 @@ AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg', '.MOV']
 '''***FRAMES_PER_EPISODE***
 Number of frames per video chunk. Used to parallelise processes
 '''
-FRAMES_PER_EPISODE = 100
+FRAMES_PER_EPISODE = 500
 
 #######################################
 ##########   preprocessing  ###########
@@ -28,7 +28,7 @@ STD_TOLERANCE = 4
 """***BACKGROUND_SUBTRACTION_PERIOD***
 Period used to sample the video to compute the background model
 """
-BACKGROUND_SUBTRACTION_PERIOD = 100
+BACKGROUND_SUBTRACTION_PERIOD = 400
 
 #######################################
 #########  global fragments  ##########
@@ -42,6 +42,10 @@ MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = 3
 #######################################
 ##########        CNN       ###########
 #######################################
+'''***VALIDATION_PROPORTION***
+Protortion of images used for validation in the IDCNN model
+'''
+VALIDATION_PROPORTION = .1
 '''***BATCH_SIZE_DCD, BATCH_SIZE_IDCNN***
 size of the batches used to train the DCD and idCNN, respectively.
 '''

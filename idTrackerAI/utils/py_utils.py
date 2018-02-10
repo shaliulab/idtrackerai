@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, absolute_import
 from itertools import groupby
 import os
 import glob
@@ -6,6 +6,7 @@ import re
 import numpy as np
 import sys
 import matplotlib
+from matplotlib import cm
 import subprocess
 if sys.argv[0] == 'idtrackerdeepApp.py':
     from kivy.logger import Logger
@@ -150,7 +151,7 @@ def scanFolder(path):
     return paths
 
 def get_spaced_colors_util(n, norm = False, black = True, cmap = 'jet'):
-    RGB_tuples = matplotlib.cm.get_cmap(cmap)
+    RGB_tuples = cm.get_cmap(cmap)
     if norm:
         colors = [RGB_tuples(i / n) for i in range(n)]
     else:
@@ -244,16 +245,12 @@ def getExistentFiles(video, processes):
         logger.debug("loading old video object from get existent files")
         if os.path.isfile(os.path.join(video._previous_session_folder, 'video_object.npy')):
             old_video = np.load(os.path.join(video._previous_session_folder, 'video_object.npy')).item()
-            video.use_previous_knowledge_transfer_decision = old_video.use_previous_knowledge_transfer_decision
             logger.info("old video loaded")
         else:
             logger.info("The folder %s is empty. The tracking cannot be restored." %video._previous_session_folder)
-            video.use_previous_knowledge_transfer_decision = False
             return existentFile, old_video
         old_video = check_and_change_video_path(video,old_video)
         existentFile = set_load_previous_dict(old_video, processes, existentFile)
-    else:
-        video.use_previous_knowledge_transfer_decision = False
 
     return existentFile, old_video
 
