@@ -96,7 +96,7 @@
     <span class="kn">import</span> <span class="nn">logging</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.globalfragment&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="GlobalFragment"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment">[docs]</a><span class="k">class</span> <span class="nc">GlobalFragment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment">[docs]</a><span class="k">class</span> <span class="nc">GlobalFragment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; A global fragment is a collection of instances of the class</span>
 <span class="sd">    :class:`~fragment.Fragment`. Such fragments are collected from a part of the</span>
 <span class="sd">    video in which all animals are visible.</span>
@@ -151,7 +151,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_unique</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_certain</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="GlobalFragment.reset"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roll_back_to</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment.reset"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roll_back_to</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Resets attributes to the fragmentation step in the algorithm,</span>
 <span class="sd">        allowing for example to start a new accumulation</span>
 
@@ -172,7 +172,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">softmax_probs_median</span> <span class="o">=</span> <span class="p">[]</span></div>
 
-<div class="viewcode-block" id="GlobalFragment.get_individual_fragments_of_global_fragment"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment.get_individual_fragments_of_global_fragment">[docs]</a>    <span class="k">def</span> <span class="nf">get_individual_fragments_of_global_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment.get_individual_fragments_of_global_fragment"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.get_individual_fragments_of_global_fragment">[docs]</a>    <span class="k">def</span> <span class="nf">get_individual_fragments_of_global_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the individual fragments in the global fragments by using their</span>
 <span class="sd">        unique identifiers</span>
 
@@ -186,7 +186,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">individual_fragments</span> <span class="o">=</span> <span class="p">[</span><span class="n">fragment</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">fragments</span>
                                         <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">individual_fragments_identifiers</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="GlobalFragment.get_list_of_attributes_from_individual_fragments"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment.get_list_of_attributes_from_individual_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_list_of_attributes_from_individual_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span>
+<div class="viewcode-block" id="GlobalFragment.get_list_of_attributes_from_individual_fragments"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.get_list_of_attributes_from_individual_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_list_of_attributes_from_individual_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span>
                 <span class="n">list_of_attributes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;distance_travelled&#39;</span><span class="p">,</span> <span class="s1">&#39;number_of_images&#39;</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Given a set of attributes available in the instances of the class</span>
 <span class="sd">        :class:`~fragment.Fragment` it copies them in the global fragment.</span>
@@ -214,12 +214,12 @@
                 <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">list_of_attributes</span><span class="p">:</span>
                     <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span> <span class="o">+</span> <span class="s1">&#39;_per_individual_fragment&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="GlobalFragment.set_minimum_distance_travelled"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment.set_minimum_distance_travelled">[docs]</a>    <span class="k">def</span> <span class="nf">set_minimum_distance_travelled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment.set_minimum_distance_travelled"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.set_minimum_distance_travelled">[docs]</a>    <span class="k">def</span> <span class="nf">set_minimum_distance_travelled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets the minum distance travelled attribute</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">minimum_distance_travelled</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">distance_travelled_per_individual_fragment</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GlobalFragment.set_candidate_for_accumulation"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment.set_candidate_for_accumulation">[docs]</a>    <span class="k">def</span> <span class="nf">set_candidate_for_accumulation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment.set_candidate_for_accumulation"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.set_candidate_for_accumulation">[docs]</a>    <span class="k">def</span> <span class="nf">set_candidate_for_accumulation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets the global fragment to be eligible for accumulation</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_candidate_for_accumulation</span> <span class="o">=</span> <span class="kc">True</span>
@@ -264,7 +264,7 @@
     <span class="k">def</span> <span class="nf">used_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">individual_fragments</span><span class="p">])</span>
 
-<div class="viewcode-block" id="GlobalFragment.acceptable_for_training"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment.acceptable_for_training">[docs]</a>    <span class="k">def</span> <span class="nf">acceptable_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accumulation_strategy</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment.acceptable_for_training"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.acceptable_for_training">[docs]</a>    <span class="k">def</span> <span class="nf">acceptable_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accumulation_strategy</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns True if the global fragment is acceptable for training.</span>
 <span class="sd">        See :attr:`~fragment.Fragment.acceptable_for_training` for every</span>
 <span class="sd">        individual fragment in the global fragment</span>
@@ -295,7 +295,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">check_uniqueness</span><span class="p">(</span><span class="n">scope</span> <span class="o">=</span> <span class="s1">&#39;partial&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_partially_unique</span>
 
-<div class="viewcode-block" id="GlobalFragment.check_uniqueness"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment.check_uniqueness">[docs]</a>    <span class="k">def</span> <span class="nf">check_uniqueness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment.check_uniqueness"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.check_uniqueness">[docs]</a>    <span class="k">def</span> <span class="nf">check_uniqueness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Checks that the identities assigned to the individual fragments are</span>
 <span class="sd">        unique</span>
 
@@ -320,14 +320,14 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_is_partially_unique</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="GlobalFragment.get_total_number_of_images"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment.get_total_number_of_images">[docs]</a>    <span class="k">def</span> <span class="nf">get_total_number_of_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment.get_total_number_of_images"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.get_total_number_of_images">[docs]</a>    <span class="k">def</span> <span class="nf">get_total_number_of_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Gets the total number of images in the global fragment</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s1">&#39;total_number_of_images&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">total_number_of_images</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">individual_fragments</span><span class="p">])</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_number_of_images</span></div>
 
-<div class="viewcode-block" id="GlobalFragment.get_images_and_labels"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment.get_images_and_labels">[docs]</a>    <span class="k">def</span> <span class="nf">get_images_and_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment.get_images_and_labels"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.get_images_and_labels">[docs]</a>    <span class="k">def</span> <span class="nf">get_images_and_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Arrange the images and identities in the global fragment as a</span>
 <span class="sd">        labelled dataset in order to train the idCNN</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -340,7 +340,7 @@
 
         <span class="k">return</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span></div>
 
-<div class="viewcode-block" id="GlobalFragment.compute_start_end_frame_indices_of_individual_fragments"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment.compute_start_end_frame_indices_of_individual_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">compute_start_end_frame_indices_of_individual_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blobs_in_video</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment.compute_start_end_frame_indices_of_individual_fragments"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.compute_start_end_frame_indices_of_individual_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">compute_start_end_frame_indices_of_individual_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blobs_in_video</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Parameters</span>
@@ -353,7 +353,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">starts_ends_individual_fragments</span> <span class="o">=</span> <span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">compute_fragment_start_end</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_video</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index_beginning_of_fragment</span><span class="p">]]</span></div>
 
-<div class="viewcode-block" id="GlobalFragment.update_individual_fragments_attribute"><a class="viewcode-back" href="../modules.html#globalfragment.GlobalFragment.update_individual_fragments_attribute">[docs]</a>    <span class="k">def</span> <span class="nf">update_individual_fragments_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="GlobalFragment.update_individual_fragments_attribute"><a class="viewcode-back" href="../fragmentation.html#globalfragment.GlobalFragment.update_individual_fragments_attribute">[docs]</a>    <span class="k">def</span> <span class="nf">update_individual_fragments_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Update `attribute` in every individual fragment in the global</span>
 <span class="sd">        fragment by setting it at `value`</span>
 
@@ -391,7 +391,7 @@
       Last updated on Feb 09, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
       </li>
     </ul>
     </div>

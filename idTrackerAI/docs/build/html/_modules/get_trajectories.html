@@ -108,7 +108,7 @@
 <span class="sd">a NaN appears instead of the coordinates</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="assign_point_to_identity"><a class="viewcode-back" href="../modules.html#get_trajectories.assign_point_to_identity">[docs]</a><span class="k">def</span> <span class="nf">assign_point_to_identity</span><span class="p">(</span><span class="n">centroid</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">centroid_trajectories</span><span class="p">):</span>
+<div class="viewcode-block" id="assign_point_to_identity"><a class="viewcode-back" href="../postprocessing.html#get_trajectories.assign_point_to_identity">[docs]</a><span class="k">def</span> <span class="nf">assign_point_to_identity</span><span class="p">(</span><span class="n">centroid</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">centroid_trajectories</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Populate the matrix of individual trajectories with the centroid of a</span>
 <span class="sd">    selected Blob object (see :class:`~blob.Blob`)</span>
 
@@ -133,7 +133,7 @@
         <span class="n">centroid_trajectories</span><span class="p">[</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">identity</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">centroid</span>
     <span class="k">return</span> <span class="n">centroid_trajectories</span></div>
 
-<div class="viewcode-block" id="produce_trajectories"><a class="viewcode-back" href="../modules.html#get_trajectories.produce_trajectories">[docs]</a><span class="k">def</span> <span class="nf">produce_trajectories</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">number_of_frames</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+<div class="viewcode-block" id="produce_trajectories"><a class="viewcode-back" href="../postprocessing.html#get_trajectories.produce_trajectories">[docs]</a><span class="k">def</span> <span class="nf">produce_trajectories</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">number_of_frames</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Produce trajectories array from ListOfBlobs</span>
 
 <span class="sd">    Parameters</span>
@@ -171,7 +171,7 @@
 
     <span class="k">return</span> <span class="n">centroid_trajectories</span></div>
 
-<div class="viewcode-block" id="produce_output_dict"><a class="viewcode-back" href="../modules.html#get_trajectories.produce_output_dict">[docs]</a><span class="k">def</span> <span class="nf">produce_output_dict</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
+<div class="viewcode-block" id="produce_output_dict"><a class="viewcode-back" href="../postprocessing.html#get_trajectories.produce_output_dict">[docs]</a><span class="k">def</span> <span class="nf">produce_output_dict</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Outputs the dictionary with keys: trajectories, git_commit, video_path,</span>
 <span class="sd">    frames_per_second</span>
 
@@ -195,7 +195,7 @@
                     <span class="s1">&#39;frames_per_second&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">frames_per_second</span><span class="p">}</span>
     <span class="k">return</span> <span class="n">output_dict</span></div>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="c1"># #SIMPLE USAGE EXAMPLE</span>
     <span class="c1"># BLOB_FILE_NAME = &quot;blobs_collection.npy&quot;</span>
     <span class="n">session_path</span> <span class="o">=</span> <span class="n">selectDir</span><span class="p">(</span><span class="s1">&#39;./&#39;</span><span class="p">)</span> <span class="c1">#select path to video</span>
@@ -240,7 +240,7 @@
       Last updated on Feb 09, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
       </li>
     </ul>
     </div>

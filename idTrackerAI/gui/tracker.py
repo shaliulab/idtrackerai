@@ -156,7 +156,7 @@ class Tracker(BoxLayout):
         self.net = ConvNetwork(self.accumulation_network_params)
         if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
             self.net.restore()
-        CHOSEN_VIDEO.video._first_frame_first_global_fragment.append(CHOSEN_VIDEO.list_of_global_fragments.set_first_global_fragment_for_accumulation(CHOSEN_VIDEO.video, self.net, accumulation_trial = 0))
+        CHOSEN_VIDEO.video._first_frame_first_global_fragment.append(CHOSEN_VIDEO.list_of_global_fragments.set_first_global_fragment_for_accumulation(CHOSEN_VIDEO.video, accumulation_trial = 0))
         if CHOSEN_VIDEO.video.identity_transfer and\
             CHOSEN_VIDEO.video.number_of_animals < CHOSEN_VIDEO.video.knowledge_transfer_info_dict['number_of_animals']:
             tf.reset_default_graph()
@@ -285,7 +285,7 @@ class Tracker(BoxLayout):
         self.net.restore()
         self.net.reinitialize_softmax_and_fully_connected()
         Logger.info("Initialising accumulation manager")
-        CHOSEN_VIDEO.video._first_frame_first_global_fragment.append(CHOSEN_VIDEO.list_of_global_fragments.set_first_global_fragment_for_accumulation(CHOSEN_VIDEO.video, self.net, accumulation_trial = iteration_number - 1))
+        CHOSEN_VIDEO.video._first_frame_first_global_fragment.append(CHOSEN_VIDEO.list_of_global_fragments.set_first_global_fragment_for_accumulation(CHOSEN_VIDEO.video, accumulation_trial = iteration_number - 1))
         if CHOSEN_VIDEO.video.identity_transfer and CHOSEN_VIDEO.video.number_of_animals < CHOSEN_VIDEO.video.knowledge_transfer_info_dict['number_of_animals']:
             tf.reset_default_graph()
             self.accumulation_network_params.number_of_animals = CHOSEN_VIDEO.video.number_of_animals

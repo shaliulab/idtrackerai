@@ -12,7 +12,6 @@ from get_data import DataSet
 from id_CNN import ConvNetwork
 from get_predictions import GetPrediction
 from visualize_embeddings import EmbeddingVisualiser
-from statistics_for_assignment import compute_P2_of_individual_fragment_from_blob
 if sys.argv[0] == 'idtrackerdeepApp.py':
     from kivy.logger import Logger
     logger = Logger

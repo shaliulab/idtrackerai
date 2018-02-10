@@ -350,7 +350,7 @@ if __name__ == '__main__':
         logger.info("Initialising accumulation manager")
         # the list of global fragments is ordered in place from the distance (in frames) wrt
         # the core of the first global fragment that will be accumulated
-        video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = 0))
+        video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = 0))
         if video.identity_transfer and video.number_of_animals < video.knowledge_transfer_info_dict['number_of_animals']:
             tf.reset_default_graph()
             accumulation_network_params.number_of_animals = video.number_of_animals
@@ -483,7 +483,7 @@ if __name__ == '__main__':
                 net.restore()
                 net.reinitialize_softmax_and_fully_connected()
                 logger.info("Initialising accumulation manager")
-                video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, net, accumulation_trial = i - 1))
+                video._first_frame_first_global_fragment.append(list_of_global_fragments.set_first_global_fragment_for_accumulation(video, accumulation_trial = i - 1))
                 if video.identity_transfer and video.number_of_animals < video.knowledge_transfer_info_dict['number_of_animals']:
                     tf.reset_default_graph()
                     accumulation_network_params.number_of_animals = video.number_of_animals
