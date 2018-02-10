@@ -56,7 +56,7 @@ def assign(net, video, images, print_flag):
     logger.info("generating data set. Images shape %s" %str(images.shape))
     data = DataSet(net.params.number_of_animals, images)
     logger.info("getting predictions")
-    assigner = GetPrediction(data, print_flag = print_flag)
+    assigner = GetPrediction(data)
     assigner.get_predictions_softmax(net.predict)
     logger.info("done")
     return assigner
