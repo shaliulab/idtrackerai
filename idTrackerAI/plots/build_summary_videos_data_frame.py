@@ -175,8 +175,9 @@ def get_mean_number_of_images_in_first_global_fragment(list_of_global_fragments,
 
 if __name__ == '__main__':
     # hard_drive_path = '/media/themis/ground_truth_results_backup'
-    hard_drive_path = '/media/chronos/ground_truth_results_backup'
-    session_paths = [x[0] for x in os.walk(hard_drive_path) if 'session' in x[0][-16:] and 'Trash' not in x[0]]
+    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup'
+    tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
+    session_paths = [x[0] for x in os.walk(tracked_videos_folder) if 'session' in x[0][-16:] and 'Trash' not in x[0]]
     pprint(session_paths)
     tracked_videos_data_frame = pd.DataFrame()
     if len(session_paths) == len(sessions) and len(session_paths) == len(animal_type) and len(idTracker_video) == len(session_paths):
@@ -212,6 +213,9 @@ if __name__ == '__main__':
 
             if not hasattr(video, 'gt_accuracy_interpolated') or not hasattr(video, 'gt_results_interpolated'):
                 print("\ncomputing gt_accuracy_interpolated")
+                if not 'list_of_blobs_interpolated' in locals():
+                    print("loading list_of_fragments")
+                    list_of_blobs_interpolated = ListOfBlobs.load(video, os.path.join(session_path, 'preprocessing', 'blobs_collection_interpolated.npy'))
                 print("loading ground truth file")
                 groundtruth = np.load(os.path.join(video_folder, '_groundtruth.npy')).item()
                 blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
@@ -455,6 +459,6 @@ if __name__ == '__main__':
                     'individual_accurcay_identified_animals_interpolated': 0 if not hasattr(video, 'gt_accuracy_individual_interpolated') else video.gt_accuracy_individual_interpolated['accuracy_assigned']
                     }, ignore_index=True)
 
-        tracked_videos_data_frame.to_pickle(os.path.join(hard_drive_path, 'tracked_videos_data_frame.pkl'))
+        tracked_videos_data_frame.to_pickle(os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl'))
     else:
         print("update the list of sessions and species")

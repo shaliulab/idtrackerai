@@ -348,7 +348,8 @@ class Video(object):
             #get video folder
             self._video_folder = os.path.dirname(self.video_path)
             #collect some info on the video (resolution, number of frames, ..)
-            self.get_info()
+            if not hasattr(self,'number_of_frames'):
+                self.get_info()
             self.modified = time.strftime("%c")
         else:
             raise ValueError("Supported video extensions are ", AVAILABLE_VIDEO_EXTENSION)
