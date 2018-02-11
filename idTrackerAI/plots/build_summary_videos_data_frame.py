@@ -30,6 +30,7 @@ sessions = ['10_fish_group4/first/session_20180122',
  '10_flies_compressed_clara/session_20180207',
  '38 drosophila (females males)/Canton_N38_top_video_01-31-18_10-50-14/session_20180201',
  '72 drosophila (females - males)/session_20180201',
+ '80 drosophila (females - males)/session_20180206',
  '80 drosophila (females males)/Canton_N80_11-28-17_17-21-32/session_20180123',
  'ants_andrew_1/session_20180206',
  'idTrackerDeep_LargeGroups_1/100/First/session_20180102',
@@ -57,6 +58,7 @@ sessions = ['10_fish_group4/first/session_20180122',
 animal_type = ['zebrafish (30dpf)',
             'zebrafish (30dpf)',
             'zebrafish (30dpf)',
+            'drosophila',
             'drosophila',
             'drosophila',
             'drosophila',
@@ -112,9 +114,11 @@ idTracker_video = [False,
                     True,
                     True,
                     True,
+                    True,
                     True]
 
 used_for_developing = [False,
+                    False,
                     False,
                     False,
                     False,
@@ -445,10 +449,10 @@ if __name__ == '__main__':
                     'accuracy_identified_animals_identification_and_interpolation': video.gt_accuracy_interpolated['accuracy_assigned'],
                     'accuracy_in_residual_identification_identification_and_interpolation': video.gt_accuracy_interpolated['accuracy_after_accumulation'],
                     'accuracy_with_gaps_closed_by_interpolation': None if not hasattr(video, 'gt_accuracy_no_gaps') else video.gt_accuracy_no_gaps['accuracy'],
-                    'individual_accuracy': None if not hasattr(video, 'gt_accuracy_individual') else video.gt_accuracy_individual['accuracy'],
-                    'individual_accuracy_identified_animals': None if not hasattr(video, 'gt_accuracy_individual') else video.gt_accuracy_individual['accuracy_assigned'],
-                    'individual_accuracy_interpolated': None if not hasattr(video, 'gt_accuracy_individual_interpolated') else video.gt_accuracy_individual_interpolated['accuracy'],
-                    'individual_accurcay_identified_animals_interpolated': None if not hasattr(video, 'gt_accuracy_individual_interpolated') else video.gt_accuracy_individual_interpolated['accuracy_assigned']
+                    'individual_accuracy': 0 if not hasattr(video, 'gt_accuracy_individual') else video.gt_accuracy_individual['accuracy'],
+                    'individual_accuracy_identified_animals': 0 if not hasattr(video, 'gt_accuracy_individual') else video.gt_accuracy_individual['accuracy_assigned'],
+                    'individual_accuracy_interpolated': 0 if not hasattr(video, 'gt_accuracy_individual_interpolated') else video.gt_accuracy_individual_interpolated['accuracy'],
+                    'individual_accurcay_identified_animals_interpolated': 0 if not hasattr(video, 'gt_accuracy_individual_interpolated') else video.gt_accuracy_individual_interpolated['accuracy_assigned']
                     }, ignore_index=True)
 
         tracked_videos_data_frame.to_pickle(os.path.join(hard_drive_path, 'tracked_videos_data_frame.pkl'))
