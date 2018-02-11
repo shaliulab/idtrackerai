@@ -77,9 +77,9 @@ Init variables
     VEL_PERCENTILE: integer [0, 100]
         percentile used to compute the maximal accpetable individual velocity
 """
-PROCESSES = ['preprocessing','first_accumulation', 'pretraining', 'second_accumulation',
-            'assignment', 'solving_duplications', 'trajectories', 'crossings',
-            'trajectories_wo_gaps']
+PROCESSES = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
+            'protocol3_accumulation', 'residual_identification',
+            'post_processing']
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
 RESTORE_CRITERION = 'last'
 VEL_PERCENTILE = 99
@@ -232,7 +232,8 @@ class Root(TabbedPanel):
         if not DEACTIVATE_VALIDATION.process:
             self.validator = Validator(chosen_video = CHOSEN_VIDEO,
                                         deactivate_validation = DEACTIVATE_VALIDATION)
-            self.tracker.go_to_validation_button.bind(on_release = partial(self.switch, self.tab_list[1]))
+            if hasattr(self, 'tracker'):
+                self.tracker.go_to_validation_button.bind(on_release = partial(self.switch, self.tab_list[1]))
             self.validator.id = "validator"
             self.validation_tab.add_widget(self.validator)
         else:

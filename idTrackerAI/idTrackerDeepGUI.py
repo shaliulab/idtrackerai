@@ -697,12 +697,15 @@ if __name__ == '__main__':
     groundtruth_path = os.path.join(video.video_folder,'_groundtruth.npy')
     if os.path.isfile(groundtruth_path):
         print("\n**** Computing accuracy wrt. groundtruth ****")
-        groundtruth = np.load(groundtruth_path).item()
-        blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
-        blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
-        video.gt_accuracy, video.gt_results = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
-        video.gt_start_end = (groundtruth.start, groundtruth.end)
-        video.save()
+        try:
+            groundtruth = np.load(groundtruth_path).item()
+            blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
+            blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
+            video.gt_accuracy, video.gt_results = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
+            video.gt_start_end = (groundtruth.start, groundtruth.end)
+            video.save()
+        except:
+            print("error computing the ground truth")
 
     video.total_time = sum([video.generate_trajectories_time,
                             video.solve_impossible_jumps_time,
@@ -755,12 +758,3 @@ if __name__ == '__main__':
         video._has_trajectories_wo_gaps = True
         video.save()
     video.generate_trajectories_wogaps_time = time.time() - video.generate_trajectories_wogaps_time
-
-    #############################################################
-    ############ Create trajectories (w gaps interpolated) ######
-    #############################################################
-    list_of_blobs_interpolated = assign_zeros_with_interpolation_identities(list_of_blobs, list_of_blobs_no_gaps)
-    trajectories_file = os.path.join(video.trajectories_folder, 'trajectories_interpolated.npy')
-    trajectories = produce_output_dict(list_of_blobs_interpolated.blobs_in_video, video)
-    np.save(trajectories_file, trajectories)
-    logger.info("Saving trajectories")

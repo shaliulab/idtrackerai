@@ -11,6 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   gallery
    how_to_install
    quickstart
    modules
