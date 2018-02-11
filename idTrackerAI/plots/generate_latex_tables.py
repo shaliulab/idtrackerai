@@ -15,6 +15,9 @@ def f_percentage(x):
 def f_accuracy(x):
     return '%.3f' %(x*100) if x != 1 else '%i' %(x*100)
 
+def f_individual_accuracy(x):
+    return '%.3f' %(x*100) if x != 1 else '%i' %(x*100)
+
 def f_time(x):
     return '%.2f' %x
 
@@ -43,6 +46,7 @@ if __name__ == '__main__':
                         'number_of_crossing_fragments_in_validated_part',
                         'mean_area_in_pixels',
                         'accuracy_identification_and_interpolation',
+                        'individual_accuracy_interpolated',
                         'accuracy_in_accumulation',
                         'accuracy_in_residual_identification_identification_and_interpolation',
                         'protocol_used',
@@ -56,6 +60,7 @@ if __name__ == '__main__':
                 'Number of crossings',
                 'Pixels per animal',
                 'Accuracy',
+                'Individual accuracy',
                 'Accuracy in accumulation and identification',
                 'Accuracy in residual identification',
                 'Protocol',
@@ -69,6 +74,7 @@ if __name__ == '__main__':
                     f_integer,
                     f_area,
                     f_accuracy,
+                    f_individual_accuracy,
                     f_accuracy,
                     f_accuracy,
                     f_integer,
