@@ -389,8 +389,8 @@ def update_fragments_with_groundtruth_identities(video, list_of_fragments, groun
 
 if __name__ == '__main__':
     # session_path = selectDir('./')
-    # session_path = '/media/chronos/ground_truth_results_backup/tracked_videos/idTrackerDeep_LargeGroups_3/100fish/First/session_02122017'
-    session_path = '/media/chronos/ground_truth_results_backup/tracked_videos/idTrackerVideos/8zebrafish_conflicto/session_20180130'
+    session_path = '/media/atlas/ground_truth_results_backup/tracked_videos/idTrackerDeep_LargeGroups_3/100fish/First/session_02122017'
+    # session_path = '/media/atlas/ground_truth_results_backup/tracked_videos/idTrackerVideos/8zebrafish_conflicto/session_20180130'
     # session_path = '/media/chronos/ground_truth_results_backup/tracked_videos/conflicto_short/session_20180210'
     path_to_video_object = os.path.join(session_path,'video_object.npy')
     print("loading video object")
