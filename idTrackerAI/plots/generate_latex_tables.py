@@ -34,8 +34,9 @@ def f_boolean(x):
     return 'yes' if x else 'no'
 
 if __name__ == '__main__':
-
-    path_to_tracked_videos_data_frame = '/media/chronos/ground_truth_results_backup/tracked_videos_data_frame.pkl'
+    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup'
+    tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
+    path_to_tracked_videos_data_frame = os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl')
 
     tracked_videos_data_frame = pd.read_pickle(path_to_tracked_videos_data_frame)
 
@@ -81,25 +82,27 @@ if __name__ == '__main__':
                     f_percentage,
                     f_percentage]
 
-    def write_latex_table_for_subset_dataframe(data_frame, columns_to_include, new_columns_names, formatters, subset_condition, subtable_name):
+    def write_latex_table_for_subset_dataframe(tracked_videos_folder, data_frame, columns_to_include, new_columns_names, formatters, subset_condition, subtable_name):
         assert len(columns_to_include) == len(new_columns_names) == len(formatters)
 
         subset_data_frame = data_frame[subset_condition]
         subset_data_frame = subset_data_frame[columns_to_include].copy()
         subset_data_frame.columns = new_columns_names
-        with open('./plots/' + subtable_name + '.tex','w') as file:
+        latex_table_name = subtable_name + '.tex'
+        latex_table_path = os.path.join(tracked_videos_folder, latex_table_name)
+        with open(latex_table_path,'w') as file:
             file.write(subset_data_frame.to_latex(index = False, formatters = formatters))
 
     ### smaller groups videos
     print("generating smaller groups table")
     condition = [x and not y for (x,y) in zip(list(tracked_videos_data_frame.number_of_animals <= 35), list(tracked_videos_data_frame.idTracker_video))]
     # condition = tracked_videos_data_frame.number_of_animals <= 35 and not tracked_videos_data_frame.idTracker_video
-    write_latex_table_for_subset_dataframe(tracked_videos_data_frame, columns_to_include, new_columns_names, formatters, condition, 'smaller_group_sizes_table')
+    write_latex_table_for_subset_dataframe(tracked_videos_folder, tracked_videos_data_frame, columns_to_include, new_columns_names, formatters, condition, 'smaller_group_sizes_table')
     ### larger groups videos
     print("generating larger groups videos table")
     condition = [x and not y for (x,y) in zip(list(tracked_videos_data_frame.number_of_animals > 35), list(tracked_videos_data_frame.idTracker_video))]
-    write_latex_table_for_subset_dataframe(tracked_videos_data_frame, columns_to_include, new_columns_names, formatters, condition, 'larger_group_sizes_table')
+    write_latex_table_for_subset_dataframe(tracked_videos_folder, tracked_videos_data_frame, columns_to_include, new_columns_names, formatters, condition, 'larger_group_sizes_table')
     ### idTracker videos
     print("generating idTracker videos table")
     condition = [bool(x) for x in tracked_videos_data_frame.idTracker_video]
-    write_latex_table_for_subset_dataframe(tracked_videos_data_frame, columns_to_include, new_columns_names, formatters, condition, 'idTracker_videos_table')
+    write_latex_table_for_subset_dataframe(tracked_videos_folder, tracked_videos_data_frame, columns_to_include, new_columns_names, formatters, condition, 'idTracker_videos_table')

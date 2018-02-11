@@ -374,8 +374,8 @@ def plot_accumulation_steps(video, list_of_fragments, list_of_blobs, list_of_blo
 
     set_properties_crossigns(video, fig1, ax_crossings, number_of_accumulation_steps, zoom = zoomed_frames)
 
-    fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps_1.pdf'), transparent=True, dpi = 600)
-    fig1.savefig(os.path.join(video._accumulation_folder,'accumulation_steps_1.png'), transparent=False, dpi = 600)
+    # fig1.savefig(os.path.join(video.session_folder,'accumulation_steps_1.pdf'), transparent=True, dpi = 600)
+    fig1.savefig(os.path.join(video.session_folder,'accumulation_steps_1.png'), transparent=False, dpi = 600)
     plt.show()
 
 def update_fragments_with_groundtruth_identities(video, list_of_fragments, groundtruth):
@@ -388,11 +388,14 @@ def update_fragments_with_groundtruth_identities(video, list_of_fragments, groun
     return list_of_fragments
 
 if __name__ == '__main__':
-    session_path = selectDir('./') #select path to video
-    # session_path = '/home/themis/Desktop/IdTrackerDeep/videos/idTrackerDeep_LargeGroups_3/100fish/First/session_2'
-    video_path = os.path.join(session_path,'video_object.npy')
+    # session_path = selectDir('./')
+    # session_path = '/media/chronos/ground_truth_results_backup/tracked_videos/idTrackerDeep_LargeGroups_3/100fish/First/session_02122017'
+    session_path = '/media/chronos/ground_truth_results_backup/tracked_videos/idTrackerVideos/8zebrafish_conflicto/session_20180130'
+    # session_path = '/media/chronos/ground_truth_results_backup/tracked_videos/conflicto_short/session_20180210'
+    path_to_video_object = os.path.join(session_path,'video_object.npy')
     print("loading video object")
-    video = np.load(video_path).item(0)
+    video = np.load(path_to_video_object).item(0)
+    video.update_paths(path_to_video_object)
     print("loading groundtruth")
     groundtruth = np.load(os.path.join(video.video_folder, '_groundtruth.npy')).item()
     print("loading list_of_blobs_no_gaps")
