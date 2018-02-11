@@ -598,29 +598,29 @@ if __name__ == '__main__':
     ###################   Solve duplications      ###############
     ####
     #############################################################
-    video.solve_duplications_time = time.time()
-    if not loadPreviousDict['solving_duplications']:
-        logger.info("Start checking for and solving duplications")
-        list_of_fragments.reset(roll_back_to = 'assignment')
-        mark_fragments_as_duplications(list_of_fragments.fragments)
-        solve_duplications(list_of_fragments, video.first_frame_first_global_fragment)
-        video._has_duplications_solved = True
-        logger.info("Saving")
-        list_of_fragments.save(video.fragments_path)
-        video.save()
-    else:
-        logger.info("Duplications have already been checked. Using previous information")
-        video._has_duplications_solved = True
-        video.save()
-    video.solve_duplications_time = time.time() - video.solve_duplications_time
-
-    print("************** After solving duplications ************************")
-    print("Number of fragments with zero identity: ", len([f for f in list_of_fragments.fragments
-                                                            if f.assigned_identity == 0]))
-    print("Number of fragments with zero identity by P2: ",
-                    len([f for f in list_of_fragments.fragments
-                    if f.assigned_identity == 0
-                    and hasattr(f, 'zero_identity_assigned_by_P2')]))
+    # video.solve_duplications_time = time.time()
+    # if not loadPreviousDict['solving_duplications']:
+    #     logger.info("Start checking for and solving duplications")
+    #     list_of_fragments.reset(roll_back_to = 'assignment')
+    #     mark_fragments_as_duplications(list_of_fragments.fragments)
+    #     solve_duplications(list_of_fragments, video.first_frame_first_global_fragment)
+    #     video._has_duplications_solved = True
+    #     logger.info("Saving")
+    #     list_of_fragments.save(video.fragments_path)
+    #     video.save()
+    # else:
+    #     logger.info("Duplications have already been checked. Using previous information")
+    #     video._has_duplications_solved = True
+    #     video.save()
+    # video.solve_duplications_time = time.time() - video.solve_duplications_time
+    #
+    # print("************** After solving duplications ************************")
+    # print("Number of fragments with zero identity: ", len([f for f in list_of_fragments.fragments
+    #                                                         if f.assigned_identity == 0]))
+    # print("Number of fragments with zero identity by P2: ",
+    #                 len([f for f in list_of_fragments.fragments
+    #                 if f.assigned_identity == 0
+    #                 and hasattr(f, 'zero_identity_assigned_by_P2')]))
 
     #############################################################
     ###################  Solving impossible jumps    ############
@@ -697,12 +697,15 @@ if __name__ == '__main__':
     groundtruth_path = os.path.join(video.video_folder,'_groundtruth.npy')
     if os.path.isfile(groundtruth_path):
         print("\n**** Computing accuracy wrt. groundtruth ****")
-        groundtruth = np.load(groundtruth_path).item()
-        blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
-        blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
-        video.gt_accuracy, video.gt_results = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
-        video.gt_start_end = (groundtruth.start, groundtruth.end)
-        video.save()
+        try:
+            groundtruth = np.load(groundtruth_path).item()
+            blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
+            blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
+            video.gt_accuracy, video.gt_results = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth, blobs_in_video)
+            video.gt_start_end = (groundtruth.start, groundtruth.end)
+            video.save()
+        except:
+            print("error computing the ground truth")
 
     video.total_time = sum([video.generate_trajectories_time,
                             video.solve_impossible_jumps_time,
@@ -755,12 +758,3 @@ if __name__ == '__main__':
         video._has_trajectories_wo_gaps = True
         video.save()
     video.generate_trajectories_wogaps_time = time.time() - video.generate_trajectories_wogaps_time
-
-    #############################################################
-    ############ Create trajectories (w gaps interpolated) ######
-    #############################################################
-    list_of_blobs_interpolated = assign_zeros_with_interpolation_identities(list_of_blobs, list_of_blobs_no_gaps)
-    trajectories_file = os.path.join(video.trajectories_folder, 'trajectories_interpolated.npy')
-    trajectories = produce_output_dict(list_of_blobs_interpolated.blobs_in_video, video)
-    np.save(trajectories_file, trajectories)
-    logger.info("Saving trajectories")

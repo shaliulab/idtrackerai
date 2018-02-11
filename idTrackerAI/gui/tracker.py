@@ -82,33 +82,34 @@ class Tracker(BoxLayout):
 
     def do(self):
         CHOSEN_VIDEO.video.accumulation_trial = 0
-        delete = not CHOSEN_VIDEO.processes_to_restore['first_accumulation'] if 'first_accumulation' in CHOSEN_VIDEO.processes_to_restore.keys() else True
+        delete = not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2'] if 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore.keys() else True
         CHOSEN_VIDEO.video.create_accumulation_folder(iteration_number = 0, delete = delete)
         self.number_of_animals = CHOSEN_VIDEO.video.number_of_animals if not CHOSEN_VIDEO.video.identity_transfer\
                                                                     else CHOSEN_VIDEO.video.knowledge_transfer_info_dict['number_of_animals']
         self.restoring_first_accumulation = False
         self.init_accumulation_network()
         self.create_main_layout()
-        if 'trajectories_wo_gaps' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['trajectories_wo_gaps']:
+        if 'post_processing' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['post_processing']:
+            self.restore_trajectories()
+            self.restore_crossings_solved()
             self.restore_trajectories_wo_gaps()
             self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
-        elif 'crossings' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['crossings']:
-            self.restore_crossings_solved()
-            self.start_tracking_button.bind(on_release = self.start_from_crossings_solved)
-        elif 'trajectories' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['trajectories']:
-            self.restore_trajectories()
-            self.start_tracking_button.bind(on_release = self.start_from_trajectories)
-        elif 'assignment' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['assignment']:
+            self.start_tracking_button.text = "Show estimated\naccuracy"
+        elif 'residual_identification' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['residual_identification']:
+            Logger.info("Restoring residual identification")
             self.restore_identification()
             CHOSEN_VIDEO.video._has_been_assigned = True
-            self.start_tracking_button.bind(on_release = self.start_from_impossible_jumps)
-        elif 'second_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['second_accumulation']:
+            self.start_tracking_button.bind(on_release = self.start_from_post_processing)
+            self.start_tracking_button.text = "Start\npost-processing"
+        elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
             Logger.info("Restoring second accumulation")
             self.restore_second_accumulation()
             CHOSEN_VIDEO.video._first_frame_first_global_fragment = [CHOSEN_VIDEO.video.percentage_of_accumulated_images]
             Logger.info("Starting identification")
             self.start_tracking_button.bind(on_release = self.start_from_identification)
-        elif 'pretraining' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['pretraining']:
+            self.start_tracking_button.text = "Start\nresidual identification"
+        elif 'protocol3_pretraining' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_pretraining']:
+            Logger.info("Restoring pretraining")
             Logger.info("Initialising pretraining network")
             self.init_pretraining_net()
             Logger.info("Restoring pretraining")
@@ -120,7 +121,8 @@ class Tracker(BoxLayout):
             self.create_one_shot_accumulation_popup()
             Logger.info("Start accumulation parachute")
             self.start_tracking_button.bind(on_release = self.accumulate)
-        elif 'first_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['first_accumulation']:
+            self.start_tracking_button.text = "Start\naccumulation (protocol 3)"
+        elif 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
             Logger.info("Restoring protocol 1")
             self.restoring_first_accumulation = True
             self.restore_first_accumulation()
@@ -129,7 +131,8 @@ class Tracker(BoxLayout):
             self.accumulation_step_finished = True
             self.create_one_shot_accumulation_popup()
             self.start_tracking_button.bind(on_release = self.accumulate)
-        elif 'first_accumulation' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['first_accumulation']:
+            self.start_tracking_button.text = "Start\nidentification"
+        elif 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
             Logger.info("Starting protocol cascade")
             self.start_tracking_button.bind(on_release = self.protocol1)
         self.control_panel.add_widget(self.help_button_tracker)
@@ -268,7 +271,7 @@ class Tracker(BoxLayout):
     def accumulation_parachute_init(self, iteration_number):
         Logger.info("Starting accumulation %i" %iteration_number)
         self.one_shot_accumulation_popup.dismiss()
-        delete = not CHOSEN_VIDEO.processes_to_restore['second_accumulation'] if 'second_accumulation' in CHOSEN_VIDEO.processes_to_restore.keys() else True
+        delete = not CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation'] if 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore.keys() else True
         CHOSEN_VIDEO.video.create_accumulation_folder(iteration_number = iteration_number, delete = delete)
         CHOSEN_VIDEO.video.accumulation_trial = iteration_number
         CHOSEN_VIDEO.list_of_fragments.reset(roll_back_to = 'fragmentation')
@@ -326,7 +329,7 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO.video.save()
 
     def init_pretraining_net(self):
-        delete = not CHOSEN_VIDEO.processes_to_restore['pretraining'] if 'pretraining' in CHOSEN_VIDEO.processes_to_restore.keys() else True
+        delete = not CHOSEN_VIDEO.processes_to_restore['protocol3_pretraining'] if 'protocol3_pretraining' in CHOSEN_VIDEO.processes_to_restore.keys() else True
         CHOSEN_VIDEO.video.create_pretraining_folder(delete = delete)
         self.pretrain_network_params = NetworkParams(CHOSEN_VIDEO.video.number_of_animals,
                                                 learning_rate = 0.01,
@@ -445,7 +448,7 @@ class Tracker(BoxLayout):
         self.trajectories_popup.open()
 
     def create_trajectories(self, *args):
-        if 'trajectories' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['trajectories']:
+        if 'post_processing' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['post_processing']:
             CHOSEN_VIDEO.video.create_trajectories_folder()
             trajectories_file = os.path.join(CHOSEN_VIDEO.video.trajectories_folder, 'trajectories.npy')
             trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
@@ -571,7 +574,7 @@ class Tracker(BoxLayout):
     def start_from_impossible_jumps(self, *args):
         self.impossible_jumps_popup.open()
 
-    def start_from_trajectories(self, *args):
+    def start_from_post_processing(self, *args):
         self.trajectories_popup.open()
 
     def start_from_crossings_solved(self, *args):
