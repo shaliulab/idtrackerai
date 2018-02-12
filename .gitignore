@@ -22,3 +22,4 @@
 #except docs folder and subfolders
 !idTrackerAI/docs/*
 !idTrackerAI/docs/**/*
+!idTrackerAI/gui/*
