@@ -483,7 +483,6 @@ class ListOfFragments(object):
 
         fig.savefig(os.path.join(video.preprocessing_folder,'fragments_summary_1.pdf'), transparent=True)
 
-
         import matplotlib.patches as patches
         def get_fragment_identification_type(fragment):
             """Returns the an identifier of the process in which fragment has
