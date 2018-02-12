@@ -38,8 +38,8 @@ class EmbeddingVisualiser(object):
         Generates sprite image and associated labels
         """
         sprite_width = sprite_height = self.image_size[0] * 256
-        images_first_gf, labels_first_gf = list_of_global_fragments.global_fragments[0].get_images_and_labels()
-        images1, labels1 = list_of_global_fragments.global_fragments[1].get_images_and_labels()
+        images_first_gf, labels_first_gf = list_of_global_fragments.global_fragments[0].get_images_and_labels_for_training()
+        images1, labels1 = list_of_global_fragments.global_fragments[1].get_images_and_labels_for_training()
         number_of_columns = 256
         number_of_rows = 256
         number_of_images = int(number_of_columns * number_of_rows)
@@ -111,12 +111,12 @@ class EmbeddingVisualiser(object):
 def visualize_embeddings_global_fragments(video, list_of_global_fragments, list_of_fragments, params, print_flag):
     net = ConvNetwork(params, training_flag = False)
     try:
-        imagesT, labelsT = list_of_global_fragments.global_fragments[0].get_images_and_labels()
-        imagesV, labelsV = list_of_global_fragments.global_fragments[1].get_images_and_labels()
+        imagesT, labelsT = list_of_global_fragments.global_fragments[0].get_images_and_labels_for_training()
+        imagesV, labelsV = list_of_global_fragments.global_fragments[1].get_images_and_labels_for_training()
     except:
         list_of_global_fragments.relink_fragments_to_global_fragments(list_of_fragments.fragments)
-        imagesT, labelsT = list_of_global_fragments.global_fragments[0].get_images_and_labels()
-        imagesV, labelsV = list_of_global_fragments.global_fragments[1].get_images_and_labels()
+        imagesT, labelsT = list_of_global_fragments.global_fragments[0].get_images_and_labels_for_training()
+        imagesV, labelsV = list_of_global_fragments.global_fragments[1].get_images_and_labels_for_training()
     imagesT = np.asarray(imagesT)
     imagesV = np.asarray(imagesV)
     if len(imagesT[0].shape) < 3:

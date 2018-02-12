@@ -283,7 +283,7 @@ class ListOfBlobs(object):
         return [blob.area for blobs_in_frame in self.blobs_in_video for blob in blobs_in_frame]
 
 
-    def check_maximal_number_of_blob(self, number_of_animals):
+    def check_maximal_number_of_blob(self, number_of_animals, return_maximum_number_of_blobs = False):
         """Checks that the amount of blobs per frame is not greater than the
         number of animals to track
 
@@ -299,16 +299,22 @@ class ListOfBlobs(object):
             have been segmented
 
         """
+        maximum_number_of_blobs = 0
         frames_with_more_blobs_than_animals = []
         for frame_number, blobs_in_frame in enumerate(self.blobs_in_video):
 
             if len(blobs_in_frame) > number_of_animals:
                 frames_with_more_blobs_than_animals.append(frame_number)
+            maximum_number_of_blobs = len(blobs_in_frame) if len(blobs_in_frame) > maximum_number_of_blobs else maximum_number_of_blobs
 
         if len(frames_with_more_blobs_than_animals) > 0:
             logger.error('There are frames with more blobs than animals, this can be detrimental for the proper functioning of the system.')
             logger.error("Frames with more blobs than animals: %s" %str(frames_with_more_blobs_than_animals))
-        return frames_with_more_blobs_than_animals
+        if return_maximum_number_of_blobs:
+            return frames_with_more_blobs_than_animals, maximum_number_of_blobs
+        else:
+            return frames_with_more_blobs_than_animals
+
 
     def update_from_list_of_fragments(self, fragments, fragment_identifier_to_index):
         """Updates the blobs objects generated from the video with the attributes
