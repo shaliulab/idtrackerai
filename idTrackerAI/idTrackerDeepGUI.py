@@ -598,29 +598,29 @@ if __name__ == '__main__':
     ###################   Solve duplications      ###############
     ####
     #############################################################
-    video.solve_duplications_time = time.time()
-    if not loadPreviousDict['solving_duplications']:
-        logger.info("Start checking for and solving duplications")
-        list_of_fragments.reset(roll_back_to = 'assignment')
-        mark_fragments_as_duplications(list_of_fragments.fragments)
-        solve_duplications(list_of_fragments, video.first_frame_first_global_fragment)
-        video._has_duplications_solved = True
-        logger.info("Saving")
-        list_of_fragments.save(video.fragments_path)
-        video.save()
-    else:
-        logger.info("Duplications have already been checked. Using previous information")
-        video._has_duplications_solved = True
-        video.save()
-    video.solve_duplications_time = time.time() - video.solve_duplications_time
-
-    print("************** After solving duplications ************************")
-    print("Number of fragments with zero identity: ", len([f for f in list_of_fragments.fragments
-                                                            if f.assigned_identity == 0]))
-    print("Number of fragments with zero identity by P2: ",
-                    len([f for f in list_of_fragments.fragments
-                    if f.assigned_identity == 0
-                    and hasattr(f, 'zero_identity_assigned_by_P2')]))
+    # video.solve_duplications_time = time.time()
+    # if not loadPreviousDict['solving_duplications']:
+    #     logger.info("Start checking for and solving duplications")
+    #     list_of_fragments.reset(roll_back_to = 'assignment')
+    #     mark_fragments_as_duplications(list_of_fragments.fragments)
+    #     solve_duplications(list_of_fragments, video.first_frame_first_global_fragment)
+    #     video._has_duplications_solved = True
+    #     logger.info("Saving")
+    #     list_of_fragments.save(video.fragments_path)
+    #     video.save()
+    # else:
+    #     logger.info("Duplications have already been checked. Using previous information")
+    #     video._has_duplications_solved = True
+    #     video.save()
+    # video.solve_duplications_time = time.time() - video.solve_duplications_time
+    #
+    # print("************** After solving duplications ************************")
+    # print("Number of fragments with zero identity: ", len([f for f in list_of_fragments.fragments
+    #                                                         if f.assigned_identity == 0]))
+    # print("Number of fragments with zero identity by P2: ",
+    #                 len([f for f in list_of_fragments.fragments
+    #                 if f.assigned_identity == 0
+    #                 and hasattr(f, 'zero_identity_assigned_by_P2')]))
 
     #############################################################
     ###################  Solving impossible jumps    ############

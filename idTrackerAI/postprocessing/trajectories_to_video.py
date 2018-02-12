@@ -24,7 +24,7 @@ def generate_video(video_object,
                 colors,
                 func = None,
                 centroid_trace_length = 10):
-    if not hasattr(video_object, 'paths_to_video_segments'):
+    if video_object.paths_to_video_segments is None:
         cap = cv2.VideoCapture(video_object.video_path)
     else:
         cap = None
