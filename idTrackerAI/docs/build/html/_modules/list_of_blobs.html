@@ -158,7 +158,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">blobs_are_connected</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="ListOfBlobs.load"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.load">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">path_to_load_blob_list_file</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">path_to_load_blob_list_file</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Short summary.</span>
 
 <span class="sd">        Parameters</span>
@@ -365,7 +365,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">area</span> <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blobs_in_video</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="ListOfBlobs.check_maximal_number_of_blob"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.check_maximal_number_of_blob">[docs]</a>    <span class="k">def</span> <span class="nf">check_maximal_number_of_blob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+<div class="viewcode-block" id="ListOfBlobs.check_maximal_number_of_blob"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.check_maximal_number_of_blob">[docs]</a>    <span class="k">def</span> <span class="nf">check_maximal_number_of_blob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">return_maximum_number_of_blobs</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Checks that the amount of blobs per frame is not greater than the</span>
 <span class="sd">        number of animals to track</span>
 
@@ -381,16 +381,22 @@
 <span class="sd">            have been segmented</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">maximum_number_of_blobs</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">frames_with_more_blobs_than_animals</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">):</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">number_of_animals</span><span class="p">:</span>
                 <span class="n">frames_with_more_blobs_than_animals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame_number</span><span class="p">)</span>
+            <span class="n">maximum_number_of_blobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">maximum_number_of_blobs</span> <span class="k">else</span> <span class="n">maximum_number_of_blobs</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames_with_more_blobs_than_animals</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;There are frames with more blobs than animals, this can be detrimental for the proper functioning of the system.&#39;</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Frames with more blobs than animals: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">frames_with_more_blobs_than_animals</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">frames_with_more_blobs_than_animals</span></div>
+        <span class="k">if</span> <span class="n">return_maximum_number_of_blobs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">frames_with_more_blobs_than_animals</span><span class="p">,</span> <span class="n">maximum_number_of_blobs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">frames_with_more_blobs_than_animals</span></div>
+
 
 <div class="viewcode-block" id="ListOfBlobs.update_from_list_of_fragments"><a class="viewcode-back" href="../preprocessing.html#list_of_blobs.ListOfBlobs.update_from_list_of_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">update_from_list_of_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">fragment_identifier_to_index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates the blobs objects generated from the video with the attributes</span>
@@ -460,10 +466,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 11, 2018.
+      Last updated on Feb 12, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
       </li>
     </ul>
     </div>
