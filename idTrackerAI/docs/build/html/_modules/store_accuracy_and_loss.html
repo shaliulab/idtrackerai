@@ -183,7 +183,7 @@
                 <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;epochs&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">canvas_from_GUI</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mf">1e-8</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">canvas_from_GUI</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span></div>
 
@@ -232,14 +232,14 @@
         <span class="sd">&quot;&quot;&quot;Saves the values stored</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">number_of_epochs_completed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">number_of_epochs_completed</span><span class="p">)</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_loss_acc_dict.npy&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span></div>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_loss_acc_dict.npy&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Store_Accuracy_and_Loss.load"><a class="viewcode-back" href="../idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load the values stored in case there are any saved</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_loss_acc_dict.npy&#39;</span><span class="p">)):</span>
             <span class="n">loss_accuracy_dictionary</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_loss_acc_dict.npy&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">=</span> <span class="n">loss_accuracy_dictionary</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">loss_accuracy_dictionary</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;number_of_epochs_completed&#39;</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">number_of_epochs_completed</span> <span class="o">=</span> <span class="p">[]</span></div></div>
 </pre></div>
@@ -264,10 +264,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 10, 2018.
+      Last updated on Feb 11, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.6.
       </li>
     </ul>
     </div>

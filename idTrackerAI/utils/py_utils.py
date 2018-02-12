@@ -212,19 +212,34 @@ def set_load_previous_dict(old_video, processes, existentFile):
     attributes = [ 'has_been_preprocessed',
                     'first_accumulation_finished',
                     'has_been_pretrained', 'second_accumulation_finished',
-                    'has_been_assigned', 'has_duplications_solved',
+                    'has_been_assigned',
                     'has_crossings_solved', 'has_trajectories',
                     'has_trajectories_wo_gaps']
 
-    for i, attribute in enumerate(attributes):
-        attr_value = getattr(old_video, attribute)
-        if attr_value == True:
+    # gui_processes = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
+    #                 'protocol3_accumulation', 'residual_identification',
+    #                 'post_processing']
+    processes_to_attributes = { 'preprocessing' : ['has_been_preprocessed'],
+            'protocols1_and_2' : ['first_accumulation_finished'],
+            'protocol3_pretraining' : ['has_been_pretrained'],
+            'protocol3_accumulation' : ['second_accumulation_finished'],
+            'residual_identification' : ['has_been_assigned'],
+            'post_processing' : ['has_crossings_solved', 'has_trajectories',
+                                'has_trajectories_wo_gaps']}
+    for process in processes:
+        attributes = processes_to_attributes[process]
+        attributes_values = []
+
+        for attribute in attributes:
+            attributes_values.append(getattr(old_video, attribute))
+        if None in attributes_values:
+            existentFile[process] = '-1'
+        elif all(attributes_values):
             logger.debug(attribute)
-            existentFile[processes[i]] = '1'
-        elif attr_value is False:
-            existentFile[processes[i]] = '0'
-        elif attr_value is None:
-            existentFile[processes[i]] = '-1'
+            existentFile[process] = '1'
+        else:
+            existentFile[process] = '0'
+
     return existentFile
 
 def getExistentFiles(video, processes):

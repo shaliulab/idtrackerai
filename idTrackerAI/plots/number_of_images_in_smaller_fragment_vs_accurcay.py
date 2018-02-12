@@ -103,7 +103,7 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
 def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy):
     ax_arr_num_images_accuracy[0].set_title('Group size ' + r'$\leq$ 10', fontsize = 22, y = 1.05)
     ax_arr_num_images_accuracy[1].set_title('Group size ' + r'$\geq$ 38', fontsize = 22, y = 1.05)
-    ax_arr_num_images_accuracy[0].set_xlabel('Number of training images', fontsize = 20)
+    ax_arr_num_images_accuracy[0].set_xlabel('Number of images', fontsize = 20)
     ax_arr_num_images_accuracy[0].set_ylabel('Accuracy', fontsize = 20)
     ax_arr_num_images_accuracy[1].set_xlabel('Number of images', fontsize = 20)
     ax_arr_num_images_accuracy[1].tick_params(axis='both', which='major', labelsize=14)
@@ -121,9 +121,8 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
     sns.despine(ax = ax_arr_num_images_accuracy[1], right = True, top = True)
 
     simulated_videos = mpatches.Patch(color='k', fc = 'None', linewidth = 1, label='Simulated videos')
-    real_videos = mpatches.Patch(color='k', alpha = 1., label='Real videos')
-    fish_videos = mpatches.Patch(color='g', alpha = 1., label='Zebrafish')
-    flies_videos = mpatches.Patch(color='m', alpha = 1., label='Drosophila')
+    fish_videos = mpatches.Patch(color='g', alpha = 1., label='Zebrafish videos')
+    flies_videos = mpatches.Patch(color='m', alpha = 1., label='Drosophila videos')
     protocol_1 = mlines.Line2D([], [], color='k', marker='^', markersize=6, label='Protocol 1',
                                 markeredgecolor = 'k', markeredgewidth=1, markerfacecolor='None',
                                 linestyle = 'None')
@@ -135,111 +134,114 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
                                 linestyle = 'None')
 
 
-    ax_arr_num_images_accuracy[0].legend(handles=[simulated_videos, real_videos,
+    ax_arr_num_images_accuracy[0].legend(handles=[simulated_videos,
                                                 fish_videos, flies_videos,
                                                 protocol_1,
                                                 protocol_2,
                                                 protocol_3], loc = 4)
 
 if __name__ == '__main__':
-    tracked_videos_data_frame = pd.read_pickle('/media/chronos/ground_truth_results_backup/tracked_videos_data_frame.pkl')
-    ### load global results data frame
-    if os.path.isfile('./library/library_test_algorithm_test_GHI_aaa_cnn_0/results_data_frame.pkl'):
-        print("loading results_data_frame.pkl...")
-        results_data_frame = pd.read_pickle('./library/library_test_algorithm_test_GHI_aaa_cnn_0/results_data_frame.pkl')
-        print("results_data_frame.pkl loaded \n")
-    else:
-        print("results_data_frame.pkl does not exist \n")
-    repetition_to_plot = int(sys.argv[1]) if int(sys.argv[1]) != 0 else None
-    if repetition_to_plot is not None:
-        results_data_frame = results_data_frame[results_data_frame.repetition == repetition_to_plot]
+    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup/'
+    if os.path.isdir(path_to_results_hard_drive):
+        tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
+        path_to_tracked_videos_data_frame = os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl')
+        tracked_videos_data_frame = pd.read_pickle(path_to_tracked_videos_data_frame)
+        ### load global results data frame
+        if os.path.isfile(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Simulation_idTrackerAI/results_data_frame.pkl')):
+            print("loading results_data_frame.pkl...")
+            results_data_frame = pd.read_pickle(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Simulation_idTrackerAI/results_data_frame.pkl'))
+            print("results_data_frame.pkl loaded \n")
+        else:
+            print("results_data_frame.pkl does not exist \n")
+        repetition_to_plot = int(sys.argv[1]) if int(sys.argv[1]) != 0 else None
+        if repetition_to_plot is not None:
+            results_data_frame = results_data_frame[results_data_frame.repetition == repetition_to_plot]
 
-    # get tests_data_frame and test to plot
-    print("loading tests data frame")
-    tests_data_frame = pd.read_pickle('./library/library_test_algorithm_test_GHI_aaa_cnn_0/tests_data_frame.pkl')
-    test_dictionary = tests_data_frame.loc[12].to_dict()
-    frames_in_video = test_dictionary['frames_in_video'][0]
+        # get tests_data_frame and test to plot
+        print("loading tests data frame")
+        tests_data_frame = pd.read_pickle(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Simulation_idTrackerAI/tests_data_frame.pkl'))
+        test_dictionary = tests_data_frame.loc[12].to_dict()
+        frames_in_video = test_dictionary['frames_in_video'][0]
 
-    pprint(test_dictionary)
+        pprint(test_dictionary)
 
-    ### Initialize arrays
-    group_sizes_list = test_dictionary['group_sizes']
-    scale_parameter_list = test_dictionary['scale_parameter'][::-1]
-    shape_parameter_list = test_dictionary['shape_parameter'][::-1]
-    number_of_group_sizes = len(group_sizes_list)
-    number_of_scale_values = len(scale_parameter_list)
-    number_of_shape_values = len(shape_parameter_list)
-    number_of_repetitions = len(results_data_frame.repetition.unique())
-    protocol = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
-    accuracy = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
-    images_in_shortest_fragment_in_first_global_fragment = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
+        ### Initialize arrays
+        group_sizes_list = test_dictionary['group_sizes']
+        scale_parameter_list = test_dictionary['scale_parameter'][::-1]
+        shape_parameter_list = test_dictionary['shape_parameter'][::-1]
+        number_of_group_sizes = len(group_sizes_list)
+        number_of_scale_values = len(scale_parameter_list)
+        number_of_shape_values = len(shape_parameter_list)
+        number_of_repetitions = len(results_data_frame.repetition.unique())
+        protocol = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
+        accuracy = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
+        images_in_shortest_fragment_in_first_global_fragment = np.zeros((number_of_group_sizes, number_of_shape_values, number_of_scale_values, number_of_repetitions))
 
-    plt.ion()
-    window = plt.get_current_fig_manager().window
-    screen_y = window.winfo_screenheight()
-    screen_x = window.winfo_screenwidth()
-    plt.close()
-    sns.set_style("ticks")
-    for i, group_size in enumerate(group_sizes_list):
-        print("***group_size ", group_size)
-        for j, scale_parameter in enumerate(scale_parameter_list):
-            if scale_parameter % 1 == 0:
-                scale_parameter = int(scale_parameter)
+        plt.ion()
+        window = plt.get_current_fig_manager().window
+        screen_y = window.winfo_screenheight()
+        screen_x = window.winfo_screenwidth()
+        plt.close()
+        sns.set_style("ticks")
+        for i, group_size in enumerate(group_sizes_list):
+            print("***group_size ", group_size)
+            for j, scale_parameter in enumerate(scale_parameter_list):
+                if scale_parameter % 1 == 0:
+                    scale_parameter = int(scale_parameter)
 
-            for k, shape_parameter in enumerate(shape_parameter_list):
-                print('----- ', scale_parameter, shape_parameter)
-                if shape_parameter % 1 == 0:
-                    shape_parameter = int(shape_parameter)
+                for k, shape_parameter in enumerate(shape_parameter_list):
+                    print('----- ', scale_parameter, shape_parameter)
+                    if shape_parameter % 1 == 0:
+                        shape_parameter = int(shape_parameter)
 
-                for l, repetition in enumerate(results_data_frame.repetition.unique()):
-                    repetition_path = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0],
-                                                    'group_size_' + str(int(group_size)),
-                                                    'num_frames_' + str(int(frames_in_video)),
-                                                    'scale_parameter_' + str(scale_parameter),
-                                                    'shape_parameter_' + str(shape_parameter),
-                                                    'repetition_' + str(int(repetition)))
-                    try:
-                        video_path = os.path.join(repetition_path, 'session', 'video_object.npy')
-                        video = np.load(video_path).item(0)
-                        video_object_found = True
-                    except:
-                        video_object_found = False
-                        print("video object not found")
+                    for l, repetition in enumerate(results_data_frame.repetition.unique()):
+                        repetition_path = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0],
+                                                        'group_size_' + str(int(group_size)),
+                                                        'num_frames_' + str(int(frames_in_video)),
+                                                        'scale_parameter_' + str(scale_parameter),
+                                                        'shape_parameter_' + str(shape_parameter),
+                                                        'repetition_' + str(int(repetition)))
+                        try:
+                            video_path = os.path.join(repetition_path, 'session', 'video_object.npy')
+                            video = np.load(video_path).item(0)
+                            video_object_found = True
+                        except:
+                            video_object_found = False
+                            print("video object not found")
 
-                    try:
-                        list_of_global_fragments = np.load(video.global_fragments_path).item()
-                        list_of_global_fragments_found = True
-                    except:
-                        list_of_global_fragments_found = False
+                        try:
+                            list_of_global_fragments = np.load(video.global_fragments_path).item()
+                            list_of_global_fragments_found = True
+                        except:
+                            list_of_global_fragments_found = False
 
-                    ### Get data for repetition
-                    results_data_frame_rep = results_data_frame.query('group_size == @group_size' +
-                                                                ' & frames_in_video == @frames_in_video' +
-                                                                ' & scale_parameter == @scale_parameter' +
-                                                                ' & shape_parameter == @shape_parameter' +
-                                                                ' & repetition == @repetition')
-                    if results_data_frame_rep.protocol.item() is None:
-                        video_object_found = False
-                        print("Algorithm did not finish")
+                        ### Get data for repetition
+                        results_data_frame_rep = results_data_frame.query('group_size == @group_size' +
+                                                                    ' & frames_in_video == @frames_in_video' +
+                                                                    ' & scale_parameter == @scale_parameter' +
+                                                                    ' & shape_parameter == @shape_parameter' +
+                                                                    ' & repetition == @repetition')
+                        if results_data_frame_rep.protocol.item() is None:
+                            video_object_found = False
+                            print("Algorithm did not finish")
 
-                    ### Get statistics
-                    if len(results_data_frame_rep) != 0:
-                        protocol[i,k,j,l] = results_data_frame_rep.protocol.item() if video_object_found else None
-                        accuracy[i,k,j,l] = results_data_frame_rep.accuracy.item() if video_object_found else None
-                        images_in_shortest_fragment_in_first_global_fragment[i,k,j,l] = get_number_of_images_in_shortest_fragment_in_first_global_fragment(list_of_global_fragments, video)
+                        ### Get statistics
+                        if len(results_data_frame_rep) != 0:
+                            protocol[i,k,j,l] = results_data_frame_rep.protocol.item() if video_object_found else None
+                            accuracy[i,k,j,l] = results_data_frame_rep.accuracy.item() if video_object_found else None
+                            images_in_shortest_fragment_in_first_global_fragment[i,k,j,l] = get_number_of_images_in_shortest_fragment_in_first_global_fragment(list_of_global_fragments, video)
 
-    ### plot minimun number of images in first global fragment vs accuracy
-    fig_num_images_accuracy, ax_arr_num_images_accuracy = plt.subplots(1,2, sharey = False, sharex = False)
-    fig_num_images_accuracy.set_size_inches((screen_x/100*2/3,screen_y/100*5/8))
-    plot_minimum_number_of_images_figure(fig_num_images_accuracy,
-                                        ax_arr_num_images_accuracy,
-                                        tracked_videos_data_frame,
-                                        group_sizes_list, accuracy,
-                                        images_in_shortest_fragment_in_first_global_fragment,
-                                        protocol)
-    set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy)
+        ### plot minimun number of images in first global fragment vs accuracy
+        fig_num_images_accuracy, ax_arr_num_images_accuracy = plt.subplots(1,2, sharey = False, sharex = False)
+        fig_num_images_accuracy.set_size_inches((screen_x/100*2/3,screen_y/100*5/8))
+        plot_minimum_number_of_images_figure(fig_num_images_accuracy,
+                                            ax_arr_num_images_accuracy,
+                                            tracked_videos_data_frame,
+                                            group_sizes_list, accuracy,
+                                            images_in_shortest_fragment_in_first_global_fragment,
+                                            protocol)
+        set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy)
 
-    path_to_save_figure = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0])
-    fig_num_images_accuracy.savefig(os.path.join(path_to_save_figure, 'number_of_images_vs_accuracy.pdf'), transparent = True)
+        fig_num_images_accuracy.savefig(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Simulation_idTrackerAI/number_of_images_vs_accuracy.pdf'), transparent = True)
 
-    plt.show()
+        plt.show()

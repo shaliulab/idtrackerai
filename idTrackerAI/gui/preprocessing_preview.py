@@ -433,8 +433,8 @@ class PreprocessingPreview(BoxLayout):
         self.add_widget(self.visualiser)
         self.currentSegment = 0
         self.areas_plotted = False
-        self.create_areas_figure()
         self.number_of_detected_blobs = [0]
+        self.create_areas_figure()
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.show_preprocessing)
 
     @staticmethod
@@ -445,20 +445,24 @@ class PreprocessingPreview(BoxLayout):
 
     def create_areas_figure(self, visualiser = None):
         self.set_matplotlib_params()
+        self.areas_box = BoxLayout(orientation = "vertical", size_hint = (1.,.3))
+        self.areas_label_text = "Areas:"
+        self.areas_label = CustomLabel(font_size = 14, text = self.areas_label_text, size_hint = (1.,.15))
         self.fig, self.ax = plt.subplots(1)
-        self.fig.subplots_adjust(left=.1, bottom=.1, right=1, top=1, wspace=None, hspace=0.5)
+        self.fig.subplots_adjust(left=.1, bottom=.3, right=.9, top=.9)
         self.fig.set_facecolor((.188, .188, .188))
         self.ax.set_xlabel('blob')
         self.ax.set_ylabel('area')
-        self.fig.canvas.set_window_title('Areas')
         self.ax.set_facecolor((.188, .188, .188))
         self.ax.tick_params(color='white', labelcolor='white')
         self.ax.xaxis.label.set_color('white')
         self.ax.yaxis.label.set_color('white')
         [spine.set_edgecolor('white') for spine in self.ax.spines.values()]
+        # self.area_bars = self.fig.canvas
         self.area_bars = FigureCanvasKivyAgg(self.fig)
-        self.area_bars.size_hint = (1., .2)
         self.area_bars_width = .5
+        self.areas_box.add_widget(self.areas_label)
+        self.areas_box.add_widget(self.area_bars)
         if visualiser is None:
             visualiser = self.visualiser
 
@@ -466,7 +470,10 @@ class PreprocessingPreview(BoxLayout):
         self.ax.clear()
         self.ax.bar(range(len(areas)), areas, self.area_bars_width)
         if len(areas) > 0:
-            self.ax.axhline(np.min(areas), color = 'w', linewidth = .3)
+            min_area = np.min(areas)
+            self.ax.axhline(min_area, color = 'w', linewidth = .3)
+            self.areas_label.text = str(len(areas)) + " blobs detected. Minimum area: " + str(min_area)
+
         self.area_bars.draw()
         has_child = False
 
@@ -475,7 +482,7 @@ class PreprocessingPreview(BoxLayout):
                 has_child = True
 
         if not has_child:
-            visualiser.add_widget(self.area_bars)
+            visualiser.add_widget(self.areas_box)
 
     def show_preprocessing(self, frame, visualiser = None, sliders = None, hide_video_slider = False):
         if visualiser is None:
@@ -493,7 +500,7 @@ class PreprocessingPreview(BoxLayout):
         else:
             self.frame = frame
         if hasattr(self, 'area_bars'):
-            visualiser.remove_widget(self.area_bars)
+            visualiser.remove_widget(self.areas_box)
         if not hasattr(CHOSEN_VIDEO.video, 'number_of_channels'):
             if frame.shape[2] == 1 or (np.any(frame[:,:,1] == frame[:,:,2] ) and np.any(frame[:,:, 0] == frame[:,:,1])):
                 CHOSEN_VIDEO.video._number_of_channels = 1

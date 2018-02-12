@@ -13,6 +13,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.switch import Switch
 from kivy.graphics import *
 from kivy.graphics.transformation import Matrix
+from kivy_utils import CustomLabel
 
 import cv2
 
@@ -48,13 +49,8 @@ class VisualiseVideo(BoxLayout):
                                 value=0,
                                 size_hint=(.8,1.))
         self.video_slider.bind(value=self.get_value)
-        self.video_slider_lbl = Label( id = 'max_threshold_lbl')
+        self.video_slider_lbl = CustomLabel( id = 'max_threshold_lbl')
         self.video_slider_lbl.text = "Frame number:" + str(int(self.video_slider.value))
-        self.video_slider_lbl.text_size = self.video_slider_lbl.size
-        self.video_slider_lbl.size = self.video_slider_lbl.texture_size
-        self.video_slider_lbl.font_size = 16
-        self.video_slider_lbl.halign =  "center"
-        self.video_slider_lbl.valign = "middle"
         self.footer.add_widget(self.video_slider)
         self.footer.add_widget(self.video_slider_lbl)
 
