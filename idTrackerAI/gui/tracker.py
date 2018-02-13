@@ -198,12 +198,14 @@ class Tracker(BoxLayout):
                                                                     black = False,
                                                                     canvas_from_GUI = self.tracking_fig_canvas)
         store_validation_accuracy_and_loss_data.plot(self.ax_arr,
-                                                    color ='lightgrey',
+                                                    color ='b',
                                                     canvas_from_GUI = self.tracking_fig_canvas,
+                                                    index = self.accumulation_manager.counter - 1,
                                                     legend_font_color = 'w')
         store_training_accuracy_and_loss_data.plot(self.ax_arr,
-                                                    color = 'w',
+                                                    color = 'r',
                                                     canvas_from_GUI = self.tracking_fig_canvas,
+                                                    index = self.accumulation_manager.counter - 1,
                                                     legend_font_color = 'w')
         self.accumulation_step_finished = True
 
@@ -321,7 +323,8 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO.video._ratio_accumulated_images = CHOSEN_VIDEO.video.percentage_of_accumulated_images[CHOSEN_VIDEO.video.accumulation_trial]
         accumulation_folder_name = 'accumulation_' + str(CHOSEN_VIDEO.video.accumulation_trial)
         CHOSEN_VIDEO.video._accumulation_folder = os.path.join(CHOSEN_VIDEO.video.session_folder, accumulation_folder_name)
-        CHOSEN_VIDEO.list_of_fragments.load_light_list(CHOSEN_VIDEO.video._accumulation_folder)
+        CHOSEN_VIDEO.list_of_fragments.save_light_list(CHOSEN_VIDEO.video._accumulation_folder)
+        # CHOSEN_VIDEO.list_of_fragments.load_light_list(CHOSEN_VIDEO.video._accumulation_folder)
         CHOSEN_VIDEO.video._second_accumulation_finished = True
         Logger.info("Saving global fragments")
         CHOSEN_VIDEO.list_of_fragments.save(CHOSEN_VIDEO.video.fragments_path)
@@ -399,11 +402,11 @@ class Tracker(BoxLayout):
                                                                     black = False,
                                                                     canvas_from_GUI = self.pretrain_fig_canvas)
         self.store_validation_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
-                                                    color ='lightgrey',
+                                                    color ='b',
                                                     canvas_from_GUI = self.pretrain_fig_canvas,
                                                     legend_font_color = 'w')
         self.store_training_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
-                                                    color = 'w',
+                                                    color = 'r',
                                                     canvas_from_GUI = self.pretrain_fig_canvas,
                                                     legend_font_color = 'w')
         self.pretraining_step_finished = True
@@ -779,7 +782,7 @@ class Tracker(BoxLayout):
         self.pretraining_counter_label = CustomLabel(text = "iteration: ", size_hint = (1., .2))
         self.pretraining_counter_value = CustomLabel(text = str(self.pretraining_counter + 1), size_hint = (1., .2))
         self.percentage_pretrained_images_label = CustomLabel(text = "percentage of pretrained images: ", size_hint = (1., .2))
-        self.percentage_pretrained_images_value = CustomLabel(text = "Trainig: Wait for the data ...", size_hint = (1., .2))
+        self.percentage_pretrained_images_value = CustomLabel(text = "Training: Wait for the data ...", size_hint = (1., .2))
         self.pretraining_popup_data_container.add_widget(self.pretraining_counter_label)
         self.pretraining_popup_data_container.add_widget(self.pretraining_counter_value)
         self.pretraining_popup_data_container.add_widget(self.percentage_pretrained_images_label)
@@ -787,7 +790,7 @@ class Tracker(BoxLayout):
         self.pretraining_image_box = BoxLayout()
         self.pretraining_popup_container.add_widget(self.pretraining_popup_data_container)
         self.pretraining_popup_container.add_widget(self.pretraining_image_box)
-        self.pretraining_popup = Popup(title='Pre-training: Learning features from the entire video ...',
+        self.pretraining_popup = Popup(title='Protocol3 (Pre-training): Learning features from the entire video ...',
             content= self.pretraining_popup_container,
             size_hint=(.8, .8))
 
@@ -799,7 +802,7 @@ class Tracker(BoxLayout):
         self.accumulation_counter_label = CustomLabel(text = "iteration: ", size_hint = (1., .2))
         self.accumulation_counter_value = CustomLabel(text = str(self.accumulation_manager.counter + 1), size_hint = (1., .2))
         self.percentage_accumulated_images_label = CustomLabel(text = "percentage of accumulated images: ", size_hint = (1., .2))
-        self.percentage_accumulated_images_value = CustomLabel(text = "Trainig: Wait for the data ...", size_hint = (1., .2))
+        self.percentage_accumulated_images_value = CustomLabel(text = "Training: Wait for the data ...", size_hint = (1., .2))
         self.one_shot_accumulation_popup_data_container.add_widget(self.protocol_label)
         self.one_shot_accumulation_popup_data_container.add_widget(self.protocol_value)
         self.one_shot_accumulation_popup_data_container.add_widget(self.accumulation_counter_label)
@@ -892,7 +895,7 @@ class Tracker(BoxLayout):
         [(ax.set_facecolor((.188, .188, .188)), ax.tick_params(color='white', labelcolor='white'), ax.xaxis.label.set_color('white'), ax.yaxis.label.set_color('white')) for ax in self.ax_arr]
         [spine.set_edgecolor('white') for ax in self.ax_arr for spine in ax.spines.values()]
         self.fig.canvas.set_window_title('Accumulation ' + str(CHOSEN_VIDEO.video.accumulation_trial))
-        self.fig.subplots_adjust(left = None, bottom = None, right = None, top = None, wspace = None, hspace = 0.5)
+        self.fig.subplots_adjust(left = .1, bottom = .2, right = .9, top = .9, wspace = None, hspace = 1.)
         self.tracking_main_figure = FigureCanvasKivyAgg(self.fig)
         self.tracking_fig_canvas = self.fig.canvas
         self.accumulation_image_box.add_widget(self.tracking_fig_canvas)
@@ -906,6 +909,6 @@ class Tracker(BoxLayout):
         [spine.set_edgecolor('white') for ax in self.pretrain_ax_arr for spine in ax.spines.values()]
         self.tracking_main_figure = FigureCanvasKivyAgg(self.pretrain_fig)
         self.pretrain_fig_canvas = self.pretrain_fig.canvas
-        self.pretrain_fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
+        self.pretrain_fig.subplots_adjust(left = .1, bottom = .2, right = .9, top = .9, wspace = None, hspace = 1.)
         self.epoch_index_to_plot = 0
         self.pretraining_image_box.add_widget(self.pretrain_fig_canvas)

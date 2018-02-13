@@ -24,7 +24,8 @@ def get_frames_and_frames_moving_for_fragments(fragments):
     return frames, frames_moving
 
 if __name__ == '__main__':
-    session_paths = ['/home/prometheus/Desktop/IdTrackerDeep/videos/60 drosophila (females)/Canton_N60_12-15-17_15-15-10/session_20180110']
+    session_paths = ['/home/prometheus/Desktop/IdTrackerDeep/videos/60 drosophila (females)/Canton_N60_12-15-17_15-15-10/session_20180110',
+                     '/home/prometheus/Desktop/IdTrackerDeep/videos/60 drosophila (females)/Canton_N59_12-15-17_16-32-02/session_20180102']
 
     for session_path in session_paths:
         print("\nsession_path: ", session_path)

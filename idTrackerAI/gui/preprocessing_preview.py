@@ -59,6 +59,9 @@ class PreprocessingPreview(BoxLayout):
         self.bkg_subtractor = BkgSubtraction(orientation = 'vertical', chosen_video = CHOSEN_VIDEO)
         self.bkg_subtraction_label = CustomLabel(font_size = 14, text = "background subtraction")
         self.bkg_subtractor_switch = Switch()
+        self.check_segmentation_consistency_label = CustomLabel(font_size = 14,
+                                                                text = 'check segmentation consistency')
+        self.check_segmentation_consistency_switch = Switch()
         self.ROI_label = CustomLabel(font_size = 14, text = 'apply ROI')
         self.ROI_switch = Switch()
         self.container_layout.add_widget(self.reduce_resolution_btn)
@@ -66,6 +69,8 @@ class PreprocessingPreview(BoxLayout):
         self.container_layout.add_widget(self.ROI_switch)
         self.container_layout.add_widget(self.bkg_subtraction_label)
         self.container_layout.add_widget(self.bkg_subtractor_switch)
+        self.container_layout.add_widget(self.check_segmentation_consistency_label)
+        self.container_layout.add_widget(self.check_segmentation_consistency_switch)
         self.count_scrollup = 0
         self.scale = 1
         self.has_been_executed = False
@@ -164,7 +169,7 @@ class PreprocessingPreview(BoxLayout):
         if not hasattr(self, 'number_of_animals'):
             self.num_of_animals_input.text = str(mode(self.number_of_detected_blobs)[0][0])
         else:
-            self.num_of_animals_input.text = self.number_of_animals
+            self.num_of_animals_input.text = str(self.number_of_animals)
         self.num_of_animals_popup.open()
 
     def visualise_resegmentation(self, frame_number):
@@ -224,6 +229,7 @@ class PreprocessingPreview(BoxLayout):
 
         [resegmentation_controls_box.add_widget(w) for w in w_list]
         resegmentation_visualiser = VisualiseVideo(chosen_video = CHOSEN_VIDEO)
+        self.create_areas_figure(visualiser = resegmentation_visualiser)
         resegmentation_visualiser.visualise_video(CHOSEN_VIDEO.video,
                                                 func = partial(self.show_preprocessing,
                                                 visualiser = resegmentation_visualiser),
@@ -240,13 +246,13 @@ class PreprocessingPreview(BoxLayout):
 
     def resegment_and_update(self, *args):
         for frame_number in self.frames_with_more_blobs_than_animals:
-            maximum_number_of_blobs = resegment(CHOSEN_VIDEO.video,
+            CHOSEN_VIDEO.video._maximum_number_of_blobs = resegment(CHOSEN_VIDEO.video,
                                                 frame_number,
                                                 CHOSEN_VIDEO.list_of_blobs,
                                                 self.new_preprocessing_parameters)
-            if maximum_number_of_blobs <= CHOSEN_VIDEO.video.number_of_animals:
+            if CHOSEN_VIDEO.video._maximum_number_of_blobs <= CHOSEN_VIDEO.video.number_of_animals:
                 CHOSEN_VIDEO.video._resegmentation_parameters.append((frame_number, self.new_preprocessing_parameters))
-        self.frames_with_more_blobs_than_animals = CHOSEN_VIDEO.list_of_blobs.check_maximal_number_of_blob(CHOSEN_VIDEO.video.number_of_animals)
+        self.frames_with_more_blobs_than_animals, CHOSEN_VIDEO.video._maximum_number_of_blobs = CHOSEN_VIDEO.list_of_blobs.check_maximal_number_of_blob(CHOSEN_VIDEO.video.number_of_animals, return_maximum_number_of_blobs = True)
         self.resegmentation_step_finished = True
 
     def resegmentation(self, *args):
@@ -266,8 +272,8 @@ class PreprocessingPreview(BoxLayout):
     def check_segmentation_consistency(self, *args):
         CHOSEN_VIDEO.list_of_blobs = ListOfBlobs(blobs_in_video = self.blobs)
         CHOSEN_VIDEO.video.create_preprocessing_folder()
-        self.frames_with_more_blobs_than_animals = CHOSEN_VIDEO.list_of_blobs.check_maximal_number_of_blob(CHOSEN_VIDEO.video.number_of_animals)
-        if len(self.frames_with_more_blobs_than_animals) > 0:
+        self.frames_with_more_blobs_than_animals, CHOSEN_VIDEO.video._maximum_number_of_blobs = CHOSEN_VIDEO.list_of_blobs.check_maximal_number_of_blob(CHOSEN_VIDEO.video.number_of_animals, return_maximum_number_of_blobs = True)
+        if len(self.frames_with_more_blobs_than_animals) > 0 and self.check_segmentation_consistency_switch.active:
             self.resegmentation_step_finished = True
             self.consistency_popup.dismiss()
             self.consistency_fail_popup.open()
@@ -303,7 +309,7 @@ class PreprocessingPreview(BoxLayout):
 
     def plot_crossing_detection_statistics(self, *args):
         content = BoxLayout(orientation = "vertical")
-        crossing_label = CustomLabel(text = "The deep crossing detector has been trained succesfully and used to discriminate crossing and individual images. In the figure the loss, accuracy and accuracy per class, respectively. Close the popup by clicking in any point out of it and go to the tracking tab.", size_hint = (1., .2))
+        self.crossing_label = CustomLabel(font_size = 14, text = "The deep crossing detector has been trained succesfully and used to discriminate crossing and individual images. In the figure the loss, accuracy and accuracy per class, respectively. The video is currenly being fragmented. The 'go_to_tracking' button will activate at the end of the process.", size_hint = (1., .2))
         if not self.crossing_detector_trainer.model_diverged:
             matplotlib.rcParams.update({'font.size': 8,
                                         'axes.labelsize': 8,
@@ -312,27 +318,31 @@ class PreprocessingPreview(BoxLayout):
                                         'legend.fontsize': 8})
             fig, ax_arr = plt.subplots(3)
             fig.set_facecolor((.188, .188, .188))
-            fig.subplots_adjust(left=0.5, bottom=0.5, right=1, top=1, wspace=None, hspace=0.5)
+            fig.subplots_adjust(left=0.2, bottom=0.1, right=1, top=1, wspace=None, hspace=1)
             self.fig.set_facecolor((.188, .188, .188))
             [(ax.set_facecolor((.188, .188, .188)), ax.tick_params(color='white', labelcolor='white'), ax.xaxis.label.set_color('white'), ax.yaxis.label.set_color('white')) for ax in ax_arr]
             [spine.set_edgecolor('white') for ax in ax_arr for spine in ax.spines.values()]
             self.crossing_detector_trainer.store_training_accuracy_and_loss_data.plot(ax_arr, color = 'r', plot_now = False, legend_font_color = "white")
             self.crossing_detector_trainer.store_validation_accuracy_and_loss_data.plot(ax_arr, color ='b', plot_now = False, legend_font_color = "white")
-            plt.tight_layout()
+            self.go_to_tracking_button = Button(text = "Go to the tracking tab", size_hint = (1.,.1))
+            self.go_to_tracking_button.disabled = True
             crossing_detector_accuracy = FigureCanvasKivyAgg(fig)
-            content.add_widget(crossing_label)
+            content.add_widget(self.crossing_label)
+            content.add_widget(self.go_to_tracking_button)
             content.add_widget(crossing_detector_accuracy)
         else:
             content.add_widget(CustomLabel(text = "The model diverged, crossing and individuals will be discriminated only by area."))
         self.crossing_detector_accuracy_popup = Popup(title = 'Crossing/individual images discrimination',
                             content = content,
-                            size_hint = (.8, .8))
+                            size_hint = (1., 1.))
         self.crossing_detector_accuracy_popup.bind(on_open = self.generate_list_of_fragments_and_global_fragments)
+        if hasattr(self, 'go_to_tracking_button'):
+            self.go_to_tracking_button.bind(on_release = self.crossing_detector_accuracy_popup.dismiss)
         self.crossing_detector_accuracy_popup.open()
 
     def generate_list_of_fragments_and_global_fragments(self, *args):
         CHOSEN_VIDEO.list_of_blobs.compute_overlapping_between_subsequent_frames()
-        CHOSEN_VIDEO.list_of_blobs.compute_fragment_identifier_and_blob_index(CHOSEN_VIDEO.video.number_of_animals)
+        CHOSEN_VIDEO.list_of_blobs.compute_fragment_identifier_and_blob_index(max(CHOSEN_VIDEO.video.number_of_animals, CHOSEN_VIDEO.video.maximum_number_of_blobs))
         CHOSEN_VIDEO.list_of_blobs.compute_crossing_fragment_identifier()
         fragments = create_list_of_fragments(CHOSEN_VIDEO.list_of_blobs.blobs_in_video,
                                             CHOSEN_VIDEO.video.number_of_animals)
@@ -433,8 +443,8 @@ class PreprocessingPreview(BoxLayout):
         self.add_widget(self.visualiser)
         self.currentSegment = 0
         self.areas_plotted = False
-        self.create_areas_figure()
         self.number_of_detected_blobs = [0]
+        self.create_areas_figure()
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.show_preprocessing)
 
     @staticmethod
@@ -445,20 +455,23 @@ class PreprocessingPreview(BoxLayout):
 
     def create_areas_figure(self, visualiser = None):
         self.set_matplotlib_params()
+        self.areas_box = BoxLayout(orientation = "vertical", size_hint = (1.,.3))
+        self.areas_label_text = "Areas:"
+        self.areas_label = CustomLabel(font_size = 14, text = self.areas_label_text, size_hint = (1.,.15))
         self.fig, self.ax = plt.subplots(1)
-        self.fig.subplots_adjust(left=.1, bottom=.1, right=1, top=1, wspace=None, hspace=0.5)
+        self.fig.subplots_adjust(left=.1, bottom=.3, right=.9, top=.9)
         self.fig.set_facecolor((.188, .188, .188))
         self.ax.set_xlabel('blob')
         self.ax.set_ylabel('area')
-        self.fig.canvas.set_window_title('Areas')
         self.ax.set_facecolor((.188, .188, .188))
         self.ax.tick_params(color='white', labelcolor='white')
         self.ax.xaxis.label.set_color('white')
         self.ax.yaxis.label.set_color('white')
         [spine.set_edgecolor('white') for spine in self.ax.spines.values()]
         self.area_bars = FigureCanvasKivyAgg(self.fig)
-        self.area_bars.size_hint = (1., .2)
         self.area_bars_width = .5
+        self.areas_box.add_widget(self.areas_label)
+        self.areas_box.add_widget(self.area_bars)
         if visualiser is None:
             visualiser = self.visualiser
 
@@ -466,7 +479,10 @@ class PreprocessingPreview(BoxLayout):
         self.ax.clear()
         self.ax.bar(range(len(areas)), areas, self.area_bars_width)
         if len(areas) > 0:
-            self.ax.axhline(np.min(areas), color = 'w', linewidth = .3)
+            min_area = np.min(areas)
+            self.ax.axhline(min_area, color = 'w', linewidth = .3)
+            self.areas_label.text = str(len(areas)) + " blobs detected. Minimum area: " + str(min_area)
+
         self.area_bars.draw()
         has_child = False
 
@@ -475,13 +491,12 @@ class PreprocessingPreview(BoxLayout):
                 has_child = True
 
         if not has_child:
-            visualiser.add_widget(self.area_bars)
+            visualiser.add_widget(self.areas_box)
 
     def show_preprocessing(self, frame, visualiser = None, sliders = None, hide_video_slider = False):
         if visualiser is None:
             visualiser = self.visualiser
-        else:
-            self.create_areas_figure(visualiser = visualiser)
+
         min_threshold_slider = self.min_threshold_slider if sliders is None else sliders[0]
         max_threshold_slider = self.max_threshold_slider if sliders is None else sliders[1]
         min_area_slider = self.min_area_slider if sliders is None else sliders[2]
@@ -493,7 +508,7 @@ class PreprocessingPreview(BoxLayout):
         else:
             self.frame = frame
         if hasattr(self, 'area_bars'):
-            visualiser.remove_widget(self.area_bars)
+            visualiser.remove_widget(self.areas_box)
         if not hasattr(CHOSEN_VIDEO.video, 'number_of_channels'):
             if frame.shape[2] == 1 or (np.any(frame[:,:,1] == frame[:,:,2] ) and np.any(frame[:,:, 0] == frame[:,:,1])):
                 CHOSEN_VIDEO.video._number_of_channels = 1
