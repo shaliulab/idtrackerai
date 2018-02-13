@@ -9,11 +9,11 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup'
     path_to_tracked_videos_data_frame = os.path.join(path_to_results_hard_drive,'tracked_videos/tracked_videos_data_frame.pkl')
     if os.path.isfile(path_to_tracked_videos_data_frame):
         tracked_videos_data_frame = pd.read_pickle(path_to_tracked_videos_data_frame)
-
+        tracked_videos_data_frame_good = tracked_videos_data_frame[tracked_videos_data_frame.bad_video_example == False]
         sns.set_style("ticks")
         plt.ion()
         fig, ax = plt.subplots(1,1)

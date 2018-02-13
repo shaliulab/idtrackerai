@@ -34,7 +34,7 @@ def f_boolean(x):
     return 'yes' if x else 'no'
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup'
     tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
     path_to_tracked_videos_data_frame = os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl')
 
@@ -43,42 +43,42 @@ if __name__ == '__main__':
     columns_to_include = ['video_title',
                         'video_length_min',
                         'frame_rate',
+                        'mean_area_in_pixels',
+                        'protocol_used',
                         'percentage_of_video_validated',
                         'number_of_crossing_fragments_in_validated_part',
-                        'mean_area_in_pixels',
                         'accuracy_identification_and_interpolation',
                         'individual_accuracy_interpolated',
                         'accuracy_in_accumulation',
                         'accuracy_in_residual_identification_identification_and_interpolation',
-                        'protocol_used',
                         'percentage_of_unoccluded_images',
                         'false_positive_rate_in_crossing_detector']
 
     new_columns_names = ['Video',
                 'Length (min)',
                 'Frame rate (fps)',
+                'Pixels per animal',
+                'Protocol',
                 'perc. of video reviewed',
                 'Number of crossings',
-                'Pixels per animal',
                 'Accuracy',
                 'Individual accuracy',
                 'Accuracy in accumulation and identification',
                 'Accuracy in residual identification',
-                'Protocol',
                 'perc. of individual blobs',
                 'False positive rate for DCD']
 
     formatters = [f_string,
                     f_time,
                     f_integer,
-                    f_float,
                     f_integer,
+                    f_integer,
+                    f_float,
                     f_area,
                     f_accuracy,
                     f_individual_accuracy,
                     f_accuracy,
                     f_accuracy,
-                    f_integer,
                     f_percentage,
                     f_percentage]
 
