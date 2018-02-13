@@ -65,7 +65,6 @@ if __name__ == '__main__':
                 'Individual accuracy',
                 'Accuracy in accumulation and identification',
                 'Accuracy in residual identification',
-                'perc. of individual blobs',
                 'False positive rate for DCD']
 
     formatters = [f_string,
@@ -95,12 +94,12 @@ if __name__ == '__main__':
 
     ### smaller groups videos
     print("generating smaller groups table")
-    condition = [x and not y for (x,y) in zip(list(tracked_videos_data_frame.number_of_animals <= 35), list(tracked_videos_data_frame.idTracker_video))]
+    condition = [x and not y for (x,y) in zip(list(tracked_videos_data_frame.number_of_animals < 60), list(tracked_videos_data_frame.idTracker_video))]
     # condition = tracked_videos_data_frame.number_of_animals <= 35 and not tracked_videos_data_frame.idTracker_video
     write_latex_table_for_subset_dataframe(tracked_videos_folder, tracked_videos_data_frame, columns_to_include, new_columns_names, formatters, condition, 'smaller_group_sizes_table')
     ### larger groups videos
     print("generating larger groups videos table")
-    condition = [x and not y for (x,y) in zip(list(tracked_videos_data_frame.number_of_animals > 35), list(tracked_videos_data_frame.idTracker_video))]
+    condition = [x and not y for (x,y) in zip(list(tracked_videos_data_frame.number_of_animals >= 60), list(tracked_videos_data_frame.idTracker_video))]
     write_latex_table_for_subset_dataframe(tracked_videos_folder, tracked_videos_data_frame, columns_to_include, new_columns_names, formatters, condition, 'larger_group_sizes_table')
     ### idTracker videos
     print("generating idTracker videos table")
