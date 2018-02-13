@@ -54,8 +54,9 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
                                             tracked_videos_data_frame, group_sizes_list, \
                                             accuracies, images_in_shortest_fragment_in_first_global_fragment, protocols_array):
     accuracies = accuracies*100
+    group_size_boundary = 59
     for i, group_size in enumerate(group_sizes_list):
-        j = 0 if group_size <= 10 else 1
+        j = 0 if group_size < group_size_boundary  else 1
         all_accuracies = np.ravel(accuracies[i,:,:,:])
         minimum_number_of_images = np.ravel(images_in_shortest_fragment_in_first_global_fragment[i,:,:,:])
         protocols = np.ravel(protocols_array[i,:,:,:])
@@ -73,36 +74,41 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
 
     for i in range(len(tracked_videos_data_frame)):
         species = tracked_videos_data_frame.loc[i].animal_type
+        bad_video = tracked_videos_data_frame.loc[i].bad_video_example
+        group_size = tracked_videos_data_frame.loc[i].number_of_animals
+        protocol = tracked_videos_data_frame.loc[i].protocol_used
         if 'zebrafish' in species or 'drosophila' in species:
-            if 'zebrafish' in species:
+            if 'zebrafish' in species and not bad_video:
                 color = 'g'
-            elif 'drosophila' in species:
+            elif 'drosophila' in species and not bad_video:
                 color = 'm'
+            elif 'drosophila' in species and bad_video and group_size == 100:
+                color = 'c'
+            elif 'drosophila' in species and bad_video and group_size == 60:
+                color = 'y'
             accuracy = tracked_videos_data_frame.loc[i].accuracy_identification_and_interpolation * 100
             if tracked_videos_data_frame.loc[i].minimum_number_of_frames_moving_in_first_global_fragment is not None:
                 minimum_number_of_images = tracked_videos_data_frame.loc[i].minimum_number_of_frames_moving_in_first_global_fragment
             else:
                 minimum_number_of_images = tracked_videos_data_frame.loc[i].number_of_images_in_shortest_fragment_in_first_global_fragment
-            group_size = tracked_videos_data_frame.loc[i].number_of_animals
-            protocol = tracked_videos_data_frame.loc[i].protocol_used
             if protocol == 1:
                 marker = '^'
             elif protocol == 2:
                 marker = 'o'
             elif protocol == 3:
                 marker = 's'
-            j = 0 if group_size <= 10 else 1
+            j = 0 if group_size <= group_size_boundary else 1
             ax_arr_num_images_accuracy[j].semilogx(minimum_number_of_images, accuracy, alpha = 1.,
                                                         marker = marker, markerfacecolor = color,
-                                                        markersize = 10)
+                                                        markersize = 10, markeredgecolor = 'None' )
 
     ax_arr_num_images_accuracy[0].axvline(30, c = 'r', ls = '--')
     ax_arr_num_images_accuracy[1].axvline(30, c = 'r', ls = '--')
 
 
 def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy):
-    ax_arr_num_images_accuracy[0].set_title('Group size ' + r'$\leq$ 10', fontsize = 22, y = 1.05)
-    ax_arr_num_images_accuracy[1].set_title('Group size ' + r'$\geq$ 38', fontsize = 22, y = 1.05)
+    ax_arr_num_images_accuracy[0].set_title('Group size ' + r'$\leq$ 40', fontsize = 22, y = 1.05)
+    ax_arr_num_images_accuracy[1].set_title('Group size ' + r'$\geq$ 60', fontsize = 22, y = 1.05)
     ax_arr_num_images_accuracy[0].set_xlabel('Number of images', fontsize = 20)
     ax_arr_num_images_accuracy[0].set_ylabel('Accuracy', fontsize = 20)
     ax_arr_num_images_accuracy[1].set_xlabel('Number of images', fontsize = 20)
@@ -123,6 +129,8 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
     simulated_videos = mpatches.Patch(color='k', fc = 'None', linewidth = 1, label='Simulated videos')
     fish_videos = mpatches.Patch(color='g', alpha = 1., label='Zebrafish videos')
     flies_videos = mpatches.Patch(color='m', alpha = 1., label='Drosophila videos')
+    bad_video1 = mpatches.Patch(color = 'c', alpha = 1., label='100 Drosophila \n(bad condition 1)')
+    bad_video2 = mpatches.Patch(color = 'y', alpha = 1., label='60 Drosophila \n(bad condition 2)')
     protocol_1 = mlines.Line2D([], [], color='k', marker='^', markersize=6, label='Protocol 1',
                                 markeredgecolor = 'k', markeredgewidth=1, markerfacecolor='None',
                                 linestyle = 'None')
@@ -134,14 +142,15 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
                                 linestyle = 'None')
 
 
-    ax_arr_num_images_accuracy[0].legend(handles=[simulated_videos,
+    ax_arr_num_images_accuracy[1].legend(handles=[simulated_videos,
                                                 fish_videos, flies_videos,
+                                                bad_video1, bad_video2,
                                                 protocol_1,
                                                 protocol_2,
                                                 protocol_3], loc = 4)
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup/'
+    path_to_results_hard_drive = '/media/prometheus/ground_truth_results_backup/'
     if os.path.isdir(path_to_results_hard_drive):
         tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
         path_to_tracked_videos_data_frame = os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl')
@@ -195,12 +204,14 @@ if __name__ == '__main__':
                         shape_parameter = int(shape_parameter)
 
                     for l, repetition in enumerate(results_data_frame.repetition.unique()):
-                        repetition_path = os.path.join('./library','library_test_' + results_data_frame.test_name.unique()[0],
-                                                        'group_size_' + str(int(group_size)),
-                                                        'num_frames_' + str(int(frames_in_video)),
-                                                        'scale_parameter_' + str(scale_parameter),
-                                                        'shape_parameter_' + str(shape_parameter),
-                                                        'repetition_' + str(int(repetition)))
+                        repetition_path = os.path.join(path_to_results_hard_drive,
+                                                    'CARP library and simulations results/Simulation_idTrackerAI',
+                                                    'library_test_' + results_data_frame.test_name.unique()[0],
+                                                    'group_size_' + str(int(group_size)),
+                                                    'num_frames_' + str(int(frames_in_video)),
+                                                    'scale_parameter_' + str(scale_parameter),
+                                                    'shape_parameter_' + str(shape_parameter),
+                                                    'repetition_' + str(int(repetition)))
                         try:
                             video_path = os.path.join(repetition_path, 'session', 'video_object.npy')
                             video = np.load(video_path).item(0)
@@ -210,9 +221,11 @@ if __name__ == '__main__':
                             print("video object not found")
 
                         try:
-                            list_of_global_fragments = np.load(video.global_fragments_path).item()
+                            list_of_global_fragments = np.load(os.path.join(repetition_path, 'session', 'preprocessing', 'global_fragments.npy')).item()
                             list_of_global_fragments_found = True
                         except:
+                            print("No global fragments")
+                            print(repetition_path)
                             list_of_global_fragments_found = False
 
                         ### Get data for repetition
