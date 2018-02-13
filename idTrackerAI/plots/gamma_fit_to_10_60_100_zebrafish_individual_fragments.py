@@ -34,7 +34,7 @@ paths_to_videos_to_plot = ['10_fish_group4/first/session_20180122',
                     'idTrackerDeep_LargeGroups_3/60fish/First/session_20171225']
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/chronos/ground_truth_results'
+    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup'
     tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
     nbins = 25
     min = 1
@@ -111,5 +111,4 @@ if __name__ == '__main__':
 
         else:
             print('video_object_path does not exist')
-    # fig1.savefig(os.path.join(folder_to_videos, 'distributions_individual_fragments_first.pdf'), transparent = True)
-    # fig2.savefig(os.path.join(folder_to_videos, 'distributions_individual_fragments_second.pdf'), transparent = True)
+    fig1.savefig(os.path.join(tracked_videos_folder, 'distributions_individual_fragments_10_60_100_zebrafish.pdf'), transparent = True)
