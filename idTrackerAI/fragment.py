@@ -239,6 +239,10 @@ class Fragment(object):
         return self._temporary_id
 
     @property
+    def temporary_id_for_pretraining(self):
+        return self._temporary_id_for_pretraining
+
+    @property
     def identity(self):
         return self._identity
 

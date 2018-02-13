@@ -134,17 +134,17 @@ class Store_Accuracy_and_Loss(object):
                         1.,          # height
                         fill=True,
                         edgecolor=None,
-                        facecolor=colors[fragment.temporary_id if attribute_to_check == 'used_for_training' else int(blob_index)],
+                        facecolor=colors[fragment.temporary_id if attribute_to_check == 'used_for_training' else fragment._temporary_id_for_pretraining],
                         alpha = 1.
                     )
                 )
         ax4.axis('tight')
         ax4.set_xlabel('Frame number')
         ax4.set_ylabel('Blob index')
-        ax4.set_yticks(range(0,video.number_of_animals,3))
-        ax4.set_yticklabels(range(1,video.number_of_animals+1,3))
+        ax4.set_yticks(range(0, video.maximum_number_of_blobs, 3))
+        ax4.set_yticklabels(range(1, video.maximum_number_of_blobs + 1, 3))
         ax4.set_xlim([0., video.number_of_frames])
-        ax4.set_ylim([-.5, video.number_of_animals + .5 - 1])
+        ax4.set_ylim([-.5, video.maximum_number_of_blobs + .5 - 1])
 
     def save(self, number_of_epochs_completed):
         """Saves the values stored

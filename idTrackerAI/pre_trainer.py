@@ -92,7 +92,7 @@ def pre_train_global_fragment(net,
         list of instances of the class :class:`~fragment.Fragment`
     """
     # Get images and labels from the current global fragment
-    images, labels = pretraining_global_fragment.get_images_and_labels()
+    images, labels = pretraining_global_fragment.get_images_and_labels_for_pretraining()
     # Instantiate data_set
     training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals,
                                                                             images, labels)

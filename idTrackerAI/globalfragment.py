@@ -245,16 +245,17 @@ class GlobalFragment(object):
             self.total_number_of_images = sum([fragment.number_of_images for fragment in self.individual_fragments])
         return self.total_number_of_images
 
-    def get_images_and_labels(self):
+    def get_images_and_labels_for_pretraining(self):
         """Arrange the images and identities in the global fragment as a
         labelled dataset in order to train the idCNN
         """
         images = []
         labels = []
 
-        for fragment in self.individual_fragments:
+        for temporary_id, fragment in enumerate(self.individual_fragments):
             images.extend(fragment.images)
-            labels.extend([fragment.blob_hierarchy_in_starting_frame] * fragment.number_of_images)
+            labels.extend([temporary_id] * fragment.number_of_images)
+            fragment._temporary_id_for_pretraining = temporary_id
 
         return images, labels
 
