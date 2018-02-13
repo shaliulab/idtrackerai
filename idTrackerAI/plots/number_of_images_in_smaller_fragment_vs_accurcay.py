@@ -71,7 +71,6 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
                                                 markeredgecolor = 'k', markeredgewidth=1,
                                                 marker = marker, markerfacecolor = 'None')
 
-
     for i in range(len(tracked_videos_data_frame)):
         species = tracked_videos_data_frame.loc[i].animal_type
         bad_video = tracked_videos_data_frame.loc[i].bad_video_example

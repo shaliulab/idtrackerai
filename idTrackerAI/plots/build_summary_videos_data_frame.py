@@ -58,10 +58,10 @@ sessions = ['100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_2018
     'idTrackerVideos/ValidacionTracking/Moscas/Platogrande_8females/session_20180131',
     'idTrackerVideos/Zebrafish_nacreLucie/pair3ht/session_20180207']
 
-animal_type = ['drosophila (females)', 'zebrafish (30dpf)', 'zebrafish (30dpf)', 'zebrafish (30dpf)','drosophila',
-            'drosophila', 'drosophila (females)', 'drosophila (females)', 'drosophila', 'drosophila',
-            'drosophila', 'ants', 'zebrafish (30dpf)', 'zebrafish (30dpf)', 'zebrafish (30dpf)',
-            'zebrafish (30dpf)', 'zebrafish (30dpf)', 'zebrafish (30dpf)', 'zebrafish', 'medaka',
+animal_type = ['drosophila', 'zebrafish', 'zebrafish', 'zebrafish','drosophila',
+            'drosophila', 'drosophila', 'drosophila', 'drosophila', 'drosophila',
+            'drosophila', 'ants', 'zebrafish', 'zebrafish', 'zebrafish',
+            'zebrafish', 'zebrafish', 'zebrafish', 'zebrafish', 'medaka',
             'medaka', 'medaka', 'drosophila', 'drosophila', 'zebrafish',
             'black mice', 'black mice', 'agouti mice', 'black mice', 'black mice',
             'black mice', 'drosophila', 'nacre zebrafish']
@@ -117,7 +117,7 @@ def get_mean_number_of_images_in_first_global_fragment(list_of_global_fragments,
 
 if __name__ == '__main__':
     # hard_drive_path = '/media/themis/ground_truth_results_backup'
-    path_to_results_hard_drive = '/media/prometheus/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup'
     tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
     session_paths = [x[0] for x in os.walk(tracked_videos_folder) if 'session' in x[0][-16:] and 'Trash' not in x[0]]
     pprint(session_paths)
@@ -335,7 +335,7 @@ if __name__ == '__main__':
                     'original_width': video.original_width,
                     'original_height': video.original_height,
                     'tracking_with_knowledge_transfer': video.tracking_with_knowledge_transfer,
-                    'video_length_min': video.number_of_frames/video.frames_per_second/60,
+                    'video_length_sec': video.number_of_frames/video.frames_per_second,
                     'tracking_time': None if not hasattr(video, 'total_time') else video.total_time / 60,
                     'preprocessing_time': None if not hasattr(video, 'preprocessing_time') else video.total_time / 60,
                     'first_accumulation_time': None if not hasattr(video, 'first_accumulation_time') else video.total_time / 60,
@@ -372,6 +372,7 @@ if __name__ == '__main__':
                     'accumulation_trial': video.accumulation_trial,
                     'number_of_accumulation_steps': len(video.validation_accuracy),
                     'percentage_of_accumulated_images': video.percentage_of_accumulated_images[video.accumulation_trial],
+                    'percentage_of_video_accumualted': (video.individual_fragments_stats['number_of_globally_accumulated_individual_blobs'] + video.individual_fragments_stats['number_of_partially_accumulated_individual_blobs']) / video.individual_fragments_stats['number_of_blobs'] * 100,
                     'estimated_accuracy': video.overall_P2,
                     'interval_of_frames_validated': video.gt_start_end if not bad_video else -1,
                     'number_of_frames_validated': np.diff(video.gt_start_end)[0] if not bad_video else -1,
@@ -398,4 +399,4 @@ if __name__ == '__main__':
 
         tracked_videos_data_frame.to_pickle(os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl'))
     else:
-        print("update the list of sessions and species")
+        print("update the list of sessions or check the path_to_results_hard_drive")

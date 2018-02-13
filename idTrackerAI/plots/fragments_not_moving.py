@@ -37,6 +37,9 @@ if __name__ == '__main__':
                     '80 drosophila (females males)/Canton_N80_11-28-17_17-21-32/session_20180123',
                     'idTrackerVideos/Moscas/2011dic12/Video_4fem_2mal_bottom/session_20180130',
                     'idTrackerVideos/Moscas/20121010/PlatoGrande_8females_2/session_20180131']
+    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup'
+    tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
+    session_paths = [x[0] for x in os.walk(tracked_videos_folder) if 'session' in x[0][-16:] and 'Trash' not in x[0]]
 
     plt.ion()
     window = plt.get_current_fig_manager().window
@@ -44,13 +47,14 @@ if __name__ == '__main__':
     screen_x = window.winfo_screenwidth()
     sns.set_style("ticks")
 
-    for session in sessions:
-        session_path = os.path.join(path_to_results_hard_drive, 'tracked_videos', session)
+    for session, session_path in zip(sessions, session_paths):
+        # session_path = os.path.join(path_to_results_hard_drive, 'tracked_videos', session)
         print("\nsession_path: ", session)
-        if 'drosophila' in session_path\
-            or 'flies' in session_path\
-            or ('Moscas' in session_path and 'PlatoGrande' in session_path)\
-            or ('Moscas' in session_path and 'Platogrande' in session_path):
+        # if 'drosophila' in session_path\
+        #     or 'flies' in session_path\
+        #     or ('Moscas' in session_path and 'PlatoGrande' in session_path)\
+        #     or ('Moscas' in session_path and 'Platogrande' in session_path):
+        if True:
 
             print("loading video")
             video = np.load(os.path.join(session_path, 'video_object.npy')).item()
