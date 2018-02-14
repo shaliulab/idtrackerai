@@ -136,6 +136,7 @@ class PreprocessingPreview(BoxLayout):
             self.ROI_switch.active = False
             self.bkg_subtractor_switch.active = False
             self.bkg_subtractor_switch.bind(active = self.apply_bkg_subtraction)
+            CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction 
             self.bkg = CHOSEN_VIDEO.video.bkg
             self.ROI = CHOSEN_VIDEO.video.ROI
             self.create_number_of_animals_popup()
@@ -532,6 +533,9 @@ class PreprocessingPreview(BoxLayout):
 
         self.plot_areas_figure(areas, visualiser)
         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)
+        # self.frame = cv2.bitwise_and(self.frame, self.frame, mask = self.ROI)
+        alpha = .05
+        self.frame = cv2.addWeighted(self.ROI, alpha, self.frame, 1 - alpha, 0)
         if self.count_scrollup != 0:
             self.dst = cv2.warpAffine(self.frame, self.M, (self.frame.shape[1], self.frame.shape[1]))
             buf1 = cv2.flip(self.dst,0)
