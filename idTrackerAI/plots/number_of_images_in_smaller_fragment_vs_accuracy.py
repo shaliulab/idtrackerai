@@ -99,10 +99,10 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
             j = 0 if group_size <= group_size_boundary else 1
             ax_arr_num_images_accuracy[j].semilogx(minimum_number_of_images, accuracy, alpha = 1.,
                                                         marker = marker, markerfacecolor = color,
-                                                        markersize = 10, markeredgecolor = 'None' )
+                                                        markersize = 10, markeredgecolor = 'None')
 
-    ax_arr_num_images_accuracy[0].axvline(30, c = 'r', ls = '--')
-    ax_arr_num_images_accuracy[1].axvline(30, c = 'r', ls = '--')
+    ax_arr_num_images_accuracy[0].axvline(30, c = 'r', ls = '--', linewidth = 2)
+    ax_arr_num_images_accuracy[1].axvline(30, c = 'r', ls = '--', linewidth = 2)
 
 
 def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy):
@@ -111,8 +111,8 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
     ax_arr_num_images_accuracy[0].set_xlabel('Number of images', fontsize = 20)
     ax_arr_num_images_accuracy[0].set_ylabel('Accuracy', fontsize = 20)
     ax_arr_num_images_accuracy[1].set_xlabel('Number of images', fontsize = 20)
-    ax_arr_num_images_accuracy[1].tick_params(axis='both', which='major', labelsize=14)
-    ax_arr_num_images_accuracy[0].tick_params(axis='both', which='major', labelsize=14)
+    ax_arr_num_images_accuracy[1].tick_params(axis='both', which='major', labelsize=16)
+    ax_arr_num_images_accuracy[0].tick_params(axis='both', which='major', labelsize=16)
     ax_arr_num_images_accuracy[1].set_yticklabels([])
     ax_arr_num_images_accuracy[0].set_xticks([10, 100, 1000])
     ax_arr_num_images_accuracy[1].set_xticks([10, 100, 1000])
@@ -149,7 +149,7 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
                                                 protocol_3], loc = 4)
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/prometheus/ground_truth_results_backup/'
+    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup/'
     if os.path.isdir(path_to_results_hard_drive):
         tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
         path_to_tracked_videos_data_frame = os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl')
@@ -161,9 +161,6 @@ if __name__ == '__main__':
             print("results_data_frame.pkl loaded \n")
         else:
             print("results_data_frame.pkl does not exist \n")
-        repetition_to_plot = int(sys.argv[1]) if int(sys.argv[1]) != 0 else None
-        if repetition_to_plot is not None:
-            results_data_frame = results_data_frame[results_data_frame.repetition == repetition_to_plot]
 
         # get tests_data_frame and test to plot
         print("loading tests data frame")
@@ -254,6 +251,6 @@ if __name__ == '__main__':
                                             protocol)
         set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy)
 
-        fig_num_images_accuracy.savefig(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Simulation_idTrackerAI/number_of_images_vs_accuracy.pdf'), transparent = True)
+        fig_num_images_accuracy.savefig(os.path.join(path_to_results_hard_drive, 'tracked_videos/number_of_images_vs_accuracy.pdf'), transparent = True)
 
         plt.show()

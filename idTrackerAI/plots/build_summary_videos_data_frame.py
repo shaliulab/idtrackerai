@@ -117,7 +117,7 @@ def get_mean_number_of_images_in_first_global_fragment(list_of_global_fragments,
 
 if __name__ == '__main__':
     # hard_drive_path = '/media/themis/ground_truth_results_backup'
-    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup'
     tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
     session_paths = [x[0] for x in os.walk(tracked_videos_folder) if 'session' in x[0][-16:] and 'Trash' not in x[0]]
     pprint(session_paths)
