@@ -532,6 +532,9 @@ class PreprocessingPreview(BoxLayout):
 
         self.plot_areas_figure(areas, visualiser)
         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)
+        # self.frame = cv2.bitwise_and(self.frame, self.frame, mask = self.ROI)
+        alpha = .05
+        self.frame = cv2.addWeighted(self.ROI, alpha, self.frame, 1 - alpha, 0)
         if self.count_scrollup != 0:
             self.dst = cv2.warpAffine(self.frame, self.M, (self.frame.shape[1], self.frame.shape[1]))
             buf1 = cv2.flip(self.dst,0)
