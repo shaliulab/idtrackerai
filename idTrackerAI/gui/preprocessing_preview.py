@@ -136,6 +136,7 @@ class PreprocessingPreview(BoxLayout):
             self.ROI_switch.active = False
             self.bkg_subtractor_switch.active = False
             self.bkg_subtractor_switch.bind(active = self.apply_bkg_subtraction)
+            CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction 
             self.bkg = CHOSEN_VIDEO.video.bkg
             self.ROI = CHOSEN_VIDEO.video.ROI
             self.create_number_of_animals_popup()

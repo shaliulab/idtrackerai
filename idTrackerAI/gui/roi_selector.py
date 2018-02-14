@@ -121,53 +121,54 @@ class ROISelector(BoxLayout):
 
     def on_touch_up(self, touch):
         if self.visualiser.display_layout.collide_point(*touch.pos) and len(self.touches) > 0:
-            try:
-                if (self.btn_rectangular.state == "down" and len(self.touches) == 2) or \
-                (self.btn_circular.state == "down" and len(self.touches) == 5):
-                    touch.ungrab(self)
-                    ud = touch.ud
-                    self.visualiser.display_layout.canvas.remove(ud['lines'])
-                    self.visualiser.display_layout.canvas.remove(self.circle)
-                    # self.touches.append(touch.pos)
-                    rect = np.asarray([self.touches[0], self.touches[-1]])
-                    sorted(rect, key=lambda x:x[1], reverse=True)
-                    rectS = np.diff(rect, axis=0)[0]
+            # try:
+            print(touch)
+            if (self.btn_rectangular.state == "down" and len(self.touches) == 2) or \
+            (self.btn_circular.state == "down" and len(self.touches) == 5):
+                touch.ungrab(self)
+                ud = touch.ud
+                self.visualiser.display_layout.canvas.remove(ud['lines'])
+                self.visualiser.display_layout.canvas.remove(self.circle)
+                # self.touches.append(touch.pos)
+                rect = np.asarray([self.touches[0], self.touches[-1]])
+                sorted(rect, key=lambda x:x[1], reverse=True)
+                rectS = np.diff(rect, axis=0)[0]
 
-                    if self.btn_rectangular.state == "down":
-                        with self.visualiser.display_layout.canvas:
-                            Color(1, 1, 0,.5)
-                            self.cur_ROI = Rectangle(pos=(rect[0][0], rect[0][1]), size=(rectS[0],rectS[1]))
-                    elif self.btn_circular.state == "down":
-                        self.touches = np.round(np.asarray(self.touches)).astype(np.int32)
-                        (c_x, c_y), (ax_m, ax_M), angle = cv2.fitEllipse(self.touches)
+                if self.btn_rectangular.state == "down":
+                    with self.visualiser.display_layout.canvas:
+                        Color(1, 1, 0,.5)
+                        self.cur_ROI = Rectangle(pos=(rect[0][0], rect[0][1]), size=(rectS[0],rectS[1]))
+                elif self.btn_circular.state == "down":
+                    self.touches = np.round(np.asarray(self.touches)).astype(np.int32)
+                    (c_x, c_y), (ax_m, ax_M), angle = cv2.fitEllipse(self.touches)
 
-                        with self.visualiser.display_layout.canvas:
-                            Color(1, 1, 0,.5)
-                            PushMatrix()
-                            Rotate(angle= angle - 90, origin = (c_x , c_y))
-                            self.cur_ROI = Ellipse(pos=(c_x - ax_M / 2, c_y - ax_m / 2),
-                                                    size=(ax_M, ax_m))
-                            PopMatrix()
-                    self.ROIs.append(self.cur_ROI)
-                    #scale
-                    ratioH = self.visualiser.display_layout.texture.height / self.visualiser.display_layout.height
-                    ratioW = self.visualiser.display_layout.texture.width / self.visualiser.display_layout.width
-                    scale = np.asarray([[ratioW, 0], [0, ratioH]])
-                    #translate
-                    translation = np.asarray([0, - self.visualiser.footer.height])
-                    if self.btn_rectangular.state == "down":
-                        p1_ = self.affine_transform(rect[0], translation, scale)
-                        p2_ = self.affine_transform(rect[1], translation, scale)
-                        p1_ = self.inverse_y_axis(p1_, self.visualiser.display_layout.texture.height)
-                        p2_ = self.inverse_y_axis(p2_, self.visualiser.display_layout.texture.height)
-                        self.ROIOut.append([tuple(p1_), tuple(p2_)])
-                    elif self.btn_circular.state == "down":
-                        ellipse_points_ = self.apply_affine_and_inversion_to_list_of_points(self.touches, translation, scale)
-                        self.ROIOut.append(ellipse_points_)
-                    print(len(self.ROIOut))
-                    self.touches = []
-            except:
-                print('stay on the figure to draw a ROI')
+                    with self.visualiser.display_layout.canvas:
+                        Color(1, 1, 0,.5)
+                        PushMatrix()
+                        Rotate(angle= angle - 90, origin = (c_x , c_y))
+                        self.cur_ROI = Ellipse(pos=(c_x - ax_M / 2, c_y - ax_m / 2),
+                                                size=(ax_M, ax_m))
+                        PopMatrix()
+                self.ROIs.append(self.cur_ROI)
+                #scale
+                ratioH = self.visualiser.display_layout.texture.height / self.visualiser.display_layout.height
+                ratioW = self.visualiser.display_layout.texture.width / self.visualiser.display_layout.width
+                scale = np.asarray([[ratioW, 0], [0, ratioH]])
+                #translate
+                translation = np.asarray([0, - self.visualiser.footer.height])
+                if self.btn_rectangular.state == "down":
+                    p1_ = self.affine_transform(rect[0], translation, scale)
+                    p2_ = self.affine_transform(rect[1], translation, scale)
+                    p1_ = self.inverse_y_axis(p1_, self.visualiser.display_layout.texture.height)
+                    p2_ = self.inverse_y_axis(p2_, self.visualiser.display_layout.texture.height)
+                    self.ROIOut.append([tuple(p1_), tuple(p2_)])
+                elif self.btn_circular.state == "down":
+                    ellipse_points_ = self.apply_affine_and_inversion_to_list_of_points(self.touches, translation, scale)
+                    self.ROIOut.append(ellipse_points_)
+                print(len(self.ROIOut))
+                self.touches = []
+            # except:
+            #     print('stay on the figure to draw a ROI')
 
     def delete_ROI(self, *args):
         try:
