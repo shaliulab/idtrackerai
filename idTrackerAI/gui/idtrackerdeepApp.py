@@ -216,8 +216,9 @@ class Root(TabbedPanel):
                                 deactivate_validation = DEACTIVATE_VALIDATION)
             self.tracker.id = "tracker"
             self.tracking_tab.add_widget(self.tracker)
-            self.preprocessor.go_to_tracking_button.bind(on_press = partial(self.switch, self.tab_list[2]))
-            self.preprocessor.go_to_tracking_button.disabled = False
+            if hasattr(self, 'preprocessor'):
+                self.preprocessor.go_to_tracking_button.bind(on_press = partial(self.switch, self.tab_list[2]))
+                self.preprocessor.go_to_tracking_button.disabled = False
         else:
             if hasattr(self, 'tracker'):
                 self.tracking_tab.clean(self.tracker)

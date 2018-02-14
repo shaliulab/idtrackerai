@@ -188,7 +188,9 @@ class Tracker(BoxLayout):
                                                                                 net_properties = None,
                                                                                 plot_flag = False)
         self.accumulation_counter_value.text = str(self.accumulation_manager.counter + 1)
-        if self.accumulation_manager.counter == 1:
+        print('*****************************', self.accumulation_manager.counter)
+        if not hasattr(self, 'ax_arr'):
+            print("------------ Creating axes")
             self.create_tracking_figures_axes()
         self.percentage_accumulated_images_value.text = str(self.accumulation_manager.ratio_of_accumulated_images)
         self.protocol_value.text = '2' if CHOSEN_VIDEO.video.accumulation_trial == 0 else '3'
