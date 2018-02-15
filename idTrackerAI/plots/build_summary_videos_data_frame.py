@@ -117,7 +117,7 @@ def get_mean_number_of_images_in_first_global_fragment(list_of_global_fragments,
 
 if __name__ == '__main__':
     # hard_drive_path = '/media/themis/ground_truth_results_backup'
-    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup'
     tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
     session_paths = [x[0] for x in os.walk(tracked_videos_folder) if 'session' in x[0][-16:] and 'Trash' not in x[0]]
     pprint(session_paths)
@@ -394,7 +394,9 @@ if __name__ == '__main__':
                     'individual_accuracy': -1 if not hasattr(video, 'gt_accuracy_individual') else video.gt_accuracy_individual['accuracy'],
                     'individual_accuracy_identified_animals': -1 if not hasattr(video, 'gt_accuracy_individual') else video.gt_accuracy_individual['accuracy_assigned'],
                     'individual_accuracy_interpolated': -1 if not hasattr(video, 'gt_accuracy_individual_interpolated') else video.gt_accuracy_individual_interpolated['accuracy'],
-                    'individual_accurcay_identified_animals_interpolated': -1 if not hasattr(video, 'gt_accuracy_individual_interpolated') else video.gt_accuracy_individual_interpolated['accuracy_assigned']
+                    'individual_accurcay_identified_animals_interpolated': -1 if not hasattr(video, 'gt_accuracy_individual_interpolated') else video.gt_accuracy_individual_interpolated['accuracy_assigned'],
+                    'rate_nonidentified_animals_indentification_and_interpolation': (video.gt_results_interpolated['number_of_individual_blobs']-np.sum(video.gt_results_interpolated['number_of_assigned_blobs_per_identity'].values()))/video.gt_results_interpolated['number_of_individual_blobs'] if not bad_video else -1,
+                    'rate_misidentified_animals_identification_and_interpolation': np.sum(video.gt_results_interpolated['number_of_errors_in_assigned_blobs'].values()) /video.gt_results_interpolated['number_of_individual_blobs'] if not bad_video else -1
                     }, ignore_index=True)
 
         tracked_videos_data_frame.to_pickle(os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl'))

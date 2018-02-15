@@ -11,7 +11,10 @@ def f_string(x):
     return x
 
 def f_accuracy(x):
-    return '%.3f' %(x*100) if x != 1 else '%i' %(x*100)
+    return '%.3f' %(x*100) if x != 1 else '(%i)' %(x*100)
+
+def f_accuracy_parentesis(x):
+    return '(%.2f)' %(x*100) if x != 1 else '%i' %(x*100)
 
 def f_individual_accuracy(x):
     return '(%.3f)' %(x*100) if x != 1 else '(%i)' %(x*100)
@@ -54,7 +57,7 @@ def write_latex_table_for_subset_dataframe(tracked_videos_folder, data_frame, co
         file.write(subset_data_frame.to_latex(index = False, formatters = formatters))
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup'
     tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
     path_to_tracked_videos_data_frame = os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl')
 
@@ -68,9 +71,9 @@ if __name__ == '__main__':
                         ('number_of_crossing_fragments_in_validated_part', 'Number of crossings reviewed', f_integer),
                         ('accuracy_in_accumulation', 'Accuracy accum. identif.', f_accuracy),
                         ('accuracy_identification_and_interpolation', 'Accuracy indiv. images', f_accuracy),
-                        ('individual_accuracy_interpolated', 'Individual accuracy', f_accuracy),
-                        ('accuracy_identified_animals_identification_and_interpolation','Accuracy identified', f_accuracy),
-                        ('individual_accurcay_identified_animals_interpolated', 'Individual accuracy identified', f_accuracy)]
+                        ('individual_accuracy_interpolated', 'Individual accuracy', f_accuracy_parentesis),
+                        ('rate_nonidentified_animals_indentification_and_interpolation','perc. not identified', f_accuracy),
+                        ('rate_misidentified_animals_identification_and_interpolation', 'perc. misidentified', f_accuracy)]
 
     ### smaller groups videos
     print("generating smaller groups table")

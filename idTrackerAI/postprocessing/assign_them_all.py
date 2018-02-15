@@ -25,8 +25,19 @@ else:
     logger = logging.getLogger("__main__.assign_them_all")
 
 
-''' erosion '''
 def compute_erosion_disk(video, blobs_in_video):
+    """Computes the erosion disk used to erode the blobs during the multiple passes
+    of the interpolation algorithm. The erosion disk is computed as
+    .. math::
+        k = \lceil\mbox{median}\left(\mbox{distance\_transform}_{b\in blobs} (b) \right) \rceil
+
+    where blobs are the `blobs_in_video`
+
+    See Also
+    --------
+    :func:`compute_min_frame_distance_transform`
+
+    """
     return np.ceil(np.nanmedian([compute_min_frame_distance_transform(video, blobs_in_frame)
                     for blobs_in_frame in blobs_in_video if len(blobs_in_frame) > 0])).astype(np.int)
 
@@ -73,6 +84,16 @@ def get_eroded_blobs(video, blobs_in_frame):
 ''' assign them all '''
 
 def set_individual_with_identity_0_as_crossings(list_of_blobs_no_gaps):
+    """Sets the individual blobs with 0 identity to be crossings so they can be
+    corrected and identified using the interpolation method
+
+    Parameters
+    ----------
+    list_of_blobs_no_gaps : <ListOfBlobs object>
+        Object with the collection of blobs found during segmentation with associated
+        methods. See :class:`list_of_blobs.ListOfBlobs`
+
+    """
     [(setattr(blob, '_is_an_individual', False),
         setattr(blob, '_is_a_crossing', True),
         setattr(blob, '_identity', None),
@@ -389,6 +410,29 @@ def get_forward_backward_list_of_frames(gap_interval):
     return np.insert(gap_range[::-1], np.arange(gap_length), gap_range)[:gap_length]
 
 def interpolate_trajectories_during_gaps(video, list_of_blobs, list_of_fragments, list_of_occluded_identities, possible_identities, erosion_counter):
+    """Short summary.
+
+    Parameters
+    ----------
+    video : type
+        Description of parameter `video`.
+    list_of_blobs : type
+        Description of parameter `list_of_blobs`.
+    list_of_fragments : type
+        Description of parameter `list_of_fragments`.
+    list_of_occluded_identities : type
+        Description of parameter `list_of_occluded_identities`.
+    possible_identities : type
+        Description of parameter `possible_identities`.
+    erosion_counter : type
+        Description of parameter `erosion_counter`.
+
+    Returns
+    -------
+    type
+        Description of returned object.
+
+    """
     logger.debug('In interpolate_trajectories_during_gaps')
     blobs_in_video = list_of_blobs.blobs_in_video
     for frame_number, (blobs_in_frame, occluded_identities_in_frame) in enumerate(tqdm(zip(blobs_in_video, list_of_occluded_identities), desc = "closing gaps")):
@@ -484,6 +528,20 @@ def get_number_of_non_split_crossing(blobs_in_video):
                 if blob.is_a_crossing])
 
 def reset_blobs_in_video_before_erosion_iteration(blobs_in_video):
+    """Resets the identity of crossings and individual with multiple identities
+    before starting a loop of :func:`intepro`
+
+    Parameters
+    ----------
+    blobs_in_video : type
+        Description of parameter `blobs_in_video`.
+
+    Returns
+    -------
+    type
+        Description of returned object.
+
+    """
     logger.debug('Reseting blobs to start erosion iteration')
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
@@ -513,6 +571,37 @@ def clean_individual_blob_before_saving(blobs_in_video):
     return blobs_in_video
 
 def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
+    """This is the main function to close the gaps where animals have not been
+    identified (labelled with identity 0), are crossing with another animals or
+    are occluded or not segmented.
+
+    Parameters
+    ----------
+    video : <Video object>
+        Object containing all the parameters of the video.
+    list_of_blobs : <ListOfBlobs object>
+        Object with the collection of blobs found during segmentation with associated
+        methods. See :class:`list_of_blobs.ListOfBlobs`
+    list_of_fragments : <ListOfFragments object>
+        Collection of individual and crossing fragments with associated methods.
+        See :class:`list_of_fragments.ListOfFragments`
+
+    Returns
+    -------
+    list_of_blobs : <ListOfBlobs object>
+        ListOfBlobs object with the updated blobs and identities that close gaps
+
+    See Also
+    --------
+    :func:`set_individual_with_identity_0_as_crossings`
+    :func:`compute_erosion_disk`
+    :func:`compute_model_velocity`
+    :func:`reset_blobs_in_video_before_erosion_iteration`
+    :func:`interpolate_trajectories_during_gaps`
+    :func:`closing_gap_stopping_criteria`
+    :func:`clean_individual_blob_before_saving`
+
+    """
     logger.debug('********************************')
     logger.debug('Starting close_trajectories_gaps')
     set_individual_with_identity_0_as_crossings(list_of_blobs)
