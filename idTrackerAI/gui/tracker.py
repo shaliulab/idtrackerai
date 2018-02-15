@@ -62,6 +62,7 @@ from store_accuracy_and_loss import Store_Accuracy_and_Loss
 from id_CNN import ConvNetwork
 from constants import BATCH_SIZE_IDCNN
 from constants import THRESHOLD_ACCEPTABLE_ACCUMULATION, VEL_PERCENTILE, THRESHOLD_EARLY_STOP_ACCUMULATION, MAX_RATIO_OF_PRETRAINED_IMAGES, MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
+from identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
 
 class Tracker(BoxLayout):
     def __init__(self, chosen_video = None,
@@ -502,8 +503,12 @@ class Tracker(BoxLayout):
         trajectories_wo_gaps_file = os.path.join(CHOSEN_VIDEO.video.trajectories_wo_gaps_folder, 'trajectories_wo_gaps.npy')
         trajectories_wo_gaps = produce_output_dict(CHOSEN_VIDEO.list_of_blobs_no_gaps.blobs_in_video, CHOSEN_VIDEO.video)
         np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
-        Logger.info("Saving trajectories")
         CHOSEN_VIDEO.video._has_trajectories_wo_gaps = True
+        Logger.info("Saving trajectories")
+        CHOSEN_VIDEO.list_of_blobs = assign_zeros_with_interpolation_identities(CHOSEN_VIDEO.list_of_blobs, CHOSEN_VIDEO.list_of_blobs_no_gaps)
+        trajectories_file = os.path.join(CHOSEN_VIDEO.video.trajectories_folder, 'trajectories.npy')
+        trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
+        np.save(trajectories_file, trajectories)
         CHOSEN_VIDEO.video.save()
         self.trajectories_wo_gaps_popup.dismiss()
 
