@@ -104,7 +104,7 @@ class Tracker(BoxLayout):
         elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
             Logger.info("Restoring second accumulation")
             self.restore_second_accumulation()
-            CHOSEN_VIDEO.video._first_frame_first_global_fragment = [CHOSEN_VIDEO.video._first_frame_first_global_fragment[0]]
+            CHOSEN_VIDEO.video._first_frame_first_global_fragment = CHOSEN_VIDEO.video._first_frame_first_global_fragment[0]
             Logger.info("Starting identification")
             self.start_tracking_button.bind(on_release = self.start_from_identification)
             self.start_tracking_button.text = "Start\nresidual identification"
@@ -118,6 +118,7 @@ class Tracker(BoxLayout):
             self.restore_pretraining()
             self.accumulation_manager.ratio_accumulated_images = CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]
             CHOSEN_VIDEO.video._first_frame_first_global_fragment = [CHOSEN_VIDEO.video._first_frame_first_global_fragment[0]]
+            CHOSEN_VIDEO.video._percentage_of_accumulated_images = [CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]]
             self.create_one_shot_accumulation_popup()
             Logger.info("Start accumulation parachute")
             self.start_tracking_button.bind(on_release = self.accumulate)
@@ -128,6 +129,7 @@ class Tracker(BoxLayout):
             self.restore_first_accumulation()
             self.accumulation_manager.ratio_accumulated_images = CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]
             CHOSEN_VIDEO.video._first_frame_first_global_fragment = [CHOSEN_VIDEO.video._first_frame_first_global_fragment[0]]
+            CHOSEN_VIDEO.video._percentage_of_accumulated_images = [CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]]
             self.accumulation_step_finished = True
             self.create_one_shot_accumulation_popup()
             self.start_tracking_button.bind(on_release = self.accumulate)
