@@ -291,7 +291,7 @@ class Root(TabbedPanel):
 class MainWindow(BoxLayout):
     pass
 
-class idtrackerdeepApp(App):
+class idtrackeraiApp(App):
     Config.set('kivy', 'keyboard_mode', '')
     Config.set('graphics', 'fullscreen', '0')
     Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
@@ -303,10 +303,15 @@ class idtrackerdeepApp(App):
         return MainWindow()
 
     def create_video_logs_folder(self):
-        if os.path.exists(CHOSEN_VIDEO.video.session_folder) and CHOSEN_VIDEO.video is not None:
+        if hasattr(CHOSEN_VIDEO.video, 'session_folder')\
+            and os.path.exists(CHOSEN_VIDEO.video.session_folder)\
+            and CHOSEN_VIDEO.video is not None:
+
             CHOSEN_VIDEO.video.logs_folder = os.path.join(CHOSEN_VIDEO.video.session_folder, 'logs')
             if not os.path.isdir(CHOSEN_VIDEO.video.logs_folder):
                 os.makedirs(CHOSEN_VIDEO.video.logs_folder)
+            return True
+        return False
 
     def on_stop(self):
         log_dir = Config.get('kivy', 'log_dir')
@@ -319,8 +324,9 @@ class idtrackerdeepApp(App):
         log_files = os.listdir(_dir)
         log_files.sort(key=lambda f: os.path.getmtime(os.path.join(_dir, f)))
         log_file = os.path.join(_dir, log_files[-1])
-        self.create_video_logs_folder()
-        os.rename(os.path.join(_dir, log_file), os.path.join(CHOSEN_VIDEO.video.logs_folder, log_file))
+        move_logs = self.create_video_logs_folder()
+        if move_logs:
+            os.rename(os.path.join(_dir, log_file), os.path.join(CHOSEN_VIDEO.video.logs_folder, log_file))
 
 if __name__ == '__main__':
-    idtrackerdeepApp().run()
+    idtrackeraiApp().run()
