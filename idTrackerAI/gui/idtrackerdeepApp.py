@@ -305,7 +305,8 @@ class idtrackerdeepApp(App):
     def create_video_logs_folder(self):
         if os.path.exists(CHOSEN_VIDEO.video.session_folder) and CHOSEN_VIDEO.video is not None:
             CHOSEN_VIDEO.video.logs_folder = os.path.join(CHOSEN_VIDEO.video.session_folder, 'logs')
-            os.makedirs(CHOSEN_VIDEO.video.logs_folder)
+            if not os.path.isdir(CHOSEN_VIDEO.video.logs_folder):
+                os.makedirs(CHOSEN_VIDEO.video.logs_folder)
 
     def on_stop(self):
         log_dir = Config.get('kivy', 'log_dir')
