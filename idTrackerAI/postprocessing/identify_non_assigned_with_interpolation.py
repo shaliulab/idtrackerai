@@ -1,16 +1,11 @@
 from __future__ import absolute_import, division, print_function
-import os
 import sys
 import copy
 sys.path.append('../')
 sys.path.append('../utils')
 sys.path.append('../groundtruth_utils')
 import numpy as np
-from GUI_utils import selectDir
-from video import Video
 from list_of_blobs import ListOfBlobs
-from generate_groundtruth import GroundTruthBlob, GroundTruth
-from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
 if sys.argv[0] == 'idtrackerdeepApp.py':
     from kivy.logger import Logger
     logger = Logger
@@ -21,9 +16,8 @@ else:
 
 def assign_zeros_with_interpolation_identities(list_of_blobs, list_of_blobs_no_gaps):
     logger.debug("creating copy of list_of_blobs")
-    list_of_blobs_interpolated = copy.deepcopy(list_of_blobs)
 
-    for blobs_in_frame, blobs_in_frame_no_gaps in zip(list_of_blobs_interpolated.blobs_in_video, list_of_blobs_no_gaps.blobs_in_video):
+    for blobs_in_frame, blobs_in_frame_no_gaps in zip(list_of_blobs.blobs_in_video, list_of_blobs_no_gaps.blobs_in_video):
         unassigned_blobs = [blob for blob in blobs_in_frame if blob.assigned_identity == 0]
         for unassigned_blob in unassigned_blobs:
             candidate_blobs = [blob for blob in blobs_in_frame_no_gaps
@@ -34,9 +28,14 @@ def assign_zeros_with_interpolation_identities(list_of_blobs, list_of_blobs_no_g
                 unassigned_blob._identity_corrected_closing_gaps = candidate_blobs[0].assigned_identity[0]
 
 
-    return list_of_blobs_interpolated
+    return list_of_blobs
 
 if __name__ == '__main__':
+    import os
+    from GUI_utils import selectDir
+    from video import Video
+    from generate_groundtruth import GroundTruthBlob, GroundTruth
+    from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
 
     session_path = selectDir('./') #select path to video
     video_path = os.path.join(session_path,'video_object.npy')
