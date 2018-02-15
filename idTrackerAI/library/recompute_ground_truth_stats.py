@@ -82,7 +82,7 @@ if __name__ == '__main__':
                             print("computting groundtrugh")
                             accuracies, _ = get_accuracy_wrt_groundtruth(video, blobs_in_video_groundtruth,
                                                                             blobs_in_video,
-                                                                            video.first_frame_first_global_fragment)
+                                                                            video.first_frame_first_global_fragment[video.accumulation_trial])
 
                             if accuracies is not None:
                                 print("saving accuracies in video")

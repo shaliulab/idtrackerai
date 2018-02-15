@@ -667,7 +667,7 @@ class Fragment(object):
         assert len(neighbour) < 2
         return neighbour[0] if len(neighbour) == 1 else None
 
-    def set_partially_or_globally_accumualted(self, accumulation_strategy):
+    def set_partially_or_globally_accumulated(self, accumulation_strategy):
         """Sets :attr:`accumulated_globally` and :attr:`accumulated_partially`
         according to `accumulation_strategy`
 

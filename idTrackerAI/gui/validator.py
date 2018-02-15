@@ -173,9 +173,7 @@ class Validator(BoxLayout):
         self.init_segmentZero()
 
     def get_first_frame(self):
-        if not hasattr(CHOSEN_VIDEO.video, 'first_frame_first_global_fragment'):
-            CHOSEN_VIDEO.video._first_frame_first_global_fragment = CHOSEN_VIDEO.old_video.first_frame_first_global_fragment
-        return CHOSEN_VIDEO.video.first_frame_first_global_fragment
+        return CHOSEN_VIDEO.video.first_frame_first_global_fragment[CHOSEN_VIDEO.video.accumulation_trial]
 
     def do(self, *args):
         if "assignment" in CHOSEN_VIDEO.processes_to_restore.keys() and CHOSEN_VIDEO.processes_to_restore['assignment']:
