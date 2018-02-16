@@ -13,7 +13,7 @@ import sys
 """
 The accumulation manager module
 """
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

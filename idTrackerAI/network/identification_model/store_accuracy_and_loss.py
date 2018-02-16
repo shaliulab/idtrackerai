@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sb
 from py_utils import get_spaced_colors_util
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

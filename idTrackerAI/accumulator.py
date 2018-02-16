@@ -7,7 +7,7 @@ from trainer import train
 from accumulation_manager import AccumulationManager, get_predictions_of_candidates_fragments
 from constants import THRESHOLD_EARLY_STOP_ACCUMULATION
 import sys
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

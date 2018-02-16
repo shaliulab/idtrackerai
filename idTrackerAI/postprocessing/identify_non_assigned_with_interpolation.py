@@ -6,7 +6,7 @@ sys.path.append('../utils')
 sys.path.append('../groundtruth_utils')
 import numpy as np
 from list_of_blobs import ListOfBlobs
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

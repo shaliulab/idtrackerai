@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import os
 import sys
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

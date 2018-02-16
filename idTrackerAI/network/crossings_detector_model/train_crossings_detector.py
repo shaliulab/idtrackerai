@@ -16,7 +16,7 @@ from crossings_detector_model import ConvNetwork_crossings
 from stop_training_criteria_crossings import Stop_Training
 from store_accuracy_and_loss_crossings import Store_Accuracy_and_Loss
 from epoch_runner_crossings import EpochRunner
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

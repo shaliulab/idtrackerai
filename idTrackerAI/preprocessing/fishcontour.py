@@ -6,7 +6,7 @@ from scipy.signal import argrelmax
 import cv2
 sys.path.append('./')
 from constants import SMOOTH_SIGMA, HEAD_DIAMETER
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

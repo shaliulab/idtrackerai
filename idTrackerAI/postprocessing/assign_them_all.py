@@ -17,7 +17,7 @@ from blob import Blob
 from list_of_blobs import ListOfBlobs
 from compute_velocity_model import compute_model_velocity
 from constants import VEL_PERCENTILE
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

@@ -31,7 +31,7 @@ CNN_MODELS_DICT = {0: cnn_model_0,
                     10: cnn_model_10,
                     11: cnn_model_11}
 
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

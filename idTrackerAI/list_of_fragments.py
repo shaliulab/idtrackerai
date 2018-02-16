@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 from fragment import Fragment
 from py_utils import set_attributes_of_object_to_value, append_values_to_lists
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

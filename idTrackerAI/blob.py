@@ -10,7 +10,7 @@ from tqdm import tqdm
 from joblib import Parallel, delayed
 from sklearn.decomposition import PCA
 from fishcontour import FishContour
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

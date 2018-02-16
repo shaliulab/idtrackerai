@@ -9,7 +9,7 @@ from tqdm import tqdm
 from blob import Blob
 from model_area import ModelArea
 from erosion import get_eroded_blobs, get_new_blobs_in_frame_after_erosion
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

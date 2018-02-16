@@ -14,7 +14,7 @@ sys.path.append('../IdTrackerDeep')
 from blob import Blob
 from py_utils import flatten
 from video_utils import segment_frame, blob_extractor
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

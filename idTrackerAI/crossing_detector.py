@@ -9,7 +9,7 @@ from cnn_architectures import cnn_model_crossing_detector
 from crossings_detector_model import ConvNetwork_crossings
 from train_crossings_detector import TrainDeepCrossing
 from get_predictions_crossings import GetPredictionCrossigns
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

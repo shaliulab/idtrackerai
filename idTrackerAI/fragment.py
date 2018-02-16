@@ -8,7 +8,7 @@ from tqdm import tqdm
 from math import sqrt
 from py_utils import delete_attributes_from_object
 from constants import MAX_FLOAT, MIN_FLOAT, FIXED_IDENTITY_THRESHOLD
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

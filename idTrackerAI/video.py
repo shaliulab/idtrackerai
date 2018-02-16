@@ -11,7 +11,7 @@ import time
 sys.path.append('./utils')
 from py_utils import get_git_revision_hash
 from constants import AVAILABLE_VIDEO_EXTENSION, FRAMES_PER_EPISODE, MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

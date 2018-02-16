@@ -14,7 +14,7 @@ import matplotlib
 import logging
 import matplotlib
 import subprocess
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:
