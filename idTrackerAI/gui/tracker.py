@@ -105,7 +105,8 @@ class Tracker(BoxLayout):
         elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
             Logger.info("Restoring second accumulation")
             self.restore_second_accumulation()
-            CHOSEN_VIDEO.video._first_frame_first_global_fragment = CHOSEN_VIDEO.video._first_frame_first_global_fragment[0]
+            CHOSEN_VIDEO.video._first_frame_first_global_fragment = CHOSEN_VIDEO.video._first_frame_first_global_fragment
+            Logger.warning('first_frame_first_global_fragment ' + str(CHOSEN_VIDEO.video.first_frame_first_global_fragment))
             Logger.info("Starting identification")
             self.start_tracking_button.bind(on_release = self.start_from_identification)
             self.start_tracking_button.text = "Start\nresidual identification"
