@@ -54,9 +54,9 @@ class ListOfFragments(object):
         """Resets all the fragment by using the method
         :meth:`~fragment.Fragment.roll_back_to`
         """
-        Logger.warning("Reseting list_of_fragments")
+        logger.warning("Reseting list_of_fragments")
         [fragment.reset(roll_back_to) for fragment in self.fragments]
-        Logger.warning("Done")
+        logger.warning("Done")
 
     def get_images_from_fragments_to_assign(self):
         """Take all the fragments that have not been used to train the idCNN

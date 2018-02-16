@@ -82,10 +82,10 @@ class AccumulationManager(object):
         if not any([(global_fragment.acceptable_for_training(self.accumulation_strategy)
                     and not global_fragment.used_for_training)
                     for global_fragment in self.list_of_global_fragments.global_fragments]):
-            Logger.warning('There are no more fragments acceptable for training')
+            logger.warning('There are no more fragments acceptable for training')
             return False
         else:
-            Logger.warning('There are fragments acceptable for training')
+            logger.warning('There are fragments acceptable for training')
             return True
 
 
