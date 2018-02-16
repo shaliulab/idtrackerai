@@ -59,7 +59,7 @@ class Store_Accuracy_and_Loss(object):
         if canvas_from_GUI is not None:
             ax1 = axes_handles[0]
             ax2 = axes_handles[1]
-            ax1.plot(range(index,len(self.loss)),self.accuracy[index:], color,label=self.name)
+            ax1.plot(range(len(self.loss)),self.accuracy, color,label=self.name)
             width = 0.35
             numAnimals = len(self.individual_accuracy[-1])
             if self.name == 'training':

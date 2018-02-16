@@ -59,7 +59,7 @@ if __name__ == '__main__':
     save_folder = os.path.join(video.session_folder, 'identification_images_and_video_frame')
     if not os.path.isdir(save_folder):
         os.makedirs(save_folder)
-    frame_number = video.first_frame_first_global_fragment
+    frame_number = video.first_frame_first_global_fragment[video.accumulation_trial]
     # save frame snapshot
     save_video_frame(video, save_folder, frame_number = frame_number)
     # save preprocessing images

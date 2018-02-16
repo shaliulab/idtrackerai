@@ -81,8 +81,8 @@ class VisualiseVideo(BoxLayout):
         textureFrame = Texture.create(size=(self.frame.shape[1], self.frame.shape[0]), colorfmt='bgr')
         textureFrame.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
         self.display_layout.texture = textureFrame
-        self.initImW = self.width
-        self.initImH = self.height
+        self.initImW = self.display_layout.width
+        self.initImH = self.display_layout.height
 
     def get_value(self, instance, value):
         self.video_slider_lbl.text = "Frame number:" + str(int(value))

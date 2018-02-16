@@ -19,6 +19,8 @@ import sys
 sys.path.append('../')
 sys.path.append('../utils')
 import numpy as np
+from numpy.linalg import eig, inv
+from math import sqrt
 import cv2
 
 from video import Video
@@ -39,7 +41,7 @@ class ROISelector(BoxLayout):
         self.roi_shape_label = CustomLabel(font_size = 14, text = "Select ROI shape")
         self.btn_rectangular = ToggleButton(text = "Rectangle", group = "ROI_shape")
         self.btn_rectangular.state = 'down'
-        self.btn_circular = ToggleButton(text = "Circle", group = "ROI_shape")
+        self.btn_circular = ToggleButton(text = "Ellipse", group = "ROI_shape")
         self.separator = BoxLayout()
         self.btn_load_roi = Button(text = "load ROIs")
         self.btn_save_roi = Button(text = "save ROIs")
@@ -73,7 +75,12 @@ class ROISelector(BoxLayout):
             self.has_been_executed = True
 
     def on_touch_down(self, touch):
-        self.touches = []
+        if self.btn_rectangular.state == "down" \
+        and (len(self.touches) == 0 or len(self.touches) > 2):
+            self.touches = []
+        elif self.btn_circular.state == "down" \
+        and (len(self.touches) == 0 or len(self.touches) > 5):
+            self.touches = []
         if self.visualiser.display_layout.collide_point(*touch.pos):
             self.touches.append(touch.pos)
             ud = touch.ud
@@ -89,27 +96,6 @@ class ROISelector(BoxLayout):
         else:
             self.disable_touch_down_outside_collided_widget(touch)
 
-    def on_touch_move(self, touch):
-        if self.visualiser.display_layout.collide_point(*touch.pos):
-            self.touches.append(touch.pos)
-            with self.visualiser.display_layout.canvas:
-                ud = touch.ud
-                rect = np.asarray([self.touches[0], self.touches[-1]])
-                sorted(rect, key=lambda x:x[1], reverse=True)
-                rectS = np.diff(rect, axis=0)[0]
-                if self.btn_rectangular.state == "down":
-                    ud['lines'].pos = rect[0][0], rect[0][1]
-                    ud['lines'].size = rectS[0],rectS[1]
-                elif self.btn_circular.state == "down":
-                    ax_x = rectS[0]
-                    ax_y = rectS[1]
-                    c_x = (rect[0][0] + rect[1][0]) / 2
-                    c_y = (rect[0][1] + rect[1][1]) / 2
-                    ud['lines'].pos = c_x - ax_x / 2, c_y - ax_y / 2
-                    ud['lines'].size = ax_x, ax_y
-        else:
-            self.disable_touch_down_outside_collided_widget(touch)
-
     def disable_touch_down_outside_collided_widget(self, touch):
         return super(ROISelector, self).on_touch_down(touch)
 
@@ -122,29 +108,47 @@ class ROISelector(BoxLayout):
         point[1] = height - point[1]
         return point
 
+    def apply_affine_and_inversion_to_list_of_points(self, list_of_points, translation, scale):
+        list_of_points_ = []
+
+        for point in list_of_points:
+            point_ = self.affine_transform(point, translation, scale)
+            point_ = self.inverse_y_axis(point_, self.visualiser.display_layout.texture.height)
+            list_of_points_.append(point_)
+
+        return np.asarray(list_of_points_).astype(np.int32)
+
+
     def on_touch_up(self, touch):
         if self.visualiser.display_layout.collide_point(*touch.pos) and len(self.touches) > 0:
             # try:
-            touch.ungrab(self)
-            ud = touch.ud
-            self.visualiser.display_layout.canvas.remove(ud['lines'])
-            self.visualiser.display_layout.canvas.remove(self.circle)
-            self.touches.append(touch.pos)
-            rect = np.asarray([self.touches[0], self.touches[-1]])
-            sorted(rect, key=lambda x:x[1], reverse=True)
-            rectS = np.diff(rect, axis=0)[0]
-            with self.visualiser.display_layout.canvas:
-                Color(1, 1, 0,.5)
-                if self.btn_rectangular.state == "down":
-                    self.cur_ROI = Rectangle(pos=(rect[0][0], rect[0][1]), size=(rectS[0],rectS[1]))
-                elif self.btn_circular.state == "down":
-                    ax_x = rectS[0]
-                    ax_y = rectS[1]
-                    c_x = (rect[0][0] + rect[1][0]) / 2
-                    c_y = (rect[0][1] + rect[1][1]) / 2
-                    self.cur_ROI = Ellipse(pos=(c_x - ax_x / 2, c_y - ax_y / 2),
-                                        size=(ax_x, ax_y))
+            print(touch)
+            if (self.btn_rectangular.state == "down" and len(self.touches) == 2) or \
+            (self.btn_circular.state == "down" and len(self.touches) == 5):
+                touch.ungrab(self)
+                ud = touch.ud
+                self.visualiser.display_layout.canvas.remove(ud['lines'])
+                self.visualiser.display_layout.canvas.remove(self.circle)
+                # self.touches.append(touch.pos)
+                rect = np.asarray([self.touches[0], self.touches[-1]])
+                sorted(rect, key=lambda x:x[1], reverse=True)
+                rectS = np.diff(rect, axis=0)[0]
 
+                if self.btn_rectangular.state == "down":
+                    with self.visualiser.display_layout.canvas:
+                        Color(1, 1, 0,.5)
+                        self.cur_ROI = Rectangle(pos=(rect[0][0], rect[0][1]), size=(rectS[0],rectS[1]))
+                elif self.btn_circular.state == "down":
+                    self.touches = np.round(np.asarray(self.touches)).astype(np.int32)
+                    (c_x, c_y), (ax_m, ax_M), angle = cv2.fitEllipse(self.touches)
+
+                    with self.visualiser.display_layout.canvas:
+                        Color(1, 1, 0,.5)
+                        PushMatrix()
+                        Rotate(angle= angle - 90, origin = (c_x , c_y))
+                        self.cur_ROI = Ellipse(pos=(c_x - ax_M / 2, c_y - ax_m / 2),
+                                                size=(ax_M, ax_m))
+                        PopMatrix()
                 self.ROIs.append(self.cur_ROI)
                 #scale
                 ratioH = self.visualiser.display_layout.texture.height / self.visualiser.display_layout.height
@@ -153,20 +157,14 @@ class ROISelector(BoxLayout):
                 #translate
                 translation = np.asarray([0, - self.visualiser.footer.height])
                 if self.btn_rectangular.state == "down":
-                    print("out rect")
                     p1_ = self.affine_transform(rect[0], translation, scale)
                     p2_ = self.affine_transform(rect[1], translation, scale)
                     p1_ = self.inverse_y_axis(p1_, self.visualiser.display_layout.texture.height)
                     p2_ = self.inverse_y_axis(p2_, self.visualiser.display_layout.texture.height)
                     self.ROIOut.append([tuple(p1_), tuple(p2_)])
                 elif self.btn_circular.state == "down":
-                    print("out ellipse")
-                    c = np.asarray([c_x, c_y])
-                    c_ = self.affine_transform(c, translation, scale)
-                    c_ = self.inverse_y_axis(c_, self.visualiser.display_layout.texture.height)
-                    semi_ax_x = int(abs(c_[0] - self.affine_transform(np.asarray([c_x + ax_x / 2, c_y]), translation, scale)[0]))
-                    semi_ax_y = int(abs(c_[1] - self.affine_transform(np.asarray([c_x, c_y + ax_y / 2]), translation, scale)[1]))
-                    self.ROIOut.append([tuple(c_), semi_ax_x, semi_ax_y])
+                    ellipse_points_ = self.apply_affine_and_inversion_to_list_of_points(self.touches, translation, scale)
+                    self.ROIOut.append(ellipse_points_)
                 print(len(self.ROIOut))
                 self.touches = []
             # except:
@@ -196,22 +194,19 @@ class ROISelector(BoxLayout):
         self.visualiser.initImW = self.cur_image_width
 
     def save_ROI(self, *args):
-        print("in save ROI")
-        print("number of ROIs ", len(self.ROIOut))
         if len(self.ROIOut) > 0:
             self.ROIcv2 = np.zeros_like(self.visualiser.frame, dtype='uint8')
-            print("ROI saving")
+
             for p in self.ROIOut:
                 if len(p) == 2:
-                    print("rectangle")
                     cv2.rectangle(self.ROIcv2, p[0], p[1], 255, -1)
-                elif len(p) == 3:
-                    print("ellipse")
-                    angle = 90
-                    cv2.ellipse(self.ROIcv2, p[0], (p[1], p[2]),angle,0,360,255,-1)
+                elif len(p) == 5:
+                    (x,y),(MA,ma),angle = cv2.fitEllipse(p)
+                    cv2.ellipse(self.ROIcv2,(int(x), int(y)), (int(MA / 2), int(ma / 2)), angle ,0 ,360 ,255, -1)
         else:
             self.ROIcv2 = np.ones_like(self.visualiser.frame, dtype='uint8') * 255
         CHOSEN_VIDEO.video._original_ROI = self.ROIcv2
+        CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
         CHOSEN_VIDEO.video.save()
 
     def no_ROI(self, *args):
@@ -220,5 +215,4 @@ class ROISelector(BoxLayout):
         CHOSEN_VIDEO.video.save()
 
     def load_ROI(self, *args):
-        print("loading previous ROI")
         CHOSEN_VIDEO.video._ROI = CHOSEN_VIDEO.old_video.ROI
