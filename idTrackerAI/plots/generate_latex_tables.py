@@ -13,11 +13,8 @@ def f_string(x):
 def f_accuracy(x):
     return '%.3f' %(x*100) if x != 1 else '(%i)' %(x*100)
 
-def f_accuracy_parentesis(x):
-    return '(%.2f)' %(x*100) if x != 1 else '%i' %(x*100)
-
 def f_individual_accuracy(x):
-    return '(%.3f)' %(x*100) if x != 1 else '(%i)' %(x*100)
+    return '/%.3f' %(x*100) if x != 1 else '/%i' %(x*100)
 
 def f_float_parentesis(x):
     return '(%.2f)' %x if x != 1 else '(%i)' %x
@@ -49,6 +46,7 @@ def write_latex_table_for_subset_dataframe(tracked_videos_folder, data_frame, co
     columns_to_include = list(zip(*columns_to_include)[0])
 
     subset_data_frame = data_frame[subset_condition]
+    print(subset_data_frame[["animal_type", "number_of_animals", "video_name", "percentage_of_video_validated"]])
     subset_data_frame = subset_data_frame[columns_to_include].copy()
     subset_data_frame.columns = new_columns_names
     latex_table_name = subtable_name + '.tex'
@@ -71,7 +69,7 @@ if __name__ == '__main__':
                         ('number_of_crossing_fragments_in_validated_part', 'Number of crossings reviewed', f_integer),
                         ('accuracy_in_accumulation', 'Accuracy accum. identif.', f_accuracy),
                         ('accuracy_identification_and_interpolation', 'Accuracy indiv. images', f_accuracy),
-                        ('individual_accuracy_interpolated', 'Individual accuracy', f_accuracy_parentesis),
+                        ('individual_accuracy_interpolated', 'Individual accuracy', f_individual_accuracy),
                         ('rate_nonidentified_animals_indentification_and_interpolation','perc. not identified', f_accuracy),
                         ('rate_misidentified_animals_identification_and_interpolation', 'perc. misidentified', f_accuracy)]
 

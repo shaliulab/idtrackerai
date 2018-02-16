@@ -58,10 +58,10 @@ sessions = ['100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_2018
     'idTrackerVideos/ValidacionTracking/Moscas/Platogrande_8females/session_20180131',
     'idTrackerVideos/Zebrafish_nacreLucie/pair3ht/session_20180207']
 
-animal_type = ['drosophila', 'zebrafish', 'zebrafish', 'zebrafish','drosophila',
-            'drosophila', 'drosophila', 'drosophila', 'drosophila', 'drosophila',
-            'drosophila', 'ants', 'zebrafish', 'zebrafish', 'zebrafish',
-            'zebrafish', 'zebrafish', 'zebrafish', 'zebrafish', 'medaka',
+animal_type = ['drosophila', 'zebrafish (1)', 'zebrafish (2)', 'zebrafish (3)','drosophila',
+            'drosophila', 'drosophila (1)', 'drosophila (2)', 'drosophila', 'drosophila (1)',
+            'drosophila (2)', 'ants', 'zebrafish (1)', 'zebrafish (1)', 'zebrafish (2)',
+            'zebrafish (2)', 'zebrafish (2)', 'zebrafish (3)', 'zebrafish (3)', 'medaka',
             'medaka', 'medaka', 'drosophila', 'drosophila', 'zebrafish',
             'black mice', 'black mice', 'agouti mice', 'black mice', 'black mice',
             'black mice', 'drosophila', 'nacre zebrafish']
