@@ -27,7 +27,7 @@ def get_frames_and_frames_moving_for_fragments(fragments, moving_threshold, fram
     return frames, frames_moving
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/rhea/ground_truth_results_backup'
     tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
     session_paths = [x[0] for x in os.walk(tracked_videos_folder) if 'session' in x[0][-16:] and 'Trash' not in x[0]]
     path_to_tracked_videos_data_frame = os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl')
@@ -53,8 +53,11 @@ if __name__ == '__main__':
         elif 'drosophila' in species and not bad_video:
             color = 'm'
             plot_flag = True
-        elif 'drosophila' in species and bad_video and group_size == 100:
+        elif 'drosophila (1)' in species and bad_video and group_size == 100:
             color = 'c'
+            plot_flag = True
+        elif 'drosophila (2)' in species and bad_video and group_size == 100:
+            color = 'salmon'
             plot_flag = True
         elif 'drosophila' in species and bad_video and group_size == 60:
             color = 'y'

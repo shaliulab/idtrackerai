@@ -25,6 +25,7 @@ from identify_non_assigned_with_interpolation import assign_zeros_with_interpola
 from global_fragments_statistics import compute_and_plot_fragments_statistics
 
 sessions = ['100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_20180122',
+    '100_drosophila_females_males_topview/CantonS_N100_02-08-18_10-52-40_3/session_20180210',
     '10_fish_group4/first/session_20180122',
     '10_fish_group5/first/session_20180131',
     '10_fish_group6/first/session_20180202',
@@ -58,7 +59,7 @@ sessions = ['100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_2018
     'idTrackerVideos/ValidacionTracking/Moscas/Platogrande_8females/session_20180131',
     'idTrackerVideos/Zebrafish_nacreLucie/pair3ht/session_20180207']
 
-animal_type = ['drosophila', 'zebrafish (1)', 'zebrafish (2)', 'zebrafish (3)','drosophila',
+animal_type = ['drosophila (1)', 'drosophila (2)', 'zebrafish (1)', 'zebrafish (2)', 'zebrafish (3)','drosophila',
             'drosophila', 'drosophila (1)', 'drosophila (2)', 'drosophila', 'drosophila (1)',
             'drosophila (2)', 'ants', 'zebrafish (1)', 'zebrafish (1)', 'zebrafish (2)',
             'zebrafish (2)', 'zebrafish (2)', 'zebrafish (3)', 'zebrafish (3)', 'medaka',
@@ -66,7 +67,7 @@ animal_type = ['drosophila', 'zebrafish (1)', 'zebrafish (2)', 'zebrafish (3)','
             'black mice', 'black mice', 'agouti mice', 'black mice', 'black mice',
             'black mice', 'drosophila', 'nacre zebrafish']
 
-idTracker_video = [False, False, False, False, False,
+idTracker_video = [False, False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, False, True, True,
@@ -74,7 +75,7 @@ idTracker_video = [False, False, False, False, False,
                     True, True, True, True, True,
                     True, True, True]
 
-used_for_developing = [False, False, False, False, False,
+used_for_developing = [False, False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, True, False, False,
                     False, False, False, True, False,
@@ -82,7 +83,7 @@ used_for_developing = [False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, False]
 
-bad_video_example = [True, False, False, False, False,
+bad_video_example = [True, True, False, False, False, False,
                     False, False, True, False, False,
                     False, False, False, False, False,
                     False, False, False, False, False,
@@ -117,7 +118,7 @@ def get_mean_number_of_images_in_first_global_fragment(list_of_global_fragments,
 
 if __name__ == '__main__':
     # hard_drive_path = '/media/themis/ground_truth_results_backup'
-    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/rhea/ground_truth_results_backup'
     tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
     session_paths = [x[0] for x in os.walk(tracked_videos_folder) if 'session' in x[0][-16:] and 'Trash' not in x[0]]
     pprint(session_paths)

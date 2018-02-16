@@ -54,7 +54,7 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
                                             tracked_videos_data_frame, group_sizes_list, \
                                             accuracies, images_in_shortest_fragment_in_first_global_fragment, protocols_array):
     accuracies = accuracies*100
-    group_size_boundary = 35
+    group_size_boundary = 59
     for i, group_size in enumerate(group_sizes_list):
         j = 0 if group_size < group_size_boundary  else 1
         all_accuracies = np.ravel(accuracies[i,:,:,:])
@@ -83,8 +83,10 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
                 color = 'm'
             elif 'drosophila (1)' in species and bad_video and group_size == 100:
                 color = 'c'
+                plot_flag = True
             elif 'drosophila (2)' in species and bad_video and group_size == 100:
                 color = 'salmon'
+                plot_flag = True
             elif 'drosophila' in species and bad_video and group_size == 60:
                 color = 'y'
             accuracy = tracked_videos_data_frame.loc[i].accuracy_identification_and_interpolation * 100
@@ -101,29 +103,27 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
             j = 0 if group_size <= group_size_boundary else 1
             ax_arr_num_images_accuracy[j].semilogx(minimum_number_of_images, accuracy, alpha = 1.,
                                                         marker = marker, markerfacecolor = color,
-                                                        markersize = 10, markeredgecolor = 'None')
-            ax_arr_num_images_accuracy[j].text(minimum_number_of_images, accuracy - 10, str(int(group_size)), ha = 'center')
+                                                        markersize = 10, markeredgecolor = 'None' )
 
-    ax_arr_num_images_accuracy[0].axvline(30, c = 'r', ls = '--', linewidth = 2)
-    ax_arr_num_images_accuracy[1].axvline(30, c = 'r', ls = '--', linewidth = 2)
+    ax_arr_num_images_accuracy[0].axvline(30, c = 'r', ls = '--')
+    ax_arr_num_images_accuracy[1].axvline(30, c = 'r', ls = '--')
 
 
 def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy):
-    # ax_arr_num_images_accuracy[0].set_title('Group size ' + r'$\leq$ 40', fontsize = 22, y = 1.05)
-    # ax_arr_num_images_accuracy[1].set_title('Group size ' + r'$\geq$ 60', fontsize = 22, y = 1.05)
-    # ax_arr_num_images_accuracy[0].set_xlabel('Number of images', fontsize = 20)
+    ax_arr_num_images_accuracy[0].set_title('Group size ' + r'$\leq$ 40', fontsize = 22, y = 1.05)
+    ax_arr_num_images_accuracy[1].set_title('Group size ' + r'$\geq$ 60', fontsize = 22, y = 1.05)
+    ax_arr_num_images_accuracy[0].set_xlabel('Number of images', fontsize = 20)
     ax_arr_num_images_accuracy[0].set_ylabel('Accuracy', fontsize = 20)
-    ax_arr_num_images_accuracy[1].set_ylabel('Accuracy', fontsize = 20)
     ax_arr_num_images_accuracy[1].set_xlabel('Number of images', fontsize = 20)
-    ax_arr_num_images_accuracy[1].tick_params(axis='both', which='major', labelsize=16)
-    ax_arr_num_images_accuracy[0].tick_params(axis='both', which='major', labelsize=16)
-    # ax_arr_num_images_accuracy[1].set_yticklabels([])
+    ax_arr_num_images_accuracy[1].tick_params(axis='both', which='major', labelsize=14)
+    ax_arr_num_images_accuracy[0].tick_params(axis='both', which='major', labelsize=14)
+    ax_arr_num_images_accuracy[1].set_yticklabels([])
     ax_arr_num_images_accuracy[0].set_xticks([10, 100, 1000])
     ax_arr_num_images_accuracy[1].set_xticks([10, 100, 1000])
     ax_arr_num_images_accuracy[0].set_xticklabels([10, 100, 1000])
     ax_arr_num_images_accuracy[1].set_xticklabels([10, 100, 1000])
-    ax_arr_num_images_accuracy[0].set_ylim((0,105))
-    ax_arr_num_images_accuracy[1].set_ylim((0,105))
+    ax_arr_num_images_accuracy[0].set_ylim((0,102))
+    ax_arr_num_images_accuracy[1].set_ylim((0,102))
 
 
     sns.despine(ax = ax_arr_num_images_accuracy[0], right = True, top = True)
@@ -148,31 +148,31 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
 
     ax_arr_num_images_accuracy[1].legend(handles=[simulated_videos,
                                                 fish_videos, flies_videos,
-                                                bad_video1, bad_video2, bad_video3,
+                                                bad_video1, bad_video2,
                                                 protocol_1,
                                                 protocol_2,
                                                 protocol_3], loc = 4)
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/rhea/ground_truth_results_backup/'
-    path_to_library_hard_drive = '/media/rhea/idtrackerai_CARP_lib_and_results/'
-    if os.path.isdir(path_to_results_hard_drive):
-        tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
+    path_to_results_hard_drive = '/media/rhea/ground_truth_results_backup'
+    tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
+    if os.path.isdir(tracked_videos_folder):
         path_to_tracked_videos_data_frame = os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl')
         tracked_videos_data_frame = pd.read_pickle(path_to_tracked_videos_data_frame)
         ### load global results data frame
-        library_results_path = os.path.join(path_to_library_hard_drive, 'CARP library and simulations results/Simulation_idTrackerAI/results_data_frame.pkl')
-        if os.path.isfile(library_results_path):
+        if os.path.isfile(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Simulation_idTrackerAI/results_data_frame.pkl')):
             print("loading results_data_frame.pkl...")
-            results_data_frame = pd.read_pickle(library_results_path)
+            results_data_frame = pd.read_pickle(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Simulation_idTrackerAI/results_data_frame.pkl'))
             print("results_data_frame.pkl loaded \n")
         else:
             print("results_data_frame.pkl does not exist \n")
+        repetition_to_plot = int(sys.argv[1]) if int(sys.argv[1]) != 0 else None
+        if repetition_to_plot is not None:
+            results_data_frame = results_data_frame[results_data_frame.repetition == repetition_to_plot]
 
         # get tests_data_frame and test to plot
         print("loading tests data frame")
-        library_tests_path = os.path.join(path_to_library_hard_drive, 'CARP library and simulations results/Simulation_idTrackerAI/tests_data_frame.pkl')
-        tests_data_frame = pd.read_pickle(library_tests_path)
+        tests_data_frame = pd.read_pickle(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Simulation_idTrackerAI/tests_data_frame.pkl'))
         test_dictionary = tests_data_frame.loc[12].to_dict()
         frames_in_video = test_dictionary['frames_in_video'][0]
 
@@ -208,7 +208,7 @@ if __name__ == '__main__':
                         shape_parameter = int(shape_parameter)
 
                     for l, repetition in enumerate(results_data_frame.repetition.unique()):
-                        repetition_path = os.path.join(path_to_library_hard_drive,
+                        repetition_path = os.path.join(path_to_results_hard_drive,
                                                     'CARP library and simulations results/Simulation_idTrackerAI',
                                                     'library_test_' + results_data_frame.test_name.unique()[0],
                                                     'group_size_' + str(int(group_size)),
@@ -249,10 +249,8 @@ if __name__ == '__main__':
                             images_in_shortest_fragment_in_first_global_fragment[i,k,j,l] = get_number_of_images_in_shortest_fragment_in_first_global_fragment(list_of_global_fragments, video)
 
         ### plot minimun number of images in first global fragment vs accuracy
-        fig_num_images_accuracy, ax_arr_num_images_accuracy = plt.subplots(2,1, sharey = False, sharex = True)
+        fig_num_images_accuracy, ax_arr_num_images_accuracy = plt.subplots(1,2, sharey = False, sharex = False)
         fig_num_images_accuracy.set_size_inches((screen_x/100*2/3,screen_y/100*5/8))
-        plt.subplots_adjust(left=None, bottom=None, right=None, top=None,
-                wspace=None, hspace=.2)
         plot_minimum_number_of_images_figure(fig_num_images_accuracy,
                                             ax_arr_num_images_accuracy,
                                             tracked_videos_data_frame,
@@ -261,6 +259,6 @@ if __name__ == '__main__':
                                             protocol)
         set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy)
 
-        fig_num_images_accuracy.savefig(os.path.join(path_to_results_hard_drive, 'tracked_videos/number_of_images_vs_accuracy.pdf'), transparent = True)
+        fig_num_images_accuracy.savefig(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Simulation_idTrackerAI/number_of_images_vs_accuracy.pdf'), transparent = True)
 
         plt.show()
