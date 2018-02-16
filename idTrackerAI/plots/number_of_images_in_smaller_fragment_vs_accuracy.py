@@ -54,7 +54,7 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
                                             tracked_videos_data_frame, group_sizes_list, \
                                             accuracies, images_in_shortest_fragment_in_first_global_fragment, protocols_array):
     accuracies = accuracies*100
-    group_size_boundary = 59
+    group_size_boundary = 35
     for i, group_size in enumerate(group_sizes_list):
         j = 0 if group_size < group_size_boundary  else 1
         all_accuracies = np.ravel(accuracies[i,:,:,:])
@@ -100,26 +100,28 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
             ax_arr_num_images_accuracy[j].semilogx(minimum_number_of_images, accuracy, alpha = 1.,
                                                         marker = marker, markerfacecolor = color,
                                                         markersize = 10, markeredgecolor = 'None')
+            ax_arr_num_images_accuracy[j].text(minimum_number_of_images, accuracy - 10, str(int(group_size)), ha = 'center')
 
     ax_arr_num_images_accuracy[0].axvline(30, c = 'r', ls = '--', linewidth = 2)
     ax_arr_num_images_accuracy[1].axvline(30, c = 'r', ls = '--', linewidth = 2)
 
 
 def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_images_accuracy):
-    ax_arr_num_images_accuracy[0].set_title('Group size ' + r'$\leq$ 40', fontsize = 22, y = 1.05)
-    ax_arr_num_images_accuracy[1].set_title('Group size ' + r'$\geq$ 60', fontsize = 22, y = 1.05)
-    ax_arr_num_images_accuracy[0].set_xlabel('Number of images', fontsize = 20)
+    # ax_arr_num_images_accuracy[0].set_title('Group size ' + r'$\leq$ 40', fontsize = 22, y = 1.05)
+    # ax_arr_num_images_accuracy[1].set_title('Group size ' + r'$\geq$ 60', fontsize = 22, y = 1.05)
+    # ax_arr_num_images_accuracy[0].set_xlabel('Number of images', fontsize = 20)
     ax_arr_num_images_accuracy[0].set_ylabel('Accuracy', fontsize = 20)
+    ax_arr_num_images_accuracy[1].set_ylabel('Accuracy', fontsize = 20)
     ax_arr_num_images_accuracy[1].set_xlabel('Number of images', fontsize = 20)
     ax_arr_num_images_accuracy[1].tick_params(axis='both', which='major', labelsize=16)
     ax_arr_num_images_accuracy[0].tick_params(axis='both', which='major', labelsize=16)
-    ax_arr_num_images_accuracy[1].set_yticklabels([])
+    # ax_arr_num_images_accuracy[1].set_yticklabels([])
     ax_arr_num_images_accuracy[0].set_xticks([10, 100, 1000])
     ax_arr_num_images_accuracy[1].set_xticks([10, 100, 1000])
     ax_arr_num_images_accuracy[0].set_xticklabels([10, 100, 1000])
     ax_arr_num_images_accuracy[1].set_xticklabels([10, 100, 1000])
-    ax_arr_num_images_accuracy[0].set_ylim((0,102))
-    ax_arr_num_images_accuracy[1].set_ylim((0,102))
+    ax_arr_num_images_accuracy[0].set_ylim((0,105))
+    ax_arr_num_images_accuracy[1].set_ylim((0,105))
 
 
     sns.despine(ax = ax_arr_num_images_accuracy[0], right = True, top = True)
@@ -149,7 +151,7 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
                                                 protocol_3], loc = 4)
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup/'
+    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup/'
     if os.path.isdir(path_to_results_hard_drive):
         tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
         path_to_tracked_videos_data_frame = os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl')
@@ -241,8 +243,10 @@ if __name__ == '__main__':
                             images_in_shortest_fragment_in_first_global_fragment[i,k,j,l] = get_number_of_images_in_shortest_fragment_in_first_global_fragment(list_of_global_fragments, video)
 
         ### plot minimun number of images in first global fragment vs accuracy
-        fig_num_images_accuracy, ax_arr_num_images_accuracy = plt.subplots(1,2, sharey = False, sharex = False)
+        fig_num_images_accuracy, ax_arr_num_images_accuracy = plt.subplots(2,1, sharey = False, sharex = True)
         fig_num_images_accuracy.set_size_inches((screen_x/100*2/3,screen_y/100*5/8))
+        plt.subplots_adjust(left=None, bottom=None, right=None, top=None,
+                wspace=None, hspace=.2)
         plot_minimum_number_of_images_figure(fig_num_images_accuracy,
                                             ax_arr_num_images_accuracy,
                                             tracked_videos_data_frame,
