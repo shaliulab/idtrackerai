@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/rhea/ground_truth_results_backup'
     path_to_tracked_videos_data_frame = os.path.join(path_to_results_hard_drive,'tracked_videos/tracked_videos_data_frame.pkl')
     if os.path.isfile(path_to_tracked_videos_data_frame):
         tracked_videos_data_frame = pd.read_pickle(path_to_tracked_videos_data_frame)
@@ -29,12 +29,12 @@ if __name__ == '__main__':
                 markersize = 10)
         ax.plot([0,100],[0,100],'r--')
         plt.axis('square')
-        ax.set_xlim((99.6,100.01))
-        ax.set_ylim((99.6,100.01))
-        ax.set_yticks(np.linspace(99.6,100,5))
-        ax.set_yticklabels(np.linspace(99.6,100,5))
-        ax.set_xticks(np.linspace(99.6,100,5))
-        ax.set_xticklabels(np.linspace(99.6,100,5))
+        ax.set_xlim((99.0,100.01))
+        ax.set_ylim((99.0,100.01))
+        ax.set_yticks(np.linspace(99.0,100,5))
+        ax.set_yticklabels(np.linspace(99.0,100,5))
+        ax.set_xticks(np.linspace(99.0,100,5))
+        ax.set_xticklabels(np.linspace(99.0,100,5))
         ax.set_xlabel('Estimated accuracy', fontsize = 20)
         ax.set_ylabel('Groundtruth accuracy', fontsize = 20)
         ax.tick_params(axis='both', which='major', labelsize=14)

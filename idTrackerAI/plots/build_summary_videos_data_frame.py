@@ -24,7 +24,8 @@ from compute_individual_groundtruth_statistics import get_individual_accuracy_wr
 from identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
 from global_fragments_statistics import compute_and_plot_fragments_statistics
 
-sessions = ['100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_20180122',
+sessions = ['100 drosophila (females - males)/Canton_N100_02-10-18_15-59-24/session_20180211',
+    '100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_20180122',
     '100_drosophila_females_males_topview/CantonS_N100_02-08-18_10-52-40_3/session_20180210',
     '10_fish_group4/first/session_20180122',
     '10_fish_group5/first/session_20180131',
@@ -59,7 +60,7 @@ sessions = ['100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_2018
     'idTrackerVideos/ValidacionTracking/Moscas/Platogrande_8females/session_20180131',
     'idTrackerVideos/Zebrafish_nacreLucie/pair3ht/session_20180207']
 
-animal_type = ['drosophila (1)', 'drosophila (2)', 'zebrafish (1)', 'zebrafish (2)', 'zebrafish (3)','drosophila',
+animal_type = ['drosophila (1)', 'drosophila (2)', 'drosophila (3)', 'zebrafish (1)', 'zebrafish (2)', 'zebrafish (3)','drosophila',
             'drosophila', 'drosophila (1)', 'drosophila (2)', 'drosophila', 'drosophila (1)',
             'drosophila (2)', 'ants', 'zebrafish (1)', 'zebrafish (1)', 'zebrafish (2)',
             'zebrafish (2)', 'zebrafish (2)', 'zebrafish (3)', 'zebrafish (3)', 'medaka',
@@ -67,7 +68,7 @@ animal_type = ['drosophila (1)', 'drosophila (2)', 'zebrafish (1)', 'zebrafish (
             'black mice', 'black mice', 'agouti mice', 'black mice', 'black mice',
             'black mice', 'drosophila', 'nacre zebrafish']
 
-idTracker_video = [False, False, False, False, False, False,
+idTracker_video = [False, False, False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, False, True, True,
@@ -75,7 +76,7 @@ idTracker_video = [False, False, False, False, False, False,
                     True, True, True, True, True,
                     True, True, True]
 
-used_for_developing = [False, False, False, False, False, False,
+used_for_developing = [False, False, False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, True, False, False,
                     False, False, False, True, False,
@@ -83,7 +84,7 @@ used_for_developing = [False, False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, False]
 
-bad_video_example = [True, True, False, False, False, False,
+bad_video_example = [False, True, True, False, False, False, False,
                     False, False, True, False, False,
                     False, False, False, False, False,
                     False, False, False, False, False,

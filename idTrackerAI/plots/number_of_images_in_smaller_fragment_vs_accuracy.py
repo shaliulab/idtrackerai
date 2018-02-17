@@ -145,13 +145,12 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
                                 markeredgecolor = 'k', markeredgewidth=1, markerfacecolor='None',
                                 linestyle = 'None')
 
-
-    ax_arr_num_images_accuracy[1].legend(handles=[simulated_videos,
-                                                fish_videos, flies_videos,
-                                                bad_video1, bad_video2, bad_video3,
-                                                protocol_1,
+    ax_arr_num_images_accuracy[0].legend(handles=[protocol_1,
                                                 protocol_2,
                                                 protocol_3], loc = 4)
+    ax_arr_num_images_accuracy[1].legend(handles=[simulated_videos,
+                                                fish_videos, flies_videos,
+                                                bad_video1, bad_video2, bad_video3], loc = 4)
 
 if __name__ == '__main__':
     path_to_results_hard_drive = '/media/rhea/ground_truth_results_backup/'
