@@ -9,6 +9,7 @@ from py_utils import get_spaced_colors_util
 
 def init(video_path, trajectories_dict_path):
     video_object = np.load(video_path).item()
+    video_object.update_paths(video_path)
     trajectories  = np.load(trajectories_dict_path).item()['trajectories']
     colors = get_spaced_colors_util(video_object.number_of_animals)
     path_to_save_video = video_object._session_folder +'/tracked.avi'
@@ -56,6 +57,7 @@ def apply_func_on_frame(video_object,
     else:
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, frame_number)
     ret, frame = cap.read()
+    print(ret)
     if ret:
         if video_object.resolution_reduction != 1:
             frame = cv2.resize(frame, None,
