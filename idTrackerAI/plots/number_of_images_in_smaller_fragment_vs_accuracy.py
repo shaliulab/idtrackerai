@@ -76,17 +76,22 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
         bad_video = tracked_videos_data_frame.loc[i].bad_video_example
         group_size = tracked_videos_data_frame.loc[i].number_of_animals
         protocol = tracked_videos_data_frame.loc[i].protocol_used
-        if 'zebrafish' in species or 'drosophila' in species:
-            if 'zebrafish' in species and not bad_video:
-                color = 'g'
-            elif 'drosophila' in species and not bad_video:
-                color = 'm'
-            elif 'drosophila (1)' in species and bad_video and group_size == 100:
-                color = 'c'
-            elif 'drosophila (2)' in species and bad_video and group_size == 100:
-                color = 'salmon'
-            elif 'drosophila' in species and bad_video and group_size == 60:
-                color = 'y'
+        plot_flag = True
+        if 'zebrafish' in species and not bad_video:
+            color = 'g'
+        elif 'drosophila' in species and not bad_video:
+            color = 'm'
+        # elif 'drosophila (2)' in species and bad_video and group_size == 100:
+        #     print(tracked_videos_data_frame.loc[i].session_path)
+        #     color = 'c'
+        # elif 'drosophila (3)' in species and bad_video and group_size == 100:
+        #     color = 'salmon'
+        #     print(tracked_videos_data_frame.loc[i].session_path)
+        elif ('drosophila (1)' in species or 'drosophila (2)' in species) and bad_video and group_size >= 60:
+            color = 'y'
+        else:
+            plot_flag = False
+        if plot_flag:
             accuracy = tracked_videos_data_frame.loc[i].accuracy_identification_and_interpolation * 100
             if tracked_videos_data_frame.loc[i].minimum_number_of_frames_moving_in_first_global_fragment is not None:
                 minimum_number_of_images = tracked_videos_data_frame.loc[i].minimum_number_of_frames_moving_in_first_global_fragment
@@ -102,7 +107,7 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
             ax_arr_num_images_accuracy[j].semilogx(minimum_number_of_images, accuracy, alpha = 1.,
                                                         marker = marker, markerfacecolor = color,
                                                         markersize = 10, markeredgecolor = 'None')
-            ax_arr_num_images_accuracy[j].text(minimum_number_of_images, accuracy - 10, str(int(group_size)), ha = 'center')
+            ax_arr_num_images_accuracy[j].text(minimum_number_of_images, accuracy - 10, str(int(group_size)), ha = 'center', fontsize = 14)
 
     ax_arr_num_images_accuracy[0].axvline(30, c = 'r', ls = '--', linewidth = 2)
     ax_arr_num_images_accuracy[1].axvline(30, c = 'r', ls = '--', linewidth = 2)
@@ -132,9 +137,9 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
     simulated_videos = mpatches.Patch(color='k', fc = 'None', linewidth = 1, label='Simulated videos')
     fish_videos = mpatches.Patch(color='g', alpha = 1., label='Zebrafish videos')
     flies_videos = mpatches.Patch(color='m', alpha = 1., label='Drosophila videos')
-    bad_video1 = mpatches.Patch(color = 'c', alpha = 1., label='100 Drosophila \n(bad condition 1)')
-    bad_video2 = mpatches.Patch(color = 'salmon', alpha = 1., label='100 Drosophila \n(bad condition 2)')
-    bad_video3 = mpatches.Patch(color = 'y', alpha = 1., label='60 Drosophila \n(bad condition 3)')
+    bad_video1 = mpatches.Patch(color = 'y', alpha = 1., label='Low quality drosophila videos: low activity levels \nand bad preprocessing parameters or dead flies')
+    # bad_video2 = mpatches.Patch(color = 'c', alpha = 1., label=r'Bad drosophila video: low activity levels and at least 4 death animals')
+    # bad_video3 = mpatches.Patch(color = 'salmon', alpha = 1., label='Bad drosophila video: atypical postures (jumping and rolling) during the video')
     protocol_1 = mlines.Line2D([], [], color='k', marker='^', markersize=6, label='Protocol 1',
                                 markeredgecolor = 'k', markeredgewidth=1, markerfacecolor='None',
                                 linestyle = 'None')
@@ -147,14 +152,34 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
 
     ax_arr_num_images_accuracy[0].legend(handles=[protocol_1,
                                                 protocol_2,
-                                                protocol_3], loc = 4)
+                                                protocol_3], loc = 4, title = 'Protocol used',
+                                                frameon = True)
     ax_arr_num_images_accuracy[1].legend(handles=[simulated_videos,
                                                 fish_videos, flies_videos,
-                                                bad_video1, bad_video2, bad_video3], loc = 4)
+                                                bad_video1], loc = 4,
+                                                title = 'Video type',
+                                                frameon = True)
+
+
+    smaller_groups_ax_position = ax_arr_num_images_accuracy[0].get_position()
+    text_axes = fig_num_images_accuracy.add_axes([smaller_groups_ax_position.x0 + smaller_groups_ax_position.width + 0.025, smaller_groups_ax_position.y0, 0.01, smaller_groups_ax_position.height])
+    text_axes.text(0.5, 0.5,'Smaller groups', horizontalalignment='center', verticalalignment='center', rotation=-90, fontsize = 18)
+    text_axes.set_xticks([])
+    text_axes.set_yticks([])
+    text_axes.grid(False)
+    sns.despine(ax = text_axes, left=True, bottom=True, right=True)
+
+    smaller_groups_ax_position = ax_arr_num_images_accuracy[1].get_position()
+    text_axes = fig_num_images_accuracy.add_axes([smaller_groups_ax_position.x0 + smaller_groups_ax_position.width + 0.025, smaller_groups_ax_position.y0, 0.01, smaller_groups_ax_position.height])
+    text_axes.text(0.5, 0.5,'Larger groups', horizontalalignment='center', verticalalignment='center', rotation=-90, fontsize = 18)
+    text_axes.set_xticks([])
+    text_axes.set_yticks([])
+    text_axes.grid(False)
+    sns.despine(ax = text_axes, left=True, bottom=True, right=True)
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/rhea/ground_truth_results_backup/'
-    path_to_library_hard_drive = '/media/rhea/idtrackerai_CARP_lib_and_results/'
+    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup/'
+    path_to_library_hard_drive = '/media/chronos/idtrackerai_CARP_lib_and_results/'
     if os.path.isdir(path_to_results_hard_drive):
         tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
         path_to_tracked_videos_data_frame = os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl')
