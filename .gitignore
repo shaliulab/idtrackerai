@@ -16,8 +16,8 @@
 !*README.md
 
 #except docs folder and subfolders
-!idTrackerAI/docs/scipy-sphinx-theme/*
-!idTrackerAI/docs/source/*
-!idTrackerAI/docs/make.bat
-!idTrackerAI/docs/Makefile
-!idTrackerAI/idtrackerai/gui/*.png
+!docs/scipy-sphinx-theme/*
+!docs/source/*
+!docs/make.bat
+!docs/Makefile
+!idtrackerai/gui/*.png
