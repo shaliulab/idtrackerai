@@ -1,7 +1,7 @@
 #ignore all kind of files
 *
 !*/
-#except python files
+#except files with extension
 !*.py
 !*.yaml
 !*.kv
@@ -11,6 +11,9 @@
 
 #except gitignore
 !*.gitignore
+
+#ecept README
+!*README.md
 
 #except docs folder and subfolders
 !idTrackerAI/docs/scipy-sphinx-theme/*
