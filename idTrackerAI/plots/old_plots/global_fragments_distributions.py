@@ -26,7 +26,7 @@ sys.path.append('./preprocessing')
 sys.path.append('./')
 # sys.path.append('IdTrackerDeep/tracker')
 
-from globalfragment import  give_me_list_of_global_fragments,\
+from idtrackerai.globalfragment import  give_me_list_of_global_fragments,\
                             ModelArea,\
                             give_me_pre_training_global_fragments,\
                             get_images_and_labels_from_global_fragments,\

@@ -15,13 +15,13 @@ import seaborn as sns
 from pprint import pprint
 import collections
 
-from video import Video
-from list_of_blobs import ListOfBlobs
-from blob import Blob
-from list_of_fragments import ListOfFragments
-from fragment import Fragment
-from GUI_utils import selectDir
-from py_utils import get_spaced_colors_util
+from idtrackerai.video import Video
+from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai.blob import Blob
+from idtrackerai.list_of_fragments import ListOfFragments
+from idtrackerai.fragment import Fragment
+from idtrackerai.utils.GUI_utils import selectDir
+from idtrackerai.utils.py_utils import  get_spaced_colors_util
 
 
 LABELS = ['crossing', 'assigned', 'not assigned']

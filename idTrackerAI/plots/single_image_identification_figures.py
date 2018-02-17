@@ -13,7 +13,7 @@ MARKERS = matplotlib.markers.MarkerStyle.markers.keys()[5:]
 import seaborn as sns
 import pandas as pd
 from pprint import pprint
-from py_utils import get_spaced_colors_util
+from idtrackerai.utils.py_utils import  get_spaced_colors_util
 
 def flatten(l):
     for el in l:

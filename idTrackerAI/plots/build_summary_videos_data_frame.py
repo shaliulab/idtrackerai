@@ -13,15 +13,15 @@ from pprint import pprint
 import pandas as pd
 from glob import glob
 
-from video import Video
-from list_of_blobs import ListOfBlobs
-from list_of_fragments import ListOfFragments
-from list_of_global_fragments import ListOfGlobalFragments
-from generate_groundtruth import GroundTruthBlob, GroundTruth
-from generate_individual_groundtruth import GroundTruthBlob, IndividualGroundTruth, generate_individual_groundtruth
-from compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
-from compute_individual_groundtruth_statistics import get_individual_accuracy_wrt_groundtruth
-from identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
+from idtrackerai.video import Video
+from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai.list_of_fragments import ListOfFragments
+from idtrackerai.list_of_global_fragments import ListOfGlobalFragments
+from idtrackerai.groundtruth_utils.generate_groundtruth import GroundTruthBlob, GroundTruth
+from idtrackerai.groundtruth_utils.generate_individual_groundtruth import GroundTruthBlob, IndividualGroundTruth, generate_individual_groundtruth
+from idtrackerai.groundtruth_utils.compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
+from idtrackerai.groundtruth_utils.compute_individual_groundtruth_statistics import get_individual_accuracy_wrt_groundtruth
+from idtrackerai.postprocessing.identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
 from global_fragments_statistics import compute_and_plot_fragments_statistics
 
 sessions = ['100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_20180122',

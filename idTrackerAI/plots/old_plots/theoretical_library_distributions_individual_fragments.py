@@ -22,7 +22,7 @@ from scipy.stats import truncnorm
 
 # Import application/library specifics
 sys.path.append('./utils')
-from py_utils import get_spaced_colors_util
+from idtrackerai.utils.py_utils import  get_spaced_colors_util
 
 if __name__ == '__main__':
 

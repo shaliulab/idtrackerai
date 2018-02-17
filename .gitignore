@@ -8,18 +8,14 @@
 !*.js
 !*.html
 !*.sh
-!./idTrackerAI/utils/loadingIdDeep.png
 
 #except gitignore
 !*.gitignore
 
-#except requirements.txt
-!requirements.txt
-
-#except idTrackerDeep logo
-!idTrackerAI/utils/loadingIdDeep.png
-
 #except docs folder and subfolders
-!idTrackerAI/docs/*
-!idTrackerAI/docs/**/*
-!idTrackerAI/gui/*
+!idTrackerAI/docs/scipy-sphinx-theme/*
+!idTrackerAI/docs/source/*
+!idTrackerAI/docs/make.bat
+!idTrackerAI/docs/Makefile
+!idTrackerAI/gui/*.py
+!idTrackerAI/gui/*.png

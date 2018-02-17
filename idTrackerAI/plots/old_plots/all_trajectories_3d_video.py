@@ -24,18 +24,18 @@ sys.path.append('./preprocessing')
 sys.path.append('./')
 # sys.path.append('IdTrackerDeep/tracker')
 
-from video import Video
-from blob import compute_fragment_identifier_and_blob_index,\
+from idtrackerai.video import Video
+from idtrackerai.blob import compute_fragment_identifier_and_blob_index,\
                 connect_blob_list,\
                 apply_model_area_to_video,\
                 ListOfBlobs
-from globalfragment import  give_me_list_of_global_fragments,\
+from idtrackerai.globalfragment import  give_me_list_of_global_fragments,\
                             ModelArea,\
                             give_me_pre_training_global_fragments,\
                             get_images_and_labels_from_global_fragments,\
                             order_global_fragments_by_distance_travelled
-from segmentation import segment
-from GUI_utils import selectFile,\
+from idtrackerai.preprocessing.segmentation import segment
+from idtrackerai.utils.GUI_utils import selectFile,\
                     getInput,\
                     selectOptions,\
                     ROISelectorPreview,\
@@ -43,18 +43,18 @@ from GUI_utils import selectFile,\
                     fragmentation_inspector,\
                     frame_by_frame_identity_inspector,\
                     selectDir
-from py_utils import getExistentFiles, get_spaced_colors_util
-from video_utils import check_background_substraction
-from pre_trainer import pre_train
-from accumulation_manager import AccumulationManager
-from network_params import NetworkParams
-from trainer import train
-from assigner import assign,\
+from idtrackerai.utils.py_utils import  getExistentFiles, get_spaced_colors_util
+from idtrackerai.utils.video_utils import check_background_substraction
+from idtrackerai.pre_trainer import pre_train
+from idtrackerai.accumulation_manager import AccumulationManager
+from idtrackerai.network.identification_model.network_params import NetworkParams
+from idtrackerai.trainer import train
+from idtrackerai.assigner import assign,\
                     assign_identity_to_blobs_in_video,\
                     compute_P1_for_blobs_in_video,\
                     assign_identity_to_blobs_in_video_by_fragment
 from visualize_embeddings import visualize_embeddings_global_fragments
-from id_CNN import ConvNetwork
+from idtrackerai.network.identification_model.id_CNN import ConvNetwork
 
 def imscatter(x, y, image, ax=None, zoom=1):
     if ax is None:

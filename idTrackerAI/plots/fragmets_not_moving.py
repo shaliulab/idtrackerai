@@ -9,10 +9,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 
-from fragment import Fragment
-from list_of_fragments import ListOfFragments
-from list_of_global_fragments import ListOfGlobalFragments
-from GUI_utils import selectDir
+from idtrackerai.fragment import Fragment
+from idtrackerai.list_of_fragments import ListOfFragments
+from idtrackerai.list_of_global_fragments import ListOfGlobalFragments
+from idtrackerai.utils.GUI_utils import selectDir
 
 def get_frames_and_frames_moving_for_fragments(fragments, moving_threshold, frame_rate, body_lengt):
     frames_moving = []

@@ -14,8 +14,8 @@ import seaborn as sns
 import pandas as pd
 from pprint import pprint
 
-from video import Video
-from list_of_global_fragments import ListOfGlobalFragments
+from idtrackerai.video import Video
+from idtrackerai.list_of_global_fragments import ListOfGlobalFragments
 
 def add_subplot_axes(fig, ax, rect, axisbg='w'):
     box = ax.get_position()

@@ -15,8 +15,8 @@ from pprint import pprint
 from scipy.stats import gamma
 from scipy import stats
 
-from py_utils import get_spaced_colors_util
-from video import Video
+from idtrackerai.utils.py_utils import  get_spaced_colors_util
+from idtrackerai.video import Video
 
 def pdf2logpdf(pdf):
     def logpdf(x):

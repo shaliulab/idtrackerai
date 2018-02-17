@@ -12,7 +12,7 @@ MARKERS = matplotlib.markers.MarkerStyle.markers.keys()[5:]
 import numpy as np
 
 sys.path.append('./utils')
-from py_utils import get_spaced_colors_util
+from idtrackerai.utils.py_utils import  get_spaced_colors_util
 
 if __name__ == '__main__':
 

@@ -17,12 +17,12 @@ import pandas as pd
 from pprint import pprint
 import time
 
-from list_of_blobs import ListOfBlobs
-from blob import Blob
+from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai.blob import Blob
 from generate_light_groundtruth_blob_list import GroundTruth, GroundTruthBlob
 from compute_statistics_against_groundtruth import get_statistics_against_groundtruth, \
                                                     compute_and_save_gt_accuracy
-from globalfragment import compute_and_plot_global_fragments_statistics
+from idtrackerai.globalfragment import compute_and_plot_global_fragments_statistics
 
 def compute_and_save_individual_fragments_and_distance_travelled(video_object_path, video):
     video.check_paths_consistency_with_video_path(video_object_path)

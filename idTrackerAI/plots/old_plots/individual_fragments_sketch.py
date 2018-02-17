@@ -28,15 +28,15 @@ sys.path.append('./preprocessing')
 sys.path.append('./')
 # sys.path.append('IdTrackerDeep/tracker')
 
-from video import Video
-from blob import Blob
-from list_of_blobs import ListOfBlobs
-from fragment import Fragment
-from list_of_fragments import ListOfFragments
-from globalfragment import GlobalFragment
-from list_of_global_fragments import ListOfGlobalFragments
-from GUI_utils import selectDir
-from py_utils import get_spaced_colors_util
+from idtrackerai.video import Video
+from idtrackerai.blob import Blob
+from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai.fragment import Fragment
+from idtrackerai.list_of_fragments import ListOfFragments
+from idtrackerai.globalfragment import GlobalFragment
+from idtrackerai.list_of_global_fragments import ListOfGlobalFragments
+from idtrackerai.utils.GUI_utils import selectDir
+from idtrackerai.utils.py_utils import  get_spaced_colors_util
 
 
 def imscatter(x, y, image, ax=None, zoom=1):

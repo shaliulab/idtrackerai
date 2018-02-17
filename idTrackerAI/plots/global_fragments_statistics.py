@@ -17,12 +17,12 @@ import numpy as np
 from scipy.stats import gamma
 from scipy import stats
 
-from video import Video
-from model_area import ModelArea
-from list_of_blobs import ListOfBlobs
-from list_of_fragments import ListOfFragments
-from list_of_global_fragments import ListOfGlobalFragments
-from GUI_utils import selectDir
+from idtrackerai.video import Video
+from idtrackerai.preprocessing.model_area import ModelArea
+from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai.list_of_fragments import ListOfFragments
+from idtrackerai.list_of_global_fragments import ListOfGlobalFragments
+from idtrackerai.utils.GUI_utils import selectDir
 
 def pdf2logpdf(pdf):
     def logpdf(x):

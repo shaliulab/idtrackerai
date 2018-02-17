@@ -18,10 +18,10 @@ from pprint import pprint
 from scipy.stats import gamma
 from scipy import stats
 
-from py_utils import get_spaced_colors_util
-from video import Video
-from globalfragment import GlobalFragment
-from list_of_global_fragments import ListOfGlobalFragments
+from idtrackerai.utils.py_utils import  get_spaced_colors_util
+from idtrackerai.video import Video
+from idtrackerai.globalfragment import GlobalFragment
+from idtrackerai.list_of_global_fragments import ListOfGlobalFragments
 
 def pdf2logpdf(pdf):
     def logpdf(x):
