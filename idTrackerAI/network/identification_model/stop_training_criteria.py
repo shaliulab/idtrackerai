@@ -5,7 +5,7 @@ sys.path.append('../../')
 from constants import MAX_FLOAT, LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN, \
                     LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN, OVERFITTING_COUNTER_THRESHOLD_IDCNN, \
                     MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

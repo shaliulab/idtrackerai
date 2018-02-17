@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 from fragment import Fragment
 from py_utils import set_attributes_of_object_to_value, append_values_to_lists
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:
@@ -54,7 +54,9 @@ class ListOfFragments(object):
         """Resets all the fragment by using the method
         :meth:`~fragment.Fragment.roll_back_to`
         """
+        logger.warning("Reseting list_of_fragments")
         [fragment.reset(roll_back_to) for fragment in self.fragments]
+        logger.warning("Done")
 
     def get_images_from_fragments_to_assign(self):
         """Take all the fragments that have not been used to train the idCNN

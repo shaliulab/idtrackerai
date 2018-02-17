@@ -8,7 +8,7 @@ import tensorflow as tf
 import numpy as np
 import re
 import itertools
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

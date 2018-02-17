@@ -7,7 +7,7 @@ sys.path.append('IdTrackerDeep/utils')
 from tqdm import tqdm
 from list_of_blobs import ListOfBlobs
 from GUI_utils import selectDir
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

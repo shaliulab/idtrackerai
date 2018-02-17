@@ -390,7 +390,7 @@ def correct_impossible_velocity_jumps_loop(video, list_of_fragments, scope = Non
     reassign
 
     """
-    fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(scope, video.first_frame_first_global_fragment)
+    fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(scope, video.first_frame_first_global_fragment[video.accumulation_trial])
     impossible_velocity_threshold = video.velocity_threshold
 
     for fragment in tqdm(fragments_in_direction, desc = 'Correcting impossible velocity jumps ' + scope):

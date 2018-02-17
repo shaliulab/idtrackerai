@@ -69,6 +69,13 @@ class SelectFile(BoxLayout):
         self.welcome_popup.dismiss()
         if CHOSEN_VIDEO.video.previous_session_folder != '':
             CHOSEN_VIDEO.existent_files, CHOSEN_VIDEO.old_video = getExistentFiles(CHOSEN_VIDEO.video, CHOSEN_VIDEO.processes_list)
+            if CHOSEN_VIDEO.old_video is not None and hasattr(CHOSEN_VIDEO.old_video, 'first_frame_first_global_fragment'):
+                if isinstance(CHOSEN_VIDEO.old_video.first_frame_first_global_fragment, int):
+                    first_frame_first_global_fragment = [0 if i < CHOSEN_VIDEO.old_video.accumulation_trial - 1
+                                                            else CHOSEN_VIDEO.old_video.first_frame_first_global_fragment
+                                                            for i in range(CHOSEN_VIDEO.old_video.accumulation_trial)]
+                    CHOSEN_VIDEO.old_video._first_frame_first_global_fragment = first_frame_first_global_fragment
+
             self.create_restore_popup()
             self.restore_popup.open()
         else:

@@ -9,7 +9,7 @@ import numpy as np
 import psutil
 sys.path.append('../../')
 from constants import BATCH_SIZE_PREDICTIONS_DCD
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

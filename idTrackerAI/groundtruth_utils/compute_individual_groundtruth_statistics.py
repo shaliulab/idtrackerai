@@ -12,7 +12,7 @@ from list_of_blobs import ListOfBlobs
 from blob import Blob
 from generate_individual_groundtruth import IndividualGroundTruth, GroundTruthBlob
 
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

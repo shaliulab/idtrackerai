@@ -12,7 +12,7 @@ sys.path.append('IdTrackerDeep/utils')
 from py_utils import loadFile, saveFile
 from video_utils import cntBB2Full
 from fishcontour import FishContour
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

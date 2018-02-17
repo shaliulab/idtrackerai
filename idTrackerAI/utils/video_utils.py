@@ -10,7 +10,7 @@ sys.path.append('../IdTrackerDeep')
 from py_utils import *
 from video import Video
 from constants import BACKGROUND_SUBTRACTION_PERIOD
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

@@ -7,7 +7,7 @@ from assigner import assign, compute_identification_statistics_for_non_accumulat
 from accumulation_manager import AccumulationManager
 from constants import CERTAINTY_THRESHOLD
 import sys
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

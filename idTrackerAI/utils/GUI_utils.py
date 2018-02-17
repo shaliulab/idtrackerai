@@ -26,7 +26,7 @@ from video_utils import check_background_substraction, blob_extractor
 from py_utils import get_existent_preprocessing_steps
 from blob import Blob
 
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:

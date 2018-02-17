@@ -13,7 +13,7 @@ import sys
 """
 The accumulation manager module
 """
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:
@@ -79,16 +79,15 @@ class AccumulationManager(object):
     def continue_accumulation(self):
         """ We stop the accumulation when there are not more global fragments
         that are acceptable for training"""
-        logger.info("global fragments acceptable_for_training: %s" %str(sum([global_fragment.acceptable_for_training(self.accumulation_strategy)
-                                                                for global_fragment in self.list_of_global_fragments.global_fragments])))
-        logger.info("global fragments not used_for_training: %s" %str(sum([not global_fragment.used_for_training
-                                                                for global_fragment in self.list_of_global_fragments.global_fragments])))
         if not any([(global_fragment.acceptable_for_training(self.accumulation_strategy)
                     and not global_fragment.used_for_training)
                     for global_fragment in self.list_of_global_fragments.global_fragments]):
+            logger.warning('There are no more fragments acceptable for training')
             return False
         else:
+            logger.warning('There are fragments acceptable for training')
             return True
+
 
     def update_counter(self):
         """ Update iteration counter
@@ -178,7 +177,7 @@ class AccumulationManager(object):
         logger.debug("Setting used_for_training to TRUE and acceptable for training to FALSE for the global fragments already used...")
         [(setattr(fragment,'_used_for_training',True),
             setattr(fragment,'_acceptable_for_training',False),
-            fragment.set_partially_or_globally_accumualted(self.accumulation_strategy),
+            fragment.set_partially_or_globally_accumulated(self.accumulation_strategy),
             setattr(fragment, '_accumulation_step', self.counter))
             for fragment in self.list_of_fragments.fragments
             if fragment.acceptable_for_training == True

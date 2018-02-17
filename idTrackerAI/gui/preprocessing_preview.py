@@ -136,9 +136,9 @@ class PreprocessingPreview(BoxLayout):
             self.ROI_switch.active = False
             self.bkg_subtractor_switch.active = False
             self.bkg_subtractor_switch.bind(active = self.apply_bkg_subtraction)
-            CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction 
+            CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
             self.bkg = CHOSEN_VIDEO.video.bkg
-            self.ROI = CHOSEN_VIDEO.video.ROI
+            self.ROI = CHOSEN_VIDEO.video.ROI if CHOSEN_VIDEO.video.ROI is not None else np.ones((CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width) ,dtype='uint8') * 255
             self.create_number_of_animals_popup()
             self.num_of_animals_input.bind(on_text_validate = self.set_number_of_animals)
             self.num_of_animals_popup.bind(on_dismiss = self.show_segmenting_popup)

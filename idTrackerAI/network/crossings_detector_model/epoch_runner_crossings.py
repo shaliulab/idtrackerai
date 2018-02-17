@@ -4,7 +4,7 @@ import sys
 sys.path.append('../../')
 from constants import BATCH_SIZE_DCD
 
-if sys.argv[0] == 'idtrackerdeepApp.py':
+if sys.argv[0] == 'idtrackeraiApp.py':
     from kivy.logger import Logger
     logger = Logger
 else:
