@@ -8,6 +8,7 @@ import sys
 import matplotlib
 from matplotlib import cm
 import subprocess
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -17,7 +18,10 @@ else:
 
 ### Git utils ###
 def get_git_revision_hash():
-    return subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+    try:
+        return subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+    except:
+        return 'not in a git repository'
 
 ### Object utils ###
 def append_values_to_lists(values, list_of_lists):
@@ -142,8 +146,8 @@ def getFilesAndSubfolders(folder):
 def scanFolder(path):
     ### NOTE if the video selected does not finish with '_1' the scanFolder function won't select all of them. This can be improved
     paths = [path]
-    video = os.path.basename(path)
-    filename, extension = os.path.splitext(video)
+    video_path = os.path.basename(path)
+    filename, extension = os.path.splitext(video_path)
     folder = os.path.dirname(path)
     # maybe write check on video extension supported by opencv2
     if filename[-2:] == '_1':
@@ -166,8 +170,8 @@ def get_spaced_colors_util(n, norm = False, black = True, cmap = 'jet'):
         colors.insert(0, black)
     return colors
 
-def check_and_change_video_path(video, old_video):
-    current_video_folder = os.path.split(video.video_path)[0]
+def check_and_change_video_path(video_object, old_video):
+    current_video_folder = os.path.split(video_object.video_path)[0]
     old_video_folder = os.path.split(old_video.video_path)[0]
     old_video_session_name = old_video.session_folder
     if current_video_folder != old_video_folder:
@@ -242,10 +246,10 @@ def set_load_previous_dict(old_video, processes, existentFile):
 
     return existentFile
 
-def getExistentFiles(video, processes):
+def getExistentFiles(video_object, processes):
     """get processes already computed in a previous session
     preprocessing: segmentation, fragmentation and creation of blobs and individual/global fragments
-    knowledge_transfer: knowledge transferred from a model trained on a different video
+    knowledge_transfer: knowledge transferred from a model trained on a different video_object
     first_accumulation: first accumulation attempt
     pretraining: building the filters in a global-identity-agnostic way
     second_accumulation: accumulation by transferring knowledge from pre-training
@@ -256,15 +260,15 @@ def getExistentFiles(video, processes):
     """
     existentFile = {name:'-1' for name in processes}
     old_video = None
-    if os.path.isdir(video._previous_session_folder):
+    if os.path.isdir(video_object._previous_session_folder):
         logger.debug("loading old video object from get existent files")
-        if os.path.isfile(os.path.join(video._previous_session_folder, 'video_object.npy')):
-            old_video = np.load(os.path.join(video._previous_session_folder, 'video_object.npy')).item()
-            logger.info("old video loaded")
+        if os.path.isfile(os.path.join(video_object._previous_session_folder, 'video_object.npy')):
+            old_video = np.load(os.path.join(video_object._previous_session_folder, 'video_object.npy')).item()
+            logger.info("old video_object loaded")
         else:
-            logger.info("The folder %s is empty. The tracking cannot be restored." %video._previous_session_folder)
+            logger.info("The folder %s is empty. The tracking cannot be restored." %video_object._previous_session_folder)
             return existentFile, old_video
-        old_video = check_and_change_video_path(video,old_video)
+        old_video = check_and_change_video_path(video_object,old_video)
         existentFile = set_load_previous_dict(old_video, processes, existentFile)
 
     return existentFile, old_video

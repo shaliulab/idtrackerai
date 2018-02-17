@@ -39,9 +39,10 @@ requirements = ['Cython >= 0.26.1',
                 'PyYAML >= 3.12',
                 'scipy >= 0.19.0',
                 'sklearn >= 0.0',
+                'protobuf >= 3.4.0',
                 'tables >= 3.3.0',
                 'dask >= 0.17.0',
-                'tensorflow-gpu >= 1.4']
+                'tensorflow-gpu == 1.4.1']
 
 
 np_gpu_warning = False
@@ -94,7 +95,7 @@ WARNING!
 ========
 No cuda driver has been detected and Tensorflow has
 been installed without gpu support. As a consequence idtrackerai will run
-slower and will require more system resources. 
+slower and will require more system resources.
 If a GPU is available, download and
 install the drivers by following the instructions provided at
 http://www.nvidia.com/

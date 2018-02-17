@@ -47,6 +47,7 @@ Python 2.7
 * PyYAML >= 3.12
 * scipy >= 0.19.0
 * sklearn >= 0.0
+* protobuf >= 3.4.0
 * tables >= 3.3.0
 * dask >= 0.17.0
 * tensorflow-gpu >= 1.4
