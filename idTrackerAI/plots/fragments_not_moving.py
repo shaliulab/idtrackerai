@@ -26,7 +26,7 @@ def get_frames_and_frames_moving_for_fragments(fragments, moving_threshold, fram
     return frames, frames_moving
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/prometheus/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/atlas/ground_truth_results_backup'
     sessions = ['100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_20180122',
                     '10_flies_compressed_clara/session_20180207',
                     '38 drosophila (females males)/Canton_N38_top_video_01-31-18_10-50-14/session_20180201',
@@ -87,7 +87,7 @@ if __name__ == '__main__':
             ax_arr[1].set_xticks([-1, 0, 1])
             ax_arr[1].set_xticklabels([0.1, 1, 10])
             ax_arr[1].set_xlabel('px/frame')
-            moving_threshold = 0 # in log10(BL/s)
+            moving_threshold = 0 # in log10(BL/s) so the threshold is 1BL/s
 
             ### Distribution of frames in the fragments of the first global fragment
             list_of_global_fragments.order_by_distance_travelled()
@@ -99,5 +99,6 @@ if __name__ == '__main__':
             print(video.minimum_number_of_frames_moving_in_first_global_fragment)
 
             np.save(os.path.join(session_path, 'video_object.npy'), video)
+            fig.savefig(os.path.join(session_path,'velocities_distribution.pdf'), transparent = True)
 
             del video, list_of_fragments, list_of_global_fragments

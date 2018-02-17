@@ -75,19 +75,21 @@ def get_repetition_std_data_frame(results_data_frame):
     return repetition_std_data_frame
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup/'
-    if os.path.isdir(path_to_results_hard_drive):
+    path_to_library_hard_drive = '/media/chronos/idtrackerai_CARP_lib_and_results/'
+    if os.path.isdir(path_to_library_hard_drive):
         ### load global results data frame
-        if os.path.isfile(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Single_image_identification/results_data_frame.pkl')):
+        library_results_path = os.path.join(path_to_library_hard_drive, 'CARP library and simulations results/Single_image_identification/results_data_frame.pkl')
+        if os.path.isfile(library_results_path):
             print("loading results_data_frame.pkl...")
-            results_data_frame = pd.read_pickle(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Single_image_identification/results_data_frame.pkl'))
+            results_data_frame = pd.read_pickle(library_results_path)
             print("results_data_frame.pkl loaded \n")
         else:
             print("results_data_frame.pkl does not exist \n")
 
         # get tests_data_frame and test to plot
         print("loading tests data frame")
-        tests_data_frame = pd.read_pickle(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Single_image_identification/tests_data_frame.pkl'))
+        library_tests_path = os.path.join(path_to_library_hard_drive, 'CARP library and simulations results/Single_image_identification/tests_data_frame.pkl')
+        tests_data_frame = pd.read_pickle(library_tests_path)
         test_names = [test_name for test_name in results_data_frame['test_name'].unique() if 'uncorrelated' in test_name]
         new_ordered_test_names = test_names[:-3]
         new_ordered_test_names.append(test_names[-2])
@@ -98,11 +100,11 @@ if __name__ == '__main__':
                                 1: '1 conv layer',
                                 2: '2 conv layers',
                                 3: '4 conv layers',
-                                6: 'fully 50',
-                                7: 'fully 200',
-                                8: 'fully 100 + fully 100',
-                                9: 'fully 100 + fully 50',
-                                10: 'fully 100 + fully 200'}
+                                6: 'fc 50',
+                                7: 'fc 200',
+                                8: r'fc 100 $\rightarrow$ fc 100',
+                                9: r'fc 100 $\rightarrow$ fc 50',
+                                10: r'fc 100 $\rightarrow$ fc 200'}
 
         legend_order_conv = ['idTracker',
                                 cnn_model_names_dict[1],
@@ -112,13 +114,13 @@ if __name__ == '__main__':
 
         legend_order_fully = ['idTracker',
                                 cnn_model_names_dict[6],
-                                'fully 100 (idtracker.ai)',
+                                'fc 100 (idtracker.ai)',
                                 cnn_model_names_dict[7],
                                 cnn_model_names_dict[9],
                                 cnn_model_names_dict[8],
                                 cnn_model_names_dict[10]]
 
-        idTracker_single_image_accuracy_results = np.load(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Single_image_identification/idTracker_results.npy'))
+        idTracker_single_image_accuracy_results = np.load(os.path.join(path_to_library_hard_drive, 'CARP library and simulations results/Single_image_identification/idTracker_results.npy'))
 
         # plot
         plt.ion()
@@ -198,7 +200,7 @@ if __name__ == '__main__':
         std_accuracy = repetition_std_data_frame.test_accuracy
         group_sizes = repetition_averaged_data_frame.group_size.astype('float32')
 
-        labels_to_plot = ['3 conv layers (idtracker.ai)', 'fully 100 (idtracker.ai)', 'idtracker.ai']
+        labels_to_plot = ['3 conv layers (idtracker.ai)', 'fc 100 (idtracker.ai)', 'idtracker.ai']
         axes_to_plot = [ax_arr[0], ax_arr[1], ax2]
         for ax, label in zip(axes_to_plot, labels_to_plot):
             if label == 'idtracker.ai':
@@ -259,7 +261,7 @@ if __name__ == '__main__':
         plt.minorticks_off()
 
         # plt.show()
-        fig1.savefig(os.path.join(path_to_results_hard_drive,'CARP library and simulations results/Single_image_identification/single_image_identification_accuracy_SM.pdf'), transparent=True)
-        fig2.savefig(os.path.join(path_to_results_hard_drive,'CARP library and simulations results/Single_image_identification/single_image_identification_accuracy_main.pdf'), transparent=True)
+        fig1.savefig(os.path.join(path_to_library_hard_drive,'CARP library and simulations results/Single_image_identification/single_image_identification_accuracy_SM.pdf'), transparent=True)
+        fig2.savefig(os.path.join(path_to_library_hard_drive,'CARP library and simulations results/Single_image_identification/single_image_identification_accuracy_main.pdf'), transparent=True)
     else:
-        print("update the path_to_results_hard_drive")
+        print("update the path_to_library_hard_drive")

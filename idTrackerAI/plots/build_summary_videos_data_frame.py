@@ -24,7 +24,9 @@ from compute_individual_groundtruth_statistics import get_individual_accuracy_wr
 from identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
 from global_fragments_statistics import compute_and_plot_fragments_statistics
 
-sessions = ['100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_20180122',
+sessions = ['100 drosophila (females - males)/Canton_N100_02-10-18_15-59-24/session_20180211',
+    '100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_20180122',
+    '100_drosophila_females_males_topview/CantonS_N100_02-08-18_10-52-40_3/session_20180210',
     '10_fish_group4/first/session_20180122',
     '10_fish_group5/first/session_20180131',
     '10_fish_group6/first/session_20180202',
@@ -58,15 +60,15 @@ sessions = ['100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_2018
     'idTrackerVideos/ValidacionTracking/Moscas/Platogrande_8females/session_20180131',
     'idTrackerVideos/Zebrafish_nacreLucie/pair3ht/session_20180207']
 
-animal_type = ['drosophila (females)', 'zebrafish (30dpf)', 'zebrafish (30dpf)', 'zebrafish (30dpf)','drosophila',
-            'drosophila', 'drosophila (females)', 'drosophila (females)', 'drosophila', 'drosophila',
-            'drosophila', 'ants', 'zebrafish (30dpf)', 'zebrafish (30dpf)', 'zebrafish (30dpf)',
-            'zebrafish (30dpf)', 'zebrafish (30dpf)', 'zebrafish (30dpf)', 'zebrafish', 'medaka',
+animal_type = ['drosophila (1)', 'drosophila (2)', 'drosophila (3)', 'zebrafish (1)', 'zebrafish (2)', 'zebrafish (3)','drosophila',
+            'drosophila', 'drosophila (1)', 'drosophila (2)', 'drosophila', 'drosophila (1)',
+            'drosophila (2)', 'ants', 'zebrafish (1)', 'zebrafish (1)', 'zebrafish (2)',
+            'zebrafish (2)', 'zebrafish (2)', 'zebrafish (3)', 'zebrafish (3)', 'medaka',
             'medaka', 'medaka', 'drosophila', 'drosophila', 'zebrafish',
             'black mice', 'black mice', 'agouti mice', 'black mice', 'black mice',
             'black mice', 'drosophila', 'nacre zebrafish']
 
-idTracker_video = [False, False, False, False, False,
+idTracker_video = [False, False, False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, False, True, True,
@@ -74,7 +76,7 @@ idTracker_video = [False, False, False, False, False,
                     True, True, True, True, True,
                     True, True, True]
 
-used_for_developing = [False, False, False, False, False,
+used_for_developing = [False, False, False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, True, False, False,
                     False, False, False, True, False,
@@ -82,7 +84,7 @@ used_for_developing = [False, False, False, False, False,
                     False, False, False, False, False,
                     False, False, False]
 
-bad_video_example = [True, False, False, False, False,
+bad_video_example = [False, True, True, False, False, False, False,
                     False, False, True, False, False,
                     False, False, False, False, False,
                     False, False, False, False, False,
@@ -117,7 +119,7 @@ def get_mean_number_of_images_in_first_global_fragment(list_of_global_fragments,
 
 if __name__ == '__main__':
     # hard_drive_path = '/media/themis/ground_truth_results_backup'
-    path_to_results_hard_drive = '/media/prometheus/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/rhea/ground_truth_results_backup'
     tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
     session_paths = [x[0] for x in os.walk(tracked_videos_folder) if 'session' in x[0][-16:] and 'Trash' not in x[0]]
     pprint(session_paths)
@@ -335,7 +337,7 @@ if __name__ == '__main__':
                     'original_width': video.original_width,
                     'original_height': video.original_height,
                     'tracking_with_knowledge_transfer': video.tracking_with_knowledge_transfer,
-                    'video_length_min': video.number_of_frames/video.frames_per_second/60,
+                    'video_length_sec': video.number_of_frames/video.frames_per_second,
                     'tracking_time': None if not hasattr(video, 'total_time') else video.total_time / 60,
                     'preprocessing_time': None if not hasattr(video, 'preprocessing_time') else video.total_time / 60,
                     'first_accumulation_time': None if not hasattr(video, 'first_accumulation_time') else video.total_time / 60,
@@ -372,6 +374,7 @@ if __name__ == '__main__':
                     'accumulation_trial': video.accumulation_trial,
                     'number_of_accumulation_steps': len(video.validation_accuracy),
                     'percentage_of_accumulated_images': video.percentage_of_accumulated_images[video.accumulation_trial],
+                    'percentage_of_video_accumualted': (video.individual_fragments_stats['number_of_globally_accumulated_individual_blobs'] + video.individual_fragments_stats['number_of_partially_accumulated_individual_blobs']) / video.individual_fragments_stats['number_of_blobs'] * 100,
                     'estimated_accuracy': video.overall_P2,
                     'interval_of_frames_validated': video.gt_start_end if not bad_video else -1,
                     'number_of_frames_validated': np.diff(video.gt_start_end)[0] if not bad_video else -1,
@@ -393,9 +396,11 @@ if __name__ == '__main__':
                     'individual_accuracy': -1 if not hasattr(video, 'gt_accuracy_individual') else video.gt_accuracy_individual['accuracy'],
                     'individual_accuracy_identified_animals': -1 if not hasattr(video, 'gt_accuracy_individual') else video.gt_accuracy_individual['accuracy_assigned'],
                     'individual_accuracy_interpolated': -1 if not hasattr(video, 'gt_accuracy_individual_interpolated') else video.gt_accuracy_individual_interpolated['accuracy'],
-                    'individual_accurcay_identified_animals_interpolated': -1 if not hasattr(video, 'gt_accuracy_individual_interpolated') else video.gt_accuracy_individual_interpolated['accuracy_assigned']
+                    'individual_accurcay_identified_animals_interpolated': -1 if not hasattr(video, 'gt_accuracy_individual_interpolated') else video.gt_accuracy_individual_interpolated['accuracy_assigned'],
+                    'rate_nonidentified_animals_indentification_and_interpolation': (video.gt_results_interpolated['number_of_individual_blobs']-np.sum(video.gt_results_interpolated['number_of_assigned_blobs_per_identity'].values()))/video.gt_results_interpolated['number_of_individual_blobs'] if not bad_video else -1,
+                    'rate_misidentified_animals_identification_and_interpolation': np.sum(video.gt_results_interpolated['number_of_errors_in_assigned_blobs'].values()) /video.gt_results_interpolated['number_of_individual_blobs'] if not bad_video else -1
                     }, ignore_index=True)
 
         tracked_videos_data_frame.to_pickle(os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl'))
     else:
-        print("update the list of sessions and species")
+        print("update the list of sessions or check the path_to_results_hard_drive")
