@@ -137,7 +137,7 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
     simulated_videos = mpatches.Patch(color='k', fc = 'None', linewidth = 1, label='Simulated videos')
     fish_videos = mpatches.Patch(color='g', alpha = 1., label='Zebrafish videos')
     flies_videos = mpatches.Patch(color='m', alpha = 1., label='Drosophila videos')
-    bad_video1 = mpatches.Patch(color = 'y', alpha = 1., label='Low quality drosophila videos: low activity levels \nand bad preprocessing parameters or dead flies')
+    bad_video1 = mpatches.Patch(color = 'y', alpha = 1., label='Unsuitable drosophila videos: low locomotor activity levels \nor dead animals and inadequate segmentation parameters')
     # bad_video2 = mpatches.Patch(color = 'c', alpha = 1., label=r'Bad drosophila video: low activity levels and at least 4 death animals')
     # bad_video3 = mpatches.Patch(color = 'salmon', alpha = 1., label='Bad drosophila video: atypical postures (jumping and rolling) during the video')
     protocol_1 = mlines.Line2D([], [], color='k', marker='^', markersize=6, label='Protocol 1',
@@ -152,7 +152,7 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
 
     ax_arr_num_images_accuracy[0].legend(handles=[protocol_1,
                                                 protocol_2,
-                                                protocol_3], loc = 4, title = 'Protocol used',
+                                                protocol_3], loc = 4, title = 'Tracking protocol',
                                                 frameon = True)
     ax_arr_num_images_accuracy[1].legend(handles=[simulated_videos,
                                                 fish_videos, flies_videos,
@@ -162,7 +162,7 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
 
 
     smaller_groups_ax_position = ax_arr_num_images_accuracy[0].get_position()
-    text_axes = fig_num_images_accuracy.add_axes([smaller_groups_ax_position.x0 + smaller_groups_ax_position.width + 0.025, smaller_groups_ax_position.y0, 0.01, smaller_groups_ax_position.height])
+    text_axes = fig_num_images_accuracy.add_axes([smaller_groups_ax_position.x0 - 0.025, smaller_groups_ax_position.y0, 0.01, smaller_groups_ax_position.height])
     text_axes.text(0.5, 0.5,'Smaller groups', horizontalalignment='center', verticalalignment='center', rotation=-90, fontsize = 18)
     text_axes.set_xticks([])
     text_axes.set_yticks([])
@@ -170,7 +170,7 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
     sns.despine(ax = text_axes, left=True, bottom=True, right=True)
 
     smaller_groups_ax_position = ax_arr_num_images_accuracy[1].get_position()
-    text_axes = fig_num_images_accuracy.add_axes([smaller_groups_ax_position.x0 + smaller_groups_ax_position.width + 0.025, smaller_groups_ax_position.y0, 0.01, smaller_groups_ax_position.height])
+    text_axes = fig_num_images_accuracy.add_axes([smaller_groups_ax_position.x0 - 0.025, smaller_groups_ax_position.y0, 0.01, smaller_groups_ax_position.height])
     text_axes.text(0.5, 0.5,'Larger groups', horizontalalignment='center', verticalalignment='center', rotation=-90, fontsize = 18)
     text_axes.set_xticks([])
     text_axes.set_yticks([])
