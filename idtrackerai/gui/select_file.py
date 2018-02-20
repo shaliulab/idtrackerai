@@ -39,7 +39,7 @@ class SelectFile(BoxLayout):
         self.update ='You did not select a video yet'
         self.main_layout = BoxLayout()
         self.main_layout.orientation = "vertical"
-        self.logo = Image(source = "idtrackerai/gui/logo.png")
+        self.logo = Image(source = os.path.join(os.path.dirname(__file__), 'logo.png'))
         self.main_layout.add_widget(self.logo)
         self.welcome_label = CustomLabel(font_size = 20, text = "Welcome to idTrackerAI")
         self.main_layout.add_widget(self.welcome_label)

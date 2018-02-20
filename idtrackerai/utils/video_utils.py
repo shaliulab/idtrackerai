@@ -45,7 +45,7 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
     cap = cv2.VideoCapture(video_path)
     logger.debug('Adding from starting frame %i to background' %starting_frame)
     number_of_frames_for_bkg_in_episode = 0
-    frameInds = range(starting_frame,ending_frame, 100)
+    frameInds = range(starting_frame,ending_frame, BACKGROUND_SUBTRACTION_PERIOD)
     for ind in frameInds:
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
         ret, frameBkg = cap.read()
@@ -81,7 +81,7 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
     cap = cv2.VideoCapture(video_path)
     counter = 0
     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-    numFramesBkg = 0
+    number_of_frames_for_bkg_in_episode = 0
     frameInds = range(0,numFrame, BACKGROUND_SUBTRACTION_PERIOD)
     for ind in frameInds:
         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
@@ -118,12 +118,13 @@ def cumpute_background(video):
     bkg = np.zeros((video.original_height, video.original_width))
     num_cores = multiprocessing.cpu_count()
     if video.paths_to_video_segments is None: # one single file
-        print('one single video, computing bkg in parallel from single video')
+        logger.debug('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=num_cores)(delayed(
                     sum_frames_for_bkg_per_episode_in_single_file_video)(
                     starting_frame, ending_frame, video.video_path, bkg)
                     for (starting_frame, ending_frame) in video.episodes_start_end)
     else: # multiple video files
+        logger.debug('multiple videos, computing bkg in parallel from every episode')
         output = Parallel(n_jobs=num_cores)(delayed(
                     sum_frames_for_bkg_per_episode_in_multiple_files_video)(
                     videoPath,bkg) for videoPath in video.paths_to_video_segments)
@@ -196,8 +197,10 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     """
     if useBkg:
         frame = cv2.absdiff(bkg,frame) #only step where frame normalization is important, because the background is normalised
-
-    frame_segmented = cv2.inRange(frame * (255.0/frame.max()), min_threshold, max_threshold) #output: 255 in range, else 0
+        frame = 255 - frame * (255.0/frame.max())
+        frame_segmented = cv2.inRange(frame, min_threshold, max_threshold) #output: 255 in range, else 0
+    elif not useBkg:
+        frame_segmented = cv2.inRange(frame * (255.0/frame.max()), min_threshold, max_threshold) #output: 255 in range, else 0
     # print("frame segmented frame ", frame_segmented.shape)
     # print("ROI shape: ", ROI.shape)
     frame_segmented_and_masked = cv2.bitwise_and(frame_segmented,frame_segmented, mask=ROI) #Applying the mask

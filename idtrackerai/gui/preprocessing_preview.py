@@ -117,14 +117,24 @@ class PreprocessingPreview(BoxLayout):
         self.container_layout.add_widget(self.segment_video_btn)
         self.container_layout.add_widget(self.help_button_preprocessing)
 
+    def activate_ROI_switch(self, *args):
+        if hasattr(self,'visualiser'):
+            self.ROI_switch.active = True
+
+    def deactivate_ROI_switch(self, *args):
+        if hasattr(self,'visualiser'):
+            self.ROI_switch.active = False
+
     def do(self, *args):
         if CHOSEN_VIDEO.video is not None and CHOSEN_VIDEO.video.video_path is not None:
             self.init_preproc_parameters()
             self.create_resolution_reduction_popup()
             self.res_red_input.bind(on_text_validate = self.on_enter_res_red_coeff)
             self.reduce_resolution_btn.bind(on_press = self.open_resolution_reduction_popup)
-            self.ROI_switch.bind(active = self.apply_ROI)
-            self.ROI_switch.active = False
+            # self.ROI_switch.bind(active = self.apply_ROI)
+            num_valid_pxs_in_ROI = len(sum(np.where(CHOSEN_VIDEO.video.ROI == 255)))
+            num_pxs_in_frame = CHOSEN_VIDEO.video.height * CHOSEN_VIDEO.video.width
+            self.ROI_switch.active = not (num_pxs_in_frame == num_valid_pxs_in_ROI or num_valid_pxs_in_ROI == 0)
             self.bkg_subtractor_switch.active = False
             self.bkg_subtractor_switch.bind(active = self.apply_bkg_subtraction)
             CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
@@ -438,6 +448,7 @@ class PreprocessingPreview(BoxLayout):
         self.number_of_detected_blobs = [0]
         self.create_areas_figure()
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.show_preprocessing)
+        self.ROI_switch.bind(active = self.apply_ROI)
 
     @staticmethod
     def set_matplotlib_params(font_size = 8):

@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+import os
 import kivy
 from kivy.properties import StringProperty
 from kivy.properties import BooleanProperty, NumericProperty
@@ -13,18 +14,20 @@ from kivy.graphics import *
 import sys
 from idtrackerai.video import Video
 
+HELP_BUTTON_OFF_PATH = os.path.join(os.path.dirname(__file__), 'help_button.png')
+HELP_BUTTON_ON_PATH = os.path.join(os.path.dirname(__file__), 'help_button_on.png')
 
 class HelpButton(ButtonBehavior, Image):
     def __init__(self, **kwargs):
         super(HelpButton, self).__init__(**kwargs)
-        self.source = 'idtrackerai/gui/help_button.png'
+        self.source = HELP_BUTTON_OFF_PATH
         self.size_hint = (.15,.15)
 
     def on_press(self):
-        self.source = 'idtrackerai/gui/help_button_on.png'
+        self.source = HELP_BUTTON_ON_PATH
 
     def on_release(self):
-        self.source = 'idtrackerai/gui/help_button.png'
+        self.source = HELP_BUTTON_OFF_PATH
 
     def create_help_popup(self, title, text):
         self.help_popup_container = BoxLayout()

@@ -41,9 +41,18 @@ class ROISelector(BoxLayout):
         self.btn_save_roi = Button(text = "save ROIs")
         self.btn_clear_roi = Button(text = "clear last ROI")
         self.btn_no_roi = Button(text = "do not use any ROI")
+        self.help_button_ROI = HelpButton()
+        self.help_button_ROI.size_hint = (1.,1.)
+        self.help_button_ROI.create_help_popup("ROI selector",\
+                                                "ROI are useful to limit the tracking to specific parts of the frame. Select the ROI shape you want to draw in the bottom of the right pannel." +
+                                                "\nTo draw a rectangular ROI click on a corner of the rectangular you want to select and then click again in the oposite corner." +
+                                                "\nTo draw an elliptical ROI click on 5 points in the contour of the ellipse you want to draw." +
+                                                "\nYou can select as many ROIs as you want. If you make a mistake, you can clear the last ROI by pressing 'clear last ROI'." +
+                                                "\nTo apply the ROIs on the frame click 'save ROIs' and move to the preprocessing tab.")
         w_list = [self.btn_load_roi, self.btn_save_roi,
                 self.btn_clear_roi, self.btn_no_roi, self.separator,
-                self.roi_shape_label, self.btn_rectangular, self.btn_circular]
+                self.roi_shape_label, self.btn_rectangular, self.btn_circular,
+                self.help_button_ROI]
         [self.control_panel.add_widget(w) for w in w_list]
         self.btn_save_roi.bind(on_press = self.save_ROI)
         self.btn_load_roi.bind(on_press = self.load_ROI)
@@ -52,6 +61,8 @@ class ROISelector(BoxLayout):
         self.has_been_executed = False
         global CHOSEN_VIDEO
         CHOSEN_VIDEO.bind(chosen=self.do)
+
+
 
     def do(self, *args):
         if CHOSEN_VIDEO.video.video_path is not None:
@@ -204,6 +215,13 @@ class ROISelector(BoxLayout):
         CHOSEN_VIDEO.video.save()
 
     def no_ROI(self, *args):
+        try:
+            for ROI in self.ROIs[::-1]:
+                self.ROIs = self.ROIs[:-1] #clear from the app ROIs collection
+                self.ROIOut = self.ROIOut[:-1] #clear from the cv2 ROIs collection
+                self.visualiser.display_layout.canvas.remove(ROI) #clear from the image in the visualisation
+        except:
+            print('Select one ROI first')
         CHOSEN_VIDEO.video._ROI = np.ones_like(self.visualiser.frame ,dtype='uint8') * 255
         CHOSEN_VIDEO.apply_ROI = False
         CHOSEN_VIDEO.video.save()

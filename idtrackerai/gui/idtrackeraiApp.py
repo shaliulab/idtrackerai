@@ -127,6 +127,9 @@ class Root(TabbedPanel):
                                         deactivate_tracking = DEACTIVATE_TRACKING)
             self.preprocessor.id = "preprocessor"
             self.preprocessing_tab.add_widget(self.preprocessor)
+            if hasattr(self, 'roi_selector'):
+                self.roi_selector.btn_save_roi.bind(on_press = self.preprocessor.activate_ROI_switch)
+                self.roi_selector.btn_no_roi.bind(on_press = self.preprocessor.deactivate_ROI_switch)
         else:
             if hasattr(self, 'preprocessor'):
                 self.preprocessing_tab.clean(self.preprocessor)

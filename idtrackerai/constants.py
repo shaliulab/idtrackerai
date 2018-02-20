@@ -28,7 +28,7 @@ STD_TOLERANCE = 4
 """***BACKGROUND_SUBTRACTION_PERIOD***
 Period used to sample the video to compute the background model
 """
-BACKGROUND_SUBTRACTION_PERIOD = 400
+BACKGROUND_SUBTRACTION_PERIOD = 100
 
 #######################################
 #########  global fragments  ##########
