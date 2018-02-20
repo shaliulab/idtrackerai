@@ -438,14 +438,14 @@ class Validator(BoxLayout):
             current = modified_blob
 
             while len(current.next) == 1 and current.next[0].fragment_identifier == modified_blob.fragment_identifier:
-                current.next[0]._user_generated_identity = current.user_generated_identity
+                current.next[0]._user_generated_identity = new_blob_identity
                 current = current.next[0]
                 count_future_corrections += 1
 
             current = modified_blob
 
             while len(current.previous) == 1 and current.previous[0].fragment_identifier == modified_blob.fragment_identifier:
-                current.previous[0]._user_generated_identity = current.user_generated_identity
+                current.previous[0]._user_generated_identity = new_blob_identity
                 current = current.previous[0]
                 count_past_corrections += 1
 
@@ -502,7 +502,7 @@ class Validator(BoxLayout):
         self.container = BoxLayout()
         self.blob_to_explore = blob_to_explore
         self.show_attributes_box = BoxLayout(orientation="vertical")
-        self.id_label = CustomLabel(text='Assigned identity: ' + str(blob_to_explore.final_identity))
+        self.id_label = CustomLabel(text='Assigned identity: ' + str(blob_to_explore.assigned_identity))
         self.frag_id_label = CustomLabel(text='Fragment identifier: ' + str(blob_to_explore.fragment_identifier))
         self.accumulation_label = CustomLabel(text='Used for training: ' + str(blob_to_explore.used_for_training))
         self.in_a_fragment_label = CustomLabel(text='It is in an individual fragment: ' + str(blob_to_explore.is_in_a_fragment))

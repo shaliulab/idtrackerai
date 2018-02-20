@@ -574,7 +574,7 @@ class Video(object):
         compute the size of the square image that is generated from every
         blob to identify the animals
         """
-        identification_image_size = int(np.sqrt(maximum_body_length ** 2 / 2))
+        identification_image_size = int(maximum_body_length / np.sqrt(2))
         identification_image_size = identification_image_size + identification_image_size % 2
         self._identification_image_size = (identification_image_size, identification_image_size, self.number_of_channels)
 

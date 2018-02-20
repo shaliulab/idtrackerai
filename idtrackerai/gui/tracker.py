@@ -67,7 +67,7 @@ class Tracker(BoxLayout):
         self.help_button_tracker = HelpButton()
         self.help_button_tracker.size_hint = (1.,.4)
         self.help_button_tracker.create_help_popup("Tracking",\
-                                                "A message to help people.")
+                                                "A message to the user.")
 
     def do(self):
         CHOSEN_VIDEO.video.accumulation_trial = 0
