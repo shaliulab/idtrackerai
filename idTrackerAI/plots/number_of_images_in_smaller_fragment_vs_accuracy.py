@@ -73,22 +73,13 @@ def plot_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_ima
 
     for i in range(len(tracked_videos_data_frame)):
         species = tracked_videos_data_frame.loc[i].animal_type
-        bad_video = tracked_videos_data_frame.loc[i].bad_video_example
         group_size = tracked_videos_data_frame.loc[i].number_of_animals
         protocol = tracked_videos_data_frame.loc[i].protocol_used
         plot_flag = True
-        if 'zebrafish' in species and not bad_video:
+        if 'zebrafish' in species:
             color = 'g'
-        elif 'drosophila' in species and not bad_video:
+        elif 'drosophila' in species:
             color = 'm'
-        # elif 'drosophila (2)' in species and bad_video and group_size == 100:
-        #     print(tracked_videos_data_frame.loc[i].session_path)
-        #     color = 'c'
-        # elif 'drosophila (3)' in species and bad_video and group_size == 100:
-        #     color = 'salmon'
-        #     print(tracked_videos_data_frame.loc[i].session_path)
-        elif ('drosophila (1)' in species or 'drosophila (2)' in species) and bad_video and group_size >= 60:
-            color = 'y'
         else:
             plot_flag = False
         if plot_flag:
@@ -117,16 +108,16 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
     # ax_arr_num_images_accuracy[0].set_title('Group size ' + r'$\leq$ 40', fontsize = 22, y = 1.05)
     # ax_arr_num_images_accuracy[1].set_title('Group size ' + r'$\geq$ 60', fontsize = 22, y = 1.05)
     # ax_arr_num_images_accuracy[0].set_xlabel('Number of images', fontsize = 20)
-    ax_arr_num_images_accuracy[0].set_ylabel('Accuracy', fontsize = 20)
-    ax_arr_num_images_accuracy[1].set_ylabel('Accuracy', fontsize = 20)
-    ax_arr_num_images_accuracy[1].set_xlabel('Number of images', fontsize = 20)
+    ax_arr_num_images_accuracy[0].set_ylabel('Accuracy', fontsize = 16)
+    ax_arr_num_images_accuracy[1].set_ylabel('Accuracy', fontsize = 16)
+    ax_arr_num_images_accuracy[1].set_xlabel('Minimum number of images in first global fragment', fontsize = 16)
     ax_arr_num_images_accuracy[1].tick_params(axis='both', which='major', labelsize=16)
     ax_arr_num_images_accuracy[0].tick_params(axis='both', which='major', labelsize=16)
     # ax_arr_num_images_accuracy[1].set_yticklabels([])
-    ax_arr_num_images_accuracy[0].set_xticks([10, 100, 1000])
-    ax_arr_num_images_accuracy[1].set_xticks([10, 100, 1000])
-    ax_arr_num_images_accuracy[0].set_xticklabels([10, 100, 1000])
-    ax_arr_num_images_accuracy[1].set_xticklabels([10, 100, 1000])
+    ax_arr_num_images_accuracy[0].set_xticks([10, 30, 100, 1000])
+    ax_arr_num_images_accuracy[1].set_xticks([10, 30, 100, 1000])
+    ax_arr_num_images_accuracy[0].set_xticklabels([10, 30, 100, 1000])
+    ax_arr_num_images_accuracy[1].set_xticklabels([10, 30, 100, 1000])
     ax_arr_num_images_accuracy[0].set_ylim((0,105))
     ax_arr_num_images_accuracy[1].set_ylim((0,105))
 
@@ -137,7 +128,7 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
     simulated_videos = mpatches.Patch(color='k', fc = 'None', linewidth = 1, label='Simulated videos')
     fish_videos = mpatches.Patch(color='g', alpha = 1., label='Zebrafish videos')
     flies_videos = mpatches.Patch(color='m', alpha = 1., label='Drosophila videos')
-    bad_video1 = mpatches.Patch(color = 'y', alpha = 1., label='Unsuitable drosophila videos: low locomotor activity levels \nor dead animals and inadequate segmentation parameters')
+    # bad_video1 = mpatches.Patch(color = 'y', alpha = 1., label='Unsuitable drosophila videos: low locomotor activity levels \nor dead animals and inadequate segmentation parameters')
     # bad_video2 = mpatches.Patch(color = 'c', alpha = 1., label=r'Bad drosophila video: low activity levels and at least 4 death animals')
     # bad_video3 = mpatches.Patch(color = 'salmon', alpha = 1., label='Bad drosophila video: atypical postures (jumping and rolling) during the video')
     protocol_1 = mlines.Line2D([], [], color='k', marker='^', markersize=6, label='Protocol 1',
@@ -153,25 +144,28 @@ def set_minimum_number_of_images_figure(fig_num_images_accuracy, ax_arr_num_imag
     ax_arr_num_images_accuracy[0].legend(handles=[protocol_1,
                                                 protocol_2,
                                                 protocol_3], loc = 4, title = 'Tracking protocol',
-                                                frameon = True)
+                                                frameon = True,
+                                                fontsize = 14)
+    ax_arr_num_images_accuracy[0].get_legend().get_title().set_fontsize('14')
     ax_arr_num_images_accuracy[1].legend(handles=[simulated_videos,
-                                                fish_videos, flies_videos,
-                                                bad_video1], loc = 4,
+                                                fish_videos, flies_videos], loc = 4,
                                                 title = 'Video type',
-                                                frameon = True)
+                                                frameon = True,
+                                                fontsize = 14)
+    ax_arr_num_images_accuracy[1].get_legend().get_title().set_fontsize('14')
 
 
     smaller_groups_ax_position = ax_arr_num_images_accuracy[0].get_position()
-    text_axes = fig_num_images_accuracy.add_axes([smaller_groups_ax_position.x0 - 0.025, smaller_groups_ax_position.y0, 0.01, smaller_groups_ax_position.height])
-    text_axes.text(0.5, 0.5,'Smaller groups', horizontalalignment='center', verticalalignment='center', rotation=-90, fontsize = 18)
+    text_axes = fig_num_images_accuracy.add_axes([smaller_groups_ax_position.x0 - 0.1, smaller_groups_ax_position.y0, 0.01, smaller_groups_ax_position.height])
+    text_axes.text(0.5, 0.5,'Smaller groups', horizontalalignment='center', verticalalignment='center', rotation=90, fontsize = 18)
     text_axes.set_xticks([])
     text_axes.set_yticks([])
     text_axes.grid(False)
     sns.despine(ax = text_axes, left=True, bottom=True, right=True)
 
     smaller_groups_ax_position = ax_arr_num_images_accuracy[1].get_position()
-    text_axes = fig_num_images_accuracy.add_axes([smaller_groups_ax_position.x0 - 0.025, smaller_groups_ax_position.y0, 0.01, smaller_groups_ax_position.height])
-    text_axes.text(0.5, 0.5,'Larger groups', horizontalalignment='center', verticalalignment='center', rotation=-90, fontsize = 18)
+    text_axes = fig_num_images_accuracy.add_axes([smaller_groups_ax_position.x0 - 0.1, smaller_groups_ax_position.y0, 0.01, smaller_groups_ax_position.height])
+    text_axes.text(0.5, 0.5,'Larger groups', horizontalalignment='center', verticalalignment='center', rotation=90, fontsize = 18)
     text_axes.set_xticks([])
     text_axes.set_yticks([])
     text_axes.grid(False)

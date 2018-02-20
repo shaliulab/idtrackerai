@@ -25,49 +25,50 @@ from identify_non_assigned_with_interpolation import assign_zeros_with_interpola
 from global_fragments_statistics import compute_and_plot_fragments_statistics
 
 
-###(session, animal_type, idTracker_video, used_for_developing, bad_video)
-sessions_tuples = [('100 drosophila (females - males)/Canton_N100_02-10-18_15-59-24/session_20180211', 'drosophila (1)', False, False, False),
-    ('100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_20180122', 'drosophila (2)', False, False, True),
-    ('100_drosophila_females_males_topview/CantonS_N100_02-08-18_10-52-40_3/session_20180210', 'drosophila (3)', False, False, True),
-    ('10_fish_group4/first/session_20180122', 'zebrafish (1)', False, False, False),
-    ('10_fish_group5/first/session_20180131', 'zebrafish (2)', False, False, False),
-    ('10_fish_group6/first/session_20180202', 'zebrafish (3)', False, False, False),
-    ('10_flies_compressed_clara/session_20180207', 'drosophila', False, False, True),
-    ('38 drosophila (females males)/Canton_N38_top_video_01-31-18_10-50-14/session_20180201', 'drosophila', False, False, False),
-    ('60 drosophila (females)/Canton_N59_12-15-17_16-32-02/session_20180102', 'drosophila (1)', False, False, True),
-    ('60 drosophila (females)/Canton_N60_12-15-17_15-15-10/session_20171221', 'drosophila (2)', False, False, True),
-    ('72 drosophila (females - males)/session_20180201', 'drosophila', False, False, False),
-    ('80 drosophila (females - males)/session_20180206', 'drosophila (1)', False, False, False),
-    ('80 drosophila (females males)/Canton_N80_11-28-17_17-21-32/session_20180123', 'drosophila (2)', False, False, True),
-    ('ants_andrew_1/session_20180206', 'ants', False, False, True),
-    ('idTrackerDeep_LargeGroups_1/100/First/session_20180102', 'zebrafish (1)', False, False, False),
-    ('idTrackerDeep_LargeGroups_1/60/First/session_20180108', 'zebrafish (1)', False, False, False),
-    ('idTrackerDeep_LargeGroups_2/TU20170307/numberIndivs_100/First/session_20180104', 'zebrafish (2)', False, False, False),
-    ('idTrackerDeep_LargeGroups_2/TU20170307/numberIndivs_60/First/session_20171221', 'zebrafish (2)', False, False, False),
-    ('idTrackerDeep_LargeGroups_3/100fish/First/session_02122017', 'zebrafish (3)', False, True, False),
-    ('idTrackerDeep_LargeGroups_3/60fish/First/session_20171225', 'zebrafish (3)', False, False, False),
-    ('idTrackerVideos/8zebrafish_conflicto/session_20180130', 'zebrafish', False, True, False),
-    ('idTrackerVideos/Hipertec_pesados/Medaka/2012may31/Grupo10/session_20180201', 'medaka', True, False, False),
-    ('idTrackerVideos/Hipertec_pesados/Medaka/2012may31/Grupo5/session_20180131', 'medaka', True, False, False),
-    ('idTrackerVideos/Hipertec_pesados/Medaka/20fish_contapa/session_20180201', 'medaka', True, False, False),
-    ('idTrackerVideos/Moscas/2011dic12/Video_4fem_2mal_bottom/session_20180130', 'drosophila', True, False, False),
-    ('idTrackerVideos/Moscas/20121010/PlatoGrande_8females_2/session_20180131', 'drosophila', True, False, False),
-    ('idTrackerVideos/NatureMethods/Isogenicos/Wik_8_grupo4/session_20180130', 'zebrafish', True, False, False),
-    ('idTrackerVideos/NatureMethods/Ratones4/session_20180205', 'black mice', True, False, False),
-    ('idTrackerVideos/NatureMethods/VideoRatonesDespeinaos3/session_20180206', 'black mice', True, False, False),
-    ('idTrackerVideos/Ratones/20121203/2aguties/session_20180204', 'agouti mice', True, False, False),
-    ('idTrackerVideos/Ratones/20121203/2negroscanosos/session_20180204', 'black mice', True, False, False),
-    ('idTrackerVideos/Ratones/20121203/2negroslisocanoso/session_20180205', 'black mice', True, False, False),
-    ('idTrackerVideos/Ratones/20121203/2negroslisos/session_20180205', 'black mice', True, False, False),
-    ('idTrackerVideos/ValidacionTracking/Moscas/Platogrande_8females/session_20180131', 'drosophila', True, False, False),
-    ('idTrackerVideos/Zebrafish_nacreLucie/pair3ht/session_20180207', 'nacre zebrafish', True, False, False)]
+###(session, animal_type, idTracker_video, used_for_developing, bad_video, bad_example)
+sessions_tuples = [('100 drosophila (females - males)/Canton_N100_02-10-18_15-59-24/session_20180211', 'drosophila (1)', False, False, False, False),
+    ('100 drosophila (females)/Canton_N100_11-23-17_12-59-17/session_20180122', 'drosophila (2)', False, False, True, True),
+    ('100_drosophila_females_males_topview/CantonS_N100_02-08-18_10-52-40_3/session_20180210', 'drosophila (3)', False, False, False, True),
+    ('10_fish_group4/first/session_20180122', 'zebrafish (1)', False, False, False, False),
+    ('10_fish_group5/first/session_20180131', 'zebrafish (2)', False, False, False, False),
+    ('10_fish_group6/first/session_20180202', 'zebrafish (3)', False, False, False, False),
+    ('10_flies_compressed_clara/session_20180207', 'drosophila', False, False, False, True),
+    ('38 drosophila (females males)/Canton_N38_top_video_01-31-18_10-50-14/session_20180201', 'drosophila', False, False, False, False),
+    ('60 drosophila (females)/Canton_N59_12-15-17_16-32-02/session_20180102', 'drosophila (1)', False, False, False, False),
+    ('60 drosophila (females)/Canton_N60_12-15-17_15-15-10/session_20171221', 'drosophila (2)', False, False, True, True),
+    ('72 drosophila (females - males)/session_20180201', 'drosophila', False, False, False, False),
+    ('80 drosophila (females - males)/session_20180206', 'drosophila (1)', False, False, False, False),
+    ('80 drosophila (females males)/Canton_N80_11-28-17_17-21-32/session_20180123', 'drosophila (2)', False, False, False, False),
+    ('ants_andrew_1/session_20180206', 'ants', False, False, False, True),
+    ('idTrackerDeep_LargeGroups_1/100/First/session_20180102', 'zebrafish (1)', False, False, False, False),
+    ('idTrackerDeep_LargeGroups_1/60/First/session_20180108', 'zebrafish (1)', False, False, False, False),
+    ('idTrackerDeep_LargeGroups_2/TU20170307/numberIndivs_100/First/session_20180104', 'zebrafish (2)', False, False, False, False),
+    ('idTrackerDeep_LargeGroups_2/TU20170307/numberIndivs_60/First/session_20171221', 'zebrafish (2)', False, False, False, False),
+    ('idTrackerDeep_LargeGroups_3/100fish/First/session_02122017', 'zebrafish (3)', False, True, False, False),
+    ('idTrackerDeep_LargeGroups_3/60fish/First/session_20171225', 'zebrafish (3)', False, False, False, False),
+    ('idTrackerVideos/8zebrafish_conflicto/session_20180130', 'zebrafish', False, True, False, False),
+    ('idTrackerVideos/Hipertec_pesados/Medaka/2012may31/Grupo10/session_20180201', 'medaka', True, False, False, False),
+    ('idTrackerVideos/Hipertec_pesados/Medaka/2012may31/Grupo5/session_20180131', 'medaka', True, False, False, False),
+    ('idTrackerVideos/Hipertec_pesados/Medaka/20fish_contapa/session_20180201', 'medaka', True, False, False, False),
+    ('idTrackerVideos/Moscas/2011dic12/Video_4fem_2mal_bottom/session_20180130', 'drosophila', True, False, False, False),
+    ('idTrackerVideos/Moscas/20121010/PlatoGrande_8females_2/session_20180131', 'drosophila', True, False, False, False),
+    ('idTrackerVideos/NatureMethods/Isogenicos/Wik_8_grupo4/session_20180130', 'zebrafish', True, False, False, False),
+    ('idTrackerVideos/NatureMethods/Ratones4/session_20180205', 'black mice', True, False, False, False),
+    ('idTrackerVideos/NatureMethods/VideoRatonesDespeinaos3/session_20180206', 'black mice', True, False, False, False),
+    ('idTrackerVideos/Ratones/20121203/2aguties/session_20180204', 'agouti mice', True, False, False, False),
+    ('idTrackerVideos/Ratones/20121203/2negroscanosos/session_20180204', 'black mice', True, False, False, False),
+    ('idTrackerVideos/Ratones/20121203/2negroslisocanoso/session_20180205', 'black mice', True, False, False, False),
+    ('idTrackerVideos/Ratones/20121203/2negroslisos/session_20180205', 'black mice', True, False, False, False),
+    ('idTrackerVideos/ValidacionTracking/Moscas/Platogrande_8females/session_20180131', 'drosophila', True, False, False, False),
+    ('idTrackerVideos/Zebrafish_nacreLucie/pair3ht/session_20180207', 'nacre zebrafish', True, False, False, False)]
 
 session_tuples_unziped = list(zip(*sessions_tuples))
 sessions = session_tuples_unziped[0]
 animal_type = session_tuples_unziped[1]
 idTracker_video = session_tuples_unziped[2]
 used_for_developing = session_tuples_unziped[3]
-bad_video_example = session_tuples_unziped[4]
+bad_videos = session_tuples_unziped[4]
+bad_examples = session_tuples_unziped[5]
 
 def get_number_of_images_in_shortest_fragment_in_first_global_fragment(list_of_global_fragments, video):
     if hasattr(video, 'accumulation_folder'):
@@ -114,7 +115,8 @@ if __name__ == '__main__':
             session_number = session_number[0]
             ### give animal type name
             video.animal_type = animal_type[session_number]
-            bad_video = bad_video_example[session_number]
+            bad_video = bad_videos[session_number]
+            bad_example = bad_examples[session_number]
 
             ### give if idTracker video or not
             video.idTracker_video = idTracker_video[session_number]
@@ -290,7 +292,8 @@ if __name__ == '__main__':
                 tracked_videos_data_frame.append({'session_path': session_path,
                     'git_commit': video.git_commit,
                     'video_title': str(video.number_of_animals) + ' ' + video.animal_type,
-                    'bad_video_example': bad_video,
+                    'bad_video': bad_video,
+                    'bad_example': bad_example,
                     'video_name': os.path.split(video.video_path)[1],
                     'animal_type': video.animal_type,
                     'idTracker_video': video.idTracker_video,
