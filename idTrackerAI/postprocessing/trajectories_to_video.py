@@ -14,7 +14,7 @@ def init(video_path, trajectories_dict_path):
     colors = get_spaced_colors_util(video_object.number_of_animals)
     path_to_save_video = video_object._session_folder +'/tracked.avi'
     fourcc = cv2.cv.CV_FOURCC(*'XVID')
-    video_writer = cv2.VideoWriter(path_to_save_video, fourcc, 32.0,
+    video_writer = cv2.VideoWriter(path_to_save_video, fourcc, video_object.frames_per_second,
                                     (video_object.width, video_object.height))
     print("The video will be saved at ", path_to_save_video)
     return video_object, trajectories, video_writer, colors
