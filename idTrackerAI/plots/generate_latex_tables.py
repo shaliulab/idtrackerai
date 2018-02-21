@@ -55,7 +55,7 @@ def write_latex_table_for_subset_dataframe(tracked_videos_folder, data_frame, co
         file.write(subset_data_frame.to_latex(index = False, formatters = formatters))
 
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/rhea/ground_truth_results_backup'
+    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup'
     tracked_videos_folder = os.path.join(path_to_results_hard_drive, 'tracked_videos')
     path_to_tracked_videos_data_frame = os.path.join(tracked_videos_folder, 'tracked_videos_data_frame.pkl')
 
@@ -75,14 +75,14 @@ if __name__ == '__main__':
 
     ### smaller groups videos
     print("generating smaller groups table")
-    condition = [x and not y for (x,y) in zip(list(tracked_videos_data_frame.number_of_animals < 35), list(tracked_videos_data_frame.idTracker_video))]
+    condition = [x and not y for (x,y) in zip(list(tracked_videos_data_frame.number_of_animals < 35), list(tracked_videos_data_frame.bad_example))]
     # condition = tracked_videos_data_frame.number_of_animals <= 35 and not tracked_videos_data_frame.idTracker_video
     write_latex_table_for_subset_dataframe(tracked_videos_folder, tracked_videos_data_frame, columns_to_include, condition, 'smaller_group_sizes_table')
     ### larger groups videos
     print("generating larger groups videos table")
-    condition = [x and not y for (x,y) in zip(list(tracked_videos_data_frame.number_of_animals >= 35), list(tracked_videos_data_frame.idTracker_video))]
+    condition = [x and not y for (x,y) in zip(list(tracked_videos_data_frame.number_of_animals >= 35), list(tracked_videos_data_frame.bad_example))]
     write_latex_table_for_subset_dataframe(tracked_videos_folder, tracked_videos_data_frame, columns_to_include, condition, 'larger_group_sizes_table')
     ### idTracker videos
-    print("generating idTracker videos table")
-    condition = [bool(x) for x in tracked_videos_data_frame.idTracker_video]
-    write_latex_table_for_subset_dataframe(tracked_videos_folder, tracked_videos_data_frame, columns_to_include, condition, 'idTracker_videos_table')
+    print("generating bad videos table")
+    condition = [bool(x) for x in tracked_videos_data_frame.bad_example]
+    write_latex_table_for_subset_dataframe(tracked_videos_folder, tracked_videos_data_frame, columns_to_include, condition, 'bad_videos_table')

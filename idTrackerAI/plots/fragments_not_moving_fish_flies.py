@@ -45,22 +45,13 @@ if __name__ == '__main__':
     for i, session_path in enumerate(session_paths):
         print("\nsession_path: ", session_path)
         species = tracked_videos_data_frame.loc[i].animal_type
-        bad_video = tracked_videos_data_frame.loc[i].bad_video_example
         group_size = tracked_videos_data_frame.loc[i].number_of_animals
-        if 'zebrafish' in species and not bad_video and 'nacre' not in species:
+        if 'zebrafish' in species and 'nacre' not in species:
             color = 'g'
             plot_flag = True
-        elif 'drosophila' in species and not bad_video:
+            legend = True
+        elif 'drosophila' in species:
             color = 'm'
-            plot_flag = True
-        # elif 'drosophila (2)' in species and bad_video and group_size == 100:
-        #     color = 'c'
-        #     plot_flag = True
-        # elif 'drosophila (3)' in species and bad_video and group_size == 100:
-        #     color = 'salmon'
-        #     plot_flag = True
-        elif ('drosophila (1)' in species or 'drosophila (2)' in species) and bad_video and group_size >= 60:
-            color = 'y'
             plot_flag = True
         else:
             plot_flag = False
@@ -117,5 +108,8 @@ if __name__ == '__main__':
             ax.set_ylim((0,1.6))
             sns.despine(ax = ax, right = True, top = True)
             del video
-            plt.show()
+    zebrafish_legend, = ax.plot([],[], linestyle = '-', color = 'g', linewidth = 3, label = 'Zebrafish videos')
+    drosophila_legend, = ax.plot([],[], linestyle = '-', color = 'm', linewidth = 3, label = 'Drosophila videos')
+    ax.legend(handles = [zebrafish_legend, drosophila_legend], loc = 2, fontsize = 20)
+    plt.show()
     fig.savefig(os.path.join(tracked_videos_folder,'velocities_distribution.pdf'), transparent = True)
