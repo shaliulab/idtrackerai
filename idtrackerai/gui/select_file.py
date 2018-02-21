@@ -41,15 +41,23 @@ class SelectFile(BoxLayout):
         self.main_layout.orientation = "vertical"
         self.logo = Image(source = os.path.join(os.path.dirname(__file__), 'logo.png'))
         self.main_layout.add_widget(self.logo)
-        self.welcome_label = CustomLabel(font_size = 20, text = "Welcome to idTrackerAI")
+        self.welcome_label = CustomLabel(font_size = 20, text = "Welcome to idtracker.ai")
         self.main_layout.add_widget(self.welcome_label)
+        self.general_info_label = CustomLabel(text = "Press on the help icon to get assistance" +
+                                            " at any point during the tracking process. " +
+                                            "\nFor the documentation visit our website at \nhttp://idtracker.ai " +
+                                            "\n Please, report any issues at \nhttps://gitlab.com/polavieja_lab/idtrackerai .")
+        self.main_layout.add_widget(self.general_info_label)
         self.add_widget(self.main_layout)
         self.video = None
         self.old_video = None
         self.help_button_welcome = HelpButton()
         self.main_layout.add_widget(self.help_button_welcome)
         self.help_button_welcome.create_help_popup("Getting started",\
-                                                "Use the menu on the right to browse and select a video file. The supported formats are avi, mp4 and mpg. Albeit compressed video formats are accepted, we suggest to use uncompressed ones for an optimal tracking. See the documentation for more details.\n\nClick on the main window to close the popup.")
+                                                "Use the menu on the right to browse and select a video file. "+
+                                                "\n\nTo go to the previous parent directory press the symbol '../' " +
+                                                ".\n\nClick on the main window to close the popup.")
+        self.help_button_welcome.size_hint = (1,.4)
         self.filechooser = FileChooserListView(path = os.getcwd(), size_hint = (1., 1.))
         self.filechooser.bind(selection = self.open)
         self.add_widget(self.filechooser)

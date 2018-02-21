@@ -76,7 +76,18 @@ class PreprocessingPreview(BoxLayout):
         self.help_button_preprocessing = HelpButton()
         self.help_button_preprocessing.size_hint = (1.,1.)
         self.help_button_preprocessing.create_help_popup("Preprocessing",\
-                                                "The aim of this part of the process is to separate the animals from the background, by setting the following parameters.\n1) Apply ROI: Allows to consider only a region of interest on the frame. Select it by using the table ROI selection.\n2) background subtraction: Perform background subtraction by computing a model of the background on the fly.\n3) Max\Min intensity: Set the maximum intensity used to separate the animals from the background.\n4) Max\Min area: Filter the blob by area.")
+                                                "The aim of this part of the process is to separate the animals from the background," +
+                                                " by setting the following parameters." +
+                                                "\n1) Apply ROI: Allows to consider only a region of interest on the frame. " +
+                                                "Select it by using the table ROI selection." +
+                                                "\n2) background subtraction: Perform background subtraction by computing " +
+                                                "a model of the background on the fly."+
+                                                "\n3) Check segmentation consiscenty: Raise a warning if there are more blobs than animals during the" +
+                                                "segmentation process and ask to readjust the preprocessing parameters for those frames" +
+                                                "\n4) Max\Min intensity: Set the maximum intensity used to separate "+
+                                                "the animals from the background."+
+                                                "\n5) Max\Min area: Filter the blob by area.")
+        self.help_button_preprocessing.help_popup.size_hint = (.5,.6)
 
     def init_preproc_parameters(self):
         if CHOSEN_VIDEO.old_video is not None and CHOSEN_VIDEO.old_video._has_been_preprocessed == True:
@@ -311,7 +322,11 @@ class PreprocessingPreview(BoxLayout):
 
     def plot_crossing_detection_statistics(self, *args):
         content = BoxLayout(orientation = "vertical")
-        self.crossing_label = CustomLabel(font_size = 14, text = "The deep crossing detector has been trained succesfully and used to discriminate crossing and individual images. In the figure the loss, accuracy and accuracy per class, respectively. The video is currenly being fragmented. The 'go_to_tracking' button will activate at the end of the process.", size_hint = (1., .2))
+        self.crossing_label = CustomLabel(font_size = 14, text = "The deep crossing detector has been trained succesfully "+
+                                        "and used to discriminate crossing and individual images. "+
+                                        "In the figure the loss, accuracy and accuracy per class, respectively. "+
+                                        "The video is currenly being fragmented. The 'Go to the tracking tab' button will"+
+                                        " activate at the end of the process.", size_hint = (1., .2))
         if not self.crossing_detector_trainer.model_diverged:
             matplotlib.rcParams.update({'font.size': 8,
                                         'axes.labelsize': 8,
@@ -320,7 +335,7 @@ class PreprocessingPreview(BoxLayout):
                                         'legend.fontsize': 8})
             fig, ax_arr = plt.subplots(3)
             fig.set_facecolor((.188, .188, .188))
-            fig.subplots_adjust(left=0.2, bottom=0.1, right=1, top=1, wspace=None, hspace=1)
+            fig.subplots_adjust(left=0.1, bottom=0.15, right=.9, top=.95, wspace=None, hspace=1)
             self.fig.set_facecolor((.188, .188, .188))
             [(ax.set_facecolor((.188, .188, .188)), ax.tick_params(color='white', labelcolor='white'), ax.xaxis.label.set_color('white'), ax.yaxis.label.set_color('white')) for ax in ax_arr]
             [spine.set_edgecolor('white') for ax in ax_arr for spine in ax.spines.values()]

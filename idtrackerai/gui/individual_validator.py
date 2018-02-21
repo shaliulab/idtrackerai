@@ -75,12 +75,45 @@ class IndividualValidator(BoxLayout):
         self.lob_label.text = "Loading..."
 
     def on_choose_list_of_blobs_btns_press(self, instance):
+        self.help_button_global_validation = HelpButton()
+        self.help_button_global_validation.size_hint = (1.,1.)
         if instance.text == 'With gaps':
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
+            self.help_button_global_validation.create_help_popup("INdividual validation with gaps",\
+                                                    "The validations is recomended to start at the 'first frame first global fragment' " +
+                                                    "as the identities in that frame are the identities given arbitrarely to the animals at the " +
+                                                    "begining of the tracking process. " +
+                                                    "\nClick on the 'Choose individual to follow' to select the identity that you want to validate. "
+                                                    "\nUse the left/right arrows or the trackbar to move along the video. " +
+                                                    "\nScroll up/down in the frame to zoom in/out. This will allow you to explore better some crossings. " +
+                                                    "\nPress the butonn 'Go to next crossing' (or up arrow) and 'Go to previous crossing' (or down arrow)" +
+                                                    " to move to the next frame where the animal with the given identity is crossing or non-identified. " +
+                                                    "\nRight click on an animal to inspect advance information about the blob. " +
+                                                    "\nClick on 'Save updated identities' to update the identities of the blobs modified. " +
+                                                    "\nClick on 'Compute accuracy' and introduce a range of frames in the popup to compute the accuracy. ")
+            self.help_button_global_validation.help_popup.size_hint = (.5, .7)
         else:
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
+            self.help_button_global_validation.create_help_popup("Individual validation without gaps",\
+                                                    "The porpose of this validation is to count the number of times that " +
+                                                    "animals are non-identified or mis-identified during crossings"
+                                                    "\nUse the left/right arrows or the trackbar to move along the video. " +
+                                                    "\nScroll up/down in the frame to zoom in/out. This will allow you to explore better some crossings. " +
+                                                    "\nPress the butonn 'Go to next crossing' (or up arrow) and 'Go to previous crossing' (or down arrow)" +
+                                                    " to move to the next frame the animal with the given identity is crossing or non-identified. " +
+                                                    "\nLeft click on an animal to modify its identity. Introduce the new identity in the popup and press return in your keyboard. " +
+                                                    "Click out of the popup if you do not want to modify the identity after selecting an animal. "
+                                                    "\nIn a crossing zoom in and check if the centroid corresponding to the identity of the animals " +
+                                                    "is placed inside of their bodies. "
+                                                    "\nIf the centroid is not correct press 'c' in your keyboard and introduce " +
+                                                    "in the popup the identity that is incorrect in that frame. " +
+                                                    "\nIf the animal is not identified during the crossing press 'u' " +
+                                                    "in your keyboard and introduce in the pop up the identity of the non-identified animals in that frame "
+                                                    "\nClick on 'Save updated identities' to update the identities of the blobs modified. " +
+                                                    "\nClick on 'Compute accuracy' and introduce a range of frames in the popup to compute the accuracy. ")
+            self.help_button_global_validation.help_popup.size_hint = (.7, .8)
         if not self.list_of_blobs.blobs_are_connected:
             self.list_of_blobs.reconnect()
         self.choose_list_of_blobs_popup.dismiss()
@@ -97,7 +130,7 @@ class IndividualValidator(BoxLayout):
         return CHOSEN_VIDEO.video.first_frame_first_global_fragment[CHOSEN_VIDEO.video.accumulation_trial]
 
     def do(self, *args):
-        if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['assignment']:
+        if CHOSEN_VIDEO.processes_to_restore is not None and CHOSEN_VIDEO.processes_to_restore['post_processing']:
             CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
         if  CHOSEN_VIDEO.video.has_been_assigned and CHOSEN_VIDEO.video.has_crossings_solved:
             self.create_choose_list_of_blobs_popup()
@@ -151,13 +184,13 @@ class IndividualValidator(BoxLayout):
         self.colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals)
         self.button_box = BoxLayout(orientation='vertical', size_hint=(.3,1.))
         self.add_widget(self.button_box)
-        self.choose_individual_btn = Button(text = "Choose individual to follow")
+        self.choose_individual_btn = Button(text = "Choose individual \nto follow")
         self.choose_individual_btn.bind(on_press=self.choose_individual)
         self.button_box.add_widget(self.choose_individual_btn)
-        self.next_cross_button = Button(text='Next crossing')
+        self.next_cross_button = Button(text='Go to next crossing')
         self.next_cross_button.bind(on_press=self.go_to_next_crossing)
         self.button_box.add_widget(self.next_cross_button)
-        self.previous_cross_button = Button(text='Previous crossing')
+        self.previous_cross_button = Button(text='Go to previous crossing')
         self.previous_cross_button.bind(on_press=self.go_to_previous_crossing)
         self.button_box.add_widget(self.previous_cross_button)
         self.go_to_first_global_fragment_button = Button(text='First global fragment')
@@ -172,6 +205,7 @@ class IndividualValidator(BoxLayout):
         self.compute_accuracy_button.disabled = False
         self.compute_accuracy_button.bind(on_press = self.compute_and_save_session_accuracy_wrt_groundtruth_APP)
         self.button_box.add_widget(self.compute_accuracy_button)
+        self.button_box.add_widget(self.help_button_global_validation)
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.writeIds, frame_index_to_start = self.get_first_frame())
 
     def go_to_crossing(self, direction = None, instance = None):
@@ -383,7 +417,7 @@ class IndividualValidator(BoxLayout):
 
             while len(current.next) == 1 and current.next[0].fragment_identifier == modified_blob.fragment_identifier:
                 print("in first while")
-                current.next[0]._user_generated_identity = current.user_generated_identity
+                current.next[0]._user_generated_identity = new_blob_identity
                 current = current.next[0]
                 count_future_corrections += 1
 
@@ -391,7 +425,7 @@ class IndividualValidator(BoxLayout):
 
             while len(current.previous) == 1 and current.previous[0].fragment_identifier == modified_blob.fragment_identifier:
                 print("in second while")
-                current.previous[0]._user_generated_identity = current.user_generated_identity
+                current.previous[0]._user_generated_identity = new_blob_identity
                 current = current.previous[0]
                 count_past_corrections += 1
 
@@ -455,7 +489,7 @@ class IndividualValidator(BoxLayout):
         self.container = BoxLayout()
         self.blob_to_explore = blob_to_explore
         self.show_attributes_box = BoxLayout(orientation="vertical")
-        self.id_label = CustomLabel(text='Assigned identity: ' + str(blob_to_explore.final_identity))
+        self.id_label = CustomLabel(text='Assigned identity: ' + str(blob_to_explore.assigned_identity))
         self.frag_id_label = CustomLabel(text='Fragment identifier: ' + str(blob_to_explore.fragment_identifier))
         self.accumulation_label = CustomLabel(text='Used for training: ' + str(blob_to_explore.used_for_training))
         self.in_a_fragment_label = CustomLabel(text='It is in an individual fragment: ' + str(blob_to_explore.is_in_a_fragment))

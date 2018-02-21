@@ -138,13 +138,50 @@ class Validator(BoxLayout):
         self.lob_label.text = "Loading..."
 
     def on_choose_list_of_blobs_btns_press(self, instance):
+        self.help_button_global_validation = HelpButton()
+        self.help_button_global_validation.size_hint = (1.,1.)
+
         if instance.text == 'With gaps':
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
+            self.help_button_global_validation.create_help_popup("Global validation with gaps",\
+                                                    "The validations is recomended to start at the 'first frame first global fragment' " +
+                                                    "as the identities in that frame are the identities given arbitrarely to the animals at the " +
+                                                    "begining of the tracking process. " +
+                                                    "\nUse the left/right arrows or the trackbar to move along the video. " +
+                                                    "\nScroll up/down in the frame to zoom in/out. This will allow you to explore better some crossings. " +
+                                                    "\nPress the butonn 'Go to next crossing' (or up arrow) and 'Go to previous crossing' (or down arrow)" +
+                                                    " to move to the next frame where some animals are crossing or an animal is unidentified. "
+
+                                                    "\nRight click on an animal to inspect advance information about the blob. " +
+                                                    "\nClick on 'Save updated identities' to update the identities of the blobs modified. " +
+                                                    "\nClick on 'Compute accuracy' and introduce a range of frames in the popup to compute the accuracy. ")
+            self.help_button_global_validation.help_popup.size_hint = (.5, .7)
         else:
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
             self.with_gaps = False
+            self.help_button_global_validation.create_help_popup("Global validation without gaps",\
+                                                    "The validations is recomended to start at the 'first frame first global fragment' " +
+                                                    "as the identities in that frame are the identities given arbitrarely to the animals at the " +
+                                                    "begining of the tracking process. " +
+                                                    "\nThe porpose of this validation is to count the number of times that " +
+                                                    "animals are non-identified or mis-identified during crossings."
+                                                    "\nUse the left/right arrows or the trackbar to move along the video. " +
+                                                    "\nScroll up/down in the frame to zoom in/out. This will allow you to explore better some crossings. " +
+                                                    "\nPress the butonn 'Go to next crossing' (or up arrow) and 'Go to previous crossing' (or down arrow)" +
+                                                    " to move to the next frame where some animals are crossing or an animal is unidentified. " +
+                                                    "\nLeft click on an animal to modify its identity. Introduce the new identity in the popup and press return in your keyboard. " +
+                                                    "Click out of the popup if you do not want to modify the identity after selecting an animal. "
+                                                    "\nIn a crossing zoom in and check if the centroid corresponding to the identity of the animals " +
+                                                    "is placed inside of their bodies. "
+                                                    "\nIf the centroid is not correct press 'c' in your keyboard and introduce " +
+                                                    "in the popup the identity that is incorrect in that frame. " +
+                                                    "\nIf the animal is not identified during the crossing press 'u' " +
+                                                    "in your keyboard and introduce in the pop up the identity of the non-identified animals in that frame "
+                                                    "\nClick on 'Save updated identities' to update the identities of the blobs modified. " +
+                                                    "\nClick on 'Compute accuracy' and introduce a range of frames in the popup to compute the accuracy. ")
+            self.help_button_global_validation.help_popup.size_hint = (.7, .8)
         if not self.list_of_blobs.blobs_are_connected:
             self.list_of_blobs.reconnect()
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
@@ -170,7 +207,7 @@ class Validator(BoxLayout):
         return CHOSEN_VIDEO.video.first_frame_first_global_fragment[CHOSEN_VIDEO.video.accumulation_trial]
 
     def do(self, *args):
-        if "assignment" in CHOSEN_VIDEO.processes_to_restore.keys() and CHOSEN_VIDEO.processes_to_restore['assignment']:
+        if "post_processing" in CHOSEN_VIDEO.processes_to_restore.keys() and CHOSEN_VIDEO.processes_to_restore['post_processing']:
             CHOSEN_VIDEO.video.__dict__.update(CHOSEN_VIDEO.old_video.__dict__)
         if  CHOSEN_VIDEO.video.has_been_assigned and CHOSEN_VIDEO.video.has_crossings_solved:
             self.create_choose_list_of_blobs_popup()
@@ -215,6 +252,7 @@ class Validator(BoxLayout):
         self.compute_accuracy_button.disabled = False
         self.compute_accuracy_button.bind(on_press = self.compute_and_save_session_accuracy_wrt_groundtruth_APP)
         self.button_box.add_widget(self.compute_accuracy_button)
+        self.button_box.add_widget(self.help_button_global_validation)
         self.visualiser.visualise_video(CHOSEN_VIDEO.video, func = self.writeIds, frame_index_to_start = self.get_first_frame())
 
     def go_to_crossing(self, direction = None, instance = None):

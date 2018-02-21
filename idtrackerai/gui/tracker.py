@@ -67,7 +67,14 @@ class Tracker(BoxLayout):
         self.help_button_tracker = HelpButton()
         self.help_button_tracker.size_hint = (1.,.4)
         self.help_button_tracker.create_help_popup("Tracking",\
-                                                "A message to the user.")
+                                                "Press the button 'Start protocol cascade' to start tracking the video. " +
+                                                "In the 'Advanced idCNN controls' you will be able to change the identification model " +
+                                                "hyperparameters. " +
+                                                "Activate the 'Save tensorboard summaries' switch to save the training and validation " +
+                                                "losses as well as a subset of the images at the output of every layer of the model. " +
+                                                "The files with the summaries will be saved in your session folder in the corresponding 'accumulation' folder. " +
+                                                "If you are restoring the session from a different point of the tracking " +
+                                                "press the upper botton which will indicate the process that will be computed.")
 
     def do(self):
         CHOSEN_VIDEO.video.accumulation_trial = 0
@@ -632,7 +639,8 @@ class Tracker(BoxLayout):
         self.container = BoxLayout(orientation = "vertical")
         self.parameters_grid = GridLayout(cols = 2)
         self.disclaimer_box = BoxLayout(size_hint = (1.,.2))
-        self.disclaimer = CustomLabel(font_size = 14, text = "Modify the idCNN parameters only if you fully understand the feature that you are changing. After modifying each parameter press return.")
+        self.disclaimer = CustomLabel(font_size = 14, text = "Modify the idCNN parameters only if you fully understand the feature that you are changing. "+
+                                                    "After modifying each parameter press return. Click outside of the popup to go back to the main window")
         self.disclaimer_box.add_widget(self.disclaimer)
         self.container.add_widget(self.disclaimer_box)
         self.container.add_widget(self.parameters_grid)
@@ -869,6 +877,9 @@ class Tracker(BoxLayout):
     def create_happy_ending_popup(self, overall_P2 = None):
         self.this_is_the_end_grid = GridLayout(cols = 2)
         self.this_is_the_end_label = CustomLabel(text = "The video has been tracked with estimated accuracy:")
+        self.output_information = CustomLabel(text = "The output files of the tracking including the trajectories" +
+                                            " can be found in the folder: ")
+        self.session_folder_info = CustomLabel(text = CHOSEN_VIDEO.video.session_folder)
         if isinstance(overall_P2, float):
             overall_P2 = round(overall_P2 * 100, 2)
             if overall_P2 > 98:
@@ -881,6 +892,7 @@ class Tracker(BoxLayout):
         go_to_validation_button_text = "Validate the tracking" if self.safe else "Validate the tracking\n(recommended)"
         self.go_to_validation_button = Button(text = go_to_validation_button_text)
         end_widgets = [self.this_is_the_end_label, self.this_is_the_end_value,
+                        self.output_information ,self.session_folder_info,
                         self.quit_button, self.go_to_validation_button]
         [self.this_is_the_end_grid.add_widget(w) for w in end_widgets]
         self.this_is_the_end_popup = Popup(title = "Process finished",

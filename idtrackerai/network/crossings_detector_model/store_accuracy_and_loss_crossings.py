@@ -42,14 +42,14 @@ class Store_Accuracy_and_Loss(object):
                 ind = np.arange(numAnimals) + 1
 
             ax2.bar(ind, self.individual_accuracy[-1], width, color=color, alpha=0.4,label=self.name)
-            ax2.set_xlabel('individual')
-            ax2.set_ylabel('Individual accuracy')
+            ax2.set_xlabel('image type (individual or crossings)')
+            ax2.set_ylabel('Per class \naccuracy')
             if index == 0:
                 legend = ax1.legend()
                 if legend_font_color is not None:
                     for text in legend.get_texts():
                         text.set_color(legend_font_color)
-                ax1.set_ylabel('accuracy')
+                ax1.set_ylabel('Accuracy')
         else:
             ax1 = axes_handles[0]
             ax2 = axes_handles[1]
@@ -64,16 +64,16 @@ class Store_Accuracy_and_Loss(object):
                 ind = np.arange(numAnimals) + 1
 
             ax3.bar(ind, self.individual_accuracy[-1], width, color=color, alpha=0.4,label=self.name)
-            ax3.set_xlabel('individual')
-            ax3.set_ylabel('Individual accuracy')
+            ax3.set_xlabel('image type (individual or crossings)')
+            ax3.set_ylabel('Per class \naccuracy')
             if index == 0:
                 legend = ax1.legend()
                 if legend_font_color is not None:
                     for text in legend.get_texts():
                         text.set_color(legend_font_color)
-                ax1.set_ylabel('loss')
-                ax2.set_ylabel('accuracy')
-                ax2.set_xlabel('epochs')
+                ax1.set_ylabel('Loss')
+                ax2.set_ylabel('Accuracy')
+                ax2.set_xlabel('Epochs')
             if plot_now:
                 plt.draw()
                 plt.pause(1e-8)

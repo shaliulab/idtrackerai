@@ -44,8 +44,8 @@ class ROISelector(BoxLayout):
         self.help_button_ROI = HelpButton()
         self.help_button_ROI.size_hint = (1.,1.)
         self.help_button_ROI.create_help_popup("ROI selector",\
-                                                "ROI are useful to limit the tracking to specific parts of the frame. Select the ROI shape you want to draw in the bottom of the right pannel." +
-                                                "\nTo draw a rectangular ROI click on a corner of the rectangular you want to select and then click again in the oposite corner." +
+                                                "ROIs are useful to limit the tracking to specific parts of the frame. Select the ROI shape you want to draw in the bottom of the right pannel." +
+                                                "\nTo draw a rectangular ROI click on a corner of the rectangule you want to draw and then click again in the oposite corner." +
                                                 "\nTo draw an elliptical ROI click on 5 points in the contour of the ellipse you want to draw." +
                                                 "\nYou can select as many ROIs as you want. If you make a mistake, you can clear the last ROI by pressing 'clear last ROI'." +
                                                 "\nTo apply the ROIs on the frame click 'save ROIs' and move to the preprocessing tab.")
