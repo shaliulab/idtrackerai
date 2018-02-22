@@ -29,7 +29,6 @@
     <link rel="search" title="Search" href="search.html" >
     <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
     <link rel="up" title="Modules" href="modules.html" >
-    <link rel="next" title="Video information manager" href="video_information_manager.html" >
     <link rel="prev" title="Post-processing" href="postprocessing.html" > 
   </head>
   <body>
@@ -65,10 +64,6 @@
            accesskey="I">index</a>
       </li>
       <li class="active">
-        <a href="video_information_manager.html" title="Video information manager"
-           accesskey="N">next</a>
-      </li>
-      <li class="active">
         <a href="postprocessing.html" title="Post-processing"
            accesskey="P">previous</a>
       </li>
@@ -85,8 +80,8 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Human validation</a><ul>
-<li><a class="reference internal" href="#generate-groundtruth">Generate groundtruth</a></li>
-<li><a class="reference internal" href="#generate-individual-ground-truth">Generate individual ground truth</a></li>
+<li><a class="reference internal" href="#module-generate_groundtruth">Generate groundtruth</a></li>
+<li><a class="reference internal" href="#module-generate_individual_groundtruth">Generate individual ground truth</a></li>
 </ul>
 </li>
 </ul>
@@ -106,12 +101,79 @@ in a frame are validated. This kind of validation is extremely hard when
 dealing with large groups. To verify the goodness of the tracking the
 individual validation allows to follow a single selected animals throughout
 the video.</p>
-<div class="section" id="generate-groundtruth">
-<h2>Generate groundtruth<a class="headerlink" href="#generate-groundtruth" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-generate_groundtruth">
+<span id="generate-groundtruth"></span><h2>Generate groundtruth<a class="headerlink" href="#module-generate_groundtruth" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="generate_groundtruth.GroundTruthBlob">
+<em class="property">class </em><code class="descclassname">generate_groundtruth.</code><code class="descname">GroundTruthBlob</code><span class="sig-paren">(</span><em>attributes_to_get=['identity', 'assigned_identity', 'used_for_training', 'accumulation_step', 'centroid', 'pixels', 'frame_number', 'is_an_individual', 'is_a_crossing', 'was_a_crossing', 'blob_index', 'fragment_identifier']</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generate_groundtruth.html#GroundTruthBlob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generate_groundtruth.GroundTruthBlob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lighter blob objects.
+Attributes:</p>
+<blockquote>
+<div>identity (preferring the one assigned by the user, if it is not None)
+centroid
+pixels (pixels is stored to check the groundtruth in crossings)</div></blockquote>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_attribute</span></code>(blob)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="generate_groundtruth.generate_groundtruth">
+<code class="descclassname">generate_groundtruth.</code><code class="descname">generate_groundtruth</code><span class="sig-paren">(</span><em>video</em>, <em>blobs_in_video=None</em>, <em>start=None</em>, <em>end=None</em>, <em>wrong_crossing_counter=None</em>, <em>unidentified_individuals_counter=None</em>, <em>save_gt=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generate_groundtruth.html#generate_groundtruth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generate_groundtruth.generate_groundtruth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a list of light blobs_in_video, given a video object corresponding to a
+tracked video</p>
+</dd></dl>
+
+<span class="target" id="module-compute_groundtruth_statistics"></span><dl class="function">
+<dt id="compute_groundtruth_statistics.compare_tracking_against_groundtruth_no_gaps">
+<code class="descclassname">compute_groundtruth_statistics.</code><code class="descname">compare_tracking_against_groundtruth_no_gaps</code><span class="sig-paren">(</span><em>number_of_animals</em>, <em>groundtruth</em>, <em>blobs_in_video_groundtruth</em>, <em>blobs_in_video</em>, <em>identities_dictionary_permutation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/compute_groundtruth_statistics.html#compare_tracking_against_groundtruth_no_gaps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#compute_groundtruth_statistics.compare_tracking_against_groundtruth_no_gaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>blobs_in_video_groundtruth: cut groundtruth.blobs_in_video using start and end of the groundtruth object
+blobs_in_video: cut list_of_blobs.blobs_in_video using start and end of the groundtruth object</p>
+</dd></dl>
+
 </div>
-<div class="section" id="generate-individual-ground-truth">
-<h2>Generate individual ground truth<a class="headerlink" href="#generate-individual-ground-truth" title="Permalink to this headline">¶</a></h2>
-</div>
+<div class="section" id="module-generate_individual_groundtruth">
+<span id="generate-individual-ground-truth"></span><h2>Generate individual ground truth<a class="headerlink" href="#module-generate_individual_groundtruth" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="generate_individual_groundtruth.GroundTruthBlob">
+<em class="property">class </em><code class="descclassname">generate_individual_groundtruth.</code><code class="descname">GroundTruthBlob</code><span class="sig-paren">(</span><em>attributes_to_get=['identity', 'assigned_identity', 'used_for_training', 'accumulation_step', 'centroid', 'pixels', 'frame_number', 'is_an_individual', 'is_a_crossing', 'blob_index', 'fragment_identifier']</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generate_individual_groundtruth.html#GroundTruthBlob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generate_individual_groundtruth.GroundTruthBlob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lighter blob objects.
+Attributes:</p>
+<blockquote>
+<div>identity (preferring the one assigned by the user, if it is not None)
+centroid
+pixels (pixels is stored to check the groundtruth in crossings)</div></blockquote>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_attribute</span></code>(blob)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="generate_individual_groundtruth.generate_individual_groundtruth">
+<code class="descclassname">generate_individual_groundtruth.</code><code class="descname">generate_individual_groundtruth</code><span class="sig-paren">(</span><em>video</em>, <em>blobs_in_video=None</em>, <em>start=None</em>, <em>end=None</em>, <em>validated_identity=None</em>, <em>save_gt=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generate_individual_groundtruth.html#generate_individual_groundtruth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generate_individual_groundtruth.generate_individual_groundtruth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a list of light blobs_in_video, given a video object corresponding to a
+tracked video</p>
+</dd></dl>
+
+<span class="target" id="module-compute_individual_groundtruth_statistics"></span></div>
 </div>
 
 

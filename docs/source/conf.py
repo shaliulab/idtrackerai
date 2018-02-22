@@ -5,17 +5,17 @@ import matplotlib
 if os.name == 'posix':
     matplotlib.use('TkAgg')
 sys.path.insert(0, os.path.abspath('..'))
-sys.path.insert(0, os.path.abspath('../..'))
-sys.path.insert(0, os.path.abspath('../../utils'))
-sys.path.insert(0, os.path.abspath('../../preprocessing'))
-sys.path.insert(0, os.path.abspath('../../network'))
-sys.path.insert(0, os.path.abspath('../../network/crossings_detector_model'))
-sys.path.insert(0, os.path.abspath('../../network/identification_model'))
-sys.path.insert(0, os.path.abspath('../../plots'))
-sys.path.insert(0, os.path.abspath('../../plots/old_plots'))
-sys.path.insert(0, os.path.abspath('../../postprocessing'))
-sys.path.insert(0, os.path.abspath('../../groundtruth_utils'))
-sys.path.insert(0, os.path.abspath('../../tf_cnnvisualisation'))
+sys.path.insert(0, os.path.abspath('../../idtrackerai'))
+sys.path.insert(0, os.path.abspath('../../idtrackerai/utils'))
+sys.path.insert(0, os.path.abspath('../../idtrackerai/preprocessing'))
+sys.path.insert(0, os.path.abspath('../../idtrackerai/network'))
+sys.path.insert(0, os.path.abspath('../../idtrackerai/network/crossings_detector_model'))
+sys.path.insert(0, os.path.abspath('../../idtrackerai/network/identification_model'))
+sys.path.insert(0, os.path.abspath('../../idtrackerai/plots'))
+sys.path.insert(0, os.path.abspath('../../idtrackerai/plots/old_plots'))
+sys.path.insert(0, os.path.abspath('../../idtrackerai/postprocessing'))
+sys.path.insert(0, os.path.abspath('../../idtrackerai/groundtruth_utils'))
+sys.path.insert(0, os.path.abspath('../../idtrackerai/tf_cnnvisualisation'))
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',

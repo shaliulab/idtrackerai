@@ -83,16 +83,12 @@
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../&#39;</span><span class="p">)</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../preprocessing&#39;</span><span class="p">)</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../utils&#39;</span><span class="p">)</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">list_of_blobs</span> <span class="k">import</span> <span class="n">ListOfBlobs</span>
-<span class="kn">from</span> <span class="nn">list_of_fragments</span> <span class="k">import</span> <span class="n">ListOfFragments</span>
-<span class="kn">from</span> <span class="nn">blob</span> <span class="k">import</span> <span class="n">Blob</span>
-<span class="kn">from</span> <span class="nn">GUI_utils</span> <span class="k">import</span> <span class="n">selectDir</span><span class="p">,</span> <span class="n">getInput</span>
-
-<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.list_of_blobs</span> <span class="k">import</span> <span class="n">ListOfBlobs</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.list_of_fragments</span> <span class="k">import</span> <span class="n">ListOfFragments</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.blob</span> <span class="k">import</span> <span class="n">Blob</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.utils.GUI_utils</span> <span class="k">import</span> <span class="n">selectDir</span><span class="p">,</span> <span class="n">getInput</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
 <span class="k">else</span><span class="p">:</span>
@@ -119,8 +115,8 @@
         <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">attribute</span> <span class="o">==</span> <span class="s1">&#39;identity&#39;</span><span class="p">:</span>
                 <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;final_identity&#39;</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span></div>
+            <span class="k">else</span><span class="p">:</span></div>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
 
 <span class="k">class</span> <span class="nc">GroundTruth</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">blobs_in_video</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">start</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -165,10 +161,10 @@
     <span class="n">groundtruth</span><span class="o">.</span><span class="n">wrong_crossing_counter</span> <span class="o">=</span> <span class="n">wrong_crossing_counter</span>
     <span class="n">groundtruth</span><span class="o">.</span><span class="n">unidentified_individuals_counter</span> <span class="o">=</span> <span class="n">unidentified_individuals_counter</span>
     <span class="k">if</span> <span class="n">save_gt</span><span class="p">:</span>
-        <span class="n">groundtruth</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">groundtruth</span></div>
+        <span class="n">groundtruth</span><span class="o">.</span><span class="n">save</span><span class="p">()</span></div>
+    <span class="k">return</span> <span class="n">groundtruth</span>
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
 
     <span class="n">session_path</span> <span class="o">=</span> <span class="n">selectDir</span><span class="p">(</span><span class="s1">&#39;./&#39;</span><span class="p">)</span> <span class="c1">#select path to video</span>
     <span class="n">video_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">session_path</span><span class="p">,</span><span class="s1">&#39;video_object.npy&#39;</span><span class="p">)</span>
@@ -204,10 +200,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 12, 2018.
+      Last updated on Feb 22, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>

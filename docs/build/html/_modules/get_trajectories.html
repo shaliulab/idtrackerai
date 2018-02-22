@@ -83,13 +83,9 @@
 <span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;IdTrackerDeep/restructure&#39;</span><span class="p">)</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;IdTrackerDeep/tracker&#39;</span><span class="p">)</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;IdTrackerDeep/utils&#39;</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
-<span class="kn">from</span> <span class="nn">list_of_blobs</span> <span class="k">import</span> <span class="n">ListOfBlobs</span>
-<span class="kn">from</span> <span class="nn">GUI_utils</span> <span class="k">import</span> <span class="n">selectDir</span>
-<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.list_of_blobs</span> <span class="k">import</span> <span class="n">ListOfBlobs</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
 <span class="k">else</span><span class="p">:</span>
@@ -130,8 +126,8 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">centroid_trajectories</span><span class="p">[</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">identity</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">centroid</span>
-    <span class="k">return</span> <span class="n">centroid_trajectories</span></div>
+        <span class="n">centroid_trajectories</span><span class="p">[</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">identity</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">centroid</span></div>
+    <span class="k">return</span> <span class="n">centroid_trajectories</span>
 
 <div class="viewcode-block" id="produce_trajectories"><a class="viewcode-back" href="../postprocessing.html#get_trajectories.produce_trajectories">[docs]</a><span class="k">def</span> <span class="nf">produce_trajectories</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">number_of_frames</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Produce trajectories array from ListOfBlobs</span>
@@ -168,8 +164,8 @@
                                                                     <span class="n">identity</span><span class="p">,</span>
                                                                     <span class="n">blob</span><span class="o">.</span><span class="n">frame_number</span><span class="p">,</span>
                                                                     <span class="n">centroid_trajectories</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">centroid_trajectories</span></div>
+</div>
+    <span class="k">return</span> <span class="n">centroid_trajectories</span>
 
 <div class="viewcode-block" id="produce_output_dict"><a class="viewcode-back" href="../postprocessing.html#get_trajectories.produce_output_dict">[docs]</a><span class="k">def</span> <span class="nf">produce_output_dict</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Outputs the dictionary with keys: trajectories, git_commit, video_path,</span>
@@ -192,10 +188,11 @@
     <span class="n">output_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;trajectories&#39;</span><span class="p">:</span> <span class="n">produce_trajectories</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">),</span>
                     <span class="s1">&#39;git_commit&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">git_commit</span><span class="p">,</span>
                     <span class="s1">&#39;video_path&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">video_path</span><span class="p">,</span>
-                    <span class="s1">&#39;frames_per_second&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">frames_per_second</span><span class="p">}</span>
-    <span class="k">return</span> <span class="n">output_dict</span></div>
+                    <span class="s1">&#39;frames_per_second&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">frames_per_second</span><span class="p">}</span></div>
+    <span class="k">return</span> <span class="n">output_dict</span>
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">idtrackerai.utils.GUI_utils</span> <span class="k">import</span> <span class="n">selectDir</span>
     <span class="c1"># #SIMPLE USAGE EXAMPLE</span>
     <span class="c1"># BLOB_FILE_NAME = &quot;blobs_collection.npy&quot;</span>
     <span class="n">session_path</span> <span class="o">=</span> <span class="n">selectDir</span><span class="p">(</span><span class="s1">&#39;./&#39;</span><span class="p">)</span> <span class="c1">#select path to video</span>
@@ -237,10 +234,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 12, 2018.
+      Last updated on Feb 22, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>
