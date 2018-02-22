@@ -82,22 +82,17 @@
   <h1>Source code for correct_impossible_velocity_jumps</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;./&#39;</span><span class="p">)</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;./preprocessing&#39;</span><span class="p">)</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">)</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;./network&#39;</span><span class="p">)</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;./plots&#39;</span><span class="p">)</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span> <span class="nn">collections</span>
-<span class="kn">from</span> <span class="nn">list_of_blobs</span> <span class="k">import</span> <span class="n">ListOfBlobs</span>
-<span class="kn">from</span> <span class="nn">assigner</span> <span class="k">import</span> <span class="n">assign</span>
-<span class="kn">from</span> <span class="nn">id_CNN</span> <span class="k">import</span> <span class="n">ConvNetwork</span>
-<span class="kn">from</span> <span class="nn">network_params</span> <span class="k">import</span> <span class="n">NetworkParams</span>
-<span class="kn">from</span> <span class="nn">blob</span> <span class="k">import</span> <span class="n">Blob</span>
-<span class="kn">from</span> <span class="nn">compute_velocity_model</span> <span class="k">import</span> <span class="n">compute_velocity_from_list_of_fragments</span><span class="p">,</span> <span class="n">compute_model_velocity</span>
-<span class="kn">from</span> <span class="nn">get_trajectories</span> <span class="k">import</span> <span class="n">produce_trajectories</span>
-<span class="kn">from</span> <span class="nn">constants</span> <span class="k">import</span> <span class="n">VEL_PERCENTILE</span> <span class="c1">#percentile used to model velocity jumps</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.list_of_blobs</span> <span class="k">import</span> <span class="n">ListOfBlobs</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.assigner</span> <span class="k">import</span> <span class="n">assign</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.id_CNN</span> <span class="k">import</span> <span class="n">ConvNetwork</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.network_params</span> <span class="k">import</span> <span class="n">NetworkParams</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.blob</span> <span class="k">import</span> <span class="n">Blob</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.postprocessing.compute_velocity_model</span> <span class="k">import</span> <span class="n">compute_velocity_from_list_of_fragments</span><span class="p">,</span> <span class="n">compute_model_velocity</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.postprocessing.get_trajectories</span> <span class="k">import</span> <span class="n">produce_trajectories</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span> <span class="n">VEL_PERCENTILE</span> <span class="c1">#percentile used to model velocity jumps</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">The correct_impossible_velocity_jumps module</span>
 <span class="sd">&quot;&quot;&quot;</span>
@@ -311,8 +306,8 @@
 
     <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">fragment</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="n">candidate_id</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">fragment</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="n">candidate_id</span></div>
+    <span class="k">else</span><span class="p">:</span></div>
+        <span class="n">fragment</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="n">candidate_id</span>
 
 <div class="viewcode-block" id="compute_velocities_consecutive_fragments"><a class="viewcode-back" href="../postprocessing.html#correct_impossible_velocity_jumps.compute_velocities_consecutive_fragments">[docs]</a><span class="k">def</span> <span class="nf">compute_velocities_consecutive_fragments</span><span class="p">(</span><span class="n">neighbour_fragment_past</span><span class="p">,</span>
                                                 <span class="n">fragment</span><span class="p">,</span>
@@ -347,8 +342,8 @@
     <span class="k">if</span> <span class="n">neighbour_fragment_past</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">velocities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">compute_border_velocity</span><span class="p">(</span><span class="n">neighbour_fragment_past</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">neighbour_fragment_future</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">velocities</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">neighbour_fragment_future</span><span class="o">.</span><span class="n">compute_border_velocity</span><span class="p">(</span><span class="n">fragment</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">velocities</span></div>
+        <span class="n">velocities</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">neighbour_fragment_future</span><span class="o">.</span><span class="n">compute_border_velocity</span><span class="p">(</span><span class="n">fragment</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">velocities</span>
 
 <div class="viewcode-block" id="get_fragment_with_same_identity"><a class="viewcode-back" href="../postprocessing.html#correct_impossible_velocity_jumps.get_fragment_with_same_identity">[docs]</a><span class="k">def</span> <span class="nf">get_fragment_with_same_identity</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">fragment</span><span class="p">,</span> <span class="n">direction</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get the `neighbour_fragment` with the same identity in a given `direction`</span>
@@ -391,8 +386,8 @@
                                         <span class="n">number_of_frames_in_direction</span> <span class="o">=</span> <span class="n">number_of_frames_in_direction</span><span class="p">)</span>
         <span class="n">number_of_frames_in_direction</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">frame_number</span> <span class="o">+=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;to_the_past&#39;</span> <span class="k">else</span> <span class="mi">1</span>
-
-    <span class="k">return</span> <span class="n">neighbour_fragment</span><span class="p">,</span> <span class="n">number_of_frames_in_direction</span></div>
+</div>
+    <span class="k">return</span> <span class="n">neighbour_fragment</span><span class="p">,</span> <span class="n">number_of_frames_in_direction</span>
 
 <div class="viewcode-block" id="compute_neighbour_fragments_and_velocities"><a class="viewcode-back" href="../postprocessing.html#correct_impossible_velocity_jumps.compute_neighbour_fragments_and_velocities">[docs]</a><span class="k">def</span> <span class="nf">compute_neighbour_fragments_and_velocities</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">fragment</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Computes the fragments with the same identities to the past and to the</span>
@@ -442,8 +437,8 @@
                                                             <span class="n">fragment</span><span class="p">,</span>
                                                             <span class="n">neighbour_fragment_future</span><span class="p">)</span>
     <span class="n">velocities_between_fragments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">velocities</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">number_of_frames_in_past</span><span class="p">,</span> <span class="n">number_of_frames_in_future</span><span class="p">])</span>
-
-    <span class="k">return</span> <span class="n">neighbour_fragment_past</span><span class="p">,</span> <span class="n">neighbour_fragment_future</span><span class="p">,</span> <span class="n">velocities_between_fragments</span></div>
+</div>
+    <span class="k">return</span> <span class="n">neighbour_fragment_past</span><span class="p">,</span> <span class="n">neighbour_fragment_future</span><span class="p">,</span> <span class="n">velocities_between_fragments</span>
 
 <div class="viewcode-block" id="correct_impossible_velocity_jumps_loop"><a class="viewcode-back" href="../postprocessing.html#correct_impossible_velocity_jumps.correct_impossible_velocity_jumps_loop">[docs]</a><span class="k">def</span> <span class="nf">correct_impossible_velocity_jumps_loop</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Checks whether the velocity needed to join two consecutive fragments with</span>
@@ -472,7 +467,7 @@
 <span class="sd">    reassign</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">fragments_in_direction</span> <span class="o">=</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">get_ordered_list_of_fragments</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">first_frame_first_global_fragment</span><span class="p">)</span>
+    <span class="n">fragments_in_direction</span> <span class="o">=</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">get_ordered_list_of_fragments</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">first_frame_first_global_fragment</span><span class="p">[</span><span class="n">video</span><span class="o">.</span><span class="n">accumulation_trial</span><span class="p">])</span>
     <span class="n">impossible_velocity_threshold</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">velocity_threshold</span>
 
     <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">fragments_in_direction</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;Correcting impossible velocity jumps &#39;</span> <span class="o">+</span> <span class="n">scope</span><span class="p">):</span>
@@ -499,8 +494,8 @@
             <span class="k">elif</span> <span class="n">velocities_between_fragments</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">impossible_velocity_threshold</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">neighbour_fragment_future</span><span class="o">.</span><span class="n">identity_is_fixed</span><span class="p">:</span>
                     <span class="n">reassign</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span><span class="p">,</span> <span class="n">impossible_velocity_threshold</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">reassign</span><span class="p">(</span><span class="n">neighbour_fragment_future</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span><span class="p">,</span> <span class="n">impossible_velocity_threshold</span><span class="p">)</span></div>
+                <span class="k">else</span><span class="p">:</span></div>
+                    <span class="n">reassign</span><span class="p">(</span><span class="n">neighbour_fragment_future</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span><span class="p">,</span> <span class="n">impossible_velocity_threshold</span><span class="p">)</span>
 
 <div class="viewcode-block" id="correct_impossible_velocity_jumps"><a class="viewcode-back" href="../postprocessing.html#correct_impossible_velocity_jumps.correct_impossible_velocity_jumps">[docs]</a><span class="k">def</span> <span class="nf">correct_impossible_velocity_jumps</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Corrects the parts of the video where the velocity of any individual is</span>
@@ -521,8 +516,8 @@
 <span class="sd">    correct_impossible_velocity_jumps_loop</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">correct_impossible_velocity_jumps_loop</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="s1">&#39;to_the_past&#39;</span><span class="p">)</span>
-    <span class="n">correct_impossible_velocity_jumps_loop</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="s1">&#39;to_the_future&#39;</span><span class="p">)</span></div>
+    <span class="n">correct_impossible_velocity_jumps_loop</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="s1">&#39;to_the_past&#39;</span><span class="p">)</span></div>
+    <span class="n">correct_impossible_velocity_jumps_loop</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="s1">&#39;to_the_future&#39;</span><span class="p">)</span>
 </pre></div>
 
           </div>
@@ -545,10 +540,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 12, 2018.
+      Last updated on Feb 22, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>

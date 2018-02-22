@@ -83,19 +83,17 @@
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;./network&#39;</span><span class="p">)</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;./network/identification_model&#39;</span><span class="p">)</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">network_params</span> <span class="k">import</span> <span class="n">NetworkParams</span>
-<span class="kn">from</span> <span class="nn">get_data</span> <span class="k">import</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">split_data_train_and_validation</span>
-<span class="kn">from</span> <span class="nn">id_CNN</span> <span class="k">import</span> <span class="n">ConvNetwork</span>
-<span class="kn">from</span> <span class="nn">epoch_runner</span> <span class="k">import</span> <span class="n">EpochRunner</span>
-<span class="kn">from</span> <span class="nn">stop_training_criteria</span> <span class="k">import</span> <span class="n">Stop_Training</span>
-<span class="kn">from</span> <span class="nn">store_accuracy_and_loss</span> <span class="k">import</span> <span class="n">Store_Accuracy_and_Loss</span>
-<span class="kn">from</span> <span class="nn">constants</span> <span class="k">import</span> <span class="n">BATCH_SIZE_IDCNN</span>
-<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.network_params</span> <span class="k">import</span> <span class="n">NetworkParams</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.get_data</span> <span class="k">import</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">split_data_train_and_validation</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.id_CNN</span> <span class="k">import</span> <span class="n">ConvNetwork</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.epoch_runner</span> <span class="k">import</span> <span class="n">EpochRunner</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.stop_training_criteria</span> <span class="k">import</span> <span class="n">Stop_Training</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.identification_model.store_accuracy_and_loss</span> <span class="k">import</span> <span class="n">Store_Accuracy_and_Loss</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span>  <span class="n">BATCH_SIZE_IDCNN</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
 <span class="k">else</span><span class="p">:</span>
@@ -240,8 +238,8 @@
             <span class="n">store_validation_accuracy_and_loss_data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">_epochs_completed</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">plot_flag</span><span class="p">:</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">save_folder</span><span class="p">,</span><span class="s1">&#39;Accumulation-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">accumulation_trial</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">accumulation_step</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.pdf&#39;</span><span class="p">))</span>
-        <span class="n">net</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">global_step</span><span class="p">,</span> <span class="n">net</span><span class="p">,</span> <span class="n">store_validation_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">store_training_accuracy_and_loss_data</span></div>
+        <span class="n">net</span><span class="o">.</span><span class="n">save</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">global_step</span><span class="p">,</span> <span class="n">net</span><span class="p">,</span> <span class="n">store_validation_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">store_training_accuracy_and_loss_data</span>
 </pre></div>
 
           </div>
@@ -264,10 +262,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 12, 2018.
+      Last updated on Feb 22, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>
