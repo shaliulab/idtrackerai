@@ -84,12 +84,12 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">psutil</span>
-<span class="kn">from</span> <span class="nn">assigner</span> <span class="k">import</span> <span class="n">assign</span>
-<span class="kn">from</span> <span class="nn">trainer</span> <span class="k">import</span> <span class="n">train</span>
-<span class="kn">from</span> <span class="nn">accumulation_manager</span> <span class="k">import</span> <span class="n">AccumulationManager</span><span class="p">,</span> <span class="n">get_predictions_of_candidates_fragments</span>
-<span class="kn">from</span> <span class="nn">constants</span> <span class="k">import</span> <span class="n">THRESHOLD_EARLY_STOP_ACCUMULATION</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.assigner</span> <span class="k">import</span> <span class="n">assign</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.trainer</span> <span class="k">import</span> <span class="n">train</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.accumulation_manager</span> <span class="k">import</span> <span class="n">AccumulationManager</span><span class="p">,</span> <span class="n">get_predictions_of_candidates_fragments</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span>  <span class="n">THRESHOLD_EARLY_STOP_ACCUMULATION</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
 <span class="k">else</span><span class="p">:</span>
@@ -114,8 +114,8 @@
 <span class="sd">    float</span>
 <span class="sd">        Ratio of accumulated images over accumulable images</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">number_of_accumulated_images</span> <span class="o">/</span> <span class="n">number_of_unique_images_in_global_fragments</span></div>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+    <span class="k">return</span> <span class="n">number_of_accumulated_images</span> <span class="o">/</span> <span class="n">number_of_unique_images_in_global_fragments</span>
 
 <span class="k">def</span> <span class="nf">perform_one_accumulation_step</span><span class="p">(</span><span class="n">accumulation_manager</span><span class="p">,</span>
                                     <span class="n">video</span><span class="p">,</span>
@@ -259,8 +259,8 @@
                         <span class="n">identity_transfer</span><span class="p">,</span>
                         <span class="n">GUI_axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                         <span class="n">net_properties</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                        <span class="n">plot_flag</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">accumulation_manager</span><span class="o">.</span><span class="n">ratio_accumulated_images</span></div>
+                        <span class="n">plot_flag</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">accumulation_manager</span><span class="o">.</span><span class="n">ratio_accumulated_images</span>
 </pre></div>
 
           </div>
@@ -283,10 +283,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 12, 2018.
+      Last updated on Feb 22, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>

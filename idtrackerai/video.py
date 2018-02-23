@@ -8,7 +8,7 @@ import glob
 from natsort import natsorted
 import cv2
 import time
-from idtrackerai.utils.py_utils import  get_git_revision_hash
+from idtrackerai.utils.py_utils import get_git_revision_hash
 from idtrackerai.constants import  AVAILABLE_VIDEO_EXTENSION, FRAMES_PER_EPISODE, MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger

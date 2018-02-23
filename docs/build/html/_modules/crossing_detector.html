@@ -84,14 +84,14 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">list_of_blobs</span> <span class="k">import</span> <span class="n">ListOfBlobs</span>
-<span class="kn">from</span> <span class="nn">get_crossings_data_set</span> <span class="k">import</span> <span class="n">CrossingDataset</span>
-<span class="kn">from</span> <span class="nn">network_params_crossings</span> <span class="k">import</span> <span class="n">NetworkParams_crossings</span>
-<span class="kn">from</span> <span class="nn">cnn_architectures</span> <span class="k">import</span> <span class="n">cnn_model_crossing_detector</span>
-<span class="kn">from</span> <span class="nn">crossings_detector_model</span> <span class="k">import</span> <span class="n">ConvNetwork_crossings</span>
-<span class="kn">from</span> <span class="nn">train_crossings_detector</span> <span class="k">import</span> <span class="n">TrainDeepCrossing</span>
-<span class="kn">from</span> <span class="nn">get_predictions_crossings</span> <span class="k">import</span> <span class="n">GetPredictionCrossigns</span>
-<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackerdeepApp.py&#39;</span><span class="p">:</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.list_of_blobs</span> <span class="k">import</span> <span class="n">ListOfBlobs</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.cnn_architectures</span> <span class="k">import</span> <span class="n">cnn_model_crossing_detector</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.crossings_detector_model.get_crossings_data_set</span> <span class="k">import</span> <span class="n">CrossingDataset</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.crossings_detector_model.network_params_crossings</span> <span class="k">import</span> <span class="n">NetworkParams_crossings</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.crossings_detector_model.crossings_detector_model</span> <span class="k">import</span> <span class="n">ConvNetwork_crossings</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.crossings_detector_model.train_crossings_detector</span> <span class="k">import</span> <span class="n">TrainDeepCrossing</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.network.crossings_detector_model.get_predictions_crossings</span> <span class="k">import</span> <span class="n">GetPredictionCrossigns</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
 <span class="k">else</span><span class="p">:</span>
@@ -165,8 +165,8 @@
                 <span class="k">for</span> <span class="n">blob</span><span class="p">,</span> <span class="n">prediction</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">test_set</span><span class="o">.</span><span class="n">test</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)]</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Freeing memory. Test crossings set deleted&quot;</span><span class="p">)</span>
             <span class="n">test_set</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">return_store_objects</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">trainer</span></div>
+            <span class="k">if</span> <span class="n">return_store_objects</span><span class="p">:</span></div>
+                <span class="k">return</span> <span class="n">trainer</span>
 </pre></div>
 
           </div>
@@ -189,10 +189,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 12, 2018.
+      Last updated on Feb 22, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.6.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>

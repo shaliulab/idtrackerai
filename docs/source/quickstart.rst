@@ -1,9 +1,13 @@
 Quickstart
 ==========
 
-idtrackerai is equipped with a GUI. Open it by ::
+idtrackerai is equipped with a GUI. Start it by double-clicking on the
+file created during installation.
 
-  we will see
+If you want to start the GUI from the terminal, open it and type ::
+
+  source activate idtrackerai-environment
+  idtrackeraiGUI
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1. Start a tracking session
@@ -28,7 +32,7 @@ tracking session.
 .. figure:: ./_static/img2.png
    :scale: 50 %
    :align: center
-   :alt: welcome tab
+   :alt: session name
 
 By entering the name of an existing session it will be possible to load all or
 part of the processes already computed.
@@ -44,7 +48,7 @@ the tab preprocessing.
 .. figure:: ./_static/img3.png
    :scale: 50 %
    :align: center
-   :alt: welcome tab
+   :alt: roi
 
 It is possible to select one or more region of interests on the video.
 First select the shape of the ROI, then draw it by clicking and dragging
@@ -65,7 +69,7 @@ Step 3. Video segmentation and preprocessing
 .. figure:: ./_static/img4.png
    :scale: 50 %
    :align: right
-   :alt: welcome tab
+   :alt: preprocessing
 
 The aim of this step is to set the parameters that allow to separate the animals
 from the background. Apply the ROIs selected in the precious step by activating
@@ -81,12 +85,8 @@ After setting the parameters, the segmentation of the video can be initiated by
 clicking the button “Segment video”. A popup showing an estimate of the number
 of animals present in the video will open. Modify the number if it is incorrect
 and press return on your keyboard.
-A series of popup will keep you updated with respect to the stage of the preprocessing:
+A series of popup will keep you updated with respect to the stage of the preprocessing.
 
-.. figure:: ./_static/img5.png
-   :scale: 50 %
-   :align: center
-   :alt: welcome tab
 
 .. figure:: ./_static/img6.png
   :scale: 30 %

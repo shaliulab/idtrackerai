@@ -81,7 +81,9 @@
   <ul>
 <li><a class="reference internal" href="#">Human validation</a><ul>
 <li><a class="reference internal" href="#module-generate_groundtruth">Generate groundtruth</a></li>
+<li><a class="reference internal" href="#module-compute_groundtruth_statistics">Compute ground truth statistics</a></li>
 <li><a class="reference internal" href="#module-generate_individual_groundtruth">Generate individual ground truth</a></li>
+<li><a class="reference internal" href="#module-compute_individual_groundtruth_statistics">Compute individual ground truth statistics</a></li>
 </ul>
 </li>
 </ul>
@@ -95,12 +97,12 @@
             
   <div class="section" id="human-validation">
 <h1>Human validation<a class="headerlink" href="#human-validation" title="Permalink to this headline">¶</a></h1>
-<p>Human validation is thougth in two different processes. We intend with global
+<p>It is possible to perform Human validation in two different ways.
+On one hand, we intend with global
 a human generated ground truth in which the identities of all the animals
 in a frame are validated. This kind of validation is extremely hard when
-dealing with large groups. To verify the goodness of the tracking the
-individual validation allows to follow a single selected animals throughout
-the video.</p>
+dealing with large groups. To verify the goodness of the tracking on the entire
+video the individual validation allows to follow a single selected animals.</p>
 <div class="section" id="module-generate_groundtruth">
 <span id="generate-groundtruth"></span><h2>Generate groundtruth<a class="headerlink" href="#module-generate_groundtruth" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -133,7 +135,10 @@ pixels (pixels is stored to check the groundtruth in crossings)</div></blockquot
 tracked video</p>
 </dd></dl>
 
-<span class="target" id="module-compute_groundtruth_statistics"></span><dl class="function">
+</div>
+<div class="section" id="module-compute_groundtruth_statistics">
+<span id="compute-ground-truth-statistics"></span><h2>Compute ground truth statistics<a class="headerlink" href="#module-compute_groundtruth_statistics" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
 <dt id="compute_groundtruth_statistics.compare_tracking_against_groundtruth_no_gaps">
 <code class="descclassname">compute_groundtruth_statistics.</code><code class="descname">compare_tracking_against_groundtruth_no_gaps</code><span class="sig-paren">(</span><em>number_of_animals</em>, <em>groundtruth</em>, <em>blobs_in_video_groundtruth</em>, <em>blobs_in_video</em>, <em>identities_dictionary_permutation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/compute_groundtruth_statistics.html#compare_tracking_against_groundtruth_no_gaps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#compute_groundtruth_statistics.compare_tracking_against_groundtruth_no_gaps" title="Permalink to this definition">¶</a></dt>
 <dd><p>blobs_in_video_groundtruth: cut groundtruth.blobs_in_video using start and end of the groundtruth object
@@ -173,7 +178,10 @@ pixels (pixels is stored to check the groundtruth in crossings)</div></blockquot
 tracked video</p>
 </dd></dl>
 
-<span class="target" id="module-compute_individual_groundtruth_statistics"></span></div>
+</div>
+<div class="section" id="module-compute_individual_groundtruth_statistics">
+<span id="compute-individual-ground-truth-statistics"></span><h2>Compute individual ground truth statistics<a class="headerlink" href="#module-compute_individual_groundtruth_statistics" title="Permalink to this headline">¶</a></h2>
+</div>
 </div>
 
 
