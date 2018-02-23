@@ -58,7 +58,6 @@ dependencies:
     - h5py==2.7.1
     - html5lib==0.9999999
     - idna==2.6
-    - idtrackerai==0.0.1
     - joblib==0.11
     - kivy-garden==0.1.4
     - markdown==2.2.0
