@@ -16,7 +16,7 @@ install it on Python {}.{}.
 """.format(*(REQUIRED_PYTHON + CURRENT_PYTHON)))
     sys.exit(1)
 
-requirements = ['Cython >= 0.26.1',
+requirements = [#'Cython >= 0.26.1',
                 'pygame >= 1.9.3',
                 'numpy >= 1.13.0',
                 'natsort >= 5.0.2',
@@ -29,7 +29,7 @@ requirements = ['Cython >= 0.26.1',
                 'pyyaml >= 3.12',
                 'psutil >= 5.4.3',
                 'h5py >= 2.7.0',
-                'Kivy >= 1.10.0',
+                'xlib == 0.21',
                 'Kivy-Garden >= 0.1.4',
                 'matplotlib >= 2.0.0',
                 'msgpack-numpy >= 0.3.9',
