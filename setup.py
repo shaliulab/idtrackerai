@@ -42,7 +42,7 @@ requirements = [#'Cython >= 0.26.1',
                 'protobuf >= 3.4.0',
                 'tables >= 3.3.0',
                 'dask >= 0.17.0',
-                'tensorflow-gpu >= 1.2.0']
+                'tensorflow-gpu == 1.2.0']
 
 
 np_gpu_warning = False
