@@ -6,5 +6,5 @@ wget http://git.yalp.io/mattia/IdTrackerDeep/raw/write_setup/environment-mint18.
 conda env create -f environment-mint18.1.yml
 source activate idtrackerai-environment
 git clone http://git.yalp.io/mattia/IdTrackerDeep.git
-pip install IdTrackerDeep
+pip install IdTrackerDeep/.
 chmod +x IdTrackerDeep/run.sh
