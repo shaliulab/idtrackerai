@@ -8,6 +8,7 @@
 !*.js
 !*.html
 !*.sh
+!*.in
 
 #except gitignore
 !*.gitignore
