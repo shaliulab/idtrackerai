@@ -49,9 +49,9 @@ def apply_func_on_frame(video_object,
     if cap is None:
         cap = cv2.VideoCapture(video_object.paths_to_video_segments[segment_number])
         start = video_object._episodes_start_end[segment_number][0]
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_number - start)
+        cap.set(1,frame_number - start)
     else:
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, frame_number)
+        cap.set(1, frame_number)
     ret, frame = cap.read()
     if ret:
         if video_object.resolution_reduction != 1:

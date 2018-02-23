@@ -28,14 +28,14 @@ def segment_episode(path, height, width, mask, useBkg, bkg, EQ, min_threshold, m
         video = os.path.basename(path)
         filename, extension = os.path.splitext(video)
         numSegment = int(filename.split('_')[-1])
-        numFrames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+        numFrames = int(cap.get(7))
         counter = 0
     else:
         numSegment = int(episode_start_end_frames[0]/framesPerSegment) + 1
         print 'Segment video %s from frame %i to frame %i (segment %i)' %(path, episode_start_end_frames[0], episode_start_end_frames[1], numSegment)
         numFrames = episode_start_end_frames[1] - episode_start_end_frames[0] + 1
         counter = 0
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,episode_start_end_frames[0])
+        cap.set(1,episode_start_end_frames[0])
     df = pd.DataFrame(columns=('avIntensity', 'boundingBoxes','miniFrames', 'contours', 'centroids', 'areas', 'pixels', 'numberOfBlobs', 'bkgSamples'))
     maxNumBlobs = 0
     while counter < numFrames:

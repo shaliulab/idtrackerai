@@ -5,9 +5,9 @@ import numpy as np
 import logging.config
 import cv2
 from functools import partial
+import kivy
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
-import kivy
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.logger import Logger

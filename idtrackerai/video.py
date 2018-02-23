@@ -341,11 +341,17 @@ class Video(object):
 
     @video_path.setter
     def video_path(self, value):
+        print("video_path 1")
         video_name, video_extension = os.path.splitext(value)
+        print("video_path 2")
         if video_extension in AVAILABLE_VIDEO_EXTENSION:
+            print("video_path 3")
             self._video_path = value
+            print("video_path 4")
             #get video folder
+            print("video_path 5")
             self._video_folder = os.path.dirname(self.video_path)
+            print("video_path 6")
             #collect some info on the video (resolution, number of frames, ..)
             if not hasattr(self,'number_of_frames'):
                 self.get_info()
@@ -548,18 +554,18 @@ class Video(object):
         """
         self._paths_to_video_segments = self.check_split_video()
         cap = cv2.VideoCapture(self.video_path)
-        self._original_width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        self._original_height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+        self._original_width = int(cap.get(3))
+        self._original_height = int(cap.get(4))
         try:
-            self._frames_per_second = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
+            self._frames_per_second = int(cap.get(5))
         except:
             self._frames_per_second = None
             logger.info("Cannot read frame per second")
         if self._paths_to_video_segments is None:
-            self._number_of_frames = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+            self._number_of_frames = int(cap.get(7))
             self.get_episodes()
         else:
-            chunks_lengths = [int(cv2.VideoCapture(chunk).get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) for chunk in self._paths_to_video_segments]
+            chunks_lengths = [int(cv2.VideoCapture(chunk).get(7)) for chunk in self._paths_to_video_segments]
             self._episodes_start_end = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])) for i in range(1,len(chunks_lengths)+1)]
             self._number_of_frames = np.sum(chunks_lengths)
             self._number_of_episodes = len(self._paths_to_video_segments)

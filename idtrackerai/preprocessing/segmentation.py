@@ -49,11 +49,11 @@ def get_videoCapture(video, path, episode_start_end_frames):
     """
     if episode_start_end_frames is None:
         cap = cv2.VideoCapture(path)
-        number_of_frames_in_episode = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+        number_of_frames_in_episode = int(cap.get(7))
     elif path is None:
         cap = cv2.VideoCapture(video.video_path)
         number_of_frames_in_episode = episode_start_end_frames[1] - episode_start_end_frames[0] + 1
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,episode_start_end_frames[0])
+        cap.set(1,episode_start_end_frames[0])
 
     return cap, number_of_frames_in_episode
 
@@ -287,12 +287,12 @@ def resegment(video, frame_number, list_of_blobs, new_segmentation_thresholds):
     episode_number = video.in_which_episode(frame_number)
     if not video.paths_to_video_segments:
         cap, _ = get_videoCapture(video, None, video.episodes_start_end[episode_number])
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_number)
+        cap.set(1,frame_number)
     else:
         path = video.paths_to_video_segments[episode_number]
         cap, _ = get_videoCapture(video, path, None)
         start = video.episodes_start_end[episode_number][0]
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frame_number - start)
+        cap.set(1,frame_number - start)
 
     blobs_in_resegmanted_frame, \
     number_of_blobs_in_frame = get_blobs_in_frame(cap, video, new_segmentation_thresholds,

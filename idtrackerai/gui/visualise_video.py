@@ -62,9 +62,9 @@ class VisualiseVideo(BoxLayout):
             self.cap = cv2.VideoCapture(self.video_object.paths_to_video_segments[sNumber])
         if self.video_object.paths_to_video_segments:
             start = self.video_object._episodes_start_end[sNumber][0]
-            self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
+            self.cap.set(1,sFrame - start)
         else:
-            self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbar_value)
+            self.cap.set(1,trackbar_value)
         ret, self.frame = self.cap.read()
         if ret == True:
             if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and CHOSEN_VIDEO.video.resolution_reduction != 1:

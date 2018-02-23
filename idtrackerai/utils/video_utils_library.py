@@ -23,18 +23,18 @@ from idtrackerai.utils.py_utils import  *
 #     video = os.path.basename(videoPath)
 #     filename, extension = os.path.splitext(video)
 #     folder = os.path.dirname(videoPath)
-#     fps = cv2.cv.CV_CAP_PROP_FPS
+#     fps = 5
 #     print 'fps ',fps
 #     fourcc = cv2.cv.CV_CAP_PROP_FOURCC
 #     print fourcc
 #     fourcc = cv2.cv.CV_FOURCC(*'MP4A')
 #     # fourcc = cv2.cv.CV_FOURCC(*'X264')
 #     # fourcc = cv2.cv.CV_FOURCC(*'XVID')
-#     width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-#     height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-#     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+#     width = int(cap.get(3))
+#     height = int(cap.get(4))
+#     numFrame = int(cap.get(7))
 #     print 'numFrames, ', numFrame
-#     currentFrame = cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
+#     currentFrame = cap.get(1)
 #     # chunk it
 #     numSeg = 1
 #     name = folder +'/'+ filename + '_' + str(numSeg) + extension
@@ -77,13 +77,13 @@ def getVideoInfo(videoPaths):
     else:
         raise ValueError('the videoPath (or list of videoPaths) seems to be empty')
     cap = cv2.VideoCapture(videoPaths[0])
-    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+    width = int(cap.get(3))
+    height = int(cap.get(4))
     return width, height
 
 def getNumFrame(videoPath):
     cap = cv2.VideoCapture(videoPath)
-    return int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    return int(cap.get(7))
 
 def collectAndSaveVideoInfo(videoPath, numFrames, height, width, numAnimals, numCores, min_threshold,max_threshold,max_area,maxNumBlobs):
     """
@@ -146,11 +146,11 @@ Compute background and threshold
 # def computeBkgPar(videoPath,bkg,EQ):
 #     print 'Adding video %s to background' % videoPath
 #     cap = cv2.VideoCapture(videoPath)
-#     numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+#     numFrame = int(cap.get(7))
 #     numFramesBkg = 0
 #     frameInds = range(0,numFrame,100)
 #     for ind in frameInds:
-#         cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
+#         cap.set(1,ind)
 #         ret, frameBkg = cap.read()
 #         gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
 #         # gray = checkEq(EQ, gray)
@@ -181,7 +181,7 @@ def computeBkgParSingleVideo(startingFrame,endingFrame,videoPath,bkg,framesPerSe
     numFramesBkg = 0
     frameInds = range(startingFrame,endingFrame,100)
     for ind in frameInds:
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
+        cap.set(1,ind)
         ret, frameBkg = cap.read()
         gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
         # gray = checkEq(EQ, gray)
@@ -196,11 +196,11 @@ def computeBkgParSegmVideo(videoPath,bkg):
     print 'Adding video %s to background' % videoPath
     cap = cv2.VideoCapture(videoPath)
     counter = 0
-    numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    numFrame = int(cap.get(7))
     numFramesBkg = 0
     frameInds = range(0,numFrame,100)
     for ind in frameInds:
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
+        cap.set(1,ind)
         ret, frameBkg = cap.read()
         gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
         gray = np.true_divide(gray,np.mean(gray))

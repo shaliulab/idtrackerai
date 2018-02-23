@@ -62,8 +62,6 @@ class ROISelector(BoxLayout):
         global CHOSEN_VIDEO
         CHOSEN_VIDEO.bind(chosen=self.do)
 
-
-
     def do(self, *args):
         if CHOSEN_VIDEO.video.video_path is not None:
             CHOSEN_VIDEO.video.resolution_reduction = 1
