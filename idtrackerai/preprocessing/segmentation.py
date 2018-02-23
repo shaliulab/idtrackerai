@@ -192,7 +192,7 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
         frame_number += 1
 
     cap.release()
-    cv2.destroyAllWindows()
+    #cv2.destroyAllWindows()
     gc.collect()
     return blobs_in_episode, max_number_of_blobs
 

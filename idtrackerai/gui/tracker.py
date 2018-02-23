@@ -62,6 +62,7 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO = chosen_video
         DEACTIVATE_TRACKING = deactivate_tracking
         DEACTIVATE_VALIDATION = deactivate_validation
+        self.has_been_executed = False
         self.control_panel = BoxLayout(orientation = "vertical", size_hint = (.26,1.))
         self.add_widget(self.control_panel)
         self.help_button_tracker = HelpButton()
@@ -84,7 +85,10 @@ class Tracker(BoxLayout):
                                                                     else CHOSEN_VIDEO.video.knowledge_transfer_info_dict['number_of_animals']
         self.restoring_first_accumulation = False
         self.init_accumulation_network()
-        self.create_main_layout()
+        if not self.has_been_executed:
+            self.create_main_layout()
+            self.control_panel.add_widget(self.help_button_tracker)
+            self.has_been_executed = True
         if 'post_processing' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['post_processing']:
             self.restore_trajectories()
             self.restore_crossings_solved()
@@ -134,7 +138,7 @@ class Tracker(BoxLayout):
         elif 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
             Logger.info("Starting protocol cascade")
             self.start_tracking_button.bind(on_release = self.protocol1)
-        self.control_panel.add_widget(self.help_button_tracker)
+
 
     def init_accumulation_network(self):
         self.accumulation_network_params = NetworkParams(self.number_of_animals,

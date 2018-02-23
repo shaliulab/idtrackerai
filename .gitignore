@@ -4,6 +4,7 @@
 #except files with extension
 !*.py
 !*.yaml
+!*.yml
 !*.kv
 !*.js
 !*.html
