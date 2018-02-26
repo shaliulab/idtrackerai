@@ -1,5 +1,4 @@
-include install_opencv2.sh
 include idtrackerai/gui/logo.png
-include idtrackerai/gui/help_button_on.png
+include idtrackerai/gui/help_button.png
 include idtrackerai/gui/help_button_off.png
 include idtrackerai/gui/idtrackerai.kv

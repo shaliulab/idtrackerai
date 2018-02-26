@@ -47,7 +47,7 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
     number_of_frames_for_bkg_in_episode = 0
     frameInds = range(starting_frame,ending_frame, BACKGROUND_SUBTRACTION_PERIOD)
     for ind in frameInds:
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
+        cap.set(1,ind)
         ret, frameBkg = cap.read()
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
@@ -80,11 +80,11 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
     logger.debug('Adding video %s to background' % video_path)
     cap = cv2.VideoCapture(video_path)
     counter = 0
-    numFrame = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    numFrame = int(cap.get(7))
     number_of_frames_for_bkg_in_episode = 0
     frameInds = range(0,numFrame, BACKGROUND_SUBTRACTION_PERIOD)
     for ind in frameInds:
-        cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,ind)
+        cap.set(1,ind)
         ret, frameBkg = cap.read()
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)

@@ -90,15 +90,21 @@ class SelectFile(BoxLayout):
         CHOSEN_VIDEO.video._subtract_bkg = False
 
     def open(self, *args):
-        try:
-            CHOSEN_VIDEO.set_chosen_item(self.filechooser.selection[0])
-            if CHOSEN_VIDEO.video.video_path is not None:
-                self.create_welcome_popup()
-                self.create_restoring_popup()
-                self.session_name_input.bind(on_text_validate = self.on_enter_session_folder)
-                self.welcome_popup.open()
-        except Exception,e:
-            print(str(e))
+        #try:
+        print('-----------------------')
+        CHOSEN_VIDEO.set_chosen_item(self.filechooser.selection[0])
+        print(1)
+        if CHOSEN_VIDEO.video.video_path is not None:
+            print(2)
+            self.create_welcome_popup()
+            print(3)
+            self.create_restoring_popup()
+            print(4)
+            self.session_name_input.bind(on_text_validate = self.on_enter_session_folder)
+            print(5) 
+            self.welcome_popup.open()
+        #except Exception,e:
+        #    print(str(e))
 
     def create_welcome_popup(self):
         self.popup_container = BoxLayout()

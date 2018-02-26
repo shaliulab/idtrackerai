@@ -61,7 +61,9 @@ class Chosen_Video(EventDispatcher):
 
     def on_modified(self, instance, value):
         try:
+            print('000', value)
             self.video.video_path = value
+            print('111')
         except Exception,e:
             print(str(e))
             print("Choose a video to proceed")

@@ -326,9 +326,9 @@ def SegmentationPreview(video):
         #Get frame from video file
         if video.paths_to_video_segments:
             start = video.episodes_start_end[sNumber][0]
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,sFrame - start)
+            cap.set(1,sFrame - start)
         else:
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,trackbarValue)
+            cap.set(1,trackbarValue)
         ret, frame = cap.read()
         if video.resolution_reduction != 1:
             frame = cv2.resize(frame,None, fx = video.resolution_reduction, fy = video.resolution_reduction, interpolation = cv2.INTER_CUBIC)
@@ -490,9 +490,9 @@ def resegmentation_preview(video, frame_number, new_preprocessing_parameters):
         #Get frame from video file
         if video.paths_to_video_segments:
             start = video.episodes_start_end[sNumber][0]
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, frame_number - start)
+            cap.set(1, frame_number - start)
         else:
-            cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, frame_number)
+            cap.set(1, frame_number)
         ret, frame = cap.read()
 
         if video.resolution_reduction != 1:
