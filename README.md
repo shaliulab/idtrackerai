@@ -21,7 +21,7 @@ and conditions, then will download this repository and install the package.
 At the end of the installation activate the environment and launch the GUI:
 
     conda activate idtrackera-environment
-    idtrackerGUI
+    idtrackeraiGUI
 
 If the installation did not succeed try proceeding step by step, by running 
 the following commands in your terminal:
