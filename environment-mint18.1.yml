@@ -12,6 +12,7 @@ dependencies:
   - libiconv=1.15=0
   - libidn11=1.33=0
   - nettle=3.3=0
+  - python-xlib=0.20=py_0
   - setuptools=38.5.1=py27_0
   - x264=20131217=3
   - ca-certificates=2017.08.26=h1d4fec5_0
