@@ -42,9 +42,9 @@ the following commands in your terminal:
 http://idtracker.ai
 
 ## Contributors
-Mattia G. Bergomi
-Francisco Romero-Ferrero
-Francisco J.H. Heras
+* Mattia G. Bergomi
+* Francisco Romero-Ferrero
+* Francisco J.H. Heras
 
 ## Licese
 This is idtracker.ai a multiple animals tracking system
