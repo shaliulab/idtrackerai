@@ -479,6 +479,20 @@ def get_number_of_non_split_crossing(blobs_in_video):
                 if blob.is_a_crossing])
 
 def reset_blobs_in_video_before_erosion_iteration(blobs_in_video):
+    """Resets the identity of crossings and individual with multiple identities
+    before starting a loop of :func:`intepro`
+
+    Parameters
+    ----------
+    blobs_in_video : type
+        Description of parameter `blobs_in_video`.
+
+    Returns
+    -------
+    type
+        Description of returned object.
+
+    """
     logger.debug('Reseting blobs to start erosion iteration')
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
@@ -508,6 +522,37 @@ def clean_individual_blob_before_saving(blobs_in_video):
     return blobs_in_video
 
 def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
+    """This is the main function to close the gaps where animals have not been
+    identified (labelled with identity 0), are crossing with another animals or
+    are occluded or not segmented.
+
+    Parameters
+    ----------
+    video : <Video object>
+        Object containing all the parameters of the video.
+    list_of_blobs : <ListOfBlobs object>
+        Object with the collection of blobs found during segmentation with associated
+        methods. See :class:`list_of_blobs.ListOfBlobs`
+    list_of_fragments : <ListOfFragments object>
+        Collection of individual and crossing fragments with associated methods.
+        See :class:`list_of_fragments.ListOfFragments`
+
+    Returns
+    -------
+    list_of_blobs : <ListOfBlobs object>
+        ListOfBlobs object with the updated blobs and identities that close gaps
+
+    See Also
+    --------
+    :func:`set_individual_with_identity_0_as_crossings`
+    :func:`compute_erosion_disk`
+    :func:`compute_model_velocity`
+    :func:`reset_blobs_in_video_before_erosion_iteration`
+    :func:`interpolate_trajectories_during_gaps`
+    :func:`closing_gap_stopping_criteria`
+    :func:`clean_individual_blob_before_saving`
+
+    """
     logger.debug('********************************')
     logger.debug('Starting close_trajectories_gaps')
     set_individual_with_identity_0_as_crossings(list_of_blobs)

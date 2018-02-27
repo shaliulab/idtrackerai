@@ -8,6 +8,12 @@ Impossible velocity jumps correction
 .. automodule:: correct_impossible_velocity_jumps
   :members:
 
+^^^^^^^^^^^^^^^^
+Assign crossings
+^^^^^^^^^^^^^^^^
+
+.. automodule:: assign_them_all
+  :members:
 
 ^^^^^^^^^^^^^^^^
 Get trajectories

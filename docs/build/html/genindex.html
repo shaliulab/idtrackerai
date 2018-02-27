@@ -139,6 +139,8 @@
       </ul></li>
       <li><a href="postprocessing.html#get_trajectories.assign_point_to_identity">assign_point_to_identity() (in module get_trajectories)</a>
 </li>
+      <li><a href="postprocessing.html#module-assign_them_all">assign_them_all (module)</a>
+</li>
       <li><a href="fingerprint_protocol_cascade.html#module-assigner">assigner (module)</a>
 </li>
       <li><a href="fingerprint_protocol_cascade.html#assigner.assigner">assigner() (in module assigner)</a>
@@ -182,6 +184,10 @@
       <li><a href="video_information_manager.html#video.Video.check_split_video">check_split_video() (video.Video method)</a>
 </li>
       <li><a href="fragmentation.html#globalfragment.GlobalFragment.check_uniqueness">check_uniqueness() (globalfragment.GlobalFragment method)</a>
+</li>
+      <li><a href="postprocessing.html#assign_them_all.clean_individual_blob_before_saving">clean_individual_blob_before_saving() (in module assign_them_all)</a>
+</li>
+      <li><a href="postprocessing.html#assign_them_all.close_trajectories_gaps">close_trajectories_gaps() (in module assign_them_all)</a>
 </li>
       <li><a href="preprocessing.html#video_utils.cnt2BoundingBox">cnt2BoundingBox() (in module video_utils)</a>
 </li>
@@ -229,10 +235,10 @@
 </li>
       <li><a href="fragmentation.html#list_of_fragments.ListOfFragments.compute_number_of_unique_images_used_for_training">compute_number_of_unique_images_used_for_training() (list_of_fragments.ListOfFragments method)</a>
 </li>
-      <li><a href="preprocessing.html#list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames">compute_overlapping_between_subsequent_frames() (list_of_blobs.ListOfBlobs method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="preprocessing.html#list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames">compute_overlapping_between_subsequent_frames() (list_of_blobs.ListOfBlobs method)</a>
+</li>
       <li><a href="fragmentation.html#fragment.Fragment.compute_P1_from_frequencies">compute_P1_from_frequencies() (fragment.Fragment static method)</a>
 </li>
       <li><a href="fragmentation.html#fragment.Fragment.compute_P2_vector">compute_P2_vector() (fragment.Fragment method)</a>
@@ -408,6 +414,8 @@
       <li><a href="idCNN.html#id_CNN.ConvNetwork.get_feed_dict">get_feed_dict() (id_CNN.ConvNetwork method)</a>
 </li>
       <li><a href="fragmentation.html#fragment.Fragment.get_fixed_identities_of_coexisting_fragments">get_fixed_identities_of_coexisting_fragments() (fragment.Fragment method)</a>
+</li>
+      <li><a href="postprocessing.html#assign_them_all.get_forward_backward_list_of_frames">get_forward_backward_list_of_frames() (in module assign_them_all)</a>
 </li>
       <li><a href="fragmentation.html#list_of_fragments.ListOfFragments.get_fragment_identifier_to_index_list">get_fragment_identifier_to_index_list() (list_of_fragments.ListOfFragments method)</a>
 </li>
@@ -661,6 +669,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="fingerprint_protocol_cascade.html#accumulation_manager.AccumulationManager.reset_accumulation_variables">reset_accumulation_variables() (accumulation_manager.AccumulationManager method)</a>
 </li>
+      <li><a href="postprocessing.html#assign_them_all.reset_blobs_in_video_before_erosion_iteration">reset_blobs_in_video_before_erosion_iteration() (in module assign_them_all)</a>
+</li>
       <li><a href="fingerprint_protocol_cascade.html#accumulation_manager.AccumulationManager.reset_non_acceptable_fragment">reset_non_acceptable_fragment() (accumulation_manager.AccumulationManager method)</a>
 </li>
       <li><a href="fingerprint_protocol_cascade.html#accumulation_manager.AccumulationManager.reset_non_acceptable_global_fragment">reset_non_acceptable_global_fragment() (accumulation_manager.AccumulationManager method)</a>
@@ -842,7 +852,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Feb 22, 2018.
+      Last updated on Feb 27, 2018.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.

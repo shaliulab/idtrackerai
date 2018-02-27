@@ -4,7 +4,7 @@ Some videos tracked with idtracker.ai
 Large groups of fish (*D. rerio*)
 *********************************
 
-Videos of 60 and 100 30dpf zebrafish in a 70cm circular arena. For the setup specifications check Supplementary Figure X in *this paper*.
+Videos of 60 and 100 30dpf zebrafish in a 70cm circular arena. For the setup specifications check Supplementary Figure 3 and 4 in [1]_.
 
 .. raw:: html
 
@@ -24,10 +24,11 @@ Videos of 60 and 100 30dpf zebrafish in a 70cm circular arena. For the setup spe
 
 Small groups of fish (*D. rerio*)
 *********************************
-Videos of 10 30dpf zebrafish in a 70cm circular arena. For the setup specifications check Supplementary Figure X in *this paper*.
+Videos of 10 30dpf zebrafish in a 70cm circular arena.
+
 *Coming soon*
 
-Video of 8 adult zebrafish with complex behaviors. (video used to develop [1]_ *this paper*)
+Video of 8 adult zebrafish with complex behaviors. (video used to develop this software [1]_ and the software in [2]_)
 
 .. raw:: html
 
@@ -46,6 +47,8 @@ Large groups of flies (*D. melanogaster*)
 
 Small groups of flies (*D. melanogaster*)
 *****************************************
+
 *Coming soon*
 
-.. [1] Pérez-Escudero, A., Vicente-Page, J., Hinz, R. C., Arganda, S., & De Polavieja, G. G. (2014). idTracker: tracking individuals in a group by automatic identification of unmarked animals. Nature methods, 11(7), 743.
+.. [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G., (2018). idtracker.ai: Tracking all individuals with correct identities in large animal collectives (submitted)
+.. [2] Pérez-Escudero, A., Vicente-Page, J., Hinz, R. C., Arganda, S., & De Polavieja, G. G. (2014). idTracker: tracking individuals in a group by automatic identification of unmarked animals. Nature methods, 11(7), 743.
