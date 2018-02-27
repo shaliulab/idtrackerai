@@ -7,4 +7,5 @@ conda env create -f environment-mint18.1.yml
 source activate idtrackerai-environment
 git clone http://git.yalp.io/mattia/IdTrackerDeep.git
 pip install IdTrackerDeep/.
+garden install matoplotlib
 chmod +x IdTrackerDeep/run.sh
