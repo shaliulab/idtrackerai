@@ -1,3 +1,29 @@
+
+# This file is part of idtracker.ai, a multiple animals tracking system
+# described in [1].
+# Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.
+#
+# idtracker.ai is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details. In addition, we require
+# derivatives or applications to acknowledge the authors by citing [1].
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# For more information please send an email (idtrackerai@gmail.com) or
+# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
+#
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
+# (2018). idtracker.ai: Tracking all individuals with correct identities in large
+# animal collectives (submitted)
+
 from __future__ import absolute_import, division, print_function
 import os
 import sys
@@ -38,6 +64,14 @@ from idtrackerai.list_of_fragments import ListOfFragments
 from idtrackerai.groundtruth_utils.generate_groundtruth import generate_groundtruth
 from idtrackerai.groundtruth_utils.compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
 from idtrackerai.constants import THRESHOLD_ACCEPTABLE_ACCUMULATION, RESTORE_CRITERION, VEL_PERCENTILE
+
+print('\n************************************************************************************')
+print('LICENSE')
+print('idtracker.ai  Copyright (C) 2017-  Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.')
+print('This program comes with ABSOLUTELY NO WARRANTY.')
+print('This is free software, and you are welcome to redistribute it')
+print('under certain conditions. Check http://idtracker.ai/ for more information.')
+print('************************************************************************************\n')
 
 """
 Init variables

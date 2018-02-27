@@ -62,7 +62,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details. In addition, we require
 derivatives or applications to acknowledge the authors by citing [1].
 
-A copy of the GNU General Public License is available [here](myLib/LICENSE.md).
+A copy of the GNU General Public License is available [here](LICENSE.md).
 
 For more information please send an email (idtrackerai@gmail.com) or
 use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
