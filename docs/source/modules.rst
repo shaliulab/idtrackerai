@@ -1,5 +1,5 @@
-Modules
-=======
+Code documentation
+==================
 Contents:
 
 .. toctree::
