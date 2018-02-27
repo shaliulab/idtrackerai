@@ -1,7 +1,7 @@
 # idtrackerai
 ## Tracking all individuals with correct identities in large animal collectives
 
-idtrackerai allows to track animals in small and large collectives using convolutional neural networks
+idtrackerai allows to track animals in small and large collectives using convolutional neural networks.
 
 ### Installation in linux Mint 18.1
 
@@ -42,6 +42,9 @@ the following commands in your terminal:
 http://idtracker.ai
 
 ## Contributors
+Mattia G. Bergomi
+Francisco Romero-Ferrero
+Francisco J.H. Heras
 
 ## Licese
 This is idtracker.ai a multiple animals tracking system
