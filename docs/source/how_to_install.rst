@@ -27,7 +27,7 @@ Installation
 
 *This installation has been tested under linux Mint 18.1.*
 
-Download install.sh and create a folder idtrackerai.
+Download :download:`install.sh <../../install.sh>` file and create a folder idtrackerai.
 
     cd idtrackerai
     ./install.sh

@@ -10,12 +10,10 @@
 !*.html
 !*.sh
 !*.in
+!*.md
 
 #except gitignore
 !*.gitignore
-
-#ecept README
-!*README.md
 
 #except docs folder and subfolders
 !docs/scipy-sphinx-theme/*

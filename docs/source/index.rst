@@ -3,7 +3,7 @@ Welcome to idtracker.ai's documentation!
 
 idtracker.ai [1]_ allows to track groups of animals in videos realised in laboratory conditions.
 
-The usage of information from this webpage must reference [1]_:
+The usage of information from this webpage must referenced as:
 
   Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G., (2018).
   idtracker.ai: Tracking all individuals with correct identities in large animal collectives (submitted)

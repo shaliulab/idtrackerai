@@ -3,7 +3,7 @@ Quickstart
 
 In this section we explain how to start tracking a video with idtracker.ai. For
 more information about the different functionalities of the system go to the
-Graphical User Interface section.
+Graphical User Interface section :doc:`./GUI_explained`.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1. Download the video example

@@ -9,13 +9,13 @@ Download install.sh and create a folder idtrackerai.
 
     cd idtrackerai
     ./install.sh
-    
+
 If install.sh does not have executable permission type
 
     chmod u+x install.sh
     ./install.sh
 
-install.sh will first install miniconda, you will be asked to accept the terms 
+install.sh will first install miniconda, you will be asked to accept the terms
 and conditions, then will download this repository and install the package.
 
 At the end of the installation activate the environment and launch the GUI:
@@ -23,7 +23,7 @@ At the end of the installation activate the environment and launch the GUI:
     conda activate idtrackera-environment
     idtrackeraiGUI
 
-If the installation did not succeed try proceeding step by step, by running 
+If the installation did not succeed try proceeding step by step, by running
 the following commands in your terminal:
 
     wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
@@ -36,10 +36,34 @@ the following commands in your terminal:
     git clone http://git.yalp.io/mattia/IdTrackerDeep.git
     pip install IdTrackerDeep/.
     chmod +x IdTrackerDeep/run.sh
-    
+
 
 ## Documentation and examples of tracked videos
 http://idtracker.ai
 
 ## Contributors
 
+## Licese
+This is idtracker.ai a multiple animals tracking system
+described in [1].
+Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.
+
+idtracker.ai is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details. In addition, we require
+derivatives or applications to acknowledge the authors by citing [1].
+
+A copy of the GNU General Public License is available [here](myLib/LICENSE.md).
+
+For more information please send an email (idtrackerai@gmail.com) or
+use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
+
+[1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
+(2018). idtracker.ai: Tracking all individuals with correct identities in large
+animal collectives (submitted)

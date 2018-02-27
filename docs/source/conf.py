@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.abspath('../../idtrackerai/groundtruth_utils'))
 sys.path.insert(0, os.path.abspath('../../idtrackerai/tf_cnnvisualisation'))
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
@@ -44,7 +45,7 @@ html_theme_options = {
         "sidebar": "left",
         "scipy_org_logo": True,
         "navigation_links" : True,
-        "rootlinks": [("http://www.gitlab.com/polaviejalab/idtracker", "GitLab repo")]
+        "rootlinks": [("https://gitlab.com/polavieja_lab/idtrackerai.git", "GitLab repo")]
     }
 html_sidebars = {
             '**': [
