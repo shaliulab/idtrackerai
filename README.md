@@ -46,7 +46,7 @@ http://idtracker.ai
 * Francisco Romero-Ferrero
 * Francisco J.H. Heras
 
-## Licese
+## License
 This is idtracker.ai a multiple animals tracking system
 described in [1].
 Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.
