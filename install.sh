@@ -11,4 +11,3 @@ git clone https://gitlab.com/polavieja_lab/idtrackerai.git
 pip install idtrackerai/.
 source activate idtrackerai-environment
 garden install matplotlib
-
