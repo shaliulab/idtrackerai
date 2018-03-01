@@ -1,5 +1,5 @@
 wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
-chmod +x Miniconda2-latest-Linux-x86_64.sh
+chmod u+x Miniconda2-latest-Linux-x86_64.sh
 ./Miniconda2-latest-Linux-x86_64.sh
 
 source ~/.bashrc
@@ -11,3 +11,4 @@ git clone https://gitlab.com/polavieja_lab/idtrackerai.git
 pip install idtrackerai/.
 source activate idtrackerai-environment
 garden install matplotlib
+chmod u+x idtrackerai/run.sh
