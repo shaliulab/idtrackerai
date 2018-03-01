@@ -20,7 +20,7 @@ and conditions, then will download this repository and install the package.
 
 At the end of the installation activate the environment and launch the GUI:
 
-    conda activate idtrackera-environment
+    conda activate idtrackerai-environment
     idtrackeraiGUI
 
 If the installation did not succeed try proceeding step by step, by running
@@ -30,12 +30,14 @@ the following commands in your terminal:
     chmod +x Miniconda2-latest-Linux-x86_64.sh
     ./Miniconda2-latest-Linux-x86_64.sh
     source ~/.bashrc
-    wget http://git.yalp.io/mattia/IdTrackerDeep/raw/write_setup/environment-mint18.1.yml
+    wget https://gitlab.com/polavieja_lab/idtrackerai/blob/write_setup/environment-mint18.1.yml
     conda env create -f environment-mint18.1.yml
     source activate idtrackerai-environment
-    git clone http://git.yalp.io/mattia/IdTrackerDeep.git
-    pip install IdTrackerDeep/.
-    chmod +x IdTrackerDeep/run.sh
+    git clone https://gitlab.com/polavieja_lab/idtrackerai.git
+    pip install idtrackerai/.
+    garden install matoplotlib
+    chmod +x idtrackerai/run.sh
+
 
 
 ## Documentation and examples of tracked videos
@@ -46,7 +48,7 @@ http://idtracker.ai
 * Francisco Romero-Ferrero
 * Francisco J.H. Heras
 
-## Licese
+## License
 This is idtracker.ai a multiple animals tracking system
 described in [1].
 Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.
@@ -62,7 +64,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details. In addition, we require
 derivatives or applications to acknowledge the authors by citing [1].
 
-A copy of the GNU General Public License is available [here](LICENSE.md).
+A copy of the GNU General Public License is available [here](LICENSE).
 
 For more information please send an email (idtrackerai@gmail.com) or
 use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
