@@ -5,7 +5,7 @@ idtrackerai allows to track animals in small and large collectives using convolu
 
 ### Installation in linux Mint 18.1
 
-Download install.sh and create a folder idtrackerai.
+Download [install.sh](install.sh) and create a folder idtrackerai.
 
     cd idtrackerai
     ./install.sh
