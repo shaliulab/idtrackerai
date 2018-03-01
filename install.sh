@@ -9,6 +9,6 @@ conda env create -f environment-mint18.1.yml
 source activate idtrackerai-environment
 git clone https://gitlab.com/polavieja_lab/idtrackerai.git
 pip install idtrackerai/.
-chmod +x idtrackerai/run.sh
+source activate idtrackerai-environment
 garden install matoplotlib
 
