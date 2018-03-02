@@ -3,9 +3,7 @@
 
 idtracker.ai allows to track animals in small and large collectives using convolutional neural networks.
 
-## Installation and requirements.
-
-### Requirements
+## Requirements
 
 idtracker.ai has been tested under the following specifications:
 
@@ -20,6 +18,20 @@ idtracker.ai is coded in python 2.7 and its core uses Tensorflow libraries
  a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher. Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU. If a GPU
 is not installed on the computer the CPU version of tensorflow will be installed
 but the speed of the tracking will be highly affected.
+
+## Installation.
+
+The installation of idtracker.ai requires some amout of interaction with the linux 
+terminal. Read the following paragraph only if your are not familiar using the terminal in 
+linux operating systems.
+
+In linux Mint you can open one using the icon ">_" in your toolbar. We provide the 
+commands needed to install idtracker.ai from the terminal. You can type them directly 
+in the command line and press ENTER to execute them. Use the right button in your 
+mouse to copy and paset commands from the instructinos to the terminal. (NOTE: 
+do not use the shortcut Ctrl+C and Ctrl+V as they do not work in the terminal)
+
+### Pre-installation checks
 
 To install the GPU version of idtracker.ai make sure that NVIDIA drivers,
 CUDA Toolkit 8.0 and the corresponding CuDNN v5.1 libraries for CUDA 8.0 are
@@ -83,17 +95,10 @@ for Tensorflow 1.2.0 [here](https://www.tensorflow.org/versions/r1.2/install/ins
 
 ### Installation
 
-The installation requires some amout of interaction with the linux terminal. In 
-linux Mint you can open one using the icon ">_" in your toolbar. We provide the 
-commands needed to install idtracker.ai from the terminal. You can type them directly 
-in the command line and press ENTER to execute them.
-
-Create a folder named idtrackerai in your Home directory by typing 
+In the terminal, create a folder named idtrackerai in your Home directory by typing 
     
     mkdir idtrackerai
     
-in the terminal. 
-
 Move to that folder by typing 
 
     cd idtrackerai
