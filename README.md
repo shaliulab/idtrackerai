@@ -20,7 +20,7 @@ idtracker.ai is coded in python 2.7 and its core uses Tensorflow libraries
 (version 1.2.0). Due to the intense use of deep neural networks, we recommend using
  a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher. Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU. If a GPU
 is not installed on the computer the CPU version of tensorflow will be installed
-but the speed of the tracking would be highly affected.
+but the speed of the tracking will be highly affected.
 
 To install the GPU version of idtracker.ai make sure that NVIDIA drivers,
 CUDA Toolkit 8.0 and the corresponding CuDNN v5.1 libraries for CUDA 8.0 are
