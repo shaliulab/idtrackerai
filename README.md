@@ -3,7 +3,6 @@
 
 idtracker.ai allows to track animals in small and large collectives using convolutional neural networks.
 
-
 ## Installation and requirements.
 
 ### Requirements
@@ -85,13 +84,15 @@ for Tensorflow 1.2.0 [here](https://www.tensorflow.org/versions/r1.2/install/ins
 ### Installation
 
 The installation requires some amout of interaction with the linux terminal. In 
-linux Mint you can open one using the icon ">_" in your toolbar. 
+linux Mint you can open one using the icon ">_" in your toolbar. We provide the 
+commands needed to install idtracker.ai from the terminal. You can type them directly 
+in the command line and press ENTER to execute them.
 
 Create a folder named idtrackerai in your Home directory by typing 
     
     mkdir idtrackerai
     
-in the terminal and pressing ENTER. 
+in the terminal. 
 
 Move to that folder by typing 
 
