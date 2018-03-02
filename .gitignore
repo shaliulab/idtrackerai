@@ -11,6 +11,7 @@
 !*.sh
 !*.in
 !*.md
+!*.png
 
 #except gitignore
 !*.gitignore
@@ -21,5 +22,4 @@
 !docs/make.bat
 !docs/Makefile
 !docs/source/_static/*
-!./*.png
 !idtrackerai/gui/*.png
