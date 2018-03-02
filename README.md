@@ -7,37 +7,38 @@ idtracker.ai allows to track animals in small and large collectives using convol
 
 idtracker.ai has been tested under the following specifications:
 
-- Operating system: 64bit linux Mint 18.1
+- Operating system: 64bit GNU/linux Mint 18.1
 - CPU: Core(TM) i7-7700K CPU @4.20GHz 6 core Intel(R) or Core(TM) i7-6800K CPU @3.40GHz 4 core
 - GPU: Nvidia TITAN X or Nvidia GeForce GTX 1080 Ti
 - RAM: 32Gb (for small groups) or 128Gb (for large groups)
 - Disk: 1TB SSD
 
-idtracker.ai is coded in python 2.7 and its core uses Tensorflow libraries
+idtracker.ai is coded in python 2.7 and uses Tensorflow libraries
 (version 1.2.0). Due to the intense use of deep neural networks, we recommend using
- a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher. Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU. If a GPU
+ a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher. 
+ Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU. If a GPU
 is not installed on the computer the CPU version of tensorflow will be installed
 but the speed of the tracking will be highly affected.
 
 ## Installation.
 
-The installation of idtracker.ai requires some amout of interaction with the linux 
-terminal. Read the following paragraph only if your are not familiar using the terminal in 
+The installation of idtracker.ai requires some amount of interaction with the linux 
+terminal. Read the following paragraph only if your are not familiar with the terminal in 
 linux operating systems.
 
 In linux Mint you can open one using the icon ">_" in the bottom panel. We provide the 
 commands needed to install idtracker.ai from the terminal. You can type them directly 
-in the command line and press ENTER to execute them. Use the right button in your 
-mouse to copy and paste commands from the instructinos to the terminal. (NOTE: 
+in the command line and press ENTER to execute them. Right-click with your 
+mouse to copy and paste commands from the instructions to the terminal. (NOTE: 
 do not use the shortcut Ctrl+C and Ctrl+V as they do not work in the terminal)
 
 ### Pre-installation checks
 
-To install the GPU version of idtracker.ai make sure that NVIDIA drivers,
-CUDA Toolkit 8.0 and the corresponding CuDNN v5.1 libraries for CUDA 8.0 are
+To install the GPU version of idtracker.ai first make sure that NVIDIA drivers,
+CUDA Toolkit 8.0 and the corresponding CuDNN v5.1 libraries for CUDA 8.0, are
 installed in your computer.
 
-To check that your computer detects the GPU and the drivers are correctly installed
+To check that your computer detects the GPU and the NVIDIA drivers are correctly installed
 type
 
     nvidia-smi
@@ -112,13 +113,13 @@ Execute the install file:
 
     ./install.sh
 
-If install.sh does not have executable permission type
+Give install.sh executable permissions by typing
 
     chmod u+x install.sh
     ./install.sh
 
 install.sh will first install [miniconda](https://conda.io/miniconda.html),
-you will be asked review the license agreement and accept the terms and conditions.  
+you will be asked to review the license agreement and accept the terms and conditions.  
 Review the license agreement by pressing ENTER and accept the terms typing "yes".
 
 Then you will be asked to confirm the location of the installation. Press ENTER
@@ -129,7 +130,7 @@ location to PATH in your .bashrc file. Type "yes" to continue with the default i
 Otherwise you will get an ERROR indicating that the directory already exists, but the
 installation of idtrackerai will continue.
 
-At the end of the installation activate the environment and launch the GUI:
+At the end of the installation, activate the environment and launch the GUI:
 
     source activate idtrackerai-environment
     idtrackeraiGUI
