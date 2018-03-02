@@ -3,9 +3,12 @@
 
 idtrackerai allows to track animals in small and large collectives using convolutional neural networks.
 
-### Installation in linux Mint 18.1
 
-Download [install.sh](install.sh) and create a folder idtrackerai.
+## Installation in linux Mint 18.1
+
+Create a folder named idtrackerai. Download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh) and save it in that folder (*after opening the file right click and press "Save as..."*).
+
+Using the terminal go to the folder and execute the install file (*to open a terminal click on* ):
 
     cd idtrackerai
     ./install.sh

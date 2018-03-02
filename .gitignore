@@ -20,5 +20,6 @@
 !docs/source/*
 !docs/make.bat
 !docs/Makefile
-!docs/source/_static
+!docs/source/_static/*
+!./*.png
 !idtrackerai/gui/*.png
