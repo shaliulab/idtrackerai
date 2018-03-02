@@ -1,14 +1,93 @@
 # idtrackerai
 ## Tracking all individuals with correct identities in large animal collectives
 
-idtrackerai allows to track animals in small and large collectives using convolutional neural networks.
+idtracker.ai allows to track animals in small and large collectives using convolutional neural networks.
 
 
-## Installation in linux Mint 18.1
+## Installation and requirements.
 
-Create a folder named idtrackerai. Download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh) and save it in that folder (*after opening the file right click and press "Save as..."*).
+### Requirements
 
-Using the terminal go to the folder and execute the install file (*to open a terminal click on* ):
+idtracker.ai has been tested under the following specifications:
+
+- Operating system: 64bit linux Mint 18.1
+- CPU: Core(TM) i7-7700K CPU @4.20GHz 6 core Intel(R) or Core(TM) i7-6800K CPU @3.40GHz 4 core
+- GPU: Nvidia TITAN X or Nvidia GeForce GTX 1080 Ti
+- RAM: 32Gb (for small groups) or 128Gb (for large groups)
+- Disk: 1TB SSD
+
+idtracker.ai is coded in python 2.7 and its core uses Tensorflow libraries
+(version 1.2.0). Due to the intense use of deep neural networks, we recommend using
+ a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher. Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU. If a GPU
+is not installed on the computer the CPU version of tensorflow will be installed
+but the speed of the tracking would be highly affected.
+
+To install the GPU version of idtracker.ai make sure that NVIDIA drivers,
+CUDA Toolkit 8.0 and the corresponding CuDNN v5.1 libraries for CUDA 8.0 are
+installed in your computer.
+
+To check that your computer detects the GPU and the drivers are correctly installed
+type
+
+    nvidia-smi
+
+in your terminal. You should get an output similar to this:
+
+    +-----------------------------------------------------------------------------+
+    | NVIDIA-SMI 384.111                Driver Version: 384.111                   |
+    |-------------------------------+----------------------+----------------------+
+    | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+    | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+    |===============================+======================+======================|
+    |   0  GeForce GTX 108...  Off  | 00000000:03:00.0  On |                  N/A |
+    |  0%   35C    P5    24W / 250W |    569MiB / 11171MiB |      1%      Default |
+    +-------------------------------+----------------------+----------------------+
+
+    +-----------------------------------------------------------------------------+
+    | Processes:                                                       GPU Memory |
+    |  GPU       PID   Type   Process name                             Usage      |
+    |=============================================================================|
+    |    0      1266      G   /usr/lib/xorg/Xorg                           280MiB |
+    |    0      1712      G   cinnamon                                     119MiB |
+    |    0      2402      G   ...vendor-id=0x10de --gpu-device-id=0x1b06    50MiB |
+    |    0      3869      G   ...-token=B623FBCDF5B2B7F30ECB74EC9ADEFC8F   117MiB |
+    +-----------------------------------------------------------------------------+
+
+To check that CUDA Toolkit 8.0 is properly installed type
+
+    nvcc -V
+
+in your terminal. You should get an output similar to this:
+
+    nvcc: NVIDIA (R) Cuda compiler driver
+    Copyright (c) 2005-2016 NVIDIA Corporation
+    Built on Tue_Jan_10_13:22:03_CST_2017
+    Cuda compilation tools, release 8.0, V8.0.61
+
+To check that the correct version of CuDNN is installed type
+
+    cat /usr/local/cuda/include/cudnn.h | grep CUDNN_MAJOR -A 2
+
+in your terminal. You should get an output similar to this:
+
+    #define CUDNN_MAJOR      5
+    #define CUDNN_MINOR      1
+    #define CUDNN_PATCHLEVEL 10
+    --
+    #define CUDNN_VERSION    (CUDNN_MAJOR * 1000 + CUDNN_MINOR * 100 + CUDNN_PATCHLEVEL)
+
+    #include "driver_types.h"
+
+For further information please check the NVIDIA requirements to run TensorFlow with GPU support
+for Tensorflow 1.2.0 [here](https://www.tensorflow.org/versions/r1.2/install/install_linux).
+
+
+### Installation
+
+Create a folder named idtrackerai. Download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh)
+and save it in this folder (*after opening the link to the file right click and press "Save as..."*).
+
+Using the terminal go to the folder idtrackerai and execute the install file:
 
     cd idtrackerai
     ./install.sh
@@ -18,19 +97,28 @@ If install.sh does not have executable permission type
     chmod u+x install.sh
     ./install.sh
 
-install.sh will first install miniconda, you will be asked to accept the terms
-and conditions, then will download this repository and install the package.
+install.sh will first install [miniconda](https://conda.io/miniconda.html),
+you will be asked review the license agreement and accept the terms and conditions.  
+Review the license agreement by pressing ENTER and accept the terms typing "yes".
+
+Then you will be asked to confirm the location of the installation. Press ENTER
+to continue with the default installation.
+
+If a version of miniconda is not yet installed you will be asked to prepend the install
+location to PATH in your .bashrc file. Type "yes" to continue with the default installation.
+Otherwise you will get an ERROR indicating that the directory already exists, but the
+installation of idtrackerai will continue.
 
 At the end of the installation activate the environment and launch the GUI:
 
-    conda activate idtrackerai-environment
+    source activate idtrackerai-environment
     idtrackeraiGUI
 
 If the installation did not succeed try proceeding step by step, by running
 the following commands in your terminal:
 
     wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
-    chmod +x Miniconda2-latest-Linux-x86_64.sh
+    chmod u+x Miniconda2-latest-Linux-x86_64.sh
     ./Miniconda2-latest-Linux-x86_64.sh
     source ~/.bashrc
     wget https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/environment-mint18.1.yml
@@ -38,9 +126,13 @@ the following commands in your terminal:
     source activate idtrackerai-environment
     git clone https://gitlab.com/polavieja_lab/idtrackerai.git
     pip install idtrackerai/.
-    
-    garden install matoplotlib
-    chmod +x idtrackerai/run.sh
+    source activate idtrackerai-environment
+    garden install matplotlib
+    chmod u+x idtrackerai/run.sh
+
+### Uninstall and remove software
+
+
 
 
 
