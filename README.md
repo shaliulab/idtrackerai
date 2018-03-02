@@ -28,7 +28,7 @@ linux operating systems.
 In linux Mint you can open one using the icon ">_" in your toolbar. We provide the 
 commands needed to install idtracker.ai from the terminal. You can type them directly 
 in the command line and press ENTER to execute them. Use the right button in your 
-mouse to copy and paset commands from the instructinos to the terminal. (NOTE: 
+mouse to copy and paste commands from the instructinos to the terminal. (NOTE: 
 do not use the shortcut Ctrl+C and Ctrl+V as they do not work in the terminal)
 
 ### Pre-installation checks
@@ -95,7 +95,7 @@ for Tensorflow 1.2.0 [here](https://www.tensorflow.org/versions/r1.2/install/ins
 
 ### Installation
 
-In the terminal, create a folder named idtrackerai in your Home directory by typing 
+Using the terminal create a folder named idtrackerai in your Home directory by typing 
     
     mkdir idtrackerai
     
@@ -133,6 +133,9 @@ At the end of the installation activate the environment and launch the GUI:
 
     source activate idtrackerai-environment
     idtrackeraiGUI
+    
+Go to the [Quick start](http://idtracker.ai/quickstart.html) and follow the instructions 
+to track a simple example video. 
 
 If the installation did not succeed try proceeding step by step, by running
 the following commands in your terminal:
