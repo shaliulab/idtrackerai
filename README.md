@@ -111,9 +111,12 @@ if you get the following output
 
 miniconda is not installed in your computer. Follow the next instructions to install it.
 
-Download the miniconda installation file and give it executable permissions.
+Download the miniconda installation file 
 
     wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+
+and give it executable permissions.
+
     chmod u+x Miniconda2-latest-Linux-x86_64.sh
 
 Execute the file
@@ -124,7 +127,9 @@ You will be asked to review the license agreement and accept the terms and condi
 Review the license agreement by pressing ENTER and accept the terms typing "yes".
 
 Then you will be asked to confirm the location of the installation. Press ENTER
-to continue with the default installation. Finally you will be asked to prepend the install location to PATH in your .bashrc file. Type "yes" to continue with the default installation.
+to continue with the default installation. Finally you will be asked to prepend 
+the install location to PATH in your .bashrc file. 
+Type "yes" to continue with the default installation.
 
 At the end of the installation close the terminal and open a new one.
 
