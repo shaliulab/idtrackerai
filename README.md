@@ -15,24 +15,26 @@ idtracker.ai has been tested under the following specifications:
 
 idtracker.ai is coded in python 2.7 and uses Tensorflow libraries
 (version 1.2.0). Due to the intense use of deep neural networks, we recommend using
- a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher. 
+ a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher.
  Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU. If a GPU
 is not installed on the computer the CPU version of tensorflow will be installed
 but the speed of the tracking will be highly affected.
 
 ## Installation.
 
-The installation of idtracker.ai requires some amount of interaction with the linux 
-terminal. Read the following paragraph only if your are not familiar with the terminal in 
+The installation of idtracker.ai requires some amount of interaction with the linux
+terminal. Read the following paragraph only if your are not familiar with the terminal in
 linux operating systems.
 
-In linux Mint you can open one using the icon ">_" in the bottom panel. We provide the 
-commands needed to install idtracker.ai from the terminal. You can type them directly 
-in the command line and press ENTER to execute them. Right-click with your 
-mouse to copy and paste commands from the instructions to the terminal. (NOTE: 
+In linux Mint you can open one using the icon ">_" in the bottom panel. We provide the
+commands needed to install idtracker.ai from the terminal. You can type them directly
+in the command line and press ENTER to execute them. Right-click with your
+mouse to copy and paste commands from the instructions to the terminal. (NOTE:
 do not use the shortcut Ctrl+C and Ctrl+V as they do not work in the terminal)
 
 ### Pre-installation checks
+
+#### NVIDIA Drivers, CUDA Toolkit and CuDNN library.
 
 To install the GPU version of idtracker.ai first make sure that NVIDIA drivers,
 CUDA Toolkit 8.0 and the corresponding CuDNN v5.1 libraries for CUDA 8.0, are
@@ -93,58 +95,65 @@ in your terminal. You should get an output similar to this:
 For further information please check the NVIDIA requirements to run TensorFlow with GPU support
 for Tensorflow 1.2.0 [here](https://www.tensorflow.org/versions/r1.2/install/install_linux).
 
+#### Miniconda package manager
+
+The installation process requires [miniconda](https://conda.io/miniconda.html) to
+to be installed in your computer. Skip the next paragraphs if Miniconda2 or Miniconda3
+are installed already installed.
+
+To check whether miniconda is installed in your computer type
+
+    conda
+
+if you get the following output
+
+    conda: command not found
+
+miniconda is not installed in your computer. Follow the next instructions to install it.
+
+Download the miniconda installation file and give it executable permissions.
+
+    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+    chmod u+x Miniconda2-latest-Linux-x86_64.sh
+
+Execute the file
+
+    ./Miniconda2-latest-Linux-x86_64.sh
+
+You will be asked to review the license agreement and accept the terms and conditions.  
+Review the license agreement by pressing ENTER and accept the terms typing "yes".
+
+Then you will be asked to confirm the location of the installation. Press ENTER
+to continue with the default installation. Finally you will be asked to prepend the install location to PATH in your .bashrc file. Type "yes" to continue with the default installation.
+
+At the end of the installation close the terminal and open a new one.
 
 ### Installation
 
-Using the terminal create a folder named idtrackerai in your Home directory by typing 
-    
-    mkdir idtrackerai
-    
-Move to that folder by typing 
-
-    cd idtrackerai
-
-Download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh) 
+Using the terminal download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh)
 using the following command.
 
     wget https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh
 
-Execute the install file:
-
-    ./install.sh
-
 Give install.sh executable permissions by typing
 
     chmod u+x install.sh
+
+and execute it
+
     ./install.sh
-
-install.sh will first install [miniconda](https://conda.io/miniconda.html),
-you will be asked to review the license agreement and accept the terms and conditions.  
-Review the license agreement by pressing ENTER and accept the terms typing "yes".
-
-Then you will be asked to confirm the location of the installation. Press ENTER
-to continue with the default installation.
-
-If a version of miniconda is not yet installed you will be asked to prepend the install
-location to PATH in your .bashrc file. Type "yes" to continue with the default installation.
-Otherwise you will get an ERROR indicating that the directory already exists, but the
-installation of idtrackerai will continue.
 
 At the end of the installation, activate the environment and launch the GUI:
 
     source activate idtrackerai-environment
     idtrackeraiGUI
-    
-Go to the [Quick start](http://idtracker.ai/quickstart.html) and follow the instructions 
-to track a simple example video. 
+
+Go to the [Quick start](http://idtracker.ai/quickstart.html) and follow the instructions
+to track a simple example video.
 
 If the installation did not succeed try proceeding step by step, by running
 the following commands in your terminal:
 
-    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
-    chmod u+x Miniconda2-latest-Linux-x86_64.sh
-    ./Miniconda2-latest-Linux-x86_64.sh
-    source ~/.bashrc
     wget https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/environment-mint18.1.yml
     conda env create -f environment-mint18.1.yml
     source activate idtrackerai-environment
@@ -156,9 +165,7 @@ the following commands in your terminal:
 
 ### Uninstall and remove software
 
-
-
-
+*coming soon*
 
 ## Documentation and examples of tracked videos
 http://idtracker.ai
