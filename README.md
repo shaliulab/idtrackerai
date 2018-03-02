@@ -25,7 +25,7 @@ The installation of idtracker.ai requires some amout of interaction with the lin
 terminal. Read the following paragraph only if your are not familiar using the terminal in 
 linux operating systems.
 
-In linux Mint you can open one using the icon ">_" in your toolbar. We provide the 
+In linux Mint you can open one using the icon ">_" in the bottom panel. We provide the 
 commands needed to install idtracker.ai from the terminal. You can type them directly 
 in the command line and press ENTER to execute them. Use the right button in your 
 mouse to copy and paste commands from the instructinos to the terminal. (NOTE: 
