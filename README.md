@@ -84,12 +84,26 @@ for Tensorflow 1.2.0 [here](https://www.tensorflow.org/versions/r1.2/install/ins
 
 ### Installation
 
-Create a folder named idtrackerai. Download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh)
-and save it in this folder (*after opening the link to the file right click and press "Save as..."*).
+The installation requires some amout of interaction with the linux terminal. In 
+linux Mint you can open one using the icon ">_" in your toolbar. 
 
-Using the terminal go to the folder idtrackerai and execute the install file:
+Create a folder named idtrackerai in your Home directory by typing 
+    
+    mkdir idtrackerai
+    
+in the terminal and pressing ENTER. 
+
+Move to that folder by typing 
 
     cd idtrackerai
+
+Download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh) 
+using the following command.
+
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh
+
+Execute the install file:
+
     ./install.sh
 
 If install.sh does not have executable permission type
