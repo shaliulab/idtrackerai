@@ -104,14 +104,14 @@
             
   <div class="section" id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
-<p>In this section we explain how to start tracking a video with idtracker.ai. For
-more information about the different functionalities of the system go to the
-Graphical User Interface section <a class="reference internal" href="GUI_explained.html"><span class="doc">Graphical user interface (GUI)</span></a>.</p>
+<p>In this section we explain how to start tracking a video with idtracker.ai. For more information about
+the different functionalities of the system go to the Graphical User Interface section
+<a class="reference internal" href="GUI_explained.html"><span class="doc">Graphical user interface (GUI)</span></a> or check the Supplementary Material in <a class="footnote-reference" href="#id2" id="id1">[1]</a></p>
 <div class="section" id="step-1-download-the-video-example">
 <h2>Step 1. Download the video example<a class="headerlink" href="#step-1-download-the-video-example" title="Permalink to this headline">¶</a></h2>
 <p>If it is the first time that you are using this system, we recomend to start with
 the video example. You can download it from
-<a class="reference external" href="https://drive.google.com/open?id=11G4cg3lb2yvS4ppym73YO5ILwOCJlhkk">this link</a></p>
+<a class="reference external" href="https://drive.google.com/open?id=1uBOEMGxrOed8du7J9Rt-dlXdqOyhCpMC">this link</a>.</p>
 </div>
 <div class="section" id="step-2-copy-video-to-an-adequate-location">
 <h2>Step 2. Copy video to an adequate location<a class="headerlink" href="#step-2-copy-video-to-an-adequate-location" title="Permalink to this headline">¶</a></h2>
@@ -126,26 +126,24 @@ idtracker.ai generates will be faster.</p>
 </div>
 <div class="section" id="step-3-start-a-tracking-session">
 <h2>Step 3. Start a tracking session<a class="headerlink" href="#step-3-start-a-tracking-session" title="Permalink to this headline">¶</a></h2>
-<p>idtrackerai is equipped with a GUI. Start it by double-clicking on the
-file created during installation.</p>
-<p>If you want to start the GUI from the terminal, open it and type</p>
+<p>idtrackerai is equipped with a GUI. To start the GUI from the terminal, open it and type</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="n">activate</span> <span class="n">idtrackerai</span><span class="o">-</span><span class="n">environment</span>
 <span class="n">idtrackeraiGUI</span>
 </pre></div>
 </div>
 <div class="figure align-right">
-<a class="reference internal image-reference" href="_images/qs_img1.png"><img alt="welcome tab" src="_images/qs_img1.png" style="width: 415.5px; height: 310.5px;" /></a>
+<a class="reference internal image-reference" href="_images/qs_img1.png"><img alt="welcome tab" src="_images/qs_img1.png" style="width: 400.5px; height: 300.5px;" /></a>
 </div>
 <p>After opening the idtracker.ai user interface, browse to the folder containing
-the video you want to track (use the bar with the symbol “../” to go up in
-your folders.
+the video you want to track (if needed, use the bar with the symbol “../” to go up in
+your folders).
 In case the video is split in segments, the software will concatenate them if
 each segment is named according to the following convention:</p>
 <blockquote>
 <div>videoName_segmentNumber.extension</div></blockquote>
 <p>Click on the video file (or one of its segments) to start a new tracking session.
 After clicking on the video file it is necessary to assign a name to the current
-tracking session.</p>
+tracking session. Type a name and press ENTER.</p>
 <p>By entering the name of an existing session it will be possible to load all or
 part of the processes already computed. Note that the word “session” is
 included by default in the name, so if your session name is “newTracking” the
@@ -158,11 +156,11 @@ session folder generated will be:</p>
 <p>If needed, it is possible to select one or more ROIs to limit the tracking to a
 portion of each frame of the video or to prevent objects to be detected.</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/qs_img3.png"><img alt="roi" src="_images/qs_img3.png" style="width: 416.0px; height: 311.5px;" /></a>
+<a class="reference internal image-reference" href="_images/qs_img3.png"><img alt="roi" src="_images/qs_img3.png" style="width: 400.5px; height: 301.5px;" /></a>
 </div>
 <p>First select the shape of the ROI: It is possible to draw either rectangular or
 elliptic ROIs. To draw a rectangle, first click on the position of one of the
-corners of the rectangle and then on the position of the opposite corner.
+corners of the rectangle and then, without dragging, on the position of the opposite corner.
 To generate a elliptical ROI select 5 points on the contour of the ellipse that
 you want to draw.</p>
 <p>In case of mistake it is possible to delete the ROI and draw a new one. Furthermore,
@@ -175,7 +173,7 @@ the tab preprocessing.</p>
 <div class="section" id="step-5-video-segmentation-and-preprocessing">
 <h2>Step 5. Video segmentation and preprocessing<a class="headerlink" href="#step-5-video-segmentation-and-preprocessing" title="Permalink to this headline">¶</a></h2>
 <div class="figure align-right">
-<a class="reference internal image-reference" href="_images/qs_img4.png"><img alt="preprocessing" src="_images/qs_img4.png" style="width: 415.5px; height: 311.5px;" /></a>
+<a class="reference internal image-reference" href="_images/qs_img4.png"><img alt="preprocessing" src="_images/qs_img4.png" style="width: 400.5px; height: 300.5px;" /></a>
 </div>
 <p>The aim of this step is to set the parameters that allow to separate the animals
 from the background.</p>
@@ -191,7 +189,7 @@ to animals, despite their intensity. The bars plot on the bottom displays the
 areas of the detected objects in the current frame. A horizontal line indicates
 the minimum of the areas of the segmented blobs.</p>
 <div class="figure align-right">
-<a class="reference internal image-reference" href="_images/qs_img6.png"><img alt="welcome tab" src="_images/qs_img6.png" style="width: 341.5px; height: 255.5px;" /></a>
+<a class="reference internal image-reference" href="_images/qs_img6.png"><img alt="welcome tab" src="_images/qs_img6.png" style="width: 400.5px; height: 300.5px;" /></a>
 </div>
 <p>After setting the parameters, the segmentation of the video can be initiated by
 clicking the button “Segment video”. A popup showing an estimate of the number
@@ -208,7 +206,7 @@ the bar that says “Go to the tracking tab”.</p>
 <div class="section" id="step-6-start-tracking-the-video">
 <h2>Step 6. Start tracking the video<a class="headerlink" href="#step-6-start-tracking-the-video" title="Permalink to this headline">¶</a></h2>
 <div class="figure align-right">
-<a class="reference internal image-reference" href="_images/qs_img7.png"><img alt="welcome tab" src="_images/qs_img7.png" style="width: 403.0px; height: 301.0px;" /></a>
+<a class="reference internal image-reference" href="_images/qs_img7.png"><img alt="welcome tab" src="_images/qs_img7.png" style="width: 401.5px; height: 300.5px;" /></a>
 </div>
 <p>To start the tracking click on the button “Start protocol cascade”. The values
 displayed on the right of the tab are the hyperparameters used to initialise
@@ -225,11 +223,12 @@ the identified animals have been saved a popup allows either to quit the program
 or proceed to the validation of the video. In addition, the estimated accuracy
 of the tracking is shown. The algorithm will automatically recommend the user
 to proceed to the validation if the estimated accuracy is lower than expected.</p>
+<p>To validate</p>
 </div>
 <div class="section" id="step-7-global-and-individual-validation">
 <h2>Step 7. Global and individual validation<a class="headerlink" href="#step-7-global-and-individual-validation" title="Permalink to this headline">¶</a></h2>
 <div class="figure align-right">
-<a class="reference internal image-reference" href="_images/qs_img9.png"><img alt="welcome tab" src="_images/qs_img9.png" style="width: 415.0px; height: 308.0px;" /></a>
+<a class="reference internal image-reference" href="_images/qs_img9.png"><img alt="welcome tab" src="_images/qs_img9.png" style="width: 400.5px; height: 300.5px;" /></a>
 </div>
 <p>The output of the tracking algorithm can be easily validated and corrected by
 using the global validation and individual validation tabs.</p>
@@ -258,6 +257,13 @@ can be found in the folder “trajectories_wo_gaps”.</p>
 <div class="figure align-center">
 <a class="reference internal image-reference" href="_images/session_folder.png"><img alt="welcome tab" src="_images/session_folder.png" style="width: 588.0px; height: 282.4px;" /></a>
 </div>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., (2018).
+idtracker.ai: Tracking all individuals with correct identities in large animal collectives (submitted)</td></tr>
+</tbody>
+</table>
 </div>
 </div>
 

@@ -90,7 +90,7 @@ class Store_Accuracy_and_Loss(object):
                 ind = np.arange(numAnimals) + 1 - width
             elif self.name == 'validation':
                 ind = np.arange(numAnimals) + 1
-
+            ax1.set_xlabel('Epochs')
             ax2.bar(ind, self.individual_accuracy[-1], width, color=color, alpha=0.4,label=self.name)
             ax2.set_xlabel('Individual')
             ax2.set_ylabel('Individual \naccuracy')
@@ -106,6 +106,7 @@ class Store_Accuracy_and_Loss(object):
             ax3 = axes_handles[2]
             ax1.plot(range(index,len(self.loss)), self.loss[index:], color,label=self.name)
             ax2.plot(range(index,len(self.loss)),self.accuracy[index:], color,label=self.name)
+            ax2.set_xlabel('Epochs')
             width = 0.35
             numAnimals = len(self.individual_accuracy[-1])
             if self.name == 'training':

@@ -72,6 +72,7 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
     number_of_frames_for_bkg_in_episode = 0
     frameInds = range(starting_frame,ending_frame, BACKGROUND_SUBTRACTION_PERIOD)
     for ind in frameInds:
+        logger.debug('Frame %i' %ind)
         cap.set(1,ind)
         ret, frameBkg = cap.read()
         if ret:
@@ -142,17 +143,21 @@ def cumpute_background(video):
     # initialized as the full frame
     bkg = np.zeros((video.original_height, video.original_width))
     num_cores = multiprocessing.cpu_count()
+    if video.number_of_episodes < num_cores:
+        num_cores = video.number_of_episodes
     if video.paths_to_video_segments is None: # one single file
         logger.debug('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=num_cores)(delayed(
                     sum_frames_for_bkg_per_episode_in_single_file_video)(
                     starting_frame, ending_frame, video.video_path, bkg)
                     for (starting_frame, ending_frame) in video.episodes_start_end)
+        logger.debug('Finished parallel loop for bkg subtraction')
     else: # multiple video files
         logger.debug('multiple videos, computing bkg in parallel from every episode')
         output = Parallel(n_jobs=num_cores)(delayed(
                     sum_frames_for_bkg_per_episode_in_multiple_files_video)(
                     videoPath,bkg) for videoPath in video.paths_to_video_segments)
+        logger.debug('Finished parallel loop for bkg subtraction')
 
     partialBkg = [bkg for (bkg,_) in output]
     totNumFrame = np.sum([numFrame for (_,numFrame) in output])

@@ -1,16 +1,16 @@
 Quickstart
 ==========
 
-In this section we explain how to start tracking a video with idtracker.ai. For
-more information about the different functionalities of the system go to the
-Graphical User Interface section :doc:`./GUI_explained`.
+In this section we explain how to start tracking a video with idtracker.ai. For more information about
+the different functionalities of the system go to the Graphical User Interface section
+:doc:`./GUI_explained` or check the Supplementary Material in [1]_.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1. Download the video example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If it is the first time that you are using this system, we recomend to start with
 the video example. You can download it from
-`this link <https://drive.google.com/open?id=11G4cg3lb2yvS4ppym73YO5ILwOCJlhkk>`_
+`this link <https://drive.google.com/open?id=1uBOEMGxrOed8du7J9Rt-dlXdqOyhCpMC>`_.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 2. Copy video to an adequate location
@@ -28,10 +28,11 @@ idtracker.ai generates will be faster.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 3. Start a tracking session
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-idtrackerai is equipped with a GUI. Start it by double-clicking on the
-file created during installation.
+idtrackerai is equipped with a GUI organized by tabs that activate to guide the user
+throughout the tracking process. Press the help button in any tab to get more information
+about the possible actions in the tab.
 
-If you want to start the GUI from the terminal, open it and type ::
+To start the GUI open a terminal and type
 
   source activate idtrackerai-environment
   idtrackeraiGUI
@@ -42,8 +43,8 @@ If you want to start the GUI from the terminal, open it and type ::
    :alt: welcome tab
 
 After opening the idtracker.ai user interface, browse to the folder containing
-the video you want to track (use the bar with the symbol "../" to go up in
-your folders.
+the video you want to track (if needed, use the bar with the symbol "../" to go up in
+your folders).
 In case the video is split in segments, the software will concatenate them if
 each segment is named according to the following convention:
 
@@ -51,7 +52,7 @@ each segment is named according to the following convention:
 
 Click on the video file (or one of its segments) to start a new tracking session.
 After clicking on the video file it is necessary to assign a name to the current
-tracking session.
+tracking session. Type a name and press ENTER.
 
 By entering the name of an existing session it will be possible to load all or
 part of the processes already computed. Note that the word "session" is
@@ -73,7 +74,7 @@ portion of each frame of the video or to prevent objects to be detected.
 
 First select the shape of the ROI: It is possible to draw either rectangular or
 elliptic ROIs. To draw a rectangle, first click on the position of one of the
-corners of the rectangle and then on the position of the opposite corner.
+corners of the rectangle and then, without dragging, on the position of the opposite corner.
 To generate a elliptical ROI select 5 points on the contour of the ellipse that
 you want to draw.
 
@@ -94,7 +95,6 @@ Step 5. Video segmentation and preprocessing
    :align: right
    :alt: preprocessing
 
-
 The aim of this step is to set the parameters that allow to separate the animals
 from the background.
 
@@ -112,7 +112,7 @@ areas of the detected objects in the current frame. A horizontal line indicates
 the minimum of the areas of the segmented blobs.
 
 .. figure:: ./_static/qs_img6.png
-  :scale: 25 %
+  :scale: 50 %
   :align: right
   :alt: welcome tab
 
@@ -128,7 +128,6 @@ popup shows the graph of the loss function and the accuracy of this network,
 when trained on a dataset automatically extracted from the images segmented in
 the previous stages. It is now possible to start the tracking by clicking on
 the bar that says "Go to the tracking tab".
-
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 6. Start tracking the video
@@ -158,6 +157,11 @@ or proceed to the validation of the video. In addition, the estimated accuracy
 of the tracking is shown. The algorithm will automatically recommend the user
 to proceed to the validation if the estimated accuracy is lower than expected.
 
+Choose to validate the trajectories "with gaps" if you want to check the trajectories
+of individual animals before and after they touch or cross with other animals. Choose
+to validate the trajectories "without gaps" if you want to check the trajectories also
+during the crossings.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 7. Global and individual validation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -180,13 +184,12 @@ this part of the video which can be reached in any moment by clicking on the
 button “First global fragment”.
 
 To modify the identity of an individual click inside of the body of the animal.
-A pop up will apear indicating the current identity of the animal. Type the new
+A pop up will appear indicating the current identity of the animal. Type the new
 identity and press return. The new identity will be propagated to the past and
 the future until the animal enters a crossing or disappears. In case the user
 modifies at least one of the assigned identities the algorithm gives the possibility
 to save the updated identities and updates the file were all the information about
 the blobs is stored.
-
 
 ^^^^^^^^^^^^^^^^^^^^
 Step 8. Output files
@@ -202,3 +205,6 @@ can be found in the folder "trajectories_wo_gaps".
    :scale: 80 %
    :align: center
    :alt: welcome tab
+
+.. [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., (2018).
+   idtracker.ai: Tracking all individuals with correct identities in large animal collectives (submitted)
