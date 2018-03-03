@@ -176,16 +176,6 @@ the following commands in your terminal:
 
 *coming soon*
 
-### Possible errors during installation
-
-- This error can occur when downloading conda packages during the creation of the conda environment.
-
-    CondaHTTPError: HTTP 000 CONNECTION FAILED for url <https://conda.anaconda.org/wgarcia/linux-64/kivy-1.9.1-py27_0.tar.bz2>
-    Elapsed: -
-
-    An HTTP error occurred when trying to retrieve this URL.
-    HTTP errors are often intermittent, and a simple retry will get you on your way.
-
 ## Open idtracker.ai
 
 If the installation succeed correctly you can test the system by launching the GUI.
