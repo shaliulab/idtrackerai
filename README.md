@@ -179,7 +179,7 @@ the following commands in your terminal:
 ## Open idtracker.ai
 
 If the installation succeed correctly you can test the system by launching the GUI.
-To launch the GUI open a terminal and activate the conda environment idtrackerai-environment
+Open a terminal and activate the conda environment idtrackerai-environment
 
     source activate idtrackerai-environment
 
