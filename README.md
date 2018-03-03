@@ -26,11 +26,12 @@ The installation of idtracker.ai requires some amount of interaction with the li
 terminal. Read the following paragraph only if your are not familiar with the terminal in
 linux operating systems.
 
-In linux Mint you can open one using the icon ">_" in the bottom panel. We provide the
-commands needed to install idtracker.ai from the terminal. You can type them directly
-in the command line and press ENTER to execute them. Right-click with your
-mouse to copy and paste commands from the instructions to the terminal. (NOTE:
-do not use the shortcut Ctrl+C and Ctrl+V as they do not work in the terminal)
+In linux Mint you can open a terminal using the icon with the gray symbol ">_" on the left in the bottom bar.
+We provide the commands needed to install idtracker.ai from the terminal.
+In this documentation inputs to the terminal and outputs are shown inside of a box.
+You can type them directly in the command line and press ENTER to execute them.
+Right-click with your mouse to copy and paste commands from the instructions to the terminal.
+(NOTE: do not use the shortcut Ctrl+C and Ctrl+V as they do not work in the terminal)
 
 ### Pre-installation checks
 
@@ -97,8 +98,7 @@ for Tensorflow 1.2.0 [here](https://www.tensorflow.org/versions/r1.2/install/ins
 
 #### Miniconda package manager
 
-The installation process requires [miniconda](https://conda.io/miniconda.html) to
-to be installed in your computer. Skip the next paragraphs if Miniconda2 or Miniconda3
+The installation process requires [miniconda](https://conda.io/miniconda.html) to be installed in your computer. Skip the next paragraphs if Miniconda2 or Miniconda3
 are installed already installed.
 
 To check whether miniconda is installed in your computer type
@@ -111,7 +111,7 @@ if you get the following output
 
 miniconda is not installed in your computer. Follow the next instructions to install it.
 
-Download the miniconda installation file 
+Using the terminal, download the miniconda installation file
 
     wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
 
@@ -127,15 +127,15 @@ You will be asked to review the license agreement and accept the terms and condi
 Review the license agreement by pressing ENTER and accept the terms typing "yes".
 
 Then you will be asked to confirm the location of the installation. Press ENTER
-to continue with the default installation. Finally you will be asked to prepend 
-the install location to PATH in your .bashrc file. 
+to continue with the default installation. Finally you will be asked to prepend
+the install location to PATH in your .bashrc file.
 Type "yes" to continue with the default installation.
 
 At the end of the installation close the terminal and open a new one.
 
 ### Installation
 
-Using the terminal download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh)
+Using the terminal, download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh)
 using the following command.
 
     wget https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh
@@ -148,13 +148,14 @@ and execute it
 
     ./install.sh
 
-At the end of the installation, activate the environment and launch the GUI:
+The installation can take several minutes. At the end of the process the last lines
+of the terminal should show a message similar to this:
 
-    source activate idtrackerai-environment
-    idtrackeraiGUI
-
-Go to the [Quick start](http://idtracker.ai/quickstart.html) and follow the instructions
-to track a simple example video.
+    Download done (21059 downloaded)
+    Extracting...
+    Installing new version...
+    Done! garden.matplotlib is installed at: /home/rhea/.kivy/garden/garden.matplotlib
+    Cleaning...
 
 If the installation did not succeed try proceeding step by step, by running
 the following commands in your terminal:
@@ -176,11 +177,26 @@ the following commands in your terminal:
 
     CondaHTTPError: HTTP 000 CONNECTION FAILED for url <https://conda.anaconda.org/wgarcia/linux-64/kivy-1.9.1-py27_0.tar.bz2>
     Elapsed: -
-    
+
     An HTTP error occurred when trying to retrieve this URL.
     HTTP errors are often intermittent, and a simple retry will get you on your way.
 
+## Open idtracker.ai
+
+If the installation succeed correctly you can test the system by launching the GUI.
+To launch the GUI open a terminal and activate the conda environment idtrackerai-environment
+
+    source activate idtrackerai-environment
+
+Once you are inside of the environment launch the GUI
+
+    idtrackeraiGUI
+
+Go to the [Quick start](http://idtracker.ai/quickstart.html) and follow the instructions
+to track a simple example video.
+
 ## Documentation and examples of tracked videos
+
 http://idtracker.ai
 
 ## Contributors
