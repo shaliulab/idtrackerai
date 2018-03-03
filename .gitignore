@@ -12,14 +12,17 @@
 !*.in
 !*.md
 !*.png
+!*.css
+!*.gif
+!*.less
+!*.css_t
+!*.conf
 
 #except gitignore
 !*.gitignore
 
 #except docs folder and subfolders
-!docs/scipy-sphinx-theme/_static/*
-!docs/scipy-sphinx-theme/_theme/scipy/static/*.html
-!docs/scipy-sphinx-theme/_theme/scipy/static/*.conf
+!docs/scipy-sphinx-theme/*
 !docs/source/*
 !docs/make.bat
 !docs/Makefile
