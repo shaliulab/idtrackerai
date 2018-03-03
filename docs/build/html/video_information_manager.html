@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>Video information manager &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
+    <link rel="stylesheet" href="_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" >
+    <link rel="search" title="Search" href="search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
+    <link rel="up" title="Code documentation" href="modules.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="index.html">
+      <img style="border: 0;" alt="idtrackerai" src="_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
+	
+        <li class="active"><a href="index.html">idtrackerai v0.0 Manual</a></li>
+	
+          <li class="active"><a href="modules.html" accesskey="U">Code documentation</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <div class="section" id="video-information-manager">
+<h1>Video information manager<a class="headerlink" href="#video-information-manager" title="Permalink to this headline">¶</a></h1>
+<p>Collects information concerning the video (fps, number of channels, …) and manages
+the creation of the folders used to save and load both partial and final outputs of
+the algorithm</p>
+<span class="target" id="module-video"></span><dl class="class">
+<dt id="video.Video">
+<em class="property">class </em><code class="descclassname">video.</code><code class="descname">Video</code><span class="sig-paren">(</span><em>video_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="76%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>video_path</strong></td>
+<td>(str) path to the video (if the video is split in portions, the path to one of the portions)</td>
+</tr>
+<tr class="row-even"><td><strong>number_of_animals</strong></td>
+<td>(int) number of animals to track</td>
+</tr>
+<tr class="row-odd"><td><strong>episodes_start_end</strong></td>
+<td>(list) list of lists of the form [start, end] to parallelise processes</td>
+</tr>
+<tr class="row-even"><td><strong>original_bkg</strong></td>
+<td>(ndarray) model of the background with size the frame size</td>
+</tr>
+<tr class="row-odd"><td><strong>bkg</strong></td>
+<td>(ndarray) resized bkg according to <code class="xref py py-attr docutils literal notranslate"><span class="pre">Video.resolution_reduction</span></code></td>
+</tr>
+<tr class="row-even"><td><strong>subtract_bkg</strong></td>
+<td>(bool) True if bkg subtraction is performed</td>
+</tr>
+<tr class="row-odd"><td><strong>original_ROI</strong></td>
+<td>(ndarray) ROI of the size of frame</td>
+</tr>
+<tr class="row-even"><td><strong>ROI</strong></td>
+<td>(ndarray) resized ROI according to <code class="xref py py-attr docutils literal notranslate"><span class="pre">Video.resolution_reduction</span></code></td>
+</tr>
+<tr class="row-odd"><td><strong>apply_ROI</strong></td>
+<td>(bool) True if a non-trivial ROI has been specified</td>
+</tr>
+<tr class="row-even"><td><strong>min_threshold</strong></td>
+<td>(int) minimum intensity threshold</td>
+</tr>
+<tr class="row-odd"><td><strong>max_threshold</strong></td>
+<td>(int) maximum intensity threshold</td>
+</tr>
+<tr class="row-even"><td><strong>min_area</strong></td>
+<td>(int) minimum blob area</td>
+</tr>
+<tr class="row-odd"><td><strong>max_area</strong></td>
+<td>(int) maximum blob area</td>
+</tr>
+<tr class="row-even"><td><strong>resegmentation_parameters</strong></td>
+<td>(list) segmentation parameters specific to a frame</td>
+</tr>
+<tr class="row-odd"><td><strong>has_preprocessing_parameters</strong></td>
+<td>(bool) True if the preprocessing has been concluded succesfully</td>
+</tr>
+<tr class="row-even"><td><strong>maximum_number_of_blobs</strong></td>
+<td>(int) Maximum number of blobs segmented from a single frame</td>
+</tr>
+<tr class="row-odd"><td><strong>resolution_reduction</strong></td>
+<td>(float) resolution reduction to be applied to the original frame</td>
+</tr>
+<tr class="row-even"><td><strong>erosion_kernel_size</strong></td>
+<td>(int) size of the kernel used to erode blobs while solving the crossings. See <a class="reference internal" href="postprocessing.html#module-assign_them_all" title="assign_them_all"><code class="xref py py-mod docutils literal notranslate"><span class="pre">assign_them_all</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_paths_consistency_with_video_path</span></code>(…)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#video.Video.check_split_video" title="video.Video.check_split_video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_split_video</span></code></a>()</td>
+<td>If the video is divided in segments retrieves their paths</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#video.Video.compute_identification_image_size" title="video.Video.compute_identification_image_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_identification_image_size</span></code></a>(…)</td>
+<td>Uses an estimate of the body length of the animals in order to compute the size of the square image that is generated from every blob to identify the animals</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_overall_P2</span></code>(fragments)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy_attributes_between_two_video_objects</span></code>(…)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#video.Video.create_accumulation_folder" title="video.Video.create_accumulation_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_accumulation_folder</span></code></a>([…])</td>
+<td>Folder in which the model generated while accumulating is stored (after pretraining)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#video.Video.create_crossings_detector_folder" title="video.Video.create_crossings_detector_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_crossings_detector_folder</span></code></a>()</td>
+<td>If it does not exist creates a folder called crossing_detector in the video folder</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#video.Video.create_embeddings_folder" title="video.Video.create_embeddings_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_embeddings_folder</span></code></a>()</td>
+<td>If it does not exist creates a folder called embedding in the video folder</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#video.Video.create_preprocessing_folder" title="video.Video.create_preprocessing_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_preprocessing_folder</span></code></a>()</td>
+<td>If it does not exist creates a folder called preprocessing in the video folder</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#video.Video.create_pretraining_folder" title="video.Video.create_pretraining_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_pretraining_folder</span></code></a>([delete])</td>
+<td>Creates a folder named pretraining in video_folder where the model trained during the pretraining is stored</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#video.Video.create_session_folder" title="video.Video.create_session_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_session_folder</span></code></a>([name])</td>
+<td>Creates a folder named training in video_folder and a folder session_num where num is the session number and it is created everytime one starts training a network for a certain video_path</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#video.Video.create_training_folder" title="video.Video.create_training_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_training_folder</span></code></a>()</td>
+<td>Folder in which the last model is stored (after accumulation)</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#video.Video.create_trajectories_folder" title="video.Video.create_trajectories_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_trajectories_folder</span></code></a>()</td>
+<td>Folder in which trajectories files are stored</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#video.Video.create_trajectories_wo_gaps_folder" title="video.Video.create_trajectories_wo_gaps_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_trajectories_wo_gaps_folder</span></code></a>()</td>
+<td>Folder in which trajectories files are stored</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#video.Video.get_episodes" title="video.Video.get_episodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_episodes</span></code></a>()</td>
+<td>Split video in episodes (chunks) of 500 frames for parallelisation</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#video.Video.get_info" title="video.Video.get_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_info</span></code></a>()</td>
+<td>Retrieves basic information concerning the video.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#video.Video.in_which_episode" title="video.Video.in_which_episode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">in_which_episode</span></code></a>(frame_number)</td>
+<td>Check to which episode a frame index belongs</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_accumulation_statistics_attributes</span></code>([…])</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_processes_time_attributes</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_identity_transfer_possible</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename_session_folder</span></code>(new_session_name)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#video.Video.save" title="video.Video.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>()</td>
+<td>save class</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_accumulation_statistics_data</span></code>(…[,&nbsp;…])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_accumulation_step_statistics_data</span></code>(…)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_paths</span></code>(new_video_object_path)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_tensorflow_checkpoints_file</span></code>(…)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="video.Video.blobs_path">
+<code class="descname">blobs_path</code><a class="headerlink" href="#video.Video.blobs_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the path to save the blob collection after segmentation.
+It checks that the segmentation has been succesfully performed</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="video.Video.blobs_path_segmented">
+<code class="descname">blobs_path_segmented</code><a class="headerlink" href="#video.Video.blobs_path_segmented" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the path to save the blob collection after segmentation.
+It checks that the segmentation has been succesfully performed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.check_split_video">
+<code class="descname">check_split_video</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.check_split_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.check_split_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the video is divided in segments retrieves their paths</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.compute_identification_image_size">
+<code class="descname">compute_identification_image_size</code><span class="sig-paren">(</span><em>maximum_body_length</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.compute_identification_image_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.compute_identification_image_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses an estimate of the body length of the animals in order to
+compute the size of the square image that is generated from every
+blob to identify the animals</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.create_accumulation_folder">
+<code class="descname">create_accumulation_folder</code><span class="sig-paren">(</span><em>iteration_number=0</em>, <em>delete=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.create_accumulation_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.create_accumulation_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Folder in which the model generated while accumulating is stored
+(after pretraining)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.create_crossings_detector_folder">
+<code class="descname">create_crossings_detector_folder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.create_crossings_detector_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.create_crossings_detector_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>If it does not exist creates a folder called crossing_detector
+in the video folder</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.create_embeddings_folder">
+<code class="descname">create_embeddings_folder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.create_embeddings_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.create_embeddings_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>If it does not exist creates a folder called embedding
+in the video folder</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.create_preprocessing_folder">
+<code class="descname">create_preprocessing_folder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.create_preprocessing_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.create_preprocessing_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>If it does not exist creates a folder called preprocessing
+in the video folder</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.create_pretraining_folder">
+<code class="descname">create_pretraining_folder</code><span class="sig-paren">(</span><em>delete=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.create_pretraining_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.create_pretraining_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a folder named pretraining in video_folder where the model
+trained during the pretraining is stored</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.create_session_folder">
+<code class="descname">create_session_folder</code><span class="sig-paren">(</span><em>name=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.create_session_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.create_session_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a folder named training in video_folder and a folder session_num
+where num is the session number and it is created everytime one starts
+training a network for a certain video_path</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.create_training_folder">
+<code class="descname">create_training_folder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.create_training_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.create_training_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Folder in which the last model is stored (after accumulation)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.create_trajectories_folder">
+<code class="descname">create_trajectories_folder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.create_trajectories_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.create_trajectories_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Folder in which trajectories files are stored</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.create_trajectories_wo_gaps_folder">
+<code class="descname">create_trajectories_wo_gaps_folder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.create_trajectories_wo_gaps_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.create_trajectories_wo_gaps_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Folder in which trajectories files are stored</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="video.Video.fragments_path">
+<code class="descname">fragments_path</code><a class="headerlink" href="#video.Video.fragments_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the path to save the list of global fragments after
+fragmentation</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.get_episodes">
+<code class="descname">get_episodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.get_episodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.get_episodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split video in episodes (chunks) of 500 frames
+for parallelisation</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.get_info">
+<code class="descname">get_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.get_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.get_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves basic information concerning the video. If the video is
+recorded as a single file, it generates “episodes” for parallelisation
+during segmentation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="video.Video.global_fragments_path">
+<code class="descname">global_fragments_path</code><a class="headerlink" href="#video.Video.global_fragments_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the path to save the list of global fragments after
+fragmentation</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.in_which_episode">
+<code class="descname">in_which_episode</code><span class="sig-paren">(</span><em>frame_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.in_which_episode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.in_which_episode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check to which episode a frame index belongs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="video.Video.save">
+<code class="descname">save</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>save class</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Mar 03, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>video &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for video</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This file is part of idtracker.ai, a multiple animals tracking system</span>
+<span class="c1"># described in [1].</span>
+<span class="c1"># Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.</span>
+<span class="c1">#</span>
+<span class="c1"># idtracker.ai is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details. In addition, we require</span>
+<span class="c1"># derivatives or applications to acknowledge the authors by citing [1].</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># For more information please send an email (idtrackerai@gmail.com) or</span>
+<span class="c1"># use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.</span>
+<span class="c1">#</span>
+<span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G.,</span>
+<span class="c1"># (2018). idtracker.ai: Tracking all individuals with correct identities in large</span>
+<span class="c1"># animal collectives (submitted)</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">tempfile</span> <span class="k">import</span> <span class="n">mkstemp</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="k">import</span> <span class="n">move</span><span class="p">,</span> <span class="n">rmtree</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">from</span> <span class="nn">natsort</span> <span class="k">import</span> <span class="n">natsorted</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.utils.py_utils</span> <span class="k">import</span> <span class="n">get_git_revision_hash</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span>  <span class="n">AVAILABLE_VIDEO_EXTENSION</span><span class="p">,</span> <span class="n">FRAMES_PER_EPISODE</span><span class="p">,</span> <span class="n">MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.video&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Video"><a class="viewcode-back" href="../video_information_manager.html#video.Video">[docs]</a><span class="k">class</span> <span class="nc">Video</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    video_path : str</span>
+<span class="sd">        path to the video (if the video is split in portions, the path to one</span>
+<span class="sd">        of the portions)</span>
+<span class="sd">    number_of_animals : int</span>
+<span class="sd">        number of animals to track</span>
+<span class="sd">    episodes_start_end : list</span>
+<span class="sd">        list of lists of the form [start, end] to parallelise processes</span>
+<span class="sd">    original_bkg : ndarray</span>
+<span class="sd">        model of the background with size the frame size</span>
+<span class="sd">    bkg : ndarray</span>
+<span class="sd">        resized bkg according to :attr:`.Video.resolution_reduction`</span>
+<span class="sd">    subtract_bkg : bool</span>
+<span class="sd">        True if bkg subtraction is performed</span>
+<span class="sd">    original_ROI : ndarray</span>
+<span class="sd">        ROI of the size of frame</span>
+<span class="sd">    ROI : ndarray</span>
+<span class="sd">        resized ROI according to :attr:`.Video.resolution_reduction`</span>
+<span class="sd">    apply_ROI : bool</span>
+<span class="sd">        True if a non-trivial ROI has been specified</span>
+<span class="sd">    min_threshold : int</span>
+<span class="sd">        minimum intensity threshold</span>
+<span class="sd">    max_threshold : int</span>
+<span class="sd">        maximum intensity threshold</span>
+<span class="sd">    min_area : int</span>
+<span class="sd">        minimum blob area</span>
+<span class="sd">    max_area : int</span>
+<span class="sd">        maximum blob area</span>
+<span class="sd">    resegmentation_parameters : list</span>
+<span class="sd">        segmentation parameters specific to a frame</span>
+<span class="sd">    has_preprocessing_parameters : bool</span>
+<span class="sd">        True if the preprocessing has been concluded succesfully</span>
+<span class="sd">    maximum_number_of_blobs : int</span>
+<span class="sd">        Maximum number of blobs segmented from a single frame</span>
+<span class="sd">    resolution_reduction : float</span>
+<span class="sd">        resolution reduction to be applied to the original frame</span>
+<span class="sd">    erosion_kernel_size : int</span>
+<span class="sd">        size of the kernel used to erode blobs while solving the crossings. See</span>
+<span class="sd">        :mod:`~assign_them_all`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video_path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Video object init&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_video_path</span> <span class="o">=</span> <span class="n">video_path</span> <span class="c1">#string: path to the video</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_animals</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#int: number of animals in the video</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_episodes_start_end</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#list of lists: starting and ending frame per chunk [video is split for parallel computation]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_bkg</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#matrix [shape = shape of a frame] background used to do bkg subtraction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bkg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subtract_bkg</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#boolean: True if the user specifies to subtract the background</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_ROI</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ROI</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_ROI</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#boolean: True if the user applies a ROI to the video</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_threshold</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_threshold</span> <span class="o">=</span> <span class="mi">135</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_area</span> <span class="o">=</span> <span class="mi">150</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_area</span> <span class="o">=</span> <span class="mi">10000</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resize</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resegmentation_parameters</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_preprocessing_parameters</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1">#boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maximum_number_of_blobs</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#int: the maximum number of blobs detected in the video</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blobs_path</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#string: path to the saved list of blob objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blobs_path_segmented</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blobs_path_interpolated</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_been_segmented</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_been_preprocessed</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#boolean: True if a video has been fragmented in a past session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_preprocessing_folder</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_fragments_path</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#string: path to saved list of global fragments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_been_pretrained</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pretraining_folder</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_transfer_model_folder</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_identity_transfer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tracking_with_knowledge_transfer</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_percentage_of_accumulated_images</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_first_accumulation_finished</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_second_accumulation_finished</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_been_assigned</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_duplications_solved</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_crossings_solved</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_trajectories</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_trajectories_wo_gaps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings_folder</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># If embeddings are computed, the will be saved in this path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_first_frame_first_global_fragment</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_channels</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">episodes_start_end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_episodes_start_end</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_preprocessing_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_preprocessing_parameters</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">preprocessing_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocessing_folder</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_been_preprocessed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_been_preprocessed</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_been_segmented</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_been_segmented</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">crossings_detector_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crossings_detector_folder</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_been_pretrained</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_been_pretrained</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">previous_session_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previous_session_folder</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pretraining_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretraining_folder</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">first_accumulation_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_first_accumulation_finished</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">second_accumulation_finished</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_second_accumulation_finished</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">accumulation_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulation_folder</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">percentage_of_accumulated_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_percentage_of_accumulated_images</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_been_assigned</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_been_assigned</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_duplications_solved</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_duplications_solved</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_crossings_solved</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_crossings_solved</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_trajectories</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_trajectories</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_trajectories_wo_gaps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_trajectories_wo_gaps</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">embeddings_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings_folder</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">session_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_folder</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">apply_ROI</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_ROI</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">original_ROI</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_ROI</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ROI</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ROI</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">subtract_bkg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtract_bkg</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">original_bkg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_bkg</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bkg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bkg</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">resolution_reduction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolution_reduction</span>
+
+    <span class="nd">@resolution_reduction</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">resolution_reduction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resolution_reduction</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original_height</span> <span class="o">*</span> <span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original_width</span> <span class="o">*</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subtract_bkg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bkg</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original_bkg</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+                                            <span class="n">fx</span> <span class="o">=</span> <span class="n">value</span><span class="p">,</span>
+                                            <span class="n">fy</span> <span class="o">=</span> <span class="n">value</span><span class="p">,</span>
+                                            <span class="n">interpolation</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_CUBIC</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_ROI</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_ROI</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ROI</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original_ROI</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+                                            <span class="n">fx</span> <span class="o">=</span> <span class="n">value</span><span class="p">,</span>
+                                            <span class="n">fy</span> <span class="o">=</span> <span class="n">value</span><span class="p">,</span>
+                                            <span class="n">interpolation</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_CUBIC</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_threshold</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_threshold</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_area</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_area</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">resegmentation_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resegmentation_parameters</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resize</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">blobs_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;get the path to save the blob collection after segmentation.</span>
+<span class="sd">        It checks that the segmentation has been succesfully performed&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blobs_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocessing_folder</span><span class="p">,</span> <span class="s1">&#39;blobs_collection.npy&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blobs_path</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">blobs_path_segmented</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;get the path to save the blob collection after segmentation.</span>
+<span class="sd">        It checks that the segmentation has been succesfully performed&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blobs_path_segmented</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocessing_folder</span><span class="p">,</span> <span class="s1">&#39;blobs_collection_segmented.npy&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blobs_path_segmented</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">blobs_path_interpolated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blobs_path_interpolated</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocessing_folder</span><span class="p">,</span> <span class="s1">&#39;blobs_collection_interpolated.npy&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blobs_path_interpolated</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">global_fragments_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;get the path to save the list of global fragments after</span>
+<span class="sd">        fragmentation&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_fragments_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocessing_folder</span><span class="p">,</span> <span class="s1">&#39;global_fragments.npy&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_fragments_path</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fragments_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;get the path to save the list of global fragments after</span>
+<span class="sd">        fragmentation&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fragments_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocessing_folder</span><span class="p">,</span> <span class="s1">&#39;fragments.npy&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fragments_path</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">erosion_kernel_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_erosion_kernel_size</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">path_to_video_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_to_video_object</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">git_commit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_git_commit</span>
+
+<div class="viewcode-block" id="Video.save"><a class="viewcode-back" href="../video_information_manager.html#video.Video.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;save class&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_git_commit</span> <span class="o">=</span> <span class="n">get_git_revision_hash</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;saving video object in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">path_to_video_object</span><span class="p">)</span></div>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path_to_video_object</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">knowledge_transfer_model_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_transfer_model_folder</span>
+
+    <span class="nd">@knowledge_transfer_model_folder</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">knowledge_transfer_model_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_kt_model_path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">new_kt_model_path</span><span class="p">:</span>
+            <span class="n">subfolders</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_kt_model_path</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_kt_model_path</span><span class="p">,</span> <span class="s2">&quot;conv&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">subfolders</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_kt_model_path</span><span class="p">,</span> <span class="s2">&quot;softmax&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">subfolders</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_transfer_model_folder</span> <span class="o">=</span> <span class="n">new_kt_model_path</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The model folders &quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_kt_model_path</span><span class="p">,</span> <span class="s2">&quot;conv&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; and &quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_kt_model_path</span><span class="p">,</span> <span class="s2">&quot;softmax&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; are missing&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_transfer_model_folder</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">identity_transfer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_transfer</span>
+
+    <span class="k">def</span> <span class="nf">is_identity_transfer_possible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_transfer_info_dict</span><span class="p">[</span><span class="s1">&#39;number_of_animals&#39;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">first_global_fragment_knowledge_transfer_identities</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_first_global_fragment_knowledge_transfer_identities</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tracking_with_knowledge_transfer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracking_with_knowledge_transfer</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">video_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_video_path</span>
+
+    <span class="nd">@video_path</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">video_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;video_path 1&quot;</span><span class="p">)</span>
+        <span class="n">video_name</span><span class="p">,</span> <span class="n">video_extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;video_path 2&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">video_extension</span> <span class="ow">in</span> <span class="n">AVAILABLE_VIDEO_EXTENSION</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;video_path 3&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_video_path</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;video_path 4&quot;</span><span class="p">)</span>
+            <span class="c1">#get video folder</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;video_path 5&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_video_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_path</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;video_path 6&quot;</span><span class="p">)</span>
+            <span class="c1">#collect some info on the video (resolution, number of frames, ..)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s1">&#39;number_of_frames&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_info</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modified</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%c</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Supported video extensions are &quot;</span><span class="p">,</span> <span class="n">AVAILABLE_VIDEO_EXTENSION</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">video_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_video_folder</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_animals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_animals</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maximum_number_of_blobs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maximum_number_of_blobs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_frames</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_episodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_episodes</span>
+
+<div class="viewcode-block" id="Video.check_split_video"><a class="viewcode-back" href="../video_information_manager.html#video.Video.check_split_video">[docs]</a>    <span class="k">def</span> <span class="nf">check_split_video</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If the video is divided in segments retrieves their paths</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">paths_to_video_segments</span> <span class="o">=</span> <span class="n">scanFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">paths_to_video_segments</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">paths_to_video_segments</span>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">paths_to_video_segments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths_to_video_segments</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">original_width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_width</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">original_height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_height</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_width</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_height</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frames_per_second</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frames_per_second</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fragment_identifier_to_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fragment_identifier_to_index</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">first_frame_first_global_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_first_frame_first_global_fragment</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">median_body_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_median_body_length</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">model_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_area</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gamma_fit_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gamma_fit_parameters</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maximum_number_of_images_in_global_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maximum_number_of_images_in_global_fragments</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_unique_images_in_global_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_unique_images_in_global_fragments</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ratio_accumulated_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ratio_accumulated_images</span>
+
+    <span class="k">def</span> <span class="nf">check_paths_consistency_with_video_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">new_video_path</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">video_path</span> <span class="o">!=</span> <span class="n">new_video_path</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_paths</span><span class="p">(</span><span class="n">new_video_path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_video_object_path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">new_video_object_path</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The path to the video object is an empty string&quot;</span><span class="p">)</span>
+        <span class="n">new_session_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">new_video_object_path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">old_session_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span>
+        <span class="n">video_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_video_path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_video_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">new_session_path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_folder</span><span class="p">,</span><span class="n">video_name</span><span class="p">)</span>
+        <span class="n">attributes_to_modify</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">basestring</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">old_session_path</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attributes_to_modify</span><span class="p">:</span>
+            <span class="n">new_value</span> <span class="o">=</span> <span class="n">attributes_to_modify</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">old_session_path</span><span class="p">,</span> <span class="n">new_session_path</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">new_value</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating checkpoint files&quot;</span><span class="p">)</span>
+        <span class="n">folders_to_check</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;crossings_detector_folder&#39;</span><span class="p">,</span> <span class="s1">&#39;pretraining_folder&#39;</span><span class="p">,</span> <span class="s1">&#39;accumulation_folder&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">folders_to_check</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">folder</span> <span class="o">==</span> <span class="n">folders_to_check</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crossings_detector_folder</span><span class="p">,</span> <span class="s1">&#39;checkpoint&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">update_tensorflow_checkpoints_file</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">old_session_path</span><span class="p">,</span> <span class="n">new_session_path</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No checkpoint found in </span><span class="si">%s</span><span class="s1"> &#39;</span> <span class="o">%</span><span class="n">folder</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">sub_folder</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;conv&#39;</span><span class="p">,</span> <span class="s1">&#39;softmax&#39;</span><span class="p">]:</span>
+                        <span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">),</span> <span class="n">sub_folder</span><span class="p">,</span> <span class="s1">&#39;checkpoint&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">update_tensorflow_checkpoints_file</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">old_session_path</span><span class="p">,</span> <span class="n">new_session_path</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No checkpoint found in </span><span class="si">%s</span><span class="s1"> &#39;</span> <span class="o">%</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">folder</span><span class="p">),</span><span class="n">sub_folder</span><span class="p">))</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saving video object&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Done&quot;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">update_tensorflow_checkpoints_file</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">current_session_name</span><span class="p">,</span> <span class="n">new_session_name</span><span class="p">):</span>
+        <span class="n">checkpoint_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">fh</span><span class="p">,</span> <span class="n">abs_path</span> <span class="o">=</span> <span class="n">mkstemp</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">new_file</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">old_file</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">old_file</span><span class="p">:</span>
+                    <span class="n">splitted_line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+                    <span class="n">string_to_replace</span> <span class="o">=</span> <span class="n">splitted_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">new_string</span> <span class="o">=</span> <span class="n">string_to_replace</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">current_session_name</span><span class="p">,</span> <span class="n">new_session_name</span><span class="p">)</span>
+                    <span class="n">splitted_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_string</span>
+                    <span class="n">new_line</span> <span class="o">=</span> <span class="s1">&#39;&quot;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">splitted_line</span><span class="p">)</span>
+                    <span class="n">new_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">new_line</span><span class="p">)</span>
+
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">)</span>
+        <span class="n">move</span><span class="p">(</span><span class="n">abs_path</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">rename_session_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_session_name</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">new_session_name</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">new_session_name</span> <span class="o">=</span> <span class="s1">&#39;session_&#39;</span> <span class="o">+</span> <span class="n">new_session_name</span>
+        <span class="n">current_session_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating checkpoint files&quot;</span><span class="p">)</span>
+        <span class="n">folders_to_check</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;video_folder&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;preprocessing_folder&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;logs_folder&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;previous_session_folder&#39;</span>
+                            <span class="s1">&#39;crossings_detector_folder&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;pretraining_folder&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;accumulation_folder&#39;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">folders_to_check</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">folder</span> <span class="o">==</span> <span class="n">folders_to_check</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crossings_detector_folder</span><span class="p">,</span> <span class="s1">&#39;checkpoint&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">update_tensorflow_checkpoints_file</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">current_session_name</span><span class="p">,</span> <span class="n">new_session_name</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No checkpoint found in </span><span class="si">%s</span><span class="s1"> &#39;</span> <span class="o">%</span><span class="n">folder</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">sub_folder</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;conv&#39;</span><span class="p">,</span> <span class="s1">&#39;softmax&#39;</span><span class="p">]:</span>
+                        <span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">folder</span><span class="p">),</span> <span class="n">sub_folder</span><span class="p">,</span> <span class="s1">&#39;checkpoint&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">update_tensorflow_checkpoints_file</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">current_session_name</span><span class="p">,</span> <span class="n">new_session_name</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No checkpoint found in </span><span class="si">%s</span><span class="s1"> &#39;</span> <span class="o">%</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">),</span> <span class="n">sub_folder</span><span class="p">))</span>
+
+        <span class="n">attributes_to_modify</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">basestring</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">current_session_name</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="p">}</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Modifying folder name from </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> &quot;</span>  <span class="o">%</span><span class="p">(</span><span class="n">current_session_name</span><span class="p">,</span> <span class="n">new_session_name</span><span class="p">))</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_folder</span><span class="p">,</span> <span class="n">new_session_name</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Updating video object&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attributes_to_modify</span><span class="p">:</span>
+            <span class="n">new_value</span> <span class="o">=</span> <span class="n">attributes_to_modify</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">current_session_name</span><span class="p">,</span> <span class="n">new_session_name</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">new_value</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saving video object&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Video.get_info"><a class="viewcode-back" href="../video_information_manager.html#video.Video.get_info">[docs]</a>    <span class="k">def</span> <span class="nf">get_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retrieves basic information concerning the video. If the video is</span>
+<span class="sd">        recorded as a single file, it generates &quot;episodes&quot; for parallelisation</span>
+<span class="sd">        during segmentation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_paths_to_video_segments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_split_video</span><span class="p">()</span>
+        <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_frames_per_second</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_frames_per_second</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Cannot read frame per second&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths_to_video_segments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_frames</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">7</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_episodes</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">chunks_lengths</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">7</span><span class="p">))</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths_to_video_segments</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_episodes_start_end</span> <span class="o">=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">chunks_lengths</span><span class="p">[:</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">chunks_lengths</span><span class="p">[:</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">chunks_lengths</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_frames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">chunks_lengths</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_episodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_paths_to_video_segments</span><span class="p">)</span></div>
+        <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">identification_image_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identification_image_size</span>
+
+<div class="viewcode-block" id="Video.compute_identification_image_size"><a class="viewcode-back" href="../video_information_manager.html#video.Video.compute_identification_image_size">[docs]</a>    <span class="k">def</span> <span class="nf">compute_identification_image_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maximum_body_length</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Uses an estimate of the body length of the animals in order to</span>
+<span class="sd">        compute the size of the square image that is generated from every</span>
+<span class="sd">        blob to identify the animals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">identification_image_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">maximum_body_length</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">identification_image_size</span> <span class="o">=</span> <span class="n">identification_image_size</span> <span class="o">+</span> <span class="n">identification_image_size</span> <span class="o">%</span> <span class="mi">2</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_identification_image_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">identification_image_size</span><span class="p">,</span> <span class="n">identification_image_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_channels</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">init_processes_time_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_trajectories_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solve_impossible_jumps_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solve_duplications_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assignment_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">second_accumulation_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pretraining_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assignment_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_accumulation_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preprocessing_time</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="Video.create_session_folder"><a class="viewcode-back" href="../video_information_manager.html#video.Video.create_session_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_session_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a folder named training in video_folder and a folder session_num</span>
+<span class="sd">        where num is the session number and it is created everytime one starts</span>
+<span class="sd">        training a network for a certain video_path</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_folder</span><span class="p">,</span> <span class="s1">&#39;session&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_folder</span><span class="p">,</span> <span class="s1">&#39;session_&#39;</span> <span class="o">+</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_folder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_folder</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_previous_session_folder</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_previous_session_folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path_to_video_object</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span> <span class="s1">&#39;video_object.npy&#39;</span><span class="p">)</span></div>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;the folder </span><span class="si">%s</span><span class="s2"> has been created&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Video.create_preprocessing_folder"><a class="viewcode-back" href="../video_information_manager.html#video.Video.create_preprocessing_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_preprocessing_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If it does not exist creates a folder called preprocessing</span>
+<span class="sd">        in the video folder&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_preprocessing_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span> <span class="s1">&#39;preprocessing&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocessing_folder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocessing_folder</span><span class="p">)</span></div>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;the folder </span><span class="si">%s</span><span class="s2"> has been created&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_preprocessing_folder</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Video.create_crossings_detector_folder"><a class="viewcode-back" href="../video_information_manager.html#video.Video.create_crossings_detector_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_crossings_detector_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If it does not exist creates a folder called crossing_detector</span>
+<span class="sd">        in the video folder&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;setting path to save crossing detector model&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_crossings_detector_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span> <span class="s1">&#39;crossings_detector&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crossings_detector_folder</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;the folder </span><span class="si">%s</span><span class="s2"> has been created&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">crossings_detector_folder</span><span class="p">)</span></div>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crossings_detector_folder</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Video.create_pretraining_folder"><a class="viewcode-back" href="../video_information_manager.html#video.Video.create_pretraining_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_pretraining_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delete</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a folder named pretraining in video_folder where the model</span>
+<span class="sd">        trained during the pretraining is stored</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pretraining_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span> <span class="s1">&#39;pretraining&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretraining_folder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretraining_folder</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">delete</span><span class="p">:</span>
+            <span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretraining_folder</span><span class="p">)</span></div>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretraining_folder</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Video.create_accumulation_folder"><a class="viewcode-back" href="../video_information_manager.html#video.Video.create_accumulation_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_accumulation_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iteration_number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">delete</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Folder in which the model generated while accumulating is stored</span>
+<span class="sd">        (after pretraining)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">accumulation_folder_name</span> <span class="o">=</span> <span class="s1">&#39;accumulation_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">iteration_number</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_accumulation_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span> <span class="n">accumulation_folder_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accumulation_folder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accumulation_folder</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">delete</span><span class="p">:</span>
+            <span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accumulation_folder</span><span class="p">)</span></div>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accumulation_folder</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">init_accumulation_statistics_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attributes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;number_of_accumulated_global_fragments&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;number_of_non_certain_global_fragments&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;number_of_randomly_assigned_global_fragments&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;number_of_nonconsistent_global_fragments&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;number_of_nonunique_global_fragments&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;number_of_acceptable_global_fragments&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;validation_accuracy&#39;</span><span class="p">,</span><span class="s1">&#39;validation_individual_accuracies&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;training_accuracy&#39;</span><span class="p">,</span><span class="s1">&#39;training_individual_accuracies&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;ratio_of_accumulated_images&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accumulation_statistics_attributes_list</span> <span class="o">=</span> <span class="n">attributes</span>
+        <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="p">[])</span> <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">accumulation_statistics_attributes_list</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">store_accumulation_step_statistics_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_values</span><span class="p">):</span>
+        <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accumulation_statistics_attributes_list</span><span class="p">,</span> <span class="n">new_values</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">store_accumulation_statistics_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accumulation_trial</span><span class="p">,</span> <span class="n">number_of_possible_accumulation</span> <span class="o">=</span> <span class="n">MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;accumulation_statistics&#39;</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">accumulation_statistics</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">number_of_possible_accumulation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accumulation_statistics</span><span class="p">[</span><span class="n">accumulation_trial</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stat_attr</span><span class="p">)</span>
+                                                            <span class="k">for</span> <span class="n">stat_attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">accumulation_statistics_attributes_list</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">final_training_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_final_training_folder</span>
+
+<div class="viewcode-block" id="Video.create_training_folder"><a class="viewcode-back" href="../video_information_manager.html#video.Video.create_training_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_training_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Folder in which the last model is stored (after accumulation)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_final_training_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span> <span class="s1">&#39;training&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_training_folder</span><span class="p">):</span></div>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_training_folder</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Video.create_trajectories_folder"><a class="viewcode-back" href="../video_information_manager.html#video.Video.create_trajectories_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_trajectories_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Folder in which trajectories files are stored</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trajectories_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span><span class="s1">&#39;trajectories&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories_folder</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating trajectories folder...&quot;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories_folder</span><span class="p">)</span></div>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;the folder </span><span class="si">%s</span><span class="s2"> has been created&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories_folder</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Video.create_trajectories_wo_gaps_folder"><a class="viewcode-back" href="../video_information_manager.html#video.Video.create_trajectories_wo_gaps_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_trajectories_wo_gaps_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Folder in which trajectories files are stored</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trajectories_wo_gaps_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span> <span class="s1">&#39;trajectories_wo_gaps&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories_wo_gaps_folder</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating trajectories folder...&quot;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories_wo_gaps_folder</span><span class="p">)</span></div>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;the folder </span><span class="si">%s</span><span class="s2"> has been created&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories_wo_gaps_folder</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Video.create_embeddings_folder"><a class="viewcode-back" href="../video_information_manager.html#video.Video.create_embeddings_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_embeddings_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If it does not exist creates a folder called embedding</span>
+<span class="sd">        in the video folder&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span> <span class="s1">&#39;embeddings&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embeddings_folder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embeddings_folder</span><span class="p">)</span></div>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;the folder </span><span class="si">%s</span><span class="s2"> has been created&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">embeddings_folder</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Video.get_episodes"><a class="viewcode-back" href="../video_information_manager.html#video.Video.get_episodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_episodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Split video in episodes (chunks) of 500 frames</span>
+<span class="sd">        for parallelisation&quot;&quot;&quot;</span>
+        <span class="n">starting_frames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">,</span> <span class="n">FRAMES_PER_EPISODE</span><span class="p">)</span>
+        <span class="n">ending_frames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">starting_frames</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_episodes_start_end</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">starting_frames</span><span class="p">,</span> <span class="n">ending_frames</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_episodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">starting_frames</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Video.in_which_episode"><a class="viewcode-back" href="../video_information_manager.html#video.Video.in_which_episode">[docs]</a>    <span class="k">def</span> <span class="nf">in_which_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check to which episode a frame index belongs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">episode_number</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">episode_start_end</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_episodes_start_end</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">episode_start_end</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">frame_number</span>
+                            <span class="ow">and</span> <span class="n">episode_start_end</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">frame_number</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">episode_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">episode_number</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">copy_attributes_between_two_video_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video_object_source</span><span class="p">,</span> <span class="n">list_of_attributes</span><span class="p">,</span> <span class="n">is_property</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">list_of_attributes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;attribute </span><span class="si">%s</span><span class="s2"> does not exist&quot;</span> <span class="o">%</span><span class="n">attribute</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_property</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">attribute_is_property</span> <span class="o">=</span> <span class="n">is_property</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">attribute_is_property</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">compute_overall_P2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
+        <span class="n">weighted_P2</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">number_of_individual_blobs</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">fragments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">weighted_P2</span> <span class="o">+=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">P2_vector</span><span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span>
+                <span class="n">number_of_individual_blobs</span> <span class="o">+=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span>
+</div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">overall_P2</span> <span class="o">=</span> <span class="n">weighted_P2</span> <span class="o">/</span> <span class="n">number_of_individual_blobs</span>
+
+<span class="k">def</span> <span class="nf">scanFolder</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="n">video</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">filename</span><span class="p">,</span> <span class="n">extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+    <span class="n">folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;/*&quot;</span> <span class="o">+</span> <span class="n">extension</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">paths</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">filename_split</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">filename_split</span> <span class="o">==</span> <span class="n">filename</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;To process videos separated in segments use the following notation: video_name_1, video_name_2, ...&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">paths</span> <span class="o">=</span> <span class="n">natsorted</span><span class="p">([</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span> <span class="k">if</span> <span class="n">filename_split</span> <span class="ow">in</span> <span class="n">path</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">paths</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="p">()</span>
+    <span class="n">video</span><span class="o">.</span><span class="n">video_path</span> <span class="o">=</span> <span class="s1">&#39;/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi&#39;</span>
+
+<span class="c1"># &#39;time_preprocessing&#39;: None,</span>
+<span class="c1"># &#39;time_accumulation_before_pretraining&#39;: None,</span>
+<span class="c1"># &#39;time_pretraining&#39;: None,</span>
+<span class="c1"># &#39;time_accumulation_after_pretraining&#39;: None,</span>
+<span class="c1"># &#39;time_assignment&#39;: None,</span>
+<span class="c1"># &#39;time_postprocessing&#39;: None,</span>
+<span class="c1"># &#39;total_time&#39;: None,</span>
+<span class="c1">#  }, ignore_index=True)</span>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Mar 03, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

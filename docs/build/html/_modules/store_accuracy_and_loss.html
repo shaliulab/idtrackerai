@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>store_accuracy_and_loss &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for store_accuracy_and_loss</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This file is part of idtracker.ai, a multiple animals tracking system</span>
+<span class="c1"># described in [1].</span>
+<span class="c1"># Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.</span>
+<span class="c1">#</span>
+<span class="c1"># idtracker.ai is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details. In addition, we require</span>
+<span class="c1"># derivatives or applications to acknowledge the authors by citing [1].</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># For more information please send an email (idtrackerai@gmail.com) or</span>
+<span class="c1"># use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.</span>
+<span class="c1">#</span>
+<span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G.,</span>
+<span class="c1"># (2018). idtracker.ai: Tracking all individuals with correct identities in large</span>
+<span class="c1"># animal collectives (submitted)</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sb</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.utils.py_utils</span> <span class="k">import</span>  <span class="n">get_spaced_colors_util</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.store_accuracy_and_loss&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Store_Accuracy_and_Loss"><a class="viewcode-back" href="../idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss">[docs]</a><span class="k">class</span> <span class="nc">Store_Accuracy_and_Loss</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Store the loss, accuracy and individual accuracy values computed during</span>
+<span class="sd">    training and validation</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    _path_to_accuracy_error_data :</span>
+<span class="sd">        Path to save the lists :attr:`loss`, :attr:`accuracy`, :attr:`individual_accuracy`</span>
+<span class="sd">    name : string</span>
+<span class="sd">        &#39;Training&#39; or &#39;Validation&#39;</span>
+<span class="sd">    loss : list</span>
+<span class="sd">        List with the values of the loss</span>
+<span class="sd">    accuracy : list</span>
+<span class="sd">        List with the values of the accuracy</span>
+<span class="sd">    individual_accuracy : list</span>
+<span class="sd">        List with the values of the individual accuracies</span>
+<span class="sd">    number_of_epochs_completed :</span>
+<span class="sd">        Number of epochs completed</span>
+<span class="sd">    scope : string</span>
+<span class="sd">        &#39;Training&#39; if the class is instantiated during the training of the accumulation.</span>
+<span class="sd">        &#39;Pretraining&#39; if the class is instantiated during the training</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">save_folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">individual_accuracy</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_epochs_completed</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scope</span> <span class="o">=</span> <span class="n">scope</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Store_Accuracy_and_Loss.append_data"><a class="viewcode-back" href="../idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss.append_data">[docs]</a>    <span class="k">def</span> <span class="nf">append_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_value</span><span class="p">,</span> <span class="n">accuracy_value</span><span class="p">,</span> <span class="n">individual_accuracy_value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Appends the `loss_value`, `accuracy_value` and `individual_accuracy_value`</span>
+<span class="sd">        to their correspoding lists</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accuracy_value</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">individual_accuracy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">individual_accuracy_value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Store_Accuracy_and_Loss.plot"><a class="viewcode-back" href="../idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axes_handles</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">canvas_from_GUI</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">legend_font_color</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots the accuracy and the individual accuracies for every epoch</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">canvas_from_GUI</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax1</span> <span class="o">=</span> <span class="n">axes_handles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ax2</span> <span class="o">=</span> <span class="n">axes_handles</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">)),</span><span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="mf">0.35</span>
+            <span class="n">numAnimals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">individual_accuracy</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;training&#39;</span><span class="p">:</span>
+                <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">numAnimals</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">width</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;validation&#39;</span><span class="p">:</span>
+                <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">numAnimals</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="n">ax2</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">individual_accuracy</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">width</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Individual&#39;</span><span class="p">)</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Individual </span><span class="se">\n</span><span class="s1">accuracy&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">legend</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">legend_font_color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">legend</span><span class="o">.</span><span class="n">get_texts</span><span class="p">():</span>
+                        <span class="n">text</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="n">legend_font_color</span><span class="p">)</span>
+                <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Accuracy&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax1</span> <span class="o">=</span> <span class="n">axes_handles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ax2</span> <span class="o">=</span> <span class="n">axes_handles</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">ax3</span> <span class="o">=</span> <span class="n">axes_handles</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">[</span><span class="n">index</span><span class="p">:],</span> <span class="n">color</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">)),</span><span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="p">[</span><span class="n">index</span><span class="p">:],</span> <span class="n">color</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="mf">0.35</span>
+            <span class="n">numAnimals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">individual_accuracy</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;training&#39;</span><span class="p">:</span>
+                <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">numAnimals</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="o">-</span><span class="n">width</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;validation&#39;</span><span class="p">:</span>
+                <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">numAnimals</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>
+            <span class="n">ax3</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">individual_accuracy</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">width</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">ax3</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Individual&#39;</span><span class="p">)</span>
+            <span class="n">ax3</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Individual </span><span class="se">\n</span><span class="s1">accuracy&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">legend</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">legend_font_color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">legend</span><span class="o">.</span><span class="n">get_texts</span><span class="p">():</span>
+                        <span class="n">text</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="n">legend_font_color</span><span class="p">)</span>
+                <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Loss&#39;</span><span class="p">)</span>
+                <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Accuracy&#39;</span><span class="p">)</span>
+                <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Epochs&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">canvas_from_GUI</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mf">1e-8</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="n">canvas_from_GUI</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Store_Accuracy_and_Loss.plot_global_fragments"><a class="viewcode-back" href="../idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss.plot_global_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">plot_global_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax_handles</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">black</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">canvas_from_GUI</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots the global fragments used for training until the current epoch</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">patches</span>
+        <span class="k">if</span> <span class="n">canvas_from_GUI</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax4</span> <span class="o">=</span> <span class="n">ax_handles</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">ax4</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax4</span> <span class="o">=</span> <span class="n">ax_handles</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">ax4</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">get_spaced_colors_util</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">black</span><span class="o">=</span><span class="n">black</span><span class="p">)</span>
+        <span class="n">attribute_to_check</span> <span class="o">=</span> <span class="s1">&#39;used_for_training&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span> <span class="o">==</span> <span class="s1">&#39;training&#39;</span> <span class="k">else</span> <span class="s1">&#39;used_for_pretraining&#39;</span>
+
+        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">fragments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="n">attribute_to_check</span><span class="p">)</span> <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">final_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">blob_index</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">final_identity</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span> <span class="o">==</span> <span class="s1">&#39;pretraining&#39;</span><span class="p">:</span>
+                    <span class="n">blob_index</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">blob_hierarchy_in_starting_frame</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">blob_index</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">temporary_id</span>
+                <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">start_end</span>
+                <span class="n">ax4</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span>
+                    <span class="n">patches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">blob_index</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">),</span>   <span class="c1"># (x,y)</span>
+                        <span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span>  <span class="c1"># width</span>
+                        <span class="mf">1.</span><span class="p">,</span>          <span class="c1"># height</span>
+                        <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">edgecolor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">facecolor</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">temporary_id</span> <span class="k">if</span> <span class="n">attribute_to_check</span> <span class="o">==</span> <span class="s1">&#39;used_for_training&#39;</span> <span class="k">else</span> <span class="n">fragment</span><span class="o">.</span><span class="n">_temporary_id_for_pretraining</span><span class="p">],</span>
+                        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Frame number&#39;</span><span class="p">)</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Blob index&#39;</span><span class="p">)</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">maximum_number_of_blobs</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">maximum_number_of_blobs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">])</span></div>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">maximum_number_of_blobs</span> <span class="o">+</span> <span class="o">.</span><span class="mi">5</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+
+<div class="viewcode-block" id="Store_Accuracy_and_Loss.save"><a class="viewcode-back" href="../idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_epochs_completed</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves the values stored</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_epochs_completed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">number_of_epochs_completed</span><span class="p">)</span></div>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_loss_acc_dict.npy&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Store_Accuracy_and_Loss.load"><a class="viewcode-back" href="../idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load the values stored in case there are any saved</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_loss_acc_dict.npy&#39;</span><span class="p">)):</span>
+            <span class="n">loss_accuracy_dictionary</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_loss_acc_dict.npy&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">loss_accuracy_dictionary</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;number_of_epochs_completed&#39;</span><span class="p">):</span></div></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">number_of_epochs_completed</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Mar 03, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

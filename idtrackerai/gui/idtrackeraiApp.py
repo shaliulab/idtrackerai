@@ -293,11 +293,23 @@ class idtrackeraiApp(App):
         log_file = os.path.join(_dir, log_files[-1])
         move_logs = self.create_video_logs_folder()
         if move_logs:
-            os.rename(os.path.join(_dir, log_file), os.path.join(CHOSEN_VIDEO.video.logs_folder, log_file))
+            os.rename(os.path.join(_dir, log_file), os.path.join(CHOSEN_VIDEO.video.logs_folder, os.path.split(log_file)[-1]))
 
 def run_app():
     idtrackeraiApp().run()
 
 if __name__ == '__main__':
-
-    run_app()
+    try:
+        run_app()
+    except Exception, err:
+        import traceback
+        ex_type, ex, tb = sys.exc_info()
+        traceback.print_tb(tb)
+        idtrackeraiApp().on_stop()
+        print("\n")
+        print("Sorry, idtracker.ai quit unexpectedly.")
+        print("If this error persists please send the latest log file placed in")
+        try:
+            print(CHOSEN_VIDEO.video.logs_folder, " to idtrackerai@gmail.com")
+        except:
+            print(os.path.join(kivy.kivy_home_dir, Config.get('kivy', 'log_dir')), " to idtrackerai@gmail.com")

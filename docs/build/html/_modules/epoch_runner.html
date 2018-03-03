@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>epoch_runner &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for epoch_runner</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This file is part of idtracker.ai, a multiple animals tracking system</span>
+<span class="c1"># described in [1].</span>
+<span class="c1"># Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.</span>
+<span class="c1">#</span>
+<span class="c1"># idtracker.ai is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details. In addition, we require</span>
+<span class="c1"># derivatives or applications to acknowledge the authors by citing [1].</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># For more information please send an email (idtrackerai@gmail.com) or</span>
+<span class="c1"># use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.</span>
+<span class="c1">#</span>
+<span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G.,</span>
+<span class="c1"># (2018). idtracker.ai: Tracking all individuals with correct identities in large</span>
+<span class="c1"># animal collectives (submitted)</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.epoch_runner&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EpochRunner"><a class="viewcode-back" href="../idCNN.html#epoch_runner.EpochRunner">[docs]</a><span class="k">class</span> <span class="nc">EpochRunner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Runs an epoch divided in batches for a given operation and a given</span>
+<span class="sd">    data set (:class:`~get_data.DataSet`).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    epochs_completed : int</span>
+<span class="sd">        Number of epochs completed in the current step of the training</span>
+<span class="sd">    starting_epoch : int</span>
+<span class="sd">        Epoch at which the training step started</span>
+<span class="sd">    print_flag : bool</span>
+<span class="sd">        If `True` prints the values of the loss, the accucacy, and the individual</span>
+<span class="sd">        accuracy at the end of the epoch</span>
+<span class="sd">    data_set : &lt;DataSet object&gt;</span>
+<span class="sd">        Object containing the images and labels to be passed through the network</span>
+<span class="sd">        in the current epoch (see :class:`~get_data.DataSet`)</span>
+<span class="sd">    batch_size : int</span>
+<span class="sd">        Number of images to be passed through the network in each bach.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_set</span><span class="p">,</span>
+                <span class="n">starting_epoch</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="n">print_flag</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">batch_size</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_epochs_completed</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">starting_epoch</span> <span class="o">=</span> <span class="n">starting_epoch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_flag</span> <span class="o">=</span> <span class="n">print_flag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span> <span class="o">=</span> <span class="n">data_set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">epochs_completed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_epochs_completed</span>
+
+<div class="viewcode-block" id="EpochRunner.next_batch"><a class="viewcode-back" href="../idCNN.html#epoch_runner.EpochRunner.next_batch">[docs]</a>    <span class="k">def</span> <span class="nf">next_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the images and labels for the next batch to be computed. Images</span>
+<span class="sd">        and labels are extracted from a :class:`get_data.DataSet` object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        batch_size : int</span>
+<span class="sd">            Number of examples to be passed through the network in this batch</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        images : ndarray</span>
+<span class="sd">            Array of shape [batch_size, height, width, channels] containing</span>
+<span class="sd">            the images to be used in this batch</span>
+<span class="sd">        labels : ndarray</span>
+<span class="sd">            Array of shape [batch_size, number_of_classes] containing the</span>
+<span class="sd">            labels corresponding to the images to be used in this batch</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :class:`get_data.DataSet`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span> <span class="o">+=</span> <span class="n">batch_size</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span></div>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+
+<div class="viewcode-block" id="EpochRunner.run_epoch"><a class="viewcode-back" href="../idCNN.html#epoch_runner.EpochRunner.run_epoch">[docs]</a>    <span class="k">def</span> <span class="nf">run_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">store_loss_and_accuracy</span><span class="p">,</span> <span class="n">batch_operation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Performs a given `batch_operation` for an entire epoch and stores the</span>
+<span class="sd">        values of the loss and the accurcaies in a :class:`~store_accuracy_and_loss.Store_Accuracy_and_Loss`</span>
+<span class="sd">        object for visualization</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : string</span>
+<span class="sd">            A string to be printed in the epoch information. Typically &#39;Training&#39;</span>
+<span class="sd">            or &#39;Validation&#39;.</span>
+<span class="sd">        store_loss_and_accuracy : &lt;Store_Accuracy_and_Loss object&gt;</span>
+<span class="sd">            Object collecting the values of the loss, accurcay and individual accuracies</span>
+<span class="sd">            (see :class:`store_accuracy_and_loss.Store_Accuracy_and_Loss`)</span>
+<span class="sd">        batch_operation : func</span>
+<span class="sd">            Function to be run in the epoch</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        feed_dict : dict</span>
+<span class="sd">            Dictionary with the parameters and variables needed to run the</span>
+<span class="sd">            `batch_operation`. It is used to save the Tensorflow summaries</span>
+<span class="sd">            if needed</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :class:`get_data.DataSet`</span>
+<span class="sd">        :class:`store_accuracy_and_loss.Store_Accuracy_and_Loss`</span>
+<span class="sd">        :meth:`next_batch`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">loss_epoch</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">accuracy_epoch</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">individual_accuracy_epoch</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">_num_images</span><span class="p">:</span>
+            <span class="n">loss_acc_batch</span><span class="p">,</span> <span class="n">feed_dict</span> <span class="o">=</span> <span class="n">batch_operation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next_batch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">))</span>
+            <span class="n">loss_epoch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_acc_batch</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">accuracy_epoch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_acc_batch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">individual_accuracy_epoch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_acc_batch</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">loss_epoch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">loss_epoch</span><span class="p">))</span>
+        <span class="n">accuracy_epoch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">accuracy_epoch</span><span class="p">))</span>
+        <span class="n">individual_accuracy_epoch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">individual_accuracy_epoch</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_flag</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> (epoch </span><span class="si">%i</span><span class="s1">). Loss: </span><span class="si">%f</span><span class="s1">, accuracy </span><span class="si">%f</span><span class="s1">, individual accuracy: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting_epoch</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_epochs_completed</span><span class="p">,</span> <span class="n">loss_epoch</span><span class="p">,</span> <span class="n">accuracy_epoch</span> <span class="p">,</span> <span class="n">individual_accuracy_epoch</span><span class="p">))</span>
+
+        <span class="c1"># self._index_in_epoch_train = 0</span>
+        <span class="n">store_loss_and_accuracy</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">loss_epoch</span><span class="p">,</span> <span class="n">accuracy_epoch</span><span class="p">,</span> <span class="n">individual_accuracy_epoch</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">feed_dict</span>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Mar 03, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

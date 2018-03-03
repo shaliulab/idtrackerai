@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>Preprocessing &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
+    <link rel="stylesheet" href="_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" >
+    <link rel="search" title="Search" href="search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
+    <link rel="up" title="Code documentation" href="modules.html" >
+    <link rel="prev" title="Code documentation" href="modules.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="index.html">
+      <img style="border: 0;" alt="idtrackerai" src="_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
+	
+        <li class="active"><a href="index.html">idtrackerai v0.0 Manual</a></li>
+	
+          <li class="active"><a href="modules.html" accesskey="U">Code documentation</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+      <li class="active">
+        <a href="modules.html" title="Code documentation"
+           accesskey="P">previous</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Preprocessing</a><ul>
+<li><a class="reference internal" href="#module-blob">Blob</a></li>
+<li><a class="reference internal" href="#list-of-blobs">List of Blobs</a></li>
+<li><a class="reference internal" href="#model-area">Model area</a></li>
+<li><a class="reference internal" href="#module-segmentation">Segmentation</a></li>
+<li><a class="reference internal" href="#module-video_utils">Segmentation utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <div class="section" id="preprocessing">
+<h1>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-blob">
+<span id="blob"></span><h2>Blob<a class="headerlink" href="#module-blob" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="blob.Blob">
+<em class="property">class </em><code class="descclassname">blob.</code><code class="descname">Blob</code><span class="sig-paren">(</span><em>centroid</em>, <em>contour</em>, <em>area</em>, <em>bounding_box_in_frame_coordinates</em>, <em>bounding_box_image=None</em>, <em>estimated_body_length=None</em>, <em>pixels=None</em>, <em>number_of_animals=None</em>, <em>frame_number=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object representing a blob (collection of pixels) segmented from a frame</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>frame_number</strong></td>
+<td>(int) Object containing all the parameters of the video.</td>
+</tr>
+<tr class="row-even"><td><strong>number_of_animals</strong></td>
+<td>(int) Number of animals to be tracked</td>
+</tr>
+<tr class="row-odd"><td><strong>centroid</strong></td>
+<td>(tuple) Centroid as (x,y) in frame coordinate</td>
+</tr>
+<tr class="row-even"><td><strong>contour: list</strong></td>
+<td>List of tuples (x,y) in frame coordinate of the pixels on the boundary of the blob</td>
+</tr>
+<tr class="row-odd"><td><strong>area</strong></td>
+<td>(int) Number of pixels composing the blob</td>
+</tr>
+<tr class="row-even"><td><strong>bounding_box_in_frame_coordinates: list</strong></td>
+<td>List of tuples [(x, y), (x + width, y + height)] of the bounding box rectangle enclosing the blob’s pixels</td>
+</tr>
+<tr class="row-odd"><td><strong>bounding_box_image: ndarray</strong></td>
+<td>Image obtained by clipping the frame to the bounding box</td>
+</tr>
+<tr class="row-even"><td><strong>estimated_body_length: float</strong></td>
+<td>Body length estimated from the bounding box</td>
+</tr>
+<tr class="row-odd"><td><strong>_image_for_identification: ndarray</strong></td>
+<td>Image fed to the network to get the identity of the animal the blob is associated to</td>
+</tr>
+<tr class="row-even"><td><strong>pixels</strong></td>
+<td>(list) List of ravelled pixels belonging to the blob (wrt the full frame)</td>
+</tr>
+<tr class="row-odd"><td><strong>_is_an_individual</strong></td>
+<td>(bool) If True the blob is associated to a single animal</td>
+</tr>
+<tr class="row-even"><td><strong>_is_a_crossing</strong></td>
+<td>(bool) If True the blob is associated to two or more animals touching</td>
+</tr>
+<tr class="row-odd"><td><strong>_was_a_crossing</strong></td>
+<td>(bool) If True the blob has been generated by splitting a crossing in postprocessing</td>
+</tr>
+<tr class="row-even"><td><strong>_is_a_misclassified_individual</strong></td>
+<td>(bool) This property can be modified only by the user during validation. It identifies a blob that was by mistaken associated to a crossing by the DeepCrossingDetector</td>
+</tr>
+<tr class="row-odd"><td><strong>next</strong></td>
+<td>(list) List of blob objects segmented in self.frame_number + 1 whose list of pixels intersect self.pixels</td>
+</tr>
+<tr class="row-even"><td><strong>previous</strong></td>
+<td>(list) List of blob objects segmented in self.frame_number - 1 whose list of pixels intersect self.pixels</td>
+</tr>
+<tr class="row-odd"><td><strong>_fragment_identifier</strong></td>
+<td>(int) Unique integer identifying the fragment (built by blob overlapping) to which self belongs to</td>
+</tr>
+<tr class="row-even"><td><strong>_blob_index</strong></td>
+<td>(int) Hierarchy of the blob</td>
+</tr>
+<tr class="row-odd"><td><strong>_used_for_training</strong></td>
+<td>(bool) If True the image obtained from the blob has been used to train the idCNN</td>
+</tr>
+<tr class="row-even"><td><strong>_accumulation_step</strong></td>
+<td>(int) Accumulation step in which the image associated to the blob has been accumulated</td>
+</tr>
+<tr class="row-odd"><td><strong>_generated_while_closing_the_gap</strong></td>
+<td>(bool) If True the blob has been generated while solving the crossings</td>
+</tr>
+<tr class="row-even"><td><strong>_user_generated_identity</strong></td>
+<td>(int) The identity corrected manually by the user during validation</td>
+</tr>
+<tr class="row-odd"><td><strong>_identity_corrected_closing_gaps</strong></td>
+<td>(int) The identity given to the blob during in postprocessing</td>
+</tr>
+<tr class="row-even"><td><strong>_identity_corrected_solving_duplication</strong></td>
+<td>(int) The identity given to the blob while solving duplications</td>
+</tr>
+<tr class="row-odd"><td><strong>_identity</strong></td>
+<td>(int) Identity associated to the blob</td>
+</tr>
+<tr class="row-even"><td><strong>is_identified</strong></td>
+<td>(bool) True if self.identity is not None</td>
+</tr>
+<tr class="row-odd"><td><strong>final_identity</strong></td>
+<td>(int) Identity assigned to self after validation</td>
+</tr>
+<tr class="row-even"><td><strong>assigned_identity</strong></td>
+<td>(int) Identity assigned to self by the algorithm (ignoring eventual correction made by the user during validation)</td>
+</tr>
+<tr class="row-odd"><td><strong>has_ambiguous_identity: bool</strong></td>
+<td>True if during either accumulation of residual identification the blob has been associated with equal probability to two (or more) distinct identities</td>
+</tr>
+<tr class="row-even"><td><strong>nose_coordinates</strong></td>
+<td>(tuple) Coordinate of the nose of the blob (only for zebrafish)</td>
+</tr>
+<tr class="row-odd"><td><strong>head_coordinates</strong></td>
+<td>(tuple) Coordinate of the centroid of the head of the blob (only for zebrafish)</td>
+</tr>
+<tr class="row-even"><td><strong>extreme1_coordinate</strong></td>
+<td>(tuple)</td>
+</tr>
+<tr class="row-odd"><td><strong>extreme2_coordinates</strong></td>
+<td>(tuple)</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#blob.Blob.apply_model_area" title="blob.Blob.apply_model_area"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_model_area</span></code></a>(video,&nbsp;number_of_animals,&nbsp;…)</td>
+<td>Classify self as a crossing or individual blob according to its area</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#blob.Blob.check_for_multiple_next_or_previous" title="blob.Blob.check_for_multiple_next_or_previous"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_for_multiple_next_or_previous</span></code></a>([direction])</td>
+<td>Return True if self has multiple blobs in its past or future overlapping history of the blob</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_overlapping_with_previous_blob</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#blob.Blob.distance_from_countour_to" title="blob.Blob.distance_from_countour_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distance_from_countour_to</span></code></a>(point)</td>
+<td>Returns the distance between the point passed as input and the closes point belonging to the contour of the blob.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#blob.Blob.get_image_for_identification" title="blob.Blob.get_image_for_identification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_image_for_identification</span></code></a>(video[,&nbsp;…])</td>
+<td>Compute the image that will be used to identify the animal with the idCNN</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#blob.Blob.get_nose_and_head_coordinates" title="blob.Blob.get_nose_and_head_coordinates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_nose_and_head_coordinates</span></code></a>()</td>
+<td>Only for zebrafish: Compute the nose coordinate according to [R2]</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#blob.Blob.in_a_global_fragment_core" title="blob.Blob.in_a_global_fragment_core"><code class="xref py py-obj docutils literal notranslate"><span class="pre">in_a_global_fragment_core</span></code></a>(blobs_in_frame)</td>
+<td>A blob in a frame is in the core of a global fragment if in that frame there are as many blobs as number of animals to track</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#blob.Blob.is_a_sure_crossing" title="blob.Blob.is_a_sure_crossing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_a_sure_crossing</span></code></a>()</td>
+<td>A blob marked as a sure crossing will be used to train the Deep Crossing Detector (the artificial neural network used to disriminate images associated with individual from ones associated to crossings).</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#blob.Blob.is_a_sure_individual" title="blob.Blob.is_a_sure_individual"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_a_sure_individual</span></code></a>()</td>
+<td>A blob marked as a sure individual will be used to train the Deep Crossing Detector (the artificial neural network used to disriminate images associated with individual from ones associated to crossings).</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#blob.Blob.now_points_to" title="blob.Blob.now_points_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">now_points_to</span></code></a>(other)</td>
+<td>Given two consecutive blob objects updates their respective overlapping histories</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#blob.Blob.overlaps_with" title="blob.Blob.overlaps_with"><code class="xref py py-obj docutils literal notranslate"><span class="pre">overlaps_with</span></code></a>(other)</td>
+<td>Given a second blob object, checks if the lists of pixels of the two blobs intersect</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#blob.Blob.set_image_for_identification" title="blob.Blob.set_image_for_identification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_image_for_identification</span></code></a>(video)</td>
+<td>Set the image that will be used to identitfy the animal with the idCNN</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#blob.Blob.squared_distance_to" title="blob.Blob.squared_distance_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">squared_distance_to</span></code></a>(other)</td>
+<td>Returns the squared distance from the centroid of self to the centroid of other</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="blob.Blob.apply_model_area">
+<code class="descname">apply_model_area</code><span class="sig-paren">(</span><em>video</em>, <em>number_of_animals</em>, <em>model_area</em>, <em>identification_image_size</em>, <em>number_of_blobs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.apply_model_area"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.apply_model_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classify self as a crossing or individual blob according to its area</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>Object containing all the parameters of the video.</p>
+</div></blockquote>
+<p><strong>number_of_animals</strong> : int</p>
+<blockquote>
+<div><p>Number of animals to be tracked</p>
+</div></blockquote>
+<p><strong>model_area</strong> : function</p>
+<blockquote>
+<div><p>Model of the area blobs representing individual animals</p>
+</div></blockquote>
+<p><strong>identification_image_size</strong> : tuple</p>
+<blockquote>
+<div><p>Shape of the images used for the identification</p>
+</div></blockquote>
+<p><strong>number_of_blobs</strong> : int</p>
+<blockquote class="last">
+<div><p>Number of blobs segmented in the frame self.frame_number</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blob.Blob.check_for_multiple_next_or_previous">
+<code class="descname">check_for_multiple_next_or_previous</code><span class="sig-paren">(</span><em>direction=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.check_for_multiple_next_or_previous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.check_for_multiple_next_or_previous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if self has multiple blobs in its past or future overlapping
+history of the blob</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>direction</strong> : str</p>
+<blockquote>
+<div><p>“previous” or “next”. If “previous” the past overlapping history will
+be checked in order to find out if the blob will split in the past.
+Symmetrically, if “next” the future overlapping history of the blob
+will be checked</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Bool</p>
+<blockquote class="last">
+<div><p>If True the blob splits into two or multiple overlapping blobs in its
+“past” or “future” history, depending on the parameter “direction”</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blob.Blob.distance_from_countour_to">
+<code class="descname">distance_from_countour_to</code><span class="sig-paren">(</span><em>point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.distance_from_countour_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.distance_from_countour_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distance between the point passed as input and the closes
+point belonging to the contour of the blob.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>point</strong> : tuple</p>
+<blockquote>
+<div><p>(x,y)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p><span class="math notranslate">\(\min_{c\in \mbox{ blob.contour}}(d(c, point))\)</span>, where <span class="math notranslate">\(d\)</span>
+is the Euclidean distance.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blob.Blob.get_image_for_identification">
+<code class="descname">get_image_for_identification</code><span class="sig-paren">(</span><em>video</em>, <em>folder_to_save_for_paper_figure=''</em>, <em>image_size=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.get_image_for_identification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.get_image_for_identification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the image that will be used to identify the animal with the idCNN</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>Object containing all the parameters of the video.</p>
+</div></blockquote>
+<p><strong>folder_to_save_for_paper_figure</strong> : str</p>
+<blockquote>
+<div><p>Path to the folder in which the image will be saved. If ‘’ the image
+will not be saved.</p>
+</div></blockquote>
+<p><strong>image_size</strong> : tuple</p>
+<blockquote>
+<div><p>Shape of the image</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>Stadardised image</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blob.Blob.get_nose_and_head_coordinates">
+<code class="descname">get_nose_and_head_coordinates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.get_nose_and_head_coordinates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.get_nose_and_head_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only for zebrafish: Compute the nose coordinate according to <a class="reference internal" href="#r1" id="id2">[R1]</a></p>
+<table class="docutils citation" frame="void" id="r1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R1]</a></td><td>Wang, Shuo Hong, et al. “Automated planar tracking the waving
+bodies of multiple zebrafish swimming in shallow water.”
+PloS one 11.4 (2016): e0154714.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blob.Blob.in_a_global_fragment_core">
+<code class="descname">in_a_global_fragment_core</code><span class="sig-paren">(</span><em>blobs_in_frame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.in_a_global_fragment_core"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.in_a_global_fragment_core" title="Permalink to this definition">¶</a></dt>
+<dd><p>A blob in a frame is in the core of a global fragment if in
+that frame there are as many blobs as number of animals to track</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>blobs_in_frame</strong> : list</p>
+<blockquote>
+<div><p>List of Blob objects representing the animals segmented in the frame
+self.frame_number</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Bool</p>
+<blockquote class="last">
+<div><p>True if the blob is in the core of a global fragment</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blob.Blob.is_a_sure_crossing">
+<code class="descname">is_a_sure_crossing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.is_a_sure_crossing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.is_a_sure_crossing" title="Permalink to this definition">¶</a></dt>
+<dd><p>A blob marked as a sure crossing will be used to train the Deep
+Crossing Detector (the artificial neural network used to disriminate
+images associated with individual from ones associated to crossings).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Bool</p>
+<blockquote class="last">
+<div><p>Blob is a sure crossing if:</p>
+<ul class="simple">
+<li>it overlaps with one and only one blob in both the immediate past and future frames;</li>
+<li>it splits in both its past and future overlapping history</li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blob.Blob.is_a_sure_individual">
+<code class="descname">is_a_sure_individual</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.is_a_sure_individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.is_a_sure_individual" title="Permalink to this definition">¶</a></dt>
+<dd><p>A blob marked as a sure individual will be used to train the Deep
+Crossing Detector (the artificial neural network used to disriminate
+images associated with individual from ones associated to crossings).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Bool</p>
+<blockquote class="last">
+<div><p>Blob is a sure individual if:</p>
+<ul class="simple">
+<li>it overlaps with one and only one blob in both the immediate past and future frames;</li>
+<li>it never splits in both its past and future overlapping history</li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blob.Blob.now_points_to">
+<code class="descname">now_points_to</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.now_points_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.now_points_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two consecutive blob objects updates their respective overlapping
+histories</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>other</strong> : &lt;Blob object&gt;</p>
+<blockquote class="last">
+<div><p>An instance of the class Blob</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blob.Blob.overlaps_with">
+<code class="descname">overlaps_with</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.overlaps_with"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.overlaps_with" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a second blob object, checks if the lists of pixels of the two
+blobs intersect</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>other</strong> : &lt;Blob object&gt;</p>
+<blockquote>
+<div><p>An instance of the class Blob</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Bool</p>
+<blockquote class="last">
+<div><p>True if the lists of pixels have non-empty intersection</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blob.Blob.set_image_for_identification">
+<code class="descname">set_image_for_identification</code><span class="sig-paren">(</span><em>video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.set_image_for_identification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.set_image_for_identification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the image that will be used to identitfy the animal with the idCNN</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote class="last">
+<div><p>Object containing all the parameters of the video.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blob.Blob.squared_distance_to">
+<code class="descname">squared_distance_to</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#Blob.squared_distance_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.Blob.squared_distance_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the squared distance from the centroid of self to the centroid
+of other</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>other</strong> : &lt;Blob object&gt; or tuple</p>
+<blockquote>
+<div><p>An instance of the class Blob or a tuple (x,y)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>Squared distance between centroids</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="blob.full2miniframe">
+<code class="descclassname">blob.</code><code class="descname">full2miniframe</code><span class="sig-paren">(</span><em>point</em>, <em>boundingBox</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#full2miniframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.full2miniframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps a point in the fullframe to the coordinate system defined by the image
+generated by considering the bounding box of the blob.
+Here it is use for centroids</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>point</strong> : tuple</p>
+<blockquote>
+<div><p>(x, y)</p>
+</div></blockquote>
+<p><strong>boundingBox</strong> : list</p>
+<blockquote>
+<div><p>[(x, y), (x + bounding_box_width, y + bounding_box_height)]</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple</p>
+<blockquote class="last">
+<div><p><span class="math notranslate">\((x^\prime, y^\prime)\)</span></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="blob.remove_background_pixels">
+<code class="descclassname">blob.</code><code class="descname">remove_background_pixels</code><span class="sig-paren">(</span><em>height</em>, <em>width</em>, <em>bounding_box_image</em>, <em>pixels</em>, <em>bounding_box_in_frame_coordinates</em>, <em>folder_to_save_for_paper_figure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/blob.html#remove_background_pixels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#blob.remove_background_pixels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the background pixels substiuting them with a homogeneous black
+background.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>height</strong> : int</p>
+<blockquote>
+<div><p>Frame height</p>
+</div></blockquote>
+<p><strong>width</strong> : int</p>
+<blockquote>
+<div><p>Frame width</p>
+</div></blockquote>
+<p><strong>bounding_box_image</strong> : ndarray</p>
+<blockquote>
+<div><p>Images cropped from the frame by considering the bounding box associated to a blob</p>
+</div></blockquote>
+<p><strong>pixels</strong> : list</p>
+<blockquote>
+<div><p>List of pixels associated to a blob</p>
+</div></blockquote>
+<p><strong>bounding_box_in_frame_coordinates</strong> : list</p>
+<blockquote>
+<div><p>[(x, y), (x + bounding_box_width, y + bounding_box_height)]</p>
+</div></blockquote>
+<p><strong>identification_image_size</strong> : tuple</p>
+<blockquote>
+<div><p>shape of the identification image</p>
+</div></blockquote>
+<p><strong>folder_to_save_for_paper_figure</strong> : str</p>
+<blockquote>
+<div><p>folder to save the images for identification</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>Image with black background pixels</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="list-of-blobs">
+<h2>List of Blobs<a class="headerlink" href="#list-of-blobs" title="Permalink to this headline">¶</a></h2>
+<p>Collection of instances of the class <a class="reference internal" href="#blob.Blob" title="blob.Blob"><code class="xref py py-class docutils literal notranslate"><span class="pre">Blob</span></code></a> generated by considering
+all the blobs segmented from the video.</p>
+<span class="target" id="module-list_of_blobs"></span><dl class="class">
+<dt id="list_of_blobs.ListOfBlobs">
+<em class="property">class </em><code class="descclassname">list_of_blobs.</code><code class="descname">ListOfBlobs</code><span class="sig-paren">(</span><em>blobs_in_video=None</em>, <em>number_of_frames=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collects all the instances of the class <a class="reference internal" href="#blob.Blob" title="blob.Blob"><code class="xref py py-class docutils literal notranslate"><span class="pre">Blob</span></code></a> generated
+from the blobs extracted from the video during segmentation
+(see <a class="reference internal" href="#module-segmentation" title="segmentation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">segmentation</span></code></a>)</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="79%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>blobs_in_video</strong></td>
+<td>(list) List of instances of <a class="reference internal" href="#blob.Blob" title="blob.Blob"><code class="xref py py-class docutils literal notranslate"><span class="pre">Blob</span></code></a> segmented from the video and organised framewise</td>
+</tr>
+<tr class="row-even"><td><strong>number_of_frames</strong></td>
+<td>(int) number of frames in the video</td>
+</tr>
+<tr class="row-odd"><td><strong>blobs_are_connected :bool</strong></td>
+<td>True if the blobs have already being organised in fragments (see <a class="reference internal" href="fragmentation.html#fragment.Fragment" title="fragment.Fragment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fragment</span></code></a>). False otherwise</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.apply_model_area_to_video" title="list_of_blobs.ListOfBlobs.apply_model_area_to_video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_model_area_to_video</span></code></a>(video,&nbsp;model_area,&nbsp;…)</td>
+<td>Applies <cite>model_area</cite> to every blob extracted from video</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.check_maximal_number_of_blob" title="list_of_blobs.ListOfBlobs.check_maximal_number_of_blob"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_maximal_number_of_blob</span></code></a>(number_of_animals)</td>
+<td>Checks that the amount of blobs per frame is not greater than the number of animals to track</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_crossing_fragment_identifier" title="list_of_blobs.ListOfBlobs.compute_crossing_fragment_identifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_crossing_fragment_identifier</span></code></a>()</td>
+<td>Assign a unique identifier to fragments associated to a crossing</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_fragment_identifier_and_blob_index" title="list_of_blobs.ListOfBlobs.compute_fragment_identifier_and_blob_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_fragment_identifier_and_blob_index</span></code></a>(…)</td>
+<td>Associates a unique fragment identifier to the fragments computed by overlapping see method <a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames" title="list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_overlapping_between_subsequent_frames()</span></code></a> and sets the blob index as the hierarchy of the blob in the first frame of the fragment to which blob belongs to.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_model_area_and_body_length" title="list_of_blobs.ListOfBlobs.compute_model_area_and_body_length"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_model_area_and_body_length</span></code></a>(…)</td>
+<td>computes the median and standard deviation of all the blobs of the video and the median_body_length estimated from the diagonal of the bounding box.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_nose_and_head_coordinates" title="list_of_blobs.ListOfBlobs.compute_nose_and_head_coordinates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_nose_and_head_coordinates</span></code></a>()</td>
+<td>Computes nose and head coordinate for all the blobs segmented from the video</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames" title="list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_overlapping_between_subsequent_frames</span></code></a>()</td>
+<td>Computes overlapping between self and the blobs generated during segmentation in the next frames</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.connect" title="list_of_blobs.ListOfBlobs.connect"><code class="xref py py-obj docutils literal notranslate"><span class="pre">connect</span></code></a>()</td>
+<td>Connects blobs in subsequent frames by computing their overlapping</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.disconnect" title="list_of_blobs.ListOfBlobs.disconnect"><code class="xref py py-obj docutils literal notranslate"><span class="pre">disconnect</span></code></a>()</td>
+<td>Reinitialise the previous and next list of blobs (see <code class="xref py py-attr docutils literal notranslate"><span class="pre">next</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">previous</span></code>).</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.erode" title="list_of_blobs.ListOfBlobs.erode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">erode</span></code></a>(video)</td>
+<td>Erodes all the blobs in the video</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.get_data_plot" title="list_of_blobs.ListOfBlobs.get_data_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_plot</span></code></a>()</td>
+<td>Gets the areas of all the blobs segmented in the video</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.load" title="list_of_blobs.ListOfBlobs.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a>(video,&nbsp;path_to_load_blob_list_file)</td>
+<td>Short summary.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.reconnect" title="list_of_blobs.ListOfBlobs.reconnect"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reconnect</span></code></a>()</td>
+<td>Connects blobs in subsequent frames by computing their overlapping and sets blobs_are_connected to True</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.save" title="list_of_blobs.ListOfBlobs.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>(video[,&nbsp;path_to_save,&nbsp;number_of_chunks])</td>
+<td>save instance</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.update_from_list_of_fragments" title="list_of_blobs.ListOfBlobs.update_from_list_of_fragments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_from_list_of_fragments</span></code></a>(fragments,&nbsp;…)</td>
+<td>Updates the blobs objects generated from the video with the attributes computed for each fragment</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.apply_model_area_to_video">
+<code class="descname">apply_model_area_to_video</code><span class="sig-paren">(</span><em>video</em>, <em>model_area</em>, <em>identification_image_size</em>, <em>number_of_animals</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.apply_model_area_to_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.apply_model_area_to_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies <cite>model_area</cite> to every blob extracted from video</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>See <a class="reference internal" href="video_information_manager.html#video.Video" title="video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a></p>
+</div></blockquote>
+<p><strong>model_area</strong> : &lt;ModelArea object&gt;</p>
+<blockquote>
+<div><p>See <a class="reference internal" href="#model_area.ModelArea" title="model_area.ModelArea"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelArea</span></code></a></p>
+</div></blockquote>
+<p><strong>identification_image_size</strong> : int</p>
+<blockquote>
+<div><p>size of the identification image (see
+<a class="reference internal" href="#blob.Blob.get_image_for_identification" title="blob.Blob.get_image_for_identification"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_image_for_identification()</span></code></a> and
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">image_for_identification</span></code>)</p>
+</div></blockquote>
+<p><strong>number_of_animals</strong> : int</p>
+<blockquote class="last">
+<div><p>number of animals to be tracked</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.check_maximal_number_of_blob">
+<code class="descname">check_maximal_number_of_blob</code><span class="sig-paren">(</span><em>number_of_animals</em>, <em>return_maximum_number_of_blobs=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.check_maximal_number_of_blob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.check_maximal_number_of_blob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks that the amount of blobs per frame is not greater than the
+number of animals to track</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>number_of_animals</strong> : int</p>
+<blockquote>
+<div><p>number of animals to be tracked</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>List of indices of frames in which more blobs than animals to track
+have been segmented</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.compute_crossing_fragment_identifier">
+<code class="descname">compute_crossing_fragment_identifier</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.compute_crossing_fragment_identifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.compute_crossing_fragment_identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign a unique identifier to fragments associated to a crossing</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.compute_fragment_identifier_and_blob_index">
+<code class="descname">compute_fragment_identifier_and_blob_index</code><span class="sig-paren">(</span><em>number_of_animals</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.compute_fragment_identifier_and_blob_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.compute_fragment_identifier_and_blob_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Associates a unique fragment identifier to the fragments computed by
+overlapping see method
+<a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames" title="list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_overlapping_between_subsequent_frames()</span></code></a> and sets the blob
+index as the hierarchy of the blob in the first frame of the fragment to
+which blob belongs to.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>number_of_animals</strong> : int</p>
+<blockquote class="last">
+<div><p>number of animals to be tracked</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.compute_model_area_and_body_length">
+<code class="descname">compute_model_area_and_body_length</code><span class="sig-paren">(</span><em>number_of_animals</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.compute_model_area_and_body_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.compute_model_area_and_body_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes the median and standard deviation of all the blobs of the video
+and the median_body_length estimated from the diagonal of the bounding box.
+These values are later used to discard blobs that are not fish and potentially
+belong to a crossing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.compute_nose_and_head_coordinates">
+<code class="descname">compute_nose_and_head_coordinates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.compute_nose_and_head_coordinates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.compute_nose_and_head_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes nose and head coordinate for all the blobs segmented from the
+video</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames">
+<code class="descname">compute_overlapping_between_subsequent_frames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.compute_overlapping_between_subsequent_frames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes overlapping between self and the blobs generated during
+segmentation in the next frames</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects blobs in subsequent frames by computing their overlapping</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.disconnect">
+<code class="descname">disconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.disconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.disconnect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reinitialise the previous and next list of blobs
+(see <code class="xref py py-attr docutils literal notranslate"><span class="pre">next</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">previous</span></code>)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.erode">
+<code class="descname">erode</code><span class="sig-paren">(</span><em>video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.erode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.erode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Erodes all the blobs in the video</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote class="last">
+<div><p>see <a class="reference internal" href="video_information_manager.html#video.Video" title="video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.get_data_plot">
+<code class="descname">get_data_plot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.get_data_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.get_data_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the areas of all the blobs segmented in the video</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>Areas of all the blobs segmented in the video</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="list_of_blobs.ListOfBlobs.load">
+<em class="property">classmethod </em><code class="descname">load</code><span class="sig-paren">(</span><em>video</em>, <em>path_to_load_blob_list_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Short summary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>See <a class="reference internal" href="video_information_manager.html#video.Video" title="video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a></p>
+</div></blockquote>
+<p><strong>path_to_load_blob_list_file</strong> : str</p>
+<blockquote>
+<div><p>path to load a list of blobs</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">&lt;ListOfBlobs object&gt;</p>
+<blockquote class="last">
+<div><p>an instance of ListOfBlobs</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.reconnect">
+<code class="descname">reconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.reconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.reconnect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects blobs in subsequent frames by computing their overlapping
+and sets blobs_are_connected to True</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>video</em>, <em>path_to_save=None</em>, <em>number_of_chunks=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>save instance</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="list_of_blobs.ListOfBlobs.update_from_list_of_fragments">
+<code class="descname">update_from_list_of_fragments</code><span class="sig-paren">(</span><em>fragments</em>, <em>fragment_identifier_to_index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/list_of_blobs.html#ListOfBlobs.update_from_list_of_fragments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#list_of_blobs.ListOfBlobs.update_from_list_of_fragments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the blobs objects generated from the video with the attributes
+computed for each fragment</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fragments</strong> : list</p>
+<blockquote>
+<div><p>List of all the fragments</p>
+</div></blockquote>
+<p><strong>fragment_identifier_to_index</strong> : int</p>
+<blockquote class="last">
+<div><p>index to retrieve the fragment corresponding to a certain fragment
+identifier (see
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_fragment_identifier_and_blob_index()</span></code>)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="model-area">
+<h2>Model area<a class="headerlink" href="#model-area" title="Permalink to this headline">¶</a></h2>
+<p>Allows to apply a model of the area of the indiviudals to be tracked to all the
+blobs collected during the segmentation process (see <a class="reference internal" href="#module-segmentation" title="segmentation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">segmentation</span></code></a>)</p>
+<span class="target" id="module-model_area"></span><dl class="class">
+<dt id="model_area.ModelArea">
+<em class="property">class </em><code class="descclassname">model_area.</code><code class="descname">ModelArea</code><span class="sig-paren">(</span><em>mean</em>, <em>median</em>, <em>std</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/model_area.html#ModelArea"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#model_area.ModelArea" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model of the area used to perform a first discrimination between blobs
+representing single individual and multiple touching animals (crossings)</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="89%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>median</strong></td>
+<td>(float) median of the area of the blobs segmented from portions of the video in which all the animals are visible (not touching)</td>
+</tr>
+<tr class="row-even"><td><strong>mean</strong></td>
+<td>(float) mean of the area of the blobs segmented from portions of the video in which all the animals are visible (not touching)</td>
+</tr>
+<tr class="row-odd"><td><strong>std</strong></td>
+<td>(float) standard deviation of the area of the blobs segmented from portions of the video in which all the animals are visible (not touching)</td>
+</tr>
+<tr class="row-even"><td><strong>std_tolerance</strong></td>
+<td>(int) tolerance factor</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(…)&nbsp;&lt;==&gt;&nbsp;x(…)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-segmentation">
+<span id="segmentation"></span><h2>Segmentation<a class="headerlink" href="#module-segmentation" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="segmentation.get_blobs_in_frame">
+<code class="descclassname">segmentation.</code><code class="descname">get_blobs_in_frame</code><span class="sig-paren">(</span><em>cap</em>, <em>video</em>, <em>segmentation_thresholds</em>, <em>max_number_of_blobs</em>, <em>frame_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/segmentation.html#get_blobs_in_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#segmentation.get_blobs_in_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segments a frame read from <cite>cap</cite> according to the preprocessing parameters
+in <cite>video</cite>. Returns a list <cite>blobs_in_frame</cite> with the Blob objects in the frame
+and the <cite>max_number_of_blobs</cite> found in the video so far. Frames are segmented
+in gray scale.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cap</strong> : &lt;VideoCapture object&gt;</p>
+<blockquote>
+<div><p>OpenCV object used to read the frames of the video</p>
+</div></blockquote>
+<p><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>Object collecting all the parameters of the video and paths for saving and loading</p>
+</div></blockquote>
+<p><strong>segmentation_thresholds</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary with the thresholds used for the segmentation: <cite>min_threshold</cite>,
+<cite>max_threshold</cite>, <cite>min_area</cite>, <cite>max_area</cite></p>
+</div></blockquote>
+<p><strong>max_number_of_blobs</strong> : int</p>
+<blockquote>
+<div><p>Maximum number of blobs found in the whole video so far in the segmentation process</p>
+</div></blockquote>
+<p><strong>frame_number</strong> : int</p>
+<blockquote>
+<div><p>Number of the frame being segmented. It is used to print in the terminal the frames
+where the segmentation fails</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>blobs_in_frame</strong> : list</p>
+<blockquote>
+<div><p>List of &lt;Blob object&gt; segmented in the current frame</p>
+</div></blockquote>
+<p><strong>max_number_of_blobs</strong> : int</p>
+<blockquote class="last">
+<div><p>Maximum number of blobs found in the whole video so far in the segmentation process</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Video</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Blob</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">segment_frame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">blob_extractor</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="segmentation.get_videoCapture">
+<code class="descclassname">segmentation.</code><code class="descname">get_videoCapture</code><span class="sig-paren">(</span><em>video</em>, <em>path</em>, <em>episode_start_end_frames</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/segmentation.html#get_videoCapture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#segmentation.get_videoCapture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the VideoCapture (OpenCV) object to read the frames for the segmentation
+and the number of frames to read. If <cite>episode_start_end_frames</cite> is None then a <cite>path</cite> must be
+given as the video is assumed to be splitted in different files (episodes). If the <cite>path</cite>
+is None the video is assumed to be in a single file and the path is read from
+<cite>video</cite>, then <cite>episode_start_end_frames</cite> must be give.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>Object collecting all the parameters of the video and paths for saving and loading</p>
+</div></blockquote>
+<p><strong>path</strong> : string</p>
+<blockquote>
+<div><p>Path to the video file from where to get the VideoCapture (OpenCV) object</p>
+</div></blockquote>
+<p><strong>episode_start_end_frames</strong> : tuple</p>
+<blockquote>
+<div><p>Tuple (starting_frame, ending_frame) indicanting the start and end of the episode
+when the video is given in a single file</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cap</strong> : &lt;VideoCapture object&gt;</p>
+<blockquote>
+<div><p>OpenCV object used to read the frames of the video</p>
+</div></blockquote>
+<p><strong>number_of_frames_in_episode</strong> : int</p>
+<blockquote class="last">
+<div><p>Number of frames in the episode of video being segmented</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="segmentation.resegment">
+<code class="descclassname">segmentation.</code><code class="descname">resegment</code><span class="sig-paren">(</span><em>video</em>, <em>frame_number</em>, <em>list_of_blobs</em>, <em>new_segmentation_thresholds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/segmentation.html#resegment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#segmentation.resegment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the <cite>list_of_blobs</cite> for a particular <cite>frame_number</cite> by performing
+a segmentation with <cite>new_segmentation_thresholds</cite>. This function is called for
+the frames in which the number of blobs is higher than the number of animals
+stated by the user.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>Object collecting all the parameters of the video and paths for saving and loading</p>
+</div></blockquote>
+<p><strong>frame_number</strong> : int</p>
+<blockquote>
+<div><p>Number of the frame to update with the new segmentation</p>
+</div></blockquote>
+<p><strong>list_of_blobs</strong> : &lt;ListOfBlobs object&gt;</p>
+<blockquote>
+<div><p>Object containing the list of blobs segmented in the video in each frame</p>
+</div></blockquote>
+<p><strong>new_segmentation_thresholds</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary with the thresholds used for the new segmentation: <cite>min_threshold</cite>,
+<cite>max_threshold</cite>, <cite>min_area</cite>, <cite>max_area</cite></p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>number_of_blobs_in_frame</strong> : int</p>
+<blockquote class="last">
+<div><p>Number of blobs found in the frame</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#segmentation.get_videoCapture" title="segmentation.get_videoCapture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_videoCapture</span></code></a>, <a class="reference internal" href="#segmentation.get_blobs_in_frame" title="segmentation.get_blobs_in_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_blobs_in_frame</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="segmentation.segment">
+<code class="descclassname">segmentation.</code><code class="descname">segment</code><span class="sig-paren">(</span><em>video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/segmentation.html#segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#segmentation.segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segment the video giving a list of <cite>blobs</cite> for every frame in the video.
+If a video is given as a set of files (episodes), those files are used to
+parallelise the segmentation process. If a video is given in a single file
+the list of indices <cite>video.episodes_start_end</cite> is used for the parallelisation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>Object collecting all the parameters of the video and paths for saving and loading</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>blobs_in_video</strong> : list</p>
+<blockquote class="last">
+<div><p>List of <cite>blobs_in_frame</cite> for all the frames of the video</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#segmentation.segment_episode" title="segmentation.segment_episode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">segment_episode</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="segmentation.segment_episode">
+<code class="descclassname">segmentation.</code><code class="descname">segment_episode</code><span class="sig-paren">(</span><em>video</em>, <em>segmentation_thresholds</em>, <em>path=None</em>, <em>episode_start_end_frames=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/segmentation.html#segment_episode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#segmentation.segment_episode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets list of blobs segmented in every frame of the episode of the video
+given by <cite>path</cite> (if the video is splitted in different files) or by
+<cite>episode_start_end_frames</cite> (if the video is given in a single file)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>Object collecting all the parameters of the video and paths for saving and loading</p>
+</div></blockquote>
+<p><strong>segmentation_thresholds</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary with the thresholds used for the segmentation: <cite>min_threshold</cite>,
+<cite>max_threshold</cite>, <cite>min_area</cite>, <cite>max_area</cite></p>
+</div></blockquote>
+<p><strong>path</strong> : string</p>
+<blockquote>
+<div><p>Path to the video file from where to get the VideoCapture (OpenCV) object</p>
+</div></blockquote>
+<p><strong>episode_start_end_frames</strong> : tuple</p>
+<blockquote>
+<div><p>Tuple (starting_frame, ending_frame) indicanting the start and end of the episode
+when the video is given in a single file</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>blobs_in_episode</strong> : list</p>
+<blockquote>
+<div><p>List of <cite>blobs_in_frame</cite> of the episode of the video being segmented</p>
+</div></blockquote>
+<p><strong>max_number_of_blobs</strong> : int</p>
+<blockquote class="last">
+<div><p>Maximum number of blobs found in the episode of the video being segmented</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Video</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Blob</span></code>, <a class="reference internal" href="#segmentation.get_videoCapture" title="segmentation.get_videoCapture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_videoCapture</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">segment_frame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">blob_extractor</span></code></p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-video_utils">
+<span id="segmentation-utils"></span><h2>Segmentation utils<a class="headerlink" href="#module-video_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="video_utils.blob_extractor">
+<code class="descclassname">video_utils.</code><code class="descname">blob_extractor</code><span class="sig-paren">(</span><em>segmented_frame</em>, <em>frame</em>, <em>min_area</em>, <em>max_area</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#blob_extractor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.blob_extractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a <cite>segmented_frame</cite> it extracts the blobs with area greater than
+<cite>min_area</cite> and smaller than <cite>max_area</cite> and it computes a set of relevant
+properties for every blob.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>segmented_frame</strong> : nd.array</p>
+<blockquote>
+<div><p>Frame with zeros and ones where ones are valid pixels.</p>
+</div></blockquote>
+<p><strong>frame</strong> : nd.array</p>
+<blockquote>
+<div><p>Frame from where to extract the <cite>bounding_box_image</cite> of every blob</p>
+</div></blockquote>
+<p><strong>min_area</strong> : int</p>
+<blockquote>
+<div><p>Minimum number of blobs above which a blob is considered to be valid</p>
+</div></blockquote>
+<p><strong>max_area</strong> : int</p>
+<blockquote>
+<div><p>Maximum number of blobs below which a blob is considered to be valid</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bounding_boxes</strong> : list</p>
+<blockquote>
+<div><p>List with the <cite>bounding_box</cite> for every contour in <cite>contours</cite></p>
+</div></blockquote>
+<p><strong>bounding_box_images</strong> : list</p>
+<blockquote>
+<div><p>List with the <cite>bounding_box_image</cite> for every contour in <cite>contours</cite></p>
+</div></blockquote>
+<p><strong>centroids</strong> : list</p>
+<blockquote>
+<div><p>List with the <cite>centroid</cite> for every contour in <cite>contours</cite></p>
+</div></blockquote>
+<p><strong>areas</strong> : list</p>
+<blockquote>
+<div><p>List with the <cite>area</cite> in pixels for every contour in <cite>contours</cite></p>
+</div></blockquote>
+<p><strong>pixels</strong> : list</p>
+<blockquote>
+<div><p>List with the <cite>pixels</cite> for every contour in <cite>contours</cite></p>
+</div></blockquote>
+<p>good_contours_in_full_frame:</p>
+<blockquote>
+<div><p>List with the <cite>contours</cite> which area is in between <cite>min_area</cite> and <cite>max_area</cite></p>
+</div></blockquote>
+<p><strong>estimated_body_lengths</strong> : list</p>
+<blockquote class="last">
+<div><p>List with the <cite>estimated_body_length</cite> for every contour in <cite>contours</cite></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#video_utils.filter_contours_by_area" title="video_utils.filter_contours_by_area"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_contours_by_area</span></code></a>, <a class="reference internal" href="#video_utils.get_blobs_information_per_frame" title="video_utils.get_blobs_information_per_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_blobs_information_per_frame</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.check_background_substraction">
+<code class="descclassname">video_utils.</code><code class="descname">check_background_substraction</code><span class="sig-paren">(</span><em>video</em>, <em>old_video</em>, <em>use_previous_background</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#check_background_substraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.check_background_substraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether background substraction must be used and in that case it
+checks whether a previous computed background can be used. Otherwise it
+computes the background model from scracth or it returns None if background
+substraction must not be used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>Object collecting all the parameters of the video and paths for saving and loading</p>
+</div></blockquote>
+<p><strong>old_video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>Same object as video but with the information of a previous tracking session</p>
+</div></blockquote>
+<p><strong>use_previous_background</strong> : bool</p>
+<blockquote>
+<div><p>Indicates whether the background computed in a previous session must be used or not</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bkg</strong> : nd.array</p>
+<blockquote class="last">
+<div><p>Array with the model of the background.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#video_utils.cumpute_background" title="video_utils.cumpute_background"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cumpute_background</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.cnt2BoundingBox">
+<code class="descclassname">video_utils.</code><code class="descname">cnt2BoundingBox</code><span class="sig-paren">(</span><em>cnt</em>, <em>bounding_box</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#cnt2BoundingBox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.cnt2BoundingBox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms the coordinates of the contour in the full frame to the the
+bounding box of the blob.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cnt</strong> : list</p>
+<blockquote>
+<div><p>List of the coordinates that defines the contour of the blob in the full
+frame of the video</p>
+</div></blockquote>
+<p><strong>bounding_box</strong> : tuple</p>
+<blockquote>
+<div><p>Tuple with the coordinates of the bounding box (x, y),(x + w, y + h))</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>contour_in_bounding_box</strong> : nd.array</p>
+<blockquote class="last">
+<div><p>Array with the pairs of coordinates of the contour in the bounding box</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.cumpute_background">
+<code class="descclassname">video_utils.</code><code class="descname">cumpute_background</code><span class="sig-paren">(</span><em>video</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#cumpute_background"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.cumpute_background" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes a model of the background by averaging multiple frames of the video.
+In particular 1 every 100 frames is used for the computation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
+<blockquote>
+<div><p>Object collecting all the parameters of the video and paths for saving and loading</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bkg</strong> : nd.array</p>
+<blockquote class="last">
+<div><p>Array with the model of the background.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#video_utils.sum_frames_for_bkg_per_episode_in_single_file_video" title="video_utils.sum_frames_for_bkg_per_episode_in_single_file_video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sum_frames_for_bkg_per_episode_in_single_file_video</span></code></a>, <a class="reference internal" href="#video_utils.sum_frames_for_bkg_per_episode_in_multiple_files_video" title="video_utils.sum_frames_for_bkg_per_episode_in_multiple_files_video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sum_frames_for_bkg_per_episode_in_multiple_files_video</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.filter_contours_by_area">
+<code class="descclassname">video_utils.</code><code class="descname">filter_contours_by_area</code><span class="sig-paren">(</span><em>contours</em>, <em>min_area</em>, <em>max_area</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#filter_contours_by_area"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.filter_contours_by_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters out contours which number of pixels is smaller than <cite>min_area</cite> or
+greater than <cite>max_area</cite></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>contours</strong> : list</p>
+<blockquote>
+<div><p>List of OpenCV contours</p>
+</div></blockquote>
+<p><strong>min_area</strong> : int</p>
+<blockquote>
+<div><p>Minimum number of pixels for a contour to be acceptable</p>
+</div></blockquote>
+<p><strong>max_area</strong> : int</p>
+<blockquote>
+<div><p>Maximum number of pixels for a contours to be acceptable</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>good_contours</strong> : list</p>
+<blockquote class="last">
+<div><p>List of OpenCV contours that fulfill both area thresholds</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.getCentroid">
+<code class="descclassname">video_utils.</code><code class="descname">getCentroid</code><span class="sig-paren">(</span><em>cnt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#getCentroid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.getCentroid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the centroid of the contour</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cnt</strong> : list</p>
+<blockquote>
+<div><p>List of the coordinates that defines the contour of the blob in the full
+frame of the video</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>centroid</strong> : tuple</p>
+<blockquote class="last">
+<div><p>(x,y) coordinates of the center of mass of the contour.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.get_blobs_information_per_frame">
+<code class="descclassname">video_utils.</code><code class="descname">get_blobs_information_per_frame</code><span class="sig-paren">(</span><em>frame</em>, <em>contours</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#get_blobs_information_per_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.get_blobs_information_per_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes a set of properties for all the <cite>contours</cite> in a given frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>frame</strong> : nd.array</p>
+<blockquote>
+<div><p>Frame from where to extract the <cite>bounding_box_image</cite> of every contour</p>
+</div></blockquote>
+<p><strong>contours</strong> : list</p>
+<blockquote>
+<div><p>List of OpenCV contours for which to compute the set of properties</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bounding_boxes</strong> : list</p>
+<blockquote>
+<div><p>List with the <cite>bounding_box</cite> for every contour in <cite>contours</cite></p>
+</div></blockquote>
+<p><strong>bounding_box_images</strong> : list</p>
+<blockquote>
+<div><p>List with the <cite>bounding_box_image</cite> for every contour in <cite>contours</cite></p>
+</div></blockquote>
+<p><strong>centroids</strong> : list</p>
+<blockquote>
+<div><p>List with the <cite>centroid</cite> for every contour in <cite>contours</cite></p>
+</div></blockquote>
+<p><strong>areas</strong> : list</p>
+<blockquote>
+<div><p>List with the <cite>area</cite> in pixels for every contour in <cite>contours</cite></p>
+</div></blockquote>
+<p><strong>pixels</strong> : list</p>
+<blockquote>
+<div><p>List with the <cite>pixels</cite> for every contour in <cite>contours</cite></p>
+</div></blockquote>
+<p><strong>estimated_body_lengths</strong> : list</p>
+<blockquote class="last">
+<div><p>List with the <cite>estimated_body_length</cite> for every contour in <cite>contours</cite></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#video_utils.get_bounding_box_image" title="video_utils.get_bounding_box_image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bounding_box_image</span></code></a>, <a class="reference internal" href="#video_utils.getCentroid" title="video_utils.getCentroid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCentroid</span></code></a>, <a class="reference internal" href="#video_utils.get_pixels" title="video_utils.get_pixels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_pixels</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.get_bounding_box">
+<code class="descclassname">video_utils.</code><code class="descname">get_bounding_box</code><span class="sig-paren">(</span><em>cnt</em>, <em>width</em>, <em>height</em>, <em>crossing_detector=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#get_bounding_box"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.get_bounding_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the bounding box of a given contour with an extra margin of 45
+pixels. If the function is called with the crossing_detector set to True the
+margin of the bounding box is set to 55.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cnt</strong> : list</p>
+<blockquote>
+<div><p>List of the coordinates that defines the contour of the blob in the full
+frame of the video</p>
+</div></blockquote>
+<p><strong>width</strong> : int</p>
+<blockquote>
+<div><p>Width of the video frame</p>
+</div></blockquote>
+<p><strong>height</strong> : int</p>
+<blockquote>
+<div><p>Height of the video frame</p>
+</div></blockquote>
+<p><strong>crossing_detector</strong> : bool</p>
+<blockquote>
+<div><p>Flag to indicate whether the function is being called from the crossing_detector module</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bounding_box</strong> : tuple</p>
+<blockquote>
+<div><p>Tuple with the coordinates of the bounding box (x, y),(x + w, y + h))</p>
+</div></blockquote>
+<p><strong>original_diagonal</strong> : int</p>
+<blockquote class="last">
+<div><p>Diagonal of the original bounding box computed with OpenCv that serves as
+an estimate for the body length of the animal.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.get_bounding_box_image">
+<code class="descclassname">video_utils.</code><code class="descname">get_bounding_box_image</code><span class="sig-paren">(</span><em>frame</em>, <em>cnt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#get_bounding_box_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.get_bounding_box_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the <cite>bounding_box_image`from a given frame and contour. It also
+returns the coordinates of the `bounding_box</cite>, the ravelled <cite>pixels</cite> inside of
+the contour and the diagonal of the <cite>bounding_box</cite> as an <cite>estimated_body_length</cite></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>frame</strong> : nd.array</p>
+<blockquote>
+<div><p>frame from where to extract the <cite>bounding_box_image</cite></p>
+</div></blockquote>
+<p><strong>cnt</strong> : list</p>
+<blockquote>
+<div><p>List of the coordinates that defines the contour of the blob in the full
+frame of the video</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bounding_box</strong> : tuple</p>
+<blockquote>
+<div><p>Tuple with the coordinates of the bounding box (x, y),(x + w, y + h))</p>
+</div></blockquote>
+<p><strong>bounding_box_image</strong> : nd.array</p>
+<blockquote>
+<div><p>Part of the <cite>frame</cite> defined by the coordinates in <cite>bounding_box</cite></p>
+</div></blockquote>
+<p><strong>pixels_in_full_frame_ravelled</strong> : list</p>
+<blockquote>
+<div><p>List of ravelled pixels coordinates inside of the given contour</p>
+</div></blockquote>
+<p><strong>estimated_body_length</strong> : int</p>
+<blockquote class="last">
+<div><p>Estimated length of the contour in pixels.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#video_utils.get_bounding_box" title="video_utils.get_bounding_box"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bounding_box</span></code></a>, <a class="reference internal" href="#video_utils.cnt2BoundingBox" title="video_utils.cnt2BoundingBox"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cnt2BoundingBox</span></code></a>, <a class="reference internal" href="#video_utils.get_pixels" title="video_utils.get_pixels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_pixels</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.get_pixels">
+<code class="descclassname">video_utils.</code><code class="descname">get_pixels</code><span class="sig-paren">(</span><em>cnt</em>, <em>width</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#get_pixels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.get_pixels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the coordinates list of the pixels inside the contour</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cnt</strong> : list</p>
+<blockquote>
+<div><p>List of the coordinates that defines the contour of the blob in a give
+width and height (it can either be the video width and heigh or the
+bounding box width and height)</p>
+</div></blockquote>
+<p><strong>width</strong> : int</p>
+<blockquote>
+<div><p>Width of the frame</p>
+</div></blockquote>
+<p><strong>height</strong> : int</p>
+<blockquote>
+<div><p>Height of the frame</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pixels_coordinates_list</strong> : list</p>
+<blockquote class="last">
+<div><p>List of the coordinates of the pixels in a given width and height</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.segment_frame">
+<code class="descclassname">video_utils.</code><code class="descname">segment_frame</code><span class="sig-paren">(</span><em>frame</em>, <em>min_threshold</em>, <em>max_threshold</em>, <em>bkg</em>, <em>ROI</em>, <em>useBkg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#segment_frame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.segment_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the intensity thresholds (<cite>min_threshold</cite> and <cite>max_threshold</cite>) and the
+mask (<cite>ROI</cite>) to a given frame. If <cite>useBkg</cite> is True, the background subtraction
+operation is applied before thresholding with the given <cite>bkg</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>frame</strong> : nd.array</p>
+<blockquote>
+<div><p>Frame to be segmented</p>
+</div></blockquote>
+<p><strong>min_threshold</strong> : int</p>
+<blockquote>
+<div><p>Minimum intensity threshold for the segmentation (value from 0 to 255)</p>
+</div></blockquote>
+<p><strong>max_threshold</strong> : int</p>
+<blockquote>
+<div><p>Maximum intensity threshold for the segmentation (value from 0 to 255)</p>
+</div></blockquote>
+<p><strong>bkg</strong> : nd.array</p>
+<blockquote>
+<div><p>Background model to be used in the background subtraction operation</p>
+</div></blockquote>
+<p><strong>ROI</strong> : nd.array</p>
+<blockquote>
+<div><p>Mask to be applied after thresholding. Ones in the array are pixels to be
+considered, zeros are pixels to be discarded.</p>
+</div></blockquote>
+<p><strong>useBkg</strong> : bool</p>
+<blockquote>
+<div><p>Flag indicating whether background subtraction must be performed or not</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>frame_segmented_and_masked</strong> : nd.array</p>
+<blockquote class="last">
+<div><p>Frame with zeros and ones after applying the thresholding and the mask.
+Pixels with value 1 are valid pixels given the thresholds and the mask.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.sum_frames_for_bkg_per_episode_in_multiple_files_video">
+<code class="descclassname">video_utils.</code><code class="descname">sum_frames_for_bkg_per_episode_in_multiple_files_video</code><span class="sig-paren">(</span><em>video_path</em>, <em>bkg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#sum_frames_for_bkg_per_episode_in_multiple_files_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.sum_frames_for_bkg_per_episode_in_multiple_files_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the sum of frames (1 every 100 frames) for a particular episode of
+the video when the video is splitted in several files</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video_path</strong> : string</p>
+<blockquote>
+<div><p>Path to the file of the episode to be added to the background</p>
+</div></blockquote>
+<p><strong>bkg</strong> : nd.array</p>
+<blockquote>
+<div><p>Zeros array with same width and height as the frame of the video.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bkg</strong> : nd.array</p>
+<blockquote>
+<div><p>Array with same width and height as the frame of the video. Contains the
+sum of (ending_frame - starting_frame) / 100 frames for the given episode</p>
+</div></blockquote>
+<p><strong>number_of_frames_for_bkg_in_episode</strong> : int</p>
+<blockquote class="last">
+<div><p>Number of frames used to compute the background in the current episode</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="video_utils.sum_frames_for_bkg_per_episode_in_single_file_video">
+<code class="descclassname">video_utils.</code><code class="descname">sum_frames_for_bkg_per_episode_in_single_file_video</code><span class="sig-paren">(</span><em>starting_frame</em>, <em>ending_frame</em>, <em>video_path</em>, <em>bkg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/video_utils.html#sum_frames_for_bkg_per_episode_in_single_file_video"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video_utils.sum_frames_for_bkg_per_episode_in_single_file_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the sum of frames (1 every 100 frames) for a particular episode of
+the video when the video is a single file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>starting_frame</strong> : int</p>
+<blockquote>
+<div><p>First frame of the episode</p>
+</div></blockquote>
+<p><strong>ending_frame</strong> : int</p>
+<blockquote>
+<div><p>Last frame of the episode</p>
+</div></blockquote>
+<p><strong>video_path</strong> : string</p>
+<blockquote>
+<div><p>Path to the single file of the video</p>
+</div></blockquote>
+<p><strong>bkg</strong> : nd.array</p>
+<blockquote>
+<div><p>Zeros array with same width and height as the frame of the video.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bkg</strong> : nd.array</p>
+<blockquote>
+<div><p>Array with same width and height as the frame of the video. Contains the
+sum of (ending_frame - starting_frame) / 100 frames for the given episode</p>
+</div></blockquote>
+<p><strong>number_of_frames_for_bkg_in_episode</strong> : int</p>
+<blockquote class="last">
+<div><p>Number of frames used to compute the background in the current episode</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Mar 03, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>
