@@ -106,7 +106,7 @@
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
 <p>In this section we explain how to start tracking a video with idtracker.ai. For more information about
 the different functionalities of the system go to the Graphical User Interface section
-<a class="reference internal" href="GUI_explained.html"><span class="doc">Graphical user interface (GUI)</span></a> or check the Supplementary Material in <a class="footnote-reference" href="#id2" id="id1">[1]</a></p>
+<a class="reference internal" href="GUI_explained.html"><span class="doc">Graphical user interface (GUI)</span></a> or check the Supplementary Material in <a class="footnote-reference" href="#id2" id="id1">[1]</a>.</p>
 <div class="section" id="step-1-download-the-video-example">
 <h2>Step 1. Download the video example<a class="headerlink" href="#step-1-download-the-video-example" title="Permalink to this headline">¶</a></h2>
 <p>If it is the first time that you are using this system, we recomend to start with
@@ -126,11 +126,13 @@ idtracker.ai generates will be faster.</p>
 </div>
 <div class="section" id="step-3-start-a-tracking-session">
 <h2>Step 3. Start a tracking session<a class="headerlink" href="#step-3-start-a-tracking-session" title="Permalink to this headline">¶</a></h2>
-<p>idtrackerai is equipped with a GUI. To start the GUI from the terminal, open it and type</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="n">activate</span> <span class="n">idtrackerai</span><span class="o">-</span><span class="n">environment</span>
-<span class="n">idtrackeraiGUI</span>
-</pre></div>
-</div>
+<p>idtrackerai is equipped with a GUI organized by tabs that activate to guide the user
+throughout the tracking process. Press the help button in any tab to get more information
+about the possible actions in the tab.</p>
+<p>To start the GUI open a terminal and type</p>
+<blockquote>
+<div>source activate idtrackerai-environment
+idtrackeraiGUI</div></blockquote>
 <div class="figure align-right">
 <a class="reference internal image-reference" href="_images/qs_img1.png"><img alt="welcome tab" src="_images/qs_img1.png" style="width: 400.5px; height: 300.5px;" /></a>
 </div>
@@ -223,7 +225,10 @@ the identified animals have been saved a popup allows either to quit the program
 or proceed to the validation of the video. In addition, the estimated accuracy
 of the tracking is shown. The algorithm will automatically recommend the user
 to proceed to the validation if the estimated accuracy is lower than expected.</p>
-<p>To validate</p>
+<p>Choose to validate the trajectories “with gaps” if you want to check the trajectories
+of individual animals before and after they touch or cross with other animals. Choose
+to validate the trajectories “without gaps” if you want to check the trajectories also
+during the crossings.</p>
 </div>
 <div class="section" id="step-7-global-and-individual-validation">
 <h2>Step 7. Global and individual validation<a class="headerlink" href="#step-7-global-and-individual-validation" title="Permalink to this headline">¶</a></h2>
@@ -240,7 +245,7 @@ the video called “first global fragment”. We suggest to start a validation f
 this part of the video which can be reached in any moment by clicking on the
 button “First global fragment”.</p>
 <p>To modify the identity of an individual click inside of the body of the animal.
-A pop up will apear indicating the current identity of the animal. Type the new
+A pop up will appear indicating the current identity of the animal. Type the new
 identity and press return. The new identity will be propagated to the past and
 the future until the animal enters a crossing or disappears. In case the user
 modifies at least one of the assigned identities the algorithm gives the possibility
