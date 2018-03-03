@@ -16,7 +16,8 @@
 !*.gitignore
 
 #except docs folder and subfolders
-!docs/scipy-sphinx-theme/*
+!docs/scipy-sphinx-theme/_static/*
+!docs/scipy-sphinx-theme/_theme/scipy/static/*
 !docs/source/*
 !docs/make.bat
 !docs/Makefile
