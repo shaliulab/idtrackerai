@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>fragment &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for fragment</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This file is part of idtracker.ai, a multiple animals tracking system</span>
+<span class="c1"># described in [1].</span>
+<span class="c1"># Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.</span>
+<span class="c1">#</span>
+<span class="c1"># idtracker.ai is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details. In addition, we require</span>
+<span class="c1"># derivatives or applications to acknowledge the authors by citing [1].</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># For more information please send an email (idtrackerai@gmail.com) or</span>
+<span class="c1"># use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.</span>
+<span class="c1">#</span>
+<span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G.,</span>
+<span class="c1"># (2018). idtracker.ai: Tracking all individuals with correct identities in large</span>
+<span class="c1"># animal collectives (submitted)</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.utils.py_utils</span> <span class="k">import</span> <span class="n">delete_attributes_from_object</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span> <span class="n">MAX_FLOAT</span><span class="p">,</span> <span class="n">MIN_FLOAT</span><span class="p">,</span> <span class="n">FIXED_IDENTITY_THRESHOLD</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.fragment&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Fragment"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment">[docs]</a><span class="k">class</span> <span class="nc">Fragment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Collects the Blob objects (:class:`~blob.Blob`) associated to the same individual or crossing.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    fragment_identifier : int</span>
+<span class="sd">        Unique identifier of the fragment assigned with :func:`~list_of_blobs.ListOfBlobs.compute_fragment_identifier_and_blob_index` and :func:`~list_of_blobs.ListOfBlobs.compute_crossing_fragment_identifier`</span>
+<span class="sd">    start_end : tuple</span>
+<span class="sd">        (starting_frame,  ending_frame) of the fragment</span>
+<span class="sd">    blob_hierarchy_in_starting_frame : int</span>
+<span class="sd">        Hierarchy of the blob in the starting frame of the fragment (the hierarchy if compute bottom-top, left-right).</span>
+<span class="sd">    images : list</span>
+<span class="sd">        List of images associated to every blob represented in the fragment and ordered according to the frame they have been segmented from</span>
+<span class="sd">    bounding_box_in_frame_coordinates : tuple</span>
+<span class="sd">        List of bounding boxes (see :attr:`~blob.Blob.bounding_box_in_frame_coordinates`)</span>
+<span class="sd">    centroids : list</span>
+<span class="sd">        List of centroids (see :attr:`~blob.Blob.centroid`)</span>
+<span class="sd">    areas : list</span>
+<span class="sd">        List of areas (see :attr:`~blob.Blob.area`)</span>
+<span class="sd">    pixels : list</span>
+<span class="sd">        List of pixels (see :attr:`~blob.Blob.pixels`)</span>
+<span class="sd">    is_an_individual : bool</span>
+<span class="sd">        True if the image has been classified as representing an individual by :func:`~crossing_detector.detect_crossings`</span>
+<span class="sd">    is_a_crossing : bool</span>
+<span class="sd">        True if the image has been classified as representing a crossing by :func:`~crossing_detector.detect_crossings`</span>
+<span class="sd">    number_of_animals : int</span>
+<span class="sd">        Number of animal to be tracked</span>
+<span class="sd">    user_generated_identity : int</span>
+<span class="sd">        Identity generated by the user during validation (if it exists, else None)</span>
+<span class="sd">    is_in_a_global_fragment : bool</span>
+<span class="sd">        True if the fragment is contained in a global fragment (see :class:`~globalfragment.GlobalFragment`)</span>
+<span class="sd">    used_for_training : bool</span>
+<span class="sd">        True if the fragment has been used to train the idCNN in the finerprinting protocol used to track the video</span>
+<span class="sd">    accumulated_globally : bool</span>
+<span class="sd">        True if the fragment&#39;s images have been accumulated with global strategy as references during the fingerprinting protocol used to track the video</span>
+<span class="sd">    accumulated_partially : bool</span>
+<span class="sd">        True if the fragment&#39;s images have been accumulated with partial strategy as references during the fingerprinting protocol used to track the video</span>
+<span class="sd">    accumulation_step : int</span>
+<span class="sd">        Accumulation step in which the fragment&#39;s images have been accumulated</span>
+<span class="sd">    accumulable : bool</span>
+<span class="sd">        True if the fragment is eligible for accumulation i.e. it is contained in a global fragment object (see :class:`~globalfragment.GlobalFragment`)</span>
+<span class="sd">    used_for_pretraining : bool</span>
+<span class="sd">        True if the fragment has been used to pretrain the idCNN in the third protocol (see :func:`~pre_trainer.pre_train`)</span>
+<span class="sd">    acceptable_for_training : bool</span>
+<span class="sd">        True if the fragment satisfies the conditions in :meth:`~accumulation_manager.AccumulationManager.check_if_is_acceptable_for_training`</span>
+<span class="sd">    frequencies : ndarray</span>
+<span class="sd">        array with shape [1, number_of_animals]. The ith component is the number of times the fragment has been assigned by the idCNN (argmax of the softmax predictions) to the identity i</span>
+<span class="sd">    P1_vector : ndarray</span>
+<span class="sd">        array with shape [1, number_of_animals] computed from frequencies by :meth:`compute_identification_statistics`</span>
+<span class="sd">    P2_vector : ndarray</span>
+<span class="sd">        array with shape [1, number_of_animals] computed from the P1_vector and considering all the identified fragment overlapping (in frames) with self by :meth:`compute_identification_statistics`</span>
+<span class="sd">    certainty : float</span>
+<span class="sd">        certainty of the identification of the fragment computed according to meth:`compute_certainty_of_individual_fragment` (depends only on the predictions of the idCNN for the fragment&#39;s images)</span>
+<span class="sd">    certainty_P2 : float</span>
+<span class="sd">        certainty of the identification of the fragment computed according to meth:`compute_P2_vector`</span>
+<span class="sd">    is_certain : bool</span>
+<span class="sd">        True if :attr:`certainty` is greater than :const:`~constants.CERTAINTY_THRESHOLD`</span>
+<span class="sd">    temporary_id : int</span>
+<span class="sd">        Identity assigned to the fragment during the fingerprint protocols cascade</span>
+<span class="sd">    identity : int</span>
+<span class="sd">        Identity assigned to the fragment</span>
+<span class="sd">    identity_is_fixed : bool</span>
+<span class="sd">        True if the :attr:`certainty_P2` is greater than :const:`~constants.FIXED_IDENTITY_THRESHOLD`</span>
+<span class="sd">    identity_corrected_closing_gaps : int</span>
+<span class="sd">        Identity assigned to the fragment while solving the crossing if it exists else None</span>
+<span class="sd">    user_generated_identity : int</span>
+<span class="sd">        Identity assigned to the fragment by the user during validation if it exists else None</span>
+<span class="sd">    final_identity : int</span>
+<span class="sd">        Final identity of the fragment. It corresponds to :attr:`user_generated_identity` if it exist otherwise to the identity assigned by the algorithm</span>
+<span class="sd">    assigned_identity : int</span>
+<span class="sd">        Identity assigned to the fragment by the algorithm</span>
+<span class="sd">    ambiguous_identities : list</span>
+<span class="sd">        List of possible identities in case the assignment is ambiguous (two or more identity can be assigned to the fragment with the same certainty)</span>
+<span class="sd">    potentially_randomly_assigned : bool</span>
+<span class="sd">        True if :attr:`certainty` is below random wrt the number of images in the fragment</span>
+<span class="sd">    non_consistent : bool</span>
+<span class="sd">        True if exist a fragment that overlaps in frame with self whose identity is the same as self</span>
+<span class="sd">    number_of_images : int</span>
+<span class="sd">        number of images composing the fragment</span>
+<span class="sd">    has_enough_accumulated_coexisting_fragments : bool</span>
+<span class="sd">        the partial accumulation strategy assumes that the condition of :attr:`has_enough_accumulated_coexisting_fragments` holds</span>
+<span class="sd">    distance_travelled : float</span>
+<span class="sd">        distance travelled by the individual in the fragment</span>
+<span class="sd">    coexisting_individual_fragments : list</span>
+<span class="sd">        List of fragment objects that coexist (in frames) with self and that represent an individual</span>
+<span class="sd">    number_of_coexisting_individual_fragments : int</span>
+<span class="sd">        Number of individual fragments coexisting with self</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragment_identifier</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_end</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">blob_hierarchy_in_starting_frame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">images</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">bounding_box_in_frame_coordinates</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">centroids</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">areas</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pixels</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">is_an_individual</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_a_crossing</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">number_of_animals</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">user_generated_identity</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">fragment_identifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_end</span> <span class="o">=</span> <span class="n">start_end</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blob_hierarchy_in_starting_frame</span> <span class="o">=</span> <span class="n">blob_hierarchy_in_starting_frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">images</span> <span class="o">=</span> <span class="n">images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_in_frame_coordinates</span> <span class="o">=</span> <span class="n">bounding_box_in_frame_coordinates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">centroids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">centroids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_distance_travelled</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">areas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">areas</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span> <span class="o">=</span> <span class="n">pixels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="o">=</span> <span class="n">is_an_individual</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_a_crossing</span> <span class="o">=</span> <span class="n">is_a_crossing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">=</span> <span class="n">number_of_animals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">possible_identities</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_in_a_global_fragment</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_used_for_training</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_used_for_pretraining</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_acceptable_for_training</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_temporary_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_generated_identity</span> <span class="o">=</span> <span class="n">user_generated_identity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_globally</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_partially</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_accumulation_step</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Fragment.reset"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roll_back_to</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset attributes of self to a specific part of the algorithm</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        roll_back_to : str</span>
+<span class="sd">            Reset all the attributes up to the process specified in input.</span>
+<span class="sd">            &#39;fragmentation&#39;, &#39;pretraining&#39;, &#39;accumulation&#39;, &#39;assignment&#39;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">roll_back_to</span> <span class="o">==</span> <span class="s1">&#39;fragmentation&#39;</span> <span class="ow">or</span> <span class="n">roll_back_to</span> <span class="o">==</span> <span class="s1">&#39;pretraining&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_used_for_training</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">roll_back_to</span> <span class="o">==</span> <span class="s1">&#39;fragmentation&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_used_for_pretraining</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_acceptable_for_training</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_temporary_id</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_globally</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_partially</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_accumulation_step</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">attributes_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;_frequencies&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;_P1_vector&#39;</span><span class="p">,</span> <span class="s1">&#39;_certainty&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;_is_certain&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;_P1_below_random&#39;</span><span class="p">,</span> <span class="s1">&#39;_non_consistent&#39;</span><span class="p">]</span>
+            <span class="n">delete_attributes_from_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes_to_delete</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">roll_back_to</span> <span class="o">==</span> <span class="s1">&#39;accumulation&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">attributes_to_delete</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_for_training</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">attributes_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;_frequencies&#39;</span><span class="p">,</span> <span class="s1">&#39;_P1_vector&#39;</span><span class="p">]</span>
+            <span class="n">attributes_to_delete</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;_P2_vector&#39;</span><span class="p">,</span> <span class="s1">&#39;_ambiguous_identities&#39;</span><span class="p">,</span>
+                                        <span class="s1">&#39;_certainty_P2&#39;</span><span class="p">])</span>
+            <span class="n">delete_attributes_from_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes_to_delete</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">roll_back_to</span> <span class="o">==</span> <span class="s1">&#39;assignment&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_user_generated_identity</span> <span class="o">=</span> <span class="kc">None</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_in_a_global_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_in_a_global_fragment</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">used_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_used_for_training</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">accumulated_globally</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_globally</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">accumulated_partially</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_partially</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">accumulation_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulation_step</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">accumulable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulable</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">used_for_pretraining</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_used_for_pretraining</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">acceptable_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_acceptable_for_training</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frequencies</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">P1_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">P2_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_P2_vector</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">certainty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_certainty</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">certainty_P2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_certainty_P2</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_certain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_certain</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">temporary_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temporary_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">temporary_id_for_pretraining</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temporary_id_for_pretraining</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">identity_is_fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">identity_corrected_solving_duplication</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">identity_corrected_closing_gaps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">user_generated_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_generated_identity</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">final_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;user_generated_identity&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_generated_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_generated_identity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">assigned_identity</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">assigned_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;identity_corrected_closing_gaps&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;identity_corrected_solving_duplication&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ambiguous_identities</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ambiguous_identities</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">potentially_randomly_assigned</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_potentially_randomly_assigned</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">non_consistent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_non_consistent</span>
+
+<div class="viewcode-block" id="Fragment.get_attribute_of_coexisting_fragments"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_attribute_of_coexisting_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_attribute_of_coexisting_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retrieve a spevific attribute from the collection of fragments</span>
+<span class="sd">        coexisting (in frame) with self</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        attribute : str</span>
+<span class="sd">            attribute to retrieve</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            attribute specified in `attribute` of the fragments coexisting with self</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Fragment.get_fixed_identities_of_coexisting_fragments"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_fixed_identities_of_coexisting_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_fixed_identities_of_coexisting_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Considers the fragments coexisting with self and returns their</span>
+<span class="sd">        identities if they are fixed (see :attr:identity_is_fixed)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        type</span>
+<span class="sd">            Description of returned object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span>
+                <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span>
+                <span class="ow">or</span> <span class="n">fragment</span><span class="o">.</span><span class="n">user_generated_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">or</span> <span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+                <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="Fragment.get_missing_identities_in_coexisting_fragments"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_missing_identities_in_coexisting_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_missing_identities_in_coexisting_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixed_identities</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the identities that have not been assigned to the set of fragments coexisting with self</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fixed_identities : list</span>
+<span class="sd">            List of fixed identities</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of missing identities in coexisting fragments</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">identities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_attribute_of_coexisting_fragments</span><span class="p">(</span><span class="s1">&#39;assigned_identity&#39;</span><span class="p">)</span>
+        <span class="n">identities</span> <span class="o">=</span> <span class="p">[</span><span class="n">identity</span> <span class="k">for</span> <span class="n">identity</span> <span class="ow">in</span> <span class="n">identities</span> <span class="k">if</span> <span class="n">identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span> <span class="ow">in</span> <span class="n">fixed_identities</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">((</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_identities</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">identities</span><span class="p">))</span> <span class="o">|</span> <span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">identity</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_identities</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">identities</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Fragment.set_distance_travelled"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.set_distance_travelled">[docs]</a>    <span class="k">def</span> <span class="nf">set_distance_travelled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the distance travelled by the individual in the fragment.</span>
+<span class="sd">        It is based on the position of the centroids in consecutive images. See</span>
+<span class="sd">        :attr:`~blob.Blob.centroid`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distance_travelled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distance_travelled</span> <span class="o">=</span> <span class="mf">0.</span>
+
+<div class="viewcode-block" id="Fragment.frame_by_frame_velocity"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.frame_by_frame_velocity">[docs]</a>    <span class="k">def</span> <span class="nf">frame_by_frame_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Short summary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            Frame by frame speed of the individual in the fragment</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Fragment.compute_border_velocity"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_border_velocity">[docs]</a>    <span class="k">def</span> <span class="nf">compute_border_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Velocity necessary to cover the space between two fragments</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : &lt;Fragment object&gt;</span>
+<span class="sd">            A second fragment</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Returns the speed at which an individual should travel to be</span>
+<span class="sd">            present in both self and other Fragment objects</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">centroids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">other</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">centroids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">other</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Fragment.are_overlapping"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.are_overlapping">[docs]</a>    <span class="k">def</span> <span class="nf">are_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Short summary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other :  &lt;Fragment object&gt;</span>
+<span class="sd">            A second fragment</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if self and other coexist in at least one frame</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">s1</span><span class="p">,</span><span class="n">e1</span><span class="p">),</span> <span class="p">(</span><span class="n">s2</span><span class="p">,</span><span class="n">e2</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_end</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">start_end</span></div>
+        <span class="k">return</span> <span class="n">s1</span> <span class="o">&lt;</span> <span class="n">e2</span> <span class="ow">and</span> <span class="n">e1</span> <span class="o">&gt;</span> <span class="n">s2</span>
+
+<div class="viewcode-block" id="Fragment.get_coexisting_individual_fragments_indices"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_coexisting_individual_fragments_indices">[docs]</a>    <span class="k">def</span> <span class="nf">get_coexisting_individual_fragments_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the list of fragment objects representing and individual (i.e.</span>
+<span class="sd">        not representing a crossing where two or more animals are touching) and</span>
+<span class="sd">        coexisting (in frame) with self</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fragments : list</span>
+<span class="sd">            List of all the fragments in the video</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span> <span class="o">=</span> <span class="p">[</span><span class="n">fragment</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">fragments</span>
+                                            <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">are_overlapping</span><span class="p">(</span><span class="n">fragment</span><span class="p">)</span>
+                                            <span class="ow">and</span> <span class="n">fragment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">]</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_coexisting_individual_fragments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_enough_accumulated_coexisting_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span>
+                    <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_coexisting_individual_fragments</span><span class="o">/</span><span class="mi">2</span>
+
+<div class="viewcode-block" id="Fragment.check_consistency_with_coexistent_individual_fragments"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.check_consistency_with_coexistent_individual_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">check_consistency_with_coexistent_individual_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temporary_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check that the temporary identity assigned to the fragment is</span>
+<span class="sd">        consistent with respect to the identities already assigned to the</span>
+<span class="sd">        fragments coexisting (in frame) with it</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temporary_id : int</span>
+<span class="sd">            Temporary identity assigned to the fragment</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if the identification of self with `temporary_id` does not</span>
+<span class="sd">            cause any duplication</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">coexisting_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">coexisting_fragment</span><span class="o">.</span><span class="n">temporary_id</span> <span class="o">==</span> <span class="n">temporary_id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span></div>
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Fragment.compute_identification_statistics"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_identification_statistics">[docs]</a>    <span class="k">def</span> <span class="nf">compute_identification_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">softmax_probs</span><span class="p">,</span> <span class="n">number_of_animals</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the statistics necessary to the identification of the</span>
+<span class="sd">        fragment</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        predictions : ndarray</span>
+<span class="sd">            array of shape [number_of_images_in_fragment, 1] whose components</span>
+<span class="sd">            are the argmax(softmax_probs) per image</span>
+<span class="sd">        softmax_probs : ndarray</span>
+<span class="sd">            array of shape [number_of_images_in_fragment, number_of_animals]</span>
+<span class="sd">            whose rows are the result of applying the softmax function to the</span>
+<span class="sd">            predictions outputted by the idCNN per image</span>
+<span class="sd">        number_of_animals : int</span>
+<span class="sd">            Description of parameter `number_of_animals`.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :meth:`compute_identification_frequencies_individual_fragment`</span>
+<span class="sd">        :meth:`compute_P1_from_frequencies`</span>
+<span class="sd">        :meth:`compute_median_softmax`</span>
+<span class="sd">        :meth:`compute_certainty_of_individual_fragment`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_an_individual</span>
+        <span class="n">number_of_animals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="k">if</span> <span class="n">number_of_animals</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">number_of_animals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frequencies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_identification_frequencies_individual_fragment</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_P1_from_frequencies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequencies</span><span class="p">)</span>
+        <span class="n">median_softmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_median_softmax</span><span class="p">(</span><span class="n">softmax_probs</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_certainty</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_certainty_of_individual_fragment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span><span class="p">,</span><span class="n">median_softmax</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Fragment.set_P1_vector_accumulated"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.set_P1_vector_accumulated">[docs]</a>    <span class="k">def</span> <span class="nf">set_P1_vector_accumulated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If self has been used for training its P1_vector is modified to be</span>
+<span class="sd">        a vector of zeros with a single component set to 1 in the</span>
+<span class="sd">        :attr:`temporary_id` position</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_for_training</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_an_individual</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P1_vector</span><span class="p">))</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">temporary_id</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span>
+
+<div class="viewcode-block" id="Fragment.get_possible_identities"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_possible_identities">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_possible_identities</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if P2 has two identical maxima. In that case returns the indices.</span>
+<span class="sd">        Else return false</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">maxima_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">P2_vector</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="n">maxima_indices</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Fragment.assign_identity"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.assign_identity">[docs]</a>    <span class="k">def</span> <span class="nf">assign_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Assigns the identity to self by considering the fragments coexisting</span>
+<span class="sd">        with it. If the certainty of the identification is high enough it sets</span>
+<span class="sd">        the identity of self to be fixed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_an_individual</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_for_training</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span><span class="p">:</span>
+            <span class="n">possible_identities</span><span class="p">,</span> <span class="n">max_P2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_possible_identities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P2_vector</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">possible_identities</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">zero_identity_assigned_by_P2</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_ambiguous_identities</span> <span class="o">=</span> <span class="n">possible_identities</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">max_P2</span> <span class="o">&gt;</span> <span class="n">FIXED_IDENTITY_THRESHOLD</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="n">possible_identities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P1_vector</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">identity</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">recompute_P2_of_coexisting_fragments</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Fragment.recompute_P2_of_coexisting_fragments"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.recompute_P2_of_coexisting_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">recompute_P2_of_coexisting_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates the P2 of the fragments coexisting with self</span>
+<span class="sd">        (see :attr:`coexisting_individual_fragments`) if their identity is not</span>
+<span class="sd">        fixed (see :attr:`identity_is_fixed`)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># The P2 of fragments with fixed identity won&#39;t be recomputed</span>
+        <span class="c1"># due to the condition in assign_identity() (second line)</span></div>
+        <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">compute_P2_vector</span><span class="p">()</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Fragment.compute_P2_vector"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_P2_vector">[docs]</a>    <span class="k">def</span> <span class="nf">compute_P2_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the P2_vector related to self. It is based on :attr:`coexisting_individual_fragments`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coexisting_P1_vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">P1_vector</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">])</span>
+        <span class="n">numerator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P1_vector</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">coexisting_P1_vectors</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">denominator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">numerator</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">denominator</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_P2_vector</span> <span class="o">=</span> <span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span>
+            <span class="n">P2_vector_ordered</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P2_vector</span><span class="p">)</span>
+            <span class="n">P2_first_max</span> <span class="o">=</span> <span class="n">P2_vector_ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">P2_second_max</span> <span class="o">=</span> <span class="n">P2_vector_ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_certainty_P2</span> <span class="o">=</span> <span class="n">MAX_FLOAT</span> <span class="k">if</span> <span class="n">P2_second_max</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">P2_first_max</span> <span class="o">/</span> <span class="n">P2_second_max</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_P2_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_certainty_P2</span> <span class="o">=</span> <span class="mf">0.</span>
+
+<div class="viewcode-block" id="Fragment.compute_identification_frequencies_individual_fragment"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_identification_frequencies_individual_fragment">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">compute_identification_frequencies_individual_fragment</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Counts the argmax of predictions per row</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        predictions : ndarray</span>
+<span class="sd">            array of shape [n, 1]</span>
+<span class="sd">        number_of_animals : int</span>
+<span class="sd">            number of animals to be tracked</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            array of shape [1, number_of_animals], whose ith component counts how</span>
+<span class="sd">            many predictions have maximum components at the index i</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">predictions</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span></div>
+                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span> <span class="c1"># The predictions come from 1 to number_of_animals + 1</span>
+
+<div class="viewcode-block" id="Fragment.compute_P1_from_frequencies"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_P1_from_frequencies">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">compute_P1_from_frequencies</span><span class="p">(</span><span class="n">frequencies</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given the frequencies of a individual fragment</span>
+<span class="sd">        computer the P1 vector. P1 is the softmax of the frequencies with base 2</span>
+<span class="sd">        for each identity.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">P1_of_fragment</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mf">2.</span><span class="o">**</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">frequencies</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frequencies</span><span class="p">),</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">frequencies</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frequencies</span><span class="p">),</span><span class="mi">1</span><span class="p">))),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">P1_of_fragment</span>
+
+<div class="viewcode-block" id="Fragment.compute_median_softmax"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_median_softmax">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">compute_median_softmax</span><span class="p">(</span><span class="n">softmax_probs</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given the softmax of the predictions outputted by the network, it</span>
+<span class="sd">        computes their median according to the argmax of the softmaxed</span>
+<span class="sd">        predictions per image</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        softmax_probs : ndarray</span>
+<span class="sd">            array of shape [number_of_images_in_fragment, number_of_animals]</span>
+<span class="sd">            whose rows are the result of applying the softmax function to the</span>
+<span class="sd">            predictions outputted by the idCNN per image</span>
+<span class="sd">        number_of_animals : int</span>
+<span class="sd">            number of animals to be tracked</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        type</span>
+<span class="sd">            Median of argmax(softmax_probs) per image</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">softmax_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">softmax_probs</span><span class="p">)</span>
+        <span class="c1">#jumps are fragment composed by a single image, thus:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">softmax_probs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">softmax_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">softmax_probs</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">max_softmax_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">softmax_probs</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">argmax_softmax_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">softmax_probs</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">softmax_median</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">number_of_animals</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">argmax_softmax_probs</span><span class="p">):</span>
+            <span class="n">softmax_median</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">max_softmax_probs</span><span class="p">[</span><span class="n">argmax_softmax_probs</span> <span class="o">==</span> <span class="n">i</span><span class="p">])</span></div>
+        <span class="k">return</span> <span class="n">softmax_median</span>
+
+<div class="viewcode-block" id="Fragment.compute_certainty_of_individual_fragment"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_certainty_of_individual_fragment">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">compute_certainty_of_individual_fragment</span><span class="p">(</span><span class="n">P1_vector</span><span class="p">,</span> <span class="n">median_softmax</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the certainty given the P1_vector of the fragment by</span>
+<span class="sd">        using the output of :meth:`compute_median_softmax`</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        P1_vector : ndarray</span>
+<span class="sd">            array with shape [1, number_of_animals] computed from frequencies by :meth:`compute_identification_statistics`</span>
+<span class="sd">        median_softmax : ndarray</span>
+<span class="sd">            Median of argmax(softmax_probs) per image</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Fragment&#39;s certainty</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">argsort_p1_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">P1_vector</span><span class="p">)</span>
+        <span class="n">sorted_p1_vector</span> <span class="o">=</span> <span class="n">P1_vector</span><span class="p">[</span><span class="n">argsort_p1_vector</span><span class="p">]</span>
+        <span class="n">sorted_softmax_probs</span> <span class="o">=</span> <span class="n">median_softmax</span><span class="p">[</span><span class="n">argsort_p1_vector</span><span class="p">]</span>
+        <span class="n">certainty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">sorted_p1_vector</span><span class="p">,</span><span class="n">sorted_softmax_probs</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sorted_p1_vector</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span></div>
+        <span class="k">return</span> <span class="n">certainty</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Fragment.get_neighbour_fragment"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_neighbour_fragment">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbour_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">number_of_frames_in_direction</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If it exist, gets the fragment in the list of all fragment whose</span>
+<span class="sd">        identity is the identity assigned to self and whose starting frame is</span>
+<span class="sd">        the starting frame of self + 1, or ending frame is the ending frame of</span>
+<span class="sd">        self - 1</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fragments : list</span>
+<span class="sd">            List of all the fragments in the video</span>
+<span class="sd">        scope : str</span>
+<span class="sd">            If &quot;to_the_future&quot; looks for the consecutive fragment wrt to self,</span>
+<span class="sd">            if &quot;to_the_past&quot; looks for the fragment the precedes self</span>
+<span class="sd">        number_of_frames_in_direction : int</span>
+<span class="sd">            Distance (in frame) at which the previous or next fragment has to</span>
+<span class="sd">            be</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        &lt;Fragment object&gt;</span>
+<span class="sd">            The neighbouring fragment with respect to self in the direction</span>
+<span class="sd">            specified by scope if it exists. Otherwise None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">scope</span> <span class="o">==</span> <span class="s1">&#39;to_the_past&#39;</span><span class="p">:</span>
+            <span class="n">neighbour</span> <span class="o">=</span> <span class="p">[</span><span class="n">fragment</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">fragments</span>
+                            <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">assigned_identity</span>
+                            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">fragment</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">number_of_frames_in_direction</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">scope</span> <span class="o">==</span> <span class="s1">&#39;to_the_future&#39;</span><span class="p">:</span>
+            <span class="n">neighbour</span> <span class="o">=</span> <span class="p">[</span><span class="n">fragment</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">fragments</span>
+                            <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">assigned_identity</span>
+                            <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">number_of_frames_in_direction</span><span class="p">]</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbour</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span></div>
+        <span class="k">return</span> <span class="n">neighbour</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbour</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Fragment.set_partially_or_globally_accumulated"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.set_partially_or_globally_accumulated">[docs]</a>    <span class="k">def</span> <span class="nf">set_partially_or_globally_accumulated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accumulation_strategy</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets :attr:`accumulated_globally` and :attr:`accumulated_partially`</span>
+<span class="sd">        according to `accumulation_strategy`</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        accumulation_strategy : str</span>
+<span class="sd">            Can be &quot;global&quot; or &quot;partial&quot;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">accumulation_strategy</span> <span class="o">==</span> <span class="s1">&#39;global&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_globally</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">accumulation_strategy</span> <span class="o">==</span> <span class="s1">&#39;partial&#39;</span><span class="p">:</span></div></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_partially</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Mar 06, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

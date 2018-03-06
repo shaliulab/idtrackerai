@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>stop_training_criteria &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../_static/css/spc-extend.css">
+    <link rel="stylesheet" href="../_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" >
+    <link rel="search" title="Search" href="../search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="../index.html" >
+    <link rel="up" title="Module code" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="../index.html">
+      <img style="border: 0;" alt="idtrackerai" src="../_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
+	
+        <li class="active"><a href="../index.html">idtrackerai v0.0 Manual</a></li>
+	
+          <li class="active"><a href="index.html" accesskey="U">Module code</a></li> 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="../genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <h1>Source code for stop_training_criteria</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This file is part of idtracker.ai, a multiple animals tracking system</span>
+<span class="c1"># described in [1].</span>
+<span class="c1"># Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.</span>
+<span class="c1">#</span>
+<span class="c1"># idtracker.ai is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details. In addition, we require</span>
+<span class="c1"># derivatives or applications to acknowledge the authors by citing [1].</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># For more information please send an email (idtrackerai@gmail.com) or</span>
+<span class="c1"># use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.</span>
+<span class="c1">#</span>
+<span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G.,</span>
+<span class="c1"># (2018). idtracker.ai: Tracking all individuals with correct identities in large</span>
+<span class="c1"># animal collectives (submitted)</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span>  <span class="n">MAX_FLOAT</span><span class="p">,</span> <span class="n">LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN</span><span class="p">,</span> \
+                    <span class="n">LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN</span><span class="p">,</span> <span class="n">OVERFITTING_COUNTER_THRESHOLD_IDCNN</span><span class="p">,</span> \
+                    <span class="n">MAXIMUM_NUMBER_OF_EPOCHS_IDCNN</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+    <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.stop_training_criteria&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Stop_Training"><a class="viewcode-back" href="../idCNN.html#stop_training_criteria.Stop_Training">[docs]</a><span class="k">class</span> <span class="nc">Stop_Training</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Stops the training of the network according to the conditions specified</span>
+<span class="sd">    in :meth:`__call__`</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    num_epochs : int</span>
+<span class="sd">        Number of epochs before starting the training</span>
+<span class="sd">    number_of_animals : int</span>
+<span class="sd">        Number of animals in the video</span>
+<span class="sd">    epochs_before_checking_stopping_conditions : int</span>
+<span class="sd">        Number of epochs before starting to check the stopping conditions</span>
+<span class="sd">    overfitting_counter : int</span>
+<span class="sd">        Counts the number of consecutive overfitting epochs during training</span>
+<span class="sd">    check_for_loss_plateau : bool</span>
+<span class="sd">        Flag to check for a plateu in the loss of the validation</span>
+<span class="sd">    first_accumulation_flag : bool</span>
+<span class="sd">        Flag to indicate that it is the first step of the accumulation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">epochs_before_checking_stopping_conditions</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">check_for_loss_plateau</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">first_accumulation_flag</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span> <span class="o">=</span> <span class="n">MAXIMUM_NUMBER_OF_EPOCHS_IDCNN</span> <span class="c1">#maximal num of epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">=</span> <span class="n">number_of_animals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epochs_before_checking_stopping_conditions</span> <span class="o">=</span> <span class="n">epochs_before_checking_stopping_conditions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#number of epochs in which the network is overfitting before stopping the training</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_for_loss_plateau</span> <span class="o">=</span> <span class="n">check_for_loss_plateau</span> <span class="c1">#bool: if true the training is stopped if the loss is not decreasing enough</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_accumulation_flag</span> <span class="o">=</span> <span class="n">first_accumulation_flag</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_accuracy_training</span><span class="p">,</span> <span class="n">loss_accuracy_validation</span><span class="p">,</span> <span class="n">epochs_completed</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True when one of the conditions to stop the training is satisfied,</span>
+<span class="sd">        otherwise it returns False</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loss_accuracy_training : list</span>
+<span class="sd">            List with the values of the loss in the training set for the previous epochs</span>
+<span class="sd">        loss_accuracy_validation : list</span>
+<span class="sd">            List with the values of the loss in the validation set for the previous epochs</span>
+<span class="sd">        epochs_completed : int</span>
+<span class="sd">            Number of epochs completed before checking the conditions</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#check that the model did not diverged (nan loss).</span>
+
+        <span class="k">if</span> <span class="n">epochs_completed</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">loss_accuracy_training</span><span class="o">.</span><span class="n">loss</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">loss_accuracy_validation</span><span class="o">.</span><span class="n">loss</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;The model diverged. Oops. Check the hyperparameters and the architecture of the network.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="c1">#check if it did not reached the epochs limit</span>
+        <span class="k">if</span> <span class="n">epochs_completed</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The number of epochs completed is larger than the number of epochs set for training, we stop the training&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="c1">#check that the model is not overfitting or if it reached a stable saddle (minimum)</span>
+        <span class="k">if</span> <span class="n">epochs_completed</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs_before_checking_stopping_conditions</span><span class="p">:</span>
+            <span class="n">current_loss</span> <span class="o">=</span> <span class="n">loss_accuracy_validation</span><span class="o">.</span><span class="n">loss</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">previous_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">loss_accuracy_validation</span><span class="o">.</span><span class="n">loss</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">epochs_before_checking_stopping_conditions</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1">#The validation loss in the first 10 epochs could have exploded but being decreasing.</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">previous_loss</span><span class="p">):</span> <span class="n">previous_loss</span> <span class="o">=</span> <span class="n">MAX_FLOAT</span>
+            <span class="n">losses_difference</span> <span class="o">=</span> <span class="p">(</span><span class="n">previous_loss</span><span class="o">-</span><span class="n">current_loss</span><span class="p">)</span>
+            <span class="c1">#check overfitting</span>
+            <span class="k">if</span> <span class="n">losses_difference</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span> <span class="o">&gt;=</span> <span class="n">OVERFITTING_COUNTER_THRESHOLD_IDCNN</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_accumulation_flag</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Overfitting</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">overfitting_counter</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1">#check if the error is not decreasing much</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_for_loss_plateau</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_accumulation_flag</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">losses_difference</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">current_loss</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;The losses difference is very small, we stop the training</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">losses_difference</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">current_loss</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;The losses difference is very small, we stop the training</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+            <span class="c1"># if the individual accuracies in validation are 1. for all the animals</span>
+            <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="n">loss_accuracy_validation</span><span class="o">.</span><span class="n">individual_accuracy</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;The individual accuracies in validation is 1. for all the individuals, we stop the training</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="c1"># if the validation loss is 0.</span>
+            <span class="k">if</span> <span class="n">previous_loss</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">or</span> <span class="n">current_loss</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;The validation loss is 0., we stop the training&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+</div>
+        <span class="k">return</span> <span class="kc">False</span>
+</pre></div>
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Mar 06, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

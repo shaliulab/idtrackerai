@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>Quickstart &mdash; idtrackerai v0.0 Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
+    <link rel="stylesheet" href="_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" >
+    <link rel="search" title="Search" href="search.html" >
+    <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
+    <link rel="next" title="Graphical user interface (GUI)" href="GUI_explained.html" >
+    <link rel="prev" title="Installation and requirements" href="how_to_install.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="index.html">
+      <img style="border: 0;" alt="idtrackerai" src="_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
+	
+        <li class="active"><a href="index.html">idtrackerai v0.0 Manual</a></li>
+	 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+      <li class="active">
+        <a href="GUI_explained.html" title="Graphical user interface (GUI)"
+           accesskey="N">next</a>
+      </li>
+      <li class="active">
+        <a href="how_to_install.html" title="Installation and requirements"
+           accesskey="P">previous</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Quickstart</a><ul>
+<li><a class="reference internal" href="#step-1-download-the-video-example">Step 1. Download the video example</a></li>
+<li><a class="reference internal" href="#step-2-copy-video-to-an-adequate-location">Step 2. Copy video to an adequate location</a></li>
+<li><a class="reference internal" href="#step-3-start-a-tracking-session">Step 3. Start a tracking session</a></li>
+<li><a class="reference internal" href="#step-4-select-a-region-of-interests">Step 4. Select a region of interests</a></li>
+<li><a class="reference internal" href="#step-5-video-segmentation-and-preprocessing">Step 5. Video segmentation and preprocessing</a></li>
+<li><a class="reference internal" href="#step-6-start-tracking-the-video">Step 6. Start tracking the video</a></li>
+<li><a class="reference internal" href="#step-7-global-and-individual-validation">Step 7. Global and individual validation</a></li>
+<li><a class="reference internal" href="#step-8-output-files">Step 8. Output files</a></li>
+<li><a class="reference internal" href="#try-the-100-zebrafish-sample-video">Try the 100 zebrafish sample video</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <div class="section" id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<p>In this section we explain how to start tracking a video with idtracker.ai. For more information about
+the different functionalities of the system go to the
+<a class="reference internal" href="GUI_explained.html"><span class="doc">Graphical user interface (GUI)</span></a> section or check the Supplementary Material in <a class="footnote-reference" href="#id2" id="id1">[1]</a>. Please read the notes in
+italics to get advice about how to set the parameters to track the sample videos with
+good performance levels.</p>
+<div class="section" id="step-1-download-the-video-example">
+<h2>Step 1. Download the video example<a class="headerlink" href="#step-1-download-the-video-example" title="Permalink to this headline">¶</a></h2>
+<p>If it is the first time that you are using this system, we recommend to start with
+the video example of 8 adult zebrafish (<em>Danio rerio</em>). You can download it from
+<a class="reference external" href="https://drive.google.com/open?id=1uBOEMGxrOed8du7J9Rt-dlXdqOyhCpMC">this link</a>.</p>
+<p>At the end of this page you will find the link to a video of 100 juvenile zebrafish.
+We recommend to start with the video of 8 fish as it is faster to track and it is good
+to get use to the system.</p>
+</div>
+<div class="section" id="step-2-copy-video-to-an-adequate-location">
+<h2>Step 2. Copy video to an adequate location<a class="headerlink" href="#step-2-copy-video-to-an-adequate-location" title="Permalink to this headline">¶</a></h2>
+<p>Copy the video to a folder where you want the output files to be placed.
+Depending on the length of the video, the number of animals, and the number
+of pixels per animal, idtracker.ai will generate different amounts of data,
+so there must be free space on the disk to allocate the output files.</p>
+<p>For a video of <span class="math notranslate">\(\approx18\)</span> sec at <span class="math notranslate">\(28fps\)</span> (<span class="math notranslate">\(\approx510\)</span> frames) with <span class="math notranslate">\(8\)</span> animals
+and an average of <span class="math notranslate">\(334\)</span> pixels per animal the system produces <span class="math notranslate">\(227.4\)</span> MB. We recommend
+using solid state disks as the saving and loading of the multiple objects that
+idtracker.ai generates will be faster.</p>
+</div>
+<div class="section" id="step-3-start-a-tracking-session">
+<h2>Step 3. Start a tracking session<a class="headerlink" href="#step-3-start-a-tracking-session" title="Permalink to this headline">¶</a></h2>
+<p>idtrackerai is equipped with a GUI organized by tabs that activate to guide the user
+throughout the tracking process. Press the help button in any tab to get more information
+about the possible actions in the tab.</p>
+<p>To start the GUI open a terminal and type</p>
+<blockquote>
+<div>source activate idtrackerai-environment
+idtrackeraiGUI</div></blockquote>
+<div class="figure align-right">
+<a class="reference internal image-reference" href="_images/qs_img1.png"><img alt="welcome tab" src="_images/qs_img1.png" style="width: 400.5px; height: 300.5px;" /></a>
+</div>
+<p>After opening the idtracker.ai user interface, browse to the folder containing
+the video you want to track (if needed, use the bar with the symbol “../” to go up in
+your folders).
+In case the video is split in segments, the software will concatenate them if
+each segment is named according to the following convention:</p>
+<blockquote>
+<div>videoName_segmentNumber.extension</div></blockquote>
+<p>Click on the video file (or one of its segments) to start a new tracking session.
+After clicking on the video file it is necessary to assign a name to the current
+tracking session. Type a name and press ENTER.</p>
+<p>By entering the name of an existing session it will be possible to load all or
+part of the processes already computed. Note that the word “session” is
+included by default in the name, so if your session name is “newTracking” the
+session folder generated will be:</p>
+<blockquote>
+<div>session_newTracking</div></blockquote>
+</div>
+<div class="section" id="step-4-select-a-region-of-interests">
+<h2>Step 4. Select a region of interests<a class="headerlink" href="#step-4-select-a-region-of-interests" title="Permalink to this headline">¶</a></h2>
+<p>If needed, it is possible to select one or more ROIs to limit the tracking to a
+portion of each frame of the video or to prevent objects to be detected.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/qs_img3.png"><img alt="roi" src="_images/qs_img3.png" style="width: 400.5px; height: 301.5px;" /></a>
+</div>
+<p>First select the shape of the ROI: It is possible to draw either rectangular or
+elliptic ROIs. To draw a rectangle, first click on the position of one of the
+corners of the rectangle and then, without dragging, on the position of the opposite corner.
+To generate a elliptical ROI select 5 points on the contour of the ellipse that
+you want to draw.</p>
+<p>In case of mistake it is possible to delete the ROI and draw a new one. Furthermore,
+it is possible to draw as many ROIs as desired. The slider allows to browse the
+video in order to check the goodness of the selected ROIs in every frame. Finally,
+save the ROI by clicking the button “save ROI” before leaving the tab.</p>
+<p>If you don’t need to select a region of interest skip this tab by clicking on
+the tab preprocessing.</p>
+<p><em>NOTE 1: To track the video of 8 adult zebrafish you do not actually need a ROI. However
+you can try selecting a rectangular ROI. Remember to check whether all the fish are inside
+of the ROI for the whole part of the video, otherwise the tracking can give bad results</em></p>
+<p><em>NOTE 2: To track the video of 100 juvenile zebrafish we recommend using a circular (ellipse)
+ROI. Use the track bar to explore where the animals move in the frame. The limit of the
+swimming area is the biggest ring that is all included in the frame.</em></p>
+</div>
+<div class="section" id="step-5-video-segmentation-and-preprocessing">
+<h2>Step 5. Video segmentation and preprocessing<a class="headerlink" href="#step-5-video-segmentation-and-preprocessing" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-right">
+<a class="reference internal image-reference" href="_images/qs_img4.png"><img alt="preprocessing" src="_images/qs_img4.png" style="width: 400.5px; height: 300.5px;" /></a>
+</div>
+<p>The aim of this step is to set the parameters that allow to separate the animals
+from the background.</p>
+<p>Apply the ROIs selected in the previous step by activating the “apply ROI” switch.
+The minimum and maximum threshold sliders allow to define a range of admissible
+intensities. In the example, since the fish are darker than the background,
+we consider only pixels whose intensity is greater or equal than <span class="math notranslate">\(135\)</span>.
+The intensity ranges from <span class="math notranslate">\(0\)</span> to <span class="math notranslate">\(255\)</span>.</p>
+<p>We call a collection of connected pixels that satisfies the intensity thresholds a blob.
+The user can set the range of acceptable areas (number of pixels) of the segmented blobs.
+This allows to exclude noisy blobs, or bigger objects that do not correspond
+to animals, despite their intensity. The bars plot on the bottom displays the
+areas of the detected objects in the current frame. A horizontal line indicates
+the minimum of the areas of the segmented blobs.</p>
+<div class="figure align-right">
+<a class="reference internal image-reference" href="_images/qs_img6.png"><img alt="welcome tab" src="_images/qs_img6.png" style="width: 400.5px; height: 300.5px;" /></a>
+</div>
+<p>Use the track bar to explore the video and check that all the animals are segmented
+properly in different areas of the frame. An adequate set of the preprocessing parameters
+is a key point to obtain a good performance of the following steps.</p>
+<p>After setting the parameters, the segmentation of the video can be initiated by
+clicking the button “Segment video”. A popup showing an estimate of the number
+of animals present in the video will open. Modify the number if it is incorrect
+and press return on your keyboard. A series of popups will keep you updated about
+the stage of the preprocessing.</p>
+<p>idtracker.ai uses deep learning to discriminate between segmented images
+representing single individuals and multiple touching animals. A final preprocessing
+popup shows the graph of the loss function and the accuracy of this network,
+when trained on a dataset automatically extracted from the images segmented in
+the previous stages. It is now possible to start the tracking by clicking on
+the bar that says “Go to the tracking tab”.</p>
+<p><em>NOTE 1: We recommend the following set of parameters for a good tracking performance
+on the sample video of 8 zebrafish:</em></p>
+<ul class="simple">
+<li><em>apply ROI: OFF</em></li>
+<li><em>background subtraction: OFF</em></li>
+<li><em>check segmentation consistency: OFF</em></li>
+<li><em>Max intensity: 135</em></li>
+<li><em>Min intensity: 0</em></li>
+<li><em>Max area: 60000</em></li>
+<li><em>Min area: 150</em></li>
+</ul>
+<p><em>NOTE 2: We recommend the following set of parameters for a good tracking performance
+on the sample video of 100 zebrafish:</em></p>
+<ul class="simple">
+<li><em>apply ROI: ON (circular ROI)</em></li>
+<li><em>background subtraction: ON</em></li>
+<li><em>check segmentation consistency: OFF</em></li>
+<li><em>Max intensity: 216</em></li>
+<li><em>Min intensity: 0</em></li>
+<li><em>Max area: 60000</em></li>
+<li><em>Min area: 100</em></li>
+</ul>
+</div>
+<div class="section" id="step-6-start-tracking-the-video">
+<h2>Step 6. Start tracking the video<a class="headerlink" href="#step-6-start-tracking-the-video" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-right">
+<a class="reference internal image-reference" href="_images/qs_img7.png"><img alt="welcome tab" src="_images/qs_img7.png" style="width: 401.5px; height: 300.5px;" /></a>
+</div>
+<p>To start the tracking click on the button “Start protocol cascade”. The values
+displayed on the right of the tab are the hyperparameters used to initialise
+the artificial neural network used to identify the animals. These parameters
+can be changed by clicking on the button “Advanced idCNN controls”, we recommend
+only advanced users to access this options. After clicking on the button
+“Start protocol cascade” a popup will keep you updated about the state of
+the algorithm.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/qs_img8.png"><img alt="welcome tab" src="_images/qs_img8.png" style="width: 751.2px; height: 333.2px;" /></a>
+</div>
+<p>After the protocol has been carried out successfully and the trajectories of
+the identified animals have been saved a popup allows either to quit the program
+or proceed to the validation of the video. In addition, the estimated accuracy
+of the tracking is shown. The algorithm will automatically recommend the user
+to proceed to the validation if the estimated accuracy is lower than expected.</p>
+<p>Choose to validate the trajectories “with gaps” if you want to check the trajectories
+of individual animals before and after they touch or cross with other animals. Choose
+to validate the trajectories “without gaps” if you want to check the trajectories also
+during the crossings.</p>
+</div>
+<div class="section" id="step-7-global-and-individual-validation">
+<h2>Step 7. Global and individual validation<a class="headerlink" href="#step-7-global-and-individual-validation" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-right">
+<a class="reference internal image-reference" href="_images/qs_img9.png"><img alt="welcome tab" src="_images/qs_img9.png" style="width: 400.5px; height: 300.5px;" /></a>
+</div>
+<p>The output of the tracking algorithm can be easily validated and corrected by
+using the global validation and individual validation tabs.</p>
+<p>Since the identity of the animals is preserved between crossings, it is possible
+to jump from one crossing to the next or the previous by using the “Go to next
+(previous) crossing” button, or by pressing the up and down arrow on the keyboard.</p>
+<p>The identification of the individual is done starting from a particular part of
+the video called “first global fragment”. We suggest to start a validation from
+this part of the video which can be reached in any moment by clicking on the
+button “First global fragment”.</p>
+<p>To modify the identity of an individual click inside of the body of the animal.
+A pop up will appear indicating the current identity of the animal. Type the new
+identity and press return. The new identity will be propagated to the past and
+the future until the animal enters a crossing or disappears. In case the user
+modifies at least one of the assigned identities the algorithm gives the possibility
+to save the updated identities and updates the file were all the information about
+the blobs is stored.</p>
+</div>
+<div class="section" id="step-8-output-files">
+<h2>Step 8. Output files<a class="headerlink" href="#step-8-output-files" title="Permalink to this headline">¶</a></h2>
+<p>The files generated during the tracking and the files with the trajectories
+are stored in the session folder. The trajectories of the animals in the parts
+where they are not crossing can be found in the folder “trajectories”. The
+trajectories with the interpolated position of the animals during the crossings
+can be found in the folder “trajectories_wo_gaps”.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/session_folder.png"><img alt="welcome tab" src="_images/session_folder.png" style="width: 588.0px; height: 282.4px;" /></a>
+</div>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., (2018).
+idtracker.ai: Tracking all individuals with correct identities in large animal collectives (submitted)</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="try-the-100-zebrafish-sample-video">
+<h2>Try the 100 zebrafish sample video<a class="headerlink" href="#try-the-100-zebrafish-sample-video" title="Permalink to this headline">¶</a></h2>
+<p>You can download the video from <a class="reference external" href="https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37">this link</a>.
+Note that the size of this video is 22.4GB, so it should take around 30 minutes to download it at
+an average rate of 12Mb/s.</p>
+<p>To track this video we recommend using a computer with similar specifications to the ones
+listed in the <a class="reference internal" href="how_to_install.html"><span class="doc">Installation and requirements</span></a>. In particular, we successfully tracked this video in about 3 hours
+in a computer with 8 cores, 32Gb of RAM, a Titan X GPU and a SSD disk.</p>
+<p>WARNING: Trying to track this video in a computer with less than 32Gb of RAM might block your computer.</p>
+<p>Due to the higher frame size of this video (3500x3584) you might notice a decrease of
+speed when adjusting the preprocessing parameters.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Mar 06, 2018.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>

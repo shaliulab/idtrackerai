@@ -134,7 +134,7 @@ class SelectFile(BoxLayout):
     def create_welcome_popup(self):
         self.popup_container = BoxLayout()
         self.session_name_box = BoxLayout(orientation="vertical")
-        self.session_name_label = CustomLabel(font_size = 16, text='Give a name to the current tracking session. Use the name of an existent session to load it.')
+        self.session_name_label = CustomLabel(font_size = 16, text='Give a name to the current tracking session and press ENTER. Use the name of an existent session to load it.')
         self.session_name_box.add_widget(self.session_name_label)
         self.session_name_input = TextInput(text ='', multiline=False)
         self.session_name_box.add_widget(self.session_name_input)
