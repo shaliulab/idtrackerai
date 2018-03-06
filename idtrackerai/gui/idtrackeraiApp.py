@@ -1,4 +1,3 @@
-
 # This file is part of idtracker.ai, a multiple animals tracking system
 # described in [1].
 # Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.
@@ -295,9 +294,6 @@ class idtrackeraiApp(App):
         if move_logs:
             os.rename(os.path.join(_dir, log_file), os.path.join(CHOSEN_VIDEO.video.logs_folder, os.path.split(log_file)[-1]))
 
-def run_app():
-    idtrackeraiApp().run()
-
 def get_error_and_save_logs():
     import traceback
     ex_type, ex, tb = sys.exc_info()
@@ -313,8 +309,12 @@ def get_error_and_save_logs():
         print(os.path.join(kivy.kivy_home_dir, Config.get('kivy', 'log_dir')))
         print("to idtrackerai@gmail.com")
 
-if __name__ == '__main__':
+def run_app():
     try:
-        run_app()
+        idtrackeraiApp().run()
     except Exception, err:
         get_error_and_save_logs()
+
+if __name__ == '__main__':
+    run_app()
+    
