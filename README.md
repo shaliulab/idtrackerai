@@ -3,7 +3,7 @@
 
 idtracker.ai allows to track animals in small and large collectives using convolutional neural networks.
 
-## Requirements
+## Hardware requirements
 
 idtracker.ai has been tested under the following specifications:
 
