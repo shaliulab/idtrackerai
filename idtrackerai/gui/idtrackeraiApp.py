@@ -68,7 +68,9 @@ from idtrackerai.constants import THRESHOLD_ACCEPTABLE_ACCUMULATION, RESTORE_CRI
 
 print('\n************************************************************************************')
 print('LICENSE')
-print('idtracker.ai  Copyright (C) 2017-  Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.')
+print('idtracker.ai  Copyright (C) 2017-  Francisco Romero Ferrero, Mattia G. Bergomi,') 
+print('Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the')
+print('Champalimaud Foundation')
 print('This program comes with ABSOLUTELY NO WARRANTY.')
 print('This is free software, and you are welcome to redistribute it')
 print('under certain conditions. Check http://idtracker.ai/ for more information.')
