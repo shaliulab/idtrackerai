@@ -24,7 +24,8 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'numpydoc']
+    'numpydoc',
+    'sphinxcontrib.googleanalytics']
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
@@ -95,3 +96,6 @@ texinfo_documents = [
      author, 'idtrackerai', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+# google analytics
+googleanalytics_id = 'UA-114600635-1'

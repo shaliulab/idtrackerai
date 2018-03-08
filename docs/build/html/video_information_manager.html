@@ -3,23 +3,25 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-114600635-1"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <script type="text/javascript">
 
-      gtag('config', 'UA-114600635-1');
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-114600635-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
     </script>
-
     <title>Video information manager &mdash; idtrackerai v0.0 Manual</title>
-
+    
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
     <link rel="stylesheet" href="_static/scipy.css" type="text/css" >
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" >
-
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -37,7 +39,7 @@
     <link rel="index" title="Index" href="genindex.html" >
     <link rel="search" title="Search" href="search.html" >
     <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
-    <link rel="up" title="Code documentation" href="modules.html" >
+    <link rel="up" title="Code documentation" href="modules.html" > 
   </head>
   <body>
 
@@ -52,31 +54,31 @@
 
     <div class="container">
       <div class="main">
-
+        
 	<div class="row-fluid">
 	  <div class="span12">
 	    <div class="spc-navbar">
-
+              
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
-
+	
         <li class="active"><a href="index.html">idtrackerai v0.0 Manual</a></li>
-
-          <li class="active"><a href="modules.html" accesskey="U">Code documentation</a></li>
+	
+          <li class="active"><a href="modules.html" accesskey="U">Code documentation</a></li> 
     </ul>
-
-
+              
+              
     <ul class="nav nav-pills pull-right">
       <li class="active">
         <a href="genindex.html" title="General Index"
            accesskey="I">index</a>
       </li>
     </ul>
-
+              
 	    </div>
 	  </div>
 	</div>
-
+        
 
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
@@ -84,10 +86,10 @@
         </div>
       </div>
           <div class="span9">
-
+            
         <div class="bodywrapper">
           <div class="body" id="spc-section-body">
-
+            
   <div class="section" id="video-information-manager">
 <h1>Video information manager<a class="headerlink" href="#video-information-manager" title="Permalink to this headline">¶</a></h1>
 <p>Collects information concerning the video (fps, number of channels, …) and manages
@@ -390,7 +392,7 @@ fragmentation</p>
 
     <div class="container container-navbar-bottom">
       <div class="spc-navbar">
-
+        
       </div>
     </div>
     <div class="container">
@@ -401,7 +403,7 @@ fragmentation</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 03, 2018.
+      Last updated on Mar 07, 2018.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
