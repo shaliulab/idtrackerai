@@ -148,8 +148,8 @@ class Validator(BoxLayout):
         self.lob_box = BoxLayout(orientation="vertical")
         self.lob_label = CustomLabel(text='We detected two different trajectory files. Which one do you want to use for validation?')
         self.lob_btns_container = BoxLayout()
-        self.lob_btn1 = Button(text = "With gaps")
-        self.lob_btn2 = Button(text = "Without gaps")
+        self.lob_btn1 = Button(text = "With animals\nnot identified\nduring crossings")
+        self.lob_btn2 = Button(text = "With animals\nidentified\nduring crossings")
         self.lob_btns_container.add_widget(self.lob_btn1)
         self.lob_btns_container.add_widget(self.lob_btn2)
         self.lob_box.add_widget(self.lob_label)
@@ -166,10 +166,10 @@ class Validator(BoxLayout):
         self.help_button_global_validation = HelpButton()
         self.help_button_global_validation.size_hint = (1.,1.)
 
-        if instance.text == 'With gaps':
+        if instance.text == "With animals\nnot identified\nduring crossings":
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
-            self.help_button_global_validation.create_help_popup("Global validation with gaps",\
+            self.help_button_global_validation.create_help_popup("Global validation with animals not identified during crossings.",\
                                                     "The validations is recomended to start at the 'first frame first global fragment' " +
                                                     "as the identities in that frame are the identities given arbitrarely to the animals at the " +
                                                     "begining of the tracking process. " +
@@ -186,7 +186,7 @@ class Validator(BoxLayout):
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
             self.with_gaps = False
-            self.help_button_global_validation.create_help_popup("Global validation without gaps",\
+            self.help_button_global_validation.create_help_popup("Global validation with animals identified during crossings",\
                                                     "The validations is recomended to start at the 'first frame first global fragment' " +
                                                     "as the identities in that frame are the identities given arbitrarely to the animals at the " +
                                                     "begining of the tracking process. " +

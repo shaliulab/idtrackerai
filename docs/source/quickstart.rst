@@ -157,10 +157,11 @@ or proceed to the validation of the video. In addition, the estimated accuracy
 of the tracking is shown. The algorithm will automatically recommend the user
 to proceed to the validation if the estimated accuracy is lower than expected.
 
-Choose to validate the trajectories "with gaps" if you want to check the trajectories
-of individual animals before and after they touch or cross with other animals. Choose
-to validate the trajectories "without gaps" if you want to check the trajectories also
-during the crossings.
+Choose to validate the trajectories "with animals not identified during crossings"
+if you want to check the trajectories of individual animals before and after
+they touch or cross with other animals. Choose to validate the trajectories
+"with animals identified during crossings" if you want to check the trajectories also
+when animals touch or cross. 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 7. Global and individual validation

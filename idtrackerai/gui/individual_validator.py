@@ -85,8 +85,8 @@ class IndividualValidator(BoxLayout):
         self.lob_box = BoxLayout(orientation="vertical")
         self.lob_label = CustomLabel(text='We detected two different trajectory files. Which one do you want to use for individual validation?')
         self.lob_btns_container = BoxLayout()
-        self.lob_btn1 = Button(text = "With gaps")
-        self.lob_btn2 = Button(text = "Without gaps")
+        self.lob_btn1 = Button(text = "With animals\nnot identified\nduring crossings")
+        self.lob_btn2 = Button(text = "With animals\nidentified\nduring crossings")
         self.lob_btns_container.add_widget(self.lob_btn1)
         self.lob_btns_container.add_widget(self.lob_btn2)
         self.lob_box.add_widget(self.lob_label)
@@ -102,10 +102,10 @@ class IndividualValidator(BoxLayout):
     def on_choose_list_of_blobs_btns_press(self, instance):
         self.help_button_global_validation = HelpButton()
         self.help_button_global_validation.size_hint = (1.,1.)
-        if instance.text == 'With gaps':
+        if instance.text == "With animals\nnot identified\nduring crossings":
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
-            self.help_button_global_validation.create_help_popup("INdividual validation with gaps",\
+            self.help_button_global_validation.create_help_popup("Individual validation with animals not identified during crossings",\
                                                     "The validations is recomended to start at the 'first frame first global fragment' " +
                                                     "as the identities in that frame are the identities given arbitrarely to the animals at the " +
                                                     "begining of the tracking process. " +
@@ -121,7 +121,7 @@ class IndividualValidator(BoxLayout):
         else:
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
-            self.help_button_global_validation.create_help_popup("Individual validation without gaps",\
+            self.help_button_global_validation.create_help_popup("Individual validation with animals identified during crossings",\
                                                     "The porpose of this validation is to count the number of times that " +
                                                     "animals are non-identified or mis-identified during crossings"
                                                     "\nUse the left/right arrows or the trackbar to move along the video. " +
