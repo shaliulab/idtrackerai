@@ -264,9 +264,7 @@ class ConvNetwork():
         """Loss function minimised during the training process
         """
         cross_entropy = tf.reduce_mean(
-            tf.contrib.losses.softmax_cross_entropy(self.y_logits,self.y_target_pl, self.loss_weights_pl), name = 'CrossEntropyMean')
-        # cross_entropy = tf.reduce_mean(
-        #     tf.nn.softmax_cross_entropy_with_logits(logits=y_logits,labels=y), name = 'CrossEntropyMean')
+            tf.losses.softmax_cross_entropy(self.y_target_pl, self.y_logits, self.loss_weights_pl), name = 'CrossEntropyMean')
         self._add_loss_summary(cross_entropy)
         return cross_entropy
 

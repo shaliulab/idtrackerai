@@ -3,7 +3,7 @@
 
 idtracker.ai allows to track animals in small and large collectives using convolutional neural networks.
 
-## Requirements
+## Hardware requirements
 
 idtracker.ai has been tested under the following specifications:
 
@@ -35,7 +35,7 @@ Right-click with your mouse to copy and paste commands from the instructions to 
 
 ### Pre-installation checks
 
-#### GPU Drivers, CUDA Toolkit and CuDNN library.
+###### GPU Drivers, CUDA Toolkit and CuDNN library.
 
 To install the GPU version of idtracker.ai first make sure that NVIDIA drivers,
 CUDA Toolkit 8.0 and the corresponding CuDNN v5.1 libraries for CUDA 8.0, are
@@ -46,7 +46,7 @@ installed typing
 
     nvidia-smi
 
-in your terminal. You should get an output similar to this:
+in your terminal. You should get an output that looks like:
 
     +-----------------------------------------------------------------------------+
     | NVIDIA-SMI 384.111                Driver Version: 384.111                   |
@@ -100,7 +100,7 @@ It is important that the CUDNN_MAJOR is 5 and the CUDNN_MINOR is 1
 For further information please check the NVIDIA requirements to run TensorFlow with GPU support
 for Tensorflow 1.2.0 [here](https://www.tensorflow.org/versions/r1.2/install/install_linux).
 
-#### Miniconda package manager
+###### Miniconda package manager
 
 The installation process requires [miniconda](https://conda.io/miniconda.html) to be installed in your computer. Skip the next paragraphs if Miniconda2 or Miniconda3 are already installed.
 
@@ -170,7 +170,6 @@ the following commands in your terminal:
     pip install idtrackerai/.
     source activate idtrackerai-environment
     garden install matplotlib
-    chmod u+x idtrackerai/run.sh
 
 ### Uninstall and remove software
 

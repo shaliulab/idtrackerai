@@ -2,15 +2,21 @@ Quickstart
 ==========
 
 In this section we explain how to start tracking a video with idtracker.ai. For more information about
-the different functionalities of the system go to the Graphical User Interface section
-:doc:`./GUI_explained` or check the Supplementary Material in [1]_.
+the different functionalities of the system go to the
+:doc:`./GUI_explained` section or check the Supplementary Material in [1]_. Please read the notes in
+italics to get advice about how to set the parameters to track the sample videos with
+good performance levels.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1. Download the video example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-If it is the first time that you are using this system, we recomend to start with
-the video example. You can download it from
+If it is the first time that you are using this system, we recommend to start with
+the video example of 8 adult zebrafish (*Danio rerio*). You can download it from
 `this link <https://drive.google.com/open?id=1uBOEMGxrOed8du7J9Rt-dlXdqOyhCpMC>`_.
+
+At the end of this page you will find the link to a video of 100 juvenile zebrafish.
+We recommend to start with the video of 8 fish as it is faster to track and it is good
+to get use to the system.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 2. Copy video to an adequate location
@@ -86,6 +92,14 @@ save the ROI by clicking the button “save ROI” before leaving the tab.
 If you don't need to select a region of interest skip this tab by clicking on
 the tab preprocessing.
 
+*NOTE 1: To track the video of 8 adult zebrafish you do not actually need a ROI. However
+you can try selecting a rectangular ROI. Remember to check whether all the fish are inside
+of the ROI for the whole part of the video, otherwise the tracking can give bad results*
+
+*NOTE 2: To track the video of 100 juvenile zebrafish we recommend using a circular (ellipse)
+ROI. Use the track bar to explore where the animals move in the frame. The limit of the
+swimming area is the biggest ring that is all included in the frame.*
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 5. Video segmentation and preprocessing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -116,6 +130,10 @@ the minimum of the areas of the segmented blobs.
   :align: right
   :alt: welcome tab
 
+Use the track bar to explore the video and check that all the animals are segmented
+properly in different areas of the frame. An adequate set of the preprocessing parameters
+is a key point to obtain a good performance of the following steps.
+
 After setting the parameters, the segmentation of the video can be initiated by
 clicking the button “Segment video”. A popup showing an estimate of the number
 of animals present in the video will open. Modify the number if it is incorrect
@@ -128,6 +146,28 @@ popup shows the graph of the loss function and the accuracy of this network,
 when trained on a dataset automatically extracted from the images segmented in
 the previous stages. It is now possible to start the tracking by clicking on
 the bar that says "Go to the tracking tab".
+
+*NOTE 1: We recommend the following set of parameters for a good tracking performance
+on the sample video of 8 zebrafish:*
+
+- *apply ROI: OFF*
+- *background subtraction: OFF*
+- *check segmentation consistency: OFF*
+- *Max intensity: 135*
+- *Min intensity: 0*
+- *Max area: 60000*
+- *Min area: 150*
+
+*NOTE 2: We recommend the following set of parameters for a good tracking performance
+on the sample video of 100 zebrafish:*
+
+- *apply ROI: ON (circular ROI)*
+- *background subtraction: ON*
+- *check segmentation consistency: OFF*
+- *Max intensity: 216*
+- *Min intensity: 0*
+- *Max area: 60000*
+- *Min area: 100*
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 6. Start tracking the video
@@ -209,3 +249,20 @@ can be found in the folder "trajectories_wo_gaps".
 
 .. [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., (2018).
    idtracker.ai: Tracking all individuals with correct identities in large animal collectives (submitted)
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Try the 100 zebrafish sample video
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can download the video from `this link <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_.
+Note that the size of this video is 22.4GB, so it should take around 30 minutes to download it at
+an average rate of 12Mb/s.
+
+To track this video we recommend using a computer with similar specifications to the ones
+listed in the :doc:`./how_to_install`. In particular, we successfully tracked this video in about 3 hours
+in a computer with 8 cores, 32Gb of RAM, a Titan X GPU and a SSD disk.
+
+WARNING: Trying to track this video in a computer with less than 32Gb of RAM might block your computer.
+
+Due to the higher frame size of this video (3500x3584) you might notice a decrease of
+speed when adjusting the preprocessing parameters.

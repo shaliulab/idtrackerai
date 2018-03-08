@@ -65,7 +65,7 @@ class ConvNetwork_crossings(object):
 
     def weighted_loss(self):
         cross_entropy = tf.reduce_mean(
-            tf.contrib.losses.softmax_cross_entropy(self.Y_logits, self.Y_target, self.loss_weights_pl), name = 'CrossEntropyMean')
+            tf.losses.softmax_cross_entropy(self.Y_target, self.Y_logits, self.loss_weights_pl), name = 'CrossEntropyMean')
         return cross_entropy
 
     def compute_loss_weights(self, training_labels):
