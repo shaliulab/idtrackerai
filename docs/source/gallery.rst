@@ -25,7 +25,7 @@ Videos of 60 and 100 30dpf zebrafish in a 70cm circular arena. For the setup spe
 Small groups of zebrafish (*D. rerio*)
 *********************************
 
-Video of 8 adult zebrafish with complex behaviors. (video used to develop this software [1]_ and the software in [2]_)
+Video of 8 adult zebrafish with complex behaviors.
 
 .. raw:: html
 
@@ -67,4 +67,3 @@ References
 **********
 
 .. [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., (2018). idtracker.ai: Tracking all individuals with correct identities in large animal collectives (submitted)
-.. [2] Pérez-Escudero, A., Vicente-Page, J., Hinz, R. C., Arganda, S., & De Polavieja, G. G. (2014). idTracker: tracking individuals in a group by automatic identification of unmarked animals. Nature methods, 11(7), 743.
