@@ -203,7 +203,7 @@ This file is part of idtracker.ai a multiple animals tracking system
 described in [1].
 Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
 Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-Champalimaud Foundation.
+Champalimuad Foundation.
 
 idtracker.ai is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
