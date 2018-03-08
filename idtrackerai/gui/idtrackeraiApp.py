@@ -300,14 +300,16 @@ def get_error_and_save_logs():
     traceback.print_tb(tb)
     idtrackeraiApp().on_stop()
     print("\n")
-    print("Sorry, idtracker.ai quit unexpectedly.")
-    print("If this error persists please send the latest log file placed in")
+    print("idtracker.ai quit unexpectedly.")
+    print("Check the log files in")
     try:
         print(CHOSEN_VIDEO.video.logs_folder)
-        print("to idtrackerai@gmail.com")
+        print("and attach them to the issue.")
     except:
         print(os.path.join(kivy.kivy_home_dir, Config.get('kivy', 'log_dir')))
-        print("to idtrackerai@gmail.com")
+        print("and attach them to the issue.")
+    print("If this error persists please open an issue at")
+    print("https://gitlab.com/polavieja_lab/idtrackerai/tree/write_setup")
 
 def run_app():
     try:
@@ -317,4 +319,3 @@ def run_app():
 
 if __name__ == '__main__':
     run_app()
-    

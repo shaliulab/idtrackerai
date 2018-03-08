@@ -144,7 +144,7 @@ def cumpute_background(video):
     bkg = np.zeros((video.original_height, video.original_width))
     num_cores = multiprocessing.cpu_count()
     if video.number_of_episodes < num_cores:
-        num_cores = video.number_of_episodes
+        num_cores = 1
     if video.paths_to_video_segments is None: # one single file
         logger.debug('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=num_cores)(delayed(
