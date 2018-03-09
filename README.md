@@ -1,11 +1,8 @@
-# idtrackerai
-## Tracking all individuals with correct identities in large animal collectives
-
-idtracker.ai allows to track animals in small and large collectives using convolutional neural networks.
+# idtracker.ai
 
 ## Hardware requirements
 
-idtracker.ai has been tested under the following specifications:
+idtracker.ai has been tested in computers with the following specifications:
 
 - Operating system: 64bit GNU/linux Mint 18.1
 - CPU: Core(TM) i7-7700K CPU @4.20GHz 6 core Intel(R) or Core(TM) i7-6800K CPU @3.40GHz 4 core
