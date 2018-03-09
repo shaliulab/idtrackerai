@@ -3,7 +3,18 @@
 <html>
   <head>
     <meta charset="utf-8">
-    
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-114600635-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
     <title>Quickstart &mdash; idtrackerai v0.0 Manual</title>
     
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
@@ -179,10 +190,10 @@ save the ROI by clicking the button “save ROI” before leaving the tab.</p>
 the tab preprocessing.</p>
 <p><em>NOTE 1: To track the video of 8 adult zebrafish you do not actually need a ROI. However
 you can try selecting a rectangular ROI. Remember to check whether all the fish are inside
-of the ROI for the whole part of the video, otherwise the tracking can give bad results</em></p>
+of the ROI for the whole part of the video, otherwise the tracking can give bad results</em>.</p>
 <p><em>NOTE 2: To track the video of 100 juvenile zebrafish we recommend using a circular (ellipse)
 ROI. Use the track bar to explore where the animals move in the frame. The limit of the
-swimming area is the biggest ring that is all included in the frame.</em></p>
+swimming area is the biggest ring that is completely included in the frame.</em></p>
 </div>
 <div class="section" id="step-5-video-segmentation-and-preprocessing">
 <h2>Step 5. Video segmentation and preprocessing<a class="headerlink" href="#step-5-video-segmentation-and-preprocessing" title="Permalink to this headline">¶</a></h2>
@@ -262,10 +273,11 @@ the identified animals have been saved a popup allows either to quit the program
 or proceed to the validation of the video. In addition, the estimated accuracy
 of the tracking is shown. The algorithm will automatically recommend the user
 to proceed to the validation if the estimated accuracy is lower than expected.</p>
-<p>Choose to validate the trajectories “with gaps” if you want to check the trajectories
-of individual animals before and after they touch or cross with other animals. Choose
-to validate the trajectories “without gaps” if you want to check the trajectories also
-during the crossings.</p>
+<p>Choose to validate the trajectories “with animals not identified during crossings”
+if you want to check the trajectories of individual animals before and after
+they touch or cross with other animals. Choose to validate the trajectories
+“with animals identified during crossings” if you want to check the trajectories also
+when animals touch or cross.</p>
 </div>
 <div class="section" id="step-7-global-and-individual-validation">
 <h2>Step 7. Global and individual validation<a class="headerlink" href="#step-7-global-and-individual-validation" title="Permalink to this headline">¶</a></h2>
@@ -314,7 +326,7 @@ Note that the size of this video is 22.4GB, so it should take around 30 minutes 
 an average rate of 12Mb/s.</p>
 <p>To track this video we recommend using a computer with similar specifications to the ones
 listed in the <a class="reference internal" href="how_to_install.html"><span class="doc">Installation and requirements</span></a>. In particular, we successfully tracked this video in about 3 hours
-in a computer with 8 cores, 32Gb of RAM, a Titan X GPU and a SSD disk.</p>
+in a computer with 8 cores, 32Gb of RAM, a Titan X GPU and a 1 Tb SSD.</p>
 <p>WARNING: Trying to track this video in a computer with less than 32Gb of RAM might block your computer.</p>
 <p>Due to the higher frame size of this video (3500x3584) you might notice a decrease of
 speed when adjusting the preprocessing parameters.</p>
@@ -342,7 +354,7 @@ speed when adjusting the preprocessing parameters.</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 06, 2018.
+      Last updated on Mar 08, 2018.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.

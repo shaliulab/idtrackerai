@@ -1,6 +1,8 @@
-# This file is part of idtracker.ai, a multiple animals tracking system
+# This file is part of idtracker.ai a multiple animals tracking system
 # described in [1].
-# Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.
+# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
+# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
+# Champalimaud Foundation.
 #
 # idtracker.ai is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +21,7 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G.,
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals with correct identities in large
 # animal collectives (submitted)
 

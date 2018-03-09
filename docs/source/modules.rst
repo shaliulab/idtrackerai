@@ -5,6 +5,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+  video_information_manager
   preprocessing
   crossing_detector
   fragmentation
@@ -12,4 +13,3 @@ Contents:
   fingerprint_protocol_cascade
   postprocessing
   validation
-  video_information_manager

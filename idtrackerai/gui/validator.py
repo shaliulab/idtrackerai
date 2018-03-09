@@ -1,6 +1,8 @@
-# This file is part of idtracker.ai, a multiple animals tracking system
+# This file is part of idtracker.ai a multiple animals tracking system
 # described in [1].
-# Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.
+# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
+# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
+# Champalimaud Foundation.
 #
 # idtracker.ai is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +21,7 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G.,
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals with correct identities in large
 # animal collectives (submitted)
 
@@ -148,8 +150,8 @@ class Validator(BoxLayout):
         self.lob_box = BoxLayout(orientation="vertical")
         self.lob_label = CustomLabel(text='We detected two different trajectory files. Which one do you want to use for validation?')
         self.lob_btns_container = BoxLayout()
-        self.lob_btn1 = Button(text = "With gaps")
-        self.lob_btn2 = Button(text = "Without gaps")
+        self.lob_btn1 = Button(text = "With animals\nnot identified\nduring crossings")
+        self.lob_btn2 = Button(text = "With animals\nidentified\nduring crossings")
         self.lob_btns_container.add_widget(self.lob_btn1)
         self.lob_btns_container.add_widget(self.lob_btn2)
         self.lob_box.add_widget(self.lob_label)
@@ -166,10 +168,10 @@ class Validator(BoxLayout):
         self.help_button_global_validation = HelpButton()
         self.help_button_global_validation.size_hint = (1.,1.)
 
-        if instance.text == 'With gaps':
+        if instance.text == "With animals\nnot identified\nduring crossings":
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
-            self.help_button_global_validation.create_help_popup("Global validation with gaps",\
+            self.help_button_global_validation.create_help_popup("Global validation with animals not identified during crossings.",\
                                                     "The validations is recomended to start at the 'first frame first global fragment' " +
                                                     "as the identities in that frame are the identities given arbitrarely to the animals at the " +
                                                     "begining of the tracking process. " +
@@ -186,7 +188,7 @@ class Validator(BoxLayout):
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
             self.with_gaps = False
-            self.help_button_global_validation.create_help_popup("Global validation without gaps",\
+            self.help_button_global_validation.create_help_popup("Global validation with animals identified during crossings",\
                                                     "The validations is recomended to start at the 'first frame first global fragment' " +
                                                     "as the identities in that frame are the identities given arbitrarely to the animals at the " +
                                                     "begining of the tracking process. " +

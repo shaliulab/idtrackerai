@@ -199,9 +199,11 @@ http://idtracker.ai
 * Francisco J.H. Heras
 
 ## License
-This is idtracker.ai a multiple animals tracking system
+This file is part of idtracker.ai a multiple animals tracking system
 described in [1].
-Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.
+Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
+Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
+Champalimaud Foundation.
 
 idtracker.ai is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -214,7 +216,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details. In addition, we require
 derivatives or applications to acknowledge the authors by citing [1].
 
-A copy of the GNU General Public License is available [here](LICENSE).
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 For more information please send an email (idtrackerai@gmail.com) or
 use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.

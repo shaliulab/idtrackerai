@@ -3,7 +3,18 @@
 <html>
   <head>
     <meta charset="utf-8">
-    
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-114600635-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
     <title>video_utils &mdash; idtrackerai v0.0 Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
@@ -226,7 +237,7 @@
     <span class="n">bkg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">video</span><span class="o">.</span><span class="n">original_height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">original_width</span><span class="p">))</span>
     <span class="n">num_cores</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_episodes</span> <span class="o">&lt;</span> <span class="n">num_cores</span><span class="p">:</span>
-        <span class="n">num_cores</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_episodes</span>
+        <span class="n">num_cores</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># one single file</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;one single video, computing bkg in parallel from single video&#39;</span><span class="p">)</span>
         <span class="n">output</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">num_cores</span><span class="p">)(</span><span class="n">delayed</span><span class="p">(</span>
@@ -625,7 +636,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 06, 2018.
+      Last updated on Mar 08, 2018.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.

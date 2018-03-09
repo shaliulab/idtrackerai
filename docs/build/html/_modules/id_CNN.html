@@ -3,7 +3,18 @@
 <html>
   <head>
     <meta charset="utf-8">
-    
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-114600635-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
     <title>id_CNN &mdash; idtrackerai v0.0 Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
@@ -346,9 +357,7 @@
         <span class="sd">&quot;&quot;&quot;Loss function minimised during the training process</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cross_entropy</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span>
-            <span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">softmax_cross_entropy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_logits</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_target_pl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_weights_pl</span><span class="p">),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;CrossEntropyMean&#39;</span><span class="p">)</span>
-        <span class="c1"># cross_entropy = tf.reduce_mean(</span>
-        <span class="c1">#     tf.nn.softmax_cross_entropy_with_logits(logits=y_logits,labels=y), name = &#39;CrossEntropyMean&#39;)</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">softmax_cross_entropy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_target_pl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_logits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_weights_pl</span><span class="p">),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;CrossEntropyMean&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_loss_summary</span><span class="p">(</span><span class="n">cross_entropy</span><span class="p">)</span></div>
         <span class="k">return</span> <span class="n">cross_entropy</span>
 
@@ -640,7 +649,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 06, 2018.
+      Last updated on Mar 08, 2018.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.

@@ -1,6 +1,8 @@
-# This file is part of idtracker.ai, a multiple animals tracking system
+# This file is part of idtracker.ai a multiple animals tracking system
 # described in [1].
-# Copyright (C) 2017- Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.
+# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
+# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
+# Champalimaud Foundation.
 #
 # idtracker.ai is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +21,7 @@
 # For more information please send an email (idtrackerai@gmail.com) or
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G.,
+# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals with correct identities in large
 # animal collectives (submitted)
 
@@ -66,7 +68,9 @@ from idtrackerai.constants import THRESHOLD_ACCEPTABLE_ACCUMULATION, RESTORE_CRI
 
 print('\n************************************************************************************')
 print('LICENSE')
-print('idtracker.ai  Copyright (C) 2017-  Bergomi, M.G., Romero-Ferrero, F., Heras, F.J.H.')
+print('idtracker.ai  Copyright (C) 2017-  Francisco Romero Ferrero, Mattia G. Bergomi,') 
+print('Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the')
+print('Champalimaud Foundation')
 print('This program comes with ABSOLUTELY NO WARRANTY.')
 print('This is free software, and you are welcome to redistribute it')
 print('under certain conditions. Check http://idtracker.ai/ for more information.')
@@ -300,14 +304,16 @@ def get_error_and_save_logs():
     traceback.print_tb(tb)
     idtrackeraiApp().on_stop()
     print("\n")
-    print("Sorry, idtracker.ai quit unexpectedly.")
-    print("If this error persists please send the latest log file placed in")
+    print("idtracker.ai quit unexpectedly.")
+    print("Check the log files in")
     try:
         print(CHOSEN_VIDEO.video.logs_folder)
-        print("to idtrackerai@gmail.com")
+        print("and attach them to the issue.")
     except:
         print(os.path.join(kivy.kivy_home_dir, Config.get('kivy', 'log_dir')))
-        print("to idtrackerai@gmail.com")
+        print("and attach them to the issue.")
+    print("If this error persists please open an issue at")
+    print("https://gitlab.com/polavieja_lab/idtrackerai/tree/write_setup")
 
 def run_app():
     try:
@@ -317,4 +323,3 @@ def run_app():
 
 if __name__ == '__main__':
     run_app()
-    

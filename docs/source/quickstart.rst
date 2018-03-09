@@ -94,11 +94,11 @@ the tab preprocessing.
 
 *NOTE 1: To track the video of 8 adult zebrafish you do not actually need a ROI. However
 you can try selecting a rectangular ROI. Remember to check whether all the fish are inside
-of the ROI for the whole part of the video, otherwise the tracking can give bad results*
+of the ROI for the whole part of the video, otherwise the tracking can give bad results*.
 
 *NOTE 2: To track the video of 100 juvenile zebrafish we recommend using a circular (ellipse)
 ROI. Use the track bar to explore where the animals move in the frame. The limit of the
-swimming area is the biggest ring that is all included in the frame.*
+swimming area is the biggest ring that is completely included in the frame.*
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 5. Video segmentation and preprocessing
@@ -197,10 +197,11 @@ or proceed to the validation of the video. In addition, the estimated accuracy
 of the tracking is shown. The algorithm will automatically recommend the user
 to proceed to the validation if the estimated accuracy is lower than expected.
 
-Choose to validate the trajectories "with gaps" if you want to check the trajectories
-of individual animals before and after they touch or cross with other animals. Choose
-to validate the trajectories "without gaps" if you want to check the trajectories also
-during the crossings.
+Choose to validate the trajectories "with animals not identified during crossings"
+if you want to check the trajectories of individual animals before and after
+they touch or cross with other animals. Choose to validate the trajectories
+"with animals identified during crossings" if you want to check the trajectories also
+when animals touch or cross. 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 7. Global and individual validation
@@ -259,7 +260,7 @@ an average rate of 12Mb/s.
 
 To track this video we recommend using a computer with similar specifications to the ones
 listed in the :doc:`./how_to_install`. In particular, we successfully tracked this video in about 3 hours
-in a computer with 8 cores, 32Gb of RAM, a Titan X GPU and a SSD disk.
+in a computer with 8 cores, 32Gb of RAM, a Titan X GPU and a 1 Tb SSD.
 
 WARNING: Trying to track this video in a computer with less than 32Gb of RAM might block your computer.
 
