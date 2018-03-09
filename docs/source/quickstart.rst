@@ -249,7 +249,7 @@ can be found in the folder "trajectories_wo_gaps".
 
 .. [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., (2018).
    idtracker.ai: Tracking unmarked individuals in large collectives (submitted)
-   (R-F.,F. and B.,M. contributed equally to this work.)
+   (R-F.,F. and B.,M.G. contributed equally to this work.)
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Try the 100 zebrafish sample video
