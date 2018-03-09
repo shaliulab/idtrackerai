@@ -14,7 +14,7 @@ idtracker.ai is coded in python 2.7 and uses Tensorflow libraries
 (version 1.2.0). Due to the intense use of deep neural networks, we recommend using
  a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher.
  Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU. If a GPU
-is not installed on the computer the CPU version of tensorflow will be installed
+is not installed on the computer the CPU version of Tensorflow will be installed
 but the speed of the tracking will be highly affected.
 
 ## Installation.
@@ -222,4 +222,7 @@ For more information please send an email (idtrackerai@gmail.com) or
 use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 
 **[1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-(2018). idtracker.ai: Tracking unmarked individuals in large collectives (submitted).** *R-F.,F. and B.,M.G. contributed equally to this work.*
+(2018). idtracker.ai: Tracking unmarked individuals in large collectives (submitted).**
+
+*R-F.,F. and B.,M.G. contributed equally to this work. Correspondence should be addressed to P.,G.G.:
+gonzalo.polavieja@neuro.fchampalimaud.org.*
