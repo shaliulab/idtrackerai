@@ -29,5 +29,6 @@
 !docs/source/_static/*
 !idtrackerai/gui/*.png
 
-#ignore idtrackerAI folder (it has pngs)
+#ignore idtrackerAI and videos folder as they have .png files
 idTrackerAI
+video

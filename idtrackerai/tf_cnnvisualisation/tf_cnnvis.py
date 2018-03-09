@@ -22,8 +22,8 @@
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking all individuals with correct identities in large
-# animal collectives (submitted)
+# (2018). idtracker.ai: Tracking unmarked individuals in large collectives
+ 
 
 import os
 import time

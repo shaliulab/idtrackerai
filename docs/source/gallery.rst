@@ -66,4 +66,4 @@ Small groups of mice
 References
 **********
 
-.. [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., (2018). idtracker.ai: Tracking all individuals with correct identities in large animal collectives (submitted)
+.. [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., (2018). idtracker.ai: Tracking unmarked individuals in large collectives (submitted)

@@ -201,7 +201,7 @@ Choose to validate the trajectories "with animals not identified during crossing
 if you want to check the trajectories of individual animals before and after
 they touch or cross with other animals. Choose to validate the trajectories
 "with animals identified during crossings" if you want to check the trajectories also
-when animals touch or cross. 
+when animals touch or cross.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 7. Global and individual validation
@@ -248,7 +248,7 @@ can be found in the folder "trajectories_wo_gaps".
    :alt: welcome tab
 
 .. [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., (2018).
-   idtracker.ai: Tracking all individuals with correct identities in large animal collectives (submitted)
+   idtracker.ai: Tracking unmarked individuals in large collectives (submitted)
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Try the 100 zebrafish sample video
