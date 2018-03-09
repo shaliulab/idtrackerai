@@ -32,3 +32,4 @@
 #ignore idtrackerAI and videos folder as they have .png files
 idTrackerAI
 videos
+docs/sphinx-contrib
