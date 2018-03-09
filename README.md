@@ -205,10 +205,12 @@ Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
 Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
 Champalimaud Foundation.
 
-idtracker.ai is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+idtracker.ai is free software (both as in freedom and as in free beer):
+you can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version.
+In addition, the authors chose to distribute it free of charge by making it
+publicly available (https://gitlab.com/polavieja_lab/idtrackerai.git).
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
