@@ -28,3 +28,6 @@
 !docs/Makefile
 !docs/source/_static/*
 !idtrackerai/gui/*.png
+
+#ignore idtrackerAI folder (it has pngs)
+idtrackerAI/*
