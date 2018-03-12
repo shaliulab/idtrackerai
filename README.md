@@ -160,7 +160,7 @@ of the terminal should show a message similar to this:
 If the installation did not succeed try proceeding step by step, by running
 the following commands in your terminal:
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/environment-mint18.1.yml
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.0-alpha/environment-mint18.1.yml
     conda env create -f environment-mint18.1.yml
     source activate idtrackerai-environment
     git clone https://gitlab.com/polavieja_lab/idtrackerai.git
