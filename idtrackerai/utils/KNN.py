@@ -22,7 +22,7 @@
 # use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-# (2018). idtracker.ai: Tracking unmarked individuals in large collectives. (R-F.,F. and B.,M.G. contributed equally to this work.)
+# (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
  
 from __future__ import absolute_import, print_function, division
 import tensorflow as tf
