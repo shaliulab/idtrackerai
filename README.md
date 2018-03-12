@@ -135,10 +135,10 @@ At the end of the installation close the terminal and open a new one.
 
 ### Installation
 
-Using the terminal, download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh)
+Using the terminal, download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.0-alpha/install.sh)
 using the following command.
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/write_setup/install.sh
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.0-alpha/install.sh
 
 Give install.sh executable permissions by typing
 
