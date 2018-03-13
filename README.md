@@ -1,5 +1,7 @@
 # idtracker.ai
 
+Check the arXiv article in [here](https://arxiv.org/abs/1803.04351)
+
 ## Hardware requirements
 
 idtracker.ai has been tested in computers with the following specifications:
