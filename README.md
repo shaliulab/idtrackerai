@@ -1,6 +1,6 @@
 # idtracker.ai
 
-Check the arXiv article in [here](https://arxiv.org/abs/1803.04351)
+[idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
 
 ## Hardware requirements
 
