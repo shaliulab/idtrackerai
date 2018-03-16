@@ -1,7 +1,7 @@
 Welcome to idtracker.ai's documentation!
 ========================================
 
-idtracker.ai allows to track groups of animals in videos realised in laboratory conditions.
+idtracker.ai allows to track groups of animals in videos recorded in laboratory conditions.
 
 When using information from this web page please reference
 
