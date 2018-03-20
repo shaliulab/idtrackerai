@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -246,6 +246,8 @@ def segment(video):
     # avoid computing with all the cores in very large videos. It fills the RAM.
     # num_cores = multiprocessing.cpu_count()
     num_cores = int(np.ceil(multiprocessing.cpu_count() / 2))
+    if video.number_of_episodes < num_cores:
+        num_cores = 1
     #init variables to store data
     blobs_in_video = []
     maximum_number_of_blobs_in_episode = []
