@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import kivy
@@ -511,10 +511,10 @@ class Tracker(BoxLayout):
 
     def interpolate_crossings(self, *args):
         CHOSEN_VIDEO.list_of_blobs_no_gaps = copy.deepcopy(CHOSEN_VIDEO.list_of_blobs)
-        if not hasattr(CHOSEN_VIDEO.list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
-            Logger.debug("adding attribute was_a_crossing to every blob")
-            [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
-                CHOSEN_VIDEO.list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
+        # if not hasattr(CHOSEN_VIDEO.list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
+        #     Logger.debug("adding attribute was_a_crossing to every blob")
+        #     [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
+        #         CHOSEN_VIDEO.list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
         CHOSEN_VIDEO.video._has_crossings_solved = False
         CHOSEN_VIDEO.list_of_blobs_no_gaps = close_trajectories_gaps(CHOSEN_VIDEO.video, CHOSEN_VIDEO.list_of_blobs_no_gaps, CHOSEN_VIDEO.list_of_fragments)
         CHOSEN_VIDEO.video.blobs_no_gaps_path = os.path.join(os.path.split(CHOSEN_VIDEO.video.blobs_path)[0], 'blobs_collection_no_gaps.npy')

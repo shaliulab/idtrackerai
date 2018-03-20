@@ -210,10 +210,15 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
     frame_number = 0
 
     while frame_number < number_of_frames_in_episode:
-        blobs_in_frame, maximum_number_of_blobs = get_blobs_in_frame(cap, video,
-                                                                    segmentation_thresholds,
-                                                                    max_number_of_blobs,
-                                                                    frame_number)
+        global_frame_number = episode_start_end_frames[0] + frame_number
+        if global_frame_number >= video.tracking_interval[0] and global_frame_number <= video.tracking_interval[1]:
+            blobs_in_frame, max_number_of_blobs = get_blobs_in_frame(cap, video,
+                                                                        segmentation_thresholds,
+                                                                        max_number_of_blobs,
+                                                                        frame_number)
+        else:
+            ret, frame = cap.read()
+            blobs_in_frame = []
         #store all the blobs encountered in the episode
         blobs_in_episode.append(blobs_in_frame)
         frame_number += 1

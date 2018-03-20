@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import kivy
@@ -151,9 +151,34 @@ class PreprocessingPreview(BoxLayout):
         self.min_threshold_slider.bind(value=self.update_min_th_lbl)
         self.max_area_slider.bind(value=self.update_max_area_lbl)
         self.min_area_slider.bind(value=self.update_min_area_lbl)
+        self.tracking_interval = Button(id = "tracking_interval", text = "Tracking interval", size_hint  = (1.,1.))
+        self.tracking_interval.disabled = False
+        self.tracking_interval.bind(on_press = self.get_tracking_interval)
+        self.container_layout.add_widget(self.tracking_interval)
         self.segment_video_btn = Button(text = "Segment video")
         self.container_layout.add_widget(self.segment_video_btn)
         self.container_layout.add_widget(self.help_button_preprocessing)
+
+    def get_tracking_interval(self, *args):
+        self.create_frame_interval_popup()
+        self.popup_tracking_interval.open()
+
+    def create_frame_interval_popup(self):
+        self.tracking_interval_container = BoxLayout(orientation = "vertical")
+        self.tracking_interval_label = CustomLabel(text = "Insert the the video interval (e.g. 100 - 2050) on which the tracking will be performed")
+        self.tracking_interval_container.add_widget(self.tracking_interval_label)
+        self.tracking_interval_text_input = TextInput(text = '', multiline=False)
+        self.tracking_interval_container.add_widget(self.tracking_interval_text_input)
+        self.tracking_interval_text_input.bind(on_text_validate = self.on_enter_tracking_interval)
+
+        self.popup_tracking_interval = Popup(title='Video tracking interval',
+                    content=self.tracking_interval_container,
+                    size_hint=(.4,.4))
+
+    def on_enter_tracking_interval(self, value):
+        start, end = self.tracking_interval_text_input.text.split('-')
+        CHOSEN_VIDEO.video._tracking_interval = (int(start), int(end))
+        self.popup_tracking_interval.dismiss()
 
     def activate_ROI_switch(self, *args):
         if hasattr(self,'visualiser'):

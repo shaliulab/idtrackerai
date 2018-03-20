@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import kivy
@@ -408,11 +408,11 @@ class Validator(BoxLayout):
         return {attr: [getattr(blob, attr) for blob in blobs_in_frame] for attr in attributes_to_get}
 
     def writeIds(self, frame):
-        blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
+        frame_number = int(self.visualiser.video_slider.value)
+        blobs_in_frame = self.blobs_in_video[frame_number]
         font = cv2.FONT_HERSHEY_SIMPLEX
         frame = self.visualiser.frame
-        frame_number = blobs_in_frame[0].frame_number
-
+        print('frame_number ', frame_number)
         for blob in blobs_in_frame:
             cur_id = blob.final_identity
             cur_id_str = str(cur_id)

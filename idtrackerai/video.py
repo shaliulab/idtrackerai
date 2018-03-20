@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import sys
@@ -105,6 +105,7 @@ class Video(object):
         self._max_area = 10000
         self._resize = 1
         self._resegmentation_parameters = []
+        self._tracking_interval = None
         self._has_preprocessing_parameters = False #boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved
         self._maximum_number_of_blobs = 0 #int: the maximum number of blobs detected in the video
         self._blobs_path = None #string: path to the saved list of blob objects
@@ -276,6 +277,13 @@ class Video(object):
     @property
     def resegmentation_parameters(self):
         return self._resegmentation_parameters
+
+    @property
+    def tracking_interval(self):
+        """ Tuple with the starting and ending frame on which the tracking will
+        be performed.
+        """
+        return self._tracking_interval
 
     @property
     def resize(self):
