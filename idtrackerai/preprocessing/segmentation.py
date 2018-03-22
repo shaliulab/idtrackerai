@@ -74,7 +74,7 @@ def get_videoCapture(video, path, episode_start_end_frames):
     number_of_frames_in_episode : int
         Number of frames in the episode of video being segmented
     """
-    if episode_start_end_frames is None:
+    if path is not None:
         cap = cv2.VideoCapture(path)
         number_of_frames_in_episode = int(cap.get(7))
     elif path is None:
@@ -208,21 +208,21 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
     cap, number_of_frames_in_episode = get_videoCapture(video, path, episode_start_end_frames)
     max_number_of_blobs = 0
     frame_number = 0
-
     while frame_number < number_of_frames_in_episode:
         global_frame_number = episode_start_end_frames[0] + frame_number
-        if global_frame_number >= video.tracking_interval[0] and global_frame_number <= video.tracking_interval[1]:
+        print("segmenting %i" %global_frame_number)
+        if video.tracking_interval is None or global_frame_number >= video.tracking_interval[0] and global_frame_number <= video.tracking_interval[1]:
             blobs_in_frame, max_number_of_blobs = get_blobs_in_frame(cap, video,
-                                                                        segmentation_thresholds,
-                                                                        max_number_of_blobs,
-                                                                        frame_number)
+                                                                    segmentation_thresholds,
+                                                                    max_number_of_blobs,
+                                                                    frame_number)
         else:
+            print("skipping %i" %global_frame_number)
             ret, frame = cap.read()
             blobs_in_frame = []
         #store all the blobs encountered in the episode
         blobs_in_episode.append(blobs_in_frame)
         frame_number += 1
-
     cap.release()
     #cv2.destroyAllWindows()
     gc.collect()
@@ -251,8 +251,9 @@ def segment(video):
     # avoid computing with all the cores in very large videos. It fills the RAM.
     # num_cores = multiprocessing.cpu_count()
     num_cores = int(np.ceil(multiprocessing.cpu_count() / 2))
-    if video.number_of_episodes < num_cores:
-        num_cores = 1
+    # num_cores = 1
+    # if video.number_of_episodes < num_cores:
+    #     num_cores = 1
     #init variables to store data
     blobs_in_video = []
     maximum_number_of_blobs_in_episode = []
@@ -276,11 +277,13 @@ def segment(video):
         #splitting videoPaths list into sublists
         pathsSubLists = [video.paths_to_video_segments[i:i+num_cores]
                             for i in range(0,len(video.paths_to_video_segments),num_cores)]
+        episodes_start_end_sublists = [video.episodes_start_end[i:i+num_cores]
+                                        for i in range(0,len(video.episodes_start_end),num_cores)]
 
-        for pathsSubList in tqdm(pathsSubLists, desc = 'Segmentation progress'):
+        for pathsSubList, episodes_start_end_sublist in tqdm(zip(pathsSubLists, episodes_start_end_sublists), desc = 'Segmentation progress'):
             OupPutParallel = Parallel(n_jobs=num_cores)(
-                                delayed(segment_episode)(video, segmentation_thresholds, path, None)
-                                for path in pathsSubList)
+                                delayed(segment_episode)(video, segmentation_thresholds, path, episode_start_end_frames)
+                                for path, episode_start_end_frames in zip(pathsSubList, episodes_start_end_sublist))
             blobs_in_episode = [out[0] for out in OupPutParallel]
             maximum_number_of_blobs_in_episode.append([out[1] for out in OupPutParallel])
             blobs_in_video.append(blobs_in_episode)
