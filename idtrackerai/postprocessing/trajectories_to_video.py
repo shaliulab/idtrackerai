@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, print_function, division
 import numpy as np
@@ -33,11 +33,12 @@ from idtrackerai.utils.py_utils import  get_spaced_colors_util
 
 def init(video_path, trajectories_dict_path):
     video_object = np.load(video_path).item()
+    video_object.update_paths(video_path)
     trajectories  = np.load(trajectories_dict_path).item()['trajectories']
-    colors = get_spaced_colors_util(video_object.number_of_animals)
+    colors = get_spaced_colors_util(video_object.number_of_animals, black = False)
     path_to_save_video = video_object._session_folder +'/tracked.avi'
     fourcc = cv2.cv.CV_FOURCC(*'XVID')
-    video_writer = cv2.VideoWriter(path_to_save_video, fourcc, 32.0,
+    video_writer = cv2.VideoWriter(path_to_save_video, fourcc, video_object.frames_per_second,
                                     (video_object.width, video_object.height))
     print("The video will be saved at ", path_to_save_video)
     return video_object, trajectories, video_writer, colors
@@ -56,6 +57,7 @@ def generate_video(video_object,
 
     for frame_number in range(len(trajectories)):
         frame = apply_func_on_frame(video_object,
+                            trajectories,
                             frame_number,
                             video_writer,
                             colors,
@@ -65,6 +67,7 @@ def generate_video(video_object,
         video_writer.write(frame)
 
 def apply_func_on_frame(video_object,
+                        trajectories,
                         frame_number,
                         video_writer,
                         colors,
@@ -110,14 +113,7 @@ def writeIds(frame, frame_number, trajectories, centroid_trace_length, colors):
                     cv2.circle(frame, tuple(int_centroid), 2, colors[cur_id], -1)
     return frame
 
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--video_object_path", type = str, help = "Path to the video object created during the tracking session")
-    parser.add_argument("-t", "--trajectories_path", type = str, help = "Path to the trajectory file")
-    parser.add_argument("-s", "--number_of_ghost_points", type = int, default = 20,
-                        help = "Number of points used to draw the individual trajectories' traces")
-    args = parser.parse_args()
+def main(args):
     video_object_path = args.video_object_path
     trajectories_dict_path = args.trajectories_path
     number_of_points_in_past_trace = args.number_of_ghost_points
@@ -129,3 +125,20 @@ if __name__ == "__main__":
                     colors,
                     func = writeIds,
                     centroid_trace_length = number_of_points_in_past_trace)
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--video_object_path", type = str, help = "Path to the video object created during the tracking session")
+    parser.add_argument("-t", "--trajectories_path", type = str, help = "Path to the trajectory file")
+    parser.add_argument("-s", "--number_of_ghost_points", type = int, default = 20,
+                        help = "Number of points used to draw the individual trajectories' traces")
+    args = parser.parse_args()
+    try:
+        main(args)
+    except:
+        ### This allows to use sessions tracked with the version previous to the creation of the module
+        import sys
+        sys.path.append('../')
+        sys.path.append('../preprocessing')
+        main(args)

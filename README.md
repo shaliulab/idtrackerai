@@ -21,6 +21,9 @@ but the speed of the tracking will be highly affected.
 
 ## Installation.
 
+**WARNING**: To simplify the installation of OpenCV we use a *conda* environment to install it. Currently the version 2.4.13 of OpenCV is installed, however we are experiencing problems during the call to the *Parallel* function (*joblib* module) in our *segmentation* and *video_utils* modules. The system hangs randomly without any error when trying to perform background subtraction or when segmenting the video. We do not experience this problem with the version 2.4.9.1 of OpenCV that can be installed with *sudo apt-get install python-opencv*. We will give more instructions about how to install idtracker.ai with this version of OpenCV as soon as possible.   
+
+**WARNING (the current version is not stable)**
 The installation of idtracker.ai requires some amount of interaction with the linux
 terminal. Read the following paragraph only if your are not familiar with the terminal in
 linux operating systems.

@@ -405,11 +405,10 @@ class Validator(BoxLayout):
         return {attr: [getattr(blob, attr) for blob in blobs_in_frame] for attr in attributes_to_get}
 
     def writeIds(self, frame):
-        frame_number_to_visualise = int(self.visualiser.video_slider.value)
-        blobs_in_frame = self.blobs_in_video[frame_number_to_visualise]
+        frame_number = int(self.visualiser.video_slider.value)
+        blobs_in_frame = self.blobs_in_video[frame_number]
         font = cv2.FONT_HERSHEY_SIMPLEX
         frame = self.visualiser.frame
-        frame_number = frame_number_to_visualise
 
         for blob in blobs_in_frame:
             cur_id = blob.final_identity
