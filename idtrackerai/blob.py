@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -417,8 +417,6 @@ class Blob(object):
     def assigned_identity(self):
         if hasattr(self, 'identity_corrected_closing_gaps') and self.identity_corrected_closing_gaps is not None:
             return self.identity_corrected_closing_gaps
-        elif hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
-            return self.identity_corrected_solving_duplication
         else:
             return self.identity
 

@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import kivy
@@ -259,7 +259,8 @@ class SelectFile(BoxLayout):
             CHOSEN_VIDEO.video.save()
             CHOSEN_VIDEO.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             CHOSEN_VIDEO.list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
-            CHOSEN_VIDEO.list_of_global_fragments = ListOfGlobalFragments.load(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
+            if CHOSEN_VIDEO.video.number_of_animals != 1:
+                CHOSEN_VIDEO.list_of_global_fragments = ListOfGlobalFragments.load(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
             DEACTIVATE_ROI.restored = '(restored)'
             DEACTIVATE_PREPROCESSING.restored = '(restored)'
             DEACTIVATE_TRACKING.setter(False)

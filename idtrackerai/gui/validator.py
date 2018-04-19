@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import kivy
@@ -77,6 +77,21 @@ class Validator(BoxLayout):
             size_hint=(.3,.3))
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
+        self.help_button_global_validation = HelpButton()
+        self.help_button_global_validation.size_hint = (1.,1.)
+        self.help_button_global_validation.create_help_popup("Global validation with animals not identified during crossings.",\
+                                                "Start validating from 'first frame first global fragment': " +
+                                                "The identities in that frame are the ones given arbitrarily to the animals at the " +
+                                                "beginning of the tracking process." +
+                                                "\nUse the left/right arrows or the trackbar to move along the video. " +
+                                                "\nScroll up/down in the frame to zoom in/out. This will allow you to explore complex crossings. " +
+                                                "\nPress the butonn 'Go to next crossing' (or up arrow) and 'Go to previous crossing' (or down arrow)" +
+                                                " to move to the next frame where some animals are crossing or an animal is unidentified. "
+
+                                                "\nRight click on an animal to inspect advance information about the blob. " +
+                                                "\nClick on 'Save updated identities' to update the identities of the blobs modified. " +
+                                                "\nClick on 'Compute accuracy' and introduce a range of frames in the popup to compute the accuracy. ")
+        self.help_button_global_validation.help_popup.size_hint = (.7, .7)
 
 
     def show_saving(self, *args):
@@ -136,11 +151,11 @@ class Validator(BoxLayout):
                 CHOSEN_VIDEO.video.wrong_crossing_list[frame_number].append(identity)
                 CHOSEN_VIDEO.video.unidentified_individuals_counter[int(self.unidentified_identity_input.text)] += 1
             else:
-                print("you already added this identity, it will not be counted twice")
+                logger.info("you already added this identity, it will not be counted twice")
             self.compute_accuracy_button.disabled = False
             self.recompute_groundtruth = True
         except:
-            print("The identity does not exist")
+            logger.info("The identity does not exist")
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self.unidentified_popup.dismiss()
@@ -165,55 +180,39 @@ class Validator(BoxLayout):
         self.lob_label.text = "Loading..."
 
     def on_choose_list_of_blobs_btns_press(self, instance):
-        self.help_button_global_validation = HelpButton()
-        self.help_button_global_validation.size_hint = (1.,1.)
-
         if instance.text == "With animals\nnot identified\nduring crossings":
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_path
-            self.help_button_global_validation.create_help_popup("Global validation with animals not identified during crossings.",\
-                                                    "The validations is recomended to start at the 'first frame first global fragment' " +
-                                                    "as the identities in that frame are the identities given arbitrarely to the animals at the " +
-                                                    "begining of the tracking process. " +
-                                                    "\nUse the left/right arrows or the trackbar to move along the video. " +
-                                                    "\nScroll up/down in the frame to zoom in/out. This will allow you to explore better some crossings. " +
-                                                    "\nPress the butonn 'Go to next crossing' (or up arrow) and 'Go to previous crossing' (or down arrow)" +
-                                                    " to move to the next frame where some animals are crossing or an animal is unidentified. "
-
-                                                    "\nRight click on an animal to inspect advance information about the blob. " +
-                                                    "\nClick on 'Save updated identities' to update the identities of the blobs modified. " +
-                                                    "\nClick on 'Compute accuracy' and introduce a range of frames in the popup to compute the accuracy. ")
-            self.help_button_global_validation.help_popup.size_hint = (.5, .7)
         else:
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
             self.with_gaps = False
-            self.help_button_global_validation.create_help_popup("Global validation with animals identified during crossings",\
-                                                    "The validations is recomended to start at the 'first frame first global fragment' " +
-                                                    "as the identities in that frame are the identities given arbitrarely to the animals at the " +
-                                                    "begining of the tracking process. " +
-                                                    "\nThe porpose of this validation is to count the number of times that " +
-                                                    "animals are non-identified or mis-identified during crossings."
-                                                    "\nUse the left/right arrows or the trackbar to move along the video. " +
-                                                    "\nScroll up/down in the frame to zoom in/out. This will allow you to explore better some crossings. " +
-                                                    "\nPress the butonn 'Go to next crossing' (or up arrow) and 'Go to previous crossing' (or down arrow)" +
-                                                    " to move to the next frame where some animals are crossing or an animal is unidentified. " +
-                                                    "\nLeft click on an animal to modify its identity. Introduce the new identity in the popup and press return in your keyboard. " +
-                                                    "Click out of the popup if you do not want to modify the identity after selecting an animal. "
-                                                    "\nIn a crossing zoom in and check if the centroid corresponding to the identity of the animals " +
-                                                    "is placed inside of their bodies. "
-                                                    "\nIf the centroid is not correct press 'c' in your keyboard and introduce " +
-                                                    "in the popup the identity that is incorrect in that frame. " +
-                                                    "\nIf the animal is not identified during the crossing press 'u' " +
-                                                    "in your keyboard and introduce in the pop up the identity of the non-identified animals in that frame "
-                                                    "\nClick on 'Save updated identities' to update the identities of the blobs modified. " +
-                                                    "\nClick on 'Compute accuracy' and introduce a range of frames in the popup to compute the accuracy. ")
-            self.help_button_global_validation.help_popup.size_hint = (.7, .8)
+            self.help_button_global_validation.help_label.text = "Global validation with animals identified during crossings",\
+                                                    "The validations is recomended to start at the 'first frame first global fragment' " +\
+                                                    "as the identities in that frame are the identities given arbitrarely to the animals at the " +\
+                                                    "begining of the tracking process. " +\
+                                                    "\nThe porpose of this validation is to count the number of times that " +\
+                                                    "animals are non-identified or mis-identified during crossings."\
+                                                    "\nUse the left/right arrows or the trackbar to move along the video. " +\
+                                                    "\nScroll up/down in the frame to zoom in/out. This will allow you to explore better some crossings. " +\
+                                                    "\nPress the butonn 'Go to next crossing' (or up arrow) and 'Go to previous crossing' (or down arrow)" +\
+                                                    " to move to the next frame where some animals are crossing or an animal is unidentified. " +\
+                                                    "\nLeft click on an animal to modify its identity. Introduce the new identity in the popup and press return in your keyboard. " +\
+                                                    "Click out of the popup if you do not want to modify the identity after selecting an animal. "\
+                                                    "\nIn a crossing zoom in and check if the centroid corresponding to the identity of the animals " +\
+                                                    "is placed inside of their bodies. "\
+                                                    "\nIf the centroid is not correct press 'c' in your keyboard and introduce " +\
+                                                    "in the popup the identity that is incorrect in that frame. " +\
+                                                    "\nIf the animal is not identified during the crossing press 'u' " +\
+                                                    "in your keyboard and introduce in the pop up the identity of the non-identified animals in that frame "\
+                                                    "\nClick on 'Save updated identities' to update the identities of the blobs modified. " +\
+                                                    "\nClick on 'Compute accuracy' and introduce a range of frames in the popup to compute the accuracy."
         if not self.list_of_blobs.blobs_are_connected:
             self.list_of_blobs.reconnect()
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
-        self.choose_list_of_blobs_popup.dismiss()
+        if hasattr(self, 'choose_list_of_blobs_popup'):
+            self.choose_list_of_blobs_popup.dismiss()
         self.populate_validation_tab()
 
     def populate_validation_tab(self):
@@ -231,7 +230,12 @@ class Validator(BoxLayout):
         self.init_segmentZero()
 
     def get_first_frame(self):
-        return CHOSEN_VIDEO.video.first_frame_first_global_fragment[CHOSEN_VIDEO.video.accumulation_trial]
+        if CHOSEN_VIDEO.video.number_of_animals != 1:
+            return CHOSEN_VIDEO.video.first_frame_first_global_fragment[CHOSEN_VIDEO.video.accumulation_trial]
+        else:
+            for blobs_in_frame in CHOSEN_VIDEO.list_of_blobs.blobs_in_video:
+                if len(blobs_in_frame) != 0:
+                    return blobs_in_frame[0].frame_number
 
     def do(self, *args):
         if "post_processing" in CHOSEN_VIDEO.processes_to_restore.keys() and CHOSEN_VIDEO.processes_to_restore['post_processing']:
@@ -258,7 +262,6 @@ class Validator(BoxLayout):
     def init_segmentZero(self):
         self.add_widget(self.visualiser)
         self.colors = get_spaced_colors_util(CHOSEN_VIDEO.video.number_of_animals)
-        print(self.colors)
         self.button_box = BoxLayout(orientation='vertical', size_hint=(.3,1.))
         self.add_widget(self.button_box)
         self.next_cross_button = Button(id='crossing_btn', text='Go to next crossing', size_hint=(1,1))
@@ -385,12 +388,6 @@ class Validator(BoxLayout):
         the coordinates of the original image
         """
         coords = np.asarray(coords)
-        # if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and  CHOSEN_VIDEO.video.resolution_reduction != 1:
-        #     original_frame_width = int(CHOSEN_VIDEO.video.width * CHOSEN_VIDEO.video.resolution_reduction)
-        #     original_frame_height = int(CHOSEN_VIDEO.video.height * CHOSEN_VIDEO.video.resolution_reduction)
-        # else:
-        #     original_frame_width = int(CHOSEN_VIDEO.video.width)
-        #     original_frame_height = int(CHOSEN_VIDEO.video.height)
         original_frame_width = int(CHOSEN_VIDEO.video.width)
         original_frame_height = int(CHOSEN_VIDEO.video.height)
         actual_frame_width, actual_frame_height = self.visualiser.display_layout.size
@@ -408,10 +405,11 @@ class Validator(BoxLayout):
         return {attr: [getattr(blob, attr) for blob in blobs_in_frame] for attr in attributes_to_get}
 
     def writeIds(self, frame):
-        blobs_in_frame = self.blobs_in_video[int(self.visualiser.video_slider.value)]
+        frame_number_to_visualise = int(self.visualiser.video_slider.value)
+        blobs_in_frame = self.blobs_in_video[frame_number_to_visualise]
         font = cv2.FONT_HERSHEY_SIMPLEX
         frame = self.visualiser.frame
-        frame_number = blobs_in_frame[0].frame_number
+        frame_number = frame_number_to_visualise
 
         for blob in blobs_in_frame:
             cur_id = blob.final_identity

@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+# -*- coding: UTF-8 -*-
 
 from __future__ import absolute_import, division, print_function
 import kivy
@@ -313,7 +313,7 @@ class PreprocessingPreview(BoxLayout):
         CHOSEN_VIDEO.list_of_blobs = ListOfBlobs(blobs_in_video = self.blobs)
         CHOSEN_VIDEO.video.create_preprocessing_folder()
         self.frames_with_more_blobs_than_animals, CHOSEN_VIDEO.video._maximum_number_of_blobs = CHOSEN_VIDEO.list_of_blobs.check_maximal_number_of_blob(CHOSEN_VIDEO.video.number_of_animals, return_maximum_number_of_blobs = True)
-        if len(self.frames_with_more_blobs_than_animals) > 0 and self.check_segmentation_consistency_switch.active:
+        if len(self.frames_with_more_blobs_than_animals) > 0 and (self.check_segmentation_consistency_switch.active or CHOSEN_VIDEO.video.number_of_animals == 1):
             self.resegmentation_step_finished = True
             self.consistency_popup.dismiss()
             self.consistency_fail_popup.open()
@@ -354,7 +354,7 @@ class PreprocessingPreview(BoxLayout):
                                         "In the figure the loss, accuracy and accuracy per class, respectively. "+
                                         "The video is currenly being fragmented. The 'Go to the tracking tab' button will"+
                                         " activate at the end of the process.", size_hint = (1., .2))
-        if not self.crossing_detector_trainer.model_diverged:
+        if CHOSEN_VIDEO.video.number_of_animals != 1 and not self.crossing_detector_trainer.model_diverged:
             matplotlib.rcParams.update({'font.size': 8,
                                         'axes.labelsize': 8,
                                         'xtick.labelsize' : 8,
@@ -374,6 +374,13 @@ class PreprocessingPreview(BoxLayout):
             content.add_widget(self.crossing_label)
             content.add_widget(self.go_to_tracking_button)
             content.add_widget(crossing_detector_accuracy)
+        elif CHOSEN_VIDEO.video.number_of_animals == 1:
+            content.add_widget(CustomLabel(text = "Ok, tracking a single animal...", size_hint = (1.,.1)))
+            self.go_to_tracking_button = Button(text = "Go to the tracking tab", size_hint = (1.,.1))
+            self.go_to_tracking_button.disabled = True
+            self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
+            content.add_widget(self.disappointed)
+            content.add_widget(self.go_to_tracking_button)
         else:
             content.add_widget(CustomLabel(text = "The model diverged, crossing and individuals will be discriminated only by area."))
         self.crossing_detector_accuracy_popup = Popup(title = 'Crossing/individual images discrimination',
@@ -392,28 +399,33 @@ class PreprocessingPreview(BoxLayout):
                                             CHOSEN_VIDEO.video.number_of_animals)
         self.list_of_fragments = ListOfFragments(fragments)
         CHOSEN_VIDEO.video._fragment_identifier_to_index = self.list_of_fragments.get_fragment_identifier_to_index_list()
-        global_fragments = create_list_of_global_fragments(CHOSEN_VIDEO.list_of_blobs.blobs_in_video,
-                                                            self.list_of_fragments.fragments,
-                                                            CHOSEN_VIDEO.video.number_of_animals)
-        self.list_of_global_fragments = ListOfGlobalFragments(global_fragments)
-        CHOSEN_VIDEO.video.number_of_global_fragments = self.list_of_global_fragments.number_of_global_fragments
-        self.list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
-        CHOSEN_VIDEO.video.number_of_global_fragments_candidates_for_accumulation = self.list_of_global_fragments.number_of_global_fragments
-        #XXX I skip the fit of the gamma ...
-        self.list_of_global_fragments.relink_fragments_to_global_fragments(self.list_of_fragments.fragments)
-        CHOSEN_VIDEO.video._number_of_unique_images_in_global_fragments = self.list_of_fragments.compute_total_number_of_images_in_global_fragments()
-        self.list_of_global_fragments.compute_maximum_number_of_images()
-        CHOSEN_VIDEO.video._maximum_number_of_images_in_global_fragments = self.list_of_global_fragments.maximum_number_of_images
-        self.list_of_fragments.get_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
-        self.list_of_fragments.get_not_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
-        self.list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
+        if CHOSEN_VIDEO.video.number_of_animals != 1:
+            global_fragments = create_list_of_global_fragments(CHOSEN_VIDEO.list_of_blobs.blobs_in_video,
+                                                                self.list_of_fragments.fragments,
+                                                                CHOSEN_VIDEO.video.number_of_animals)
+            self.list_of_global_fragments = ListOfGlobalFragments(global_fragments)
+            CHOSEN_VIDEO.video.number_of_global_fragments = self.list_of_global_fragments.number_of_global_fragments
+            self.list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
+            CHOSEN_VIDEO.video.number_of_global_fragments_candidates_for_accumulation = self.list_of_global_fragments.number_of_global_fragments
+            #XXX I skip the fit of the gamma ...
+            self.list_of_global_fragments.relink_fragments_to_global_fragments(self.list_of_fragments.fragments)
+            CHOSEN_VIDEO.video._number_of_unique_images_in_global_fragments = self.list_of_fragments.compute_total_number_of_images_in_global_fragments()
+            self.list_of_global_fragments.compute_maximum_number_of_images()
+            CHOSEN_VIDEO.video._maximum_number_of_images_in_global_fragments = self.list_of_global_fragments.maximum_number_of_images
+            self.list_of_fragments.get_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
+            self.list_of_fragments.get_not_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
+            self.list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
+        else:
+            CHOSEN_VIDEO.video._number_of_unique_images_in_global_fragments = None
+            CHOSEN_VIDEO.video._maximum_number_of_images_in_global_fragments = None
         CHOSEN_VIDEO.video._has_been_preprocessed = True
         CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path, number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
         self.list_of_fragments.save(CHOSEN_VIDEO.video.fragments_path)
-        self.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, self.list_of_fragments.fragments)
+        if CHOSEN_VIDEO.video.number_of_animals != 1:
+            self.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, self.list_of_fragments.fragments)
+            CHOSEN_VIDEO.list_of_global_fragments = self.list_of_global_fragments
         CHOSEN_VIDEO.video.save()
         CHOSEN_VIDEO.list_of_fragments = self.list_of_fragments
-        CHOSEN_VIDEO.list_of_global_fragments = self.list_of_global_fragments
         DEACTIVATE_TRACKING.setter(False)
 
     def open_resolution_reduction_popup(self, *args):

@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import kivy
@@ -105,67 +105,77 @@ class Tracker(BoxLayout):
                                                 "press the upper botton which will indicate the process that will be computed.")
 
     def do(self):
-        CHOSEN_VIDEO.video.accumulation_trial = 0
-        delete = not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2'] if 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore.keys() else True
-        CHOSEN_VIDEO.video.create_accumulation_folder(iteration_number = 0, delete = delete)
-        self.number_of_animals = CHOSEN_VIDEO.video.number_of_animals if not CHOSEN_VIDEO.video.identity_transfer\
-                                                                    else CHOSEN_VIDEO.video.knowledge_transfer_info_dict['number_of_animals']
-        self.restoring_first_accumulation = False
-        self.init_accumulation_network()
-        if not self.has_been_executed:
+        if CHOSEN_VIDEO.video.number_of_animals == 1:
             self.create_main_layout()
-            self.control_panel.add_widget(self.help_button_tracker)
-            self.has_been_executed = True
-        if 'post_processing' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['post_processing']:
-            self.restore_trajectories()
-            self.restore_crossings_solved()
-            self.restore_trajectories_wo_gaps()
-            self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
-            self.start_tracking_button.text = "Show estimated\naccuracy"
-        elif 'residual_identification' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['residual_identification']:
-            Logger.info("Restoring residual identification")
-            self.restore_identification()
-            CHOSEN_VIDEO.video._has_been_assigned = True
-            self.start_tracking_button.bind(on_release = self.start_from_post_processing)
-            self.start_tracking_button.text = "Start\npost-processing"
-        elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
-            Logger.info("Restoring second accumulation")
-            self.restore_second_accumulation()
-            CHOSEN_VIDEO.video._first_frame_first_global_fragment = CHOSEN_VIDEO.video._first_frame_first_global_fragment
-            Logger.warning('first_frame_first_global_fragment ' + str(CHOSEN_VIDEO.video.first_frame_first_global_fragment))
-            Logger.info("Starting identification")
-            self.start_tracking_button.bind(on_release = self.start_from_identification)
-            self.start_tracking_button.text = "Start\nresidual identification"
-        elif 'protocol3_pretraining' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_pretraining']:
-            Logger.info("Restoring pretraining")
-            Logger.info("Initialising pretraining network")
-            self.init_pretraining_net()
-            Logger.info("Restoring pretraining")
-            self.accumulation_step_finished = True
-            self.restore_first_accumulation()
-            self.restore_pretraining()
-            self.accumulation_manager.ratio_accumulated_images = CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]
-            CHOSEN_VIDEO.video._first_frame_first_global_fragment = [CHOSEN_VIDEO.video._first_frame_first_global_fragment[0]]
-            CHOSEN_VIDEO.video._percentage_of_accumulated_images = [CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]]
-            self.create_one_shot_accumulation_popup()
-            Logger.info("Start accumulation parachute")
-            self.start_tracking_button.bind(on_release = self.accumulate)
-            self.start_tracking_button.text = "Start\naccumulation\n(protocol 3)"
-        elif 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
-            Logger.info("Restoring protocol 1")
-            self.restoring_first_accumulation = True
-            self.restore_first_accumulation()
-            self.accumulation_manager.ratio_accumulated_images = CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]
-            CHOSEN_VIDEO.video._first_frame_first_global_fragment = [CHOSEN_VIDEO.video._first_frame_first_global_fragment[0]]
-            CHOSEN_VIDEO.video._percentage_of_accumulated_images = [CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]]
-            self.accumulation_step_finished = True
-            self.create_one_shot_accumulation_popup()
-            self.start_tracking_button.bind(on_release = self.accumulate)
-            self.start_tracking_button.text = "Start\nidentification\nor\nprotocol 3"
-        elif 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
-            Logger.info("Starting protocol cascade")
-            self.start_tracking_button.bind(on_release = self.protocol1)
+            self.start_tracking_button.bind(on_release = self.track_single_animal)
+            self.start_tracking_button.text = "Get animal\ntrajectory"
+            self.start_tracking_button.size_hint = (.2,.3)
+        else:
+            CHOSEN_VIDEO.video.accumulation_trial = 0
+            delete = not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2'] if 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore.keys() else True
+            CHOSEN_VIDEO.video.create_accumulation_folder(iteration_number = 0, delete = delete)
+            self.number_of_animals = CHOSEN_VIDEO.video.number_of_animals if not CHOSEN_VIDEO.video.identity_transfer\
+                                                                        else CHOSEN_VIDEO.video.knowledge_transfer_info_dict['number_of_animals']
+            self.restoring_first_accumulation = False
+            self.init_accumulation_network()
+            if not self.has_been_executed:
+                self.create_main_layout()
+                self.control_panel.add_widget(self.help_button_tracker)
+                self.has_been_executed = True
+            if 'post_processing' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['post_processing']:
+                self.restore_trajectories()
+                self.restore_crossings_solved()
+                self.restore_trajectories_wo_gaps()
+                self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
+                self.start_tracking_button.text = "Show estimated\naccuracy"
+            elif 'residual_identification' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['residual_identification']:
+                Logger.info("Restoring residual identification")
+                self.restore_identification()
+                CHOSEN_VIDEO.video._has_been_assigned = True
+                self.start_tracking_button.bind(on_release = self.start_from_post_processing)
+                self.start_tracking_button.text = "Start\npost-processing"
+            elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
+                Logger.info("Restoring second accumulation")
+                self.restore_second_accumulation()
+                CHOSEN_VIDEO.video._first_frame_first_global_fragment = CHOSEN_VIDEO.video._first_frame_first_global_fragment
+                Logger.warning('first_frame_first_global_fragment ' + str(CHOSEN_VIDEO.video.first_frame_first_global_fragment))
+                Logger.info("Starting identification")
+                self.start_tracking_button.bind(on_release = self.start_from_identification)
+                self.start_tracking_button.text = "Start\nresidual identification"
+            elif 'protocol3_pretraining' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_pretraining']:
+                Logger.info("Restoring pretraining")
+                Logger.info("Initialising pretraining network")
+                self.init_pretraining_net()
+                Logger.info("Restoring pretraining")
+                self.accumulation_step_finished = True
+                self.restore_first_accumulation()
+                self.restore_pretraining()
+                self.accumulation_manager.ratio_accumulated_images = CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]
+                CHOSEN_VIDEO.video._first_frame_first_global_fragment = [CHOSEN_VIDEO.video._first_frame_first_global_fragment[0]]
+                CHOSEN_VIDEO.video._percentage_of_accumulated_images = [CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]]
+                self.create_one_shot_accumulation_popup()
+                Logger.info("Start accumulation parachute")
+                self.start_tracking_button.bind(on_release = self.accumulate)
+                self.start_tracking_button.text = "Start\naccumulation\n(protocol 3)"
+            elif 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
+                Logger.info("Restoring protocol 1")
+                self.restoring_first_accumulation = True
+                self.restore_first_accumulation()
+                self.accumulation_manager.ratio_accumulated_images = CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]
+                CHOSEN_VIDEO.video._first_frame_first_global_fragment = [CHOSEN_VIDEO.video._first_frame_first_global_fragment[0]]
+                CHOSEN_VIDEO.video._percentage_of_accumulated_images = [CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]]
+                self.accumulation_step_finished = True
+                self.create_one_shot_accumulation_popup()
+                self.start_tracking_button.bind(on_release = self.accumulate)
+                self.start_tracking_button.text = "Start\nidentification\nor\nprotocol 3"
+            elif 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
+                Logger.info("Starting protocol cascade")
+                self.start_tracking_button.bind(on_release = self.protocol1)
 
+    def track_single_animal(self, *args):
+        [setattr(blob, '_identity', 1) for blobs_in_frame in
+         CHOSEN_VIDEO.list_of_blobs.blobs_in_video for blob in blobs_in_frame]
+        self.trajectories_popup.open()
 
     def init_accumulation_network(self):
         self.accumulation_network_params = NetworkParams(self.number_of_animals,
@@ -507,7 +517,16 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO.video._has_trajectories = True
         CHOSEN_VIDEO.video.save()
         self.trajectories_popup.dismiss()
-        self.interpolate_crossings_popup.open()
+        if CHOSEN_VIDEO.video.number_of_animals != 1:
+            self.interpolate_crossings_popup.open()
+        else:
+            CHOSEN_VIDEO.video.overall_P2 = 1.
+            CHOSEN_VIDEO.video._has_been_assigned = True
+            CHOSEN_VIDEO.video._has_crossings_solved = False
+            CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video,
+                                            CHOSEN_VIDEO.video.blobs_path,
+                                            number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
+            self.update_and_show_happy_ending_popup()
 
     def interpolate_crossings(self, *args):
         CHOSEN_VIDEO.list_of_blobs_no_gaps = copy.deepcopy(CHOSEN_VIDEO.list_of_blobs)
@@ -637,31 +656,34 @@ class Tracker(BoxLayout):
     def create_main_layout(self):
         self.start_tracking_button = Button(text = "Start protocol cascade")
         self.control_panel.add_widget(self.start_tracking_button)
-        self.advanced_controls_button = Button(text = "Advanced idCNN\ncontrols")
-        self.control_panel.add_widget(self.advanced_controls_button)
-        self.generate_tensorboard_label = CustomLabel(font_size = 16,
+        if CHOSEN_VIDEO.video.number_of_animals != 1:
+            self.advanced_controls_button = Button(text = "Advanced idCNN\ncontrols")
+            self.control_panel.add_widget(self.advanced_controls_button)
+            self.generate_tensorboard_label = CustomLabel(font_size = 16,
                                                         text = "Save tensorboard summaries",
                                                         size_hint = (1.,.5))
-        self.generate_tensorboard_switch = Switch(size_hint = (1.,.15))
-        self.control_panel.add_widget(self.generate_tensorboard_label)
-        self.control_panel.add_widget(self.generate_tensorboard_switch)
-        self.create_network_params_labels()
-        self.generate_tensorboard_switch.active = False
-        self.create_display_network_parameters()
-        self.create_advanced_controls_popup()
-        self.create_identification_popup()
-        self.create_impossible_jumps_popup()
-        self.create_trajectories_popup()
-        self.create_interpolate_during_crossings_popup()
-        self.create_trajectories_wo_gaps_popup()
-        if CHOSEN_VIDEO.video.number_of_channels > 3:
-            self.color_tracking_label = CustomLabel(font_size = 16,
-                                                    text = "Enable color-tracking")
-            self.color_tracking_switch = Switch()
-            self.control_panel.add_widget(self.color_tracking_label)
-            self.control_panel.add_widget(self.color_tracking_switch)
-            self.color_tracking_switch.active = False
-        self.advanced_controls_button.bind(on_press = self.show_advanced_controls)
+            self.generate_tensorboard_switch = Switch(size_hint = (1.,.15))
+            self.control_panel.add_widget(self.generate_tensorboard_label)
+            self.control_panel.add_widget(self.generate_tensorboard_switch)
+            self.create_network_params_labels()
+            self.generate_tensorboard_switch.active = False
+            self.create_display_network_parameters()
+            self.create_advanced_controls_popup()
+            self.create_identification_popup()
+            self.create_impossible_jumps_popup()
+            self.create_trajectories_popup()
+            self.create_interpolate_during_crossings_popup()
+            self.create_trajectories_wo_gaps_popup()
+            if CHOSEN_VIDEO.video.number_of_channels > 3:
+                self.color_tracking_label = CustomLabel(font_size = 16,
+                                                        text = "Enable color-tracking")
+                self.color_tracking_switch = Switch()
+                self.control_panel.add_widget(self.color_tracking_label)
+                self.control_panel.add_widget(self.color_tracking_switch)
+                self.color_tracking_switch.active = False
+            self.advanced_controls_button.bind(on_press = self.show_advanced_controls)
+        else:
+            self.create_trajectories_popup()
 
     def show_advanced_controls(self, *args):
         self.advanced_controls_popup.open()
