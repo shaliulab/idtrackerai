@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -68,7 +68,7 @@ from idtrackerai.constants import THRESHOLD_ACCEPTABLE_ACCUMULATION, RESTORE_CRI
 
 print('\n************************************************************************************')
 print('LICENSE')
-print('idtracker.ai  Copyright (C) 2017-  Francisco Romero Ferrero, Mattia G. Bergomi,') 
+print('idtracker.ai  Copyright (C) 2017-  Francisco Romero Ferrero, Mattia G. Bergomi,')
 print('Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the')
 print('Champalimaud Foundation')
 print('This program comes with ABSOLUTELY NO WARRANTY.')
@@ -301,7 +301,7 @@ class idtrackeraiApp(App):
 def get_error_and_save_logs():
     import traceback
     ex_type, ex, tb = sys.exc_info()
-    traceback.print_tb(tb)
+    traceback.print_exception(ex_type, ex, tb)
     idtrackeraiApp().on_stop()
     print("\n")
     print("idtracker.ai quit unexpectedly.")
@@ -318,7 +318,7 @@ def get_error_and_save_logs():
 def run_app():
     try:
         idtrackeraiApp().run()
-    except Exception, err:
+    except:
         get_error_and_save_logs()
 
 if __name__ == '__main__':

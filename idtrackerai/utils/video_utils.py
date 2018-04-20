@@ -23,18 +23,21 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
 import sys
 import numpy as np
+import ctypes
+mkl_rt = ctypes.CDLL('libmkl_rt.so')
+mkl_get_max_threads = mkl_rt.mkl_get_max_threads
 import multiprocessing
 import cv2
 from joblib import Parallel, delayed
 from idtrackerai.utils.py_utils import  *
 from idtrackerai.video import Video
-from idtrackerai.constants import  BACKGROUND_SUBTRACTION_PERIOD
+from idtrackerai.constants import  BACKGROUND_SUBTRACTION_PERIOD, NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -145,8 +148,18 @@ def cumpute_background(video):
     # initialized as the full frame
     bkg = np.zeros((video.original_height, video.original_width))
     num_cores = multiprocessing.cpu_count()
-    if video.number_of_episodes < num_cores:
-        num_cores = 1
+    if NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION is not None:
+        try:
+            logger.info('NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION set to a value different than the default')
+            assert NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION <= multiprocessing.cpu_count()
+            num_cores = NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION
+        except:
+            logger.info('NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION > multiprocessing.cpu_count(). Setting NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION set to 1')
+            num_cores = 1
+
+    # os.environ['MKL_NUM_THREADS'] = '1'
+    # os.environ['OMP_NUM_THREADS'] = '1'
+    # os.environ['MKL_DYNAMIC'] = 'FALSE'
     if video.paths_to_video_segments is None: # one single file
         logger.debug('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=num_cores)(delayed(
@@ -160,6 +173,9 @@ def cumpute_background(video):
                     sum_frames_for_bkg_per_episode_in_multiple_files_video)(
                     videoPath,bkg) for videoPath in video.paths_to_video_segments)
         logger.debug('Finished parallel loop for bkg subtraction')
+    # os.environ['MKL_NUM_THREADS'] = str(multiprocessing.cpu_count())#str(mkl_get_max_threads())
+    # os.environ['OMP_NUM_THREADS'] = str(multiprocessing.cpu_count())#str(mkl_get_max_threads())
+    # os.environ['MKL_DYNAMIC'] = 'TRUE'
 
     partialBkg = [bkg for (bkg,_) in output]
     totNumFrame = np.sum([numFrame for (_,numFrame) in output])
