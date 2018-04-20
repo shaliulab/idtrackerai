@@ -157,9 +157,9 @@ def cumpute_background(video):
             logger.info('NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION > multiprocessing.cpu_count(). Setting NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION set to 1')
             num_cores = 1
 
-    # os.environ['MKL_NUM_THREADS'] = '1'
-    # os.environ['OMP_NUM_THREADS'] = '1'
-    # os.environ['MKL_DYNAMIC'] = 'FALSE'
+    os.environ['MKL_NUM_THREADS'] = '1'
+    os.environ['OMP_NUM_THREADS'] = '1'
+    os.environ['MKL_DYNAMIC'] = 'FALSE'
     if video.paths_to_video_segments is None: # one single file
         logger.debug('one single video, computing bkg in parallel from single video')
         output = Parallel(n_jobs=num_cores)(delayed(
@@ -173,9 +173,9 @@ def cumpute_background(video):
                     sum_frames_for_bkg_per_episode_in_multiple_files_video)(
                     videoPath,bkg) for videoPath in video.paths_to_video_segments)
         logger.debug('Finished parallel loop for bkg subtraction')
-    # os.environ['MKL_NUM_THREADS'] = str(multiprocessing.cpu_count())#str(mkl_get_max_threads())
-    # os.environ['OMP_NUM_THREADS'] = str(multiprocessing.cpu_count())#str(mkl_get_max_threads())
-    # os.environ['MKL_DYNAMIC'] = 'TRUE'
+    os.environ['MKL_NUM_THREADS'] = str(multiprocessing.cpu_count())#str(mkl_get_max_threads())
+    os.environ['OMP_NUM_THREADS'] = str(multiprocessing.cpu_count())#str(mkl_get_max_threads())
+    os.environ['MKL_DYNAMIC'] = 'TRUE'
 
     partialBkg = [bkg for (bkg,_) in output]
     totNumFrame = np.sum([numFrame for (_,numFrame) in output])
