@@ -64,7 +64,8 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True, retur
     """
     logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
     list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0], video.number_of_animals)
-    if use_network and video.number_of_animals != 1:
+
+    if use_network:
         video.create_crossings_detector_folder()
         logger.info("Get individual and crossing images labelled data")
         training_set = CrossingDataset(list_of_blobs.blobs_in_video, video, scope = 'training')
@@ -113,6 +114,4 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True, retur
             if return_store_objects:
                 return trainer
     if video.number_of_animals == 1:
-        logger.info("Are you really using idtracker.ai to track a single animal??? Ok, we will do it...")
-        [setattr(blob, '_is_an_individual', True) for blobs_in_frame in
-         list_of_blobs.blobs_in_video for blob in blobs_in_frame]
+        return list_of_blobs

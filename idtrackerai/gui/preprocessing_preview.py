@@ -366,9 +366,19 @@ class PreprocessingPreview(BoxLayout):
         self.DCD_popup.open()
 
     def train_and_apply_crossing_detector(self, *args):
-        self.crossing_detector_trainer = detect_crossings(CHOSEN_VIDEO.list_of_blobs, CHOSEN_VIDEO.video,
+        if CHOSEN_VIDEO.video.number_of_animals != 1:
+            self.crossing_detector_trainer = detect_crossings(CHOSEN_VIDEO.list_of_blobs, CHOSEN_VIDEO.video,
                         CHOSEN_VIDEO.video.model_area, use_network = True,
                         return_store_objects = True, plot_flag = False)
+        else:
+            CHOSEN_VIDEO.list_of_blob = detect_crossings(CHOSEN_VIDEO.list_of_blobs, CHOSEN_VIDEO.video,
+                        CHOSEN_VIDEO.video.model_area, use_network = False,
+                        return_store_objects = False, plot_flag = False)
+            print("after model area")
+            print([b.image_for_identification.shape for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf])
+            CHOSEN_VIDEO.list_of_blob.save(CHOSEN_VIDEO.video,
+                                    CHOSEN_VIDEO.video.blobs_path_segmented,
+                                    number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
         self.DCD_popup.dismiss()
 
     def plot_crossing_detection_statistics(self, *args):
@@ -416,14 +426,14 @@ class PreprocessingPreview(BoxLayout):
         self.crossing_detector_accuracy_popup.open()
 
     def generate_list_of_fragments_and_global_fragments(self, *args):
-        CHOSEN_VIDEO.list_of_blobs.compute_overlapping_between_subsequent_frames()
-        CHOSEN_VIDEO.list_of_blobs.compute_fragment_identifier_and_blob_index(max(CHOSEN_VIDEO.video.number_of_animals, CHOSEN_VIDEO.video.maximum_number_of_blobs))
-        CHOSEN_VIDEO.list_of_blobs.compute_crossing_fragment_identifier()
-        fragments = create_list_of_fragments(CHOSEN_VIDEO.list_of_blobs.blobs_in_video,
-                                            CHOSEN_VIDEO.video.number_of_animals)
-        self.list_of_fragments = ListOfFragments(fragments)
-        CHOSEN_VIDEO.video._fragment_identifier_to_index = self.list_of_fragments.get_fragment_identifier_to_index_list()
         if CHOSEN_VIDEO.video.number_of_animals != 1:
+            CHOSEN_VIDEO.list_of_blobs.compute_overlapping_between_subsequent_frames()
+            CHOSEN_VIDEO.list_of_blobs.compute_fragment_identifier_and_blob_index(max(CHOSEN_VIDEO.video.number_of_animals, CHOSEN_VIDEO.video.maximum_number_of_blobs))
+            CHOSEN_VIDEO.list_of_blobs.compute_crossing_fragment_identifier()
+            fragments = create_list_of_fragments(CHOSEN_VIDEO.list_of_blobs.blobs_in_video,
+                                                CHOSEN_VIDEO.video.number_of_animals)
+            self.list_of_fragments = ListOfFragments(fragments)
+            CHOSEN_VIDEO.video._fragment_identifier_to_index = self.list_of_fragments.get_fragment_identifier_to_index_list()
             global_fragments = create_list_of_global_fragments(CHOSEN_VIDEO.list_of_blobs.blobs_in_video,
                                                                 self.list_of_fragments.fragments,
                                                                 CHOSEN_VIDEO.video.number_of_animals)
@@ -439,17 +449,17 @@ class PreprocessingPreview(BoxLayout):
             self.list_of_fragments.get_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
             self.list_of_fragments.get_not_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
             self.list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
+            self.list_of_fragments.save(CHOSEN_VIDEO.video.fragments_path)
+            CHOSEN_VIDEO.list_of_fragments = self.list_of_fragments
         else:
             CHOSEN_VIDEO.video._number_of_unique_images_in_global_fragments = None
             CHOSEN_VIDEO.video._maximum_number_of_images_in_global_fragments = None
         CHOSEN_VIDEO.video._has_been_preprocessed = True
         CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path, number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
-        self.list_of_fragments.save(CHOSEN_VIDEO.video.fragments_path)
         if CHOSEN_VIDEO.video.number_of_animals != 1:
             self.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, self.list_of_fragments.fragments)
             CHOSEN_VIDEO.list_of_global_fragments = self.list_of_global_fragments
         CHOSEN_VIDEO.video.save()
-        CHOSEN_VIDEO.list_of_fragments = self.list_of_fragments
         DEACTIVATE_TRACKING.setter(False)
 
     def open_resolution_reduction_popup(self, *args):
