@@ -41,7 +41,7 @@ from tqdm import tqdm
 from scipy import ndimage
 from idtrackerai.constants import NUMBER_OF_CORES_FOR_SEGMENTATION
 from idtrackerai.blob import Blob
-from idtrackerai.utils.py_utils import  flatten
+from idtrackerai.utils.py_utils import flatten, set_mkl_to_single_thread, set_mkl_to_multi_thread
 from idtrackerai.utils.video_utils import segment_frame, blob_extractor
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -268,9 +268,7 @@ def segment(video):
                                 'max_threshold': video.max_threshold,
                                 'min_area': video.min_area,
                                 'max_area': video.max_area}
-    os.environ['MKL_NUM_THREADS'] = '1'
-    os.environ['OMP_NUM_THREADS'] = '1'
-    os.environ['MKL_DYNAMIC'] = 'FALSE'
+    set_mkl_to_single_thread()
     if not video.paths_to_video_segments:
         logger.info('There is only one path, segmenting by frame indices')
         #Spliting episodes_start_end in sublists for parallel processing
@@ -297,9 +295,7 @@ def segment(video):
             blobs_in_episode = [out[0] for out in OupPutParallel]
             maximum_number_of_blobs_in_episode.append([out[1] for out in OupPutParallel])
             blobs_in_video.append(blobs_in_episode)
-    os.environ['MKL_NUM_THREADS'] = str(multiprocessing.cpu_count())#str(mkl_get_max_threads())
-    os.environ['OMP_NUM_THREADS'] = str(multiprocessing.cpu_count())#str(mkl_get_max_threads())
-    os.environ['MKL_DYNAMIC'] = 'TRUE'
+    set_mkl_to_multi_thread()
 
     video._maximum_number_of_blobs = max(flatten(maximum_number_of_blobs_in_episode))
     #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
