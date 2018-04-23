@@ -313,7 +313,7 @@ def get_error_and_save_logs():
         print(os.path.join(kivy.kivy_home_dir, Config.get('kivy', 'log_dir')))
         print("and attach them to the issue.")
     print("If this error persists please open an issue at")
-    print("https://gitlab.com/polavieja_lab/idtrackerai/tree/write_setup")
+    print("https://gitlab.com/polavieja_lab/idtrackerai")
 
 def run_app():
     try:
