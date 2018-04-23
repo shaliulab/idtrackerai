@@ -31,6 +31,7 @@ import os
 import glob
 import re
 import numpy as np
+import multiprocessing
 import sys
 import matplotlib
 from matplotlib import cm
@@ -49,6 +50,18 @@ def get_git_revision_hash():
         return subprocess.check_output(['git', 'rev-parse', 'HEAD'])
     except:
         return 'not in a git repository'
+
+### MKL
+def set_mkl_to_single_thread():
+    logger.info('Setting MKL library to use single thread')
+    os.environ['MKL_NUM_THREADS'] = '1'
+    os.environ['OMP_NUM_THREADS'] = '1'
+    os.environ['MKL_DYNAMIC'] = 'FALSE'
+def set_mkl_to_multi_thread():
+    logger.info('Setting MKL library to use multiple threads')
+    os.environ['MKL_NUM_THREADS'] = str(multiprocessing.cpu_count())#str(mkl_get_max_threads())
+    os.environ['OMP_NUM_THREADS'] = str(multiprocessing.cpu_count())#str(mkl_get_max_threads())
+    os.environ['MKL_DYNAMIC'] = 'TRUE'
 
 ### Object utils ###
 def append_values_to_lists(values, list_of_lists):

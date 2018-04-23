@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, print_function, division
 import sys
@@ -56,6 +56,14 @@ STD_TOLERANCE = 4
 Period used to sample the video to compute the background model
 """
 BACKGROUND_SUBTRACTION_PERIOD = 100
+"""***NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION***
+Number of jobs used to compute the background model
+"""
+NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION = None # Set None to use the default mode of the system. (see video_utils.py module for details)
+"""***NUMBER_OF_CORES_FOR_SEGMENTATION***
+Number of jobs used to perform the segmentation
+"""
+NUMBER_OF_CORES_FOR_SEGMENTATION = None # Set None to use the default mode of the system. (see segmentation.py module for details)
 
 #######################################
 #########  global fragments  ##########
