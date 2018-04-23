@@ -454,7 +454,7 @@ class Blob(object):
             Number of blobs segmented in the frame self.frame_number
 
         """
-        if model_area(self.area) or number_of_blobs == number_of_animals: #Checks if area is compatible with the model area we built
+        if model_area(self.area) or number_of_blobs == number_of_animals or video.number_of_animals == 1: #Checks if area is compatible with the model area we built
             self.set_image_for_identification(video)
             self._is_an_individual = True
         else:

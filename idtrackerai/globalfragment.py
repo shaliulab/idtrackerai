@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -85,9 +85,9 @@ class GlobalFragment(object):
         individual fragment
 
     """
-    def __init__(self, list_of_blobs, fragments, index_beginning_of_fragment, number_of_animals):
+    def __init__(self, blobs_in_video, fragments, index_beginning_of_fragment, number_of_animals):
         self.index_beginning_of_fragment = index_beginning_of_fragment
-        self.individual_fragments_identifiers = [blob.fragment_identifier for blob in list_of_blobs[index_beginning_of_fragment]]
+        self.individual_fragments_identifiers = [blob.fragment_identifier for blob in blobs_in_video[index_beginning_of_fragment]]
         self.get_list_of_attributes_from_individual_fragments(fragments)
         self.set_minimum_distance_travelled()
         self.set_candidate_for_accumulation()
