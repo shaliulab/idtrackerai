@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -69,30 +69,7 @@ class NetworkParams(object):
 
     .. [2] Kingma, Diederik P., and Jimmy Ba. "Adam: A method for stochastic optimization." arXiv preprint arXiv:1412.6980 (2014).
     """
-    def __init__(self, number_of_animals, cnn_model = 0, learning_rate = None,
-                keep_prob = None, use_adam_optimiser = False,
-                scopes_layers_to_optimize = None, restore_folder = None,
-                save_folder = None, knowledge_transfer_folder = None,
-                image_size = None,
-                number_of_channels = None,
-                video_path = None):
-
-        self.video_path = video_path
-        self.number_of_animals = number_of_animals
-        self.learning_rate = learning_rate
-        self.keep_prob = keep_prob
-        self._restore_folder = restore_folder
-        self._save_folder = save_folder
-        self._knowledge_transfer_folder = knowledge_transfer_folder
-        self.use_adam_optimiser = use_adam_optimiser
-        self.scopes_layers_to_optimize = scopes_layers_to_optimize
-        self._cnn_model = cnn_model
-        self.image_size = image_size
-        self.target_image_size = None
-        self.pre_target_image_size = None
-        self.action_on_image = None
-        self.number_of_channels = number_of_channels
-
+    
     def __init__(self, number_of_animals, cnn_model = 0, learning_rate = None,
                 keep_prob = None, use_adam_optimiser = False,
                 scopes_layers_to_optimize = None, restore_folder = None,
