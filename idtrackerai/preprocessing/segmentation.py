@@ -29,9 +29,6 @@ from __future__ import absolute_import, division, print_function
 import os
 import sys
 import numpy as np
-import ctypes
-mkl_rt = ctypes.CDLL('libmkl_rt.so')
-mkl_get_max_threads = mkl_rt.mkl_get_max_threads
 import multiprocessing
 import cv2
 import cPickle as pickle
