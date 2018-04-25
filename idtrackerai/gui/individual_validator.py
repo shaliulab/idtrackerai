@@ -154,7 +154,12 @@ class IndividualValidator(BoxLayout):
         self.init_segmentZero()
 
     def get_first_frame(self):
-        return CHOSEN_VIDEO.video.first_frame_first_global_fragment[CHOSEN_VIDEO.video.accumulation_trial]
+        if CHOSEN_VIDEO.video.number_of_animals != 1:
+            return CHOSEN_VIDEO.video.first_frame_first_global_fragment[CHOSEN_VIDEO.video.accumulation_trial]
+        else:
+            for blobs_in_frame in CHOSEN_VIDEO.list_of_blobs.blobs_in_video:
+                if len(blobs_in_frame) != 0:
+                    return blobs_in_frame[0].frame_number
 
     def do(self, *args):
         if "post_processing" in CHOSEN_VIDEO.processes_to_restore.keys() and CHOSEN_VIDEO.processes_to_restore['post_processing']:
