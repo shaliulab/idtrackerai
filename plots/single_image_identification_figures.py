@@ -24,9 +24,9 @@ def flatten(l):
             yield el
 
 def get_repetition_averaged_data_frame(results_data_frame):
-
-    repetition_averaged_data_frame = pd.DataFrame(columns = [results_data_frame.mean().to_dict().keys() + ['individual_accuracies','individual_accuracies_95' , 'individual_accuracies_05']])
+    repetition_averaged_data_frame = pd.DataFrame(columns = [results_data_frame.mean().to_dict().keys()])
     count = 0
+
     for group_size in results_data_frame['group_size'].unique():
 
         for frames_in_video in results_data_frame['frames_in_video'].unique():
@@ -37,28 +37,16 @@ def get_repetition_averaged_data_frame(results_data_frame):
                                                             ' & frames_in_video == @frames_in_video' +
                                                             ' & frames_per_fragment == @frames_in_fragment')
                 temp_dict = temp_data_frame.mean().to_dict()
-                repetition_averaged_data_frame.loc[count,:] = temp_dict
-
-                individual_accuracies = []
-                for repetition in results_data_frame['repetition'].unique():
-                    results_data_frame_rep = results_data_frame.query('group_size == @group_size' +
-                                                                ' & frames_in_video == @frames_in_video' +
-                                                                ' & frames_per_fragment == @frames_in_fragment'+
-                                                                ' & repetition == @repetition')
-
-                    individual_accuracies.append(list(results_data_frame_rep['individual_accuracies_best']))
-                individual_accuracies = list(flatten(individual_accuracies))
-                repetition_averaged_data_frame.loc[count,'individual_accuracies'] = individual_accuracies
-                repetition_averaged_data_frame.loc[count,'individual_accuracies_95'] = np.percentile(individual_accuracies,95)
-                repetition_averaged_data_frame.loc[count,'individual_accuracies_05'] = np.percentile(individual_accuracies,5)
+                repetition_averaged_data_frame.loc[count,'test_accuracy'] = temp_dict['test_accuracy']
+                repetition_averaged_data_frame.loc[count,'group_size'] = temp_dict['group_size']
 
                 count += 1
     return repetition_averaged_data_frame
 
 def get_repetition_std_data_frame(results_data_frame):
-
     repetition_std_data_frame = pd.DataFrame(columns = [results_data_frame.std().to_dict().keys()])
     count = 0
+
     for group_size in results_data_frame['group_size'].unique():
 
         for frames_in_video in results_data_frame['frames_in_video'].unique():
@@ -69,25 +57,78 @@ def get_repetition_std_data_frame(results_data_frame):
                                                             ' & frames_in_video == @frames_in_video' +
                                                             ' & frames_per_fragment == @frames_in_fragment')
                 temp_dict = temp_data_frame.std().to_dict()
-                repetition_std_data_frame.loc[count,:] = temp_dict
+                repetition_std_data_frame.loc[count,'test_accuracy'] = temp_dict['test_accuracy']
 
                 count += 1
     return repetition_std_data_frame
 
+def convolutional_modifications_axes_settings(ax_arr, legend_order_conv, results_data_frame, repetition_averaged_data_frame):
+    ax = ax_arr[0]
+    ax.set_title('Convolutional modifications', fontsize = 20)
+    ax.set_ylabel('accuracy',fontsize = 20)
+    handles, labels = ax.get_legend_handles_labels()
+    handles_ordered = []
+    for label_ordered in legend_order_conv:
+        index = labels.index(label_ordered)
+        handles_ordered.append(handles[index])
+    h_legend = ax.legend(handles_ordered, legend_order_conv, loc = 4)
+    h_legend.set_title('CNN model')
+    ax.set_xticks(results_data_frame.group_size.unique().astype(int))
+    ax.set_xticklabels(results_data_frame.group_size.unique().astype(int))
+    ax.set_xlabel('Group size', fontsize = 20)
+    ax.set_ylabel('Single image accuracy (test)', fontsize = 20)
+    ax.set_ylim([82,100])
+    ax.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'].values)+2])
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    sns.despine(ax = ax, right = True, top = True)
+
+def fc_modifications_axes_settings(ax_arr, legend_order_conv, results_data_frame, repetition_averaged_data_frame):
+    ax = ax_arr[1]
+    ax.set_title('Classification modifications', fontsize = 20)
+    ax.set_yticklabels([])
+    handles, labels = ax.get_legend_handles_labels()
+    print('labels ', labels)
+    handles_ordered = []
+    for label_ordered in legend_order_fully:
+        index = labels.index(label_ordered)
+        handles_ordered.append(handles[index])
+    h_legend = ax.legend(handles_ordered, legend_order_fully,loc = 4)
+    h_legend.set_title('CNN model')
+    ax.set_xticks(results_data_frame.group_size.unique().astype(int))
+    ax.set_xticklabels(results_data_frame.group_size.unique().astype(int))
+    ax.set_xlabel('Number of individuals to identify', fontsize = 20)
+    ax.set_ylim([82,100])
+    ax.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'].values)+2])
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    sns.despine(ax = ax, right = True, top = True)
+
+def main_fig_axes_settings(ax2,repetition_averaged_data_frame):
+    h_legend = ax2.legend(loc = 4, prop={'size': 20})
+    ax2.set_xticks([2, 5, 10, 30, 60, 80, 100, 150])
+    ax2.set_xticklabels([2, '', 10, 30, 60, 80, 100, 150])
+    ax2.set_yticks([85, 90, 95, 100])
+    ax2.set_yticklabels([85, 90, 95, 100])
+    ax2.set_xlabel('Number of individuals to identify', fontsize = 20)
+    ax2.set_ylabel('Single image accuracy (test)', fontsize = 20)
+    ax2.set_ylim([82,100])
+    ax2.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'].values)+2])
+    ax2.tick_params(axis='both', which='major', labelsize=20)
+    sns.despine(ax = ax2, right = True, top = True)
+
 if __name__ == '__main__':
-    path_to_results_hard_drive = '/media/chronos/ground_truth_results_backup/'
+    path_to_results_hard_drive = '/media/chronos/idtrackerai_CARP_lib_and_simulations/'
     if os.path.isdir(path_to_results_hard_drive):
         ### load global results data frame
-        if os.path.isfile(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Single_image_identification/results_data_frame.pkl')):
+        if os.path.isfile(os.path.join(path_to_results_hard_drive, 'CARP_library_and_simulations_results/Single_image_identification/results_data_frame.pkl')):
             print("loading results_data_frame.pkl...")
-            results_data_frame = pd.read_pickle(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Single_image_identification/results_data_frame.pkl'))
+            results_data_frame = pd.read_pickle(os.path.join(path_to_results_hard_drive, 'CARP_library_and_simulations_results/Single_image_identification/results_data_frame.pkl'))
             print("results_data_frame.pkl loaded \n")
         else:
             print("results_data_frame.pkl does not exist \n")
 
         # get tests_data_frame and test to plot
         print("loading tests data frame")
-        tests_data_frame = pd.read_pickle(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Single_image_identification/tests_data_frame.pkl'))
+        tests_data_frame = pd.read_pickle(os.path.join(path_to_results_hard_drive, 'CARP_library_and_simulations_results/Single_image_identification/tests_data_frame.pkl'))
         test_names = [test_name for test_name in results_data_frame['test_name'].unique() if 'uncorrelated' in test_name]
         new_ordered_test_names = test_names[:-3]
         new_ordered_test_names.append(test_names[-2])
@@ -118,7 +159,7 @@ if __name__ == '__main__':
                                 cnn_model_names_dict[8],
                                 cnn_model_names_dict[10]]
 
-        idTracker_single_image_accuracy_results = np.load(os.path.join(path_to_results_hard_drive, 'CARP library and simulations results/Single_image_identification/idTracker_results.npy'))
+        idTracker_single_image_accuracy_results = np.load(os.path.join(path_to_results_hard_drive, 'CARP_library_and_simulations_results/Single_image_identification/idTracker_results.npy'))
 
         # plot
         plt.ion()
@@ -140,19 +181,47 @@ if __name__ == '__main__':
         fig2.subplots_adjust(left=.2, bottom=.15, right=None, top=.9,
                     wspace=None, hspace=None)
 
-
-        ax_arr[0].set_title('Convolutional modifications', fontsize = 20)
-        ax_arr[1].set_title('Classification modifications', fontsize = 20)
-
-        # import colorsys
         N = len(cnn_model_names_dict) - 1
-        # HSV_tuples = [(x*1.0/N, 0.5, 0.5) for x in range(N)]
-        # RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
-
         RGB_tuples = matplotlib.cm.get_cmap('jet')
 
+        ### idTracker accuracy
+        ax_arr[0].plot(idTracker_single_image_accuracy_results * 100, 'k--', label = 'idTracker')
+        ax_arr[1].plot(idTracker_single_image_accuracy_results * 100, 'k--', label = 'idTracker')
+        ax2.plot(idTracker_single_image_accuracy_results * 100, 'k--', label = 'idTracker', linewidth = 3)
+
+        ### idTracker.ai accuracy
+        test_name = test_names[0]
+        results_data_frame_test = results_data_frame.query('test_name == @test_name')
+        repetition_averaged_data_frame = get_repetition_averaged_data_frame(results_data_frame_test)
+        repetition_std_data_frame = get_repetition_std_data_frame(results_data_frame_test)
+        repetition_averaged_data_frame = repetition_averaged_data_frame.apply(pd.to_numeric, errors='ignore')
+        accuracy = repetition_averaged_data_frame.test_accuracy.values
+        std_accuracy = repetition_std_data_frame.test_accuracy.values
+        group_sizes = repetition_averaged_data_frame.group_size.values.astype('float32')
+
+        # plot mean accuracy
+        labels_to_plot = ['3 conv layers (idtracker.ai)', 'fully 100 (idtracker.ai)', 'idtracker.ai\n' + r'(mean $\pm$ std)']
+        axes_to_plot = [ax_arr[0], ax_arr[1], ax2]
+        for ax, label in zip(axes_to_plot, labels_to_plot):
+            if label == 'idtracker.ai\n' + r'(mean $\pm$ std)':
+                (_, caps, _) = ax.errorbar(group_sizes, accuracy * 100, yerr = std_accuracy * 100, color = 'k', label = label, marker = MARKERS[0], capsize = 5, linewidth = 3)
+            else:
+                (_, caps, _) = ax.errorbar(group_sizes, accuracy * 100, yerr = std_accuracy * 100, color = 'k', label = label, marker = MARKERS[0], capsize = 5)
+            for cap in caps:
+                cap.set_markeredgewidth(1)
+
+        # plot raw results per repetition
+        for group_size in results_data_frame_test.group_size.unique():
+            temp_df = results_data_frame_test.query('group_size == @group_size')
+            raw_test_accuracy = temp_df.test_accuracy.values * 100
+            if group_size == 2:
+                ax2.scatter([group_size] * len(raw_test_accuracy), raw_test_accuracy, c = 'r', marker = 'o', alpha = .5, label = 'idtracker.ai',zorder=3)
+            else:
+                ax2.scatter([group_size] * len(raw_test_accuracy), raw_test_accuracy, c = 'r', marker = 'o', alpha = .5, zorder=3)
+
+
+        ### plot idtracker.ai network modifications accuracies (supplementary figure)
         for i, test_name in enumerate(new_ordered_test_names[1:]):
-            print("test name ", test_name)
             this_test_info = tests_data_frame[tests_data_frame['test_name'] == test_name]
             CNN_model = int(this_test_info.CNN_model)
             label = cnn_model_names_dict[CNN_model]
@@ -162,11 +231,9 @@ if __name__ == '__main__':
 
             ''' accuracy '''
             repetition_averaged_data_frame = repetition_averaged_data_frame.apply(pd.to_numeric, errors='ignore')
-            accuracy = repetition_averaged_data_frame.test_accuracy
-            training_accuracy = repetition_averaged_data_frame.training_accuracy
-            std_accuracy = repetition_std_data_frame.test_accuracy
-            group_sizes = repetition_averaged_data_frame.group_size.astype('float32')
-
+            accuracy = repetition_averaged_data_frame.test_accuracy.values
+            std_accuracy = repetition_std_data_frame.test_accuracy.values
+            group_sizes = repetition_averaged_data_frame.group_size.values.astype('float32')
             if CNN_model <= 5:
                 marker = MARKERS[i+1]
                 color = RGB_tuples(i/N)
@@ -183,83 +250,14 @@ if __name__ == '__main__':
                 for cap in caps:
                     cap.set_markeredgewidth(1)
 
-        # idTracker accuracy
-        ax_arr[0].plot(idTracker_single_image_accuracy_results * 100, 'k--', label = 'idTracker')
-        ax_arr[1].plot(idTracker_single_image_accuracy_results * 100, 'k--', label = 'idTracker')
-        ax2.plot(idTracker_single_image_accuracy_results * 100, 'k--', label = 'idTracker', linewidth = 3)
-
-        # idTracker.ai accuracy
-        test_name = test_names[0]
-        results_data_frame_test = results_data_frame.query('test_name == @test_name')
-        repetition_averaged_data_frame = get_repetition_averaged_data_frame(results_data_frame_test)
-        repetition_std_data_frame = get_repetition_std_data_frame(results_data_frame_test)
-        repetition_averaged_data_frame = repetition_averaged_data_frame.apply(pd.to_numeric, errors='ignore')
-        accuracy = repetition_averaged_data_frame.test_accuracy
-        std_accuracy = repetition_std_data_frame.test_accuracy
-        group_sizes = repetition_averaged_data_frame.group_size.astype('float32')
-
-        labels_to_plot = ['3 conv layers (idtracker.ai)', 'fully 100 (idtracker.ai)', 'idtracker.ai']
-        axes_to_plot = [ax_arr[0], ax_arr[1], ax2]
-        for ax, label in zip(axes_to_plot, labels_to_plot):
-            if label == 'idtracker.ai':
-                (_, caps, _) = ax.errorbar(group_sizes, accuracy * 100, yerr = std_accuracy * 100, color = 'k', label = label, marker = MARKERS[0], capsize = 5, zorder=3, linewidth = 3)
-            else:
-                (_, caps, _) = ax.errorbar(group_sizes, accuracy * 100, yerr = std_accuracy * 100, color = 'k', label = label, marker = MARKERS[0], capsize = 5, zorder=3)
-            for cap in caps:
-                cap.set_markeredgewidth(1)
-
-        ax = ax_arr[0]
-        ax.set_ylabel('accuracy',fontsize = 20)
-        handles, labels = ax.get_legend_handles_labels()
-        handles_ordered = []
-        for label_ordered in legend_order_conv:
-            index = labels.index(label_ordered)
-            handles_ordered.append(handles[index])
-        h_legend = ax.legend(handles_ordered, legend_order_conv, loc = 4)
-        h_legend.set_title('CNN model')
-        ax.set_xticks(results_data_frame.group_size.unique().astype(int))
-        ax.set_xticklabels(results_data_frame.group_size.unique().astype(int))
-        ax.set_xlabel('Group size', fontsize = 20)
-        ax.set_ylabel('Single image accuracy (test)', fontsize = 20)
-        ax.set_ylim([82,100])
-        ax.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'])+2])
-        ax.tick_params(axis='both', which='major', labelsize=14)
-        sns.despine(ax = ax, right = True, top = True)
-
-        ax = ax_arr[1]
-        ax.set_yticklabels([])
-        handles, labels = ax.get_legend_handles_labels()
-        print('labels ', labels)
-        handles_ordered = []
-        for label_ordered in legend_order_fully:
-            index = labels.index(label_ordered)
-            handles_ordered.append(handles[index])
-        h_legend = ax.legend(handles_ordered, legend_order_fully,loc = 4)
-        h_legend.set_title('CNN model')
-        ax.set_xticks(results_data_frame.group_size.unique().astype(int))
-        ax.set_xticklabels(results_data_frame.group_size.unique().astype(int))
-        ax.set_xlabel('Group size', fontsize = 20)
-        ax.set_ylim([82,100])
-        ax.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'])+2])
-        ax.tick_params(axis='both', which='major', labelsize=14)
-        sns.despine(ax = ax, right = True, top = True)
-
-        h_legend = ax2.legend(loc = 4, prop={'size': 20})
-        ax2.set_xticks([2, 10, 30, 60, 80, 100, 150])
-        ax2.set_xticklabels([2, 10, 30, 60, 80, 100, 150])
-        ax2.set_yticks([85, 90, 95, 100])
-        ax2.set_yticklabels([85, 90, 95, 100])
-        ax2.set_xlabel('Group size', fontsize = 20)
-        ax2.set_ylabel('Single image accuracy (test)', fontsize = 20)
-        ax2.set_ylim([82,100])
-        ax2.set_xlim([0.,np.max(repetition_averaged_data_frame['group_size'])+2])
-        ax2.tick_params(axis='both', which='major', labelsize=20)
-        sns.despine(ax = ax2, right = True, top = True)
+        convolutional_modifications_axes_settings(ax_arr, legend_order_conv, results_data_frame, repetition_averaged_data_frame)
+        fc_modifications_axes_settings(ax_arr, legend_order_conv, results_data_frame, repetition_averaged_data_frame)
+        main_fig_axes_settings(ax2,repetition_averaged_data_frame)
 
         plt.minorticks_off()
 
         # plt.show()
-        fig1.savefig(os.path.join(path_to_results_hard_drive,'CARP library and simulations results/Single_image_identification/single_image_identification_accuracy_SM.pdf'), transparent=True)
-        fig2.savefig(os.path.join(path_to_results_hard_drive,'CARP library and simulations results/Single_image_identification/single_image_identification_accuracy_main.pdf'), transparent=True)
+        fig1.savefig(os.path.join(path_to_results_hard_drive,'CARP_library_and_simulations_results/Single_image_identification/single_image_identification_accuracy_SM.pdf'), transparent=True)
+        fig2.savefig(os.path.join(path_to_results_hard_drive,'CARP_library_and_simulations_results/Single_image_identification/single_image_identification_accuracy_main.pdf'), transparent=True)
     else:
         print("update the path_to_results_hard_drive")

@@ -116,7 +116,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -129,8 +129,9 @@
 <span class="kn">import</span> <span class="nn">gc</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">ndimage</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span> <span class="n">NUMBER_OF_CORES_FOR_SEGMENTATION</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.blob</span> <span class="k">import</span> <span class="n">Blob</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.utils.py_utils</span> <span class="k">import</span>  <span class="n">flatten</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.utils.py_utils</span> <span class="k">import</span> <span class="n">flatten</span><span class="p">,</span> <span class="n">set_mkl_to_single_thread</span><span class="p">,</span> <span class="n">set_mkl_to_multi_thread</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.utils.video_utils</span> <span class="k">import</span> <span class="n">segment_frame</span><span class="p">,</span> <span class="n">blob_extractor</span>
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;idtrackeraiApp.py&#39;</span> <span class="ow">or</span> <span class="s1">&#39;idtrackeraiGUI&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
     <span class="kn">from</span> <span class="nn">kivy.logger</span> <span class="k">import</span> <span class="n">Logger</span>
@@ -167,7 +168,7 @@
 <span class="sd">    number_of_frames_in_episode : int</span>
 <span class="sd">        Number of frames in the episode of video being segmented</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">episode_start_end_frames</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">number_of_frames_in_episode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">7</span><span class="p">))</span>
     <span class="k">elif</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -301,16 +302,19 @@
     <span class="n">cap</span><span class="p">,</span> <span class="n">number_of_frames_in_episode</span> <span class="o">=</span> <span class="n">get_videoCapture</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">episode_start_end_frames</span><span class="p">)</span>
     <span class="n">max_number_of_blobs</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">frame_number</span> <span class="o">=</span> <span class="mi">0</span>
-
     <span class="k">while</span> <span class="n">frame_number</span> <span class="o">&lt;</span> <span class="n">number_of_frames_in_episode</span><span class="p">:</span>
-        <span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">maximum_number_of_blobs</span> <span class="o">=</span> <span class="n">get_blobs_in_frame</span><span class="p">(</span><span class="n">cap</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span>
+        <span class="n">global_frame_number</span> <span class="o">=</span> <span class="n">episode_start_end_frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">frame_number</span>
+        <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">tracking_interval</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">global_frame_number</span> <span class="o">&gt;=</span> <span class="n">video</span><span class="o">.</span><span class="n">tracking_interval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">global_frame_number</span> <span class="o">&lt;=</span> <span class="n">video</span><span class="o">.</span><span class="n">tracking_interval</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">max_number_of_blobs</span> <span class="o">=</span> <span class="n">get_blobs_in_frame</span><span class="p">(</span><span class="n">cap</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span>
                                                                     <span class="n">segmentation_thresholds</span><span class="p">,</span>
                                                                     <span class="n">max_number_of_blobs</span><span class="p">,</span>
                                                                     <span class="n">frame_number</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">blobs_in_frame</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1">#store all the blobs encountered in the episode</span>
         <span class="n">blobs_in_episode</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span>
         <span class="n">frame_number</span> <span class="o">+=</span> <span class="mi">1</span>
-
     <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
     <span class="c1">#cv2.destroyAllWindows()</span>
     <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span></div>
@@ -337,8 +341,16 @@
 <span class="sd">    segment_episode</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># avoid computing with all the cores in very large videos. It fills the RAM.</span>
-    <span class="c1"># num_cores = multiprocessing.cpu_count()</span>
     <span class="n">num_cores</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">NUMBER_OF_CORES_FOR_SEGMENTATION</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;NUMBER_OF_CORES_FOR_SEGMENTATION set to a value different than the default&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">NUMBER_OF_CORES_FOR_SEGMENTATION</span> <span class="o">&lt;=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+            <span class="n">num_cores</span> <span class="o">=</span> <span class="n">NUMBER_OF_CORES_FOR_SEGMENTATION</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;NUMBER_OF_CORES_FOR_SEGMENTATION &gt; multiprocessing.cpu_count(). Setting NUMBER_OF_CORES_FOR_SEGMENTATION set to 1&#39;</span><span class="p">)</span>
+            <span class="n">num_cores</span> <span class="o">=</span> <span class="mi">1</span>
+
     <span class="c1">#init variables to store data</span>
     <span class="n">blobs_in_video</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">maximum_number_of_blobs_in_episode</span> <span class="o">=</span> <span class="p">[]</span>
@@ -346,6 +358,7 @@
                                 <span class="s1">&#39;max_threshold&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">max_threshold</span><span class="p">,</span>
                                 <span class="s1">&#39;min_area&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">min_area</span><span class="p">,</span>
                                 <span class="s1">&#39;max_area&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">max_area</span><span class="p">}</span>
+    <span class="n">set_mkl_to_single_thread</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;There is only one path, segmenting by frame indices&#39;</span><span class="p">)</span>
         <span class="c1">#Spliting episodes_start_end in sublists for parallel processing</span>
@@ -362,14 +375,17 @@
         <span class="c1">#splitting videoPaths list into sublists</span>
         <span class="n">pathsSubLists</span> <span class="o">=</span> <span class="p">[</span><span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">num_cores</span><span class="p">]</span>
                             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">paths_to_video_segments</span><span class="p">),</span><span class="n">num_cores</span><span class="p">)]</span>
+        <span class="n">episodes_start_end_sublists</span> <span class="o">=</span> <span class="p">[</span><span class="n">video</span><span class="o">.</span><span class="n">episodes_start_end</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">num_cores</span><span class="p">]</span>
+                                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">episodes_start_end</span><span class="p">),</span><span class="n">num_cores</span><span class="p">)]</span>
 
-        <span class="k">for</span> <span class="n">pathsSubList</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">pathsSubLists</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;Segmentation progress&#39;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">pathsSubList</span><span class="p">,</span> <span class="n">episodes_start_end_sublist</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pathsSubLists</span><span class="p">,</span> <span class="n">episodes_start_end_sublists</span><span class="p">),</span> <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;Segmentation progress&#39;</span><span class="p">):</span>
             <span class="n">OupPutParallel</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">num_cores</span><span class="p">)(</span>
-                                <span class="n">delayed</span><span class="p">(</span><span class="n">segment_episode</span><span class="p">)(</span><span class="n">video</span><span class="p">,</span> <span class="n">segmentation_thresholds</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                                <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">pathsSubList</span><span class="p">)</span>
+                                <span class="n">delayed</span><span class="p">(</span><span class="n">segment_episode</span><span class="p">)(</span><span class="n">video</span><span class="p">,</span> <span class="n">segmentation_thresholds</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">episode_start_end_frames</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">episode_start_end_frames</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pathsSubList</span><span class="p">,</span> <span class="n">episodes_start_end_sublist</span><span class="p">))</span>
             <span class="n">blobs_in_episode</span> <span class="o">=</span> <span class="p">[</span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">OupPutParallel</span><span class="p">]</span>
             <span class="n">maximum_number_of_blobs_in_episode</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">OupPutParallel</span><span class="p">])</span>
             <span class="n">blobs_in_video</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blobs_in_episode</span><span class="p">)</span>
+    <span class="n">set_mkl_to_multi_thread</span><span class="p">()</span>
 
     <span class="n">video</span><span class="o">.</span><span class="n">_maximum_number_of_blobs</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">maximum_number_of_blobs_in_episode</span><span class="p">))</span>
     <span class="c1">#blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs</span>
@@ -443,10 +459,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 13, 2018.
+      Last updated on May 02, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>

@@ -7,6 +7,9 @@ the different functionalities of the system go to the
 italics to get advice about how to set the parameters to track the sample videos with
 good performance levels.
 
+The full process of tracking this sample video takes around 5-7 minutes in one of our computers (:doc:`./requirements`).
+The time varies with the amount of interaction with the GUI that the user needs to explore the video and set the parameters.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1. Download the video example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -243,19 +243,19 @@ identifies images (idCNN)</p>
 <td>Create the summary writers for thw tensorboard summaries</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#id_CNN.ConvNetwork.evaluation" title="id_CNN.ConvNetwork.evaluation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluation</span></code></a>()</td>
-<td>Computes and returns the accuracy and individual accuracy of the predictions given by the model for the input images</td>
+<td>Computes and returns the accuracy and individual accuracy of the predictions</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#id_CNN.ConvNetwork.get_feed_dict" title="id_CNN.ConvNetwork.get_feed_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_feed_dict</span></code></a>(batch)</td>
-<td>Returns the dictionary <cite>feed_dict</cite> with the variables and parameters needed to perform certain operations for a give <cite>batch</cite></td>
+<td>Returns the dictionary <cite>feed_dict</cite> with the variables and parameters</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#id_CNN.ConvNetwork.get_fully_connected_vectors" title="id_CNN.ConvNetwork.get_fully_connected_vectors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fully_connected_vectors</span></code></a>(batch)</td>
-<td>Runs in the tensorflow session <code class="xref py py-attr docutils literal notranslate"><span class="pre">session</span></code> the <code class="xref py py-attr docutils literal notranslate"><span class="pre">fc_vector</span></code> operation</td>
+<td>Runs in the tensorflow session <code class="xref py py-attr docutils literal notranslate"><span class="pre">session</span></code> the <code class="xref py py-attr docutils literal notranslate"><span class="pre">fc_vector</span></code></td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#id_CNN.ConvNetwork.get_layers_to_optimize" title="id_CNN.ConvNetwork.get_layers_to_optimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_layers_to_optimize</span></code></a>()</td>
 <td>Set layers of the network to bu optimised during the training process</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#id_CNN.ConvNetwork.predict" title="id_CNN.ConvNetwork.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(batch)</td>
-<td>Runs in the tensorflow session <code class="xref py py-attr docutils literal notranslate"><span class="pre">session</span></code> the <code class="xref py py-attr docutils literal notranslate"><span class="pre">softmax_probs</span></code> and the <code class="xref py py-attr docutils literal notranslate"><span class="pre">predictions</span></code> operations</td>
+<td>Runs in the tensorflow session <code class="xref py py-attr docutils literal notranslate"><span class="pre">session</span></code> the <code class="xref py py-attr docutils literal notranslate"><span class="pre">softmax_probs</span></code></td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#id_CNN.ConvNetwork.reinitialize_softmax_and_fully_connected" title="id_CNN.ConvNetwork.reinitialize_softmax_and_fully_connected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reinitialize_softmax_and_fully_connected</span></code></a>()</td>
 <td>Reinizializes the weights in the two last fully connected layers of the network</td>
@@ -264,31 +264,31 @@ identifies images (idCNN)</p>
 <td>Restores a previously trained model from a checkpoint folder</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#id_CNN.ConvNetwork.restore_classifier" title="id_CNN.ConvNetwork.restore_classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">restore_classifier</span></code></a>()</td>
-<td>Restores the weights of the convolutional layers from a checkpoint file of a previously trained model</td>
+<td>Restores the weights of the convolutional layers from a checkpoint file</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#id_CNN.ConvNetwork.restore_convolutional_layers" title="id_CNN.ConvNetwork.restore_convolutional_layers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">restore_convolutional_layers</span></code></a>()</td>
-<td>Restores the weights of the convolutional layers from a checkpoint file of a previously trained model</td>
+<td>Restores the weights of the convolutional layers from a checkpoint file</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#id_CNN.ConvNetwork.save" title="id_CNN.ConvNetwork.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>()</td>
-<td>Saves the models in the correspoding <code class="xref py py-attr docutils literal notranslate"><span class="pre">save_folder_conv</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">save_folder_fc_softmax</span></code> folders using the saver <code class="xref py py-attr docutils literal notranslate"><span class="pre">saver_conv</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">saver_fc_softmax</span></code></td>
+<td>Saves the models in the correspoding <code class="xref py py-attr docutils literal notranslate"><span class="pre">save_folder_conv</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">save_folder_fc_softmax</span></code> folders</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#id_CNN.ConvNetwork.set_optimizer" title="id_CNN.ConvNetwork.set_optimizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_optimizer</span></code></a>()</td>
 <td>Sets the optimization operation to be perform during the training process</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#id_CNN.ConvNetwork.set_savers" title="id_CNN.ConvNetwork.set_savers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_savers</span></code></a>()</td>
-<td>Create or retrieves the paths where the checkpoint files will be saved and initialize the objects to save them</td>
+<td>Create or retrieves the paths where the checkpoint files will be saved and</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#id_CNN.ConvNetwork.train" title="id_CNN.ConvNetwork.train"><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></a>(batch)</td>
-<td>Runs in the tensorflow session <code class="xref py py-attr docutils literal notranslate"><span class="pre">session</span></code> an <code class="xref py py-attr docutils literal notranslate"><span class="pre">optimization_step</span></code> and the operations in <code class="xref py py-attr docutils literal notranslate"><span class="pre">ops_list</span></code> for a given <cite>batch</cite></td>
+<td>Runs in the tensorflow session <code class="xref py py-attr docutils literal notranslate"><span class="pre">session</span></code> an <code class="xref py py-attr docutils literal notranslate"><span class="pre">optimization_step</span></code></td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#id_CNN.ConvNetwork.validate" title="id_CNN.ConvNetwork.validate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate</span></code></a>(batch)</td>
-<td>Runs in the tensorflow session <code class="xref py py-attr docutils literal notranslate"><span class="pre">session</span></code> the operations in <code class="xref py py-attr docutils literal notranslate"><span class="pre">ops_list</span></code> for a given <cite>batch</cite></td>
+<td>Runs in the tensorflow session <code class="xref py py-attr docutils literal notranslate"><span class="pre">session</span></code> the operations</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#id_CNN.ConvNetwork.weighted_loss" title="id_CNN.ConvNetwork.weighted_loss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weighted_loss</span></code></a>()</td>
 <td>Loss function minimised during the training process</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#id_CNN.ConvNetwork.write_summaries" title="id_CNN.ConvNetwork.write_summaries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_summaries</span></code></a>(epoch_i,&nbsp;feed_dict_train,&nbsp;…)</td>
-<td>Writes the summaries using the <code class="xref py py-attr docutils literal notranslate"><span class="pre">summary_str_training</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">summary_writer_validation</span></code> to be visualized in the Tensorboard</td>
+<td>Writes the summaries using the <code class="xref py py-attr docutils literal notranslate"><span class="pre">summary_str_training</span></code> and</td>
 </tr>
 </tbody>
 </table>
@@ -636,7 +636,7 @@ in <code class="xref py py-meth docutils literal notranslate"><span class="pre">
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(loss_accuracy_training,&nbsp;…)</td>
-<td>Returns True when one of the conditions to stop the training is satisfied, otherwise it returns False</td>
+<td>Returns True when one of the conditions to stop the training is satisfied,</td>
 </tr>
 </tbody>
 </table>
@@ -695,7 +695,7 @@ training and validation</p>
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="#store_accuracy_and_loss.Store_Accuracy_and_Loss.append_data" title="store_accuracy_and_loss.Store_Accuracy_and_Loss.append_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_data</span></code></a>(loss_value,&nbsp;accuracy_value,&nbsp;…)</td>
-<td>Appends the <cite>loss_value</cite>, <cite>accuracy_value</cite> and <cite>individual_accuracy_value</cite> to their correspoding lists</td>
+<td>Appends the <cite>loss_value</cite>, <cite>accuracy_value</cite> and <cite>individual_accuracy_value</cite></td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#store_accuracy_and_loss.Store_Accuracy_and_Loss.load" title="store_accuracy_and_loss.Store_Accuracy_and_Loss.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a>()</td>
 <td>Load the values stored in case there are any saved</td>
@@ -784,7 +784,7 @@ model</p>
 <td>Checks that the length of <code class="xref py py-attr docutils literal notranslate"><span class="pre">images</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">labels</span></code> is the same</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#get_data.DataSet.convert_labels_to_one_hot" title="get_data.DataSet.convert_labels_to_one_hot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_labels_to_one_hot</span></code></a>()</td>
-<td>Converts labels from dense format to one hot format See Also ——– <a class="reference internal" href="#get_data.shuffle_images_and_labels" title="get_data.shuffle_images_and_labels"><code class="xref py py-func docutils literal notranslate"><span class="pre">shuffle_images_and_labels()</span></code></a>.</td>
+<td>Converts labels from dense format to one hot format</td>
 </tr>
 </tbody>
 </table>
@@ -942,7 +942,7 @@ data set (<a class="reference internal" href="#get_data.DataSet" title="get_data
 <td>Returns the images and labels for the next batch to be computed.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#epoch_runner.EpochRunner.run_epoch" title="epoch_runner.EpochRunner.run_epoch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_epoch</span></code></a>(name,&nbsp;store_loss_and_accuracy,&nbsp;…)</td>
-<td>Performs a given <cite>batch_operation</cite> for an entire epoch and stores the values of the loss and the accurcaies in a <a class="reference internal" href="#store_accuracy_and_loss.Store_Accuracy_and_Loss" title="store_accuracy_and_loss.Store_Accuracy_and_Loss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Store_Accuracy_and_Loss</span></code></a> object for visualization.</td>
+<td>Performs a given <cite>batch_operation</cite> for an entire epoch and stores the</td>
 </tr>
 </tbody>
 </table>
@@ -1071,7 +1071,7 @@ if needed</p>
 <td>Not used in the current version of the algorithm.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#get_predictions.GetPrediction.get_predictions_softmax" title="get_predictions.GetPrediction.get_predictions_softmax"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_predictions_softmax</span></code></a>(batch_operation)</td>
-<td>Runs a <cite>batch_operation</cite> (typically <code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code>).</td>
+<td>Runs a <cite>batch_operation</cite> (typically <code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code>)</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#get_predictions.GetPrediction.next_batch" title="get_predictions.GetPrediction.next_batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">next_batch</span></code></a>(batch_size)</td>
 <td>Return the next <cite>batch_size</cite> examples from this data set.</td>
@@ -1159,10 +1159,10 @@ of the batch</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 12, 2018.
+      Last updated on May 02, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>

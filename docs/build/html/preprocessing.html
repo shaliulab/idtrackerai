@@ -229,7 +229,7 @@
 <td>Classify self as a crossing or individual blob according to its area</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#blob.Blob.check_for_multiple_next_or_previous" title="blob.Blob.check_for_multiple_next_or_previous"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_for_multiple_next_or_previous</span></code></a>([direction])</td>
-<td>Return True if self has multiple blobs in its past or future overlapping history of the blob</td>
+<td>Return True if self has multiple blobs in its past or future overlapping</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_overlapping_with_previous_blob</span></code>()</td>
 <td></td>
@@ -244,7 +244,7 @@
 <td>Only for zebrafish: Compute the nose coordinate according to [R2]</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#blob.Blob.in_a_global_fragment_core" title="blob.Blob.in_a_global_fragment_core"><code class="xref py py-obj docutils literal notranslate"><span class="pre">in_a_global_fragment_core</span></code></a>(blobs_in_frame)</td>
-<td>A blob in a frame is in the core of a global fragment if in that frame there are as many blobs as number of animals to track</td>
+<td>A blob in a frame is in the core of a global fragment if in</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#blob.Blob.is_a_sure_crossing" title="blob.Blob.is_a_sure_crossing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_a_sure_crossing</span></code></a>()</td>
 <td>A blob marked as a sure crossing will be used to train the Deep Crossing Detector (the artificial neural network used to disriminate images associated with individual from ones associated to crossings).</td>
@@ -253,16 +253,16 @@
 <td>A blob marked as a sure individual will be used to train the Deep Crossing Detector (the artificial neural network used to disriminate images associated with individual from ones associated to crossings).</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#blob.Blob.now_points_to" title="blob.Blob.now_points_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">now_points_to</span></code></a>(other)</td>
-<td>Given two consecutive blob objects updates their respective overlapping histories</td>
+<td>Given two consecutive blob objects updates their respective overlapping</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#blob.Blob.overlaps_with" title="blob.Blob.overlaps_with"><code class="xref py py-obj docutils literal notranslate"><span class="pre">overlaps_with</span></code></a>(other)</td>
-<td>Given a second blob object, checks if the lists of pixels of the two blobs intersect</td>
+<td>Given a second blob object, checks if the lists of pixels of the two</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#blob.Blob.set_image_for_identification" title="blob.Blob.set_image_for_identification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_image_for_identification</span></code></a>(video)</td>
 <td>Set the image that will be used to identitfy the animal with the idCNN</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#blob.Blob.squared_distance_to" title="blob.Blob.squared_distance_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">squared_distance_to</span></code></a>(other)</td>
-<td>Returns the squared distance from the centroid of self to the centroid of other</td>
+<td>Returns the squared distance from the centroid of self to the centroid</td>
 </tr>
 </tbody>
 </table>
@@ -684,7 +684,7 @@ from the blobs extracted from the video during segmentation
 <td>Applies <cite>model_area</cite> to every blob extracted from video</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.check_maximal_number_of_blob" title="list_of_blobs.ListOfBlobs.check_maximal_number_of_blob"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_maximal_number_of_blob</span></code></a>(number_of_animals)</td>
-<td>Checks that the amount of blobs per frame is not greater than the number of animals to track</td>
+<td>Checks that the amount of blobs per frame is not greater than the</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_crossing_fragment_identifier" title="list_of_blobs.ListOfBlobs.compute_crossing_fragment_identifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_crossing_fragment_identifier</span></code></a>()</td>
 <td>Assign a unique identifier to fragments associated to a crossing</td>
@@ -693,19 +693,19 @@ from the blobs extracted from the video during segmentation
 <td>Associates a unique fragment identifier to the fragments computed by overlapping see method <a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames" title="list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_overlapping_between_subsequent_frames()</span></code></a> and sets the blob index as the hierarchy of the blob in the first frame of the fragment to which blob belongs to.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_model_area_and_body_length" title="list_of_blobs.ListOfBlobs.compute_model_area_and_body_length"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_model_area_and_body_length</span></code></a>(…)</td>
-<td>computes the median and standard deviation of all the blobs of the video and the median_body_length estimated from the diagonal of the bounding box.</td>
+<td>computes the median and standard deviation of all the blobs of the video</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_nose_and_head_coordinates" title="list_of_blobs.ListOfBlobs.compute_nose_and_head_coordinates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_nose_and_head_coordinates</span></code></a>()</td>
-<td>Computes nose and head coordinate for all the blobs segmented from the video</td>
+<td>Computes nose and head coordinate for all the blobs segmented from the</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames" title="list_of_blobs.ListOfBlobs.compute_overlapping_between_subsequent_frames"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_overlapping_between_subsequent_frames</span></code></a>()</td>
-<td>Computes overlapping between self and the blobs generated during segmentation in the next frames</td>
+<td>Computes overlapping between self and the blobs generated during</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.connect" title="list_of_blobs.ListOfBlobs.connect"><code class="xref py py-obj docutils literal notranslate"><span class="pre">connect</span></code></a>()</td>
 <td>Connects blobs in subsequent frames by computing their overlapping</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.disconnect" title="list_of_blobs.ListOfBlobs.disconnect"><code class="xref py py-obj docutils literal notranslate"><span class="pre">disconnect</span></code></a>()</td>
-<td>Reinitialise the previous and next list of blobs (see <code class="xref py py-attr docutils literal notranslate"><span class="pre">next</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">previous</span></code>).</td>
+<td>Reinitialise the previous and next list of blobs</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.erode" title="list_of_blobs.ListOfBlobs.erode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">erode</span></code></a>(video)</td>
 <td>Erodes all the blobs in the video</td>
@@ -717,13 +717,13 @@ from the blobs extracted from the video during segmentation
 <td>Short summary.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.reconnect" title="list_of_blobs.ListOfBlobs.reconnect"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reconnect</span></code></a>()</td>
-<td>Connects blobs in subsequent frames by computing their overlapping and sets blobs_are_connected to True</td>
+<td>Connects blobs in subsequent frames by computing their overlapping</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.save" title="list_of_blobs.ListOfBlobs.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>(video[,&nbsp;path_to_save,&nbsp;number_of_chunks])</td>
 <td>save instance</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#list_of_blobs.ListOfBlobs.update_from_list_of_fragments" title="list_of_blobs.ListOfBlobs.update_from_list_of_fragments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_from_list_of_fragments</span></code></a>(fragments,&nbsp;…)</td>
-<td>Updates the blobs objects generated from the video with the attributes computed for each fragment</td>
+<td>Updates the blobs objects generated from the video with the attributes</td>
 </tr>
 </tbody>
 </table>
@@ -1768,10 +1768,10 @@ sum of (ending_frame - starting_frame) / 100 frames for the given episode</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 12, 2018.
+      Last updated on May 02, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>

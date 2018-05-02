@@ -116,7 +116,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -157,6 +157,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Discriminating blobs representing individuals from blobs associated to crossings&quot;</span><span class="p">)</span>
     <span class="n">list_of_blobs</span><span class="o">.</span><span class="n">apply_model_area_to_video</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">model_area</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">identification_image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">use_network</span><span class="p">:</span>
         <span class="n">video</span><span class="o">.</span><span class="n">create_crossings_detector_folder</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Get individual and crossing images labelled data&quot;</span><span class="p">)</span>
@@ -203,8 +204,10 @@
                 <span class="k">for</span> <span class="n">blob</span><span class="p">,</span> <span class="n">prediction</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">test_set</span><span class="o">.</span><span class="n">test</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)]</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Freeing memory. Test crossings set deleted&quot;</span><span class="p">)</span>
             <span class="n">test_set</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">return_store_objects</span><span class="p">:</span></div>
+            <span class="k">if</span> <span class="n">return_store_objects</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">trainer</span>
+    <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span></div>
+        <span class="k">return</span> <span class="n">list_of_blobs</span>
 </pre></div>
 
           </div>
@@ -227,10 +230,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 13, 2018.
+      Last updated on May 02, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>

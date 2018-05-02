@@ -175,22 +175,22 @@
 <td>Check if global_fragment is acceptable for training</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.get_P1_array_and_argsort" title="accumulation_manager.AccumulationManager.get_P1_array_and_argsort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_P1_array_and_argsort</span></code></a>()</td>
-<td>Given a global fragment computes P1 for each of its individual fragments and returns a matrix of sorted indices according to P1</td>
+<td>Given a global fragment computes P1 for each of its individual fragments and returns a</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.get_acceptable_global_fragments_for_training" title="accumulation_manager.AccumulationManager.get_acceptable_global_fragments_for_training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_acceptable_global_fragments_for_training</span></code></a>(…)</td>
-<td>Assigns identities during test to individual fragments and rank them according to the score computed from the certainty of identification and the minimum distance travelled</td>
+<td>Assigns identities during test to individual fragments and rank them</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.get_images_and_labels_for_training" title="accumulation_manager.AccumulationManager.get_images_and_labels_for_training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_images_and_labels_for_training</span></code></a>()</td>
 <td>Create a new dataset of labelled images to train the idCNN in the following way: Per individual select MAXIMAL_IMAGES_PER_ANIMAL images.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.get_new_images_and_labels" title="accumulation_manager.AccumulationManager.get_new_images_and_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_new_images_and_labels</span></code></a>()</td>
-<td>get the images and labels of the new global fragments that are going to be used for training, this function checks whether the images of a individual fragment have been added before</td>
+<td>get the images and labels of the new global fragments that are going</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.is_not_certain" title="accumulation_manager.AccumulationManager.is_not_certain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_not_certain</span></code></a>(certainty_threshold)</td>
 <td>State if a fragment has been assigned with sufficient certainty</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.p1_below_random" title="accumulation_manager.AccumulationManager.p1_below_random"><code class="xref py py-obj docutils literal notranslate"><span class="pre">p1_below_random</span></code></a>(index_individual_fragment,&nbsp;…)</td>
-<td>Evaluate if a fragment has been assigned with a certainty lower than random (wrt the number of possible identities)</td>
+<td>Evaluate if a fragment has been assigned with a certainty lower than</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.reset_accumulation_variables" title="accumulation_manager.AccumulationManager.reset_accumulation_variables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_accumulation_variables</span></code></a>()</td>
 <td>After an accumulation is finished reinitialise the variables involved in the process.</td>
@@ -202,7 +202,7 @@
 <td>Reset the flag for non-accpetable global fragments.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.set_fragment_temporary_id" title="accumulation_manager.AccumulationManager.set_fragment_temporary_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_fragment_temporary_id</span></code></a>(temporary_id,&nbsp;…)</td>
-<td>Given a P1 array relative to a global fragment sets to 0 the row relative to fragment which is temporarily identified with identity temporary_id</td>
+<td>Given a P1 array relative to a global fragment sets to 0 the row relative to fragment</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.split_predictions_after_network_assignment" title="accumulation_manager.AccumulationManager.split_predictions_after_network_assignment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_predictions_after_network_assignment</span></code></a>(…)</td>
 <td>Gathers predictions relative to fragment images from the GPU and splits them according to their organisation in fragments.</td>
@@ -211,7 +211,7 @@
 <td>Update iteration counter</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.update_fragments_used_for_training" title="accumulation_manager.AccumulationManager.update_fragments_used_for_training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_fragments_used_for_training</span></code></a>()</td>
-<td>Once a global fragment has been used for training, sets the flags used_for_training to TRUE and acceptable_for_training to FALSE</td>
+<td>Once a global fragment has been used for training, sets the flags</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#accumulation_manager.AccumulationManager.update_individual_fragments_used_for_training" title="accumulation_manager.AccumulationManager.update_individual_fragments_used_for_training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_individual_fragments_used_for_training</span></code></a>()</td>
 <td>Returns the individual fragments used for training.</td>
@@ -1093,10 +1093,10 @@ images</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 12, 2018.
+      Last updated on May 02, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>

@@ -180,7 +180,7 @@ the algorithm</p>
 <td>If the video is divided in segments retrieves their paths</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#video.Video.compute_identification_image_size" title="video.Video.compute_identification_image_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_identification_image_size</span></code></a>(…)</td>
-<td>Uses an estimate of the body length of the animals in order to compute the size of the square image that is generated from every blob to identify the animals</td>
+<td>Uses an estimate of the body length of the animals in order to</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_overall_P2</span></code>(fragments)</td>
 <td></td>
@@ -189,22 +189,22 @@ the algorithm</p>
 <td></td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#video.Video.create_accumulation_folder" title="video.Video.create_accumulation_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_accumulation_folder</span></code></a>([…])</td>
-<td>Folder in which the model generated while accumulating is stored (after pretraining)</td>
+<td>Folder in which the model generated while accumulating is stored</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#video.Video.create_crossings_detector_folder" title="video.Video.create_crossings_detector_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_crossings_detector_folder</span></code></a>()</td>
-<td>If it does not exist creates a folder called crossing_detector in the video folder</td>
+<td>If it does not exist creates a folder called crossing_detector</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#video.Video.create_embeddings_folder" title="video.Video.create_embeddings_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_embeddings_folder</span></code></a>()</td>
-<td>If it does not exist creates a folder called embedding in the video folder</td>
+<td>If it does not exist creates a folder called embedding</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#video.Video.create_preprocessing_folder" title="video.Video.create_preprocessing_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_preprocessing_folder</span></code></a>()</td>
-<td>If it does not exist creates a folder called preprocessing in the video folder</td>
+<td>If it does not exist creates a folder called preprocessing</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#video.Video.create_pretraining_folder" title="video.Video.create_pretraining_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_pretraining_folder</span></code></a>([delete])</td>
-<td>Creates a folder named pretraining in video_folder where the model trained during the pretraining is stored</td>
+<td>Creates a folder named pretraining in video_folder where the model</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#video.Video.create_session_folder" title="video.Video.create_session_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_session_folder</span></code></a>([name])</td>
-<td>Creates a folder named training in video_folder and a folder session_num where num is the session number and it is created everytime one starts training a network for a certain video_path</td>
+<td>Creates a folder named training in video_folder and a folder session_num</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#video.Video.create_training_folder" title="video.Video.create_training_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_training_folder</span></code></a>()</td>
 <td>Folder in which the last model is stored (after accumulation)</td>
@@ -216,7 +216,7 @@ the algorithm</p>
 <td>Folder in which trajectories files are stored</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#video.Video.get_episodes" title="video.Video.get_episodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_episodes</span></code></a>()</td>
-<td>Split video in episodes (chunks) of 500 frames for parallelisation</td>
+<td>Split video in episodes (chunks) of 500 frames</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#video.Video.get_info" title="video.Video.get_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_info</span></code></a>()</td>
 <td>Retrieves basic information concerning the video.</td>
@@ -383,6 +383,13 @@ fragmentation</p>
 <dd><p>save class</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="video.Video.tracking_interval">
+<code class="descname">tracking_interval</code><a class="headerlink" href="#video.Video.tracking_interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tuple with the starting and ending frame on which the tracking will
+be performed.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -408,10 +415,10 @@ fragmentation</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 12, 2018.
+      Last updated on May 02, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>

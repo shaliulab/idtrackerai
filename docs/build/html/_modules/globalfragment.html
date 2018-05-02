@@ -116,7 +116,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -178,9 +178,9 @@
 <span class="sd">        individual fragment</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_blobs</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">index_beginning_of_fragment</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">index_beginning_of_fragment</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index_beginning_of_fragment</span> <span class="o">=</span> <span class="n">index_beginning_of_fragment</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">individual_fragments_identifiers</span> <span class="o">=</span> <span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">list_of_blobs</span><span class="p">[</span><span class="n">index_beginning_of_fragment</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">individual_fragments_identifiers</span> <span class="o">=</span> <span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_video</span><span class="p">[</span><span class="n">index_beginning_of_fragment</span><span class="p">]]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">get_list_of_attributes_from_individual_fragments</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_minimum_distance_travelled</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_candidate_for_accumulation</span><span class="p">()</span>
@@ -427,10 +427,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 13, 2018.
+      Last updated on May 02, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>

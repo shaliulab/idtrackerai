@@ -116,7 +116,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -198,6 +198,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_max_area</span> <span class="o">=</span> <span class="mi">10000</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_resize</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_resegmentation_parameters</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tracking_interval</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_has_preprocessing_parameters</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1">#boolean: True once the preprocessing parameters (max/min area, max/min threshold) are set and saved</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_maximum_number_of_blobs</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#int: the maximum number of blobs detected in the video</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_blobs_path</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#string: path to the saved list of blob objects</span>
@@ -369,6 +370,13 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">resegmentation_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resegmentation_parameters</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tracking_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Tuple with the starting and ending frame on which the tracking will</span>
+<span class="sd">        be performed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracking_interval</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -928,10 +936,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Mar 13, 2018.
+      Last updated on May 02, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
       </li>
     </ul>
     </div>
