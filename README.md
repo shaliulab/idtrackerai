@@ -189,6 +189,14 @@ Once the environment is activate launch the GUI
 
     idtrackeraiGUI
 
+The GUI can also be launched from its main script. First go the the gui folder:
+
+    cd idtrackerai/gui/
+    
+Then run the script idtrackeraiApp.py using Python.
+
+    python idtrackeraiApp.py
+    
 Go to the [Quick start](http://idtracker.ai/quickstart.html) and follow the instructions
 to track a simple example video.
 
