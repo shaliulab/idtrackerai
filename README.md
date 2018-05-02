@@ -21,11 +21,9 @@ but the speed of the tracking will be highly affected.
 
 ## Installation.
 
-**NEWS**: We have solved the problems in the parallel calls to OpenCV and the current version does not hang during the background subtraction or the segmentation of the video. The current installation is stable. We are working towards an even simpler installation and a better compatibility with higher versions of the dependencies of the system. 
-
 The installation of idtracker.ai requires some amount of interaction with the linux
 terminal. Read the following paragraph only if your are not familiar with the terminal in
-linux operating systems.
+linux operating systems. 
 
 In linux Mint you can open a terminal using the icon with the gray symbol ">_" on the left in the bottom bar.
 We provide the commands needed to install idtracker.ai from the terminal.
@@ -33,6 +31,10 @@ In this documentation inputs to the terminal and outputs are shown inside of a b
 You can type them directly in the command line and press ENTER to execute them.
 Right-click with your mouse to copy and paste commands from the instructions to the terminal.
 (NOTE: do not use the shortcut Ctrl+C and Ctrl+V as they do not work in the terminal)
+
+The time needed to install the system varies with the output of the pre-installation checks and the 
+download speed of the network when cloning the repository and dowloading the dependencies. 
+In our computers and network, the total installation time is typicall of 15 minutes. 
 
 ### Pre-installation checks
 
