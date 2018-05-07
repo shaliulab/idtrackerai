@@ -40,7 +40,8 @@
     <link rel="search" title="Search" href="search.html" >
     <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
     <link rel="up" title="Code documentation" href="modules.html" >
-    <link rel="next" title="Human validation" href="validation.html" > 
+    <link rel="next" title="Human validation" href="validation.html" >
+    <link rel="prev" title="Fingerprint protocol cascade" href="fingerprint_protocol_cascade.html" > 
   </head>
   <body>
 
@@ -78,6 +79,10 @@
         <a href="validation.html" title="Human validation"
            accesskey="N">next</a>
       </li>
+      <li class="active">
+        <a href="fingerprint_protocol_cascade.html" title="Fingerprint protocol cascade"
+           accesskey="P">previous</a>
+      </li>
     </ul>
               
 	    </div>
@@ -91,7 +96,7 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Post-processing</a><ul>
-<li><a class="reference internal" href="#module-correct_impossible_velocity_jumps">Impossible velocity jumps correction</a></li>
+<li><a class="reference internal" href="#impossible-velocity-jumps-correction">Impossible velocity jumps correction</a></li>
 <li><a class="reference internal" href="#module-assign_them_all">Assign crossings</a></li>
 <li><a class="reference internal" href="#get-trajectories">Get trajectories</a></li>
 </ul>
@@ -107,250 +112,8 @@
             
   <div class="section" id="post-processing">
 <h1>Post-processing<a class="headerlink" href="#post-processing" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-correct_impossible_velocity_jumps">
-<span id="impossible-velocity-jumps-correction"></span><h2>Impossible velocity jumps correction<a class="headerlink" href="#module-correct_impossible_velocity_jumps" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="correct_impossible_velocity_jumps.compute_neighbour_fragments_and_velocities">
-<code class="descclassname">correct_impossible_velocity_jumps.</code><code class="descname">compute_neighbour_fragments_and_velocities</code><span class="sig-paren">(</span><em>video</em>, <em>list_of_fragments</em>, <em>fragment</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/correct_impossible_velocity_jumps.html#compute_neighbour_fragments_and_velocities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#correct_impossible_velocity_jumps.compute_neighbour_fragments_and_velocities" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes the fragments with the same identities to the past and to the
-future of a given <cite>fragment</cite> and gives the velocities at the extremes of the
-current <cite>fragment</cite></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
-<blockquote>
-<div><p>Object collecting all the parameters of the video and paths for saving and loading</p>
-</div></blockquote>
-<p><strong>list_of_fragments</strong> : &lt;ListOfFragments object&gt;</p>
-<blockquote>
-<div><p>Object collecting the list of fragments and all the statistics and methods
-related to them</p>
-</div></blockquote>
-<p><strong>fragment</strong> : &lt;Fragment object&gt;</p>
-<blockquote>
-<div><p>Object collecting all the information for a consecutive set of overlapping
-blobs that are considered to be the same animal</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>neighbour_fragment_past</strong> : &lt;Fragment object&gt;</p>
-<blockquote>
-<div><p><cite>Fragment</cite> object with the same identity as the current fragment in the
-past</p>
-</div></blockquote>
-<p><strong>neighbour_fragment_future</strong> : &lt;Fragment object&gt;</p>
-<blockquote>
-<div><p><cite>Fragment</cite> object with the same identity as the current fragment in the
-future</p>
-</div></blockquote>
-<p><strong>velocities_between_fragments</strong> : nd.array</p>
-<blockquote class="last">
-<div><p>Velocities needed to connect the current fragment to its consecutive
-fragments in the past and in the future.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#correct_impossible_velocity_jumps.get_fragment_with_same_identity" title="correct_impossible_velocity_jumps.get_fragment_with_same_identity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fragment_with_same_identity</span></code></a>, <a class="reference internal" href="#correct_impossible_velocity_jumps.compute_velocities_consecutive_fragments" title="correct_impossible_velocity_jumps.compute_velocities_consecutive_fragments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_velocities_consecutive_fragments</span></code></a></p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="correct_impossible_velocity_jumps.compute_velocities_consecutive_fragments">
-<code class="descclassname">correct_impossible_velocity_jumps.</code><code class="descname">compute_velocities_consecutive_fragments</code><span class="sig-paren">(</span><em>neighbour_fragment_past</em>, <em>fragment</em>, <em>neighbour_fragment_future</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/correct_impossible_velocity_jumps.html#compute_velocities_consecutive_fragments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#correct_impossible_velocity_jumps.compute_velocities_consecutive_fragments" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute velocities in the extremes of a <cite>fragment</cite> with respecto to its
-<cite>neighbour_fragment_past</cite> and <cite>neighbour_fragment_future</cite></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>neighbour_fragment_past</strong> : &lt;Fragment object&gt;</p>
-<blockquote>
-<div><p><cite>Fragment</cite> object with the same identity as the current fragment in the
-past</p>
-</div></blockquote>
-<p><strong>fragment</strong> : &lt;Fragment object&gt;</p>
-<blockquote>
-<div><p>Object collecting all the information for a consecutive set of overlapping
-blobs that are considered to be the same animal</p>
-</div></blockquote>
-<p><strong>neighbour_fragment_future</strong> : &lt;Fragment object&gt;</p>
-<blockquote>
-<div><p><cite>Fragment</cite> object with the same identity as the current fragment in the
-future</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>velocities</strong> : list</p>
-<blockquote class="last">
-<div><p>List with the velocity needed to link the fragment with its fragment in
-the past and in the future</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fragment</span></code></p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="correct_impossible_velocity_jumps.correct_impossible_velocity_jumps">
-<code class="descclassname">correct_impossible_velocity_jumps.</code><code class="descname">correct_impossible_velocity_jumps</code><span class="sig-paren">(</span><em>video</em>, <em>list_of_fragments</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/correct_impossible_velocity_jumps.html#correct_impossible_velocity_jumps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#correct_impossible_velocity_jumps.correct_impossible_velocity_jumps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Corrects the parts of the video where the velocity of any individual is
-higher than a particular velocty threshold given by <cite>video.velocity_threshold</cite>.
-This check is done from the <cite>video.first_frame_first_global_fragment</cite> to the
-past and to the future</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
-<blockquote>
-<div><p>Object collecting all the parameters of the video and paths for saving and loading</p>
-</div></blockquote>
-<p><strong>list_of_fragments</strong> : &lt;ListOfFragments object&gt;</p>
-<blockquote class="last">
-<div><p>Object collecting the list of fragments and all the statistics and methods
-related to them</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#correct_impossible_velocity_jumps.correct_impossible_velocity_jumps_loop" title="correct_impossible_velocity_jumps.correct_impossible_velocity_jumps_loop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">correct_impossible_velocity_jumps_loop</span></code></a></p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="correct_impossible_velocity_jumps.correct_impossible_velocity_jumps_loop">
-<code class="descclassname">correct_impossible_velocity_jumps.</code><code class="descname">correct_impossible_velocity_jumps_loop</code><span class="sig-paren">(</span><em>video</em>, <em>list_of_fragments</em>, <em>scope=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/correct_impossible_velocity_jumps.html#correct_impossible_velocity_jumps_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#correct_impossible_velocity_jumps.correct_impossible_velocity_jumps_loop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks whether the velocity needed to join two consecutive fragments with
-the same identity is consistent with the typical velocity of the animals in
-the video (<cite>video.velocity_threshold</cite>). If the velocity is not consistent the
-identity of one of the fragments is reassigned. The check is performed from the
-<cite>video.first_frame_first_global_fragment</cite> to the past or to the future according
-to the <cite>scope</cite></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
-<blockquote>
-<div><p>Object collecting all the parameters of the video and paths for saving and loading</p>
-</div></blockquote>
-<p><strong>list_of_fragments</strong> : &lt;ListOfFragments object&gt;</p>
-<blockquote>
-<div><p>Object collecting the list of fragments and all the statistics and methods
-related to them</p>
-</div></blockquote>
-<p><strong>scope</strong> : string</p>
-<blockquote class="last">
-<div><p>If <cite>scope</cite> = <cite>to_the_past</cite> the check is performed to the past and if
-<cite>scope</cite> = <cite>to_the_future</cite> the check is performed to the future.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fragment</span></code>, <a class="reference internal" href="#correct_impossible_velocity_jumps.compute_neighbour_fragments_and_velocities" title="correct_impossible_velocity_jumps.compute_neighbour_fragments_and_velocities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_neighbour_fragments_and_velocities</span></code></a>, <a class="reference internal" href="#correct_impossible_velocity_jumps.compute_velocities_consecutive_fragments" title="correct_impossible_velocity_jumps.compute_velocities_consecutive_fragments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_velocities_consecutive_fragments</span></code></a>, <a class="reference internal" href="#correct_impossible_velocity_jumps.reassign" title="correct_impossible_velocity_jumps.reassign"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reassign</span></code></a></p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="correct_impossible_velocity_jumps.get_fragment_with_same_identity">
-<code class="descclassname">correct_impossible_velocity_jumps.</code><code class="descname">get_fragment_with_same_identity</code><span class="sig-paren">(</span><em>video</em>, <em>list_of_fragments</em>, <em>fragment</em>, <em>direction</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/correct_impossible_velocity_jumps.html#get_fragment_with_same_identity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#correct_impossible_velocity_jumps.get_fragment_with_same_identity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the <cite>neighbour_fragment</cite> with the same identity in a given <cite>direction</cite></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>video</strong> : &lt;Video object&gt;</p>
-<blockquote>
-<div><p>Object collecting all the parameters of the video and paths for saving and loading</p>
-</div></blockquote>
-<p><strong>list_of_fragments</strong> : &lt;ListOfFragments object&gt;</p>
-<blockquote>
-<div><p>Object collecting the list of fragments and all the statistics and methods
-related to them</p>
-</div></blockquote>
-<p><strong>fragment</strong> : &lt;Fragment object&gt;</p>
-<blockquote>
-<div><p>Object collecting all the information for a consecutive set of overlapping
-blobs that are considered to be the same animal</p>
-</div></blockquote>
-<p><strong>direction</strong> : string</p>
-<blockquote>
-<div><p>If <cite>direction</cite> = <cite>to_the_past</cite> gets the <cite>neighbour_fragment</cite> in the past
-<cite>direction</cite> = <cite>to_the_future</cite> gets the <cite>neighbour_fragment</cite> in the future</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>neighbour_fragment</strong> : &lt;Fragment object&gt;</p>
-<blockquote>
-<div><p><cite>Fragment</cite> object with the same identity in a given <cite>direction</cite></p>
-</div></blockquote>
-<p><strong>number_of_frames_in_direction</strong> : int</p>
-<blockquote class="last">
-<div><p>Number of frames to find the <cite>neighbour_fragment</cite> from a given extreme
-of the <cite>fragment</cite></p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fragment</span></code></p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="correct_impossible_velocity_jumps.reassign">
-<code class="descclassname">correct_impossible_velocity_jumps.</code><code class="descname">reassign</code><span class="sig-paren">(</span><em>fragment</em>, <em>fragments</em>, <em>impossible_velocity_threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/correct_impossible_velocity_jumps.html#reassign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#correct_impossible_velocity_jumps.reassign" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reassigns the identity of a given <cite>fragment</cite> considering the identity of the
-<cite>fragments</cite> coexisting with it and the <cite>impossible_velocity_threshold</cite></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fragment</strong> : &lt;Fragment object&gt;</p>
-<blockquote>
-<div><p>Object collecting all the information for a consecutive set of overlapping
-blobs that are considered to be the same animal</p>
-</div></blockquote>
-<p><strong>fragments</strong> : list</p>
-<blockquote>
-<div><p>List with all the <cite>Fragment</cite> objects of the video</p>
-</div></blockquote>
-<p><strong>impossible_velocity_threshold</strong> : float</p>
-<blockquote class="last">
-<div><p>If the velocity needed to link two fragments is higher than this threshold
-the identiy of one of the fragments is considerd to be wrong as it would be
-physically impossible for an animal to move so much. See <cite>video.velocity_threshold</cite>
-for each definition</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="fragmentation.html#fragment.Fragment" title="fragment.Fragment"><code class="xref py py-class docutils literal notranslate"><span class="pre">fragment.Fragment</span></code></a>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_available_and_non_available_identities()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_candidate_identities_by_minimum_speed()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_candidate_identities_above_random_P2()</span></code></p>
-</div>
-</dd></dl>
-
+<div class="section" id="impossible-velocity-jumps-correction">
+<h2>Impossible velocity jumps correction<a class="headerlink" href="#impossible-velocity-jumps-correction" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-assign_them_all">
 <span id="assign-crossings"></span><h2>Assign crossings<a class="headerlink" href="#module-assign_them_all" title="Permalink to this headline">¶</a></h2>
@@ -566,7 +329,7 @@ considering all the blobs segmented from the video</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 02, 2018.
+      Last updated on May 03, 2018.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
