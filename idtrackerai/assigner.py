@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -46,7 +46,7 @@ else:
 Identification of individual fragments given the predictions generate by the idCNN
 """
 
-def assign(net, video, images, print_flag):
+def assign(net, images, print_flag):
     """Gathers the predictions relative to the images contained in `images`.
     Such predictions are returned as attributes of `assigner`.
 
@@ -54,9 +54,6 @@ def assign(net, video, images, print_flag):
     ----------
     net : <ConvNetwork object>
         Convolutional neural network object created according to net.params
-    video : <Video object>
-        Object collecting all the parameters of the video and paths for saving
-        and loading
     images : ndarray
         array of images
     print_flag : bool
