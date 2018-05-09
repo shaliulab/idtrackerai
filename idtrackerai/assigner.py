@@ -152,7 +152,7 @@ def assigner(list_of_fragments, video, net):
     images = list_of_fragments.get_images_from_fragments_to_assign()
     logger.debug("Images shape before assignment %s" %str(images.shape))
     logger.info("Getting predictions")
-    assigner = assign(net, video, images, print_flag = True)
+    assigner = assign(net, images, print_flag = True)
     logger.debug("Number of generated predictions: %s" %str(len(assigner._predictions)))
     logger.debug("Predictions range: %s" %str(np.unique(assigner._predictions)))
     compute_identification_statistics_for_non_accumulated_fragments(list_of_fragments.fragments, assigner)
