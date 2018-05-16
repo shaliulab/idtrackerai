@@ -103,6 +103,20 @@ It is important that the CUDNN_MAJOR is 5 and the CUDNN_MINOR is 1
 For further information please check the NVIDIA requirements to run TensorFlow with GPU support
 for Tensorflow 1.2.0 [here](https://www.tensorflow.org/versions/r1.2/install/install_linux).
 
+###### Python checks
+**[NEW!!]** Make sure python-dev and python-pip are installed. You can install them running.
+
+        sudo apt-get install python-pip python-dev 
+        
+###### Extra libraries needed for OpenCV
+
+In the last installations we are experiencing problems when some libraries related to *ffmpeg*
+are not installed. Please install them running.
+
+        sudo apt install libavcodec-ffmpeg56
+        sudo apt install libavformat-ffmpeg56 
+        sudo apt install libswscale-ffmpeg3
+  
 ###### Miniconda package manager
 
 The installation process requires [miniconda](https://conda.io/miniconda.html) to be installed in your computer. Skip the next paragraphs if Miniconda2 or Miniconda3 are already installed.
@@ -173,6 +187,18 @@ the following commands in your terminal:
     pip install idtrackerai/.
     source activate idtrackerai-environment
     garden install matplotlib
+    
+### Troubleshooting installation
+
+**[NEW!!]** 
+In some installations the libdc1394 is missing and OpenCV does not work. 
+Install this library inside of the conda environment. First run
+
+    source activate idtrackerai-environment
+
+then install the library running.
+
+    conda install -c achennu libdc1394
 
 ### Uninstall and remove software
 
