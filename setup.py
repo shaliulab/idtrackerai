@@ -72,13 +72,6 @@ requirements = [#'Cython >= 0.26.1',
                 'tensorflow-gpu == 1.2.0']
 
 
-np_gpu_warning = False
-nvcc = subprocess.call("nvcc --version", shell = True)
-if  nvcc != 0:
-    np_gpu_warning = True
-    requirements[-1] = 'tensorflow == 1.2.0'
-
-
 EXCLUDE_FROM_PACKAGES = [ "plots", "plots.*",
                         "test", "test.*",
                         "docs", "docs.*"]
@@ -115,15 +108,3 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
     ],
 )
-if np_gpu_warning:
-    sys.stderr.write("""
-========
-WARNING!
-========
-No cuda driver has been detected and Tensorflow has
-been installed without gpu support. As a consequence idtrackerai will run
-slower and will require more system resources.
-If a GPU is available, download and
-install the drivers by following the instructions provided at
-http://www.nvidia.com/
-""" )
