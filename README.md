@@ -127,7 +127,7 @@ Type "yes" to continue with the default installation.
 Using the terminal, download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/cuda_in_conda/install.sh)
 using the following command.
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/cuda_in_conda/install.sh
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.1-alpha/install.sh
 
 Give install.sh executable permissions by typing
 
@@ -149,7 +149,7 @@ of the terminal should show a message similar to this:
 If the installation did not succeed try proceeding step by step, by running
 the following commands in your terminal:
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/cuda_in_conda/env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.1-alpha/env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml
     conda env create -f env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml
     source activate idtrackerai-environment
     git clone https://gitlab.com/polavieja_lab/idtrackerai.git
