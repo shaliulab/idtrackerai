@@ -1,51 +1,59 @@
-# idtracker.ai
+# idtracker.ai (v1.0.1-alpha)
 
 [idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
+
+## What is new?
+
+* Update installation to work with Linux Mint 18.3 (kernel 4.10.0-38-generic)
+* Cuda toolkit and cudnn libraries are now installed within the conda environment.
+This allows users to have other versions of TensorFlow in their system without
+entering into conflict with the versions used by idtracker.ai.
+* Currently running TensorFlow 1.7.0 (only the GPU version is working)
 
 ## Hardware requirements
 
 idtracker.ai has been tested in computers with the following specifications:
 
-- Operating system: 64bit GNU/linux Mint 18.1
+- Operating system: 64bit GNU/linux Mint 18.3
 - CPU: Core(TM) i7-7700K CPU @4.20GHz 6 core Intel(R) or Core(TM) i7-6800K CPU @3.40GHz 4 core
 - GPU: Nvidia TITAN X or GeForce GTX 1080 Ti
 - RAM: 32Gb (for small groups) or 128Gb (for large groups)
 - Disk: 1TB SSD
 
 idtracker.ai is coded in python 2.7 and uses Tensorflow libraries
-(version 1.2.0). Due to the intense use of deep neural networks, we recommend using
+(version 1.7.0). Due to the intense use of deep neural networks, we recommend using
  a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher.
- Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU. If a GPU
-is not installed on the computer the CPU version of Tensorflow will be installed
-but the speed of the tracking will be highly affected.
+ Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU.
 
-## Installation.
+## Installation (v1.0.1-alpha).
 
 The installation of idtracker.ai requires some amount of interaction with the linux
-terminal. Read the following paragraph only if your are not familiar with the terminal in
-linux operating systems. 
+terminal. Read the following paragraph only if your are not familiar with the terminal in linux operating systems.
 
-In linux Mint you can open a terminal using the icon with the gray symbol ">_" on the left in the bottom bar.
-We provide the commands needed to install idtracker.ai from the terminal.
-In this documentation inputs to the terminal and outputs are shown inside of a box.
-You can type them directly in the command line and press ENTER to execute them.
+In Linux Mint you can open a terminal using the icon with the gray symbol ">_" on the left in the bottom bar. We provide the commands needed to install idtracker.ai from the terminal. In this documentation inputs to the terminal and outputs are shown inside of a box. You can type them directly in the command line and press ENTER to execute them.
 Right-click with your mouse to copy and paste commands from the instructions to the terminal.
 (NOTE: do not use the shortcut Ctrl+C and Ctrl+V as they do not work in the terminal)
 
-The time needed to install the system varies with the output of the pre-installation checks and the 
-download speed of the network when cloning the repository and dowloading the dependencies. 
-In our computers and network, the total installation time is typicall of 15 minutes. 
+The time needed to install the system varies with the output of the pre-installation checks and the download speed of the network when cloning the repository and dowloading the dependencies. In our computers and network, the total installation time is typicall of 15 minutes.
 
 ### Pre-installation checks
 
-###### GPU Drivers, CUDA Toolkit and CuDNN library.
+###### Make sure that your system is updated
 
-To install the GPU version of idtracker.ai first make sure that NVIDIA drivers,
-CUDA Toolkit 8.0 and the corresponding CuDNN v5.1 libraries for CUDA 8.0, are
-installed in your computer.
+Check if your system is up to date running the following command in the terminal:
+
+    sudo apt update
+
+Upgrade your system running:
+
+    sudo apt upgrade
+
+###### GPU Drivers.
+
+Make sure that your GPU drivers are installed.
 
 If you are using an NVIDIA GPU you can check that the drivers are properly
-installed typing
+installed typing.
 
     nvidia-smi
 
@@ -71,52 +79,13 @@ in your terminal. You should get an output that looks like:
     |    0      3869      G   ...-token=B623FBCDF5B2B7F30ECB74EC9ADEFC8F   117MiB |
     +-----------------------------------------------------------------------------+
 
-To check that CUDA Toolkit 8.0 is properly installed type
+If the command *nvidia-smi* does not show an output similar to this one, is possible
+thay the NVIDIA drivers are not installed. In Linux Mint 18.3 you can install the NVIDIA
+drivers using the Driver Manager that can be found in the Menu button in the bottom left of the screen.
 
-    nvcc -V
+**NOTE** Do not install the *intel-microcode* driver
+as it might enter in conflict with the parts of idtracker.ai that are parallelized. When installing this driver we have experienced hangs in the background subtraction and in the segmentation parts of the algorithm.
 
-in your terminal. You should get an output similar to this:
-
-    nvcc: NVIDIA (R) Cuda compiler driver
-    Copyright (c) 2005-2016 NVIDIA Corporation
-    Built on Tue_Jan_10_13:22:03_CST_2017
-    Cuda compilation tools, release 8.0, V8.0.61
-
-It is important that the release of the Cuda compilation tools is 8.0.
-
-To check that the correct version of CuDNN is installed type
-
-    cat /usr/local/cuda/include/cudnn.h | grep CUDNN_MAJOR -A 2
-
-in your terminal. You should get an output similar to this:
-
-    #define CUDNN_MAJOR      5
-    #define CUDNN_MINOR      1
-    #define CUDNN_PATCHLEVEL 10
-    --
-    #define CUDNN_VERSION    (CUDNN_MAJOR * 1000 + CUDNN_MINOR * 100 + CUDNN_PATCHLEVEL)
-
-    #include "driver_types.h"
-
-It is important that the CUDNN_MAJOR is 5 and the CUDNN_MINOR is 1
-
-For further information please check the NVIDIA requirements to run TensorFlow with GPU support
-for Tensorflow 1.2.0 [here](https://www.tensorflow.org/versions/r1.2/install/install_linux).
-
-###### Python checks
-**[NEW!!]** Make sure python-dev and python-pip are installed. You can install them running.
-
-        sudo apt-get install python-pip python-dev 
-        
-###### Extra libraries needed for OpenCV
-
-In the last installations we are experiencing problems when some libraries related to *ffmpeg*
-are not installed. Please install them running.
-
-        sudo apt install libavcodec-ffmpeg56
-        sudo apt install libavformat-ffmpeg56 
-        sudo apt install libswscale-ffmpeg3
-  
 ###### Miniconda package manager
 
 The installation process requires [miniconda](https://conda.io/miniconda.html) to be installed in your computer. Skip the next paragraphs if Miniconda2 or Miniconda3 are already installed.
@@ -129,7 +98,7 @@ if you get the following output
 
     conda: command not found
 
-miniconda is not installed in your computer. Follow the next instructions to install it.
+miniconda is not installed in your system. Follow the next instructions to install it.
 
 Using the terminal, download the miniconda installation file
 
@@ -151,14 +120,14 @@ to continue with the default installation. Finally you will be asked to prepend
 the install location to PATH in your .bashrc file.
 Type "yes" to continue with the default installation.
 
-At the end of the installation close the terminal and open a new one.
+**IMPORTANT** At the end of the installation close the terminal and open a new one.
 
 ### Installation
 
-Using the terminal, download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.0-alpha/install.sh)
+Using the terminal, download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/cuda_in_conda/env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml)
 using the following command.
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.0-alpha/install.sh
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/cuda_in_conda/env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml
 
 Give install.sh executable permissions by typing
 
@@ -180,25 +149,18 @@ of the terminal should show a message similar to this:
 If the installation did not succeed try proceeding step by step, by running
 the following commands in your terminal:
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.0-alpha/environment-mint18.1.yml
-    conda env create -f environment-mint18.1.yml
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/cuda_in_conda/env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml
+    conda env create -f env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml
     source activate idtrackerai-environment
     git clone https://gitlab.com/polavieja_lab/idtrackerai.git
+    git checkout cuda_in_conda
     pip install idtrackerai/.
     source activate idtrackerai-environment
     garden install matplotlib
-    
+
 ### Troubleshooting installation
 
-**[NEW!!]** 
-In some installations the libdc1394 is missing and OpenCV does not work. 
-Install this library inside of the conda environment. First run
-
-    source activate idtrackerai-environment
-
-then install the library running.
-
-    conda install -c achennu libdc1394
+*coming soon*
 
 ### Uninstall and remove software
 
@@ -218,11 +180,11 @@ Once the environment is activate launch the GUI
 The GUI can also be launched from its main script. First go the the gui folder:
 
     cd idtrackerai/gui/
-    
+
 Then run the script idtrackeraiApp.py using Python.
 
     python idtrackeraiApp.py
-    
+
 Go to the [Quick start](http://idtracker.ai/quickstart.html) and follow the instructions
 to track a simple example video.
 
