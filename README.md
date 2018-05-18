@@ -153,10 +153,7 @@ the following commands in your terminal:
     conda env create -f env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml
     source activate idtrackerai-environment
     git clone https://gitlab.com/polavieja_lab/idtrackerai.git
-    cd idtrackerai/
-    git checkout cuda_in_conda
-    pip install ./
-    source activate idtrackerai-environment
+    pip install idtrackerai/.
     garden install matplotlib
 
 ### Troubleshooting installation
