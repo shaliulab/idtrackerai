@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -236,8 +236,7 @@ class ConvNetwork():
         logger.debug("model_image_height %s" %str(model_image_height))
         self.y_logits, self.fc_vector = CNN_MODELS_DICT[self.params.cnn_model](self.x_pl,self.params.number_of_animals,
                                                                 model_image_width, model_image_height,
-                                                                self.image_channels,
-                                                                self.params.pre_target_image_size)
+                                                                self.image_channels)
         self.softmax_probs = tf.nn.softmax(self.y_logits)
         self.predictions = tf.cast(tf.add(tf.argmax(self.softmax_probs,1),1),tf.float32)
 

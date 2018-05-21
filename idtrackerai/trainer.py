@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -128,7 +128,7 @@ def train(video,
     training_dataset.convert_labels_to_one_hot()
     validation_dataset.convert_labels_to_one_hot()
     # Reinitialize softmax and fully connected
-    if video.accumulation_step == 0:
+    if video is None or video.accumulation_step == 0:
         net.reinitialize_softmax_and_fully_connected()
     # Train network
     #compute weights to be fed to the loss function (weighted cross entropy)
@@ -144,7 +144,7 @@ def train(video,
     #set criteria to stop the training
     stop_training = Stop_Training(net.params.number_of_animals,
                                 check_for_loss_plateau = check_for_loss_plateau,
-                                first_accumulation_flag = video.accumulation_step == 0)
+                                first_accumulation_flag = video is None or video.accumulation_step == 0)
 
     global_step0 = global_step
 
@@ -171,7 +171,8 @@ def train(video,
         logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss[global_step0:]))
         # update used_for_training flag to True for fragments used
         logger.info("Accumulation step completed. Updating global fragments used for training")
-        accumulation_manager.update_fragments_used_for_training()
+        if accumulation_manager is not None:
+            accumulation_manager.update_fragments_used_for_training()
         # plot if asked
         if plot_flag:
             store_training_accuracy_and_loss_data.plot_global_fragments(ax_arr, video, fragments, black = False)
