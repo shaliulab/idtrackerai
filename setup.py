@@ -78,7 +78,7 @@ EXCLUDE_FROM_PACKAGES = [ "plots", "plots.*",
 
 setup(
     name='idtrackerai',
-    version='1.0.0-alpha',
+    version='1.0.1-alpha',
     python_requires='>={}.{}'.format(*REQUIRED_PYTHON),
     url='https://www.idtracker.ai/',
     author='',
