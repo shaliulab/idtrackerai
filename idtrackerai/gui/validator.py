@@ -91,7 +91,7 @@ class Validator(BoxLayout):
                                                 "\nRight click on an animal to inspect advance information about the blob. " +
                                                 "\nClick on 'Save updated identities' to update the identities of the blobs modified. " +
                                                 "\nClick on 'Compute accuracy' and introduce a range of frames in the popup to compute the accuracy. ")
-        self.help_button_global_validation.help_popup.size_hint = (.7, .7)
+        self.help_button_global_validation.help_popup.size_hint = (.7, .8)
 
 
     def show_saving(self, *args):
@@ -187,8 +187,8 @@ class Validator(BoxLayout):
             self.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_no_gaps_path)
             self.list_of_blobs_save_path = CHOSEN_VIDEO.video.blobs_no_gaps_path
             self.with_gaps = False
-            self.help_button_global_validation.help_label.text = "Global validation with animals identified during crossings",\
-                                                    "The validations is recomended to start at the 'first frame first global fragment' " +\
+            self.help_button_global_validation.help_popup.title = "Global validation with animals identified during crossings."
+            self.help_button_global_validation.help_label.text = "The validations is recomended to start at the 'first frame first global fragment' " +\
                                                     "as the identities in that frame are the identities given arbitrarely to the animals at the " +\
                                                     "begining of the tracking process. " +\
                                                     "\nThe porpose of this validation is to count the number of times that " +\

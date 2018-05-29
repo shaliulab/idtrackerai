@@ -250,7 +250,7 @@ class ConvNetwork():
             self.accuracy, self.individual_accuracy = self.evaluation()
 
     def get_layers_to_optimize(self):
-        """Set layers of the network to bu optimised during the training process
+        """Set layers of the network to be optimised during the training process
         """
         if self.params.scopes_layers_to_optimize is not None:
             self.layers_to_optimise = []
