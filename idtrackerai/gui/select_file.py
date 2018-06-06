@@ -99,7 +99,7 @@ class SelectFile(BoxLayout):
                 if isinstance(CHOSEN_VIDEO.old_video.first_frame_first_global_fragment, int):
                     first_frame_first_global_fragment = [0 if i < CHOSEN_VIDEO.old_video.accumulation_trial - 1
                                                             else CHOSEN_VIDEO.old_video.first_frame_first_global_fragment
-                                                            for i in range(CHOSEN_VIDEO.old_video.accumulation_trial)]
+                                                            for i in range(CHOSEN_VIDEO.old_video.accumulation_trial + 1)]
                     CHOSEN_VIDEO.old_video._first_frame_first_global_fragment = first_frame_first_global_fragment
 
             self.create_restore_popup()
@@ -118,17 +118,11 @@ class SelectFile(BoxLayout):
 
     def open(self, *args):
         #try:
-        print('-----------------------')
         CHOSEN_VIDEO.set_chosen_item(self.filechooser.selection[0])
-        print(1)
         if CHOSEN_VIDEO.video.video_path is not None:
-            print(2)
             self.create_welcome_popup()
-            print(3)
             self.create_restoring_popup()
-            print(4)
             self.session_name_input.bind(on_text_validate = self.on_enter_session_folder)
-            print(5)
             self.welcome_popup.open()
         #except Exception,e:
         #    print(str(e))

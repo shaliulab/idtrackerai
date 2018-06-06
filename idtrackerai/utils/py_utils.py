@@ -224,11 +224,12 @@ def check_and_change_video_path(video_object, old_video):
             setattr(old_video, key, new_value)
 
         if old_video.paths_to_video_segments is not None and len(old_video.paths_to_video_segments) != 0:
+            logger.info("Updating paths_to_video_segments")
             new_paths_to_video_segments = []
-
             for path in old_video.paths_to_video_segments:
-                new_paths_to_video_segments.append(path.replace(old_video_folder, current_video_folder))
-            old_video._paths_to_video_segments = new_paths_to_video_segments
+                new_path = os.path.join(old_video.video_folder, os.path.split(path)[1])
+                new_paths_to_video_segments.append(new_path)
+        old_video._paths_to_video_segments = new_paths_to_video_segments
 
         ### update checkpoint files
         current_video_session_name = old_video.session_folder

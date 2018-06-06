@@ -499,6 +499,15 @@ class Video(object):
             new_value = attributes_to_modify[key].replace(old_session_path, new_session_path)
             setattr(self, key, new_value)
 
+        if self.paths_to_video_segments is not None and len(self.paths_to_video_segments) != 0:
+            logger.info("Updating paths_to_video_segments")
+            new_paths_to_video_segments = []
+            for path in self.paths_to_video_segments:
+                new_path = os.path.join(self.video_folder, os.path.split(path)[1])
+                print(path, new_path)
+                new_paths_to_video_segments.append(new_path)
+        self._paths_to_video_segments = new_paths_to_video_segments
+
         logger.info("Updating checkpoint files")
         folders_to_check = ['crossings_detector_folder', 'pretraining_folder', 'accumulation_folder']
         for folder in folders_to_check:
