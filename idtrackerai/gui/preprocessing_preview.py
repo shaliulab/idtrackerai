@@ -139,7 +139,7 @@ class PreprocessingPreview(BoxLayout):
         self.min_threshold_lbl = CustomLabel(font_size = 14, id='min_threshold_lbl', text = "Min intensity:" + str(int(self.min_threshold_slider.value)))
         self.max_area_slider = Slider(id='max_area_slider', min = 0, max = 60000, value = self.max_area, step = 1)
         self.max_area_lbl = CustomLabel(font_size = 14, id='max_area_lbl', text = "Max area:" + str(int(self.max_area_slider.value)))
-        self.min_area_slider = Slider(id='min_area_slider', min = 0, max = 1000, value = self.min_area, step = 1)
+        self.min_area_slider = Slider(id='min_area_slider', min = 0, max = 10000, value = self.min_area, step = 1)
         self.min_area_lbl = CustomLabel(font_size = 14, id='min_area_lbl', text = "Min area:" + str(int(self.min_area_slider.value)))
         self.w_list = [ self.max_threshold_lbl, self.max_threshold_slider,
                         self.min_threshold_lbl, self.min_threshold_slider,
@@ -201,7 +201,7 @@ class PreprocessingPreview(BoxLayout):
             self.bkg_subtractor_switch.bind(active = self.apply_bkg_subtraction)
             CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
             self.bkg = CHOSEN_VIDEO.video.bkg
-            self.ROI = CHOSEN_VIDEO.video.ROI if CHOSEN_VIDEO.video.ROI is not None else np.ones((CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width) ,dtype='uint8') * 255
+            self.ROI = CHOSEN_VIDEO.video.ROI if CHOSEN_VIDEO.video.ROI is not None else np.ones((CHOSEN_VIDEO.video.original_height, CHOSEN_VIDEO.video.original_width) ,dtype='uint8') * 255
             self.create_number_of_animals_popup()
             self.num_of_animals_input.bind(on_text_validate = self.set_number_of_animals)
             self.num_of_animals_popup.bind(on_dismiss = self.show_segmenting_popup)
@@ -374,8 +374,6 @@ class PreprocessingPreview(BoxLayout):
             CHOSEN_VIDEO.list_of_blob = detect_crossings(CHOSEN_VIDEO.list_of_blobs, CHOSEN_VIDEO.video,
                         CHOSEN_VIDEO.video.model_area, use_network = False,
                         return_store_objects = False, plot_flag = False)
-            print("after model area")
-            print([b.image_for_identification.shape for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf])
             CHOSEN_VIDEO.list_of_blob.save(CHOSEN_VIDEO.video,
                                     CHOSEN_VIDEO.video.blobs_path_segmented,
                                     number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
@@ -605,13 +603,22 @@ class PreprocessingPreview(BoxLayout):
                 CHOSEN_VIDEO.video._number_of_channels = 1
             else:
                 raise NotImplementedError("Colour videos has still to be integrated")
+        if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and CHOSEN_VIDEO.video.resolution_reduction != 1:
+            if self.bkg_subtractor_switch.active:
+                bkg = cv2.resize(CHOSEN_VIDEO.video.bkg, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
+            else:
+                bkg = CHOSEN_VIDEO.video.bkg
+            ROI = cv2.resize(self.ROI, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
+        else:
+            bkg = CHOSEN_VIDEO.video.bkg
+            ROI = self.ROI
         avIntensity = np.float32(np.mean(self.frame))
         self.av_frame = self.frame / avIntensity
         self.segmented_frame = segment_frame(self.av_frame,
                                             int(min_threshold_slider.value),
                                             int(max_threshold_slider.value),
-                                            CHOSEN_VIDEO.video.bkg,
-                                            self.ROI,
+                                            bkg,
+                                            ROI,
                                             self.bkg_subtractor_switch.active)
         boundingBoxes, miniFrames, _, areas, _, goodContours, _ = blob_extractor(self.segmented_frame,
                                                                         self.frame,
@@ -625,7 +632,7 @@ class PreprocessingPreview(BoxLayout):
         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)
         # self.frame = cv2.bitwise_and(self.frame, self.frame, mask = self.ROI)
         alpha = .05
-        self.frame = cv2.addWeighted(self.ROI, alpha, self.frame, 1 - alpha, 0)
+        self.frame = cv2.addWeighted(ROI, alpha, self.frame, 1 - alpha, 0)
         if self.count_scrollup != 0:
             self.dst = cv2.warpAffine(self.frame, self.M, (self.frame.shape[1], self.frame.shape[1]))
             buf1 = cv2.flip(self.dst,0)

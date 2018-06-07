@@ -242,8 +242,6 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         frame_segmented = cv2.inRange(frame, min_threshold, max_threshold) #output: 255 in range, else 0
     elif not useBkg:
         frame_segmented = cv2.inRange(frame * (255.0/frame.max()), min_threshold, max_threshold) #output: 255 in range, else 0
-    # print("frame segmented frame ", frame_segmented.shape)
-    # print("ROI shape: ", ROI.shape)
     frame_segmented_and_masked = cv2.bitwise_and(frame_segmented,frame_segmented, mask=ROI) #Applying the mask
     return frame_segmented_and_masked
 

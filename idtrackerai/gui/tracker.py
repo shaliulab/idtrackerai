@@ -276,7 +276,7 @@ class Tracker(BoxLayout):
             and self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION :
             Logger.info("Accumulation in protocol 3 is not successful. Opening parachute ...")
             CHOSEN_VIDEO.video.accumulation_trial += 1
-            if not self.accumulation_manager.continue_accumulation:
+            if not self.accumulation_manager.continue_accumulation and CHOSEN_VIDEO.video.accumulation_trial > 1:
                 self.save_and_update_accumulation_parameters_in_parachute()
             self.accumulation_parachute_init(CHOSEN_VIDEO.video.accumulation_trial)
             self.accumulation_loop()
@@ -370,6 +370,7 @@ class Tracker(BoxLayout):
             CHOSEN_VIDEO.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
             CHOSEN_VIDEO.list_of_fragments.save_light_list(CHOSEN_VIDEO.video._accumulation_folder)
 
+
     def save_after_second_accumulation(self):
         Logger.info("Saving second accumulation parameters")
         self.save_and_update_accumulation_parameters_in_parachute()
@@ -382,6 +383,10 @@ class Tracker(BoxLayout):
         Logger.info("Saving global fragments")
         CHOSEN_VIDEO.list_of_fragments.save(CHOSEN_VIDEO.video.fragments_path)
         CHOSEN_VIDEO.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
+        Logger.info("Restoring networks to best second accumulation")
+        self.accumulation_network_params.restore_folder = CHOSEN_VIDEO.video._accumulation_folder
+        self.net = ConvNetwork(self.accumulation_network_params)
+        self.net.restore()
         CHOSEN_VIDEO.video.save()
 
 
