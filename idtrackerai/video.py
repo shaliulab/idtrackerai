@@ -376,17 +376,11 @@ class Video(object):
 
     @video_path.setter
     def video_path(self, value):
-        print("video_path 1")
         video_name, video_extension = os.path.splitext(value)
-        print("video_path 2")
         if video_extension in AVAILABLE_VIDEO_EXTENSION:
-            print("video_path 3")
             self._video_path = value
-            print("video_path 4")
             #get video folder
-            print("video_path 5")
             self._video_folder = os.path.dirname(self.video_path)
-            print("video_path 6")
             #collect some info on the video (resolution, number of frames, ..)
             if not hasattr(self,'number_of_frames'):
                 self.get_info()
