@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -168,10 +168,14 @@ class Store_Accuracy_and_Loss(object):
         ax4.axis('tight')
         ax4.set_xlabel('Frame number')
         ax4.set_ylabel('Blob index')
-        ax4.set_yticks(range(0, video.maximum_number_of_blobs, 3))
-        ax4.set_yticklabels(range(1, video.maximum_number_of_blobs + 1, 3))
+        if not hasattr(video, 'maximum_number_of_blobs') or video.maximum_number_of_blobs == 0:
+            max_y = video.number_of_animals
+        else:
+            max_y = video.maximum_number_of_blobs
+        ax4.set_yticks(range(0, max_y, 3))
+        ax4.set_yticklabels(range(1, max_y + 1, 3))
         ax4.set_xlim([0., video.number_of_frames])
-        ax4.set_ylim([-.5, video.maximum_number_of_blobs + .5 - 1])
+        ax4.set_ylim([-.5, max_y + .5 - 1])
 
     def save(self, number_of_epochs_completed):
         """Saves the values stored
