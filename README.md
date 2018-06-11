@@ -4,13 +4,12 @@
 
 ## What is new?
 
+* Roll back to the installation with Tensorflow 1.2.0. The installation with Tensorflow 1.7.0 in the previous release had conflicts with Cudatoolkit and CuDNN.
+* Remove scripts for plots and analysis of the paper. They have been moved to a separated repository called idtrackerai_scripts.
+* Fix usage of the option "Resolution reduction" in the GUI.
+* Restore properly the idCNN after the second accumulation in the protocol cascade.
 * Fix restoring of the variable *first_frame_first_global_fragment* in the object *video*
-* Correctly update the paths in the list *path_to_video_segments* in the object *video* if the folder where the session is changes.
-* Fix usage of the option "Resolution reduction" in the GUI
-* Restore properly the idCNN after the second accumulation
-* Remove scripts for plots and analysis of the paper. They have been moved to
-a separated repository called idtrackerai_scripts.
-* Roll back to the installation with tensorflow 1.2.0. The installation with tensorflow 1.7.0 in the previous release had conflicts with Cudatoolkit and CuDNN.
+* Correctly update the paths in the list *path_to_video_segments* in the object *video* if the folder where the session changed.
 
 ## Hardware requirements
 
