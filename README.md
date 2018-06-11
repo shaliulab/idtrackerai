@@ -10,9 +10,7 @@
 * Restore properly the idCNN after the second accumulation
 * Remove scripts for plots and analysis of the paper. They have been moved to
 a separated repository called idtrackerai_scripts.
-* Roll back to the installation with tensorflow 1.2.0 as the installation of
-with tensorflow 1.7.0 in the previous release had conflicts with the Cudatoolkit
-and CuDNN.
+* Roll back to the installation with tensorflow 1.2.0. The installation with tensorflow 1.7.0 in the previous release had conflicts with Cudatoolkit and CuDNN.
 
 ## Hardware requirements
 
