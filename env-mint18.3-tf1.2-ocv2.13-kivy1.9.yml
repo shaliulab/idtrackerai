@@ -1,17 +1,15 @@
-name: idtrackerai-environment
+name: idtrackerai-environment2
 channels:
-  - srivasv
   - dhaneshr
   - achennu
   - wgarcia
   - conda-forge
-  - anaconda
+  - marta-sd
   - defaults
 dependencies:
   - libdc1394=2.2.4=1
-  - ca-certificates=2017.08.26=h1d4fec5_0
-  - cudatoolkit=9.0=h13b8566_0
   - bzip2=1.0.6=1
+  - certifi=2018.1.18=py27_0
   - freetype=2.8.1=0
   - gmp=6.1.2=0
   - gnutls=3.5.17=0
@@ -22,8 +20,8 @@ dependencies:
   - setuptools=38.5.1=py27_0
   - six=1.11.0=py27_1
   - x264=20131217=3
+  - ca-certificates=2017.08.26=h1d4fec5_0
   - cairo=1.14.12=h77bcde2_0
-  - certifi=2018.1.18=py27_0
   - cython=0.27.3=py27hc56b35e_0
   - expat=2.2.5=he0dffb1_0
   - ffmpeg=3.4=h7264315_0
@@ -68,32 +66,24 @@ dependencies:
   - xz=5.2.3=h55aa19d_2
   - zlib=1.2.11=ha838bed_2
   - opencv=2.4.13=py27_1
-  - cudnn=7.0.5=cuda8.0_0
+  - cudatoolkit=8.0=0
+  - cudnn=5.1=0
   - kivy=1.9.1=py27_0
   - pip:
-    - absl-py==0.2.1
-    - astor==0.6.2
     - backports.functools-lru-cache==1.5
     - backports.weakref==1.0rc1
     - bleach==1.5.0
     - chardet==3.0.4
-    - configparser==3.5.0
     - cycler==0.10.0
     - dask==0.17.1
-    - enum34==1.1.6
-    - flake8==3.5.0
     - funcsigs==1.0.2
-    - futures==3.2.0
-    - gast==0.2.0
-    - grpcio==1.12.0
     - h5py==2.7.1
     - html5lib==0.9999999
     - idna==2.6
     - joblib==0.11
     - kivy-garden==0.1.4
-    - markdown==2.6.11
+    - markdown==2.2.0
     - matplotlib==2.1.2
-    - mccabe==0.6.1
     - mock==2.0.0
     - msgpack-numpy==0.4.2
     - msgpack-python==0.5.5
@@ -105,8 +95,6 @@ dependencies:
     - protobuf==3.5.1
     - psutil==5.4.3
     - pyautogui==0.9.36
-    - pycodestyle==2.3.1
-    - pyflakes==1.6.0
     - pygame==1.9.3
     - pymsgbox==1.0.6
     - pyparsing==2.2.0
@@ -123,14 +111,11 @@ dependencies:
     - stevedore==1.28.0
     - subprocess32==3.2.7
     - tables==3.4.2
-    - tensorboard==1.7.0
-    - tensorflow-gpu==1.7.0
-    - termcolor==1.1.0
+    - tensorflow-gpu==1.2.0
     - tqdm==4.19.5
     - urllib3==1.22
     - virtualenv==15.1.0
     - virtualenv-clone==0.2.6
     - werkzeug==0.14.1
     - xlib==0.21
-prefix: /home/themis/miniconda2/envs/idtrackerai-environment
-
+prefix: /home/polaviejalab/miniconda2/envs/idtrackerai-environment
