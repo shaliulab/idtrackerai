@@ -151,8 +151,8 @@ of the terminal should show a message similar to this:
 If the installation did not succeed try proceeding step by step, by running
 the following commands in your terminal:
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.2-alpha/env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml
-    conda env create -f env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.2-alpha/env-mint18.3-tf1.2-ocv2.13-kivy1.9.yml
+    conda env create -f env-mint18.3-tf1.2-ocv2.13-kivy1.9.yml
     source activate idtrackerai-environment
     git clone https://gitlab.com/polavieja_lab/idtrackerai.git
     pip install idtrackerai/.
