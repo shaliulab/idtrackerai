@@ -46,19 +46,25 @@ from functools import partial
 import matplotlib
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
-import seaborn as sns
 import os
-import sys
 import numpy as np
 from scipy.stats import mode
 import cv2
-from idtrackerai.video import Video
 from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.list_of_fragments import ListOfFragments, create_list_of_fragments
-from idtrackerai.list_of_global_fragments import ListOfGlobalFragments, create_list_of_global_fragments
-from idtrackerai.preprocessing.segmentation import segment_frame, segment, resegment
+from idtrackerai.list_of_fragments import ListOfFragments,\
+                                            create_list_of_fragments
+from idtrackerai.list_of_global_fragments import ListOfGlobalFragments,\
+                                                create_list_of_global_fragments
+from idtrackerai.preprocessing.segmentation import segment_frame, segment,\
+                                                    resegment
 from idtrackerai.utils.video_utils import blob_extractor
 from idtrackerai.crossing_detector import detect_crossings
+from idtrackerai.constants import MIN_AREA_LOWER, MIN_AREA_UPPER
+from idtrackerai.constants import MAX_AREA_LOWER, MAX_AREA_UPPER
+from idtrackerai.constants import MIN_THRESHOLD, MAX_THRESHOLD
+from idtrackerai.constants import MIN_AREA_DEFAULT, MAX_AREA_DEFAULT
+from idtrackerai.constants import MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT
+
 
 class PreprocessingPreview(BoxLayout):
     def __init__(self, chosen_video = None,
@@ -125,21 +131,21 @@ class PreprocessingPreview(BoxLayout):
             self.number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
             CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.old_video.resolution_reduction
         else:
-            self.max_threshold = 135
-            self.min_threshold = 0
-            self.min_area = 150
-            self.max_area = 60000
+            self.max_threshold = MAX_THRESHOLD_DEFAULT
+            self.min_threshold = MIN_THRESHOLD_DEFAULT
+            self.min_area = MIN_AREA_DEFAULT
+            self.max_area = MAX_AREA_DEFAULT
             CHOSEN_VIDEO.video.resolution_reduction = 1.
             self.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
             if CHOSEN_VIDEO.video._original_ROI is None:
                 CHOSEN_VIDEO.video._original_ROI = np.ones( (CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width), dtype='uint8') * 255
-        self.max_threshold_slider = Slider(id = 'max_threhsold', min = 0, max = 255, value = self.max_threshold, step = 1)
+        self.max_threshold_slider = Slider(id = 'max_threhsold', min = MIN_THRESHOLD, max = MAX_THRESHOLD, value = self.max_threshold, step = 1)
         self.max_threshold_lbl = CustomLabel(font_size = 14, id = 'max_threshold_lbl', text = "Max intensity: " + str(int(self.max_threshold_slider.value)))
-        self.min_threshold_slider = Slider(id='min_threshold_slider', min = 0, max = 255, value = self.min_threshold, step = 1)
+        self.min_threshold_slider = Slider(id='min_threshold_slider', min = MIN_THRESHOLD, max = MAX_THRESHOLD, value = self.min_threshold, step = 1)
         self.min_threshold_lbl = CustomLabel(font_size = 14, id='min_threshold_lbl', text = "Min intensity:" + str(int(self.min_threshold_slider.value)))
-        self.max_area_slider = Slider(id='max_area_slider', min = 0, max = 60000, value = self.max_area, step = 1)
+        self.max_area_slider = Slider(id='max_area_slider', min = MAX_AREA_LOWER, max = MAX_AREA_UPPER, value = self.max_area, step = 1)
         self.max_area_lbl = CustomLabel(font_size = 14, id='max_area_lbl', text = "Max area:" + str(int(self.max_area_slider.value)))
-        self.min_area_slider = Slider(id='min_area_slider', min = 0, max = 10000, value = self.min_area, step = 1)
+        self.min_area_slider = Slider(id='min_area_slider', min = MIN_AREA_LOWER, max = MIN_AREA_UPPER, value = self.min_area, step = 1)
         self.min_area_lbl = CustomLabel(font_size = 14, id='min_area_lbl', text = "Min area:" + str(int(self.min_area_slider.value)))
         self.w_list = [ self.max_threshold_lbl, self.max_threshold_slider,
                         self.min_threshold_lbl, self.min_threshold_slider,
@@ -260,22 +266,22 @@ class PreprocessingPreview(BoxLayout):
         self.resegmentation_step_finished = False
         self.resegmentation_box = BoxLayout()
         resegmentation_controls_box = BoxLayout(orientation = "vertical", size_hint = (.3, 1.))
-        max_threshold_slider = Slider(id = 'max_threshold_slider', min = 0, max = 255,
+        max_threshold_slider = Slider(id = 'max_threshold_slider', min = MIN_THRESHOLD, max = MAX_THRESHOLD,
                         value = self.new_preprocessing_parameters['max_threshold'],
                         step = 1)
         max_threshold_lbl = CustomLabel(font_size = 14,
                 text = "Max intensity: " + str(int(max_threshold_slider.value)))
-        min_threshold_slider = Slider(id = 'min_threshold_slider', min = 0, max = 255,
+        min_threshold_slider = Slider(id = 'min_threshold_slider', min = MIN_THRESHOLD, max = MAX_THRESHOLD,
                         value = self.new_preprocessing_parameters['min_threshold'],
                         step = 1)
         min_threshold_lbl = CustomLabel(font_size = 14,
                 text = "Min intensity:" + str(int(min_threshold_slider.value)))
-        max_area_slider = Slider(id = 'max_area_slider', min = 0, max = 60000,
+        max_area_slider = Slider(id = 'max_area_slider', min = MAX_AREA_LOWER, max = MAX_AREA_UPPER,
                             value = self.new_preprocessing_parameters['max_area'],
                             step = 1)
         max_area_lbl = CustomLabel(font_size = 14,
                         text = "Max area:" + str(int(max_area_slider.value)))
-        min_area_slider = Slider(id = 'min_area_slider', min = 0, max = 1000,
+        min_area_slider = Slider(id = 'min_area_slider', min = MIN_AREA_LOWER, max = MIN_AREA_UPPER,
                             value = self.new_preprocessing_parameters['min_area'],
                             step = 1)
         min_area_lbl = CustomLabel(font_size = 14,

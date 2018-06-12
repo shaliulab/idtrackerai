@@ -36,7 +36,11 @@ from natsort import natsorted
 import cv2
 import time
 from idtrackerai.utils.py_utils import get_git_revision_hash
-from idtrackerai.constants import  AVAILABLE_VIDEO_EXTENSION, FRAMES_PER_EPISODE, MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
+from idtrackerai.constants import AVAILABLE_VIDEO_EXTENSION,\
+                                FRAMES_PER_EPISODE,\
+                                MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
+from idtrackerai.constants import MIN_AREA_DEFAULT, MAX_AREA_DEFAULT
+from idtrackerai.constants import MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -99,10 +103,10 @@ class Video(object):
         self._original_ROI = None #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
         self._ROI = None
         self._apply_ROI = None #boolean: True if the user applies a ROI to the video
-        self._min_threshold = 0
-        self._max_threshold = 135
-        self._min_area = 150
-        self._max_area = 10000
+        self._min_threshold = MIN_THRESHOLD_DEFAULT
+        self._max_threshold = MAX_THRESHOLD_DEFAULT
+        self._min_area = MIN_AREA_DEFAULT
+        self._max_area = MAX_AREA_DEFAULT
         self._resize = 1
         self._resegmentation_parameters = []
         self._tracking_interval = None

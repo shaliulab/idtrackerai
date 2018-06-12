@@ -43,6 +43,30 @@ FRAMES_PER_EPISODE = 500
 #######################################
 ##########   preprocessing  ###########
 #######################################
+"""***MIN_AREA_LOWER, MIN_AREA_UPPER***
+Lower and upper bounds for the minimum area slider
+"""
+MIN_AREA_LOWER, MIN_AREA_UPPER = 0, 10000
+"""***MIN_AREA_DEFAULT***
+Default value for min area in preprocessing
+"""
+MIN_AREA_DEFAULT = 150
+"""***MAX_AREA_LOWER, MAX_AREA_UPPER***
+Lower and upper bounds for the maximum area slider
+"""
+MAX_AREA_LOWER, MAX_AREA_UPPER = 0, 60000
+"""***MAX_AREA_DEFAULT***
+Default value for min area in preprocessing
+"""
+MAX_AREA_DEFAULT = 60000
+"""***MIN_THRESHOLD, MAX_AREA_UPPER***
+Lower and upper bounds for the maximum area slider
+"""
+MIN_THRESHOLD, MAX_THRESHOLD = 0, 255
+"""***MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT***
+Default value for min area in preprocessing
+"""
+MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT = 0, 135
 """***VEL_PERCENTILE***
 percentile on the average speed of the individuals used to compute the maximal
 velocity threshold
