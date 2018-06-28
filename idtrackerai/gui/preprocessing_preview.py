@@ -610,11 +610,14 @@ class PreprocessingPreview(BoxLayout):
             else:
                 raise NotImplementedError("Colour videos has still to be integrated")
         if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and CHOSEN_VIDEO.video.resolution_reduction != 1:
-            if self.bkg_subtractor_switch.active:
+            if self.bkg_subtractor_switch.active and CHOSEN_VIDEO.video.bkg.shape != self.frame.shape:
                 bkg = cv2.resize(CHOSEN_VIDEO.video.bkg, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
             else:
                 bkg = CHOSEN_VIDEO.video.bkg
-            ROI = cv2.resize(self.ROI, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
+            if self.ROI.shape != self.frame.shape:
+                ROI = cv2.resize(self.ROI, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
+            else:
+                ROI = self.ROI
         else:
             bkg = CHOSEN_VIDEO.video.bkg
             ROI = self.ROI

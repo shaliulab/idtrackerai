@@ -236,6 +236,18 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         Frame with zeros and ones after applying the thresholding and the mask.
         Pixels with value 1 are valid pixels given the thresholds and the mask.
     """
+    if frame is not None:
+        print(frame.shape)
+    else:
+        print("frame is None")
+    if bkg is not None:
+        print(bkg.shape)
+    else:
+        print("bkg is None")
+    if ROI is not None:
+        print(ROI.shape)
+    else:
+        print("ROI is None")
     if useBkg:
         frame = cv2.absdiff(bkg,frame) #only step where frame normalization is important, because the background is normalised
         frame = 255 - frame * (255.0/frame.max())
