@@ -134,6 +134,15 @@ class Video(object):
         self._has_trajectories_wo_gaps = None
         self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
         self._first_frame_first_global_fragment = []
+        self._segmentation_time = 0.
+        self._crossing_detector_time = 0.
+        self._fragmentation_time = 0.
+        self._protocol1_time = 0.
+        self._protocol2_time = 0.
+        self._protocol3_pretraining_time = 0.
+        self._protocol3_accumulation_time = 0.
+        self._identify_time = 0.
+        self._create_trajectories_time = 0.
 
     @property
     def number_of_channels(self):
@@ -477,8 +486,43 @@ class Video(object):
     def ratio_accumulated_images(self):
         return self._ratio_accumulated_images
 
-    def check_paths_consistency_with_video_path(self,new_video_path):
+    @property
+    def segmentation_time(self):
+        return self._segmentation_time
 
+    @property
+    def crossing_detector_time(self):
+        return self._crossing_detector_time
+
+    @property
+    def fragmentation_time(self):
+        return self._fragmentation_time
+
+    @property
+    def protocol1_time(self):
+        return self._protocol1_time
+
+    @property
+    def protocol2_time(self):
+        return self._protocol2_time
+
+    @property
+    def protocol3_pretraining_time(self):
+        return self._protocol3_pretraining_time
+
+    @property
+    def protocol3_accumulation_time(self):
+        return self._protocol3_accumulation_time
+
+    @property
+    def identify_time(self):
+        return self._identify_time
+
+    @property
+    def create_trajectories_time(self):
+        return self._create_trajectories_time
+
+    def check_paths_consistency_with_video_path(self, new_video_path):
         if self.video_path != new_video_path:
             self.update_paths(new_video_path)
 
