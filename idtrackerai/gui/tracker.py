@@ -54,6 +54,7 @@ import os
 import sys
 import copy
 import numpy as np
+import time
 from scipy.stats import mode
 import cv2
 from idtrackerai.preprocessing.segmentation import segment_frame, segment
@@ -158,7 +159,7 @@ class Tracker(BoxLayout):
                 self.start_tracking_button.bind(on_release = self.accumulate)
                 self.start_tracking_button.text = "Start\naccumulation\n(protocol 3)"
             elif 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
-                Logger.info("Restoring protocol 1")
+                Logger.info("Restoring protocol 1 and 2")
                 self.restoring_first_accumulation = True
                 self.restore_first_accumulation()
                 self.accumulation_manager.ratio_accumulated_images = CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]
@@ -187,6 +188,8 @@ class Tracker(BoxLayout):
                                     video_path = CHOSEN_VIDEO.video.video_path)
 
     def protocol1(self, *args):
+        print("\n****** setting protocol1 time")
+        CHOSEN_VIDEO.video._protocol1_time = time.time()
         CHOSEN_VIDEO.list_of_fragments.reset(roll_back_to = 'fragmentation')
         CHOSEN_VIDEO.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
         if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
@@ -254,29 +257,46 @@ class Tracker(BoxLayout):
         Logger.info("------------------------> Calling accumulate")
         if self.accumulation_step_finished and self.accumulation_manager.continue_accumulation:
             Logger.info("--------------------> Performing accumulation")
+            if self.accumulation_manager.counter == 1 and CHOSEN_VIDEO.video.accumulation_trial == 0:
+                CHOSEN_VIDEO.video._protocol1_time = time.time()-CHOSEN_VIDEO.video.protocol1_time
+                CHOSEN_VIDEO.video._protocol2_time = time.time()
             self.one_shot_accumulation()
         elif not self.accumulation_manager.continue_accumulation\
             and not CHOSEN_VIDEO.video.first_accumulation_finished\
             and self.accumulation_manager.ratio_accumulated_images > THRESHOLD_EARLY_STOP_ACCUMULATION:
             Logger.info("Protocol 1 successful")
             self.save_after_first_accumulation()
+            if 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
+                CHOSEN_VIDEO.video._protocol1_time = time.time()-CHOSEN_VIDEO.video.protocol1_time
             self.identification_popup.open()
         elif not self.accumulation_manager.continue_accumulation\
             and not CHOSEN_VIDEO.video.has_been_pretrained:
             self.save_after_first_accumulation()
             if self.accumulation_manager.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                 Logger.info("Protocol 2 successful")
+                Logger.warning("------------------------ dismissing one shot accumulation popup")
+                self.one_shot_accumulation_popup.dismiss()
+                self.save_after_first_accumulation()
+                if 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
+                    CHOSEN_VIDEO.video._protocol2_time = time.time()-CHOSEN_VIDEO.video.protocol2_time
                 self.identification_popup.open()
             elif self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
                 Logger.info("Protocol 2 failed -> Start protocol 3")
+                if 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
+                    CHOSEN_VIDEO.video._protocol1_time = time.time()-CHOSEN_VIDEO.video.protocol1_time
+                    if CHOSEN_VIDEO.video.protocol2_time != 0:
+                        CHOSEN_VIDEO.video._protocol2_time = time.time()-CHOSEN_VIDEO.video.protocol2_time
+                CHOSEN_VIDEO.video._protocol3_pretraining_time = time.time()
                 self.create_pretraining_popup()
                 self.protocol3()
         elif CHOSEN_VIDEO.video.has_been_pretrained\
             and CHOSEN_VIDEO.video.accumulation_trial < MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS\
-            and self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION :
+            and self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
             Logger.info("Accumulation in protocol 3 is not successful. Opening parachute ...")
+            if CHOSEN_VIDEO.video.accumulation_trial == 0:
+                CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()
             CHOSEN_VIDEO.video.accumulation_trial += 1
-            if not self.accumulation_manager.continue_accumulation:
+            if not self.accumulation_manager.continue_accumulation and CHOSEN_VIDEO.video.accumulation_trial > 1:
                 self.save_and_update_accumulation_parameters_in_parachute()
             self.accumulation_parachute_init(CHOSEN_VIDEO.video.accumulation_trial)
             self.accumulation_loop()
@@ -284,6 +304,13 @@ class Tracker(BoxLayout):
             (self.accumulation_manager.ratio_accumulated_images >= THRESHOLD_ACCEPTABLE_ACCUMULATION\
             or CHOSEN_VIDEO.video.accumulation_trial >= MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS):
             Logger.info("Accumulation after protocol 3 has been successful")
+            print(CHOSEN_VIDEO.processes_to_restore.keys())
+            if 'protocol3_accumulation' not in CHOSEN_VIDEO.processes_to_restore:
+                CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()-CHOSEN_VIDEO.video.protocol3_accumulation_time
+            elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and not CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
+                CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()-CHOSEN_VIDEO.video.protocol3_accumulation_time
+            else:
+                CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()-CHOSEN_VIDEO.video.protocol3_accumulation_time
             Logger.warning("************************ Unscheduling accumulate")
             Clock.unschedule(self.accumulate)
             Logger.warning("------------------------ dismissing one shot accumulation popup")
@@ -370,6 +397,7 @@ class Tracker(BoxLayout):
             CHOSEN_VIDEO.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
             CHOSEN_VIDEO.list_of_fragments.save_light_list(CHOSEN_VIDEO.video._accumulation_folder)
 
+
     def save_after_second_accumulation(self):
         Logger.info("Saving second accumulation parameters")
         self.save_and_update_accumulation_parameters_in_parachute()
@@ -382,6 +410,10 @@ class Tracker(BoxLayout):
         Logger.info("Saving global fragments")
         CHOSEN_VIDEO.list_of_fragments.save(CHOSEN_VIDEO.video.fragments_path)
         CHOSEN_VIDEO.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
+        Logger.info("Restoring networks to best second accumulation")
+        self.accumulation_network_params.restore_folder = CHOSEN_VIDEO.video._accumulation_folder
+        self.net = ConvNetwork(self.accumulation_network_params)
+        self.net.restore()
         CHOSEN_VIDEO.video.save()
 
 
@@ -426,6 +458,8 @@ class Tracker(BoxLayout):
             CHOSEN_VIDEO.video._has_been_pretrained = True
             Clock.unschedule(self.continue_pretraining)
             Logger.warning('Calling accumulate from continue_pretraining')
+            print('\n****** saving protocol3 pretraining time')
+            CHOSEN_VIDEO.video._protocol3_pretraining_time = time.time()-CHOSEN_VIDEO.video.protocol3_pretraining_time
             self.accumulate()
 
     def one_shot_pretraining(self, *args):
@@ -469,6 +503,7 @@ class Tracker(BoxLayout):
         self.pretraining_step_finished = True
 
     def identify(self, *args):
+        CHOSEN_VIDEO.video._identify_time = time.time()
         Logger.warning("In identify")
         CHOSEN_VIDEO.list_of_fragments.reset(roll_back_to = 'accumulation')
         Logger.warning("Calling assigner")
@@ -505,9 +540,11 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video,
                                         CHOSEN_VIDEO.video.blobs_path,
                                         number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
+        CHOSEN_VIDEO.video._identify_time = time.time()-CHOSEN_VIDEO.video.identify_time
         self.trajectories_popup.open()
 
     def create_trajectories(self, *args):
+        CHOSEN_VIDEO.video._create_trajectories_time = time.time()
         if 'post_processing' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['post_processing']:
             CHOSEN_VIDEO.video.create_trajectories_folder()
             trajectories_file = os.path.join(CHOSEN_VIDEO.video.trajectories_folder, 'trajectories.npy')
@@ -556,6 +593,7 @@ class Tracker(BoxLayout):
         trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
         np.save(trajectories_file, trajectories)
         CHOSEN_VIDEO.video.save()
+        CHOSEN_VIDEO.video._create_trajectories_time = time.time()-CHOSEN_VIDEO.video.create_trajectories_time
         self.trajectories_wo_gaps_popup.dismiss()
 
     def update_and_show_happy_ending_popup(self, *args):
@@ -583,10 +621,14 @@ class Tracker(BoxLayout):
                     'first_frame_first_global_fragment', 'pretraining_folder',
                     'has_been_pretrained', 'has_been_assigned',
                     'has_crossings_solved','has_trajectories',
-                    'has_trajectories_wo_gaps']
+                    'has_trajectories_wo_gaps',
+                    'protocol1_time', 'protocol2_time',
+                    'protocol3_pretraining_time', 'protocol3_accumulation_time',
+                    'identify_time', 'create_trajectories_time']
         is_property = [True, True, False, False, False, False, False, False,
                         False, False, False, False, True, False, True, True,
-                        True, False, True, True, True, True, True, True, True]
+                        True, False, True, True, True, True, True, True, True,
+                        True, True, True, True, True, True]
         CHOSEN_VIDEO.video.copy_attributes_between_two_video_objects(CHOSEN_VIDEO.old_video, list_of_attributes, is_property = is_property)
 
     def restore_first_accumulation(self):
@@ -599,6 +641,7 @@ class Tracker(BoxLayout):
         self.net = ConvNetwork(self.accumulation_network_params)
         self.net.restore()
         Logger.info("Saving video")
+        CHOSEN_VIDEO.video._has_been_pretrained = False
         CHOSEN_VIDEO.video.save()
         CHOSEN_VIDEO.list_of_fragments.save_light_list(CHOSEN_VIDEO.video._accumulation_folder)
 
@@ -611,6 +654,7 @@ class Tracker(BoxLayout):
         self.accumulation_manager = AccumulationManager(CHOSEN_VIDEO.video, CHOSEN_VIDEO.list_of_fragments,
                                                     CHOSEN_VIDEO.list_of_global_fragments,
                                                     threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+        CHOSEN_VIDEO.video.accumulation_trial = 0
         CHOSEN_VIDEO.video.save()
 
     def restore_second_accumulation(self):

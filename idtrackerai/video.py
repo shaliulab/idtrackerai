@@ -36,7 +36,12 @@ from natsort import natsorted
 import cv2
 import time
 from idtrackerai.utils.py_utils import get_git_revision_hash
-from idtrackerai.constants import  AVAILABLE_VIDEO_EXTENSION, FRAMES_PER_EPISODE, MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
+from idtrackerai.constants import AVAILABLE_VIDEO_EXTENSION,\
+                                FRAMES_PER_EPISODE,\
+                                MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
+from idtrackerai.constants import MIN_AREA_DEFAULT, MAX_AREA_DEFAULT
+from idtrackerai.constants import MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT
+from idtrackerai.constants import IDENTIFICATION_IMAGE_SIZE
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -99,10 +104,10 @@ class Video(object):
         self._original_ROI = None #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
         self._ROI = None
         self._apply_ROI = None #boolean: True if the user applies a ROI to the video
-        self._min_threshold = 0
-        self._max_threshold = 135
-        self._min_area = 150
-        self._max_area = 10000
+        self._min_threshold = MIN_THRESHOLD_DEFAULT
+        self._max_threshold = MAX_THRESHOLD_DEFAULT
+        self._min_area = MIN_AREA_DEFAULT
+        self._max_area = MAX_AREA_DEFAULT
         self._resize = 1
         self._resegmentation_parameters = []
         self._tracking_interval = None
@@ -130,6 +135,15 @@ class Video(object):
         self._has_trajectories_wo_gaps = None
         self._embeddings_folder = None # If embeddings are computed, the will be saved in this path
         self._first_frame_first_global_fragment = []
+        self._segmentation_time = 0.
+        self._crossing_detector_time = 0.
+        self._fragmentation_time = 0.
+        self._protocol1_time = 0.
+        self._protocol2_time = 0.
+        self._protocol3_pretraining_time = 0.
+        self._protocol3_accumulation_time = 0.
+        self._identify_time = 0.
+        self._create_trajectories_time = 0.
 
     @property
     def number_of_channels(self):
@@ -376,17 +390,11 @@ class Video(object):
 
     @video_path.setter
     def video_path(self, value):
-        print("video_path 1")
         video_name, video_extension = os.path.splitext(value)
-        print("video_path 2")
         if video_extension in AVAILABLE_VIDEO_EXTENSION:
-            print("video_path 3")
             self._video_path = value
-            print("video_path 4")
             #get video folder
-            print("video_path 5")
             self._video_folder = os.path.dirname(self.video_path)
-            print("video_path 6")
             #collect some info on the video (resolution, number of frames, ..)
             if not hasattr(self,'number_of_frames'):
                 self.get_info()
@@ -479,8 +487,43 @@ class Video(object):
     def ratio_accumulated_images(self):
         return self._ratio_accumulated_images
 
-    def check_paths_consistency_with_video_path(self,new_video_path):
+    @property
+    def segmentation_time(self):
+        return self._segmentation_time
 
+    @property
+    def crossing_detector_time(self):
+        return self._crossing_detector_time
+
+    @property
+    def fragmentation_time(self):
+        return self._fragmentation_time
+
+    @property
+    def protocol1_time(self):
+        return self._protocol1_time
+
+    @property
+    def protocol2_time(self):
+        return self._protocol2_time
+
+    @property
+    def protocol3_pretraining_time(self):
+        return self._protocol3_pretraining_time
+
+    @property
+    def protocol3_accumulation_time(self):
+        return self._protocol3_accumulation_time
+
+    @property
+    def identify_time(self):
+        return self._identify_time
+
+    @property
+    def create_trajectories_time(self):
+        return self._create_trajectories_time
+
+    def check_paths_consistency_with_video_path(self, new_video_path):
         if self.video_path != new_video_path:
             self.update_paths(new_video_path)
 
@@ -498,6 +541,15 @@ class Video(object):
         for key in attributes_to_modify:
             new_value = attributes_to_modify[key].replace(old_session_path, new_session_path)
             setattr(self, key, new_value)
+
+        if self.paths_to_video_segments is not None and len(self.paths_to_video_segments) != 0:
+            logger.info("Updating paths_to_video_segments")
+            new_paths_to_video_segments = []
+            for path in self.paths_to_video_segments:
+                new_path = os.path.join(self.video_folder, os.path.split(path)[1])
+                print(path, new_path)
+                new_paths_to_video_segments.append(new_path)
+            self._paths_to_video_segments = new_paths_to_video_segments
 
         logger.info("Updating checkpoint files")
         folders_to_check = ['crossings_detector_folder', 'pretraining_folder', 'accumulation_folder']
@@ -615,10 +667,12 @@ class Video(object):
         compute the size of the square image that is generated from every
         blob to identify the animals
         """
-        identification_image_size = int(maximum_body_length / np.sqrt(2))
-        identification_image_size = identification_image_size + identification_image_size % 2
-        self._identification_image_size = (identification_image_size, identification_image_size, self.number_of_channels)
-
+        if IDENTIFICATION_IMAGE_SIZE is None:
+            identification_image_size = int(maximum_body_length / np.sqrt(2))
+            identification_image_size = identification_image_size + identification_image_size % 2
+            self._identification_image_size = (identification_image_size, identification_image_size, self.number_of_channels)
+        else:
+            self._identification_image_size = IDENTIFICATION_IMAGE_SIZE
     def init_processes_time_attributes(self):
         self.generate_trajectories_time = 0
         self.solve_impossible_jumps_time = 0

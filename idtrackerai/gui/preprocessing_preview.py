@@ -46,19 +46,26 @@ from functools import partial
 import matplotlib
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
-import seaborn as sns
 import os
-import sys
 import numpy as np
+import time
 from scipy.stats import mode
 import cv2
-from idtrackerai.video import Video
 from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.list_of_fragments import ListOfFragments, create_list_of_fragments
-from idtrackerai.list_of_global_fragments import ListOfGlobalFragments, create_list_of_global_fragments
-from idtrackerai.preprocessing.segmentation import segment_frame, segment, resegment
+from idtrackerai.list_of_fragments import ListOfFragments,\
+                                            create_list_of_fragments
+from idtrackerai.list_of_global_fragments import ListOfGlobalFragments,\
+                                                create_list_of_global_fragments
+from idtrackerai.preprocessing.segmentation import segment_frame, segment,\
+                                                    resegment
 from idtrackerai.utils.video_utils import blob_extractor
 from idtrackerai.crossing_detector import detect_crossings
+from idtrackerai.constants import MIN_AREA_LOWER, MIN_AREA_UPPER
+from idtrackerai.constants import MAX_AREA_LOWER, MAX_AREA_UPPER
+from idtrackerai.constants import MIN_THRESHOLD, MAX_THRESHOLD
+from idtrackerai.constants import MIN_AREA_DEFAULT, MAX_AREA_DEFAULT
+from idtrackerai.constants import MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT
+
 
 class PreprocessingPreview(BoxLayout):
     def __init__(self, chosen_video = None,
@@ -125,21 +132,21 @@ class PreprocessingPreview(BoxLayout):
             self.number_of_animals = CHOSEN_VIDEO.old_video.number_of_animals
             CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.old_video.resolution_reduction
         else:
-            self.max_threshold = 135
-            self.min_threshold = 0
-            self.min_area = 150
-            self.max_area = 60000
+            self.max_threshold = MAX_THRESHOLD_DEFAULT
+            self.min_threshold = MIN_THRESHOLD_DEFAULT
+            self.min_area = MIN_AREA_DEFAULT
+            self.max_area = MAX_AREA_DEFAULT
             CHOSEN_VIDEO.video.resolution_reduction = 1.
             self.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
             if CHOSEN_VIDEO.video._original_ROI is None:
                 CHOSEN_VIDEO.video._original_ROI = np.ones( (CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width), dtype='uint8') * 255
-        self.max_threshold_slider = Slider(id = 'max_threhsold', min = 0, max = 255, value = self.max_threshold, step = 1)
+        self.max_threshold_slider = Slider(id = 'max_threhsold', min = MIN_THRESHOLD, max = MAX_THRESHOLD, value = self.max_threshold, step = 1)
         self.max_threshold_lbl = CustomLabel(font_size = 14, id = 'max_threshold_lbl', text = "Max intensity: " + str(int(self.max_threshold_slider.value)))
-        self.min_threshold_slider = Slider(id='min_threshold_slider', min = 0, max = 255, value = self.min_threshold, step = 1)
+        self.min_threshold_slider = Slider(id='min_threshold_slider', min = MIN_THRESHOLD, max = MAX_THRESHOLD, value = self.min_threshold, step = 1)
         self.min_threshold_lbl = CustomLabel(font_size = 14, id='min_threshold_lbl', text = "Min intensity:" + str(int(self.min_threshold_slider.value)))
-        self.max_area_slider = Slider(id='max_area_slider', min = 0, max = 60000, value = self.max_area, step = 1)
+        self.max_area_slider = Slider(id='max_area_slider', min = MAX_AREA_LOWER, max = MAX_AREA_UPPER, value = self.max_area, step = 1)
         self.max_area_lbl = CustomLabel(font_size = 14, id='max_area_lbl', text = "Max area:" + str(int(self.max_area_slider.value)))
-        self.min_area_slider = Slider(id='min_area_slider', min = 0, max = 1000, value = self.min_area, step = 1)
+        self.min_area_slider = Slider(id='min_area_slider', min = MIN_AREA_LOWER, max = MIN_AREA_UPPER, value = self.min_area, step = 1)
         self.min_area_lbl = CustomLabel(font_size = 14, id='min_area_lbl', text = "Min area:" + str(int(self.min_area_slider.value)))
         self.w_list = [ self.max_threshold_lbl, self.max_threshold_slider,
                         self.min_threshold_lbl, self.min_threshold_slider,
@@ -201,7 +208,7 @@ class PreprocessingPreview(BoxLayout):
             self.bkg_subtractor_switch.bind(active = self.apply_bkg_subtraction)
             CHOSEN_VIDEO.video.resolution_reduction = CHOSEN_VIDEO.video.resolution_reduction
             self.bkg = CHOSEN_VIDEO.video.bkg
-            self.ROI = CHOSEN_VIDEO.video.ROI if CHOSEN_VIDEO.video.ROI is not None else np.ones((CHOSEN_VIDEO.video.height, CHOSEN_VIDEO.video.width) ,dtype='uint8') * 255
+            self.ROI = CHOSEN_VIDEO.video.ROI if CHOSEN_VIDEO.video.ROI is not None else np.ones((CHOSEN_VIDEO.video.original_height, CHOSEN_VIDEO.video.original_width) ,dtype='uint8') * 255
             self.create_number_of_animals_popup()
             self.num_of_animals_input.bind(on_text_validate = self.set_number_of_animals)
             self.num_of_animals_popup.bind(on_dismiss = self.show_segmenting_popup)
@@ -220,6 +227,7 @@ class PreprocessingPreview(BoxLayout):
             self.bkg_subtractor.shower = self.show_preprocessing
 
     def compute_list_of_blobs(self, *args):
+        CHOSEN_VIDEO.video._segmentation_time = time.time()
         self.blobs = segment(CHOSEN_VIDEO.video)
         self.segmenting_popup.dismiss()
 
@@ -260,22 +268,22 @@ class PreprocessingPreview(BoxLayout):
         self.resegmentation_step_finished = False
         self.resegmentation_box = BoxLayout()
         resegmentation_controls_box = BoxLayout(orientation = "vertical", size_hint = (.3, 1.))
-        max_threshold_slider = Slider(id = 'max_threshold_slider', min = 0, max = 255,
+        max_threshold_slider = Slider(id = 'max_threshold_slider', min = MIN_THRESHOLD, max = MAX_THRESHOLD,
                         value = self.new_preprocessing_parameters['max_threshold'],
                         step = 1)
         max_threshold_lbl = CustomLabel(font_size = 14,
                 text = "Max intensity: " + str(int(max_threshold_slider.value)))
-        min_threshold_slider = Slider(id = 'min_threshold_slider', min = 0, max = 255,
+        min_threshold_slider = Slider(id = 'min_threshold_slider', min = MIN_THRESHOLD, max = MAX_THRESHOLD,
                         value = self.new_preprocessing_parameters['min_threshold'],
                         step = 1)
         min_threshold_lbl = CustomLabel(font_size = 14,
                 text = "Min intensity:" + str(int(min_threshold_slider.value)))
-        max_area_slider = Slider(id = 'max_area_slider', min = 0, max = 60000,
+        max_area_slider = Slider(id = 'max_area_slider', min = MAX_AREA_LOWER, max = MAX_AREA_UPPER,
                             value = self.new_preprocessing_parameters['max_area'],
                             step = 1)
         max_area_lbl = CustomLabel(font_size = 14,
                         text = "Max area:" + str(int(max_area_slider.value)))
-        min_area_slider = Slider(id = 'min_area_slider', min = 0, max = 1000,
+        min_area_slider = Slider(id = 'min_area_slider', min = MIN_AREA_LOWER, max = MIN_AREA_UPPER,
                             value = self.new_preprocessing_parameters['min_area'],
                             step = 1)
         min_area_lbl = CustomLabel(font_size = 14,
@@ -356,9 +364,12 @@ class PreprocessingPreview(BoxLayout):
         CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video,
                                 CHOSEN_VIDEO.video.blobs_path_segmented,
                                 number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
+        CHOSEN_VIDEO.video._segmentation_time =\
+            time.time() - CHOSEN_VIDEO.video.segmentation_time
         self.consistency_success_popup.dismiss()
 
     def model_area_and_crossing_detector(self, *args):
+        CHOSEN_VIDEO.video._crossing_detector_time = time.time()
         CHOSEN_VIDEO.video._model_area, CHOSEN_VIDEO.video._median_body_length = CHOSEN_VIDEO.list_of_blobs.compute_model_area_and_body_length(CHOSEN_VIDEO.video.number_of_animals)
         CHOSEN_VIDEO.video.compute_identification_image_size(CHOSEN_VIDEO.video.median_body_length)
         if not CHOSEN_VIDEO.list_of_blobs.blobs_are_connected:
@@ -374,8 +385,6 @@ class PreprocessingPreview(BoxLayout):
             CHOSEN_VIDEO.list_of_blob = detect_crossings(CHOSEN_VIDEO.list_of_blobs, CHOSEN_VIDEO.video,
                         CHOSEN_VIDEO.video.model_area, use_network = False,
                         return_store_objects = False, plot_flag = False)
-            print("after model area")
-            print([b.image_for_identification.shape for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf])
             CHOSEN_VIDEO.list_of_blob.save(CHOSEN_VIDEO.video,
                                     CHOSEN_VIDEO.video.blobs_path_segmented,
                                     number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
@@ -423,9 +432,12 @@ class PreprocessingPreview(BoxLayout):
         self.crossing_detector_accuracy_popup.bind(on_open = self.generate_list_of_fragments_and_global_fragments)
         if hasattr(self, 'go_to_tracking_button'):
             self.go_to_tracking_button.bind(on_release = self.crossing_detector_accuracy_popup.dismiss)
+        CHOSEN_VIDEO.video._crossing_detector_time =\
+            time.time() - CHOSEN_VIDEO.video.crossing_detector_time
         self.crossing_detector_accuracy_popup.open()
 
     def generate_list_of_fragments_and_global_fragments(self, *args):
+        CHOSEN_VIDEO.video._fragmentation_time = time.time()
         if CHOSEN_VIDEO.video.number_of_animals != 1:
             CHOSEN_VIDEO.list_of_blobs.compute_overlapping_between_subsequent_frames()
             CHOSEN_VIDEO.list_of_blobs.compute_fragment_identifier_and_blob_index(max(CHOSEN_VIDEO.video.number_of_animals, CHOSEN_VIDEO.video.maximum_number_of_blobs))
@@ -459,6 +471,7 @@ class PreprocessingPreview(BoxLayout):
         if CHOSEN_VIDEO.video.number_of_animals != 1:
             self.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, self.list_of_fragments.fragments)
             CHOSEN_VIDEO.list_of_global_fragments = self.list_of_global_fragments
+        CHOSEN_VIDEO.video._fragmentation_time = time.time() - CHOSEN_VIDEO.video.fragmentation_time
         CHOSEN_VIDEO.video.save()
         DEACTIVATE_TRACKING.setter(False)
 
@@ -605,13 +618,25 @@ class PreprocessingPreview(BoxLayout):
                 CHOSEN_VIDEO.video._number_of_channels = 1
             else:
                 raise NotImplementedError("Colour videos has still to be integrated")
+        if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and CHOSEN_VIDEO.video.resolution_reduction != 1:
+            if self.bkg_subtractor_switch.active and CHOSEN_VIDEO.video.bkg.shape != self.frame.shape:
+                bkg = cv2.resize(CHOSEN_VIDEO.video.bkg, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
+            else:
+                bkg = CHOSEN_VIDEO.video.bkg
+            if self.ROI.shape != self.frame.shape:
+                ROI = cv2.resize(self.ROI, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
+            else:
+                ROI = self.ROI
+        else:
+            bkg = CHOSEN_VIDEO.video.bkg
+            ROI = self.ROI
         avIntensity = np.float32(np.mean(self.frame))
         self.av_frame = self.frame / avIntensity
         self.segmented_frame = segment_frame(self.av_frame,
                                             int(min_threshold_slider.value),
                                             int(max_threshold_slider.value),
-                                            CHOSEN_VIDEO.video.bkg,
-                                            self.ROI,
+                                            bkg,
+                                            ROI,
                                             self.bkg_subtractor_switch.active)
         boundingBoxes, miniFrames, _, areas, _, goodContours, _ = blob_extractor(self.segmented_frame,
                                                                         self.frame,
@@ -625,7 +650,7 @@ class PreprocessingPreview(BoxLayout):
         cv2.drawContours(self.frame, goodContours, -1, color=255, thickness = -1)
         # self.frame = cv2.bitwise_and(self.frame, self.frame, mask = self.ROI)
         alpha = .05
-        self.frame = cv2.addWeighted(self.ROI, alpha, self.frame, 1 - alpha, 0)
+        self.frame = cv2.addWeighted(ROI, alpha, self.frame, 1 - alpha, 0)
         if self.count_scrollup != 0:
             self.dst = cv2.warpAffine(self.frame, self.M, (self.frame.shape[1], self.frame.shape[1]))
             buf1 = cv2.flip(self.dst,0)

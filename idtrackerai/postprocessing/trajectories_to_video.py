@@ -88,14 +88,18 @@ def apply_func_on_frame(video_object,
             frame = cv2.resize(frame, None,
                                 fx = video_object.resolution_reduction,
                                 fy = video_object.resolution_reduction)
-        frame = func(frame, frame_number, trajectories, centroid_trace_length,
+        frame = func(video_object, frame, frame_number, trajectories, centroid_trace_length,
                     colors)
         return frame
 
 
-def writeIds(frame, frame_number, trajectories, centroid_trace_length, colors):
+def writeIds(video_object, frame, frame_number, trajectories, centroid_trace_length, colors):
     ordered_centroid = trajectories[frame_number]
     font = cv2.FONT_HERSHEY_SIMPLEX
+    font_size = 1 * video_object.resolution_reduction
+    font_width = int(3 * video_object.resolution_reduction)
+    font_width = 1 if font_width == 0 else font_width
+    circle_size = int(2 * video_object.resolution_reduction)
 
     for cur_id, centroid in enumerate(ordered_centroid):
         if sum(np.isnan(centroid)) == 0:
@@ -105,12 +109,12 @@ def writeIds(frame, frame_number, trajectories, centroid_trace_length, colors):
                 centroids_trace = trajectories[: frame_number, cur_id]
             cur_id_str = str(cur_id + 1)
             int_centroid = np.asarray(centroid).astype('int')
-            cv2.circle(frame, tuple(int_centroid), 2, colors[cur_id], -1)
-            cv2.putText(frame, cur_id_str,tuple(int_centroid), font, 1, colors[cur_id], 3)
+            cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
+            cv2.putText(frame, cur_id_str,tuple(int_centroid), font, font_size, colors[cur_id], font_width)
             for centroid_trace in centroids_trace:
                 if sum(np.isnan(centroid_trace)) == 0:
                     int_centroid = np.asarray(centroid_trace).astype('int')
-                    cv2.circle(frame, tuple(int_centroid), 2, colors[cur_id], -1)
+                    cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
     return frame
 
 def main(args):

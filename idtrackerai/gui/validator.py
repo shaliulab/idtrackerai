@@ -408,6 +408,9 @@ class Validator(BoxLayout):
         frame_number = int(self.visualiser.video_slider.value)
         blobs_in_frame = self.blobs_in_video[frame_number]
         font = cv2.FONT_HERSHEY_SIMPLEX
+        font_size = 1 * CHOSEN_VIDEO.video.resolution_reduction
+        font_width = int(3 * CHOSEN_VIDEO.video.resolution_reduction)
+        font_width = 1 if font_width == 0 else font_width
         frame = self.visualiser.frame
 
         for blob in blobs_in_frame:
@@ -430,7 +433,7 @@ class Validator(BoxLayout):
                 cur_id_str = root + cur_id_str
                 int_centroid = np.asarray(blob.centroid).astype('int')
                 cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)
-                cv2.putText(frame, cur_id_str,tuple(int_centroid), font, 1, self.colors[cur_id], 3)
+                cv2.putText(frame, cur_id_str,tuple(int_centroid), font, font_size, self.colors[cur_id], font_width)
                 if blob.is_a_crossing or blob.identity_corrected_closing_gaps is not None or blob.assigned_identity == 0:
                     bounding_box = blob.bounding_box_in_frame_coordinates
                     if hasattr(blob, 'rect_color'):
@@ -443,7 +446,7 @@ class Validator(BoxLayout):
                     c_id_str = root + str(c_id)
                     int_centroid = tuple([int(centroid_coordinate) for centroid_coordinate in c_centroid])
                     cv2.circle(frame, int_centroid, 2, self.colors[c_id], -1)
-                    cv2.putText(frame, c_id_str, int_centroid, font, 1, self.colors[c_id], 3)
+                    cv2.putText(frame, c_id_str, int_centroid, font, font_size, self.colors[c_id], font_width)
 
                 self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
                 self._keyboard.bind(on_key_down=self._on_keyboard_down)
