@@ -87,7 +87,8 @@ def apply_func_on_frame(video_object,
         if video_object.resolution_reduction != 1:
             frame = cv2.resize(frame, None,
                                 fx = video_object.resolution_reduction,
-                                fy = video_object.resolution_reduction)
+                                fy = video_object.resolution_reduction,
+                                interpolation = cv2.INTER_AREA)
         frame = func(video_object, frame, frame_number, trajectories, centroid_trace_length,
                     colors)
         return frame
