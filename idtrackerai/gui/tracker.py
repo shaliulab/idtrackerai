@@ -258,9 +258,7 @@ class Tracker(BoxLayout):
         if self.accumulation_step_finished and self.accumulation_manager.continue_accumulation:
             Logger.info("--------------------> Performing accumulation")
             if self.accumulation_manager.counter == 1 and CHOSEN_VIDEO.video.accumulation_trial == 0:
-                print("\n****** saving protocol1 time")
                 CHOSEN_VIDEO.video._protocol1_time = time.time()-CHOSEN_VIDEO.video.protocol1_time
-                print("\n****** setting protocol2 time")
                 CHOSEN_VIDEO.video._protocol2_time = time.time()
             self.one_shot_accumulation()
         elif not self.accumulation_manager.continue_accumulation\
@@ -269,7 +267,6 @@ class Tracker(BoxLayout):
             Logger.info("Protocol 1 successful")
             self.save_after_first_accumulation()
             if 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
-                print("\n****** saving protocol1 time")
                 CHOSEN_VIDEO.video._protocol1_time = time.time()-CHOSEN_VIDEO.video.protocol1_time
             self.identification_popup.open()
         elif not self.accumulation_manager.continue_accumulation\
@@ -281,18 +278,14 @@ class Tracker(BoxLayout):
                 self.one_shot_accumulation_popup.dismiss()
                 self.save_after_first_accumulation()
                 if 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
-                    print("\n****** saving protocol2 time")
                     CHOSEN_VIDEO.video._protocol2_time = time.time()-CHOSEN_VIDEO.video.protocol2_time
                 self.identification_popup.open()
             elif self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
                 Logger.info("Protocol 2 failed -> Start protocol 3")
                 if 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
-                    print("\n****** saving protocol1 time")
                     CHOSEN_VIDEO.video._protocol1_time = time.time()-CHOSEN_VIDEO.video.protocol1_time
                     if CHOSEN_VIDEO.video.protocol2_time != 0:
-                        print("\n****** saving protocol2 time")
                         CHOSEN_VIDEO.video._protocol2_time = time.time()-CHOSEN_VIDEO.video.protocol2_time
-                print('\n****** setting protocol3 pretraining time')
                 CHOSEN_VIDEO.video._protocol3_pretraining_time = time.time()
                 self.create_pretraining_popup()
                 self.protocol3()
@@ -301,7 +294,6 @@ class Tracker(BoxLayout):
             and self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
             Logger.info("Accumulation in protocol 3 is not successful. Opening parachute ...")
             if CHOSEN_VIDEO.video.accumulation_trial == 0:
-                print('\n****** setting protocol3 accumulation time')
                 CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()
             CHOSEN_VIDEO.video.accumulation_trial += 1
             if not self.accumulation_manager.continue_accumulation and CHOSEN_VIDEO.video.accumulation_trial > 1:
@@ -314,13 +306,10 @@ class Tracker(BoxLayout):
             Logger.info("Accumulation after protocol 3 has been successful")
             print(CHOSEN_VIDEO.processes_to_restore.keys())
             if 'protocol3_accumulation' not in CHOSEN_VIDEO.processes_to_restore:
-                print('\n****** saving1 protocol3 accumulation time')
                 CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()-CHOSEN_VIDEO.video.protocol3_accumulation_time
             elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and not CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
-                print('\n****** saving2 protocol3 accumulation time')
                 CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()-CHOSEN_VIDEO.video.protocol3_accumulation_time
             else:
-                print('\n****** saving3 protocol3 accumulation time')
                 CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()-CHOSEN_VIDEO.video.protocol3_accumulation_time
             Logger.warning("************************ Unscheduling accumulate")
             Clock.unschedule(self.accumulate)
