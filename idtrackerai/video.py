@@ -265,12 +265,12 @@ class Video(object):
             self._bkg = cv2.resize(self.original_bkg, None,
                                             fx = value,
                                             fy = value,
-                                            interpolation = cv2.INTER_CUBIC)
+                                            interpolation = cv2.INTER_AREA)
         if self.apply_ROI or self.original_ROI is not None:
             self._ROI = cv2.resize(self.original_ROI, None,
                                             fx = value,
                                             fy = value,
-                                            interpolation = cv2.INTER_CUBIC)
+                                            interpolation = cv2.INTER_AREA)
 
     @property
     def min_threshold(self):

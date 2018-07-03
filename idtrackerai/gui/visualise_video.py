@@ -95,7 +95,8 @@ class VisualiseVideo(BoxLayout):
         ret, self.frame = self.cap.read()
         if ret == True:
             if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and CHOSEN_VIDEO.video.resolution_reduction != 1:
-                self.frame = cv2.resize(self.frame, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
+                self.frame = cv2.resize(self.frame, None, fx=CHOSEN_VIDEO.video.resolution_reduction, fy=CHOSEN_VIDEO.video.resolution_reduction,
+                                        interpolation=cv2.INTER_AREA)
             if self.func is None:
                 self.func = self.simple_visualisation
             self.func(self.frame)
