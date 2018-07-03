@@ -48,6 +48,7 @@ from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+import time
 from scipy.stats import mode
 import cv2
 from idtrackerai.list_of_blobs import ListOfBlobs
@@ -226,6 +227,7 @@ class PreprocessingPreview(BoxLayout):
             self.bkg_subtractor.shower = self.show_preprocessing
 
     def compute_list_of_blobs(self, *args):
+        CHOSEN_VIDEO.video._segmentation_time = time.time()
         self.blobs = segment(CHOSEN_VIDEO.video)
         self.segmenting_popup.dismiss()
 
@@ -362,9 +364,12 @@ class PreprocessingPreview(BoxLayout):
         CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video,
                                 CHOSEN_VIDEO.video.blobs_path_segmented,
                                 number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
+        CHOSEN_VIDEO.video._segmentation_time =\
+            time.time() - CHOSEN_VIDEO.video.segmentation_time
         self.consistency_success_popup.dismiss()
 
     def model_area_and_crossing_detector(self, *args):
+        CHOSEN_VIDEO.video._crossing_detector_time = time.time()
         CHOSEN_VIDEO.video._model_area, CHOSEN_VIDEO.video._median_body_length = CHOSEN_VIDEO.list_of_blobs.compute_model_area_and_body_length(CHOSEN_VIDEO.video.number_of_animals)
         CHOSEN_VIDEO.video.compute_identification_image_size(CHOSEN_VIDEO.video.median_body_length)
         if not CHOSEN_VIDEO.list_of_blobs.blobs_are_connected:
@@ -427,9 +432,12 @@ class PreprocessingPreview(BoxLayout):
         self.crossing_detector_accuracy_popup.bind(on_open = self.generate_list_of_fragments_and_global_fragments)
         if hasattr(self, 'go_to_tracking_button'):
             self.go_to_tracking_button.bind(on_release = self.crossing_detector_accuracy_popup.dismiss)
+        CHOSEN_VIDEO.video._crossing_detector_time =\
+            time.time() - CHOSEN_VIDEO.video.crossing_detector_time
         self.crossing_detector_accuracy_popup.open()
 
     def generate_list_of_fragments_and_global_fragments(self, *args):
+        CHOSEN_VIDEO.video._fragmentation_time = time.time()
         if CHOSEN_VIDEO.video.number_of_animals != 1:
             CHOSEN_VIDEO.list_of_blobs.compute_overlapping_between_subsequent_frames()
             CHOSEN_VIDEO.list_of_blobs.compute_fragment_identifier_and_blob_index(max(CHOSEN_VIDEO.video.number_of_animals, CHOSEN_VIDEO.video.maximum_number_of_blobs))
@@ -463,6 +471,7 @@ class PreprocessingPreview(BoxLayout):
         if CHOSEN_VIDEO.video.number_of_animals != 1:
             self.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, self.list_of_fragments.fragments)
             CHOSEN_VIDEO.list_of_global_fragments = self.list_of_global_fragments
+        CHOSEN_VIDEO.video._fragmentation_time = time.time() - CHOSEN_VIDEO.video.fragmentation_time
         CHOSEN_VIDEO.video.save()
         DEACTIVATE_TRACKING.setter(False)
 

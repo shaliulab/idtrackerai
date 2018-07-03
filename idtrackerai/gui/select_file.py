@@ -245,7 +245,9 @@ class SelectFile(BoxLayout):
                                 'preprocessing_folder',
                                 'fragment_identifier_to_index',
                                 'number_of_unique_images_in_global_fragments',
-                                'maximum_number_of_images_in_global_fragments']
+                                'maximum_number_of_images_in_global_fragments',
+                                'segmentation_time', 'crossing_detector_time',
+                                'fragmentation_time']
             CHOSEN_VIDEO.video.copy_attributes_between_two_video_objects(CHOSEN_VIDEO.old_video, path_attributes)
             CHOSEN_VIDEO.video._has_preprocessing_parameters = True
             CHOSEN_VIDEO.video._has_been_segmented = True
