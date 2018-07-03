@@ -88,7 +88,10 @@ NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION = None # Set None to use the default 
 Number of jobs used to perform the segmentation
 """
 NUMBER_OF_CORES_FOR_SEGMENTATION = None # Set None to use the default mode of the system. (see segmentation.py module for details)
-
+"""***IDENTIFICATION_IMAGE_SIZE***
+size of the identification images. Used for idmatcher.ai
+"""
+IDENTIFICATION_IMAGE_SIZE = None #(46, 46, 1)
 #######################################
 #########  global fragments  ##########
 #######################################

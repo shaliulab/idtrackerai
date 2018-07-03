@@ -229,7 +229,7 @@ def check_and_change_video_path(video_object, old_video):
             for path in old_video.paths_to_video_segments:
                 new_path = os.path.join(old_video.video_folder, os.path.split(path)[1])
                 new_paths_to_video_segments.append(new_path)
-        old_video._paths_to_video_segments = new_paths_to_video_segments
+            old_video._paths_to_video_segments = new_paths_to_video_segments
 
         ### update checkpoint files
         current_video_session_name = old_video.session_folder

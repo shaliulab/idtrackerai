@@ -41,6 +41,7 @@ from idtrackerai.constants import AVAILABLE_VIDEO_EXTENSION,\
                                 MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
 from idtrackerai.constants import MIN_AREA_DEFAULT, MAX_AREA_DEFAULT
 from idtrackerai.constants import MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT
+from idtrackerai.constants import IDENTIFICATION_IMAGE_SIZE
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -622,10 +623,12 @@ class Video(object):
         compute the size of the square image that is generated from every
         blob to identify the animals
         """
-        identification_image_size = int(maximum_body_length / np.sqrt(2))
-        identification_image_size = identification_image_size + identification_image_size % 2
-        self._identification_image_size = (identification_image_size, identification_image_size, self.number_of_channels)
-
+        if IDENTIFICATION_IMAGE_SIZE is None:
+            identification_image_size = int(maximum_body_length / np.sqrt(2))
+            identification_image_size = identification_image_size + identification_image_size % 2
+            self._identification_image_size = (identification_image_size, identification_image_size, self.number_of_channels)
+        else:
+            self._identification_image_size = IDENTIFICATION_IMAGE_SIZE
     def init_processes_time_attributes(self):
         self.generate_trajectories_time = 0
         self.solve_impossible_jumps_time = 0
