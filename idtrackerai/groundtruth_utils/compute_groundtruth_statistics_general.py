@@ -47,80 +47,14 @@ else:
     import logging
     logger = logging.getLogger("__main__.compute_statistics_against_groundtruth")
 
-def compare_tracking_against_groundtruth_no_gaps(number_of_animals,
-                                                groundtruth, blobs_in_video_groundtruth,
-                                                blobs_in_video, identities_dictionary_permutation):
-    """
-    blobs_in_video_groundtruth: cut groundtruth.blobs_in_video using start and end of the groundtruth object
-    blobs_in_video: cut list_of_blobs.blobs_in_video using start and end of the groundtruth object
-    """
-    results = {}
-    results['number_of_blobs_per_identity'] = {identity: 0 for identity in range(1, number_of_animals + 1)}
-    results['number_of_individuals_badly_assigned'] = {identity: 0 for identity in range(1, number_of_animals + 1)}
-    if identities_dictionary_permutation is not None:
-        results['number_of_individuals_badly_interpolated'] = {
-            identities_dictionary_permutation[identity]: groundtruth.wrong_crossing_counter[identity]
-            for identity in groundtruth.wrong_crossing_counter}
-        results['number_of_individuals_unidentified'] = {
-            identities_dictionary_permutation[identity]: groundtruth.unidentified_individuals_counter[identity]
-            for identity in groundtruth.wrong_crossing_counter}
-    else:
-        results['number_of_individuals_badly_interpolated'] = groundtruth.wrong_crossing_counter
-        results['number_of_individuals_unidentified'] = groundtruth.unidentified_individuals_counter
 
-    for blobs_in_frame_gt, blobs_in_frame in zip(blobs_in_video_groundtruth, blobs_in_video):
-        for blob_gt, blob in zip(blobs_in_frame_gt, blobs_in_frame):
-
-            if identities_dictionary_permutation is not None:
-                if isinstance(blob_gt.identity, int):
-                    gt_identity = identities_dictionary_permutation[blob_gt.identity]
-                elif isinstance(blob_gt.identity, list):
-                    gt_identity = [identities_dictionary_permutation[identity]
-                                    for identity in blob_gt.identity]
-            else:
-                gt_identity = blob_gt.identity
-
-            if isinstance(gt_identity, int) and gt_identity != 0:
-                results['number_of_blobs_per_identity'][gt_identity] += 1
-            elif isinstance(gt_identity, list):
-                for identity in gt_identity:
-                    if identity != 0:
-                        results['number_of_blobs_per_identity'][identity] += 1
-            elif gt_identity is None:
-                logger.debug('***************************************unidentified blobs')
-
-            if blob_gt.is_an_individual and not blob_gt.was_a_crossing:
-                if gt_identity != blob.assigned_identity:
-                    results['number_of_individuals_badly_assigned'][gt_identity] += 1
-
-    results['number_of_errors_in_all_blobs'] = {i: results['number_of_individuals_badly_assigned'][i] +
-                                                results['number_of_individuals_badly_interpolated'][i]
-                                                for i in range(1, number_of_animals + 1)}
-
-    return results
-
-def get_accuracy_wrt_groundtruth_no_gaps(video, groundtruth,
-                                            blobs_in_video_groundtruth,
-                                            blobs_in_video = None,
-                                            first_frame_first_global_fragment = None):
-
-    check_ground_truth_consistency(blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment)
-    identities_dictionary_permutation = get_permutation_of_identities(first_frame_first_global_fragment,
-                                                                    blobs_in_video_groundtruth, blobs_in_video)
-    number_of_animals = video.number_of_animals
-    if blobs_in_video is None:
-        blobs_in_video = blobs_in_video_groundtruth
-    results = compare_tracking_against_groundtruth_no_gaps(number_of_animals,
-                                                    groundtruth, blobs_in_video_groundtruth,
-                                                    blobs_in_video, identities_dictionary_permutation)
-
-    accuracies = {}
-    accuracies['individual_accuracy'] = {i : 1. - results['number_of_errors_in_all_blobs'][i] / results['number_of_blobs_per_identity'][i]
-                            for i in range(1, number_of_animals + 1)}
-    accuracies['accuracy'] = np.mean(accuracies['individual_accuracy'].values())
-    logger.info(accuracies)
-    logger.info(results)
-    return accuracies, results
+def get_corresponding_gt_blob(blob, gt_blobs_in_frame):
+    corresponding_gt_blobs = []
+    for gt_blob in gt_blobs_in_frame:
+        num_overlapping_pixels = len(set(gt_blob.pixels) & set(blob.pixels))
+        if num_overlapping_pixels > 0:
+            corresponding_gt_blobs.append(gt_blob)
+    return corresponding_gt_blobs
 
 
 def compare_tracking_against_groundtruth(number_of_animals,
@@ -151,52 +85,51 @@ def compare_tracking_against_groundtruth(number_of_animals,
     results['fragments_identifiers_of_crossings'] = []
 
     for gt_blobs_in_frame, blobs_in_frame in zip(blobs_in_video_groundtruth, blobs_in_video):
-
         for blob in blobs_in_frame:
-            corresponding_gt_blobs = [gt_blob for gt_blob in gt_blobs_in_frame]
+            corresponding_gt_blobs = get_corresponding_gt_blob(blob, gt_blobs_in_frame)
+            if blob.is_an_individual and len(corresponding_gt_blobs) == 1:
+                groundtruth_blob = corresponding_gt_blobs[0]
+                if groundtruth_blob.is_an_individual and groundtruth_blob.identity != -1 and not groundtruth_blob.was_a_crossing: # we are not considering crossing or failures of the model area
+                    if identities_dictionary_permutation is not None:
+                        gt_identity = identities_dictionary_permutation[groundtruth_blob.identity]
+                    else:
+                        gt_identity = groundtruth_blob.identity
+                    results['number_of_individual_blobs'] += 1
+                    if gt_identity == 0:
+                        results['frames_with_zeros_in_groundtruth'].append(groundtruth_blob.frame_number)
+                    else:
+                        try:
+                            if blob.assigned_identity != 0 and blob.identity_corrected_closing_gaps is None: # we only consider P2 for non interpolated blobs
+                                results['sum_individual_P2'][gt_identity] += blob._P2_vector[gt_identity - 1]
+                        except:
+                            logger.debug("P2_vector %s" %str(blob._P2_vector))
+                            logger.debug("individual %s" %str(blob.is_an_individual))
+                            logger.debug("fragment identifier ", blob.fragment_identifier)
+                        results['number_of_blobs_per_identity'][gt_identity] += 1
+                        results['number_of_assigned_blobs_per_identity'][gt_identity] += 1 if blob.assigned_identity != 0 else 0
+                        results['number_of_blobs_assigned_during_accumulation_per_identity'][gt_identity] += 1 if blob.used_for_training else 0
+                        results['number_of_blobs_after_accumulation_per_identity'][gt_identity] += 1 if not blob.used_for_training else 0
+                        if gt_identity != blob.assigned_identity:
+                            results['number_of_errors_in_all_blobs'][gt_identity] += 1
+                            results['number_of_errors_in_blobs_after_accumulation'][gt_identity] += 1 if not blob.used_for_training else 0
+                            if blob.assigned_identity != 0:
+                                results['number_of_errors_in_assigned_blobs'][gt_identity] += 1
+                                results['number_of_errors_in_blobs_assigned_during_accumulation'][gt_identity] += 1 if blob.used_for_training else 0
+                                results['number_of_errors_in_blobs_assigned_after_accumulation'][gt_identity] += 1 if not blob.used_for_training else 0
+                            if blob.fragment_identifier not in results['fragment_identifiers_with_identity_errors']:
+                                results['frames_with_identity_errors'].append(blob.frame_number)
+                                results['fragment_identifiers_with_identity_errors'].append(blob.fragment_identifier)
 
-            if identities_dictionary_permutation is not None:
-                gt_identity = identities_dictionary_permutation[groundtruth_blob.identity]
-            else:
-                gt_identity = groundtruth_blob.identity
-
-            if groundtruth_blob.is_an_individual and gt_identity != -1 and not groundtruth_blob.was_a_crossing: # we are not considering crossing or failures of the model area
-                results['number_of_individual_blobs'] += 1
-                if gt_identity == 0:
-                    results['frames_with_zeros_in_groundtruth'].append(groundtruth_blob.frame_number)
-                else:
-                    try:
-                        if blob.assigned_identity != 0 and blob.identity_corrected_closing_gaps is None: # we only consider P2 for non interpolated blobs
-                            results['sum_individual_P2'][gt_identity] += blob._P2_vector[gt_identity - 1]
-                    except:
-                        logger.debug("P2_vector %s" %str(blob._P2_vector))
-                        logger.debug("individual %s" %str(blob.is_an_individual))
-                        logger.debug("fragment identifier ", blob.fragment_identifier)
-                    results['number_of_blobs_per_identity'][gt_identity] += 1
-                    results['number_of_assigned_blobs_per_identity'][gt_identity] += 1 if blob.assigned_identity != 0 else 0
-                    results['number_of_blobs_assigned_during_accumulation_per_identity'][gt_identity] += 1 if blob.used_for_training else 0
-                    results['number_of_blobs_after_accumulation_per_identity'][gt_identity] += 1 if not blob.used_for_training else 0
-                    if gt_identity != blob.assigned_identity:
-                        results['number_of_errors_in_all_blobs'][gt_identity] += 1
-                        results['number_of_errors_in_blobs_after_accumulation'][gt_identity] += 1 if not blob.used_for_training else 0
-                        if blob.assigned_identity != 0:
-                            results['number_of_errors_in_assigned_blobs'][gt_identity] += 1
-                            results['number_of_errors_in_blobs_assigned_during_accumulation'][gt_identity] += 1 if blob.used_for_training else 0
-                            results['number_of_errors_in_blobs_assigned_after_accumulation'][gt_identity] += 1 if not blob.used_for_training else 0
-                        if blob.fragment_identifier not in results['fragment_identifiers_with_identity_errors']:
-                            results['frames_with_identity_errors'].append(blob.frame_number)
-                            results['fragment_identifiers_with_identity_errors'].append(blob.fragment_identifier)
-
-            elif groundtruth_blob.is_a_crossing or gt_identity == -1:
-                if blob.fragment_identifier not in results['fragments_identifiers_of_crossings']:
-                    results['fragments_identifiers_of_crossings'].append(blob.fragment_identifier)
-                    results['number_of_crossing_fragments'] += 1
-                results['number_of_crossing_blobs'] += 1
-                results['number_of_crossings_blobs_assigned_as_individuals'] += 1 if blob.is_an_individual else 0
-                if blob.is_an_individual:
-                    if blob.fragment_identifier not in results['fragment_identifiers_with_crossing_errors']:
-                        results['frames_with_crossing_errors'].append(blob.frame_number)
-                        results['fragment_identifiers_with_crossing_errors'].append(blob.fragment_identifier)
+                elif groundtruth_blob.is_a_crossing or gt_identity == -1:
+                    if blob.fragment_identifier not in results['fragments_identifiers_of_crossings']:
+                        results['fragments_identifiers_of_crossings'].append(blob.fragment_identifier)
+                        results['number_of_crossing_fragments'] += 1
+                    results['number_of_crossing_blobs'] += 1
+                    results['number_of_crossings_blobs_assigned_as_individuals'] += 1 if blob.is_an_individual else 0
+                    if blob.is_an_individual:
+                        if blob.fragment_identifier not in results['fragment_identifiers_with_crossing_errors']:
+                            results['frames_with_crossing_errors'].append(blob.frame_number)
+                            results['fragment_identifiers_with_crossing_errors'].append(blob.fragment_identifier)
 
     return results
 
@@ -207,10 +140,19 @@ def check_ground_truth_consistency(video, gt_video):
                          groundtruth video are different. The groundtruth\
                          file cannot be reused')
 
+def check_first_frame_first_global_fragment(video, first_frame_first_global_fragment, blobs_in_video_groundtruth, blobs_in_video):
+    while len(blobs_in_video_groundtruth[first_frame_first_global_fragment]) < video.number_of_animals:
+        first_frame_first_global_fragment += 1
+    return first_frame_first_global_fragment
 
-def get_permutation_of_identities(first_frame_first_global_fragment,
+def get_permutation_of_identities(video,
+                                  first_frame_first_global_fragment,
                                   blobs_in_video_groundtruth,
                                   blobs_in_video):
+    print(first_frame_first_global_fragment)
+    first_frame_first_global_fragment = check_first_frame_first_global_fragment(video, first_frame_first_global_fragment, blobs_in_video_groundtruth, blobs_in_video)
+    print(first_frame_first_global_fragment)
+    print(len(blobs_in_video_groundtruth[first_frame_first_global_fragment]))
     if first_frame_first_global_fragment is not None:
         groundtruth_identities_in_first_frame = \
             [blob.identity for blob in
@@ -236,19 +178,14 @@ def get_permutation_of_identities(first_frame_first_global_fragment,
 
 def get_accuracy_wrt_groundtruth(video, gt_video, blobs_in_video_groundtruth,
                                  blobs_in_video=None,
-                                 first_frame_first_global_fragment=None):
-    check_ground_truth_consistency(video, gt_video)
-    accumulation_number = int(video.accumulation_folder[-1])
-    identities_dictionary_permutation = \
-        get_permutation_of_identities(
-            video.first_frame_first_global_fragment[accumulation_number],
-            blobs_in_video_groundtruth,
-            blobs_in_video)
-
+                                 identities_dictionary_permutation=None):
     number_of_animals = video.number_of_animals
     blobs_in_video = blobs_in_video_groundtruth if blobs_in_video is None\
         else blobs_in_video
-    results = compare_tracking_against_groundtruth(number_of_animals, blobs_in_video_groundtruth, blobs_in_video, identities_dictionary_permutation)
+    results = compare_tracking_against_groundtruth(number_of_animals,
+                                                   blobs_in_video_groundtruth,
+                                                   blobs_in_video,
+                                                   identities_dictionary_permutation)
     if len(results['frames_with_zeros_in_groundtruth']) == 0:
         accuracies = {}
         accuracies['percentage_of_unoccluded_images'] = results['number_of_individual_blobs'] / (results['number_of_individual_blobs'] + results['number_of_crossing_blobs'])
@@ -287,32 +224,75 @@ def get_accuracy_wrt_groundtruth(video, gt_video, blobs_in_video_groundtruth,
         logger.info("there are fish with 0 identity in frame %s" %str(results['frames_with_zeros_in_groundtruth']))
         return None, results
 
-def compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type = None):
+
+def reduce_pixels(blob, width, height, resolution_reduction):
+    pxs = np.array(np.unravel_index(blob.pixels, (height, width))).T
+    pxs_reduced = (pxs*resolution_reduction).astype('int')
+    pxs_reduced = np.ravel_multi_index([pxs_reduced[:,0], pxs_reduced[:,1]],
+                                       (int(height*resolution_reduction),
+                                        int(width*resolution_reduction)))
+    return pxs_reduced
+
+
+def reduce_resolution_groundtruth_blobs(groundtruth, video,
+                                        blobs_in_video_groundtruth):
+    gt_width, gt_height = groundtruth.video.width, groundtruth.video.height
+    resolution_reduction = video.resolution_reduction
+    for blobs_in_frame in blobs_in_video_groundtruth:
+        for blob in blobs_in_frame:
+            blob.pixels = reduce_pixels(blob, gt_width, gt_height,
+                                        resolution_reduction)
+
+
+def compute_and_save_session_accuracy_wrt_groundtruth(video,
+                                                      groundtruth_type=None):
     logger.info("loading list_of_blobs")
     if groundtruth_type == 'normal':
         list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
     elif groundtruth_type == 'no_gaps':
         list_of_blobs = ListOfBlobs.load(video, video.blobs_no_gaps_path)
-    #select ground truth file
+    # select ground truth file
     logger.info("loading groundtruth")
     if groundtruth_type == 'normal':
-        groundtruth_path = os.path.join(video.video_folder,'_groundtruth.npy')
+        groundtruth_path = os.path.join(video.video_folder, '_groundtruth.npy')
     elif groundtruth_type == 'no_gaps':
-        groundtruth_path = os.path.join(video.video_folder,'_groundtruth_with_crossing_identified.npy')
+        groundtruth_path = \
+            os.path.join(video.video_folder,
+                         '_groundtruth_with_crossing_identified.npy')
     groundtruth = np.load(groundtruth_path).item()
-    blobs_in_video_groundtruth = groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
-    blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
+
+    check_ground_truth_consistency(video, groundtruth.video)
+    accumulation_number = int(video.accumulation_folder[-1])
+    identities_dictionary_permutation = \
+        get_permutation_of_identities(video,
+                                      video.first_frame_first_global_fragment[accumulation_number],
+                                      groundtruth.blobs_in_video,
+                                      list_of_blobs.blobs_in_video)
+
+
+    blobs_in_video_groundtruth = \
+        groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
+    blobs_in_video = \
+        list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
+    if video.resolution_reduction != 1:
+        reduce_resolution_groundtruth_blobs(groundtruth, video,
+                                            blobs_in_video_groundtruth)
     logger.info("computing groundtruth")
     if groundtruth_type == 'normal':
         accuracies, results = \
             get_accuracy_wrt_groundtruth(video, groundtruth.video,
                                          blobs_in_video_groundtruth,
-                                         blobs_in_video)
+                                         blobs_in_video,
+                                         identities_dictionary_permutation)
     elif groundtruth_type == 'no_gaps':
-        accuracies, results = get_accuracy_wrt_groundtruth_no_gaps(video, groundtruth, blobs_in_video_groundtruth, blobs_in_video)
+        accuracies, results = \
+            get_accuracy_wrt_groundtruth_no_gaps(video, groundtruth,
+                                                 blobs_in_video_groundtruth,
+                                                 blobs_in_video,
+                                                 identities_dictionary_permutation)
     if accuracies is not None:
         logger.info("saving accuracies in video")
-        video.gt_start_end = (groundtruth.start,groundtruth.end)
+        video.gt_start_end = (groundtruth.start, groundtruth.end)
         if groundtruth_type == 'normal':
             video.gt_accuracy = accuracies
             video.gt_results = results
@@ -320,14 +300,26 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type = 
             video.gt_accuracy_no_gaps = accuracies
             video.gt_results_no_gaps = results
         video.save()
+    return video, groundtruth
+
 
 if __name__ == '__main__':
-    from idtrackerai.utils.GUI_utils import selectDir
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-gt", "--groundtruth_type", type=str,
+                        help="type of groundtruth to compute \
+                        ('no_gaps' or 'normal')")
+    parser.add_argument("-sp", "--session_path", type=str,
+                        help="path to the session folder")
+    args = parser.parse_args()
 
-    groundtruth_type = sys.argv[1]
-    #select blobs_in_video list tracked to compare against ground truth
-    session_path = selectDir('./') #select path to video
-    video_object_path = os.path.join(session_path,'video_object.npy')
+    groundtruth_type = args.groundtruth_type
+    session_path = args.session_path
+    video_object_path = os.path.join(session_path, 'video_object.npy')
     logger.info("loading video object")
     video = np.load(video_object_path).item(0)
-    compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type)
+    video.update_paths(video_object_path)
+    groundtruth_path = os.path.join(video.video_folder, '_groundtruth.npy')
+    groundtruth = np.load(groundtruth_path).item()
+    video, groundtruth = compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type)
+    print(video.gt_accuracy)
