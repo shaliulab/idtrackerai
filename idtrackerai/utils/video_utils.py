@@ -34,7 +34,7 @@ import cv2
 from joblib import Parallel, delayed
 from idtrackerai.utils.py_utils import *
 from idtrackerai.video import Video
-from idtrackerai.constants import  BACKGROUND_SUBTRACTION_PERIOD, NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION
+from idtrackerai.constants import  BACKGROUND_SUBTRACTION_PERIOD, NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION, SIGMA_GAUSSIAN_BLURRING
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -77,6 +77,8 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
         logger.debug('Frame %i' %ind)
         cap.set(1,ind)
         ret, frameBkg = cap.read()
+        if SIGMA_GAUSSIAN_BLURRING is not None:
+            frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), SIGMA_GAUSSIAN_BLURRING)
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
             gray = np.true_divide(gray,np.mean(gray))
@@ -114,6 +116,8 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
     for ind in frameInds:
         cap.set(1,ind)
         ret, frameBkg = cap.read()
+        if SIGMA_GAUSSIAN_BLURRING is not None:
+            frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), SIGMA_GAUSSIAN_BLURRING)
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
             gray = np.true_divide(gray,np.mean(gray))
