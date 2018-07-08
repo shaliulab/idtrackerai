@@ -309,13 +309,13 @@ if __name__ == '__main__':
     parser.add_argument("-gt", "--groundtruth_type", type=str,
                         help="type of groundtruth to compute \
                         ('no_gaps' or 'normal')")
-    parser.add_argument("-sp", "--session_path", type=str,
+    parser.add_argument("-sf", "--session_folder", type=str,
                         help="path to the session folder")
     args = parser.parse_args()
 
     groundtruth_type = args.groundtruth_type
-    session_path = args.session_path
-    video_object_path = os.path.join(session_path, 'video_object.npy')
+    session_folder = args.session_folder
+    video_object_path = os.path.join(session_folder, 'video_object.npy')
     logger.info("loading video object")
     video = np.load(video_object_path).item(0)
     video.update_paths(video_object_path)
