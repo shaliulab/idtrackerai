@@ -552,7 +552,6 @@ class Video(object):
             new_paths_to_video_segments = []
             for path in self.paths_to_video_segments:
                 new_path = os.path.join(self.video_folder, os.path.split(path)[1])
-                print(path, new_path)
                 new_paths_to_video_segments.append(new_path)
             self._paths_to_video_segments = new_paths_to_video_segments
 

@@ -614,10 +614,10 @@ class PreprocessingPreview(BoxLayout):
         if hasattr(self, 'area_bars'):
             visualiser.remove_widget(self.areas_box)
         if not hasattr(CHOSEN_VIDEO.video, 'number_of_channels'):
-            if frame.shape[2] == 1 or (np.any(frame[:,:,1] == frame[:,:,2] ) and np.any(frame[:,:, 0] == frame[:,:,1])):
-                CHOSEN_VIDEO.video._number_of_channels = 1
-            else:
-                raise NotImplementedError("Colour videos has still to be integrated")
+            #if frame.shape[2] == 1 or (np.any(frame[:,:,1] == frame[:,:,2] ) and np.any(frame[:,:, 0] == frame[:,:,1])):
+            CHOSEN_VIDEO.video._number_of_channels = 1
+            #else:
+            #    raise NotImplementedError("Colour videos has still to be integrated")
         if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and CHOSEN_VIDEO.video.resolution_reduction != 1:
             if self.bkg_subtractor_switch.active and CHOSEN_VIDEO.video.bkg.shape != self.frame.shape:
                 bkg = cv2.resize(CHOSEN_VIDEO.video.bkg, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction,
