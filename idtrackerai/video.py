@@ -42,6 +42,7 @@ from idtrackerai.constants import AVAILABLE_VIDEO_EXTENSION,\
 from idtrackerai.constants import MIN_AREA_DEFAULT, MAX_AREA_DEFAULT
 from idtrackerai.constants import MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT
 from idtrackerai.constants import IDENTIFICATION_IMAGE_SIZE
+from idtrackerai.constants import SIGMA_GAUSSIAN_BLURRING
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -144,6 +145,8 @@ class Video(object):
         self._protocol3_accumulation_time = 0.
         self._identify_time = 0.
         self._create_trajectories_time = 0.
+        if SIGMA_GAUSSIAN_BLURRING is not None:
+            self.sigma_gaussian_blurring = SIGMA_GAUSSIAN_BLURRING
 
     @property
     def number_of_channels(self):

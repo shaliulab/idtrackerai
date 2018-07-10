@@ -36,7 +36,8 @@ from joblib import Parallel, delayed
 import gc
 from tqdm import tqdm
 from scipy import ndimage
-from idtrackerai.constants import NUMBER_OF_CORES_FOR_SEGMENTATION
+from idtrackerai.constants import NUMBER_OF_CORES_FOR_SEGMENTATION,\
+                                SIGMA_GAUSSIAN_BLURRING
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import flatten, set_mkl_to_single_thread, set_mkl_to_multi_thread
 from idtrackerai.utils.video_utils import segment_frame, blob_extractor
@@ -122,6 +123,8 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
     """
     blobs_in_frame = []
     ret, frame = cap.read()
+    if SIGMA_GAUSSIAN_BLURRING is not None:
+        frame = cv2.GaussianBlur(frame, (0, 0), SIGMA_GAUSSIAN_BLURRING)
 
     try:
         if video.resolution_reduction != 1 and ret:
@@ -218,6 +221,8 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
                                                                     frame_number)
         else:
             ret, frame = cap.read()
+            if SIGMA_GAUSSIAN_BLURRING is not None:
+                frame = cv2.GaussianBlur(frame, (0, 0), SIGMA_GAUSSIAN_BLURRING)
             blobs_in_frame = []
         #store all the blobs encountered in the episode
         blobs_in_episode.append(blobs_in_frame)
