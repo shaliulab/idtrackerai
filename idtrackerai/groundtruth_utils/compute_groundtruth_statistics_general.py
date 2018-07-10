@@ -172,7 +172,7 @@ def get_permutation_of_identities(video,
         identities_dictionary_permutation = None
     print("identities_dictionary_permutation:",
           identities_dictionary_permutation)
-
+    print("----------------------", len(np.unique(identities_dictionary_permutation.values())))
     return identities_dictionary_permutation
 
 
@@ -186,6 +186,7 @@ def get_accuracy_wrt_groundtruth(video, gt_video, blobs_in_video_groundtruth,
                                                    blobs_in_video_groundtruth,
                                                    blobs_in_video,
                                                    identities_dictionary_permutation)
+    pprint(results)
     if len(results['frames_with_zeros_in_groundtruth']) == 0:
         accuracies = {}
         accuracies['percentage_of_unoccluded_images'] = results['number_of_individual_blobs'] / (results['number_of_individual_blobs'] + results['number_of_crossing_blobs'])
@@ -193,13 +194,22 @@ def get_accuracy_wrt_groundtruth(video, gt_video, blobs_in_video_groundtruth,
                                 for i in range(1, number_of_animals + 1)}
         accuracies['mean_individual_P2_in_validated_part'] = np.sum(results['sum_individual_P2'].values()) / np.sum(results['number_of_blobs_per_identity'].values())
         accuracies['individual_accuracy'] = {i : 1 - results['number_of_errors_in_all_blobs'][i] / results['number_of_blobs_per_identity'][i]
+                                if results['number_of_blobs_per_identity'] != 0 else None
                                 for i in range(1, number_of_animals + 1)}
         accuracies['accuracy'] = 1. - np.sum(results['number_of_errors_in_all_blobs'].values()) / np.sum(results['number_of_blobs_per_identity'].values())
         accuracies['individual_accuracy_assigned'] = {i : 1 - results['number_of_errors_in_assigned_blobs'][i] / results['number_of_assigned_blobs_per_identity'][i]
+                                        if results['number_of_assigned_blobs_per_identity'] != 0 else None
                                         for i in range(1, number_of_animals + 1)}
         accuracies['accuracy_assigned'] = 1. - np.sum(results['number_of_errors_in_assigned_blobs'].values()) / np.sum(results['number_of_assigned_blobs_per_identity'].values())
-        accuracies['individual_accuracy_in_accumulation'] = {i : 1 - results['number_of_errors_in_blobs_assigned_during_accumulation'][i] / results['number_of_blobs_assigned_during_accumulation_per_identity'][i]
-                                for i in range(1, number_of_animals + 1)}
+        # accuracies['individual_accuracy_in_accumulation'] = {i:1 - results['number_of_errors_in_blobs_assigned_during_accumulation'][i]/results['number_of_blobs_assigned_during_accumulation_per_identity'][i]
+        #                         if results['number_of_blobs_assigned_during_accumulation_per_identity'] != 0 else None
+        #                         for i in range(1, number_of_animals + 1)}
+        accuracies['individual_accuracy_in_accumulation'] = {}
+        for i in range(1, number_of_animals + 1):
+            if results['number_of_blobs_assigned_during_accumulation_per_identity'][i] != 0:
+                accuracies['individual_accuracy_in_accumulation'][i] = 1 - results['number_of_errors_in_blobs_assigned_during_accumulation'][i] / results['number_of_blobs_assigned_during_accumulation_per_identity'][i]
+            else:
+                accuracies['individual_accuracy_in_accumulation'][i] = None
         accuracies['accuracy_in_accumulation'] = 1. - np.sum(results['number_of_errors_in_blobs_assigned_during_accumulation'].values()) / np.sum(results['number_of_blobs_assigned_during_accumulation_per_identity'].values())
         accuracies['individual_accuracy_after_accumulation'] = {}
         for i in range(1, number_of_animals + 1):

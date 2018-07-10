@@ -259,8 +259,13 @@ class Video(object):
     @resolution_reduction.setter
     def resolution_reduction(self, value):
         self._resolution_reduction = value
-        self._height = int(self.original_height * value)
-        self._width = int(self.original_width * value)
+        fake_frame = np.ones((self._original_height, self._original_width)).astype('uint8')
+        fake_frame = cv2.resize(fake_frame, None,
+                                fx = value,
+                                fy = value,
+                                interpolation = cv2.INTER_AREA)
+        self._height = fake_frame.shape[0]
+        self._width = fake_frame.shape[1]
         if self.subtract_bkg:
             self._bkg = cv2.resize(self.original_bkg, None,
                                             fx = value,
