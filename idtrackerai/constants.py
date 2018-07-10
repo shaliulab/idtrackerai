@@ -95,7 +95,7 @@ IDENTIFICATION_IMAGE_SIZE = None #(46, 46, 1)
 """***SIGMA_GAUSSIAN_BLURRING***
 sigma for gaussian blurring tests
 """
-SIGMA_GAUSSIAN_BLURRING = 3
+SIGMA_GAUSSIAN_BLURRING = 4
 #######################################
 #########  global fragments  ##########
 #######################################
