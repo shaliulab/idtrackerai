@@ -42,6 +42,7 @@ from idtrackerai.constants import AVAILABLE_VIDEO_EXTENSION,\
 from idtrackerai.constants import MIN_AREA_DEFAULT, MAX_AREA_DEFAULT
 from idtrackerai.constants import MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT
 from idtrackerai.constants import IDENTIFICATION_IMAGE_SIZE
+from idtrackerai.constants import SIGMA_GAUSSIAN_BLURRING
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -144,6 +145,8 @@ class Video(object):
         self._protocol3_accumulation_time = 0.
         self._identify_time = 0.
         self._create_trajectories_time = 0.
+        if SIGMA_GAUSSIAN_BLURRING is not None:
+            self.sigma_gaussian_blurring = SIGMA_GAUSSIAN_BLURRING
 
     @property
     def number_of_channels(self):
@@ -259,8 +262,13 @@ class Video(object):
     @resolution_reduction.setter
     def resolution_reduction(self, value):
         self._resolution_reduction = value
-        self._height = int(self.original_height * value)
-        self._width = int(self.original_width * value)
+        fake_frame = np.ones((self._original_height, self._original_width)).astype('uint8')
+        fake_frame = cv2.resize(fake_frame, None,
+                                fx = value,
+                                fy = value,
+                                interpolation = cv2.INTER_AREA)
+        self._height = fake_frame.shape[0]
+        self._width = fake_frame.shape[1]
         if self.subtract_bkg:
             self._bkg = cv2.resize(self.original_bkg, None,
                                             fx = value,
@@ -547,7 +555,6 @@ class Video(object):
             new_paths_to_video_segments = []
             for path in self.paths_to_video_segments:
                 new_path = os.path.join(self.video_folder, os.path.split(path)[1])
-                print(path, new_path)
                 new_paths_to_video_segments.append(new_path)
             self._paths_to_video_segments = new_paths_to_video_segments
 

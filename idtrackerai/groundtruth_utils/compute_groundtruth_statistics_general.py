@@ -145,33 +145,51 @@ def check_first_frame_first_global_fragment(video, first_frame_first_global_frag
         first_frame_first_global_fragment += 1
     return first_frame_first_global_fragment
 
+# def get_permutation_of_identities(video,
+#                                   first_frame_first_global_fragment,
+#                                   blobs_in_video_groundtruth,
+#                                   blobs_in_video):
+#     print(first_frame_first_global_fragment)
+#     first_frame_first_global_fragment = check_first_frame_first_global_fragment(video, first_frame_first_global_fragment, blobs_in_video_groundtruth, blobs_in_video)
+#     print(first_frame_first_global_fragment)
+#     print(len(blobs_in_video_groundtruth[first_frame_first_global_fragment]))
+#     if first_frame_first_global_fragment is not None:
+#         groundtruth_identities_in_first_frame = \
+#             [blob.identity for blob in
+#              blobs_in_video_groundtruth[first_frame_first_global_fragment]]
+#         identities_in_first_frame = \
+#             [blob.identity for blob in
+#              blobs_in_video[first_frame_first_global_fragment]]
+#         logger.debug('groundtruth identities in first frame %s'
+#                      % str(groundtruth_identities_in_first_frame))
+#         logger.debug('identities in first frame %s'
+#                      % str(identities_in_first_frame))
+#         identities_dictionary_permutation = \
+#             {groundtruth_identity: identity for identity, groundtruth_identity
+#              in zip(identities_in_first_frame,
+#                     groundtruth_identities_in_first_frame)}
+#     else:
+#         identities_dictionary_permutation = None
+#     print("identities_dictionary_permutation:",
+#           identities_dictionary_permutation)
+#
+#     return identities_dictionary_permutation
+
+
 def get_permutation_of_identities(video,
                                   first_frame_first_global_fragment,
                                   blobs_in_video_groundtruth,
                                   blobs_in_video):
-    print(first_frame_first_global_fragment)
-    first_frame_first_global_fragment = check_first_frame_first_global_fragment(video, first_frame_first_global_fragment, blobs_in_video_groundtruth, blobs_in_video)
-    print(first_frame_first_global_fragment)
-    print(len(blobs_in_video_groundtruth[first_frame_first_global_fragment]))
-    if first_frame_first_global_fragment is not None:
-        groundtruth_identities_in_first_frame = \
-            [blob.identity for blob in
-             blobs_in_video_groundtruth[first_frame_first_global_fragment]]
-        identities_in_first_frame = \
-            [blob.identity for blob in
-             blobs_in_video[first_frame_first_global_fragment]]
-        logger.debug('groundtruth identities in first frame %s'
-                     % str(groundtruth_identities_in_first_frame))
-        logger.debug('identities in first frame %s'
-                     % str(identities_in_first_frame))
-        identities_dictionary_permutation = \
-            {groundtruth_identity: identity for identity, groundtruth_identity
-             in zip(identities_in_first_frame,
-                    groundtruth_identities_in_first_frame)}
-    else:
-        identities_dictionary_permutation = None
-    print("identities_dictionary_permutation:",
-          identities_dictionary_permutation)
+    first_frame_first_global_fragment = \
+        check_first_frame_first_global_fragment(video,
+                                                first_frame_first_global_fragment,
+                                                blobs_in_video_groundtruth,
+                                                blobs_in_video)
+    gt_blobs_in_first_frame = blobs_in_video_groundtruth[first_frame_first_global_fragment]
+    identities_dictionary_permutation = {}
+    for blob in blobs_in_video[first_frame_first_global_fragment]:
+        corresponding_blobs = get_corresponding_gt_blob(blob, gt_blobs_in_first_frame)
+        identities_dictionary_permutation[corresponding_blobs[0].identity] = blob.identity
 
     return identities_dictionary_permutation
 
@@ -186,6 +204,7 @@ def get_accuracy_wrt_groundtruth(video, gt_video, blobs_in_video_groundtruth,
                                                    blobs_in_video_groundtruth,
                                                    blobs_in_video,
                                                    identities_dictionary_permutation)
+    pprint(results)
     if len(results['frames_with_zeros_in_groundtruth']) == 0:
         accuracies = {}
         accuracies['percentage_of_unoccluded_images'] = results['number_of_individual_blobs'] / (results['number_of_individual_blobs'] + results['number_of_crossing_blobs'])
@@ -193,13 +212,22 @@ def get_accuracy_wrt_groundtruth(video, gt_video, blobs_in_video_groundtruth,
                                 for i in range(1, number_of_animals + 1)}
         accuracies['mean_individual_P2_in_validated_part'] = np.sum(results['sum_individual_P2'].values()) / np.sum(results['number_of_blobs_per_identity'].values())
         accuracies['individual_accuracy'] = {i : 1 - results['number_of_errors_in_all_blobs'][i] / results['number_of_blobs_per_identity'][i]
+                                if results['number_of_blobs_per_identity'] != 0 else None
                                 for i in range(1, number_of_animals + 1)}
         accuracies['accuracy'] = 1. - np.sum(results['number_of_errors_in_all_blobs'].values()) / np.sum(results['number_of_blobs_per_identity'].values())
         accuracies['individual_accuracy_assigned'] = {i : 1 - results['number_of_errors_in_assigned_blobs'][i] / results['number_of_assigned_blobs_per_identity'][i]
+                                        if results['number_of_assigned_blobs_per_identity'] != 0 else None
                                         for i in range(1, number_of_animals + 1)}
         accuracies['accuracy_assigned'] = 1. - np.sum(results['number_of_errors_in_assigned_blobs'].values()) / np.sum(results['number_of_assigned_blobs_per_identity'].values())
-        accuracies['individual_accuracy_in_accumulation'] = {i : 1 - results['number_of_errors_in_blobs_assigned_during_accumulation'][i] / results['number_of_blobs_assigned_during_accumulation_per_identity'][i]
-                                for i in range(1, number_of_animals + 1)}
+        # accuracies['individual_accuracy_in_accumulation'] = {i:1 - results['number_of_errors_in_blobs_assigned_during_accumulation'][i]/results['number_of_blobs_assigned_during_accumulation_per_identity'][i]
+        #                         if results['number_of_blobs_assigned_during_accumulation_per_identity'] != 0 else None
+        #                         for i in range(1, number_of_animals + 1)}
+        accuracies['individual_accuracy_in_accumulation'] = {}
+        for i in range(1, number_of_animals + 1):
+            if results['number_of_blobs_assigned_during_accumulation_per_identity'][i] != 0:
+                accuracies['individual_accuracy_in_accumulation'][i] = 1 - results['number_of_errors_in_blobs_assigned_during_accumulation'][i] / results['number_of_blobs_assigned_during_accumulation_per_identity'][i]
+            else:
+                accuracies['individual_accuracy_in_accumulation'][i] = None
         accuracies['accuracy_in_accumulation'] = 1. - np.sum(results['number_of_errors_in_blobs_assigned_during_accumulation'].values()) / np.sum(results['number_of_blobs_assigned_during_accumulation_per_identity'].values())
         accuracies['individual_accuracy_after_accumulation'] = {}
         for i in range(1, number_of_animals + 1):
@@ -263,20 +291,18 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video,
 
     check_ground_truth_consistency(video, groundtruth.video)
     accumulation_number = int(video.accumulation_folder[-1])
+    if video.resolution_reduction != 1:
+        reduce_resolution_groundtruth_blobs(groundtruth, video,
+                                            groundtruth.blobs_in_video)
     identities_dictionary_permutation = \
         get_permutation_of_identities(video,
                                       video.first_frame_first_global_fragment[accumulation_number],
                                       groundtruth.blobs_in_video,
                                       list_of_blobs.blobs_in_video)
-
-
     blobs_in_video_groundtruth = \
         groundtruth.blobs_in_video[groundtruth.start:groundtruth.end]
     blobs_in_video = \
         list_of_blobs.blobs_in_video[groundtruth.start:groundtruth.end]
-    if video.resolution_reduction != 1:
-        reduce_resolution_groundtruth_blobs(groundtruth, video,
-                                            blobs_in_video_groundtruth)
     logger.info("computing groundtruth")
     if groundtruth_type == 'normal':
         accuracies, results = \
@@ -309,13 +335,13 @@ if __name__ == '__main__':
     parser.add_argument("-gt", "--groundtruth_type", type=str,
                         help="type of groundtruth to compute \
                         ('no_gaps' or 'normal')")
-    parser.add_argument("-sp", "--session_path", type=str,
+    parser.add_argument("-sf", "--session_folder", type=str,
                         help="path to the session folder")
     args = parser.parse_args()
 
     groundtruth_type = args.groundtruth_type
-    session_path = args.session_path
-    video_object_path = os.path.join(session_path, 'video_object.npy')
+    session_folder = args.session_folder
+    video_object_path = os.path.join(session_folder, 'video_object.npy')
     logger.info("loading video object")
     video = np.load(video_object_path).item(0)
     video.update_paths(video_object_path)
