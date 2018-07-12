@@ -135,6 +135,7 @@ Number of consecutive overfitting epochs in order to stop the training
 '''
 OVERFITTING_COUNTER_THRESHOLD_DCD = 5
 OVERFITTING_COUNTER_THRESHOLD_IDCNN = 5
+OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACUM = 30
 '''***MAXIMUM_NUMBER_OF_EPOCHS ***
 Maximum number of epochs before forcing the training to stop
 '''
