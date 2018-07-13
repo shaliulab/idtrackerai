@@ -185,12 +185,25 @@ def get_permutation_of_identities(video,
                                                 first_frame_first_global_fragment,
                                                 blobs_in_video_groundtruth,
                                                 blobs_in_video)
-    gt_blobs_in_first_frame = blobs_in_video_groundtruth[first_frame_first_global_fragment]
-    identities_dictionary_permutation = {}
-    for blob in blobs_in_video[first_frame_first_global_fragment]:
-        corresponding_blobs = get_corresponding_gt_blob(blob, gt_blobs_in_first_frame)
-        identities_dictionary_permutation[corresponding_blobs[0].identity] = blob.identity
 
+    matching_found = False
+    while not matching_found:
+        print("\nmatching_found ", matching_found)
+        gt_blobs_in_first_frame = blobs_in_video_groundtruth[first_frame_first_global_fragment]
+        identities_dictionary_permutation = {}
+        print(first_frame_first_global_fragment)
+        print(len(blobs_in_video[first_frame_first_global_fragment]))
+        print(len(blobs_in_video_groundtruth[first_frame_first_global_fragment]))
+        for blob in blobs_in_video[first_frame_first_global_fragment]:
+            corresponding_blobs = get_corresponding_gt_blob(blob, gt_blobs_in_first_frame)
+            if len(corresponding_blobs) == 1:
+                identities_dictionary_permutation[corresponding_blobs[0].identity] = blob.identity
+            else:
+                first_frame_first_global_fragment += 1
+                break
+        if len(identities_dictionary_permutation)==video.number_of_animals:
+            matching_found = True
+    print(identities_dictionary_permutation)
     return identities_dictionary_permutation
 
 
@@ -253,12 +266,11 @@ def get_accuracy_wrt_groundtruth(video, gt_video, blobs_in_video_groundtruth,
         return None, results
 
 
-def reduce_pixels(blob, width, height, resolution_reduction):
-    pxs = np.array(np.unravel_index(blob.pixels, (height, width))).T
-    pxs_reduced = (pxs*resolution_reduction).astype('int')
-    pxs_reduced = np.ravel_multi_index([pxs_reduced[:,0], pxs_reduced[:,1]],
-                                       (int(height*resolution_reduction),
-                                        int(width*resolution_reduction)))
+def reduce_pixels(blob, original_width, original_height, width, height, resolution_reduction):
+    pxs = np.array(np.unravel_index(blob.pixels, (original_height, original_width))).T
+    pxs_reduced = (np.round(pxs*resolution_reduction)).astype('int')
+    pxs_reduced = np.ravel_multi_index([pxs_reduced[:, 0], pxs_reduced[:, 1]],
+                                       (height, width))
     return pxs_reduced
 
 
@@ -268,8 +280,11 @@ def reduce_resolution_groundtruth_blobs(groundtruth, video,
     resolution_reduction = video.resolution_reduction
     for blobs_in_frame in blobs_in_video_groundtruth:
         for blob in blobs_in_frame:
-            blob.pixels = reduce_pixels(blob, gt_width, gt_height,
-                                        resolution_reduction)
+            blob.pixels = reduce_pixels(blob,
+                                        video.original_width,
+                                        video.original_height,
+                                        video.width, video.height,
+                                        video.resolution_reduction)
 
 
 def compute_and_save_session_accuracy_wrt_groundtruth(video,
