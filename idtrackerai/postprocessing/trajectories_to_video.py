@@ -28,7 +28,7 @@
 from __future__ import absolute_import, print_function, division
 import numpy as np
 import cv2
-import sys
+from tqdm import tqdm
 from idtrackerai.utils.py_utils import  get_spaced_colors_util
 
 def init(video_path, trajectories_dict_path):
@@ -55,7 +55,8 @@ def generate_video(video_object,
         cap = None
 
 
-    for frame_number in range(len(trajectories)):
+    for frame_number in tqdm(range(len(trajectories)), desc='Adding trajectories to video'):
+        print(frame_number)
         frame = apply_func_on_frame(video_object,
                             trajectories,
                             frame_number,
@@ -139,11 +140,4 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--number_of_ghost_points", type = int, default = 20,
                         help = "Number of points used to draw the individual trajectories' traces")
     args = parser.parse_args()
-    try:
-        main(args)
-    except:
-        ### This allows to use sessions tracked with the version previous to the creation of the module
-        import sys
-        sys.path.append('../')
-        sys.path.append('../preprocessing')
-        main(args)
+    main(args)
