@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 import os
 import sys
@@ -133,7 +133,8 @@ def produce_output_dict(blobs_in_video, video):
     output_dict = {'trajectories': produce_trajectories(blobs_in_video, video.number_of_frames, video.number_of_animals),
                     'git_commit': video.git_commit,
                     'video_path': video.video_path,
-                    'frames_per_second': video.frames_per_second}
+                    'frames_per_second': video.frames_per_second,
+                    'body_length': video.median_body_length}
     return output_dict
 
 if __name__ == "__main__":
