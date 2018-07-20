@@ -392,10 +392,12 @@ class Tracker(BoxLayout):
             CHOSEN_VIDEO.video._first_accumulation_finished = True
             CHOSEN_VIDEO.video._ratio_accumulated_images = self.accumulation_manager.ratio_accumulated_images
             CHOSEN_VIDEO.video._percentage_of_accumulated_images = [CHOSEN_VIDEO.video.ratio_accumulated_images]
+            CHOSEN_VIDEO.video._accumulation_network_params = self.accumulation_network_params
             CHOSEN_VIDEO.video.save()
             CHOSEN_VIDEO.list_of_fragments.save(CHOSEN_VIDEO.video.fragments_path)
             CHOSEN_VIDEO.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
             CHOSEN_VIDEO.list_of_fragments.save_light_list(CHOSEN_VIDEO.video._accumulation_folder)
+
 
 
     def save_after_second_accumulation(self):
@@ -414,6 +416,7 @@ class Tracker(BoxLayout):
         self.accumulation_network_params.restore_folder = CHOSEN_VIDEO.video._accumulation_folder
         self.net = ConvNetwork(self.accumulation_network_params)
         self.net.restore()
+        CHOSEN_VIDEO.video._accumulation_network_params = self.accumulation_network_params
         CHOSEN_VIDEO.video.save()
 
 
@@ -428,6 +431,7 @@ class Tracker(BoxLayout):
                                                 save_folder = CHOSEN_VIDEO.video.pretraining_folder,
                                                 image_size = CHOSEN_VIDEO.video.identification_image_size,
                                                 video_path = CHOSEN_VIDEO.video.video_path)
+        CHOSEN_VIDEO.video._pretraining_network_params = self.pretrain_network_params
 
     def init_pretraining_variables(self):
         self.init_pretraining_net()
@@ -735,7 +739,7 @@ class Tracker(BoxLayout):
     def create_advanced_controls_popup(self):
         self.container = BoxLayout(orientation = "vertical")
         self.parameters_grid = GridLayout(cols = 2)
-        self.disclaimer_box = BoxLayout(size_hint = (1.,.2))
+        self.disclaimer_box = BoxLayout(size_hint = (1,.3))
         self.disclaimer = CustomLabel(font_size = 14, text = "Modify the idCNN parameters only if you fully understand the feature that you are changing. "+
                                                     "After modifying each parameter press return. Click outside of the popup to go back to the main window")
         self.disclaimer_box.add_widget(self.disclaimer)
@@ -757,6 +761,8 @@ class Tracker(BoxLayout):
         self.mod_save_folder_text_input = TextInput(text = self.save_folder, multiline=False)
         self.mod_knowledge_transfer_folder_label = CustomLabel(font_size = 14, text = "Knowledge transfer folder [path to load convolutional weights from a pre-trained model]: ")
         self.mod_knowledge_transfer_folder_text_input = TextInput(text = self.knowledge_transfer_folder, multiline=False)
+        self.mod_kt_conv_layers_to_discard_label = CustomLabel(font_size = 14, text = "Convolutional layers to discard from the transfered network. (e.g: conv3, conv2)")
+        self.mod_kt_conv_layers_to_discard_text_input = TextInput(text = self.kt_conv_layers_to_discard, multiline=False)
         items_to_add = [self.mod_cnn_model_label, self.mod_cnn_model_text_input,
                         self.mod_learning_rate_label, self.mod_learning_rate_text_input,
                         self.mod_keep_prob_label, self.mod_keep_prob_text_input,
@@ -767,7 +773,9 @@ class Tracker(BoxLayout):
                         self.mod_save_folder_label,
                         self.mod_save_folder_text_input,
                         self.mod_knowledge_transfer_folder_label,
-                        self.mod_knowledge_transfer_folder_text_input]
+                        self.mod_knowledge_transfer_folder_text_input,
+                        self.mod_kt_conv_layers_to_discard_label,
+                        self.mod_kt_conv_layers_to_discard_text_input]
         [self.parameters_grid.add_widget(item) for item in items_to_add]
         self.advanced_controls_popup = Popup(title='Advanced idCNN controls',
             content=self.container,
@@ -783,6 +791,7 @@ class Tracker(BoxLayout):
         self.mod_scopes_layers_to_optimize_text_input.bind(on_text_validate = self.on_enter_mod_scopes_layers_to_optimize_text_input)
         self.mod_save_folder_text_input.bind(on_text_validate = self.on_enter_mod_save_folder_text_input)
         self.mod_knowledge_transfer_folder_text_input.bind(on_text_validate = self.on_enter_mod_knowledge_transfer_folder_text_input)
+        self.mod_kt_conv_layers_to_discard_text_input.bind(on_text_validate = self.on_enter_mod_kt_conv_layers_to_discard_text_input)
 
     def on_enter_mod_cnn_model_text_input(self, *args):
         self.accumulation_network_params._cnn_model = int(self.mod_cnn_model_text_input.text)
@@ -826,6 +835,18 @@ class Tracker(BoxLayout):
         # print("------------ ", self.accumulation_network_params.knowledge_transfer_folder)
         if os.path.isdir(self.accumulation_network_params.knowledge_transfer_folder):
             CHOSEN_VIDEO.video._tracking_with_knowledge_transfer = True
+            CHOSEN_VIDEO.video._knowledge_transfer_model_folder = self.accumulation_network_params._knowledge_transfer_folder
+
+    def on_enter_mod_kt_conv_layers_to_discard_text_input(self, *args):
+        print("******",self.mod_kt_conv_layers_to_discard_text_input.text)
+        if self.mod_kt_conv_layers_to_discard_text_input.text == 'None':
+            print("is None")
+            self.accumulation_network_params._kt_conv_layers_to_discard = None
+        else:
+            print("is not None")
+            self.accumulation_network_params._kt_conv_layers_to_discard = self.mod_kt_conv_layers_to_discard_text_input.text
+            CHOSEN_VIDEO.video._kt_conv_layers_to_discard = self.accumulation_network_params._kt_conv_layers_to_discard
+
 
     def network_params_to_string(self):
         self.str_model = str(self.accumulation_network_params.cnn_model)
@@ -838,6 +859,7 @@ class Tracker(BoxLayout):
         self.restore_folder = self.accumulation_network_params.restore_folder if self.accumulation_network_params.restore_folder is not None else 'None'
         self.save_folder = self.accumulation_network_params.save_folder if self.accumulation_network_params.save_folder is not None else 'None'
         self.knowledge_transfer_folder = self.accumulation_network_params.knowledge_transfer_folder if self.accumulation_network_params.knowledge_transfer_folder is not None else 'None'
+        self.kt_conv_layers_to_discard = self.accumulation_network_params.kt_conv_layers_to_discard if self.accumulation_network_params.kt_conv_layers_to_discard is not None else 'None'
 
     def create_network_params_labels(self):
         self.cnn_model_label = CustomLabel(font_size = 14, text = "CNN model: ", halign = "left")

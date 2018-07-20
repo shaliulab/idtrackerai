@@ -45,20 +45,21 @@ else:
     import logging
     logger = logging.getLogger("__main__.trainer")
 
+
 def train(video,
-            fragments,
-            net,
-            images,
-            labels,
-            store_accuracy_and_error,
-            check_for_loss_plateau,
-            save_summaries,
-            print_flag,
-            plot_flag,
-            global_step = 0,
-            identity_transfer = False,
-            accumulation_manager = None,
-            batch_size = BATCH_SIZE_IDCNN):
+          fragments,
+          net,
+          images,
+          labels,
+          store_accuracy_and_error,
+          check_for_loss_plateau,
+          save_summaries,
+          print_flag,
+          plot_flag,
+          global_step=0,
+          identity_transfer=False,
+          accumulation_manager=None,
+          batch_size=BATCH_SIZE_IDCNN):
     """Short summary.
 
     Parameters
@@ -130,8 +131,19 @@ def train(video,
     # Reinitialize softmax and fully connected
     if video is None or video.accumulation_step == 0:
         net.reinitialize_softmax_and_fully_connected()
+    if video.accumulation_step == 0 and not video.has_been_pretrained and video.tracking_with_knowledge_transfer:
+        print("*************************** pass")
+        print(net.params.kt_conv_layers_to_discard)
+        # When tracking with knowledge transfer we transfer the weights of all the
+        # convolutional layers, but sometimes we want to reinitialize and train
+        # from sctrach the second or third convolutional layers as they might have
+        # contain features that are too specific for identification
+        # By default we do not reinitialize any conv layer in this call, but if
+        # the user adds a layer (conv1, conv2 or conv3) to be reinitialized in the
+        # advanced options of the tracking this call will do so.
+        net.reinitialize_conv_layers()
     # Train network
-    #compute weights to be fed to the loss function (weighted cross entropy)
+    # compute weights to be fed to the loss function (weighted cross entropy)
     net.compute_loss_weights(training_dataset.labels)
     trainer = EpochRunner(training_dataset,
                         starting_epoch = global_step,

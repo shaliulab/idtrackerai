@@ -305,6 +305,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type = 
             video.gt_results_no_gaps = results
         video.save()
 
+
 if __name__ == '__main__':
     from idtrackerai.utils.GUI_utils import selectDir
 

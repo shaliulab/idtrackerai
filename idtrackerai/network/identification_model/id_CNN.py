@@ -312,10 +312,33 @@ class ConvNetwork():
         return accuracy, individual_accuracy
 
     def reinitialize_softmax_and_fully_connected(self):
-        """Reinizializes the weights in the two last fully connected layers of the network
+        """Reinizializes the weights in the two last fully connected layers
+        of the network
         """
         logger.debug('Reinitializing softmax and fully connected')
-        self.session.run(tf.variables_initializer([v for v in tf.global_variables() if 'soft' in v.name or 'full' in v.name]))
+        self.session.run(tf.variables_initializer(
+            [v for v in tf.global_variables()
+             if 'soft' in v.name or 'full' in v.name]))
+
+    def reinitialize_conv_layers(self):
+        """Reinizializes the weights in the conv layers indicated in the list
+        conv_layers_list. The list can include the names 'conv1', 'conv2' or
+        'conv3'
+        """
+        if self.params.kt_conv_layers_to_discard is not None:
+            logger.debug('Reinitializing conv layers')
+            logger.debug(self.params.kt_conv_layers_to_discard)
+            self.session.run(tf.variables_initializer(
+                [v for v in tf.global_variables()
+                 if v.name in self.params.kt_conv_layers_to_discard]))
+
+    @staticmethod
+    def check_checkpoint_path(checkpoint_path, restore_folder):
+        if os.path.isfile(checkpoint_path + '.meta'):
+            return checkpoint_path
+        elif not os.path.isfile(checkpoint_path + '.meta'):
+            ckpt = os.path.split(checkpoint_path)[1]
+            return os.path.join(restore_folder, ckpt)
 
     def restore_convolutional_layers(self):
         """Restores the weights of the convolutional layers from a checkpoint file
@@ -327,11 +350,13 @@ class ConvNetwork():
         """
         ckpt = tf.train.get_checkpoint_state(self.restore_folder_conv)
         if self.restore_index is None:
-            self.saver_conv.restore(self.session, ckpt.model_checkpoint_path) # restore convolutional variables
-            logger.debug('Restoring convolutional part from %s' %ckpt.model_checkpoint_path)
+            ckpt_path = self.check_checkpoint_path(ckpt.model_checkpoint_path, self.restore_folder_conv)
+            logger.debug('Restoring convolutional part from %s' % ckpt_path)
+            self.saver_conv.restore(self.session, ckpt_path) # restore convolutional variables
         else:
-            self.saver_conv.restore(self.session, ckpt.all_model_checkpoint_paths[self.restore_index])
             logger.debug('Restoring convolutional part from %s' %ckpt.all_model_checkpoint_paths[self.restore_index])
+            self.saver_conv.restore(self.session, ckpt.all_model_checkpoint_paths[self.restore_index])
+
 
     def restore_classifier(self):
         """Restores the weights of the convolutional layers from a checkpoint file
