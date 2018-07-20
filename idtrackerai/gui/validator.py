@@ -28,6 +28,7 @@
 from __future__ import absolute_import, division, print_function
 import kivy
 from kivy.core.window import Window
+from kivy.logger import Logger
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.graphics.texture import Texture
@@ -44,8 +45,11 @@ from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import seaborn as sns
 import os
 import sys
+import copy
 import numpy as np
 import cv2
+from datetime import datetime
+from time import time
 from idtrackerai.video import Video
 from idtrackerai.utils.py_utils import  getExistentFiles, get_spaced_colors_util
 from idtrackerai.list_of_blobs import ListOfBlobs
@@ -53,6 +57,9 @@ from idtrackerai.list_of_fragments import ListOfFragments
 from idtrackerai.groundtruth_utils.generate_groundtruth import generate_groundtruth
 from idtrackerai.groundtruth_utils.compute_groundtruth_statistics import get_accuracy_wrt_groundtruth,\
                                             get_accuracy_wrt_groundtruth_no_gaps
+from idtrackerai.postprocessing.get_trajectories import produce_output_dict
+from idtrackerai.postprocessing.assign_them_all import close_trajectories_gaps
+from idtrackerai.postprocessing.identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
 
 class Validator(BoxLayout):
     def __init__(self, chosen_video = None,
@@ -151,11 +158,11 @@ class Validator(BoxLayout):
                 CHOSEN_VIDEO.video.wrong_crossing_list[frame_number].append(identity)
                 CHOSEN_VIDEO.video.unidentified_individuals_counter[int(self.unidentified_identity_input.text)] += 1
             else:
-                logger.info("you already added this identity, it will not be counted twice")
+                Logger.info("you already added this identity, it will not be counted twice")
             self.compute_accuracy_button.disabled = False
             self.recompute_groundtruth = True
         except:
-            logger.info("The identity does not exist")
+            Logger.info("The identity does not exist")
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self.unidentified_popup.dismiss()
@@ -532,7 +539,44 @@ class Validator(BoxLayout):
         self.show_saving()
 
     def save_groundtruth_list_of_blobs(self, *args):
-        self.list_of_blobs.save(CHOSEN_VIDEO.video, path_to_save = self.list_of_blobs_save_path)
+        timestamp = datetime.fromtimestamp(time()).strftime('%Y-%m-%d_%H%M%S')
+        Logger.info("Saving list_of_blobs")
+        self.list_of_blobs.save(CHOSEN_VIDEO.video,
+                                path_to_save=self.list_of_blobs_save_path)
+        self.list_of_fragments = \
+            ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
+        Logger.info("Closing gaps")
+        self.list_of_blobs_no_gaps = \
+            copy.deepcopy(self.list_of_blobs)
+        self.list_of_blobs_no_gaps = \
+            close_trajectories_gaps(CHOSEN_VIDEO.video,
+                                    self.list_of_blobs_no_gaps,
+                                    self.list_of_fragments)
+        Logger.info("Saving list_of_blobs_no_gaps")
+        self.list_of_blobs_no_gaps.save(
+            CHOSEN_VIDEO.video,
+            path_to_save=CHOSEN_VIDEO.video.blobs_no_gaps_path,
+            number_of_chunks=CHOSEN_VIDEO.video.number_of_frames)
+        trajectories_wo_gaps_file = \
+            os.path.join(CHOSEN_VIDEO.video.trajectories_wo_gaps_folder,
+                         'trajectories_wo_gaps_' + timestamp + '.npy')
+        trajectories_wo_gaps = \
+            produce_output_dict(
+                self.list_of_blobs_no_gaps.blobs_in_video,
+                CHOSEN_VIDEO.video)
+        Logger.info("Saving trajectories_wo_gaps")
+        np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
+        Logger.info('Generating trajectories')
+        self.list_of_blobs = \
+            assign_zeros_with_interpolation_identities(
+                self.list_of_blobs,
+                self.list_of_blobs_no_gaps)
+        trajectories_file = os.path.join(
+            CHOSEN_VIDEO.video.trajectories_folder, 'trajectories_' + timestamp + '.npy')
+        trajectories = produce_output_dict(
+            self.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
+        Logger.info('Saving trajectories')
+        np.save(trajectories_file, trajectories)
         CHOSEN_VIDEO.video.save()
         self.popup_saving.dismiss()
 

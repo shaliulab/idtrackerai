@@ -549,8 +549,8 @@ class Tracker(BoxLayout):
             CHOSEN_VIDEO.video.create_trajectories_folder()
             trajectories_file = os.path.join(CHOSEN_VIDEO.video.trajectories_folder, 'trajectories.npy')
             trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
-            np.save(trajectories_file, trajectories)
             Logger.info("Saving trajectories")
+            np.save(trajectories_file, trajectories)
         CHOSEN_VIDEO.video._has_trajectories = True
         CHOSEN_VIDEO.video.save()
         self.trajectories_popup.dismiss()

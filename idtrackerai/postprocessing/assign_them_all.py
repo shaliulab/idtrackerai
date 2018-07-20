@@ -101,7 +101,7 @@ def set_individual_with_identity_0_as_crossings(list_of_blobs_no_gaps):
         setattr(blob, '_identity_corrected_solving_duplications', None))
         for blobs_in_frame in list_of_blobs_no_gaps.blobs_in_video
         for blob in blobs_in_frame
-        if blob.assigned_identity == 0]
+        if blob.final_identity == 0]
 
 def flatten(l):
     for el in l:
@@ -133,7 +133,7 @@ def find_the_gap_interval(blobs_in_video, possible_identities, gap_start, list_o
 
 def get_blob_by_identity(blobs_in_frame, identity):
     for blob in blobs_in_frame:
-        if blob.assigned_identity == identity:
+        if blob.final_identity == identity:
             return [blob]
         elif (hasattr(blob, 'identity_corrected_closing_gaps')
             and isinstance(blob.identity_corrected_closing_gaps, list) and
@@ -155,10 +155,10 @@ def get_candidate_blobs_by_overlapping(blob_to_test, eroded_blobs_in_frame):
 def get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame):
     identities_in_frame = []
     for blob in blobs_in_frame:
-        if isinstance(blob.assigned_identity, int):
-            identities_in_frame.append(blob.assigned_identity)
-        elif isinstance(blob.assigned_identity, list):
-            identities_in_frame.extend(blob.assigned_identity)
+        if isinstance(blob.final_identity, int):
+            identities_in_frame.append(blob.final_identity)
+        elif isinstance(blob.final_identity, list):
+            identities_in_frame.extend(blob.final_identity)
     return (set(possible_identities) - set(identities_in_frame)) - set(occluded_identities_in_frame)
 
 def get_candidate_centroid(individual_gap_interval, previous_blob_to_the_gap, next_blob_to_the_gap, identity, border = '', inner_frame_number = None):
@@ -331,7 +331,7 @@ def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_iden
             # logger.debug('Only a candidate tuple for this original blob')
             identity = candidate_tuples_with_centroids_in_original_blob[0][2]
             centroid = candidate_tuples_with_centroids_in_original_blob[0][1]
-            if original_blob.assigned_identity == 0 and original_blob.is_an_individual:
+            if original_blob.final_identity == 0 and original_blob.is_an_individual:
                 original_blob._identity_corrected_closing_gaps = identity
                 [setattr(blob,'_identity_corrected_closing_gaps', identity)
                     for blobs_in_frame in blobs_in_video for blob in blobs_in_frame
@@ -339,12 +339,12 @@ def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_iden
             elif original_blob.is_an_individual:
                 list_of_occluded_identities[original_blob.frame_number].append(identity)
             elif original_blob.is_a_crossing:
-                if original_blob.assigned_identity is not None:
-                    if isinstance(original_blob.assigned_identity, list):
-                        identity = original_blob.assigned_identity + [identity]
+                if original_blob.final_identity is not None:
+                    if isinstance(original_blob.final_identity, list):
+                        identity = original_blob.final_identity + [identity]
                         centroid = original_blob.interpolated_centroids + [centroid]
                     else:
-                        identity = [original_blob.assigned_identity, identity]
+                        identity = [original_blob.final_identity, identity]
                         centroid = [original_blob.centroid, centroid]
                 else:
                     identity = [identity]
@@ -538,7 +538,7 @@ def clean_individual_blob_before_saving(blobs_in_video):
     """
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
-            if blob.is_an_individual and isinstance(blob.assigned_identity, list):
+            if blob.is_an_individual and isinstance(blob.final_identity, list):
                 if blob.identity_corrected_solving_duplication is not None:
                     blob._identity_corrected_closing_gaps = blob.identity_corrected_solving_duplication
                 elif blob.identity is not None and blob.identity != 0:
@@ -585,8 +585,8 @@ def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
     set_individual_with_identity_0_as_crossings(list_of_blobs)
     continue_erosion_protocol = True
     previous_number_of_non_split_crossings_blobs = sum([fragment.number_of_images
-                                                    for fragment in list_of_fragments.fragments
-                                                    if fragment.is_a_crossing])
+                                                        for fragment in list_of_fragments.fragments
+                                                        if fragment.is_a_crossing])
     if not hasattr(video, '_erosion_kernel_size'):
         video._erosion_kernel_size = compute_erosion_disk(video, list_of_blobs.blobs_in_video)
         video.save()
