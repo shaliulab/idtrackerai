@@ -146,7 +146,7 @@ class ConvNetwork():
 
     """
     def __init__(self, params, training_flag = True, restore_index = None):
-
+        print("*** params", params.__dict__)
         # Set main attibutes of the class
         self.image_width = params.image_size[0]
         self.image_height = params.image_size[1]
@@ -163,7 +163,8 @@ class ConvNetwork():
         knowledge_transfer_info_dict = {'input_image_size': self.params.target_image_size if self.params.target_image_size is not None else self.params.image_size,
                                 'video_path': self.params.video_path,
                                 'number_of_animals': self.params.number_of_animals,
-                                'number_of_channels': self.params.number_of_channels}
+                                'number_of_channels': self.params.number_of_channels,
+                                'params': params}
         np.save(os.path.join(self.params.save_folder, 'info.npy'), knowledge_transfer_info_dict)
         self.set_savers()
         # Create list of operations to run during training and validation

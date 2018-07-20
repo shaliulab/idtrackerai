@@ -192,9 +192,10 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO.video._protocol1_time = time.time()
         CHOSEN_VIDEO.list_of_fragments.reset(roll_back_to = 'fragmentation')
         CHOSEN_VIDEO.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
-        if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
-            Logger.debug('Setting layers to optimize for knowledge_transfer')
-            self.accumulation_network_params.scopes_layers_to_optimize = None
+        # print("self.accumulation_network_params", self.accumulation_network_params.__dict__)
+        # if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
+        #     Logger.debug('Setting layers to optimize for knowledge_transfer')
+        #     self.accumulation_network_params.scopes_layers_to_optimize = None #['fully-connected1','fully_connected_pre_softmax']
         self.net = ConvNetwork(self.accumulation_network_params)
         if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
             Logger.debug('Restoring for knowledge transfer')
@@ -822,7 +823,7 @@ class Tracker(BoxLayout):
             scopes_layers_to_optimize = None
         elif self.mod_scopes_layers_to_optimize_text_input.text == "fully":
             scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax']
-        self.accumulation_network_params = scopes_layers_to_optimize
+        self.accumulation_network_params.scopes_layers_to_optimize = scopes_layers_to_optimize
         self.scopes_layers_to_optimize_value.text = self.mod_scopes_layers_to_optimize_text_input.text
 
     def on_enter_mod_save_folder_text_input(self, *args):
