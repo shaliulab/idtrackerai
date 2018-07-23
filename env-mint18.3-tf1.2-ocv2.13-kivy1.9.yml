@@ -13,7 +13,7 @@ dependencies:
   - freetype=2.8.1=0
   - gmp=6.1.2=0
   - gnutls=3.5.17=0
-  - libiconv=1.15=0
+  - libiconv=1.15=h470a237_1
   - libidn11=1.33=0
   - nettle=3.3=0
   - python-xlib=0.20=py_0
