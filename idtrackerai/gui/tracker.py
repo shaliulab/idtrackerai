@@ -752,8 +752,6 @@ class Tracker(BoxLayout):
         self.mod_learning_rate_text_input = TextInput(text = self.str_lr, multiline=False)
         self.mod_keep_prob_label = CustomLabel(font_size = 14, text = "Dropout ratio. If 1.0, no dropout is performed (for fully connected layers excluding softmax): ")
         self.mod_keep_prob_text_input = TextInput(text = self.str_kp, multiline=False)
-        self.mod_data_augment_label = CustomLabel(font_size = 14, text = "Data augmentation (True or False) (customize your data augmentation in the get_data.py module)")
-        self.mod_data_augment_text_input = TextInput(text = self.str_data_augment, multiline=False)
         self.mod_optimiser_label = CustomLabel(font_size = 14, text = "Optimiser. Acceptable optimisers: SGD and Adam ")
         self.mod_optimiser_text_input = TextInput(text = self.str_optimiser, multiline=False)
         self.mod_scopes_layers_to_optimize_label = CustomLabel(font_size = 14, text = "Layers to train. Either all or fully")
@@ -767,7 +765,6 @@ class Tracker(BoxLayout):
         items_to_add = [self.mod_cnn_model_label, self.mod_cnn_model_text_input,
                         self.mod_learning_rate_label, self.mod_learning_rate_text_input,
                         self.mod_keep_prob_label, self.mod_keep_prob_text_input,
-                        self.mod_data_augment_label, self.mod_data_augment_text_input,
                         self.mod_optimiser_label, self.mod_optimiser_text_input,
                         self.mod_scopes_layers_to_optimize_label,
                         self.mod_scopes_layers_to_optimize_text_input,
@@ -787,7 +784,6 @@ class Tracker(BoxLayout):
         self.mod_cnn_model_text_input.bind(on_text_validate = self.on_enter_mod_cnn_model_text_input)
         self.mod_learning_rate_text_input.bind(on_text_validate = self.on_enter_mod_learning_rate_text_input)
         self.mod_keep_prob_text_input.bind(on_text_validate = self.on_enter_mod_keep_prob_text_input)
-        self.mod_data_augment_text_input.bind(on_text_validate = self.on_enter_mod_data_augment_text_input)
         self.mod_optimiser_text_input.bind(on_text_validate = self.on_enter_mod_optimiser_text_input)
         self.mod_scopes_layers_to_optimize_text_input.bind(on_text_validate = self.on_enter_mod_scopes_layers_to_optimize_text_input)
         self.mod_save_folder_text_input.bind(on_text_validate = self.on_enter_mod_save_folder_text_input)
@@ -806,9 +802,6 @@ class Tracker(BoxLayout):
         self.accumulation_network_params.keep_prob = float(self.mod_keep_prob_text_input.text)
         self.keep_prob_value.text = self.mod_keep_prob_text_input.text
 
-    def on_enter_mod_data_augment_text_input(self, *args):
-        self.accumulation_network_params._data_augment = bool(self.mod_data_augment_text_input.text)
-        self.data_augment_value.text = self.mod_data_augment_text_input.text
 
     def on_enter_mod_optimiser_text_input(self, *args):
         if  self.mod_optimiser_text_input.text == "SGD":
@@ -854,7 +847,6 @@ class Tracker(BoxLayout):
         self.str_lr = str(self.accumulation_network_params.learning_rate)
         self.str_kp = str(self.accumulation_network_params.keep_prob)
         self.str_optimiser = "SGD" if not self.accumulation_network_params.use_adam_optimiser else "Adam"
-        self.str_data_augment = str(self.accumulation_network_params.data_augment)
         self.str_layers_to_train = "all" if self.accumulation_network_params.scopes_layers_to_optimize is None else str(self.accumulation_network_params.scopes_layers_to_optimize)
         self.restore_folder = self.accumulation_network_params.restore_folder if self.accumulation_network_params.restore_folder is not None else 'None'
         self.save_folder = self.accumulation_network_params.save_folder if self.accumulation_network_params.save_folder is not None else 'None'
@@ -865,7 +857,6 @@ class Tracker(BoxLayout):
         self.cnn_model_label = CustomLabel(font_size = 14, text = "CNN model: ", halign = "left")
         self.learning_rate_label = CustomLabel(font_size = 14, text = "learning_rate: ", halign = "left")
         self.keep_prob_label = CustomLabel(font_size = 14, text = "Dropout ratio: ", halign = "left")
-        self.data_augment_label = CustomLabel(font_size = 14, text = "Data augment: ", halign = "left")
         self.optimiser_label = CustomLabel(font_size = 14, text = "Optimiser: ", halign = "left")
         self.scopes_layers_to_optimize_label = CustomLabel(font_size = 14, text = "Layers to train: ", halign = "left")
         self.restore_folder_label = CustomLabel(font_size = 14, text = "Restore Folder: ", halign = "left")
@@ -878,7 +869,6 @@ class Tracker(BoxLayout):
         self.cnn_model_value = CustomLabel(font_size = 14, text = self.str_model, halign = "left")
         self.learning_rate_value = CustomLabel(font_size = 14, text = self.str_lr, halign = "left")
         self.keep_prob_value = CustomLabel(font_size = 14, text = self.str_kp, halign = "left")
-        self.data_augment_value = CustomLabel(font_size = 14, text = self.str_data_augment, halign = "left")
         self.optimiser_value = CustomLabel(font_size = 14, text = self.str_optimiser, halign = "left")
         self.scopes_layers_to_optimize_value = CustomLabel(font_size = 14, text = self.str_layers_to_train, halign = "left")
         self.restore_folder_value = CustomLabel(font_size = 14, text = self.restore_folder, halign = "left")
@@ -895,8 +885,6 @@ class Tracker(BoxLayout):
                                     self.learning_rate_label,
                                     self.learning_rate_value,
                                     self.keep_prob_label, self.keep_prob_value,
-                                    self.data_augment_label,
-                                    self.data_augment_value,
                                     self.optimiser_label, self.optimiser_value,
                                     self.scopes_layers_to_optimize_label,
                                     self.scopes_layers_to_optimize_value,

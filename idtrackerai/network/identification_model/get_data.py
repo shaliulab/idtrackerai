@@ -78,40 +78,6 @@ class DataSet(object):
         """
         self.labels = dense_to_one_hot(self.labels, n_classes=self.number_of_animals)
 
-    def augment(self, type=None):
-        print("********* augmenting images")
-        self.images, self.labels = augment_with_light_intensity(self.images, self.labels)
-        self.images, self.labels = shuffle_images_and_labels(self.images, self.labels)
-
-
-def augment_with_light_intensity(images, labels):
-    """
-    Changes the intensity of the pixels of the identification image that represent
-    the blob to be identified
-
-    Parameters
-    ----------
-    images: 4-dimensional ndarray
-    labels: 2-dimensional ndarray
-
-    Return
-    ------
-    images: ndarray
-    labels: ndarray
-
-    """
-    new_images = images.copy()
-    new_labels = labels.copy()
-    min_range = new_images.min()
-    max_range = new_images.max()
-    epsilon = (max_range-min_range)*.01
-    for i, image in enumerate(new_images):
-        rows, cols, depth = np.where(image != np.min(image))
-        new_images[i, rows, cols, depth] += (np.random.rand()-.5)*epsilon
-    images = np.concatenate([images, new_images], axis=0)
-    labels = np.concatenate([labels, new_labels], axis=0)
-    return images, labels
-
 
 def duplicate_PCA_images(training_images, training_labels):
     """Creates a copy of every image in `training_images` by rotating 180 degrees

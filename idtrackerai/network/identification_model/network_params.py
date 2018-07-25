@@ -78,13 +78,11 @@ class NetworkParams(object):
                 save_folder = None, knowledge_transfer_folder = None,
                 image_size = None,
                 number_of_channels = None,
-                video_path = None,
-                data_augment = False):
+                video_path = None):
 
         self.video_path = video_path
         self.number_of_animals = number_of_animals
         self.learning_rate = learning_rate
-        self._data_augment = data_augment
         self.keep_prob = keep_prob
         self._restore_folder = restore_folder
         self._save_folder = save_folder
@@ -102,10 +100,6 @@ class NetworkParams(object):
     @property
     def cnn_model(self):
         return self._cnn_model
-
-    @property
-    def data_augment(self):
-        return self._data_augment
 
     @property
     def restore_folder(self):
