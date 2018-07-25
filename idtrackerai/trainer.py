@@ -126,22 +126,24 @@ def train(video,
     # Instantiate data set
     training_dataset, validation_dataset = split_data_train_and_validation(net.params.number_of_animals, images, labels)
     # Convert labels to one hot vectors
+    print("******Data augment: ", net.params.data_augment)
+    if net.params.data_augment:
+        training_dataset.augment()
     training_dataset.convert_labels_to_one_hot()
     validation_dataset.convert_labels_to_one_hot()
     # Reinitialize softmax and fully connected
     if video is None or video.accumulation_step == 0:
         net.reinitialize_softmax_and_fully_connected()
-    if video.accumulation_step == 0 and not video.has_been_pretrained and video.tracking_with_knowledge_transfer:
-        print("*************************** pass")
-        print(net.params.kt_conv_layers_to_discard)
-        # When tracking with knowledge transfer we transfer the weights of all the
-        # convolutional layers, but sometimes we want to reinitialize and train
-        # from sctrach the second or third convolutional layers as they might have
-        # contain features that are too specific for identification
-        # By default we do not reinitialize any conv layer in this call, but if
-        # the user adds a layer (conv1, conv2 or conv3) to be reinitialized in the
-        # advanced options of the tracking this call will do so.
-        net.reinitialize_conv_layers()
+    # if video.accumulation_step == 0 and not video.has_been_pretrained and video.tracking_with_knowledge_transfer:
+    #
+    #     # When tracking with knowledge transfer we transfer the weights of all the
+    #     # convolutional layers, but sometimes we want to reinitialize and train
+    #     # from sctrach the second or third convolutional layers as they might have
+    #     # contain features that are too specific for identification
+    #     # By default we do not reinitialize any conv layer in this call, but if
+    #     # the user adds a layer (conv1, conv2 or conv3) to be reinitialized in the
+    #     # advanced options of the tracking this call will do so.
+    #     net.reinitialize_conv_layers()
     # Train network
     # compute weights to be fed to the loss function (weighted cross entropy)
     net.compute_loss_weights(training_dataset.labels)

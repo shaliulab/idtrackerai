@@ -485,7 +485,7 @@ class Tracker(BoxLayout):
                                                     self.store_validation_accuracy_and_loss_data_pretrain,
                                                     print_flag = False,
                                                     plot_flag = False,
-                                                    batch_size = self.batch_size,
+                                                    batch_size = BATCH_SIZE_IDCNN,
                                                     canvas_from_GUI = self.pretrain_fig_canvas)
         self.pretraining_counter += 1
         self.pretraining_counter_value.text = str(self.pretraining_counter)
@@ -741,19 +741,19 @@ class Tracker(BoxLayout):
         self.container = BoxLayout(orientation = "vertical")
         self.parameters_grid = GridLayout(cols = 2)
         self.disclaimer_box = BoxLayout(size_hint = (1,.3))
-        self.disclaimer = CustomLabel(font_size = 14, text = "Modify the idCNN parameters only if you fully understand the feature that you are changing. "+
+        self.disclaimer = CustomLabel(font_size = 14, text = "Modify the identification network parameters only if you fully understand the feature that you are changing. "+
                                                     "After modifying each parameter press return. Click outside of the popup to go back to the main window")
         self.disclaimer_box.add_widget(self.disclaimer)
         self.container.add_widget(self.disclaimer_box)
         self.container.add_widget(self.parameters_grid)
-        self.mod_cnn_model_label = CustomLabel(font_size = 14, text = "CNN model: ")
+        self.mod_cnn_model_label = CustomLabel(font_size = 14, text = "CNN model (add your model in the cnn_architectures.py module): ")
         self.mod_cnn_model_text_input = TextInput(text = self.str_model, multiline=False)
         self.mod_learning_rate_label = CustomLabel(font_size = 14, text = "Learning rate")
         self.mod_learning_rate_text_input = TextInput(text = self.str_lr, multiline=False)
         self.mod_keep_prob_label = CustomLabel(font_size = 14, text = "Dropout ratio. If 1.0, no dropout is performed (for fully connected layers excluding softmax): ")
         self.mod_keep_prob_text_input = TextInput(text = self.str_kp, multiline=False)
-        self.mod_batch_size_label = CustomLabel(font_size = 14, text = "Batch size (at current state it does nothing!!!!):")
-        self.mod_batch_size_text_input = TextInput(text = self.str_batch_size, multiline=False)
+        self.mod_data_augment_label = CustomLabel(font_size = 14, text = "Data augmentation (True or False) (customize your data augmentation in the get_data.py module)")
+        self.mod_data_augment_text_input = TextInput(text = self.str_data_augment, multiline=False)
         self.mod_optimiser_label = CustomLabel(font_size = 14, text = "Optimiser. Acceptable optimisers: SGD and Adam ")
         self.mod_optimiser_text_input = TextInput(text = self.str_optimiser, multiline=False)
         self.mod_scopes_layers_to_optimize_label = CustomLabel(font_size = 14, text = "Layers to train. Either all or fully")
@@ -762,37 +762,37 @@ class Tracker(BoxLayout):
         self.mod_save_folder_text_input = TextInput(text = self.save_folder, multiline=False)
         self.mod_knowledge_transfer_folder_label = CustomLabel(font_size = 14, text = "Knowledge transfer folder [path to load convolutional weights from a pre-trained model]: ")
         self.mod_knowledge_transfer_folder_text_input = TextInput(text = self.knowledge_transfer_folder, multiline=False)
-        self.mod_kt_conv_layers_to_discard_label = CustomLabel(font_size = 14, text = "Convolutional layers to discard from the transfered network. (e.g: conv3, conv2)")
-        self.mod_kt_conv_layers_to_discard_text_input = TextInput(text = self.kt_conv_layers_to_discard, multiline=False)
+        # self.mod_kt_conv_layers_to_discard_label = CustomLabel(font_size = 14, text = "Convolutional layers to discard from the transfered network. (e.g: conv3, conv2)")
+        # self.mod_kt_conv_layers_to_discard_text_input = TextInput(text = self.kt_conv_layers_to_discard, multiline=False)
         items_to_add = [self.mod_cnn_model_label, self.mod_cnn_model_text_input,
                         self.mod_learning_rate_label, self.mod_learning_rate_text_input,
                         self.mod_keep_prob_label, self.mod_keep_prob_text_input,
-                        self.mod_batch_size_label, self.mod_batch_size_text_input,
+                        self.mod_data_augment_label, self.mod_data_augment_text_input,
                         self.mod_optimiser_label, self.mod_optimiser_text_input,
                         self.mod_scopes_layers_to_optimize_label,
                         self.mod_scopes_layers_to_optimize_text_input,
                         self.mod_save_folder_label,
                         self.mod_save_folder_text_input,
                         self.mod_knowledge_transfer_folder_label,
-                        self.mod_knowledge_transfer_folder_text_input,
-                        self.mod_kt_conv_layers_to_discard_label,
-                        self.mod_kt_conv_layers_to_discard_text_input]
+                        self.mod_knowledge_transfer_folder_text_input]
+                        # self.mod_kt_conv_layers_to_discard_label,
+                        # self.mod_kt_conv_layers_to_discard_text_input]
         [self.parameters_grid.add_widget(item) for item in items_to_add]
-        self.advanced_controls_popup = Popup(title='Advanced idCNN controls',
-            content=self.container,
-            size_hint=(.8,.66))
+        self.advanced_controls_popup = Popup(title='Advanced identification network controls',
+                                             content=self.container,
+                                             size_hint=(.9,.9))
         self.bind_network_controls()
 
     def bind_network_controls(self):
         self.mod_cnn_model_text_input.bind(on_text_validate = self.on_enter_mod_cnn_model_text_input)
         self.mod_learning_rate_text_input.bind(on_text_validate = self.on_enter_mod_learning_rate_text_input)
         self.mod_keep_prob_text_input.bind(on_text_validate = self.on_enter_mod_keep_prob_text_input)
-        self.mod_batch_size_text_input.bind(on_text_validate = self.on_enter_mod_batch_size_text_input)
+        self.mod_data_augment_text_input.bind(on_text_validate = self.on_enter_mod_data_augment_text_input)
         self.mod_optimiser_text_input.bind(on_text_validate = self.on_enter_mod_optimiser_text_input)
         self.mod_scopes_layers_to_optimize_text_input.bind(on_text_validate = self.on_enter_mod_scopes_layers_to_optimize_text_input)
         self.mod_save_folder_text_input.bind(on_text_validate = self.on_enter_mod_save_folder_text_input)
         self.mod_knowledge_transfer_folder_text_input.bind(on_text_validate = self.on_enter_mod_knowledge_transfer_folder_text_input)
-        self.mod_kt_conv_layers_to_discard_text_input.bind(on_text_validate = self.on_enter_mod_kt_conv_layers_to_discard_text_input)
+        # self.mod_kt_conv_layers_to_discard_text_input.bind(on_text_validate = self.on_enter_mod_kt_conv_layers_to_discard_text_input)
 
     def on_enter_mod_cnn_model_text_input(self, *args):
         self.accumulation_network_params._cnn_model = int(self.mod_cnn_model_text_input.text)
@@ -806,9 +806,9 @@ class Tracker(BoxLayout):
         self.accumulation_network_params.keep_prob = float(self.mod_keep_prob_text_input.text)
         self.keep_prob_value.text = self.mod_keep_prob_text_input.text
 
-    def on_enter_mod_batch_size_text_input(self, *args):
-        self.batch_size = int(self.mod_batch_size_text_input.text)
-        self.batch_size_value.text = sself.mod_batch_size_text_input.text
+    def on_enter_mod_data_augment_text_input(self, *args):
+        self.accumulation_network_params._data_augment = bool(self.mod_data_augment_text_input.text)
+        self.data_augment_value.text = self.mod_data_augment_text_input.text
 
     def on_enter_mod_optimiser_text_input(self, *args):
         if  self.mod_optimiser_text_input.text == "SGD":
@@ -838,35 +838,34 @@ class Tracker(BoxLayout):
             CHOSEN_VIDEO.video._tracking_with_knowledge_transfer = True
             CHOSEN_VIDEO.video._knowledge_transfer_model_folder = self.accumulation_network_params._knowledge_transfer_folder
 
-    def on_enter_mod_kt_conv_layers_to_discard_text_input(self, *args):
-        print("******",self.mod_kt_conv_layers_to_discard_text_input.text)
-        if self.mod_kt_conv_layers_to_discard_text_input.text == 'None':
-            print("is None")
-            self.accumulation_network_params._kt_conv_layers_to_discard = None
-        else:
-            print("is not None")
-            self.accumulation_network_params._kt_conv_layers_to_discard = self.mod_kt_conv_layers_to_discard_text_input.text
-            CHOSEN_VIDEO.video._kt_conv_layers_to_discard = self.accumulation_network_params._kt_conv_layers_to_discard
+    # def on_enter_mod_kt_conv_layers_to_discard_text_input(self, *args):
+    #     print("******",self.mod_kt_conv_layers_to_discard_text_input.text)
+    #     if self.mod_kt_conv_layers_to_discard_text_input.text == 'None':
+    #         print("is None")
+    #         self.accumulation_network_params._kt_conv_layers_to_discard = None
+    #     else:
+    #         print("is not None")
+    #         self.accumulation_network_params._kt_conv_layers_to_discard = self.mod_kt_conv_layers_to_discard_text_input.text
+    #         CHOSEN_VIDEO.video._kt_conv_layers_to_discard = self.accumulation_network_params._kt_conv_layers_to_discard
 
 
     def network_params_to_string(self):
         self.str_model = str(self.accumulation_network_params.cnn_model)
         self.str_lr = str(self.accumulation_network_params.learning_rate)
         self.str_kp = str(self.accumulation_network_params.keep_prob)
-        self.batch_size = BATCH_SIZE_IDCNN
-        self.str_batch_size = str(self.batch_size)
         self.str_optimiser = "SGD" if not self.accumulation_network_params.use_adam_optimiser else "Adam"
+        self.str_data_augment = str(self.accumulation_network_params.data_augment)
         self.str_layers_to_train = "all" if self.accumulation_network_params.scopes_layers_to_optimize is None else str(self.accumulation_network_params.scopes_layers_to_optimize)
         self.restore_folder = self.accumulation_network_params.restore_folder if self.accumulation_network_params.restore_folder is not None else 'None'
         self.save_folder = self.accumulation_network_params.save_folder if self.accumulation_network_params.save_folder is not None else 'None'
         self.knowledge_transfer_folder = self.accumulation_network_params.knowledge_transfer_folder if self.accumulation_network_params.knowledge_transfer_folder is not None else 'None'
-        self.kt_conv_layers_to_discard = self.accumulation_network_params.kt_conv_layers_to_discard if self.accumulation_network_params.kt_conv_layers_to_discard is not None else 'None'
+        # self.kt_conv_layers_to_discard = self.accumulation_network_params.kt_conv_layers_to_discard if self.accumulation_network_params.kt_conv_layers_to_discard is not None else 'None'
 
     def create_network_params_labels(self):
         self.cnn_model_label = CustomLabel(font_size = 14, text = "CNN model: ", halign = "left")
         self.learning_rate_label = CustomLabel(font_size = 14, text = "learning_rate: ", halign = "left")
         self.keep_prob_label = CustomLabel(font_size = 14, text = "Dropout ratio: ", halign = "left")
-        self.batch_size_label = CustomLabel(font_size = 14, text = "Batch size: ", halign = "left")
+        self.data_augment_label = CustomLabel(font_size = 14, text = "Data augment: ", halign = "left")
         self.optimiser_label = CustomLabel(font_size = 14, text = "Optimiser: ", halign = "left")
         self.scopes_layers_to_optimize_label = CustomLabel(font_size = 14, text = "Layers to train: ", halign = "left")
         self.restore_folder_label = CustomLabel(font_size = 14, text = "Restore Folder: ", halign = "left")
@@ -879,7 +878,7 @@ class Tracker(BoxLayout):
         self.cnn_model_value = CustomLabel(font_size = 14, text = self.str_model, halign = "left")
         self.learning_rate_value = CustomLabel(font_size = 14, text = self.str_lr, halign = "left")
         self.keep_prob_value = CustomLabel(font_size = 14, text = self.str_kp, halign = "left")
-        self.batch_size_value = CustomLabel(font_size = 14, text = self.str_batch_size, halign = "left")
+        self.data_augment_value = CustomLabel(font_size = 14, text = self.str_data_augment, halign = "left")
         self.optimiser_value = CustomLabel(font_size = 14, text = self.str_optimiser, halign = "left")
         self.scopes_layers_to_optimize_value = CustomLabel(font_size = 14, text = self.str_layers_to_train, halign = "left")
         self.restore_folder_value = CustomLabel(font_size = 14, text = self.restore_folder, halign = "left")
@@ -890,14 +889,14 @@ class Tracker(BoxLayout):
     def create_display_network_parameters(self):
         self.get_network_parameters()
         self.network_parameters_box = BoxLayout(orientation = "vertical")
-        self.network_parameters_box_title = CustomLabel(font_size = 20, text = "idCNN parameters:", size_hint = (1.,.1), halign = "left")
+        self.network_parameters_box_title = CustomLabel(font_size = 20, text = "identificaiton network parameters:", size_hint = (1.,.1), halign = "left")
         self.network_parameters_grid = GridLayout(cols = 2)
         network_parameters_labels = [self.cnn_model_label, self.cnn_model_value,
                                     self.learning_rate_label,
                                     self.learning_rate_value,
                                     self.keep_prob_label, self.keep_prob_value,
-                                    self.batch_size_label,
-                                    self.batch_size_value,
+                                    self.data_augment_label,
+                                    self.data_augment_value,
                                     self.optimiser_label, self.optimiser_value,
                                     self.scopes_layers_to_optimize_label,
                                     self.scopes_layers_to_optimize_value,
