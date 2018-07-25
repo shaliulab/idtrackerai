@@ -66,10 +66,12 @@ class NetworkParams(object):
         Tuple (height, width, channels) for the input images
     number_of_channels : int
         Number of channels of the input image
+    kt_conv_layers_to_discard : str
+        convolutional layers to discard when performing knowledge transfer
 
     .. [2] Kingma, Diederik P., and Jimmy Ba. "Adam: A method for stochastic optimization." arXiv preprint arXiv:1412.6980 (2014).
     """
-    
+
     def __init__(self, number_of_animals, cnn_model = 0, learning_rate = None,
                 keep_prob = None, use_adam_optimiser = False,
                 scopes_layers_to_optimize = None, restore_folder = None,
@@ -93,6 +95,7 @@ class NetworkParams(object):
         self.pre_target_image_size = None
         self.action_on_image = None
         self.number_of_channels = number_of_channels
+        self._kt_conv_layers_to_discard = None
 
     @property
     def cnn_model(self):
@@ -120,6 +123,10 @@ class NetworkParams(object):
     @property
     def knowledge_transfer_folder(self):
         return self._knowledge_transfer_folder
+
+    @property
+    def kt_conv_layers_to_discard(self):
+        return self._kt_conv_layers_to_discard
 
     @knowledge_transfer_folder.setter
     def knowledge_transfer_folder(self, path):

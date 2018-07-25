@@ -188,7 +188,6 @@ def get_permutation_of_identities(video,
 
     matching_found = False
     while not matching_found:
-        print("\nmatching_found ", matching_found)
         gt_blobs_in_first_frame = blobs_in_video_groundtruth[first_frame_first_global_fragment]
         identities_dictionary_permutation = {}
         print(first_frame_first_global_fragment)

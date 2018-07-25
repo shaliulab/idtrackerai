@@ -45,20 +45,21 @@ else:
     import logging
     logger = logging.getLogger("__main__.trainer")
 
+
 def train(video,
-            fragments,
-            net,
-            images,
-            labels,
-            store_accuracy_and_error,
-            check_for_loss_plateau,
-            save_summaries,
-            print_flag,
-            plot_flag,
-            global_step = 0,
-            identity_transfer = False,
-            accumulation_manager = None,
-            batch_size = BATCH_SIZE_IDCNN):
+          fragments,
+          net,
+          images,
+          labels,
+          store_accuracy_and_error,
+          check_for_loss_plateau,
+          save_summaries,
+          print_flag,
+          plot_flag,
+          global_step=0,
+          identity_transfer=False,
+          accumulation_manager=None,
+          batch_size=BATCH_SIZE_IDCNN):
     """Short summary.
 
     Parameters
@@ -131,7 +132,7 @@ def train(video,
     if video is None or video.accumulation_step == 0:
         net.reinitialize_softmax_and_fully_connected()
     # Train network
-    #compute weights to be fed to the loss function (weighted cross entropy)
+    # compute weights to be fed to the loss function (weighted cross entropy)
     net.compute_loss_weights(training_dataset.labels)
     trainer = EpochRunner(training_dataset,
                         starting_epoch = global_step,

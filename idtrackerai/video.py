@@ -179,6 +179,7 @@ class Video(object):
     @property
     def has_been_pretrained(self):
         return self._has_been_pretrained
+        
     @property
     def previous_session_folder(self):
         return self._previous_session_folder
