@@ -815,7 +815,7 @@ class Video(object):
         for parallelisation"""
         starting_frames = np.arange(0, self.number_of_frames, FRAMES_PER_EPISODE)
         ending_frames = np.hstack((starting_frames[1:]-1, self.number_of_frames))
-        self._episodes_start_end = zip(starting_frames, ending_frames)
+        self._episodes_start_end = list(zip(starting_frames, ending_frames))
         self._number_of_episodes = len(starting_frames)
 
     def in_which_episode(self, frame_number):

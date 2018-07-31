@@ -31,7 +31,7 @@ import sys
 import numpy as np
 import multiprocessing
 import cv2
-import cPickle as pickle
+# import cPickle as pickle
 from joblib import Parallel, delayed
 import gc
 from tqdm import tqdm
@@ -298,7 +298,7 @@ def segment(video):
             maximum_number_of_blobs_in_episode.append([out[1] for out in OupPutParallel])
             blobs_in_video.append(blobs_in_episode)
     set_mkl_to_multi_thread()
-
+    print(maximum_number_of_blobs_in_episode)
     video._maximum_number_of_blobs = max(flatten(maximum_number_of_blobs_in_episode))
     #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
     blobs_in_video = flatten(flatten(blobs_in_video))

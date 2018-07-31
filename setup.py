@@ -43,8 +43,7 @@ install it on Python {}.{}.
 """.format(*(REQUIRED_PYTHON + CURRENT_PYTHON)))
     sys.exit(1)
 
-requirements = [#'Cython >= 0.26.1',
-                'pygame >= 1.9.3',
+requirements = ['pygame >= 1.9.3',
                 'numpy >= 1.13.0',
                 'natsort >= 5.0.2',
                 'matplotlib >= 2.1',
@@ -66,10 +65,8 @@ requirements = [#'Cython >= 0.26.1',
                 'PyYAML >= 3.12',
                 'scipy >= 0.19.0',
                 'sklearn >= 0.0',
-                'protobuf >= 3.4.0',
                 'tables >= 3.3.0',
-                'dask >= 0.17.0',
-                'tensorflow-gpu >= 1.2.0']
+                'dask >= 0.17.0']
 
 
 EXCLUDE_FROM_PACKAGES = [ "plots", "plots.*",
