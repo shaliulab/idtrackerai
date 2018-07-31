@@ -429,15 +429,15 @@ class PreprocessingPreview(BoxLayout):
             content.add_widget(CustomLabel(text = "Ok, tracking a single animal...", size_hint = (1.,.1)))
             self.go_to_tracking_button = Button(text = "Go to the tracking tab", size_hint = (1.,.1))
             self.go_to_tracking_button.disabled = True
-            self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
-            content.add_widget(self.disappointed)
+            # self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
+            # content.add_widget(self.disappointed)
             content.add_widget(self.go_to_tracking_button)
         elif not CHOSEN_VIDEO.video.there_are_crossings:
             content.add_widget(CustomLabel(text = "This video did not have crossings, we didn't train the crossing detector", size_hint = (1.,.1)))
             self.go_to_tracking_button = Button(text = "Go to the tracking tab", size_hint = (1.,.1))
             self.go_to_tracking_button.disabled = True
-            self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
-            content.add_widget(self.disappointed)
+            # self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
+            # content.add_widget(self.disappointed)
             content.add_widget(self.go_to_tracking_button)
         else:
             content.add_widget(CustomLabel(text = "The model diverged, crossing and individuals will be discriminated only by area."))
@@ -487,11 +487,12 @@ class PreprocessingPreview(BoxLayout):
             [setattr(b, '_identity', b.fragment_identifier+1) for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
             [setattr(b, '_P2_vector', self.get_P2_vector(b.fragment_identifier, CHOSEN_VIDEO.video.number_of_animals))
             for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
-            CHOSEN_VIDEO.video._accumulation_trial = 0
+            CHOSEN_VIDEO.video.accumulation_trial = 0
         CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path, number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
         if CHOSEN_VIDEO.video.number_of_animals != 1:
             self.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, self.list_of_fragments.fragments)
             CHOSEN_VIDEO.list_of_global_fragments = self.list_of_global_fragments
+            CHOSEN_VIDEO.video._first_frame_first_global_fragment = [0]
         CHOSEN_VIDEO.video._fragmentation_time = time.time() - CHOSEN_VIDEO.video.fragmentation_time
         CHOSEN_VIDEO.video.save()
         DEACTIVATE_TRACKING.setter(False)
