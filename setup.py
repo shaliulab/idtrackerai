@@ -32,7 +32,7 @@ from setuptools import find_packages, setup
 import subprocess
 
 CURRENT_PYTHON = sys.version_info[:2]
-REQUIRED_PYTHON = (2, 7)
+REQUIRED_PYTHON = (3, 6)
 if CURRENT_PYTHON < REQUIRED_PYTHON:
     sys.stderr.write("""
 ==========================
