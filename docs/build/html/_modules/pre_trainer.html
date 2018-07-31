@@ -116,7 +116,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -261,8 +261,8 @@
     <span class="k">if</span> <span class="n">plot_flag</span><span class="p">:</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">save_folder</span><span class="p">,</span><span class="s1">&#39;pretraining_gf</span><span class="si">%i</span><span class="s1">.pdf&#39;</span><span class="o">%</span><span class="n">i</span><span class="p">))</span>
     <span class="n">ratio_of_pretrained_images</span> <span class="o">=</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">compute_ratio_of_images_used_for_pretraining</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;limit ratio of images to be used during pretraining: </span><span class="si">%.4f</span><span class="s2"> (if higher than </span><span class="si">%.2f</span><span class="s2"> we stop)&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">ratio_of_pretrained_images</span><span class="p">,</span> <span class="n">MAX_RATIO_OF_PRETRAINED_IMAGES</span><span class="p">))</span></div>
-    <span class="k">return</span> <span class="n">net</span><span class="p">,</span> <span class="n">ratio_of_pretrained_images</span><span class="p">,</span> <span class="n">global_epoch</span><span class="p">,</span> <span class="n">store_training_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">store_validation_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">list_of_fragments</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;limit ratio of images to be used during pretraining: </span><span class="si">%.4f</span><span class="s2"> (if higher than </span><span class="si">%.2f</span><span class="s2"> we stop)&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">ratio_of_pretrained_images</span><span class="p">,</span> <span class="n">MAX_RATIO_OF_PRETRAINED_IMAGES</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">net</span><span class="p">,</span> <span class="n">ratio_of_pretrained_images</span><span class="p">,</span> <span class="n">global_epoch</span><span class="p">,</span> <span class="n">store_training_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">store_validation_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">list_of_fragments</span></div>
 
 <div class="viewcode-block" id="pre_train"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#pre_trainer.pre_train">[docs]</a><span class="k">def</span> <span class="nf">pre_train</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">list_of_global_fragments</span><span class="p">,</span>
                 <span class="n">params</span><span class="p">,</span> <span class="n">store_accuracy_and_error</span><span class="p">,</span>
@@ -343,8 +343,8 @@
         <span class="k">if</span> <span class="n">ratio_of_pretrained_images</span> <span class="o">&gt;</span> <span class="n">MAX_RATIO_OF_PRETRAINED_IMAGES</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;pre-training ended: The network has been pre-trained on more than </span><span class="si">%.4f</span><span class="s2"> of the images in global fragment&quot;</span> <span class="o">%</span><span class="n">MAX_RATIO_OF_PRETRAINED_IMAGES</span><span class="p">)</span>
             <span class="k">break</span>
-</div>
-    <span class="k">return</span> <span class="n">net</span>
+
+    <span class="k">return</span> <span class="n">net</span></div>
 
 <div class="viewcode-block" id="pre_trainer"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#pre_trainer.pre_trainer">[docs]</a><span class="k">def</span> <span class="nf">pre_trainer</span><span class="p">(</span><span class="n">old_video</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">list_of_global_fragments</span><span class="p">,</span> <span class="n">pretrain_network_params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Initialises and starts the pretraining (3rd fingerprint protocol)</span>
@@ -379,8 +379,8 @@
                     <span class="n">store_accuracy_and_error</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                     <span class="n">check_for_loss_plateau</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                     <span class="n">save_summaries</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                    <span class="n">print_flag</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span></div>
-                    <span class="n">plot_flag</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+                    <span class="n">print_flag</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="n">plot_flag</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></div>
 </pre></div>
 
           </div>
@@ -403,10 +403,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

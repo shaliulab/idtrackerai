@@ -15,6 +15,11 @@ You can find the arXiv version in the following link: https://arxiv.org/abs/1803
 The source code can be found in https://gitlab.com/polavieja_lab/idtrackerai.git. Report any problem by
 opening an issue in the repository.
 
+**[NEW!!]** We are making available analysis tools and a tutorial with examples
+in the format of a Jupyter Lab Notebook. Find more information in
+:doc:`./trajectories_analysis` and in the repositories https://github.com/fjhheras/trajectorytools
+and  https://gitlab.com/polavieja_lab/bns2018.
+
 Should you need more information please contact us (idtrackerai@gmail.com).
 
 Contents:
@@ -27,6 +32,7 @@ Contents:
    how_to_install
    quickstart
    GUI_explained
+   trajectories_analysis
    modules
    video_collectives_library
    individual_images_library

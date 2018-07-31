@@ -116,7 +116,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -221,7 +221,7 @@
     <span class="n">training_dataset</span><span class="o">.</span><span class="n">convert_labels_to_one_hot</span><span class="p">()</span>
     <span class="n">validation_dataset</span><span class="o">.</span><span class="n">convert_labels_to_one_hot</span><span class="p">()</span>
     <span class="c1"># Reinitialize softmax and fully connected</span>
-    <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">accumulation_step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">video</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">video</span><span class="o">.</span><span class="n">accumulation_step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">net</span><span class="o">.</span><span class="n">reinitialize_softmax_and_fully_connected</span><span class="p">()</span>
     <span class="c1"># Train network</span>
     <span class="c1">#compute weights to be fed to the loss function (weighted cross entropy)</span>
@@ -237,7 +237,7 @@
     <span class="c1">#set criteria to stop the training</span>
     <span class="n">stop_training</span> <span class="o">=</span> <span class="n">Stop_Training</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span>
                                 <span class="n">check_for_loss_plateau</span> <span class="o">=</span> <span class="n">check_for_loss_plateau</span><span class="p">,</span>
-                                <span class="n">first_accumulation_flag</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">accumulation_step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+                                <span class="n">first_accumulation_flag</span> <span class="o">=</span> <span class="n">video</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">video</span><span class="o">.</span><span class="n">accumulation_step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
 
     <span class="n">global_step0</span> <span class="o">=</span> <span class="n">global_step</span>
 
@@ -264,7 +264,8 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;loss values in validation: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">store_validation_accuracy_and_loss_data</span><span class="o">.</span><span class="n">loss</span><span class="p">[</span><span class="n">global_step0</span><span class="p">:]))</span>
         <span class="c1"># update used_for_training flag to True for fragments used</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Accumulation step completed. Updating global fragments used for training&quot;</span><span class="p">)</span>
-        <span class="n">accumulation_manager</span><span class="o">.</span><span class="n">update_fragments_used_for_training</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">accumulation_manager</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">accumulation_manager</span><span class="o">.</span><span class="n">update_fragments_used_for_training</span><span class="p">()</span>
         <span class="c1"># plot if asked</span>
         <span class="k">if</span> <span class="n">plot_flag</span><span class="p">:</span>
             <span class="n">store_training_accuracy_and_loss_data</span><span class="o">.</span><span class="n">plot_global_fragments</span><span class="p">(</span><span class="n">ax_arr</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">black</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
@@ -276,8 +277,8 @@
             <span class="n">store_validation_accuracy_and_loss_data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">_epochs_completed</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">plot_flag</span><span class="p">:</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">save_folder</span><span class="p">,</span><span class="s1">&#39;Accumulation-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">accumulation_trial</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">accumulation_step</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.pdf&#39;</span><span class="p">))</span>
-        <span class="n">net</span><span class="o">.</span><span class="n">save</span><span class="p">()</span></div>
-        <span class="k">return</span> <span class="n">global_step</span><span class="p">,</span> <span class="n">net</span><span class="p">,</span> <span class="n">store_validation_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">store_training_accuracy_and_loss_data</span>
+        <span class="n">net</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">global_step</span><span class="p">,</span> <span class="n">net</span><span class="p">,</span> <span class="n">store_validation_accuracy_and_loss_data</span><span class="p">,</span> <span class="n">store_training_accuracy_and_loss_data</span></div>
 </pre></div>
 
           </div>
@@ -300,10 +301,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

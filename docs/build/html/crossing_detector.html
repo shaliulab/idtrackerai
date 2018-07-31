@@ -99,6 +99,40 @@
 <h1>DCD: Deep Crossing detector<a class="headerlink" href="#dcd-deep-crossing-detector" title="Permalink to this headline">¶</a></h1>
 <p>Given a collection of Blob objects (see <code class="xref py py-class docutils literal notranslate"><span class="pre">Blob</span></code>), the crossing detector module allows to apply a pre-computed model of the area to each of the blobs and, if specified,
 use a function approximator (in this case a convolutional neural network) in order to distinguish between Blob representing single individual and touching individuals.</p>
+<span class="target" id="module-crossing_detector"></span><dl class="function">
+<dt id="crossing_detector.detect_crossings">
+<code class="descclassname">crossing_detector.</code><code class="descname">detect_crossings</code><span class="sig-paren">(</span><em>list_of_blobs</em>, <em>video</em>, <em>model_area</em>, <em>use_network=True</em>, <em>return_store_objects=False</em>, <em>plot_flag=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crossing_detector.html#detect_crossings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crossing_detector.detect_crossings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Short summary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>list_of_blobs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">&lt;ListOfBlobs object&gt;</span></dt>
+<dd><p class="first last">Collection of the Blob objects extracted from the video</p>
+</dd>
+<dt><strong>video</strong> <span class="classifier-delimiter">:</span> <span class="classifier">&lt;Video object&gt;</span></dt>
+<dd><p class="first last">Object containing all the parameters of the video.</p>
+</dd>
+<dt><strong>model_area</strong> <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd><p class="first last">Model of the area of a single individual</p>
+</dd>
+<dt><strong>use_network</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd><p class="first last">If True the Deep Crossing Detector is used to distinguish between individuals and crossings images. Otherwise only the model area is applied</p>
+</dd>
+<dt><strong>return_store_objects</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd><p class="first last">If True the instantiations of the class <a class="reference internal" href="idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss" title="store_accuracy_and_loss.Store_Accuracy_and_Loss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Store_Accuracy_and_Loss</span></code></a> are returned by the function</p>
+</dd>
+<dt><strong>plot_flag</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd><p class="first last">If True a figure representing the values of the loss function, accuracy and accuracy per class for both the training and validation set.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 
@@ -122,10 +156,10 @@ use a function approximator (in this case a convolutional neural network) in ord
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 19, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

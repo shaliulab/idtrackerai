@@ -293,8 +293,8 @@
                                         <span class="s1">&#39;_certainty_P2&#39;</span><span class="p">])</span>
             <span class="n">delete_attributes_from_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes_to_delete</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">roll_back_to</span> <span class="o">==</span> <span class="s1">&#39;assignment&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_user_generated_identity</span> <span class="o">=</span> <span class="kc">None</span></div>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_user_generated_identity</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identity_corrected_solving_duplication</span> <span class="o">=</span> <span class="kc">None</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_in_a_global_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -422,8 +422,8 @@
 <span class="sd">        list</span>
 <span class="sd">            attribute specified in `attribute` of the fragments coexisting with self</span>
 
-<span class="sd">        &quot;&quot;&quot;</span></div>
-        <span class="k">return</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Fragment.get_fixed_identities_of_coexisting_fragments"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_fixed_identities_of_coexisting_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_fixed_identities_of_coexisting_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Considers the fragments coexisting with self and returns their</span>
@@ -438,8 +438,8 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span>
                 <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">used_for_training</span>
                 <span class="ow">or</span> <span class="n">fragment</span><span class="o">.</span><span class="n">user_generated_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="ow">or</span> <span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
-                <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)]</span>
+                <span class="ow">or</span> <span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)]</span></div>
 
 <div class="viewcode-block" id="Fragment.get_missing_identities_in_coexisting_fragments"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_missing_identities_in_coexisting_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_missing_identities_in_coexisting_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixed_identities</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the identities that have not been assigned to the set of fragments coexisting with self</span>
@@ -459,8 +459,8 @@
         <span class="n">identities</span> <span class="o">=</span> <span class="p">[</span><span class="n">identity</span> <span class="k">for</span> <span class="n">identity</span> <span class="ow">in</span> <span class="n">identities</span> <span class="k">if</span> <span class="n">identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity</span> <span class="ow">in</span> <span class="n">fixed_identities</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">list</span><span class="p">((</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_identities</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">identities</span><span class="p">))</span> <span class="o">|</span> <span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">identity</span><span class="p">]))</span>
-        <span class="k">else</span><span class="p">:</span></div>
-            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_identities</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">identities</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_identities</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">identities</span><span class="p">))</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">number_of_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -474,8 +474,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">distance_travelled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)))</span>
-        <span class="k">else</span><span class="p">:</span></div>
-            <span class="bp">self</span><span class="o">.</span><span class="n">distance_travelled</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distance_travelled</span> <span class="o">=</span> <span class="mf">0.</span></div>
 
 <div class="viewcode-block" id="Fragment.frame_by_frame_velocity"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.frame_by_frame_velocity">[docs]</a>    <span class="k">def</span> <span class="nf">frame_by_frame_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Short summary.</span>
@@ -485,8 +485,8 @@
 <span class="sd">        ndarray</span>
 <span class="sd">            Frame by frame speed of the individual in the fragment</span>
 
-<span class="sd">        &quot;&quot;&quot;</span></div>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="Fragment.compute_border_velocity"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_border_velocity">[docs]</a>    <span class="k">def</span> <span class="nf">compute_border_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Velocity necessary to cover the space between two fragments</span>
@@ -505,8 +505,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">centroids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">other</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="n">centroids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">other</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span></div>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">centroids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">other</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Fragment.are_overlapping"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.are_overlapping">[docs]</a>    <span class="k">def</span> <span class="nf">are_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Short summary.</span>
@@ -522,8 +522,8 @@
 <span class="sd">            True if self and other coexist in at least one frame</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="p">(</span><span class="n">s1</span><span class="p">,</span><span class="n">e1</span><span class="p">),</span> <span class="p">(</span><span class="n">s2</span><span class="p">,</span><span class="n">e2</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_end</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">start_end</span></div>
-        <span class="k">return</span> <span class="n">s1</span> <span class="o">&lt;</span> <span class="n">e2</span> <span class="ow">and</span> <span class="n">e1</span> <span class="o">&gt;</span> <span class="n">s2</span>
+        <span class="p">(</span><span class="n">s1</span><span class="p">,</span><span class="n">e1</span><span class="p">),</span> <span class="p">(</span><span class="n">s2</span><span class="p">,</span><span class="n">e2</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_end</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">start_end</span>
+        <span class="k">return</span> <span class="n">s1</span> <span class="o">&lt;</span> <span class="n">e2</span> <span class="ow">and</span> <span class="n">e1</span> <span class="o">&gt;</span> <span class="n">s2</span></div>
 
 <div class="viewcode-block" id="Fragment.get_coexisting_individual_fragments_indices"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_coexisting_individual_fragments_indices">[docs]</a>    <span class="k">def</span> <span class="nf">get_coexisting_individual_fragments_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the list of fragment objects representing and individual (i.e.</span>
@@ -538,8 +538,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span> <span class="o">=</span> <span class="p">[</span><span class="n">fragment</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">fragments</span>
                                             <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">are_overlapping</span><span class="p">(</span><span class="n">fragment</span><span class="p">)</span>
-                                            <span class="ow">and</span> <span class="n">fragment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">]</span></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_coexisting_individual_fragments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">)</span>
+                                            <span class="ow">and</span> <span class="n">fragment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_coexisting_individual_fragments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">has_enough_accumulated_coexisting_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -565,8 +565,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">coexisting_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">coexisting_fragment</span><span class="o">.</span><span class="n">temporary_id</span> <span class="o">==</span> <span class="n">temporary_id</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">False</span></div>
-        <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="Fragment.compute_identification_statistics"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_identification_statistics">[docs]</a>    <span class="k">def</span> <span class="nf">compute_identification_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">softmax_probs</span><span class="p">,</span> <span class="n">number_of_animals</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes the statistics necessary to the identification of the</span>
@@ -596,8 +596,8 @@
         <span class="n">number_of_animals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="k">if</span> <span class="n">number_of_animals</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">number_of_animals</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_frequencies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_identification_frequencies_individual_fragment</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_P1_from_frequencies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequencies</span><span class="p">)</span>
-        <span class="n">median_softmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_median_softmax</span><span class="p">(</span><span class="n">softmax_probs</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">)</span></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_certainty</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_certainty_of_individual_fragment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span><span class="p">,</span><span class="n">median_softmax</span><span class="p">)</span>
+        <span class="n">median_softmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_median_softmax</span><span class="p">(</span><span class="n">softmax_probs</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_certainty</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_certainty_of_individual_fragment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span><span class="p">,</span><span class="n">median_softmax</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Fragment.set_P1_vector_accumulated"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.set_P1_vector_accumulated">[docs]</a>    <span class="k">def</span> <span class="nf">set_P1_vector_accumulated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;If self has been used for training its P1_vector is modified to be</span>
@@ -605,16 +605,16 @@
 <span class="sd">        :attr:`temporary_id` position</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_for_training</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_an_individual</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P1_vector</span><span class="p">))</span></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">temporary_id</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P1_vector</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">temporary_id</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span></div>
 
 <div class="viewcode-block" id="Fragment.get_possible_identities"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_possible_identities">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_possible_identities</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Check if P2 has two identical maxima. In that case returns the indices.</span>
 <span class="sd">        Else return false</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">maxima_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">P2_vector</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
-        <span class="k">return</span> <span class="n">maxima_indices</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">)</span>
+        <span class="n">maxima_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">P2_vector</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">maxima_indices</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Fragment.assign_identity"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.assign_identity">[docs]</a>    <span class="k">def</span> <span class="nf">assign_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Assigns the identity to self by considering the fragments coexisting</span>
@@ -635,8 +635,8 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_identity_is_fixed</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="n">possible_identities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P1_vector</span><span class="p">))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">identity</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span></div>
-                <span class="bp">self</span><span class="o">.</span><span class="n">recompute_P2_of_coexisting_fragments</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_P1_vector</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">identity</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">recompute_P2_of_coexisting_fragments</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Fragment.recompute_P2_of_coexisting_fragments"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.recompute_P2_of_coexisting_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">recompute_P2_of_coexisting_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Updates the P2 of the fragments coexisting with self</span>
@@ -644,8 +644,8 @@
 <span class="sd">        fixed (see :attr:`identity_is_fixed`)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># The P2 of fragments with fixed identity won&#39;t be recomputed</span>
-        <span class="c1"># due to the condition in assign_identity() (second line)</span></div>
-        <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">compute_P2_vector</span><span class="p">()</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">]</span>
+        <span class="c1"># due to the condition in assign_identity() (second line)</span>
+        <span class="p">[</span><span class="n">fragment</span><span class="o">.</span><span class="n">compute_P2_vector</span><span class="p">()</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coexisting_individual_fragments</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Fragment.compute_P2_vector"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_P2_vector">[docs]</a>    <span class="k">def</span> <span class="nf">compute_P2_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes the P2_vector related to self. It is based on :attr:`coexisting_individual_fragments`</span>
@@ -660,8 +660,8 @@
             <span class="n">P2_second_max</span> <span class="o">=</span> <span class="n">P2_vector_ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_certainty_P2</span> <span class="o">=</span> <span class="n">MAX_FLOAT</span> <span class="k">if</span> <span class="n">P2_second_max</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">P2_first_max</span> <span class="o">/</span> <span class="n">P2_second_max</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_P2_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span></div>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_certainty_P2</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_P2_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_certainty_P2</span> <span class="o">=</span> <span class="mf">0.</span></div>
 
 <div class="viewcode-block" id="Fragment.compute_identification_frequencies_individual_fragment"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_identification_frequencies_individual_fragment">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">compute_identification_frequencies_individual_fragment</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
@@ -681,8 +681,8 @@
 <span class="sd">            many predictions have maximum components at the index i</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">predictions</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span></div>
-                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span> <span class="c1"># The predictions come from 1 to number_of_animals + 1</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">predictions</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span> <span class="c1"># The predictions come from 1 to number_of_animals + 1</span></div>
 
 <div class="viewcode-block" id="Fragment.compute_P1_from_frequencies"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_P1_from_frequencies">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">compute_P1_from_frequencies</span><span class="p">(</span><span class="n">frequencies</span><span class="p">):</span>
@@ -690,8 +690,8 @@
 <span class="sd">        computer the P1 vector. P1 is the softmax of the frequencies with base 2</span>
 <span class="sd">        for each identity.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">P1_of_fragment</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mf">2.</span><span class="o">**</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">frequencies</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frequencies</span><span class="p">),</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">frequencies</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frequencies</span><span class="p">),</span><span class="mi">1</span><span class="p">))),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span></div>
-        <span class="k">return</span> <span class="n">P1_of_fragment</span>
+        <span class="n">P1_of_fragment</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mf">2.</span><span class="o">**</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">frequencies</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frequencies</span><span class="p">),</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">frequencies</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frequencies</span><span class="p">),</span><span class="mi">1</span><span class="p">))),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">P1_of_fragment</span></div>
 
 <div class="viewcode-block" id="Fragment.compute_median_softmax"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_median_softmax">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">compute_median_softmax</span><span class="p">(</span><span class="n">softmax_probs</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
@@ -722,8 +722,8 @@
         <span class="n">argmax_softmax_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">softmax_probs</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">softmax_median</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">number_of_animals</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">argmax_softmax_probs</span><span class="p">):</span>
-            <span class="n">softmax_median</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">max_softmax_probs</span><span class="p">[</span><span class="n">argmax_softmax_probs</span> <span class="o">==</span> <span class="n">i</span><span class="p">])</span></div>
-        <span class="k">return</span> <span class="n">softmax_median</span>
+            <span class="n">softmax_median</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">max_softmax_probs</span><span class="p">[</span><span class="n">argmax_softmax_probs</span> <span class="o">==</span> <span class="n">i</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">softmax_median</span></div>
 
 <div class="viewcode-block" id="Fragment.compute_certainty_of_individual_fragment"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.compute_certainty_of_individual_fragment">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">compute_certainty_of_individual_fragment</span><span class="p">(</span><span class="n">P1_vector</span><span class="p">,</span> <span class="n">median_softmax</span><span class="p">):</span>
@@ -746,8 +746,8 @@
         <span class="n">argsort_p1_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">P1_vector</span><span class="p">)</span>
         <span class="n">sorted_p1_vector</span> <span class="o">=</span> <span class="n">P1_vector</span><span class="p">[</span><span class="n">argsort_p1_vector</span><span class="p">]</span>
         <span class="n">sorted_softmax_probs</span> <span class="o">=</span> <span class="n">median_softmax</span><span class="p">[</span><span class="n">argsort_p1_vector</span><span class="p">]</span>
-        <span class="n">certainty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">sorted_p1_vector</span><span class="p">,</span><span class="n">sorted_softmax_probs</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sorted_p1_vector</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span></div>
-        <span class="k">return</span> <span class="n">certainty</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">certainty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">sorted_p1_vector</span><span class="p">,</span><span class="n">sorted_softmax_probs</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sorted_p1_vector</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="n">certainty</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Fragment.get_neighbour_fragment"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.get_neighbour_fragment">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbour_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">number_of_frames_in_direction</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;If it exist, gets the fragment in the list of all fragment whose</span>
@@ -782,8 +782,8 @@
                             <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">assigned_identity</span>
                             <span class="ow">and</span> <span class="n">fragment</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_end</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">number_of_frames_in_direction</span><span class="p">]</span>
 
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbour</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span></div>
-        <span class="k">return</span> <span class="n">neighbour</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbour</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbour</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">neighbour</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbour</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="Fragment.set_partially_or_globally_accumulated"><a class="viewcode-back" href="../fragmentation.html#fragment.Fragment.set_partially_or_globally_accumulated">[docs]</a>    <span class="k">def</span> <span class="nf">set_partially_or_globally_accumulated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accumulation_strategy</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets :attr:`accumulated_globally` and :attr:`accumulated_partially`</span>
@@ -797,8 +797,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">accumulation_strategy</span> <span class="o">==</span> <span class="s1">&#39;global&#39;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_globally</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="n">accumulation_strategy</span> <span class="o">==</span> <span class="s1">&#39;partial&#39;</span><span class="p">:</span></div></div>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_partially</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">accumulation_strategy</span> <span class="o">==</span> <span class="s1">&#39;partial&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_accumulated_partially</span> <span class="o">=</span> <span class="kc">True</span></div></div>
 </pre></div>
 
           </div>
@@ -821,10 +821,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

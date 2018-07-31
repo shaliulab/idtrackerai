@@ -116,7 +116,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -169,8 +169,8 @@
 <span class="sd">        to their correspoding lists</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_value</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accuracy_value</span><span class="p">)</span></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">individual_accuracy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">individual_accuracy_value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accuracy_value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">individual_accuracy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">individual_accuracy_value</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Store_Accuracy_and_Loss.plot"><a class="viewcode-back" href="../idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axes_handles</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">canvas_from_GUI</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">legend_font_color</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Plots the accuracy and the individual accuracies for every epoch</span>
@@ -222,8 +222,8 @@
         <span class="k">if</span> <span class="n">canvas_from_GUI</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mf">1e-8</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span></div>
-            <span class="n">canvas_from_GUI</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">canvas_from_GUI</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Store_Accuracy_and_Loss.plot_global_fragments"><a class="viewcode-back" href="../idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss.plot_global_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">plot_global_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax_handles</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">black</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">canvas_from_GUI</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Plots the global fragments used for training until the current epoch</span>
@@ -261,16 +261,20 @@
         <span class="n">ax4</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
         <span class="n">ax4</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Frame number&#39;</span><span class="p">)</span>
         <span class="n">ax4</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Blob index&#39;</span><span class="p">)</span>
-        <span class="n">ax4</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">maximum_number_of_blobs</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-        <span class="n">ax4</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">maximum_number_of_blobs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-        <span class="n">ax4</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">])</span></div>
-        <span class="n">ax4</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">maximum_number_of_blobs</span> <span class="o">+</span> <span class="o">.</span><span class="mi">5</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="s1">&#39;maximum_number_of_blobs&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">video</span><span class="o">.</span><span class="n">maximum_number_of_blobs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">max_y</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">max_y</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">maximum_number_of_blobs</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_y</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">])</span>
+        <span class="n">ax4</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="n">max_y</span> <span class="o">+</span> <span class="o">.</span><span class="mi">5</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="Store_Accuracy_and_Loss.save"><a class="viewcode-back" href="../idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_epochs_completed</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Saves the values stored</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_epochs_completed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">number_of_epochs_completed</span><span class="p">)</span></div>
-        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_loss_acc_dict.npy&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_epochs_completed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">number_of_epochs_completed</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_loss_acc_dict.npy&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Store_Accuracy_and_Loss.load"><a class="viewcode-back" href="../idCNN.html#store_accuracy_and_loss.Store_Accuracy_and_Loss.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load the values stored in case there are any saved</span>
@@ -278,8 +282,8 @@
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_loss_acc_dict.npy&#39;</span><span class="p">)):</span>
             <span class="n">loss_accuracy_dictionary</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_to_accuracy_error_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_loss_acc_dict.npy&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">loss_accuracy_dictionary</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;number_of_epochs_completed&#39;</span><span class="p">):</span></div></div>
-                <span class="bp">self</span><span class="o">.</span><span class="n">number_of_epochs_completed</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;number_of_epochs_completed&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">number_of_epochs_completed</span> <span class="o">=</span> <span class="p">[]</span></div></div>
 </pre></div>
 
           </div>
@@ -302,10 +306,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

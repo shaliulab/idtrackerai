@@ -192,8 +192,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span> <span class="o">+=</span> <span class="n">batch_size</span>
-        <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span></div>
-        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="EpochRunner.run_epoch"><a class="viewcode-back" href="../idCNN.html#epoch_runner.EpochRunner.run_epoch">[docs]</a>    <span class="k">def</span> <span class="nf">run_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">store_loss_and_accuracy</span><span class="p">,</span> <span class="n">batch_operation</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Performs a given `batch_operation` for an entire epoch and stores the</span>
@@ -241,8 +241,8 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> (epoch </span><span class="si">%i</span><span class="s1">). Loss: </span><span class="si">%f</span><span class="s1">, accuracy </span><span class="si">%f</span><span class="s1">, individual accuracy: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting_epoch</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_epochs_completed</span><span class="p">,</span> <span class="n">loss_epoch</span><span class="p">,</span> <span class="n">accuracy_epoch</span> <span class="p">,</span> <span class="n">individual_accuracy_epoch</span><span class="p">))</span>
 
         <span class="c1"># self._index_in_epoch_train = 0</span>
-        <span class="n">store_loss_and_accuracy</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">loss_epoch</span><span class="p">,</span> <span class="n">accuracy_epoch</span><span class="p">,</span> <span class="n">individual_accuracy_epoch</span><span class="p">)</span></div></div>
-        <span class="k">return</span> <span class="n">feed_dict</span>
+        <span class="n">store_loss_and_accuracy</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">loss_epoch</span><span class="p">,</span> <span class="n">accuracy_epoch</span><span class="p">,</span> <span class="n">individual_accuracy_epoch</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">feed_dict</span></div></div>
 </pre></div>
 
           </div>
@@ -265,10 +265,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>
