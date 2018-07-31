@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, print_function, division
 import os
@@ -51,10 +51,11 @@ class CrossingDataset(object):
         self.blobs = blobs_list
         self.get_video_height_and_width_according_to_resolution_reduction()
         if (scope == 'training' or scope == 'validation'):
-            self.get_list_of_crossing_blobs_for_training(crossings, image_size)
-            self.get_list_of_individual_blobs_for_training(individual_blobs)
-            logger.info("number of sure crossing images used for training: %i" %len(self.crossing_blobs))
-            logger.info("number of individual images used for training: %i" %len(self.individual_blobs))
+            self.there_are_crossings = self.get_list_of_crossing_blobs_for_training(crossings, image_size)
+            if self.there_are_crossings:
+                self.get_list_of_individual_blobs_for_training(individual_blobs)
+                logger.info("number of sure crossing images used for training: %i" %len(self.crossing_blobs))
+                logger.info("number of individual images used for training: %i" %len(self.individual_blobs))
         if scope == 'test':
             self.image_size = image_size
             self.get_list_of_blobs_for_test(test)
@@ -89,9 +90,14 @@ class CrossingDataset(object):
             self.crossing_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
                                     if blob.is_a_sure_crossing()]
             logger.debug("number of crossing blobs (in get list): %i" %len(self.crossing_blobs))
-            np.random.seed(0)
-            np.random.shuffle(self.crossing_blobs)
-            self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossing_blobs]) + 5
+            if len(self.crossing_blobs) == 0:
+                logger.debug("No crossings were found")
+                self.there_are_crossings = False
+            else:
+                self.there_are_crossings = True
+                np.random.seed(0)
+                np.random.shuffle(self.crossing_blobs)
+                self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossing_blobs]) + 5
         else:
             self.crossing_blobs = crossings
             self.image_size = image_size

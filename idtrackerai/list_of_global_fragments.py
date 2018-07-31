@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -269,7 +269,10 @@ def detect_beginnings(boolean_array):
     :boolean_array: array with True where the number of animals in the frame equals
     the number of animals in the video
     """
-    return [i for i in range(0,len(boolean_array)) if (boolean_array[i] and not boolean_array[i-1])]
+    if np.all(boolean_array):
+        return [0]
+    else:
+        return [i for i in range(0,len(boolean_array)) if (boolean_array[i] and not boolean_array[i-1])]
 
 def check_global_fragments(blobs_in_video, num_animals):
     """Returns an array with True if:
@@ -305,5 +308,7 @@ def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
 
     """
     global_fragments_boolean_array = check_global_fragments(blobs_in_video, num_animals)
+    print(global_fragments_boolean_array)
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
+    print(indices_beginning_of_fragment)
     return [GlobalFragment(blobs_in_video, fragments, i, num_animals) for i in indices_beginning_of_fragment]
