@@ -40,7 +40,7 @@
     <link rel="search" title="Search" href="search.html" >
     <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
     <link rel="next" title="Video information manager" href="video_information_manager.html" >
-    <link rel="prev" title="Graphical user interface (GUI)" href="GUI_explained.html" > 
+    <link rel="prev" title="Trajectories analysis" href="trajectories_analysis.html" > 
   </head>
   <body>
 
@@ -78,7 +78,7 @@
            accesskey="N">next</a>
       </li>
       <li class="active">
-        <a href="GUI_explained.html" title="Graphical user interface (GUI)"
+        <a href="trajectories_analysis.html" title="Trajectories analysis"
            accesskey="P">previous</a>
       </li>
     </ul>
@@ -113,9 +113,7 @@
 <li class="toctree-l2"><a class="reference internal" href="preprocessing.html#list-of-blobs">List of Blobs</a><ul class="simple">
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="preprocessing.html#model-area">Model area</a><ul class="simple">
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing.html#model-area">Model area</a></li>
 <li class="toctree-l2"><a class="reference internal" href="preprocessing.html#module-segmentation">Segmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="preprocessing.html#module-video_utils">Segmentation utils</a></li>
 </ul>
@@ -131,11 +129,15 @@
 <li class="toctree-l2"><a class="reference internal" href="fragmentation.html#global-fragment">Global fragment</a><ul class="simple">
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="fragmentation.html#list-of-global-fragments">List of global fragments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fragmentation.html#list-of-global-fragments">List of global fragments</a><ul class="simple">
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="idCNN.html">Identification network</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="idCNN.html#idcnn">idCNN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="idCNN.html#idcnn">idCNN</a><ul class="simple">
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="idCNN.html#module-network_params">Network parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="idCNN.html#module-stop_training_criteria">Stop training criteria (idCNN)</a><ul class="simple">
 </ul>
@@ -146,32 +148,34 @@
 <li class="toctree-l2"><a class="reference internal" href="idCNN.html#module-get_data">Get data</a><ul class="simple">
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="idCNN.html#epoch-runner">Epoch runner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="idCNN.html#get-predictions">Get predictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="idCNN.html#epoch-runner">Epoch runner</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="idCNN.html#get-predictions">Get predictions</a><ul class="simple">
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="fingerprint_protocol_cascade.html">Fingerprint protocol cascade</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="fingerprint_protocol_cascade.html#accumulation-manager">Accumulation manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fingerprint_protocol_cascade.html#module-accumulation_manager">Accumulation manager</a><ul class="simple">
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="fingerprint_protocol_cascade.html#accumulator">Accumulator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fingerprint_protocol_cascade.html#assigner">Assigner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fingerprint_protocol_cascade.html#module-assigner">Assigner</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fingerprint_protocol_cascade.html#trainer">Trainer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fingerprint_protocol_cascade.html#pretraining">Pretraining</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="postprocessing.html">Post-processing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="postprocessing.html#impossible-velocity-jumps-correction">Impossible velocity jumps correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="postprocessing.html#module-correct_impossible_velocity_jumps">Impossible velocity jumps correction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="postprocessing.html#module-assign_them_all">Assign crossings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="postprocessing.html#get-trajectories">Get trajectories</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Human validation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="validation.html#module-generate_groundtruth">Generate groundtruth</a><ul class="simple">
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="validation.html#module-generate_groundtruth">Generate groundtruth</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validation.html#module-compute_groundtruth_statistics">Compute ground truth statistics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="validation.html#module-generate_individual_groundtruth">Generate individual ground truth</a><ul class="simple">
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="validation.html#module-generate_individual_groundtruth">Generate individual ground truth</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validation.html#module-compute_individual_groundtruth_statistics">Compute individual ground truth statistics</a></li>
 </ul>
 </li>
@@ -200,10 +204,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

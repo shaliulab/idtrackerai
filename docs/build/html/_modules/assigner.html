@@ -116,7 +116,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -139,7 +139,7 @@
 <span class="sd">Identification of individual fragments given the predictions generate by the idCNN</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="assign"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#assigner.assign">[docs]</a><span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">print_flag</span><span class="p">):</span>
+<div class="viewcode-block" id="assign"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#assigner.assign">[docs]</a><span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">print_flag</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Gathers the predictions relative to the images contained in `images`.</span>
 <span class="sd">    Such predictions are returned as attributes of `assigner`.</span>
 
@@ -147,9 +147,6 @@
 <span class="sd">    ----------</span>
 <span class="sd">    net : &lt;ConvNetwork object&gt;</span>
 <span class="sd">        Convolutional neural network object created according to net.params</span>
-<span class="sd">    video : &lt;Video object&gt;</span>
-<span class="sd">        Object collecting all the parameters of the video and paths for saving</span>
-<span class="sd">        and loading</span>
 <span class="sd">    images : ndarray</span>
 <span class="sd">        array of images</span>
 <span class="sd">    print_flag : bool</span>
@@ -173,8 +170,8 @@
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;getting predictions&quot;</span><span class="p">)</span>
     <span class="n">assigner</span> <span class="o">=</span> <span class="n">GetPrediction</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="n">assigner</span><span class="o">.</span><span class="n">get_predictions_softmax</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">predict</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">)</span></div>
-    <span class="k">return</span> <span class="n">assigner</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">assigner</span></div>
 
 <div class="viewcode-block" id="compute_identification_statistics_for_non_accumulated_fragments"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#assigner.compute_identification_statistics_for_non_accumulated_fragments">[docs]</a><span class="k">def</span> <span class="nf">compute_identification_statistics_for_non_accumulated_fragments</span><span class="p">(</span><span class="n">fragments</span><span class="p">,</span> <span class="n">assigner</span><span class="p">,</span> <span class="n">number_of_animals</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Given the predictions associated to the images in each (individual)</span>
@@ -197,8 +194,8 @@
             <span class="n">next_counter_value</span> <span class="o">=</span> <span class="n">counter</span> <span class="o">+</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span>
             <span class="n">predictions</span> <span class="o">=</span> <span class="n">assigner</span><span class="o">.</span><span class="n">predictions</span><span class="p">[</span><span class="n">counter</span> <span class="p">:</span> <span class="n">next_counter_value</span><span class="p">]</span>
             <span class="n">softmax_probs</span> <span class="o">=</span> <span class="n">assigner</span><span class="o">.</span><span class="n">softmax_probs</span><span class="p">[</span><span class="n">counter</span> <span class="p">:</span> <span class="n">next_counter_value</span><span class="p">]</span>
-            <span class="n">fragment</span><span class="o">.</span><span class="n">compute_identification_statistics</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">softmax_probs</span><span class="p">,</span> <span class="n">number_of_animals</span> <span class="o">=</span> <span class="n">number_of_animals</span><span class="p">)</span></div>
-            <span class="n">counter</span> <span class="o">=</span> <span class="n">next_counter_value</span>
+            <span class="n">fragment</span><span class="o">.</span><span class="n">compute_identification_statistics</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">softmax_probs</span><span class="p">,</span> <span class="n">number_of_animals</span> <span class="o">=</span> <span class="n">number_of_animals</span><span class="p">)</span>
+            <span class="n">counter</span> <span class="o">=</span> <span class="n">next_counter_value</span></div>
 
 <div class="viewcode-block" id="assign_identity"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#assigner.assign_identity">[docs]</a><span class="k">def</span> <span class="nf">assign_identity</span><span class="p">(</span><span class="n">list_of_fragments</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Identifies the individual fragments recursively, based on the value of</span>
@@ -214,8 +211,8 @@
 
     <span class="k">while</span> <span class="n">number_of_unidentified_individual_fragments</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">fragment</span> <span class="o">=</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">get_next_fragment_to_identify</span><span class="p">()</span>
-        <span class="n">fragment</span><span class="o">.</span><span class="n">assign_identity</span><span class="p">()</span></div>
-        <span class="n">number_of_unidentified_individual_fragments</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">fragment</span><span class="o">.</span><span class="n">assign_identity</span><span class="p">()</span>
+        <span class="n">number_of_unidentified_individual_fragments</span> <span class="o">-=</span> <span class="mi">1</span></div>
 
 <div class="viewcode-block" id="assigner"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#assigner.assigner">[docs]</a><span class="k">def</span> <span class="nf">assigner</span><span class="p">(</span><span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">net</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;This is the main function of this method: given a list_of_fragments it</span>
@@ -248,12 +245,12 @@
     <span class="n">images</span> <span class="o">=</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">get_images_from_fragments_to_assign</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Images shape before assignment </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">images</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Getting predictions&quot;</span><span class="p">)</span>
-    <span class="n">assigner</span> <span class="o">=</span> <span class="n">assign</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">print_flag</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">assigner</span> <span class="o">=</span> <span class="n">assign</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">print_flag</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Number of generated predictions: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">assigner</span><span class="o">.</span><span class="n">_predictions</span><span class="p">)))</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Predictions range: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">assigner</span><span class="o">.</span><span class="n">_predictions</span><span class="p">)))</span>
     <span class="n">compute_identification_statistics_for_non_accumulated_fragments</span><span class="p">(</span><span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span><span class="p">,</span> <span class="n">assigner</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Assigning identities&quot;</span><span class="p">)</span></div>
-    <span class="n">assign_identity</span><span class="p">(</span><span class="n">list_of_fragments</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Assigning identities&quot;</span><span class="p">)</span>
+    <span class="n">assign_identity</span><span class="p">(</span><span class="n">list_of_fragments</span><span class="p">)</span></div>
 </pre></div>
 
           </div>
@@ -276,10 +273,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

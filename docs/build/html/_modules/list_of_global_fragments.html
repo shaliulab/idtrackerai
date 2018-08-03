@@ -173,14 +173,14 @@
 <div class="viewcode-block" id="ListOfGlobalFragments.reset"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roll_back_to</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Resets all the global fragment by calling recursively the method</span>
 <span class="sd">        :meth:`~globalfragment.GlobalFragment.reset`</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
-        <span class="p">[</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">roll_back_to</span><span class="p">)</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">[</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">roll_back_to</span><span class="p">)</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="ListOfGlobalFragments.order_by_distance_travelled"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.order_by_distance_travelled">[docs]</a>    <span class="k">def</span> <span class="nf">order_by_distance_travelled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sorts the global fragments by the minimum distance travelled of their</span>
 <span class="sd">        individual fragments</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">minimum_distance_travelled</span><span class="p">,</span> <span class="n">reverse</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">minimum_distance_travelled</span><span class="p">,</span> <span class="n">reverse</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ListOfGlobalFragments.give_me_frequencies_first_fragment_accumulated"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.give_me_frequencies_first_fragment_accumulated">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">give_me_frequencies_first_fragment_accumulated</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">fragment</span><span class="p">):</span>
@@ -204,8 +204,8 @@
 <span class="sd">            :attr:`~fragment.Fragment.number_of_images`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">frequencies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">number_of_animals</span><span class="p">)</span>
-        <span class="n">frequencies</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span></div>
-        <span class="k">return</span> <span class="n">frequencies</span>
+        <span class="n">frequencies</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span>
+        <span class="k">return</span> <span class="n">frequencies</span></div>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">abort_knowledge_transfer_on_same_animals</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">net</span><span class="p">):</span>
@@ -248,8 +248,8 @@
             <span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_certainty&#39;</span><span class="p">,</span> <span class="mf">1.</span><span class="p">),</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s1">&#39;_P1_vector&#39;</span><span class="p">,</span> <span class="n">fragment</span><span class="o">.</span><span class="n">compute_P1_from_frequencies</span><span class="p">(</span><span class="n">fragment</span><span class="o">.</span><span class="n">frequencies</span><span class="p">)))</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">individual_fragments</span><span class="p">)]</span>
-</div>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">index_beginning_of_fragment</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_global_fragment_for_accumulation</span><span class="o">.</span><span class="n">index_beginning_of_fragment</span></div>
 
 <div class="viewcode-block" id="ListOfGlobalFragments.order_by_distance_to_the_first_global_fragment_for_accumulation"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.order_by_distance_to_the_first_global_fragment_for_accumulation">[docs]</a>    <span class="k">def</span> <span class="nf">order_by_distance_to_the_first_global_fragment_for_accumulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">accumulation_trial</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sorts the global fragments wrt to their distance from the first</span>
@@ -265,13 +265,13 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">,</span>
-                                        <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index_beginning_of_fragment</span> <span class="o">-</span> <span class="n">video</span><span class="o">.</span><span class="n">first_frame_first_global_fragment</span><span class="p">[</span><span class="n">accumulation_trial</span><span class="p">]),</span></div>
-                                        <span class="n">reverse</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+                                        <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index_beginning_of_fragment</span> <span class="o">-</span> <span class="n">video</span><span class="o">.</span><span class="n">first_frame_first_global_fragment</span><span class="p">[</span><span class="n">accumulation_trial</span><span class="p">]),</span>
+                                        <span class="n">reverse</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ListOfGlobalFragments.compute_maximum_number_of_images"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.compute_maximum_number_of_images">[docs]</a>    <span class="k">def</span> <span class="nf">compute_maximum_number_of_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes the maximum number of images in the global fragments</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">maximum_number_of_images</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">get_total_number_of_images</span><span class="p">()</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maximum_number_of_images</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">get_total_number_of_images</span><span class="p">()</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="ListOfGlobalFragments.filter_candidates_global_fragments_for_accumulation"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.filter_candidates_global_fragments_for_accumulation">[docs]</a>    <span class="k">def</span> <span class="nf">filter_candidates_global_fragments_for_accumulation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Filters the global fragments by taking into account the minium</span>
@@ -281,8 +281,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">non_accumulable_global_fragments</span> <span class="o">=</span> <span class="p">[</span><span class="n">global_fragment</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">global_fragment</span><span class="o">.</span><span class="n">candidate_for_accumulation</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span> <span class="o">=</span> <span class="p">[</span><span class="n">global_fragment</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span>
-                    <span class="k">if</span> <span class="n">global_fragment</span><span class="o">.</span><span class="n">candidate_for_accumulation</span><span class="p">]</span></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_global_fragments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">global_fragment</span><span class="o">.</span><span class="n">candidate_for_accumulation</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_global_fragments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ListOfGlobalFragments.get_data_plot"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.get_data_plot">[docs]</a>    <span class="k">def</span> <span class="nf">get_data_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Gathers data to plot a global fragments statistics summary</span>
@@ -316,18 +316,18 @@
         <span class="k">return</span> <span class="n">number_of_images_in_shortest_individual_fragment</span><span class="p">,</span>\
                 <span class="n">number_of_images_in_longest_individual_fragment</span><span class="p">,</span>\
                 <span class="n">number_of_images_per_individual_fragment_in_global_fragment</span><span class="p">,</span>\
-                <span class="n">median_number_of_images</span><span class="p">,</span>\</div>
-                <span class="n">minimum_distance_travelled</span>
+                <span class="n">median_number_of_images</span><span class="p">,</span>\
+                <span class="n">minimum_distance_travelled</span></div>
 
 <div class="viewcode-block" id="ListOfGlobalFragments.delete_fragments_from_global_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.delete_fragments_from_global_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">delete_fragments_from_global_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Deletes the individual fragments from each of the global fragments</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
-        <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="n">global_fragment</span><span class="p">,</span><span class="s1">&#39;individual_fragments&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="n">global_fragment</span><span class="p">,</span><span class="s1">&#39;individual_fragments&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="ListOfGlobalFragments.relink_fragments_to_global_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.relink_fragments_to_global_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">relink_fragments_to_global_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Resets the individual fragments to their respective global fragments</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
-        <span class="p">[</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">get_individual_fragments_of_global_fragment</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">[</span><span class="n">global_fragment</span><span class="o">.</span><span class="n">get_individual_fragments_of_global_fragment</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span> <span class="k">for</span> <span class="n">global_fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_fragments</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="ListOfGlobalFragments.save"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">global_fragments_path</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Saves an instance of the class in the path `global_fragments_path`.</span>
@@ -340,8 +340,8 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;saving list of global fragments at </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">global_fragments_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">delete_fragments_from_global_fragments</span><span class="p">()</span>
         <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">global_fragments_path</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span>
-        <span class="c1"># After saving the list of globa fragments the individual fragments are deleted and we need to relink them again</span></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">relink_fragments_to_global_fragments</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span>
+        <span class="c1"># After saving the list of globa fragments the individual fragments are deleted and we need to relink them again</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relink_fragments_to_global_fragments</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ListOfGlobalFragments.load"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.ListOfGlobalFragments.load">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_to_load</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
@@ -351,8 +351,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;loading list of global fragments from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">path_to_load</span><span class="p">)</span>
         <span class="n">list_of_global_fragments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_to_load</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-        <span class="n">list_of_global_fragments</span><span class="o">.</span><span class="n">relink_fragments_to_global_fragments</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span></div></div>
-        <span class="k">return</span> <span class="n">list_of_global_fragments</span>
+        <span class="n">list_of_global_fragments</span><span class="o">.</span><span class="n">relink_fragments_to_global_fragments</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">list_of_global_fragments</span></div></div>
 
 <div class="viewcode-block" id="detect_beginnings"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.detect_beginnings">[docs]</a><span class="k">def</span> <span class="nf">detect_beginnings</span><span class="p">(</span><span class="n">boolean_array</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Detects the frame where the core of a global fragment starts.</span>
@@ -361,8 +361,8 @@
 <span class="sd">    number of animals in the video</span>
 <span class="sd">    :boolean_array: array with True where the number of animals in the frame equals</span>
 <span class="sd">    the number of animals in the video</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
-    <span class="k">return</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">boolean_array</span><span class="p">))</span> <span class="k">if</span> <span class="p">(</span><span class="n">boolean_array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">boolean_array</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">boolean_array</span><span class="p">))</span> <span class="k">if</span> <span class="p">(</span><span class="n">boolean_array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">boolean_array</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])]</span></div>
 
 <div class="viewcode-block" id="check_global_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.check_global_fragments">[docs]</a><span class="k">def</span> <span class="nf">check_global_fragments</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">num_animals</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns an array with True if:</span>
@@ -374,8 +374,8 @@
 <span class="sd">        individual</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">])</span>
-</div>
-    <span class="k">return</span> <span class="p">[</span><span class="n">all_blobs_in_a_fragment</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span> <span class="o">==</span> <span class="n">num_animals</span> <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">blobs_in_video</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">all_blobs_in_a_fragment</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span> <span class="o">==</span> <span class="n">num_animals</span> <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">blobs_in_video</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="create_list_of_global_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_global_fragments.create_list_of_global_fragments">[docs]</a><span class="k">def</span> <span class="nf">create_list_of_global_fragments</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">num_animals</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates the list of instances of the class</span>
@@ -398,8 +398,8 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">global_fragments_boolean_array</span> <span class="o">=</span> <span class="n">check_global_fragments</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">num_animals</span><span class="p">)</span>
-    <span class="n">indices_beginning_of_fragment</span> <span class="o">=</span> <span class="n">detect_beginnings</span><span class="p">(</span><span class="n">global_fragments_boolean_array</span><span class="p">)</span></div>
-    <span class="k">return</span> <span class="p">[</span><span class="n">GlobalFragment</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">num_animals</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices_beginning_of_fragment</span><span class="p">]</span>
+    <span class="n">indices_beginning_of_fragment</span> <span class="o">=</span> <span class="n">detect_beginnings</span><span class="p">(</span><span class="n">global_fragments_boolean_array</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">GlobalFragment</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">num_animals</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices_beginning_of_fragment</span><span class="p">]</span></div>
 </pre></div>
 
           </div>
@@ -422,10 +422,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

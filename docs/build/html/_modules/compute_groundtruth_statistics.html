@@ -116,7 +116,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -189,8 +189,8 @@
     <span class="n">results</span><span class="p">[</span><span class="s1">&#39;number_of_errors_in_all_blobs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;number_of_individuals_badly_assigned&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span>
                                                 <span class="n">results</span><span class="p">[</span><span class="s1">&#39;number_of_individuals_badly_interpolated&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
                                                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_animals</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)}</span>
-</div>
-    <span class="k">return</span> <span class="n">results</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
 
 <span class="k">def</span> <span class="nf">get_accuracy_wrt_groundtruth_no_gaps</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">groundtruth</span><span class="p">,</span>
                                             <span class="n">blobs_in_video_groundtruth</span><span class="p">,</span>
@@ -430,10 +430,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>
