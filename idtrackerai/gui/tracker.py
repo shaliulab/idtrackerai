@@ -106,7 +106,7 @@ class Tracker(BoxLayout):
                                                 "press the upper botton which will indicate the process that will be computed.")
 
     def do(self):
-        if CHOSEN_VIDEO.video.number_of_animals == 1:
+        if CHOSEN_VIDEO.video.number_of_animals == 1 or CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments == 1:
             self.create_main_layout()
             self.start_tracking_button.bind(on_release = self.track_single_animal)
             self.start_tracking_button.text = "Get animal\ntrajectory"
@@ -546,6 +546,7 @@ class Tracker(BoxLayout):
     def create_trajectories(self, *args):
         CHOSEN_VIDEO.video._create_trajectories_time = time.time()
         if 'post_processing' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['post_processing']:
+            print("creating_trajectories")
             CHOSEN_VIDEO.video.create_trajectories_folder()
             trajectories_file = os.path.join(CHOSEN_VIDEO.video.trajectories_folder, 'trajectories.npy')
             trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
@@ -554,7 +555,7 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO.video._has_trajectories = True
         CHOSEN_VIDEO.video.save()
         self.trajectories_popup.dismiss()
-        if CHOSEN_VIDEO.video.number_of_animals != 1:
+        if CHOSEN_VIDEO.video.number_of_animals != 1 and CHOSEN_VIDEO.video.there_are_crossings:
             self.interpolate_crossings_popup.open()
         else:
             CHOSEN_VIDEO.video.overall_P2 = 1.
@@ -700,7 +701,7 @@ class Tracker(BoxLayout):
     def create_main_layout(self):
         self.start_tracking_button = Button(text = "Start protocol cascade")
         self.control_panel.add_widget(self.start_tracking_button)
-        if CHOSEN_VIDEO.video.number_of_animals != 1:
+        if CHOSEN_VIDEO.video.number_of_animals != 1 and CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments != 1:
             self.advanced_controls_button = Button(text = "Advanced idCNN\ncontrols")
             self.control_panel.add_widget(self.advanced_controls_button)
             self.generate_tensorboard_label = CustomLabel(font_size = 16,
