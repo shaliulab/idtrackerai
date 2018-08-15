@@ -308,7 +308,5 @@ def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
 
     """
     global_fragments_boolean_array = check_global_fragments(blobs_in_video, num_animals)
-    print(global_fragments_boolean_array)
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
-    print(indices_beginning_of_fragment)
     return [GlobalFragment(blobs_in_video, fragments, i, num_animals) for i in indices_beginning_of_fragment]

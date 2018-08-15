@@ -382,9 +382,7 @@ class PreprocessingPreview(BoxLayout):
                         CHOSEN_VIDEO.video.model_area, use_network = True,
                         return_store_objects = True, plot_flag = False)
             if not CHOSEN_VIDEO.video.there_are_crossings:
-                print("There are no crossings 2")
                 CHOSEN_VIDEO.list_of_blob = self.crossing_detector_trainer ## because it return list_of_blobs if it does not work or there are no crossigns
-                [setattr(b,'_is_an_individual',True) for bf in CHOSEN_VIDEO.list_of_blob.blobs_in_video for b in bf]
                 CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video,
                                         CHOSEN_VIDEO.video.blobs_path_segmented,
                                         number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
@@ -399,6 +397,8 @@ class PreprocessingPreview(BoxLayout):
         self.DCD_popup.dismiss()
 
     def plot_crossing_detection_statistics(self, *args):
+        if hasattr(self,'consistency_fail_popup'):
+            self.consistency_fail_popup.dismiss()
         content = BoxLayout(orientation = "vertical")
         self.crossing_label = CustomLabel(font_size = 14, text = "The deep crossing detector has been trained succesfully "+
                                         "and used to discriminate crossing and individual images. "+
@@ -433,7 +433,7 @@ class PreprocessingPreview(BoxLayout):
             # content.add_widget(self.disappointed)
             content.add_widget(self.go_to_tracking_button)
         elif not CHOSEN_VIDEO.video.there_are_crossings:
-            content.add_widget(CustomLabel(text = "This video did not have crossings, we didn't train the crossing detector", size_hint = (1.,.1)))
+            content.add_widget(CustomLabel(text = "This video does not have enough crossings, Crossing detector not trained", size_hint = (1.,.1)))
             self.go_to_tracking_button = Button(text = "Go to the tracking tab", size_hint = (1.,.1))
             self.go_to_tracking_button.disabled = True
             # self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
@@ -464,7 +464,6 @@ class PreprocessingPreview(BoxLayout):
             global_fragments = create_list_of_global_fragments(CHOSEN_VIDEO.list_of_blobs.blobs_in_video,
                                                                 self.list_of_fragments.fragments,
                                                                 CHOSEN_VIDEO.video.number_of_animals)
-            print(CHOSEN_VIDEO.video.number_of_animals)
             self.list_of_global_fragments = ListOfGlobalFragments(global_fragments)
             CHOSEN_VIDEO.video.number_of_global_fragments = self.list_of_global_fragments.number_of_global_fragments
             self.list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
@@ -482,26 +481,18 @@ class PreprocessingPreview(BoxLayout):
         else:
             CHOSEN_VIDEO.video._number_of_unique_images_in_global_fragments = None
             CHOSEN_VIDEO.video._maximum_number_of_images_in_global_fragments = None
-        CHOSEN_VIDEO.video._has_been_preprocessed = True
-        if self.list_of_global_fragments.number_of_global_fragments == 1:
-            [setattr(b, '_identity', b.fragment_identifier+1) for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
-            [setattr(b, '_P2_vector', self.get_P2_vector(b.fragment_identifier, CHOSEN_VIDEO.video.number_of_animals))
+            [setattr(b, '_P2_vector', np.asarray([1.]))
             for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
-            CHOSEN_VIDEO.video.accumulation_trial = 0
+            CHOSEN_VIDEO.video._first_frame_first_global_fragment = [0]
+        CHOSEN_VIDEO.video._has_been_preprocessed = True
+
         CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path, number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
         if CHOSEN_VIDEO.video.number_of_animals != 1:
             self.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, self.list_of_fragments.fragments)
             CHOSEN_VIDEO.list_of_global_fragments = self.list_of_global_fragments
-            CHOSEN_VIDEO.video._first_frame_first_global_fragment = [0]
         CHOSEN_VIDEO.video._fragmentation_time = time.time() - CHOSEN_VIDEO.video.fragmentation_time
         CHOSEN_VIDEO.video.save()
         DEACTIVATE_TRACKING.setter(False)
-
-    @staticmethod
-    def get_P2_vector(identity, number_of_animals):
-        P2_vector = np.zeros(number_of_animals)
-        P2_vector[identity] = 1.
-        return P2_vector
 
     def open_resolution_reduction_popup(self, *args):
         self.res_red_popup.open()

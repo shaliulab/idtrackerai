@@ -70,7 +70,7 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True, retur
         logger.info("Get individual and crossing images labelled data")
         training_set = CrossingDataset(list_of_blobs.blobs_in_video, video, scope = 'training')
         if not training_set.there_are_crossings:
-            logger.debug("There are no crossings")
+            logger.debug("There are not enough crossings to train the crossing detector")
             video.there_are_crossings = False
             return list_of_blobs
         else:
