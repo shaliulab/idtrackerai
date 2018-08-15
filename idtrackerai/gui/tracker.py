@@ -111,6 +111,11 @@ class Tracker(BoxLayout):
             self.start_tracking_button.bind(on_release = self.track_single_animal)
             self.start_tracking_button.text = "Get animal\ntrajectory"
             self.start_tracking_button.size_hint = (.2,.3)
+        elif CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments == 1:
+            self.create_main_layout()
+            self.start_tracking_button.bind(on_release = self.track_single_global_fragment_video)
+            self.start_tracking_button.text = "Only one global\nfragment\nwas found.\nThere is not\nneed the\nidentification CNN.\nGet animals\ntrajectories"
+            self.start_tracking_button.size_hint = (.2,.3)
         else:
             CHOSEN_VIDEO.video.accumulation_trial = 0
             delete = not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2'] if 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore.keys() else True
@@ -174,8 +179,20 @@ class Tracker(BoxLayout):
                 self.start_tracking_button.bind(on_release = self.protocol1)
 
     def track_single_animal(self, *args):
-        [setattr(blob, '_identity', 1) for blobs_in_frame in
-         CHOSEN_VIDEO.list_of_blobs.blobs_in_video for blob in blobs_in_frame]
+        [setattr(b, '_identity', 1) for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
+        [setattr(b, '_P2_vector', [1.]) for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
+        self.trajectories_popup.open()
+
+    def track_single_global_fragment_video(self, *args):
+        def get_P2_vector(identity, number_of_animals):
+            P2_vector = np.zeros(number_of_animals)
+            P2_vector[identity] = 1.
+            return P2_vector
+        [setattr(b, '_identity', b.fragment_identifier+1) for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
+        [setattr(b, '_P2_vector', get_P2_vector(b.fragment_identifier, CHOSEN_VIDEO.video.number_of_animals))
+            for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
+        CHOSEN_VIDEO.video.accumulation_trial = 0
+        CHOSEN_VIDEO.video._first_frame_first_global_fragment = [0] # in case
         self.trajectories_popup.open()
 
     def init_accumulation_network(self):
@@ -188,7 +205,7 @@ class Tracker(BoxLayout):
                                     video_path = CHOSEN_VIDEO.video.video_path)
 
     def protocol1(self, *args):
-        print("\n****** setting protocol1 time")
+        Logger.debug("****** setting protocol1 time")
         CHOSEN_VIDEO.video._protocol1_time = time.time()
         CHOSEN_VIDEO.list_of_fragments.reset(roll_back_to = 'fragmentation')
         CHOSEN_VIDEO.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
@@ -304,7 +321,6 @@ class Tracker(BoxLayout):
             (self.accumulation_manager.ratio_accumulated_images >= THRESHOLD_ACCEPTABLE_ACCUMULATION\
             or CHOSEN_VIDEO.video.accumulation_trial >= MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS):
             Logger.info("Accumulation after protocol 3 has been successful")
-            print(CHOSEN_VIDEO.processes_to_restore.keys())
             if 'protocol3_accumulation' not in CHOSEN_VIDEO.processes_to_restore:
                 CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()-CHOSEN_VIDEO.video.protocol3_accumulation_time
             elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and not CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
@@ -458,7 +474,7 @@ class Tracker(BoxLayout):
             CHOSEN_VIDEO.video._has_been_pretrained = True
             Clock.unschedule(self.continue_pretraining)
             Logger.warning('Calling accumulate from continue_pretraining')
-            print('\n****** saving protocol3 pretraining time')
+            Logger.debug('****** saving protocol3 pretraining time')
             CHOSEN_VIDEO.video._protocol3_pretraining_time = time.time()-CHOSEN_VIDEO.video.protocol3_pretraining_time
             self.accumulate()
 
@@ -554,7 +570,7 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO.video._has_trajectories = True
         CHOSEN_VIDEO.video.save()
         self.trajectories_popup.dismiss()
-        if CHOSEN_VIDEO.video.number_of_animals != 1:
+        if CHOSEN_VIDEO.video.number_of_animals != 1 and CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments != 1:
             self.interpolate_crossings_popup.open()
         else:
             CHOSEN_VIDEO.video.overall_P2 = 1.
@@ -700,7 +716,7 @@ class Tracker(BoxLayout):
     def create_main_layout(self):
         self.start_tracking_button = Button(text = "Start protocol cascade")
         self.control_panel.add_widget(self.start_tracking_button)
-        if CHOSEN_VIDEO.video.number_of_animals != 1:
+        if CHOSEN_VIDEO.video.number_of_animals != 1 and CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments != 1:
             self.advanced_controls_button = Button(text = "Advanced idCNN\ncontrols")
             self.control_panel.add_widget(self.advanced_controls_button)
             self.generate_tensorboard_label = CustomLabel(font_size = 16,
@@ -823,7 +839,6 @@ class Tracker(BoxLayout):
     def on_enter_mod_knowledge_transfer_folder_text_input(self, *args):
         self.accumulation_network_params._knowledge_transfer_folder = self.mod_knowledge_transfer_folder_text_input.text
         self.knowledge_transfer_folder_value.text = self.mod_knowledge_transfer_folder_text_input.text
-        # print("------------ ", self.accumulation_network_params.knowledge_transfer_folder)
         if os.path.isdir(self.accumulation_network_params.knowledge_transfer_folder):
             CHOSEN_VIDEO.video._tracking_with_knowledge_transfer = True
 

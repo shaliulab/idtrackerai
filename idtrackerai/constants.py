@@ -155,6 +155,11 @@ Default dropout in fully-connected layers if the CNN models (can be changed
 when instantiating the parameter class to be init the CNN)
 '''
 KEEP_PROB = 1.0
+'''***MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR***
+Minimum number of crossings required to train the crossing detector, otherwise
+only the model area is used to distinguish crossings from individuals
+'''
+MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR = 10
 
 #######################################
 # Deep fingerprint protocols cascade  #

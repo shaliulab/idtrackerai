@@ -145,6 +145,7 @@ class Video(object):
         self._protocol3_accumulation_time = 0.
         self._identify_time = 0.
         self._create_trajectories_time = 0.
+        self.there_are_crossings = True
         if SIGMA_GAUSSIAN_BLURRING is not None:
             self.sigma_gaussian_blurring = SIGMA_GAUSSIAN_BLURRING
 
