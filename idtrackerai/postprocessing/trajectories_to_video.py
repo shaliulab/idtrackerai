@@ -32,12 +32,12 @@ from tqdm import tqdm
 from idtrackerai.utils.py_utils import  get_spaced_colors_util
 
 def init(video_path, trajectories_dict_path):
-    video_object = np.load(video_path).item()
+    video_object = np.load(video_path, encoding='latin1').item()
     video_object.update_paths(video_path)
-    trajectories  = np.load(trajectories_dict_path).item()['trajectories']
+    trajectories  = np.load(trajectories_dict_path, encoding='latin1').item()['trajectories']
     colors = get_spaced_colors_util(video_object.number_of_animals, black = False)
     path_to_save_video = video_object._session_folder +'/tracked.avi'
-    fourcc = cv2.cv.CV_FOURCC(*'XVID')
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
     video_writer = cv2.VideoWriter(path_to_save_video, fourcc, video_object.frames_per_second,
                                     (video_object.width, video_object.height))
     print("The video will be saved at ", path_to_save_video)
@@ -48,15 +48,19 @@ def generate_video(video_object,
                 video_writer,
                 colors,
                 func = None,
-                centroid_trace_length = 10):
+                centroid_trace_length = 10,
+                starting_frame = 0,
+                ending_frame = None):
     if video_object.paths_to_video_segments is None:
         cap = cv2.VideoCapture(video_object.video_path)
     else:
         cap = None
 
+    if ending_frame is None:
+        ending_frame = len(trajectories)
 
-    for frame_number in tqdm(range(len(trajectories)), desc='Adding trajectories to video'):
-        print(frame_number)
+
+    for frame_number in tqdm(range(starting_frame, ending_frame), desc='Adding trajectories to video'):
         frame = apply_func_on_frame(video_object,
                             trajectories,
                             frame_number,
@@ -130,7 +134,9 @@ def main(args):
                     video_writer,
                     colors,
                     func = writeIds,
-                    centroid_trace_length = number_of_points_in_past_trace)
+                    centroid_trace_length = number_of_points_in_past_trace,
+                    starting_frame = args.starting_frame,
+                    ending_frame = args.ending_frame)
 
 if __name__ == "__main__":
     import argparse
@@ -139,5 +145,9 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--trajectories_path", type = str, help = "Path to the trajectory file")
     parser.add_argument("-s", "--number_of_ghost_points", type = int, default = 20,
                         help = "Number of points used to draw the individual trajectories' traces")
+    parser.add_argument("-sf", "--starting_frame", type = int, default = 0,
+                        help = "Frame where to start the video")
+    parser.add_argument("-ef", "--ending_frame", type = int, default = None,
+                        help = "Frame where to end the video")
     args = parser.parse_args()
     main(args)
