@@ -181,6 +181,7 @@ class Tracker(BoxLayout):
     def track_single_animal(self, *args):
         [setattr(b, '_identity', 1) for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
         [setattr(b, '_P2_vector', [1.]) for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
+        [setattr(b, 'frame_number', frame_number) for frame_number, bf in enumerate(CHOSEN_VIDEO.list_of_blobs.blobs_in_video) for b in bf]
         self.trajectories_popup.open()
 
     def track_single_global_fragment_video(self, *args):

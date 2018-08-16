@@ -254,8 +254,8 @@ class SelectFile(BoxLayout):
             CHOSEN_VIDEO.video._has_been_preprocessed = True
             CHOSEN_VIDEO.video.save()
             CHOSEN_VIDEO.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
-            CHOSEN_VIDEO.list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
             if CHOSEN_VIDEO.video.number_of_animals != 1:
+                CHOSEN_VIDEO.list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
                 CHOSEN_VIDEO.list_of_global_fragments = ListOfGlobalFragments.load(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
             DEACTIVATE_ROI.restored = '(restored)'
             DEACTIVATE_PREPROCESSING.restored = '(restored)'

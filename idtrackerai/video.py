@@ -832,15 +832,17 @@ class Video(object):
 
     def copy_attributes_between_two_video_objects(self, video_object_source, list_of_attributes, is_property = None):
         for i, attribute in enumerate(list_of_attributes):
-            if not hasattr(video_object_source, attribute): raise ValueError("attribute %s does not exist" %attribute)
-            if is_property is not None:
-                attribute_is_property = is_property[i]
-                if attribute_is_property:
-                    setattr(self, '_' + attribute, getattr(video_object_source, attribute))
-                else:
-                    setattr(self, attribute, getattr(video_object_source, attribute))
+            if not hasattr(video_object_source, attribute):
+                logger.warning("attribute %s does not exist" %attribute)
             else:
-                setattr(self, '_' + attribute, getattr(video_object_source, attribute))
+                if is_property is not None:
+                    attribute_is_property = is_property[i]
+                    if attribute_is_property:
+                        setattr(self, '_' + attribute, getattr(video_object_source, attribute))
+                    else:
+                        setattr(self, attribute, getattr(video_object_source, attribute))
+                else:
+                    setattr(self, '_' + attribute, getattr(video_object_source, attribute))
 
     def compute_overall_P2(self, fragments):
         weighted_P2 = 0
