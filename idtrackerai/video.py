@@ -544,7 +544,7 @@ class Video(object):
         self._video_folder = os.path.split(new_session_path)[0]
         self.video_path = os.path.join(self.video_folder,video_name)
         attributes_to_modify = {key: getattr(self, key) for key in self.__dict__
-        if isinstance(getattr(self, key), basestring)
+        if isinstance(getattr(self, key), str)
         and old_session_path in getattr(self, key) }
 
         for key in attributes_to_modify:
@@ -628,7 +628,7 @@ class Video(object):
                             logger.warn('No checkpoint found in %s ' %os.path.join(getattr(self, folder), sub_folder))
 
         attributes_to_modify = {key: getattr(self, key) for key in self.__dict__
-        if isinstance(getattr(self, key), basestring)
+        if isinstance(getattr(self, key), str)
         and current_session_name in getattr(self, key) }
         logger.info("Modifying folder name from %s to %s "  %(current_session_name, new_session_name))
         os.rename(self.session_folder,
