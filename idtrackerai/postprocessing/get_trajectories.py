@@ -192,6 +192,7 @@ def produce_output_dict(blobs_in_video, video):
             produce_trajectories(blobs_in_video, video.number_of_frames,
                                  video.number_of_animals)
     else:
+        video._number_of_animals = np.max([len(bf) for bf in blobs_in_video])
         centroid_trajectories, id_probabilities = \
             produce_trajectories_wo_identities(blobs_in_video,
                                                 video.number_of_frames,
