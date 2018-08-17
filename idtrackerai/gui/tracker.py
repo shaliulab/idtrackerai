@@ -135,11 +135,16 @@ class Tracker(BoxLayout):
                 self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
                 self.start_tracking_button.text = "Show estimated\naccuracy"
             elif 'residual_identification' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['residual_identification']:
-                Logger.info("Restoring residual identification")
-                self.restore_identification()
-                CHOSEN_VIDEO.video._has_been_assigned = True
-                self.start_tracking_button.bind(on_release = self.start_from_post_processing)
-                self.start_tracking_button.text = "Start\npost-processing"
+                if CHOSEN_VIDEO.video.track_wo_identities:
+                    self.restore_trajectories()
+                    self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
+                    self.start_tracking_button.text = "Show estimated\naccuracy"
+                else:
+                    Logger.info("Restoring residual identification")
+                    self.restore_identification()
+                    CHOSEN_VIDEO.video._has_been_assigned = True
+                    self.start_tracking_button.bind(on_release = self.start_from_post_processing)
+                    self.start_tracking_button.text = "Start\npost-processing"
             elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
                 Logger.info("Restoring second accumulation")
                 self.restore_second_accumulation()
@@ -177,6 +182,7 @@ class Tracker(BoxLayout):
             elif 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
                 Logger.info("Starting protocol cascade")
                 self.start_tracking_button.bind(on_release = self.protocol1)
+                self.track_wo_identities_button.bind(on_release = self.track_wo_identities)
 
     def track_single_animal(self, *args):
         [setattr(b, '_identity', 1) for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
@@ -194,6 +200,12 @@ class Tracker(BoxLayout):
             for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
         CHOSEN_VIDEO.video.accumulation_trial = 0
         CHOSEN_VIDEO.video._first_frame_first_global_fragment = [0] # in case
+        self.trajectories_popup.open()
+
+    def track_wo_identities(self, *args):
+        CHOSEN_VIDEO.video.accumulation_trial = 0
+        CHOSEN_VIDEO.video._first_frame_first_global_fragment = [0]
+        CHOSEN_VIDEO.video._track_wo_identities = True
         self.trajectories_popup.open()
 
     def init_accumulation_network(self):
@@ -563,20 +575,26 @@ class Tracker(BoxLayout):
     def create_trajectories(self, *args):
         CHOSEN_VIDEO.video._create_trajectories_time = time.time()
         if 'post_processing' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['post_processing']:
-            CHOSEN_VIDEO.video.create_trajectories_folder()
-            trajectories_file = os.path.join(CHOSEN_VIDEO.video.trajectories_folder, 'trajectories.npy')
-            trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
+            if not CHOSEN_VIDEO.video.track_wo_identities:
+                CHOSEN_VIDEO.video.create_trajectories_folder()
+                trajectories_file = os.path.join(CHOSEN_VIDEO.video.trajectories_folder, 'trajectories.npy')
+                trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
+            else:
+                CHOSEN_VIDEO.video.create_trajectories_wo_identities_folder()
+                trajectories_file = os.path.join(CHOSEN_VIDEO.video.trajectories_wo_identities_folder, 'trajectories_wo_identities.npy')
+                trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
             np.save(trajectories_file, trajectories)
             Logger.info("Saving trajectories")
         CHOSEN_VIDEO.video._has_trajectories = True
         CHOSEN_VIDEO.video.save()
         self.trajectories_popup.dismiss()
-        if CHOSEN_VIDEO.video.number_of_animals != 1 and CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments != 1:
+        if CHOSEN_VIDEO.video.number_of_animals != 1 and CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments != 1 and not CHOSEN_VIDEO.video.track_wo_identities:
             self.interpolate_crossings_popup.open()
         else:
             CHOSEN_VIDEO.video.overall_P2 = 1.
             CHOSEN_VIDEO.video._has_been_assigned = True
             CHOSEN_VIDEO.video._has_crossings_solved = False
+            CHOSEN_VIDEO.video._has_trajectories_wo_gaps = False
             CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video,
                                             CHOSEN_VIDEO.video.blobs_path,
                                             number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
@@ -720,6 +738,8 @@ class Tracker(BoxLayout):
         if CHOSEN_VIDEO.video.number_of_animals != 1 and CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments != 1:
             self.advanced_controls_button = Button(text = "Advanced idCNN\ncontrols")
             self.control_panel.add_widget(self.advanced_controls_button)
+            self.track_wo_identities_button = Button(text = "Track without identities")
+            self.control_panel.add_widget(self.track_wo_identities_button)
             self.generate_tensorboard_label = CustomLabel(font_size = 16,
                                                         text = "Save tensorboard summaries",
                                                         size_hint = (1.,.5))

@@ -71,7 +71,7 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True, retur
         training_set = CrossingDataset(list_of_blobs.blobs_in_video, video, scope = 'training')
         if not training_set.there_are_crossings:
             logger.debug("There are not enough crossings to train the crossing detector")
-            video.there_are_crossings = False
+            video._there_are_crossings = False
             return list_of_blobs
         else:
             training_set.get_data(sampling_ratio_start = 0, sampling_ratio_end = .9)

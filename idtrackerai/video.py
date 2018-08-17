@@ -145,7 +145,8 @@ class Video(object):
         self._protocol3_accumulation_time = 0.
         self._identify_time = 0.
         self._create_trajectories_time = 0.
-        self.there_are_crossings = True
+        self._there_are_crossings = True
+        self._track_wo_identities = False
         if SIGMA_GAUSSIAN_BLURRING is not None:
             self.sigma_gaussian_blurring = SIGMA_GAUSSIAN_BLURRING
 
@@ -394,6 +395,10 @@ class Video(object):
         return self._tracking_with_knowledge_transfer
 
     @property
+    def track_wo_identities(self):
+        return self._track_wo_identities
+
+    @property
     def video_path(self):
         return self._video_path
 
@@ -491,6 +496,10 @@ class Video(object):
     @property
     def number_of_unique_images_in_global_fragments(self):
         return self._number_of_unique_images_in_global_fragments
+
+    @property
+    def there_are_crossings(self):
+        return self._there_are_crossings
 
     @property
     def ratio_accumulated_images(self):
@@ -794,6 +803,15 @@ class Video(object):
             os.makedirs(self.trajectories_folder)
             logger.info("the folder %s has been created" %self.trajectories_folder)
 
+    def create_trajectories_wo_identities_folder(self):
+        """Folder in which trajectories without identites are stored
+        """
+        self.trajectories_wo_identities_folder = os.path.join(self.session_folder,'trajectories_wo_identities')
+        if not os.path.isdir(self.trajectories_wo_identities_folder):
+            logger.info("Creating trajectories folder...")
+            os.makedirs(self.trajectories_wo_identities_folder)
+            logger.info("the folder %s has been created" %self.trajectories_wo_identities_folder)
+
     def create_trajectories_wo_gaps_folder(self):
         """Folder in which trajectories files are stored
         """
@@ -876,12 +894,3 @@ if __name__ == "__main__":
 
     video = Video()
     video.video_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi'
-
-# 'time_preprocessing': None,
-# 'time_accumulation_before_pretraining': None,
-# 'time_pretraining': None,
-# 'time_accumulation_after_pretraining': None,
-# 'time_assignment': None,
-# 'time_postprocessing': None,
-# 'total_time': None,
-#  }, ignore_index=True)
