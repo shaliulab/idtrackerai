@@ -188,7 +188,7 @@ MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS = 3
 Maximal number of images per indiviudal to be included in the training dataset
 of the idCNN
 '''
-MAXIMAL_IMAGES_PER_ANIMAL = 3000
+MAXIMAL_IMAGES_PER_ANIMAL = 30
 '''***RATIO_OLD***
 Percentage of the MAXIMAL_IMAGES_PER_ANIMAL to be subsampled from the images
 accumulated in the previous steps
