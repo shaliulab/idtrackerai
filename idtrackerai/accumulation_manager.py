@@ -168,15 +168,12 @@ class AccumulationManager(object):
                     number_samples_used = MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
                 # we put together a random sample of the new images and the used images
                 if self.new_images is not None:
-                    print(new_images_indices)
-                    print(number_samples_new)
-                    print(self.new_images.shape)
-                    print(random.sample(self.new_images[new_images_indices],number_samples_new))
-                    images.extend(random.sample(self.new_images[new_images_indices],number_samples_new))
+                    print(type(self.new_images))
+                    images.extend(random.sample(list(self.new_images[new_images_indices]),number_samples_new))
                     labels.extend([i] * number_samples_new)
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate the variable used_images is None
-                    images.extend(random.sample(self.used_images[used_images_indices],number_samples_used))
+                    images.extend(random.sample(list(self.used_images[used_images_indices]),number_samples_used))
                     labels.extend([i] * number_samples_used)
             else:
                 # if the total number of images for this label does not exceed the MAXIMAL_IMAGES_PER_ANIMAL
