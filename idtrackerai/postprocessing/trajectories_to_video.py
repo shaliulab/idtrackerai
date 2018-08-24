@@ -48,14 +48,20 @@ def generate_video(video_object,
                 video_writer,
                 colors,
                 func = None,
-                centroid_trace_length = 10):
+                centroid_trace_length = 10,
+                start = 0,
+                end = -1):
     if video_object.paths_to_video_segments is None:
         cap = cv2.VideoCapture(video_object.video_path)
     else:
         cap = None
 
+    if end == -1:
+        list_of_frames = range(start, len(trajectories))
+    else:
+        list_of_frames = range(start, end)
 
-    for frame_number in tqdm(range(len(trajectories)), desc='Adding trajectories to video'):
+    for frame_number in tqdm(list_of_frames, desc='Adding trajectories to video'):
         print(frame_number)
         frame = apply_func_on_frame(video_object,
                             trajectories,
@@ -130,7 +136,9 @@ def main(args):
                     video_writer,
                     colors,
                     func = writeIds,
-                    centroid_trace_length = number_of_points_in_past_trace)
+                    centroid_trace_length = number_of_points_in_past_trace,
+                    start=args.start,
+                    end=args.end)
 
 if __name__ == "__main__":
     import argparse
@@ -139,5 +147,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--trajectories_path", type = str, help = "Path to the trajectory file")
     parser.add_argument("-s", "--number_of_ghost_points", type = int, default = 20,
                         help = "Number of points used to draw the individual trajectories' traces")
+    parser.add_argument("-t0", "--start", type = int, help = "")
+    parser.add_argument("-t1", "--end", type = int, help = "")
     args = parser.parse_args()
     main(args)

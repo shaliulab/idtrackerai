@@ -34,7 +34,7 @@ MAX_FLOAT = sys.float_info[0]
 #######################################
 ##########       video      ###########
 #######################################
-AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg', '.MOV']
+AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.MP4', '.mpg', '.MOV', '.h264']
 '''***FRAMES_PER_EPISODE***
 Number of frames per video chunk. Used to parallelise processes
 '''
