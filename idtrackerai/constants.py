@@ -34,7 +34,7 @@ MAX_FLOAT = sys.float_info[0]
 #######################################
 ##########       video      ###########
 #######################################
-AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg', '.MOV']
+AVAILABLE_VIDEO_EXTENSION = ['.avi', '.AVI', '.mp4', '.MP4', '.mpg', '.MPG', '.mov', '.MOV']
 '''***FRAMES_PER_EPISODE***
 Number of frames per video chunk. Used to parallelise processes
 '''
@@ -188,7 +188,7 @@ MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS = 3
 Maximal number of images per indiviudal to be included in the training dataset
 of the idCNN
 '''
-MAXIMAL_IMAGES_PER_ANIMAL = 30
+MAXIMAL_IMAGES_PER_ANIMAL = 3000
 '''***RATIO_OLD***
 Percentage of the MAXIMAL_IMAGES_PER_ANIMAL to be subsampled from the images
 accumulated in the previous steps
