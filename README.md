@@ -1,15 +1,6 @@
-# idtracker.ai (v1.0.2-alpha)
+# idtracker.ai (v1.0.3-alpha)
 
 [idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
-
-## What is new?
-
-* Roll back to the installation with Tensorflow 1.2.0. The installation with Tensorflow 1.7.0 in the previous release had conflicts with Cudatoolkit and CuDNN.
-* Remove scripts for plots and analysis of the paper. They have been moved to a separated repository called idtrackerai_scripts.
-* Fix usage of the option "Resolution reduction" in the GUI.
-* Restore properly the idCNN after the second accumulation in the protocol cascade.
-* Fix restoring of the variable *first_frame_first_global_fragment* in the object *video*
-* Correctly update the paths in the list *path_to_video_segments* in the object *video* if the folder where the session changed.
 
 ## Hardware requirements
 
@@ -150,7 +141,7 @@ of the terminal should show a message similar to this:
 If the installation did not succeed try proceeding step by step, by running
 the following commands in your terminal:
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.2-alpha/env-mint18.3-tf1.2-ocv2.13-kivy1.9.yml
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.3-alpha/env-mint18.3-tf1.2-ocv2.13-kivy1.9.yml
     conda env create -f env-mint18.3-tf1.2-ocv2.13-kivy1.9.yml
     source activate idtrackerai-environment
     git clone https://gitlab.com/polavieja_lab/idtrackerai.git
