@@ -116,13 +116,10 @@ class Validator(BoxLayout):
         try:
             identity = int(self.wc_identity_input.text)
             frame_number = self.visualiser.video_slider.value
-            print('frame_number ', frame_number)
             if identity not in CHOSEN_VIDEO.video.wrong_crossing_list[frame_number]:
                 CHOSEN_VIDEO.video.wrong_crossing_list[frame_number].append(identity)
                 CHOSEN_VIDEO.video.wrong_crossing_counter[identity] += 1
                 self.save_groundtruth_btn.disabled = False
-            else:
-                print("you already added this identity, it will not be counted twice")
             self.compute_accuracy_button.disabled = False
             self.recompute_groundtruth = True
         except:
@@ -232,10 +229,13 @@ class Validator(BoxLayout):
     def get_first_frame(self):
         if CHOSEN_VIDEO.video.number_of_animals != 1:
             return CHOSEN_VIDEO.video.first_frame_first_global_fragment[CHOSEN_VIDEO.video.accumulation_trial]
+        elif CHOSEN_VIDEO.video.number_of_animals == 1:
+            return 0
         else:
             for blobs_in_frame in CHOSEN_VIDEO.list_of_blobs.blobs_in_video:
                 if len(blobs_in_frame) != 0:
                     return blobs_in_frame[0].frame_number
+
 
     def do(self, *args):
         if "post_processing" in CHOSEN_VIDEO.processes_to_restore.keys() and CHOSEN_VIDEO.processes_to_restore['post_processing']:
@@ -429,7 +429,7 @@ class Validator(BoxLayout):
                 root = roots[0]
             else:
                 root  = ''
-            if isinstance(cur_id, int):
+            if isinstance(cur_id, int) or isinstance(cur_id, np.integer):
                 cur_id_str = root + cur_id_str
                 int_centroid = np.asarray(blob.centroid).astype('int')
                 cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)

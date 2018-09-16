@@ -34,7 +34,7 @@ MAX_FLOAT = sys.float_info[0]
 #######################################
 ##########       video      ###########
 #######################################
-AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg', '.MOV']
+AVAILABLE_VIDEO_EXTENSION = ['.avi', '.AVI', '.mp4', '.MP4', '.mpg', '.MPG', '.mov', '.MOV']
 '''***FRAMES_PER_EPISODE***
 Number of frames per video chunk. Used to parallelise processes
 '''
@@ -155,6 +155,11 @@ Default dropout in fully-connected layers if the CNN models (can be changed
 when instantiating the parameter class to be init the CNN)
 '''
 KEEP_PROB = 1.0
+'''***MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR***
+Minimum number of crossings required to train the crossing detector, otherwise
+only the model area is used to distinguish crossings from individuals
+'''
+MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR = 10
 
 #######################################
 # Deep fingerprint protocols cascade  #
