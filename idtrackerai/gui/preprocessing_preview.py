@@ -171,7 +171,7 @@ class PreprocessingPreview(BoxLayout):
 
     def create_frame_interval_popup(self):
         self.tracking_interval_container = BoxLayout(orientation = "vertical")
-        self.tracking_interval_label = CustomLabel(text = "Insert the the video interval (e.g. 100 - 2050) on which the tracking will be performed")
+        self.tracking_interval_label = CustomLabel(text = "Insert the video intervals in frames separated by commas (e.g. 100-250, 300-500) on which the tracking will be performed")
         self.tracking_interval_container.add_widget(self.tracking_interval_label)
         self.tracking_interval_text_input = TextInput(text = '', multiline=False)
         self.tracking_interval_container.add_widget(self.tracking_interval_text_input)
@@ -182,13 +182,8 @@ class PreprocessingPreview(BoxLayout):
                     size_hint=(.4,.4))
 
     def on_enter_tracking_interval(self, value):
-        print(self.tracking_interval_text_input.text)
-        intervals = self.tracking_interval_text_input.text.split(',')
-        tracking_intervals = []
-        for interval in intervals:
-            start, end = interval.split('-')
-            tracking_intervals.append((int(start), int(end)))
-        CHOSEN_VIDEO.video._tracking_interval = tracking_intervals
+        start, end = self.tracking_interval_text_input.text.split('-')
+        CHOSEN_VIDEO.video._tracking_interval = (int(start), int(end))
         self.popup_tracking_interval.dismiss()
 
     def activate_ROI_switch(self, *args):
@@ -386,31 +381,23 @@ class PreprocessingPreview(BoxLayout):
             self.crossing_detector_trainer = detect_crossings(CHOSEN_VIDEO.list_of_blobs, CHOSEN_VIDEO.video,
                         CHOSEN_VIDEO.video.model_area, use_network = True,
                         return_store_objects = True, plot_flag = False)
-            if not CHOSEN_VIDEO.video.there_are_crossings:
-                CHOSEN_VIDEO.list_of_blob = self.crossing_detector_trainer ## because it return list_of_blobs if it does not work or there are no crossigns
-                CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video,
-                                        CHOSEN_VIDEO.video.blobs_path_segmented,
-                                        number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
-
         else:
-            CHOSEN_VIDEO.list_of_blobs = detect_crossings(CHOSEN_VIDEO.list_of_blobs, CHOSEN_VIDEO.video,
+            CHOSEN_VIDEO.list_of_blob = detect_crossings(CHOSEN_VIDEO.list_of_blobs, CHOSEN_VIDEO.video,
                         CHOSEN_VIDEO.video.model_area, use_network = False,
                         return_store_objects = False, plot_flag = False)
-            CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video,
+            CHOSEN_VIDEO.list_of_blob.save(CHOSEN_VIDEO.video,
                                     CHOSEN_VIDEO.video.blobs_path_segmented,
                                     number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
         self.DCD_popup.dismiss()
 
     def plot_crossing_detection_statistics(self, *args):
-        if hasattr(self,'consistency_fail_popup'):
-            self.consistency_fail_popup.dismiss()
         content = BoxLayout(orientation = "vertical")
         self.crossing_label = CustomLabel(font_size = 14, text = "The deep crossing detector has been trained succesfully "+
                                         "and used to discriminate crossing and individual images. "+
                                         "In the figure the loss, accuracy and accuracy per class, respectively. "+
                                         "The video is currenly being fragmented. The 'Go to the tracking tab' button will"+
                                         " activate at the end of the process.", size_hint = (1., .2))
-        if CHOSEN_VIDEO.video.number_of_animals != 1 and CHOSEN_VIDEO.video.there_are_crossings and not self.crossing_detector_trainer.model_diverged:
+        if CHOSEN_VIDEO.video.number_of_animals != 1 and not self.crossing_detector_trainer.model_diverged:
             matplotlib.rcParams.update({'font.size': 8,
                                         'axes.labelsize': 8,
                                         'xtick.labelsize' : 8,
@@ -434,15 +421,8 @@ class PreprocessingPreview(BoxLayout):
             content.add_widget(CustomLabel(text = "Ok, tracking a single animal...", size_hint = (1.,.1)))
             self.go_to_tracking_button = Button(text = "Go to the tracking tab", size_hint = (1.,.1))
             self.go_to_tracking_button.disabled = True
-            # self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
-            # content.add_widget(self.disappointed)
-            content.add_widget(self.go_to_tracking_button)
-        elif not CHOSEN_VIDEO.video.there_are_crossings:
-            content.add_widget(CustomLabel(text = "This video does not have enough crossings, Crossing detector not trained", size_hint = (1.,.1)))
-            self.go_to_tracking_button = Button(text = "Go to the tracking tab", size_hint = (1.,.1))
-            self.go_to_tracking_button.disabled = True
-            # self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
-            # content.add_widget(self.disappointed)
+            self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
+            content.add_widget(self.disappointed)
             content.add_widget(self.go_to_tracking_button)
         else:
             content.add_widget(CustomLabel(text = "The model diverged, crossing and individuals will be discriminated only by area."))
@@ -486,11 +466,7 @@ class PreprocessingPreview(BoxLayout):
         else:
             CHOSEN_VIDEO.video._number_of_unique_images_in_global_fragments = None
             CHOSEN_VIDEO.video._maximum_number_of_images_in_global_fragments = None
-            [setattr(b, '_P2_vector', np.asarray([1.]))
-            for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
-            CHOSEN_VIDEO.video._first_frame_first_global_fragment = [0]
         CHOSEN_VIDEO.video._has_been_preprocessed = True
-
         CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path, number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
         if CHOSEN_VIDEO.video.number_of_animals != 1:
             self.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, self.list_of_fragments.fragments)
