@@ -174,6 +174,14 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
 
     return blobs_in_frame, max_number_of_blobs
 
+
+def frame_in_intervals(frame_number, intervals):
+    for interval in intervals:
+        if frame_number >= interval[0] and frame_number <= interval[1]:
+            return True
+    return False
+
+
 def segment_episode(video, segmentation_thresholds, path = None, episode_start_end_frames = None):
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
@@ -214,7 +222,7 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
     frame_number = 0
     while frame_number < number_of_frames_in_episode:
         global_frame_number = episode_start_end_frames[0] + frame_number
-        if video.tracking_interval is None or global_frame_number >= video.tracking_interval[0] and global_frame_number <= video.tracking_interval[1]:
+        if video.tracking_interval is None or frame_in_intervals(global_frame_number, video.tracking_interval):
             blobs_in_frame, max_number_of_blobs = get_blobs_in_frame(cap, video,
                                                                     segmentation_thresholds,
                                                                     max_number_of_blobs,
