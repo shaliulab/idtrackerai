@@ -140,7 +140,7 @@ def get_blob_by_identity(blobs_in_frame, identity):
             identity in blob.identity_corrected_closing_gaps):
             return [blob]
         elif (hasattr(blob, 'identity_corrected_closing_gaps')
-            and isinstance(blob.identity_corrected_closing_gaps, int) and
+            and (isinstance(blob.identity_corrected_closing_gaps, int) or isinstance(blob.identity_corrected_closing_gaps, np.integer)) and
             identity == blob.identity_corrected_closing_gaps):
             return [blob]
     return None
@@ -155,7 +155,7 @@ def get_candidate_blobs_by_overlapping(blob_to_test, eroded_blobs_in_frame):
 def get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame):
     identities_in_frame = []
     for blob in blobs_in_frame:
-        if isinstance(blob.final_identity, int):
+        if isinstance(blob.final_identity, int) or isinstance(blob.final_identity, np.integer):
             identities_in_frame.append(blob.final_identity)
         elif isinstance(blob.final_identity, list):
             identities_in_frame.extend(blob.final_identity)
