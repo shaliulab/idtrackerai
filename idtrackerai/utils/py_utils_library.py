@@ -34,7 +34,10 @@ import datetime
 import pandas as pd
 import numpy as np
 import shutil
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 import sys
 from pprint import pprint
 import matplotlib
@@ -200,7 +203,10 @@ def get_spaced_colors_util(n, norm = False, black = True, cmap = 'jet'):
     return colors
 
 def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = '', nSegment = None):
-    import cPickle as pickle
+    try:
+        import cPickle as pickle
+    except:
+        import pickle
     """
     All the input are strings!!!
     path: path to the first segment of the video
@@ -246,7 +252,7 @@ def saveFile(path, variabletoSave, name, hdfpkl = 'hdf',sessionPath = '', nSegme
             pathToSave = folder + subfolder + filename
             pickle.dump(variabletoSave,open(pathToSave,'wb'))
 
-    print 'You just saved ', pathToSave
+    print( 'You just saved ', pathToSave)
 
 def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
     """
@@ -282,7 +288,7 @@ def loadFile(path, name, hdfpkl = 'hdf',sessionPath = ''):
             filename = name + '.pkl'
             return pickle.load(open(folder + subfolder + filename,'rb') )
 
-    print 'You just loaded ', folder + subfolder + filename
+    print( 'You just loaded ', folder + subfolder + filename)
 
 def check_and_change_video_path(video,old_video):
     current_video_folder = os.path.split(video.video_path)[0]
@@ -416,11 +422,11 @@ def getExistentFiles_library(path, listNames, segmPaths):
         if name == 'segmentation':
             segDirname = srcSubFolder + name
             if os.path.isdir(segDirname):
-                print 'Segmentation folder exists'
+                print( 'Segmentation folder exists')
                 numSegmentedVideos = len(glob.glob1(segDirname,"*.pkl"))
                 print
                 if numSegmentedVideos == numSegments:
-                    print 'The number of segments and videos is the same'
+                    print( 'The number of segments and videos is the same')
                     existentFile[name] = '1'
         else:
             extensions = ['.pkl', '.hdf5']
@@ -441,19 +447,19 @@ def createFolder(path, name = '', timestamp = False):
         folderName = folderName + '_' + ts
 
     if os.path.isdir(folderName):
-        print 'Preprocessing folder exists'
+        print( 'Preprocessing folder exists')
         subFolder = folderName + '/segmentation'
         if os.path.isdir(subFolder):
-            print 'Segmentation folder exists'
+            print( 'Segmentation folder exists')
         else:
             os.makedirs(subFolder)
-            print subFolder + ' has been created'
+            print( subFolder + ' has been created')
     else:
         os.makedirs(folderName)
-        print folderName + ' has been created'
+        print( folderName + ' has been created')
         subFolder = folderName + '/segmentation'
         os.makedirs(subFolder)
-        print subFolder + ' has been created'
+        print( subFolder + ' has been created')
 
 def createSessionFolder(videoPath):
     def getLastSession(subFolders):
@@ -472,9 +478,9 @@ def createSessionFolder(videoPath):
     lastIndex = getLastSession(subSubFolders)
     sessionPath = subFolder + '/Session_' + str(lastIndex + 1)
     os.makedirs(sessionPath)
-    print 'You just created ', sessionPath
+    print( 'You just created ', sessionPath)
     figurePath = sessionPath + '/figures'
     os.makedirs(figurePath)
-    print 'You just created ', figurePath
+    print( 'You just created ', figurePath)
 
     return sessionPath, figurePath

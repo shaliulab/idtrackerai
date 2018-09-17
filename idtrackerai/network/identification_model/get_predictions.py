@@ -146,7 +146,7 @@ def kMeansCluster(vector_values, num_clusters, max_num_steps, stop_coeficient = 
             tf.boolean_mask(
                 vectors, tf.equal(assignments, c)
             ), 0)
-        for c in xrange(num_clusters)])
+        for c in range(num_clusters)])
     save_old_centroids = tf.assign(old_centroids, centroids)
     update_centroids = tf.assign(centroids, means)
     init_op = tf.initialize_all_variables()
@@ -155,7 +155,7 @@ def kMeansCluster(vector_values, num_clusters, max_num_steps, stop_coeficient = 
 
     with tf.Session() as sess:
         sess.run(init_op)
-        for step in xrange(max_num_steps):
+        for step in range(max_num_steps):
             logger.info("KMeanClustering: Running step %s" %str(step))
             sess.run(save_old_centroids)
             _, centroid_values, assignment_values = sess.run([update_centroids,

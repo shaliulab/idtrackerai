@@ -227,7 +227,7 @@ class ListOfBlobs(object):
                 blob.frame_number = frame_number
         self.disconnect()
 
-        for frame_i in tqdm(xrange(1, self.number_of_frames), desc = 'Connecting blobs '):
+        for frame_i in tqdm(range(1, self.number_of_frames), desc = 'Connecting blobs '):
             set_frame_number_to_blobs_in_frame(self.blobs_in_video[frame_i-1], frame_i-1)
 
             for (blob_0, blob_1) in itertools.product(self.blobs_in_video[frame_i-1], self.blobs_in_video[frame_i]):

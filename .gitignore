@@ -18,6 +18,8 @@
 !*.css_t
 !*.conf
 
+*.pyc
+
 #except gitignore
 !*.gitignore
 
@@ -33,3 +35,5 @@
 idTrackerAI
 videos
 docs/sphinx-contrib
+
+idtrackerai\.egg-info/

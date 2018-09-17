@@ -332,11 +332,12 @@ class Video(object):
 
     @property
     def git_commit(self):
+        return '0'
         return self._git_commit
 
     def save(self):
         """save class"""
-        self._git_commit = get_git_revision_hash()
+        #self._git_commit = get_git_revision_hash()
         logger.info("saving video object in %s" %self.path_to_video_object)
         np.save(self.path_to_video_object, self)
 
@@ -754,7 +755,7 @@ class Video(object):
         for parallelisation"""
         starting_frames = np.arange(0, self.number_of_frames, FRAMES_PER_EPISODE)
         ending_frames = np.hstack((starting_frames[1:]-1, self.number_of_frames))
-        self._episodes_start_end = zip(starting_frames, ending_frames)
+        self._episodes_start_end = list(zip(starting_frames, ending_frames))
         self._number_of_episodes = len(starting_frames)
 
     def in_which_episode(self, frame_number):

@@ -7,7 +7,10 @@ import sys
 import glob
 import numpy as np
 import pandas as pd
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 import time
 
 # Import third party libraries

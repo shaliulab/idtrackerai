@@ -4,7 +4,10 @@ from os.path import isdir, isfile
 import sys
 import glob
 import numpy as np
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 # Import third party libraries
 import cv2
@@ -36,8 +39,8 @@ if __name__ == '__main__':
 
     ageInDpf, preprocessing, subDirs, strain = retrieveInfoLib(libPath, preprocessing = "curvaturePortrait")
     # subDirs = subDirs[:4]
-    print 'ageInDpf, ', ageInDpf
-    print 'strain, ', strain
+    print( 'ageInDpf, ', ageInDpf)
+    print( 'strain, ', strain)
     group = 0
     labelsIMDB = []
     portraitsIMDB = []
@@ -53,10 +56,10 @@ if __name__ == '__main__':
     setParams = getInput('Set preprocessing parameters','Do you want to set the parameters for the preprocessing of each video? ([y]/n)')
     runPreproc = getInput('Run preprocessing','Do you want to run the preprocessing? ([y]/n)')
     buildLib = getInput('Build library','Do you want to build the library? ([y]/n)')
-    print subDirs
+    print( subDirs)
     for i, subDir in enumerate(subDirs):
-        print '-----------------------'
-        print 'preprocessing ', subDir
+        print( '-----------------------')
+        print( 'preprocessing ', subDir)
 
         ''' Path to video/s '''
         path = libPath + '/' + subDir
@@ -72,7 +75,7 @@ if __name__ == '__main__':
         ************************************************************************ '''
         if setParams == 'y' or setParams == '':
             setThisPrepParams = getInput('Set preprocessing parameters','Do you want to set parameters for this subDir ('+ subDir +')? ([y]/n)')
-            print 'setThisPrepParams', setThisPrepParams
+            print( 'setThisPrepParams', setThisPrepParams)
             if setThisPrepParams == 'n':
                 continue
             elif setThisPrepParams == 'y' or setThisPrepParams == '':
@@ -87,16 +90,16 @@ if __name__ == '__main__':
                 #exist and one wants to keep them they will be loaded
                 processesList = ['ROI', 'bkg', 'preprocparams', 'segmentation','fragments','portraits']
                 existentFiles, srcSubFolder = getExistentFiles_library(videoPath, processesList, segmPaths)
-                print 'List of processes finished, ', existentFiles
-                print '\nSelecting files to load from previous session...'
+                print( 'List of processes finished, ', existentFiles)
+                print( '\nSelecting files to load from previous session...')
                 loadPreviousDict = selectOptions(processesList, existentFiles, text='Steps already processed in this video \n (check to load from ' + srcSubFolder + ')')
 
                 usePreviousROI = loadPreviousDict['ROI']
                 use_previous_background = loadPreviousDict['bkg']
                 usePreviousPrecParams = loadPreviousDict['preprocparams']
-                print 'usePreviousROI set to ', usePreviousROI
-                print 'use_previous_background set to ', use_previous_background
-                print 'usePreviousPrecParams set to ', usePreviousPrecParams
+                print( 'usePreviousROI set to ', usePreviousROI)
+                print( 'use_previous_background set to ', use_previous_background)
+                print( 'usePreviousPrecParams set to ', usePreviousPrecParams)
 
                 ''' ROI selection/loading '''
                 width, height, mask, centers = ROISelectorPreview_library(videoPaths, useROI, usePreviousROI, numSegment=0)
@@ -105,7 +108,7 @@ if __name__ == '__main__':
 
                 ''' Selection/loading preprocessing parameters '''
                 preprocParams = selectPreprocParams_library(videoPaths, usePreviousPrecParams, width, height, bkg, mask, useBkg, frameIndices)
-                print 'The video will be preprocessed according to the following parameters: ', preprocParams
+                print( 'The video will be preprocessed according to the following parameters: ', preprocParams)
 
                 cv2.namedWindow('Bars')
 
@@ -135,7 +138,7 @@ if __name__ == '__main__':
             preprocParams= loadFile(videoPaths[0], 'preprocparams',hdfpkl = 'pkl')
             if not int(loadPreviousDict['segmentation']):
                 EQ = 0
-                print 'The preprocessing parameters dictionary loaded is ', preprocParams
+                print( 'The preprocessing parameters dictionary loaded is ', preprocParams)
                 segment(videoPaths, preprocParams, mask, centers, useBkg, bkg, EQ)
 
             ''' ************************************************************************
@@ -164,25 +167,25 @@ if __name__ == '__main__':
                 group += 1
                 numIndivIMDB += numAnimalsInGroup
 
-            print '************************************************************'
-            print 'Video ', video
-            print 'Transform, ', transform
-            print 'Group, ', group
-            print 'numAnimalsInGroup, ', numAnimalsInGroup
-            print 'numIndivIMDB, ', numIndivIMDB
-            print '************************************************************'
+            print( '************************************************************')
+            print( 'Video ', video)
+            print( 'Transform, ', transform)
+            print( 'Group, ', group)
+            print( 'numAnimalsInGroup, ', numAnimalsInGroup)
+            print( 'numIndivIMDB, ', numIndivIMDB)
+            print( '************************************************************')
 
             if not int(loadPreviousDict['fragmentation']):
-                print 'centers, ', centers
+                print( 'centers, ', centers)
                 centers = centers.drop_duplicates()
                 centers = centers.reset_index(drop=True)
-                print 'centers, ', centers
+                print( 'centers, ', centers)
                 if len(centers) != numAnimalsInGroup:
-                    print 'centers, ', centers
-                    print 'numAnimalsInGroup, ', numAnimalsInGroup
+                    print( 'centers, ', centers)
+                    print( 'numAnimalsInGroup, ', numAnimalsInGroup)
                     raise ValueError('The number of centers to assign identities is different to the number of animals in the group')
                 dfGlobal = assignCenters(segmPaths,centers,video,transform = transform)
-                print dfGlobal.columns
+                print( dfGlobal.columns)
                 playFragmentation_library(videoPaths,segmPaths,dfGlobal,visualize=False)
                 cv2.waitKey(1)
                 cv2.destroyAllWindows()
@@ -205,7 +208,7 @@ if __name__ == '__main__':
             preprocParams= loadFile(videoPaths[0], 'preprocparams')
             # preprocParams = preprocParams.to_dict()[0]
             numAnimalsInGroup = preprocParams['numAnimals']
-            print 'numAnimalsInGroup, ', numAnimalsInGroup
+            print( 'numAnimalsInGroup, ', numAnimalsInGroup)
             ''' Group and number of individuals '''
             # We assign the group number in a iterative way so that if one group is missing the labels of the IMDB are still iterative
             nameElements = subDir.split('_')
@@ -229,19 +232,19 @@ if __name__ == '__main__':
                 if i != 0:
                     group += 1
                 numIndivIMDB += numAnimalsInGroup
-            print 'Video, ', video
-            print 'transform, ', transform
-            print 'numIndivIMDB, ', numIndivIMDB
-            print 'group, ', group
+            print( 'Video, ', video)
+            print( 'transform, ', transform)
+            print( 'numIndivIMDB, ', numIndivIMDB)
+            print( 'group, ', group)
 
             portraits = loadFile(videoPaths[0], 'portraits')
             groupNum = i
             labels, portraits, bodies, bodyblobs, centroids, noses, head_centroids, areas = portraitsToIMDB(portraits, numAnimalsInGroup, group)
             print('portraits shape, ', portraits.shape)
             print('bodies shape, ', bodies.shape)
-            print 'labels shape, ', labels.shape
-            print 'labels, ', np.unique(labels)
-            print 'images per indiv, ', [np.sum(labels==i) for i in np.unique(labels)]
+            print( 'labels shape, ', labels.shape)
+            print( 'labels, ', np.unique(labels))
+            print( 'images per indiv, ', [np.sum(labels==i) for i in np.unique(labels)])
 
             labelsIMDB.append(labels)
             portraitsIMDB.append(portraits)
@@ -256,7 +259,7 @@ if __name__ == '__main__':
 
             numImagesList.append(labels.shape[0])
 
-            print 'total number of images, ', numImagesList
+            print( 'total number of images, ', numImagesList)
 
     ''' ************************************************************************
     Save IMDB to hdf5
@@ -274,12 +277,12 @@ if __name__ == '__main__':
         head_centroidsIMDB = np.concatenate(head_centroidsIMDB, axis = 0)
         areasIMDB = np.concatenate(areasIMDB, axis = 0)
         minimalNumImagesPerIndiv = int(np.min([np.sum(labelsIMDB == i) for i in np.unique(labelsIMDB)]))
-        print '\n****************************************************************'
-        print 'numIndivIMDB, ', numIndivIMDB
-        print 'totalNumImages, ', totalNumImages
-        print 'minNumImages, ', minimalNumImagesPerIndiv
-        print 'labelsIMDB, ', np.unique(labelsIMDB)
-        print 'num images per indiv, ', [np.sum(labelsIMDB == i) for i in np.unique(labelsIMDB)]
+        print( '\n****************************************************************')
+        print( 'numIndivIMDB, ', numIndivIMDB)
+        print( 'totalNumImages, ', totalNumImages)
+        print( 'minNumImages, ', minimalNumImagesPerIndiv)
+        print( 'labelsIMDB, ', np.unique(labelsIMDB))
+        print( 'num images per indiv, ', [np.sum(labelsIMDB == i) for i in np.unique(labelsIMDB)])
 
         nameDatabase =  strain + '_' + ageInDpf + '_' + str(numIndivIMDB) + 'indiv_' + str(int(minimalNumImagesPerIndiv)) + 'ImPerInd_' + 'bodyblobs'
         if not os.path.exists(libPath + '/IMDBs'): # Checkpoint folder does not exist
@@ -329,4 +332,4 @@ if __name__ == '__main__':
 
         f.close()
 
-        print 'Database saved as %s ' % nameDatabase
+        print( 'Database saved as %s ' % nameDatabase)

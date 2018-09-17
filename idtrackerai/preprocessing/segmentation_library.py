@@ -50,7 +50,7 @@ def segment_episode(path, height, width, mask, useBkg, bkg, EQ, min_threshold, m
 
     cap = cv2.VideoCapture(path)
     if episode_start_end_frames == None:
-        print 'Segmenting video %s' % path
+        print( 'Segmenting video %s' % path)
         video = os.path.basename(path)
         filename, extension = os.path.splitext(video)
         numSegment = int(filename.split('_')[-1])
@@ -58,7 +58,7 @@ def segment_episode(path, height, width, mask, useBkg, bkg, EQ, min_threshold, m
         counter = 0
     else:
         numSegment = int(episode_start_end_frames[0]/framesPerSegment) + 1
-        print 'Segment video %s from frame %i to frame %i (segment %i)' %(path, episode_start_end_frames[0], episode_start_end_frames[1], numSegment)
+        print( 'Segment video %s from frame %i to frame %i (segment %i)' %(path, episode_start_end_frames[0], episode_start_end_frames[1], numSegment))
         numFrames = episode_start_end_frames[1] - episode_start_end_frames[0] + 1
         counter = 0
         cap.set(1,episode_start_end_frames[0])
@@ -110,24 +110,24 @@ def segment(videoPaths,preprocParams, mask, centers, useBkg, bkg, EQ):
     width, height = getVideoInfo(videoPaths)
 
 
-    print 'videoPaths here, ', videoPaths
+    print( 'videoPaths here, ', videoPaths)
     # num_cores = multiprocessing.cpu_count()
     num_cores = 4
     if len(videoPaths) == 1:
-        print '**************************************'
-        print 'There is only one path, segmenting by frame indices'
-        print '**************************************'
+        print( '**************************************')
+        print( 'There is only one path, segmenting by frame indices')
+        print( '**************************************')
         '''Define list of starting and ending frames'''
         frameIndices = loadFile(videoPaths[0], 'frameIndices')
         framesPerSegment = len(np.where(frameIndices.loc[:,'segment'] == 1)[0])
         segments = np.unique(frameIndices.loc[:,'segment'])
         startingFrames = [frameIndices[frameIndices['segment']==seg].index[0] for seg in segments]
         endingFrames = [frameIndices[frameIndices['segment']==seg].index[-1] for seg in segments]
-        segmFramesIndices = zip(startingFrames,endingFrames)
+        segmFramesIndices = list(zip(startingFrames,endingFrames))
         ''' Spliting frames list into sublists '''
 
         segmFramesIndicesSubLists = [segmFramesIndices[i:i+num_cores] for i in range(0,len(segmFramesIndices),num_cores)]
-        print 'Entering to the parallel loop...\n'
+        print( 'Entering to the parallel loop...\n')
         allSegments = []
         numBlobs = []
         path = videoPaths[0]
@@ -141,7 +141,7 @@ def segment(videoPaths,preprocParams, mask, centers, useBkg, bkg, EQ):
         ''' splitting videoPaths list into sublists '''
         pathsSubLists = [videoPaths[i:i+num_cores] for i in range(0,len(videoPaths),num_cores)]
         ''' Entering loop for segmentation of the video '''
-        print 'Entering to the parallel loop...\n'
+        print( 'Entering to the parallel loop...\n')
         allSegments = []
         numBlobs = []
         for pathsSubList in pathsSubLists:

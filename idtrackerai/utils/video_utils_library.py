@@ -101,7 +101,7 @@ def collectAndSaveVideoInfo(videoPath, numFrames, height, width, numAnimals, num
         'max_area': max_area,
         'maxNumBlobs':maxNumBlobs
         }
-    print 'videoInfo, ', videoInfo
+    print( 'videoInfo, ', videoInfo)
     saveFile(videoPath, videoInfo, 'videoInfo',hdfpkl='pkl')
 
 def generateVideoTOC(allSegments, videoPath):
@@ -122,7 +122,7 @@ def generateVideoTOC(allSegments, videoPath):
 
 def getSegmPaths(videoPaths,framesPerSegment=500):
     folder = os.path.dirname(videoPaths[0])
-    print folder
+    print( folder)
     if len(videoPaths) == 1: # The video is in a single filename
         numFrames = getNumFrame(videoPaths[0])
         numSegments = np.ceil(np.true_divide(numFrames,framesPerSegment)).astype('int')
@@ -177,7 +177,7 @@ Compute background and threshold
 def computeBkgParSingleVideo(startingFrame,endingFrame,videoPath,bkg,framesPerSegment):
     # Open cap
     cap = cv2.VideoCapture(videoPath)
-    print 'Adding from starting frame %i to background' %startingFrame
+    print( 'Adding from starting frame %i to background' %startingFrame)
     numFramesBkg = 0
     frameInds = range(startingFrame,endingFrame,100)
     for ind in frameInds:
@@ -193,7 +193,7 @@ def computeBkgParSingleVideo(startingFrame,endingFrame,videoPath,bkg,framesPerSe
     return bkg, numFramesBkg
 
 def computeBkgParSegmVideo(videoPath,bkg):
-    print 'Adding video %s to background' % videoPath
+    print( 'Adding video %s to background' % videoPath)
     cap = cv2.VideoCapture(videoPath)
     counter = 0
     numFrame = int(cap.get(7))
@@ -216,7 +216,7 @@ def cumpute_background(videoPaths, width, height):
     num_cores = multiprocessing.cpu_count()
     # num_cores = 1
     if len(videoPaths) == 1: # one single video
-        print 'one single video, computing bkg in parallel from single video'
+        print( 'one single video, computing bkg in parallel from single video')
         videoPath = videoPaths[0]
         frameIndices = loadFile(videoPaths[0], 'frameIndices')
         framesPerSegment = len(np.where(frameIndices.loc[:,'segment'] == 1)[0])
@@ -247,7 +247,7 @@ def check_background_substraction(videoPaths, useBkg, use_previous_background, E
 
 def getSegmPaths(videoPaths,framesPerSegment=500):
     folder = os.path.dirname(videoPaths[0])
-    print folder
+    print( folder)
     if len(videoPaths) == 1: # The video is in a single filename
         numFrames = getNumFrame(videoPaths[0])
         numSegments = np.ceil(np.true_divide(numFrames,framesPerSegment)).astype('int')

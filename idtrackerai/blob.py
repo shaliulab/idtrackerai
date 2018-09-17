@@ -533,7 +533,7 @@ class Blob(object):
         bounding_box_image = remove_background_pixels(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, folder_to_save_for_paper_figure)
         pca = PCA()
         pxs = np.unravel_index(pixels,(height,width))
-        pxs1 = np.asarray(zip(pxs[1],pxs[0]))
+        pxs1 = np.asarray(list(zip(pxs[1],pxs[0])))
         pca.fit(pxs1)
         rot_ang = np.arctan(pca.components_[0][1]/pca.components_[0][0])*180/np.pi + 45 # we substract 45 so that the fish is aligned in the diagonal. This way we have smaller frames
         center = (pca.mean_[0], pca.mean_[1])
@@ -558,8 +558,8 @@ class Blob(object):
 
 
         crop_distance = int(identification_image_size/2)
-        x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
-        y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
+        x_range = range(center[0] - crop_distance, center[0] + crop_distance)
+        y_range = range(center[1] - crop_distance, center[1] + crop_distance)
         image_for_identification = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
         height, width = image_for_identification.shape
 
@@ -625,7 +625,7 @@ def remove_background_pixels(height, width, bounding_box_image, pixels, bounding
         new_thresholded_image = temp_image.copy()
         new_bounding_box_image = bounding_box_image.copy()
         new_bounding_box_image = cv2.cvtColor(new_bounding_box_image, cv2.COLOR_GRAY2RGB)
-        contours, hierarchy = cv2.findContours(new_thresholded_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        _, contours, hierarchy = cv2.findContours(new_thresholded_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         cv2.drawContours(new_bounding_box_image, contours, -1, (255,0,0), 1)
         save_preprocessing_step_image(new_bounding_box_image/255, folder_to_save_for_paper_figure, name = '1_blob_contour',  min_max = [0, 1])
     temp_image = cv2.dilate(temp_image, np.ones((3,3)).astype('uint8'), iterations = 1)
@@ -633,7 +633,7 @@ def remove_background_pixels(height, width, bounding_box_image, pixels, bounding
         new_thresholded_image = temp_image.copy()
         new_bounding_box_image = bounding_box_image.copy()
         new_bounding_box_image = cv2.cvtColor(new_bounding_box_image, cv2.COLOR_GRAY2RGB)
-        contours, hierarchy = cv2.findContours(new_thresholded_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        _, contours, hierarchy = cv2.findContours(new_thresholded_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         cv2.drawContours(new_bounding_box_image, contours, -1, (255,0,0), 1)
         save_preprocessing_step_image(new_bounding_box_image/255, folder_to_save_for_paper_figure, name = '2_blob_bw_dilated',  min_max = [0, 1])
     rows, columns = np.where(temp_image == 255)

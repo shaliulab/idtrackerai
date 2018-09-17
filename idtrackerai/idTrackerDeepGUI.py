@@ -33,7 +33,10 @@ import sys
 
 import glob
 import numpy as np
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 from tqdm import tqdm
 import time
 # Import third party libraries

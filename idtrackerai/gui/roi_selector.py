@@ -46,6 +46,8 @@ import numpy as np
 import cv2
 from idtrackerai.video import Video
 
+global CHOSEN_VIDEO, DEACTIVATE_ROI
+
 class ROISelector(BoxLayout):
     def __init__(self, chosen_video = None,
                     deactivate_roi = None,
@@ -86,7 +88,6 @@ class ROISelector(BoxLayout):
         self.btn_no_roi.bind(on_press = self.no_ROI)
         self.btn_clear_roi.bind(on_press = self.delete_ROI)
         self.has_been_executed = False
-        global CHOSEN_VIDEO
         CHOSEN_VIDEO.bind(chosen=self.do)
 
     def do(self, *args):

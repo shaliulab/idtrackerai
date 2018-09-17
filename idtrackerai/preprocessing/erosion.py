@@ -65,7 +65,7 @@ def generate_temp_image(video, pixels, bounding_box_in_frame_coordinates):
 
 def compute_max_distance_transform(video, blob):
     temp_image = generate_temp_image(video, blob.pixels, blob.bounding_box_in_frame_coordinates)
-    return np.max(cv2.distanceTransform(temp_image, cv2.cv.CV_DIST_L2, cv2.cv.CV_DIST_MASK_PRECISE))
+    return np.max(cv2.distanceTransform(temp_image, cv2.DIST_L2, cv2.DIST_MASK_PRECISE))
 
 def erode(image, kernel_size):
     kernel = np.ones(kernel_size, np.uint8)

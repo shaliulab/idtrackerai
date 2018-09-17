@@ -123,18 +123,21 @@ class Tracker(BoxLayout):
                 self.control_panel.add_widget(self.help_button_tracker)
                 self.has_been_executed = True
             if 'post_processing' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['post_processing']:
+                print('-',0)
                 self.restore_trajectories()
                 self.restore_crossings_solved()
                 self.restore_trajectories_wo_gaps()
                 self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
                 self.start_tracking_button.text = "Show estimated\naccuracy"
             elif 'residual_identification' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['residual_identification']:
+                print('-',1)
                 Logger.info("Restoring residual identification")
                 self.restore_identification()
                 CHOSEN_VIDEO.video._has_been_assigned = True
                 self.start_tracking_button.bind(on_release = self.start_from_post_processing)
                 self.start_tracking_button.text = "Start\npost-processing"
             elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
+                print('-',2)
                 Logger.info("Restoring second accumulation")
                 self.restore_second_accumulation()
                 CHOSEN_VIDEO.video._first_frame_first_global_fragment = CHOSEN_VIDEO.video._first_frame_first_global_fragment
@@ -143,6 +146,7 @@ class Tracker(BoxLayout):
                 self.start_tracking_button.bind(on_release = self.start_from_identification)
                 self.start_tracking_button.text = "Start\nresidual identification"
             elif 'protocol3_pretraining' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_pretraining']:
+                print('-',3)
                 Logger.info("Restoring pretraining")
                 Logger.info("Initialising pretraining network")
                 self.init_pretraining_net()
@@ -158,6 +162,7 @@ class Tracker(BoxLayout):
                 self.start_tracking_button.bind(on_release = self.accumulate)
                 self.start_tracking_button.text = "Start\naccumulation\n(protocol 3)"
             elif 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
+                print('-',4)
                 Logger.info("Restoring protocol 1")
                 self.restoring_first_accumulation = True
                 self.restore_first_accumulation()
@@ -169,6 +174,7 @@ class Tracker(BoxLayout):
                 self.start_tracking_button.bind(on_release = self.accumulate)
                 self.start_tracking_button.text = "Start\nidentification\nor\nprotocol 3"
             elif 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
+                print('-',5)
                 Logger.info("Starting protocol cascade")
                 self.start_tracking_button.bind(on_release = self.protocol1)
 

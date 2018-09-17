@@ -61,7 +61,7 @@ def _activation_summary(x):
 def _add_loss_summary(loss):
     tf.summary.scalar(loss.op.name, loss)
 
-def put_kernels_on_grid(kernel, (grid_Y, grid_X), pad=1):
+def put_kernels_on_grid(kernel, grid, pad=1):
     '''Taken from [2]_
     Visualize conv. features as an image (mostly for the 1st layer).
     Place kernel into a grid, with some paddings between adjacent filters.
@@ -76,6 +76,7 @@ def put_kernels_on_grid(kernel, (grid_Y, grid_X), pad=1):
 
     .. [2] https://gist.github.com/kukuruza/03731dc494603ceab0c5
     '''
+    (grid_Y, grid_X) = grid
     # pad X and Y
     x1 = tf.pad(kernel, tf.constant( [[pad,pad],[pad,pad],[0,0],[0,0]] ))
     # X and Y dimensions, w.r.t. padding

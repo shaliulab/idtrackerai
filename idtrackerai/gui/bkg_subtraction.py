@@ -39,7 +39,7 @@ from kivy.graphics.transformation import Matrix
 from idtrackerai.gui.kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
 from idtrackerai.utils.video_utils import cumpute_background
 from idtrackerai.gui.visualise_video import VisualiseVideo
-
+global CHOSEN_VIDEO
 class BkgSubtraction(BoxLayout):
     def __init__(self, chosen_video = None, **kwargs):
         super(BkgSubtraction, self).__init__(**kwargs)

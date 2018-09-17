@@ -40,8 +40,8 @@ import seaborn as sns
 sns.set(style="white", context="talk")
 from scipy import ndimage
 import pyautogui
-import Tkinter, tkSimpleDialog, tkFileDialog,tkMessageBox
-from Tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
+from tkinter import simpledialog as tkSimpleDialog, filedialog as tkFileDialog, messagebox as tkMessageBox
+from tkinter import Tk, Label, W, IntVar, Button, Checkbutton, Entry, mainloop
 from tqdm import tqdm
 from idtrackerai.preprocessing.segmentation import segment_frame
 from idtrackerai.utils.video_utils import check_background_substraction, blob_extractor

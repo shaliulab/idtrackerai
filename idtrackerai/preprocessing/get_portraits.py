@@ -144,8 +144,8 @@ def get_portrait(miniframe, cnt, bb, identification_image_size, px_nose_above_ce
     minif_rot = cv2.warpAffine(miniframe, M, tuple(nose_pixels+overhead), borderMode=cv2.BORDER_WRAP, flags = cv2.INTER_CUBIC)
 
     # Crop the image in 32x32 frame around the nose
-    x_range = xrange(nose_pixels[0]-half_side_sq,nose_pixels[0]+half_side_sq)
-    y_range = xrange(nose_pixels[1]-half_side_sq+px_nose_above_center,nose_pixels[1]+half_side_sq+px_nose_above_center)
+    x_range = range(nose_pixels[0]-half_side_sq,nose_pixels[0]+half_side_sq)
+    y_range = range(nose_pixels[1]-half_side_sq+px_nose_above_center,nose_pixels[1]+half_side_sq+px_nose_above_center)
     portrait = minif_rot.take(y_range,mode='wrap',axis=0).take(x_range,mode='wrap',axis=1)
 
     return portrait, tuple(noseFull.astype('float32')), tuple(head_centroid_full.astype('float32')) #output as float because it is better for analysis.
@@ -172,8 +172,8 @@ def get_body(height, width, miniframe, pixels, bb, identificationImageSize):
     M = cv2.getRotationMatrix2D(tuple(center), rot_ang, 1)
     minif_rot = cv2.warpAffine(miniframe, M, diag, borderMode=cv2.BORDER_CONSTANT, flags = cv2.INTER_CUBIC)
     crop_distance = int(identificationImageSize/2)
-    x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
-    y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
+    x_range = range(center[0] - crop_distance, center[0] + crop_distance)
+    y_range = range(center[1] - crop_distance, center[1] + crop_distance)
     portrait = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
     height, width = portrait.shape
     rot_ang_rad = rot_ang * np.pi / 180

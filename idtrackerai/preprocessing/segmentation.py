@@ -31,7 +31,10 @@ import sys
 import numpy as np
 import multiprocessing
 import cv2
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 from joblib import Parallel, delayed
 import gc
 from tqdm import tqdm
@@ -204,13 +207,16 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
     segment_frame
     blob_extractor
     """
+
     blobs_in_episode = []
 
     cap, number_of_frames_in_episode = get_videoCapture(video, path, episode_start_end_frames)
     max_number_of_blobs = 0
     frame_number = 0
     while frame_number < number_of_frames_in_episode:
+        
         global_frame_number = episode_start_end_frames[0] + frame_number
+        
         if video.tracking_interval is None or global_frame_number >= video.tracking_interval[0] and global_frame_number <= video.tracking_interval[1]:
             blobs_in_frame, max_number_of_blobs = get_blobs_in_frame(cap, video,
                                                                     segmentation_thresholds,
@@ -265,12 +271,14 @@ def segment(video):
                                 'max_threshold': video.max_threshold,
                                 'min_area': video.min_area,
                                 'max_area': video.max_area}
+
     set_mkl_to_single_thread()
     if not video.paths_to_video_segments:
         logger.info('There is only one path, segmenting by frame indices')
         #Spliting episodes_start_end in sublists for parallel processing
         episodes_start_end_sublists = [video.episodes_start_end[i:i+num_cores]
                                         for i in range(0,len(video.episodes_start_end),num_cores)]
+
         for episodes_start_end_sublist in tqdm(episodes_start_end_sublists, desc = 'Segmentation progress'):
             OupPutParallel = Parallel(n_jobs=num_cores)(
                                 delayed(segment_episode)(video, segmentation_thresholds, None, episode_start_end_frames)
@@ -285,7 +293,7 @@ def segment(video):
         episodes_start_end_sublists = [video.episodes_start_end[i:i+num_cores]
                                         for i in range(0,len(video.episodes_start_end),num_cores)]
 
-        for pathsSubList, episodes_start_end_sublist in tqdm(zip(pathsSubLists, episodes_start_end_sublists), desc = 'Segmentation progress'):
+        for pathsSubList, episodes_start_end_sublist in tqdm(list(zip(pathsSubLists, episodes_start_end_sublists), desc = 'Segmentation progress')):
             OupPutParallel = Parallel(n_jobs=num_cores)(
                                 delayed(segment_episode)(video, segmentation_thresholds, path, episode_start_end_frames)
                                 for path, episode_start_end_frames in zip(pathsSubList, episodes_start_end_sublist))

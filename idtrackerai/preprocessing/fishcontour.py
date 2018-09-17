@@ -119,7 +119,7 @@ class FishContour():
         except:
             cX = 0
             cY = 0
-            print 'Warning: M["m00"] might be zero'
+            print( 'Warning: M["m00"] might be zero')
         return (cX,cY)
 
 def smooth(contour):
