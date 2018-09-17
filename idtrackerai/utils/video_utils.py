@@ -34,7 +34,7 @@ import cv2
 from joblib import Parallel, delayed
 from idtrackerai.utils.py_utils import *
 from idtrackerai.video import Video
-from idtrackerai.constants import  BACKGROUND_SUBTRACTION_PERIOD, NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION
+from idtrackerai.constants import  BACKGROUND_SUBTRACTION_PERIOD, NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION, SIGMA_GAUSSIAN_BLURRING
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -77,6 +77,8 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
         logger.debug('Frame %i' %ind)
         cap.set(1,ind)
         ret, frameBkg = cap.read()
+        if SIGMA_GAUSSIAN_BLURRING is not None:
+            frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), SIGMA_GAUSSIAN_BLURRING)
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
             gray = np.true_divide(gray,np.mean(gray))
@@ -114,6 +116,8 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
     for ind in frameInds:
         cap.set(1,ind)
         ret, frameBkg = cap.read()
+        if SIGMA_GAUSSIAN_BLURRING is not None:
+            frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), SIGMA_GAUSSIAN_BLURRING)
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
             gray = np.true_divide(gray,np.mean(gray))
@@ -242,9 +246,6 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         frame_segmented = cv2.inRange(frame, min_threshold, max_threshold) #output: 255 in range, else 0
     elif not useBkg:
         frame_segmented = cv2.inRange(frame * (255.0/frame.max()), min_threshold, max_threshold) #output: 255 in range, else 0
-    
-    # print("frame segmented frame ", frame_segmented.shape)
-    # print("ROI shape: ", ROI.shape)
     frame_segmented_and_masked = cv2.bitwise_and(frame_segmented,frame_segmented, mask=ROI) #Applying the mask
     return frame_segmented_and_masked
 
@@ -381,7 +382,7 @@ def get_pixels(cnt, width, height):
     cimg = np.zeros((height, width))
     cv2.drawContours(cimg, [cnt], -1, color=255, thickness = -1)
     pts = np.where(cimg == 255)
-    return list(zip(pts[0],pts[1]))
+    return np.asarray(list(zip(pts[0],pts[1])))
 
 def get_bounding_box_image(frame, cnt):
     """Computes the `bounding_box_image`from a given frame and contour. It also

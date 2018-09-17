@@ -116,7 +116,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -164,8 +164,35 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">centroid_trajectories</span><span class="p">[</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">identity</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">centroid</span></div>
-    <span class="k">return</span> <span class="n">centroid_trajectories</span>
+        <span class="n">centroid_trajectories</span><span class="p">[</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">identity</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">centroid</span>
+    <span class="k">return</span> <span class="n">centroid_trajectories</span></div>
+
+
+<div class="viewcode-block" id="assign_P2_to_identity"><a class="viewcode-back" href="../postprocessing.html#get_trajectories.assign_P2_to_identity">[docs]</a><span class="k">def</span> <span class="nf">assign_P2_to_identity</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">id_probabilities</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Populate the matrix of P2 trajectories with the argmax of the P2_vector</span>
+<span class="sd">    of a selected Blob object (see :class:`~blob.Blob`)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    P2_vector : array</span>
+<span class="sd">        Array with P2 values for a Blob</span>
+<span class="sd">    identity : int</span>
+<span class="sd">        Identity to be associated with the centroid</span>
+<span class="sd">    frame_number : int</span>
+<span class="sd">        Frame number in the tracked video</span>
+<span class="sd">    centroid_trajectories : ndarray</span>
+<span class="sd">        array of shape [number of frame in video x number of animals  x  2]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray</span>
+<span class="sd">        centroid_trajectories</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">id_probabilities</span><span class="p">[</span><span class="n">frame_number</span><span class="p">,</span> <span class="n">identity</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">P2_vector</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">id_probabilities</span></div>
+
 
 <div class="viewcode-block" id="produce_trajectories"><a class="viewcode-back" href="../postprocessing.html#get_trajectories.produce_trajectories">[docs]</a><span class="k">def</span> <span class="nf">produce_trajectories</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">number_of_frames</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Produce trajectories array from ListOfBlobs</span>
@@ -185,7 +212,8 @@
 <span class="sd">        Dictionary with np.array as values (trajectories organised by identity)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">centroid_trajectories</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">number_of_frames</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+    <span class="n">centroid_trajectories</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">number_of_frames</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+    <span class="n">id_probabilities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">number_of_frames</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
 
     <span class="k">for</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">)):</span>
 
@@ -196,14 +224,19 @@
                                                                 <span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span>
                                                                 <span class="n">blob</span><span class="o">.</span><span class="n">frame_number</span><span class="p">,</span>
                                                                 <span class="n">centroid_trajectories</span><span class="p">)</span>
+                <span class="n">id_probabilities</span> <span class="o">=</span> <span class="n">assign_P2_to_identity</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">_P2_vector</span><span class="p">,</span>
+                                                        <span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span>
+                                                        <span class="n">blob</span><span class="o">.</span><span class="n">frame_number</span><span class="p">,</span>
+                                                        <span class="n">id_probabilities</span><span class="p">)</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">identity</span><span class="p">,</span> <span class="n">centroid</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">interpolated_centroids</span><span class="p">):</span>
                     <span class="n">centroid_trajectories</span> <span class="o">=</span> <span class="n">assign_point_to_identity</span><span class="p">(</span><span class="n">centroid</span><span class="p">,</span>
                                                                     <span class="n">identity</span><span class="p">,</span>
                                                                     <span class="n">blob</span><span class="o">.</span><span class="n">frame_number</span><span class="p">,</span>
                                                                     <span class="n">centroid_trajectories</span><span class="p">)</span>
-</div>
-    <span class="k">return</span> <span class="n">centroid_trajectories</span>
+
+    <span class="k">return</span> <span class="n">centroid_trajectories</span><span class="p">,</span> <span class="n">id_probabilities</span></div>
+
 
 <div class="viewcode-block" id="produce_output_dict"><a class="viewcode-back" href="../postprocessing.html#get_trajectories.produce_output_dict">[docs]</a><span class="k">def</span> <span class="nf">produce_output_dict</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Outputs the dictionary with keys: trajectories, git_commit, video_path,</span>
@@ -223,11 +256,16 @@
 <span class="sd">        Output dictionary containing trajectories as values</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">output_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;trajectories&#39;</span><span class="p">:</span> <span class="n">produce_trajectories</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">),</span>
-                    <span class="s1">&#39;git_commit&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">git_commit</span><span class="p">,</span>
-                    <span class="s1">&#39;video_path&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">video_path</span><span class="p">,</span>
-                    <span class="s1">&#39;frames_per_second&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">frames_per_second</span><span class="p">}</span></div>
-    <span class="k">return</span> <span class="n">output_dict</span>
+    <span class="n">centroid_trajectories</span><span class="p">,</span> <span class="n">id_probabilities</span> <span class="o">=</span> \
+        <span class="n">produce_trajectories</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">,</span>
+                             <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
+    <span class="n">output_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;trajectories&#39;</span><span class="p">:</span> <span class="n">centroid_trajectories</span><span class="p">,</span>
+                   <span class="s1">&#39;id_probabilities&#39;</span><span class="p">:</span> <span class="n">id_probabilities</span><span class="p">,</span>
+                   <span class="s1">&#39;git_commit&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">git_commit</span><span class="p">,</span>
+                   <span class="s1">&#39;video_path&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">video_path</span><span class="p">,</span>
+                   <span class="s1">&#39;frames_per_second&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">frames_per_second</span><span class="p">,</span>
+                   <span class="s1">&#39;body_length&#39;</span><span class="p">:</span> <span class="n">video</span><span class="o">.</span><span class="n">median_body_length</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">output_dict</span></div>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">idtrackerai.utils.GUI_utils</span> <span class="k">import</span> <span class="n">selectDir</span>
@@ -272,10 +310,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

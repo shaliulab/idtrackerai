@@ -116,7 +116,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -171,7 +171,7 @@
     <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">erode</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="n">kernel</span><span class="p">,</span><span class="n">iterations</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">get_eroded_blobs</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">blobs_in_frame</span><span class="p">):</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Getting eroded blobs&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Getting eroded blobs&#39;)</span>
     <span class="n">segmented_frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
@@ -181,7 +181,7 @@
 
     <span class="n">segmented_eroded_frame</span> <span class="o">=</span> <span class="n">erode</span><span class="p">(</span><span class="n">segmented_frame</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">erosion_kernel_size</span><span class="p">)</span>
     <span class="n">boundingBoxes</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">centroids</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">pixels_all</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">blob_extractor</span><span class="p">(</span><span class="n">segmented_eroded_frame</span><span class="p">,</span> <span class="n">segmented_eroded_frame</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished getting eroded blobse&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Finished getting eroded blobse&#39;)</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">Blob</span><span class="p">(</span><span class="n">centroid</span><span class="p">,</span> <span class="n">contour</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounding_box</span><span class="p">,</span> <span class="n">pixels</span> <span class="o">=</span> <span class="n">pixels</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">centroid</span><span class="p">,</span> <span class="n">contour</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">bounding_box</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">pixels_all</span><span class="p">,</span> <span class="n">boundingBoxes</span><span class="p">)]</span>
 
@@ -205,7 +205,7 @@
             <span class="k">yield</span> <span class="n">el</span>
 
 <span class="k">def</span> <span class="nf">find_the_gap_interval</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">possible_identities</span><span class="p">,</span> <span class="n">gap_start</span><span class="p">,</span> <span class="n">list_of_occluded_identities</span><span class="p">):</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finding gap interval&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Finding gap interval&#39;)</span>
     <span class="n">there_are_missing_identities</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">frame_number</span> <span class="o">=</span> <span class="n">gap_start</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="k">if</span> <span class="n">frame_number</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">):</span>
@@ -221,7 +221,7 @@
             <span class="n">gap_end</span> <span class="o">=</span> <span class="n">frame_number</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">gap_end</span> <span class="o">=</span> <span class="n">gap_start</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished finding gap interval&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Finished finding gap interval&#39;)</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">gap_start</span><span class="p">,</span> <span class="n">gap_end</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">get_blob_by_identity</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">identity</span><span class="p">):</span>
@@ -239,10 +239,10 @@
     <span class="k">return</span> <span class="kc">None</span>
 
 <span class="k">def</span> <span class="nf">get_candidate_blobs_by_overlapping</span><span class="p">(</span><span class="n">blob_to_test</span><span class="p">,</span> <span class="n">eroded_blobs_in_frame</span><span class="p">):</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Getting candidate blobs by overlapping&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Getting candidate blobs by overlapping&#39;)</span>
     <span class="n">overlapping_blobs</span> <span class="o">=</span> <span class="p">[</span><span class="n">blob</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">eroded_blobs_in_frame</span>
                     <span class="k">if</span> <span class="n">blob_to_test</span><span class="o">.</span><span class="n">overlaps_with</span><span class="p">(</span><span class="n">blob</span><span class="p">)]</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished getting candidate blobs by overlapping&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Finished getting candidate blobs by overlapping&#39;)</span>
     <span class="k">return</span> <span class="n">overlapping_blobs</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">overlapping_blobs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">eroded_blobs_in_frame</span>
 
 <span class="k">def</span> <span class="nf">get_missing_identities_from_blobs_in_frame</span><span class="p">(</span><span class="n">possible_identities</span><span class="p">,</span> <span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">occluded_identities_in_frame</span><span class="p">):</span>
@@ -255,7 +255,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">possible_identities</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">identities_in_frame</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">occluded_identities_in_frame</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">get_candidate_centroid</span><span class="p">(</span><span class="n">individual_gap_interval</span><span class="p">,</span> <span class="n">previous_blob_to_the_gap</span><span class="p">,</span> <span class="n">next_blob_to_the_gap</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">border</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">inner_frame_number</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Getting candidate centroids&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Getting candidate centroids&#39;)</span>
     <span class="n">blobs_for_interpolation</span> <span class="o">=</span> <span class="p">[</span><span class="n">previous_blob_to_the_gap</span><span class="p">,</span> <span class="n">next_blob_to_the_gap</span><span class="p">]</span>
     <span class="n">centroids_to_interpolate</span> <span class="o">=</span> <span class="p">[</span><span class="n">blob_for_interpolation</span><span class="o">.</span><span class="n">centroid</span>
                                 <span class="k">if</span> <span class="n">blob_for_interpolation</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="k">else</span>
@@ -269,28 +269,28 @@
     <span class="n">x_interp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">centroids_to_interpolate</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">centroids_to_interpolate</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">number_of_points</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">y_interp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">centroids_to_interpolate</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">centroids_to_interpolate</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">border</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">argsort_x</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished getting candidate centroids&#39;</span><span class="p">)</span>
+        <span class="c1"># logger.debug(&#39;Finished getting candidate centroids&#39;)</span>
         <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
     <span class="k">elif</span> <span class="n">border</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">argsort_x</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished getting candidate centroids&#39;</span><span class="p">)</span>
+        <span class="c1"># logger.debug(&#39;Finished getting candidate centroids&#39;)</span>
         <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
     <span class="k">elif</span> <span class="n">border</span> <span class="o">==</span> <span class="s1">&#39;end&#39;</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">argsort_x</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished getting candidate centroids&#39;</span><span class="p">)</span>
+        <span class="c1"># logger.debug(&#39;Finished getting candidate centroids&#39;)</span>
         <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
     <span class="k">elif</span> <span class="n">border</span> <span class="o">==</span> <span class="s1">&#39;end&#39;</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">argsort_x</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished getting candidate centroids&#39;</span><span class="p">)</span>
+        <span class="c1"># logger.debug(&#39;Finished getting candidate centroids&#39;)</span>
         <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_interp</span><span class="p">,</span> <span class="n">y_interp</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;border must be start or end: </span><span class="si">%s</span><span class="s1"> was given instead&#39;</span> <span class="o">%</span><span class="n">border</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">find_the_individual_gap_interval</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">possible_identities</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">a_frame_in_the_gap</span><span class="p">,</span> <span class="n">list_of_occluded_identities</span><span class="p">):</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finding the individual gap interval&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Finding the individual gap interval&#39;)</span>
     <span class="c1"># find gap start</span>
     <span class="n">identity_is_missing</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">gap_start</span> <span class="o">=</span> <span class="n">a_frame_in_the_gap</span>
     <span class="n">frame_number</span> <span class="o">=</span> <span class="n">gap_start</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;To the past while loop&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;To the past while loop&#39;)</span>
     <span class="k">while</span> <span class="n">identity_is_missing</span> <span class="ow">and</span> <span class="n">frame_number</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">frame_number</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">):</span>
         <span class="n">blobs_in_frame</span> <span class="o">=</span> <span class="n">blobs_in_video</span><span class="p">[</span><span class="n">frame_number</span><span class="p">]</span>
         <span class="n">occluded_identities_in_frame</span> <span class="o">=</span> <span class="n">list_of_occluded_identities</span><span class="p">[</span><span class="n">frame_number</span><span class="p">]</span>
@@ -306,7 +306,7 @@
     <span class="n">frame_number</span> <span class="o">=</span> <span class="n">a_frame_in_the_gap</span>
     <span class="n">gap_end</span> <span class="o">=</span> <span class="n">a_frame_in_the_gap</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;To the future while loop&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;To the future while loop&#39;)</span>
     <span class="k">while</span> <span class="n">identity_is_missing</span> <span class="ow">and</span> <span class="n">frame_number</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">frame_number</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">):</span>
         <span class="n">blobs_in_frame</span> <span class="o">=</span> <span class="n">blobs_in_video</span><span class="p">[</span><span class="n">frame_number</span><span class="p">]</span>
         <span class="n">occluded_identities_in_frame</span> <span class="o">=</span> <span class="n">list_of_occluded_identities</span><span class="p">[</span><span class="n">frame_number</span><span class="p">]</span>
@@ -317,11 +317,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">gap_end</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">frame_number</span> <span class="o">=</span> <span class="n">gap_end</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished finding the individual gap interval&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Finished finding the individual gap interval&#39;)</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">gap_start</span><span class="p">,</span> <span class="n">gap_end</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">get_previous_and_next_blob_wrt_gap</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">possible_identities</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">list_of_occluded_identities</span><span class="p">):</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finding previons and next blobs to the gap of this identity&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Finding previons and next blobs to the gap of this identity&#39;)</span>
     <span class="n">individual_gap_interval</span> <span class="o">=</span> <span class="n">find_the_individual_gap_interval</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span>
                                         <span class="n">possible_identities</span><span class="p">,</span>
                                         <span class="n">identity</span><span class="p">,</span>
@@ -343,7 +343,7 @@
         <span class="n">next_blob_to_the_gap</span> <span class="o">=</span> <span class="n">next_blob_to_the_gap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">next_blob_to_the_gap</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished finding previons and next blobs to the gap of this identity&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Finished finding previons and next blobs to the gap of this identity&#39;)</span>
     <span class="k">return</span> <span class="n">individual_gap_interval</span><span class="p">,</span> <span class="n">previous_blob_to_the_gap</span><span class="p">,</span> <span class="n">next_blob_to_the_gap</span>
 
 <span class="k">def</span> <span class="nf">get_closest_contour_point_to</span><span class="p">(</span><span class="n">contour</span><span class="p">,</span> <span class="n">candidate_centroid</span><span class="p">):</span>
@@ -381,30 +381,30 @@
     <span class="k">return</span> <span class="n">eroded_blob</span><span class="o">.</span><span class="n">overlaps_with</span><span class="p">(</span><span class="n">blob_in_border_frame</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">centroid_is_inside_of_any_eroded_blob</span><span class="p">(</span><span class="n">candidate_eroded_blobs</span><span class="p">,</span> <span class="n">candidate_centroid</span><span class="p">):</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Checking whether the centroids is inside of a blob&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Checking whether the centroids is inside of a blob&#39;)</span>
     <span class="n">candidate_centroid</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">centroid_coordinate</span><span class="p">)</span> <span class="k">for</span> <span class="n">centroid_coordinate</span> <span class="ow">in</span> <span class="n">candidate_centroid</span><span class="p">])</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished whether the centroids is inside of a blob&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Finished whether the centroids is inside of a blob&#39;)</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">blob</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">candidate_eroded_blobs</span>
             <span class="k">if</span> <span class="n">cv2</span><span class="o">.</span><span class="n">pointPolygonTest</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">contour</span><span class="p">,</span> <span class="n">candidate_centroid</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]</span>
 
 <span class="k">def</span> <span class="nf">evaluate_candidate_blobs_and_centroid</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">candidate_eroded_blobs</span><span class="p">,</span> <span class="n">candidate_centroid</span><span class="p">,</span> <span class="n">blob_in_border_frame</span><span class="p">,</span> <span class="n">blobs_in_frame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">inner_frame_number</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">identity</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Evaluating candidate blobs and centroids&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Evaluating candidate blobs and centroids&#39;)</span>
     <span class="n">blob_containing_candidate_centroid</span> <span class="o">=</span> <span class="n">centroid_is_inside_of_any_eroded_blob</span><span class="p">(</span><span class="n">candidate_eroded_blobs</span><span class="p">,</span> <span class="n">candidate_centroid</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">blob_containing_candidate_centroid</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished evaluating candidate blobs and centroids: the candidate centroid is in an eroded blob&#39;</span><span class="p">)</span>
+        <span class="c1"># logger.debug(&#39;Finished evaluating candidate blobs and centroids: the candidate centroid is in an eroded blob&#39;)</span>
         <span class="k">return</span> <span class="n">blob_containing_candidate_centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">candidate_centroid</span>
     <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_eroded_blobs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">nearest_blob</span> <span class="o">=</span> <span class="n">get_nearest_eroded_blob_to_candidate_centroid</span><span class="p">(</span><span class="n">candidate_eroded_blobs</span><span class="p">,</span> <span class="n">candidate_centroid</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">inner_frame_number</span><span class="p">)</span>
         <span class="n">new_centroid</span> <span class="o">=</span> <span class="n">get_closest_contour_point_to</span><span class="p">(</span><span class="n">nearest_blob</span><span class="o">.</span><span class="n">contour</span><span class="p">,</span> <span class="n">candidate_centroid</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">nearest_candidate_blob_is_near_enough</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">nearest_blob</span><span class="p">,</span> <span class="n">candidate_centroid</span><span class="p">,</span> <span class="n">blob_in_border_frame</span><span class="p">)</span> <span class="ow">or</span> \
             <span class="n">eroded_blob_overlaps_with_blob_in_border_frame</span><span class="p">(</span><span class="n">nearest_blob</span><span class="p">,</span> <span class="n">blob_in_border_frame</span><span class="p">):</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished evaluating candidate blobs and centroids: the candidate centroid is near to a candidate blob&#39;</span><span class="p">)</span>
+            <span class="c1"># logger.debug(&#39;Finished evaluating candidate blobs and centroids: the candidate centroid is near to a candidate blob&#39;)</span>
             <span class="k">return</span> <span class="n">nearest_blob</span><span class="p">,</span> <span class="n">new_centroid</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished evaluating candidate blobs and centroids: the candidate centrois is far from a candidate blob&#39;</span><span class="p">)</span>
+            <span class="c1"># logger.debug(&#39;Finished evaluating candidate blobs and centroids: the candidate centrois is far from a candidate blob&#39;)</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished evaluating candidate blobs and centroids: there where no candidate blobs&#39;</span><span class="p">)</span>
+        <span class="c1"># logger.debug(&#39;Finished evaluating candidate blobs and centroids: there where no candidate blobs&#39;)</span>
         <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
 <span class="k">def</span> <span class="nf">get_candidate_tuples_with_centroids_in_original_blob</span><span class="p">(</span><span class="n">original_blob</span><span class="p">,</span> <span class="n">candidate_tuples_to_close_gap</span><span class="p">):</span>
@@ -414,14 +414,14 @@
     <span class="k">return</span> <span class="n">candidate_tuples_with_centroids_in_original_blob</span>
 
 <span class="k">def</span> <span class="nf">assign_identity_to_new_blobs</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">fragments</span><span class="p">,</span> <span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">possible_identities</span><span class="p">,</span> <span class="n">original_inner_blobs_in_frame</span><span class="p">,</span> <span class="n">candidate_tuples_to_close_gap</span><span class="p">,</span> <span class="n">list_of_occluded_identities</span><span class="p">):</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Assigning identity to new blobs&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Assigning identity to new blobs&#39;)</span>
     <span class="n">new_original_blobs</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">original_blob</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">original_inner_blobs_in_frame</span><span class="p">):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Checking original blob&#39;</span><span class="p">)</span>
+        <span class="c1"># logger.debug(&#39;Checking original blob&#39;)</span>
         <span class="n">candidate_tuples_with_centroids_in_original_blob</span> <span class="o">=</span> <span class="n">get_candidate_tuples_with_centroids_in_original_blob</span><span class="p">(</span><span class="n">original_blob</span><span class="p">,</span> <span class="n">candidate_tuples_to_close_gap</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># the gap is a single individual blob</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Only a candidate tuple for this original blob&#39;</span><span class="p">)</span>
+            <span class="c1"># logger.debug(&#39;Only a candidate tuple for this original blob&#39;)</span>
             <span class="n">identity</span> <span class="o">=</span> <span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
             <span class="n">centroid</span> <span class="o">=</span> <span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
@@ -451,7 +451,7 @@
 
             <span class="n">new_original_blobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">original_blob</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">:</span> <span class="c1"># Note that the original blobs that were unidentified (identity 0) are set to zero before starting the main while loop</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Many candidate tuples for this original blob, and the original blob is a crossing&#39;</span><span class="p">)</span>
+            <span class="c1"># logger.debug(&#39;Many candidate tuples for this original blob, and the original blob is a crossing&#39;)</span>
             <span class="n">candidate_eroded_blobs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">candidate_eroded_blobs_centroids</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">candidate_eroded_blobs_identities</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
@@ -489,7 +489,7 @@
 
     <span class="n">new_original_blobs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">new_original_blobs</span><span class="p">))</span>
     <span class="n">blobs_in_video</span><span class="p">[</span><span class="n">original_blob</span><span class="o">.</span><span class="n">frame_number</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_original_blobs</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished assigning identity to new blobs&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Finished assigning identity to new blobs&#39;)</span>
     <span class="k">return</span> <span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">list_of_occluded_identities</span>
 
 <div class="viewcode-block" id="get_forward_backward_list_of_frames"><a class="viewcode-back" href="../postprocessing.html#assign_them_all.get_forward_backward_list_of_frames">[docs]</a><span class="k">def</span> <span class="nf">get_forward_backward_list_of_frames</span><span class="p">(</span><span class="n">gap_interval</span><span class="p">):</span>
@@ -498,44 +498,44 @@
 <span class="sd">    output:</span>
 <span class="sd">    [f1, fn, f2, fn-1, ...] for f1 = start_frame_number and</span>
 <span class="sd">                                fn = end_frame_number&quot;&quot;&quot;</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Got forward-backward list of frames&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Got forward-backward list of frames&#39;)</span>
     <span class="n">gap_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">gap_interval</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">gap_interval</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-    <span class="n">gap_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gap_range</span><span class="p">)</span></div>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">gap_range</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">gap_length</span><span class="p">),</span> <span class="n">gap_range</span><span class="p">)[:</span><span class="n">gap_length</span><span class="p">]</span>
+    <span class="n">gap_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gap_range</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">gap_range</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">gap_length</span><span class="p">),</span> <span class="n">gap_range</span><span class="p">)[:</span><span class="n">gap_length</span><span class="p">]</span></div>
 
 <span class="k">def</span> <span class="nf">interpolate_trajectories_during_gaps</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_blobs</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">,</span> <span class="n">list_of_occluded_identities</span><span class="p">,</span> <span class="n">possible_identities</span><span class="p">,</span> <span class="n">erosion_counter</span><span class="p">):</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;In interpolate_trajectories_during_gaps&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;In interpolate_trajectories_during_gaps&#39;)</span>
     <span class="n">blobs_in_video</span> <span class="o">=</span> <span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span>
     <span class="k">for</span> <span class="n">frame_number</span><span class="p">,</span> <span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">occluded_identities_in_frame</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">list_of_occluded_identities</span><span class="p">),</span> <span class="n">desc</span> <span class="o">=</span> <span class="s2">&quot;closing gaps&quot;</span><span class="p">)):</span>
         <span class="k">if</span> <span class="n">frame_number</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;-Main frame number </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">frame_number</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Getting missing identities&#39;</span><span class="p">)</span>
+            <span class="c1"># logger.debug(&#39;-Main frame number %i&#39; %frame_number)</span>
+            <span class="c1"># logger.debug(&#39;Getting missing identities&#39;)</span>
             <span class="n">missing_identities</span> <span class="o">=</span> <span class="n">get_missing_identities_from_blobs_in_frame</span><span class="p">(</span><span class="n">possible_identities</span><span class="p">,</span> <span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">occluded_identities_in_frame</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_identities</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">gap_interval</span> <span class="o">=</span> <span class="n">find_the_gap_interval</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">possible_identities</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">list_of_occluded_identities</span><span class="p">)</span>
                 <span class="n">forward_backward_list_of_frames</span> <span class="o">=</span> <span class="n">get_forward_backward_list_of_frames</span><span class="p">(</span><span class="n">gap_interval</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;--There are missing identities in this main frame: gap interval </span><span class="si">%s</span><span class="s1"> &#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">gap_interval</span><span class="p">,))</span>
+                <span class="c1"># logger.debug(&#39;--There are missing identities in this main frame: gap interval %s &#39; %(gap_interval,))</span>
                 <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">inner_frame_number</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">forward_backward_list_of_frames</span><span class="p">):</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;---Length forward_backward_list_of_frames </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">forward_backward_list_of_frames</span><span class="p">))</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;---Gap interval: interval </span><span class="si">%s</span><span class="s1"> &#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">gap_interval</span><span class="p">,))</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;---Inner frame number </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">inner_frame_number</span> <span class="p">)</span>
+                    <span class="c1"># logger.debug(&#39;---Length forward_backward_list_of_frames %i&#39; %len(forward_backward_list_of_frames))</span>
+                    <span class="c1"># logger.debug(&#39;---Gap interval: interval %s &#39; %(gap_interval,))</span>
+                    <span class="c1"># logger.debug(&#39;---Inner frame number %i&#39; %inner_frame_number )</span>
                     <span class="n">inner_occluded_identities_in_frame</span> <span class="o">=</span> <span class="n">list_of_occluded_identities</span><span class="p">[</span><span class="n">inner_frame_number</span><span class="p">]</span>
                     <span class="n">inner_blobs_in_frame</span> <span class="o">=</span> <span class="n">blobs_in_video</span><span class="p">[</span><span class="n">inner_frame_number</span><span class="p">]</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inner_blobs_in_frame</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;----There are blobs in the inner frame&#39;</span><span class="p">)</span>
+                        <span class="c1"># logger.debug(&#39;----There are blobs in the inner frame&#39;)</span>
                         <span class="k">if</span> <span class="n">erosion_counter</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                             <span class="n">eroded_blobs_in_frame</span> <span class="o">=</span> <span class="n">get_eroded_blobs</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">inner_blobs_in_frame</span><span class="p">)</span> <span class="c1">#list of eroded blobs!</span>
                             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eroded_blobs_in_frame</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                                 <span class="n">eroded_blobs_in_frame</span> <span class="o">=</span> <span class="n">inner_blobs_in_frame</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">eroded_blobs_in_frame</span> <span class="o">=</span> <span class="n">inner_blobs_in_frame</span>
-                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Getting missing identities&#39;</span><span class="p">)</span>
+                        <span class="c1"># logger.debug(&#39;Getting missing identities&#39;)</span>
                         <span class="n">inner_missing_identities</span> <span class="o">=</span> <span class="n">get_missing_identities_from_blobs_in_frame</span><span class="p">(</span><span class="n">possible_identities</span><span class="p">,</span>
                                                                                             <span class="n">inner_blobs_in_frame</span><span class="p">,</span>
                                                                                             <span class="n">inner_occluded_identities_in_frame</span><span class="p">)</span>
                         <span class="n">candidate_tuples_to_close_gap</span> <span class="o">=</span> <span class="p">[]</span>
                         <span class="k">for</span> <span class="n">identity</span> <span class="ow">in</span> <span class="n">inner_missing_identities</span><span class="p">:</span>
-                            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;-----Solving identity </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">identity</span><span class="p">)</span>
+                            <span class="c1"># logger.debug(&#39;-----Solving identity %i&#39; %identity)</span>
                             <span class="n">individual_gap_interval</span><span class="p">,</span>\
                             <span class="n">previous_blob_to_the_gap</span><span class="p">,</span>\
                             <span class="n">next_blob_to_the_gap</span> <span class="o">=</span> <span class="n">get_previous_and_next_blob_wrt_gap</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span>
@@ -543,9 +543,9 @@
                                                                                         <span class="n">identity</span><span class="p">,</span>
                                                                                         <span class="n">inner_frame_number</span><span class="p">,</span>
                                                                                         <span class="n">list_of_occluded_identities</span><span class="p">)</span>
-                            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;individual_gap_interval: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">individual_gap_interval</span><span class="p">,))</span>
+                            <span class="c1"># logger.debug(&#39;individual_gap_interval: %s&#39; %(individual_gap_interval,))</span>
                             <span class="k">if</span> <span class="n">previous_blob_to_the_gap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">next_blob_to_the_gap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;------The previous and next blobs are not None&#39;</span><span class="p">)</span>
+                                <span class="c1"># logger.debug(&#39;------The previous and next blobs are not None&#39;)</span>
                                 <span class="n">border</span> <span class="o">=</span> <span class="s1">&#39;start&#39;</span> <span class="k">if</span> <span class="n">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;end&#39;</span>
                                 <span class="n">candidate_centroid</span> <span class="o">=</span> <span class="n">get_candidate_centroid</span><span class="p">(</span><span class="n">individual_gap_interval</span><span class="p">,</span>
                                                                             <span class="n">previous_blob_to_the_gap</span><span class="p">,</span>
@@ -568,29 +568,29 @@
                                                                                                                 <span class="n">blobs_in_frame</span> <span class="o">=</span> <span class="n">inner_blobs_in_frame</span><span class="p">,</span>
                                                                                                                 <span class="n">inner_frame_number</span> <span class="o">=</span> <span class="n">inner_frame_number</span><span class="p">,</span> <span class="n">identity</span> <span class="o">=</span> <span class="n">identity</span><span class="p">)</span>
                                 <span class="k">if</span> <span class="n">candidate_blob_to_close_gap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;------There is a tuple (blob, centroid, identity) to close the gap in this inner frame)&#39;</span><span class="p">)</span>
+                                    <span class="c1"># logger.debug(&#39;------There is a tuple (blob, centroid, identity) to close the gap in this inner frame)&#39;)</span>
                                     <span class="n">candidate_tuples_to_close_gap</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">candidate_blob_to_close_gap</span><span class="p">,</span> <span class="n">centroid</span><span class="p">,</span> <span class="n">identity</span><span class="p">))</span>
                                 <span class="k">else</span><span class="p">:</span>
-                                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;------There are no candidate blobs and/or centroids: it must be occluded or it jumped&#39;</span><span class="p">)</span>
+                                    <span class="c1"># logger.debug(&#39;------There are no candidate blobs and/or centroids: it must be occluded or it jumped&#39;)</span>
                                     <span class="n">list_of_occluded_identities</span><span class="p">[</span><span class="n">inner_frame_number</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">identity</span><span class="p">)</span>
                             <span class="k">else</span><span class="p">:</span> <span class="c1"># this manages the case in which identities are missing in the first frame or disappear without appearing anymore,</span>
                                 <span class="c1"># and evntual occlusions (an identified blob does not appear in the previous and/or the next frame)</span>
-                                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;------There is not next or not previous blob to this inner gap: it must be occluded&#39;</span><span class="p">)</span>
-                                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;previous_blob_to_the_gap is None&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">previous_blob_to_the_gap</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;previous_blob_to_the_gap exists&#39;</span><span class="p">)</span>
-                                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;next_blob_to_the_gap is None&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">next_blob_to_the_gap</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;next_blob_to_the_gap exists&#39;</span><span class="p">)</span>
+                                <span class="c1"># logger.debug(&#39;------There is not next or not previous blob to this inner gap: it must be occluded&#39;)</span>
+                                <span class="c1"># logger.debug(&#39;previous_blob_to_the_gap is None&#39;) if previous_blob_to_the_gap is None else logger.debug(&#39;previous_blob_to_the_gap exists&#39;)</span>
+                                <span class="c1"># logger.debug(&#39;next_blob_to_the_gap is None&#39;) if next_blob_to_the_gap is None else logger.debug(&#39;next_blob_to_the_gap exists&#39;)</span>
                                 <span class="p">[</span><span class="n">list_of_occluded_identities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">identity</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">individual_gap_interval</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">individual_gap_interval</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
 
-                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;-----Assinning identities to candidate tuples (blob, centroid, identity)&#39;</span><span class="p">)</span>
+                        <span class="c1"># logger.debug(&#39;-----Assinning identities to candidate tuples (blob, centroid, identity)&#39;)</span>
                         <span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">list_of_occluded_identities</span> <span class="o">=</span> <span class="n">assign_identity_to_new_blobs</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span><span class="p">,</span>
                                                                     <span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">possible_identities</span><span class="p">,</span>
                                                                     <span class="n">inner_blobs_in_frame</span><span class="p">,</span> <span class="n">candidate_tuples_to_close_gap</span><span class="p">,</span>
                                                                     <span class="n">list_of_occluded_identities</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;----No blobs in this inner frame&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;--No missing identities in this frame&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;-We do not check the first frame&#39;</span><span class="p">)</span>
+                <span class="c1"># else:</span>
+                    <span class="c1"># logger.debug(&#39;----No blobs in this inner frame&#39;)</span>
+            <span class="c1"># else:</span>
+                <span class="c1"># logger.debug(&#39;--No missing identities in this frame&#39;)</span>
+        <span class="c1"># else:</span>
+            <span class="c1"># logger.debug(&#39;-We do not check the first frame&#39;)</span>
     <span class="k">return</span> <span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">list_of_occluded_identities</span>
 
 <span class="k">def</span> <span class="nf">get_number_of_non_split_crossing</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">):</span>
@@ -613,13 +613,13 @@
 <span class="sd">        Description of returned object.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Reseting blobs to start erosion iteration&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.debug(&#39;Reseting blobs to start erosion iteration&#39;)</span>
     <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">blobs_in_video</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">:</span>
                 <span class="n">blob</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">elif</span> <span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span></div>
-                <span class="n">blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">elif</span> <span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 <span class="k">def</span> <span class="nf">closing_gap_stopping_criteria</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">,</span> <span class="n">previous_number_of_non_split_crossings_blobs</span><span class="p">):</span>
     <span class="n">current_number_of_non_split_crossings</span> <span class="o">=</span> <span class="n">get_number_of_non_split_crossing</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">)</span>
@@ -638,8 +638,8 @@
                     <span class="n">blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span>
                 <span class="k">elif</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">blob</span><span class="o">.</span><span class="n">_identity</span> <span class="o">=</span> <span class="mi">0</span>
-</div>
-    <span class="k">return</span> <span class="n">blobs_in_video</span>
+
+    <span class="k">return</span> <span class="n">blobs_in_video</span></div>
 
 <div class="viewcode-block" id="close_trajectories_gaps"><a class="viewcode-back" href="../postprocessing.html#assign_them_all.close_trajectories_gaps">[docs]</a><span class="k">def</span> <span class="nf">close_trajectories_gaps</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_blobs</span><span class="p">,</span> <span class="n">list_of_fragments</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;This is the main function to close the gaps where animals have not been</span>
@@ -692,7 +692,7 @@
     <span class="n">list_of_occluded_identities</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">))]</span>
 
     <span class="k">while</span> <span class="n">continue_erosion_protocol</span> <span class="ow">or</span> <span class="n">erosion_counter</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">In main while to close gaps&#39;</span><span class="p">)</span>
+        <span class="c1"># logger.debug(&#39;\nIn main while to close gaps&#39;)</span>
         <span class="n">reset_blobs_in_video_before_erosion_iteration</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">)</span>
         <span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">,</span> \
         <span class="n">list_of_occluded_identities</span> <span class="o">=</span> <span class="n">interpolate_trajectories_during_gaps</span><span class="p">(</span><span class="n">video</span><span class="p">,</span>
@@ -706,8 +706,8 @@
         <span class="n">previous_number_of_non_split_crossings_blobs</span> <span class="o">=</span> <span class="n">current_number_of_non_split_crossings</span>
         <span class="n">erosion_counter</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span> <span class="o">=</span> <span class="n">clean_individual_blob_before_saving</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">)</span></div>
-    <span class="k">return</span> <span class="n">list_of_blobs</span>
+    <span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span> <span class="o">=</span> <span class="n">clean_individual_blob_before_saving</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">list_of_blobs</span></div>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">video</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;/home/lab/Desktop/TF_models/IdTrackerDeep/videos/8zebrafish_conflicto/session_n/video_object.npy&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
@@ -743,10 +743,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

@@ -28,13 +28,13 @@
 from __future__ import absolute_import, print_function, division
 import numpy as np
 import cv2
-import sys
+from tqdm import tqdm
 from idtrackerai.utils.py_utils import  get_spaced_colors_util
 
 def init(video_path, trajectories_dict_path):
-    video_object = np.load(video_path).item()
+    video_object = np.load(video_path, encoding='latin1').item()
     video_object.update_paths(video_path)
-    trajectories  = np.load(trajectories_dict_path).item()['trajectories']
+    trajectories  = np.load(trajectories_dict_path, encoding='latin1').item()['trajectories']
     colors = get_spaced_colors_util(video_object.number_of_animals, black = False)
     path_to_save_video = video_object._session_folder +'/tracked.avi'
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -48,14 +48,19 @@ def generate_video(video_object,
                 video_writer,
                 colors,
                 func = None,
-                centroid_trace_length = 10):
+                centroid_trace_length = 10,
+                starting_frame = 0,
+                ending_frame = None):
     if video_object.paths_to_video_segments is None:
         cap = cv2.VideoCapture(video_object.video_path)
     else:
         cap = None
 
+    if ending_frame is None:
+        ending_frame = len(trajectories)
 
-    for frame_number in range(len(trajectories)):
+
+    for frame_number in tqdm(range(starting_frame, ending_frame), desc='Adding trajectories to video'):
         frame = apply_func_on_frame(video_object,
                             trajectories,
                             frame_number,
@@ -87,15 +92,20 @@ def apply_func_on_frame(video_object,
         if video_object.resolution_reduction != 1:
             frame = cv2.resize(frame, None,
                                 fx = video_object.resolution_reduction,
-                                fy = video_object.resolution_reduction)
-        frame = func(frame, frame_number, trajectories, centroid_trace_length,
+                                fy = video_object.resolution_reduction,
+                                interpolation = cv2.INTER_AREA)
+        frame = func(video_object, frame, frame_number, trajectories, centroid_trace_length,
                     colors)
         return frame
 
 
-def writeIds(frame, frame_number, trajectories, centroid_trace_length, colors):
+def writeIds(video_object, frame, frame_number, trajectories, centroid_trace_length, colors):
     ordered_centroid = trajectories[frame_number]
     font = cv2.FONT_HERSHEY_SIMPLEX
+    font_size = 1 * video_object.resolution_reduction
+    font_width = int(3 * video_object.resolution_reduction)
+    font_width = 1 if font_width == 0 else font_width
+    circle_size = int(2 * video_object.resolution_reduction)
 
     for cur_id, centroid in enumerate(ordered_centroid):
         if sum(np.isnan(centroid)) == 0:
@@ -105,12 +115,12 @@ def writeIds(frame, frame_number, trajectories, centroid_trace_length, colors):
                 centroids_trace = trajectories[: frame_number, cur_id]
             cur_id_str = str(cur_id + 1)
             int_centroid = np.asarray(centroid).astype('int')
-            cv2.circle(frame, tuple(int_centroid), 2, colors[cur_id], -1)
-            cv2.putText(frame, cur_id_str,tuple(int_centroid), font, 1, colors[cur_id], 3)
+            cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
+            cv2.putText(frame, cur_id_str,tuple(int_centroid), font, font_size, colors[cur_id], font_width)
             for centroid_trace in centroids_trace:
                 if sum(np.isnan(centroid_trace)) == 0:
                     int_centroid = np.asarray(centroid_trace).astype('int')
-                    cv2.circle(frame, tuple(int_centroid), 2, colors[cur_id], -1)
+                    cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
     return frame
 
 def main(args):
@@ -124,7 +134,9 @@ def main(args):
                     video_writer,
                     colors,
                     func = writeIds,
-                    centroid_trace_length = number_of_points_in_past_trace)
+                    centroid_trace_length = number_of_points_in_past_trace,
+                    starting_frame = args.starting_frame,
+                    ending_frame = args.ending_frame)
 
 if __name__ == "__main__":
     import argparse
@@ -133,12 +145,9 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--trajectories_path", type = str, help = "Path to the trajectory file")
     parser.add_argument("-s", "--number_of_ghost_points", type = int, default = 20,
                         help = "Number of points used to draw the individual trajectories' traces")
+    parser.add_argument("-sf", "--starting_frame", type = int, default = 0,
+                        help = "Frame where to start the video")
+    parser.add_argument("-ef", "--ending_frame", type = int, default = None,
+                        help = "Frame where to end the video")
     args = parser.parse_args()
-    try:
-        main(args)
-    except:
-        ### This allows to use sessions tracked with the version previous to the creation of the module
-        import sys
-        sys.path.append('../')
-        sys.path.append('../preprocessing')
-        main(args)
+    main(args)

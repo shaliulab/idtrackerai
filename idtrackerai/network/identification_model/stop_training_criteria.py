@@ -30,6 +30,7 @@ import sys
 import numpy as np
 from idtrackerai.constants import  MAX_FLOAT, LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN, \
                     LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN, OVERFITTING_COUNTER_THRESHOLD_IDCNN, \
+                    OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM,\
                     MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -101,6 +102,10 @@ class Stop_Training(object):
                 self.overfitting_counter += 1
                 if self.overfitting_counter >= OVERFITTING_COUNTER_THRESHOLD_IDCNN and not self.first_accumulation_flag:
                     logger.info('Overfitting\n')
+                    return True
+                elif self.first_accumulation_flag and self.overfitting_counter > OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM:
+                    print('Overfitting counter, ', self.overfitting_counter)
+                    logger.info('Overfitting first accumulation\n')
                     return True
             else:
                 self.overfitting_counter = 0

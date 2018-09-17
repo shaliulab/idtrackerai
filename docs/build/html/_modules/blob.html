@@ -283,8 +283,8 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">direction</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span><span class="c1"># or\</span>
                 <span class="k">return</span> <span class="kc">True</span>
                 <span class="k">break</span>
-</div>
-        <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="Blob.is_a_sure_individual"><a class="viewcode-back" href="../preprocessing.html#blob.Blob.is_a_sure_individual">[docs]</a>    <span class="k">def</span> <span class="nf">is_a_sure_individual</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A blob marked as a sure individual will be used to train the Deep</span>
@@ -308,8 +308,8 @@
             <span class="n">has_multiple_next</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_for_multiple_next_or_previous</span><span class="p">(</span><span class="s1">&#39;next&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">has_multiple_previous</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_multiple_next</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">else</span><span class="p">:</span></div>
-            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="Blob.is_a_sure_crossing"><a class="viewcode-back" href="../preprocessing.html#blob.Blob.is_a_sure_crossing">[docs]</a>    <span class="k">def</span> <span class="nf">is_a_sure_crossing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A blob marked as a sure crossing will be used to train the Deep</span>
@@ -332,8 +332,8 @@
             <span class="n">has_multiple_next</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_for_multiple_next_or_previous</span><span class="p">(</span><span class="s1">&#39;next&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">has_multiple_previous</span> <span class="ow">and</span> <span class="n">has_multiple_next</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">else</span><span class="p">:</span></div>
-            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">has_ambiguous_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -356,8 +356,8 @@
         <span class="n">overlaps</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">intersection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">pixels</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">intersection</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">overlaps</span> <span class="o">=</span> <span class="kc">True</span></div>
-        <span class="k">return</span> <span class="n">overlaps</span>
+            <span class="n">overlaps</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">overlaps</span></div>
 
 <div class="viewcode-block" id="Blob.now_points_to"><a class="viewcode-back" href="../preprocessing.html#blob.Blob.now_points_to">[docs]</a>    <span class="k">def</span> <span class="nf">now_points_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Given two consecutive blob objects updates their respective overlapping</span>
@@ -368,8 +368,8 @@
 <span class="sd">        other : &lt;Blob object&gt;</span>
 <span class="sd">            An instance of the class Blob</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">next</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
-        <span class="n">other</span><span class="o">.</span><span class="n">previous</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="n">other</span><span class="o">.</span><span class="n">previous</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Blob.squared_distance_to"><a class="viewcode-back" href="../preprocessing.html#blob.Blob.squared_distance_to">[docs]</a>    <span class="k">def</span> <span class="nf">squared_distance_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the squared distance from the centroid of self to the centroid</span>
@@ -388,8 +388,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Blob</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centroid</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">centroid</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span></div>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centroid</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">other</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centroid</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">other</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Blob.distance_from_countour_to"><a class="viewcode-back" href="../preprocessing.html#blob.Blob.distance_from_countour_to">[docs]</a>    <span class="k">def</span> <span class="nf">distance_from_countour_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the distance between the point passed as input and the closes</span>
@@ -406,8 +406,8 @@
 <span class="sd">            :math:`\min_{c\in \mbox{ blob.contour}}(d(c, point))`, where :math:`d`</span>
 <span class="sd">            is the Euclidean distance.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span></div>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">pointPolygonTest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contour</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">pointPolygonTest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contour</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">used_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -473,8 +473,8 @@
 <span class="sd">        Bool</span>
 <span class="sd">            True if the blob is in the core of a global fragment</span>
 
-<span class="sd">        &quot;&quot;&quot;</span></div>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -550,8 +550,8 @@
         <span class="k">if</span> <span class="n">model_area</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">area</span><span class="p">)</span> <span class="ow">or</span> <span class="n">number_of_blobs</span> <span class="o">==</span> <span class="n">number_of_animals</span> <span class="ow">or</span> <span class="n">video</span><span class="o">.</span><span class="n">number_of_animals</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1">#Checks if area is compatible with the model area we built</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_image_for_identification</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_an_individual</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">else</span><span class="p">:</span></div>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_is_a_crossing</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_a_crossing</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="Blob.set_image_for_identification"><a class="viewcode-back" href="../preprocessing.html#blob.Blob.set_image_for_identification">[docs]</a>    <span class="k">def</span> <span class="nf">set_image_for_identification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set the image that will be used to identitfy the animal with the idCNN</span>
@@ -563,8 +563,8 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_image_for_identification</span><span class="p">,</span> \
-        <span class="bp">self</span><span class="o">.</span><span class="n">_extreme1_coordinates</span><span class="p">,</span> \</div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_extreme2_coordinates</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_image_for_identification</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extreme1_coordinates</span><span class="p">,</span> \
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extreme2_coordinates</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_image_for_identification</span><span class="p">(</span><span class="n">video</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Blob.get_image_for_identification"><a class="viewcode-back" href="../preprocessing.html#blob.Blob.get_image_for_identification">[docs]</a>    <span class="k">def</span> <span class="nf">get_image_for_identification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">image_size</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute the image that will be used to identify the animal with the idCNN</span>
@@ -591,8 +591,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_image_for_identification</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
                                                 <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixels</span><span class="p">,</span>
                                                 <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box_in_frame_coordinates</span><span class="p">,</span>
-                                                <span class="n">image_size</span><span class="p">,</span></div>
-                                                <span class="n">folder_to_save_for_paper_figure</span> <span class="o">=</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">)</span>
+                                                <span class="n">image_size</span><span class="p">,</span>
+                                                <span class="n">folder_to_save_for_paper_figure</span> <span class="o">=</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">)</span></div>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_image_for_identification</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">bounding_box_image</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">bounding_box_in_frame_coordinates</span><span class="p">,</span> <span class="n">identification_image_size</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
@@ -680,8 +680,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_nose_coordinates</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">noseFull</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_head_coordinates</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">head_centroid_full</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_nose_coordinates</span> <span class="o">=</span> <span class="kc">None</span></div></div>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_head_coordinates</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nose_coordinates</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_head_coordinates</span> <span class="o">=</span> <span class="kc">None</span></div></div>
 
 <div class="viewcode-block" id="remove_background_pixels"><a class="viewcode-back" href="../preprocessing.html#blob.remove_background_pixels">[docs]</a><span class="k">def</span> <span class="nf">remove_background_pixels</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">bounding_box_image</span><span class="p">,</span> <span class="n">pixels</span><span class="p">,</span> <span class="n">bounding_box_in_frame_coordinates</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Removes the background pixels substiuting them with a homogeneous black</span>
@@ -710,7 +710,7 @@
 <span class="sd">        Image with black background pixels</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">pxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">pixels</span><span class="p">,(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">pxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">pixels</span><span class="p">,</span> <span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
     <span class="n">pxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pxs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounding_box_in_frame_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">pxs</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounding_box_in_frame_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
     <span class="n">temp_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">bounding_box_image</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
     <span class="n">temp_image</span><span class="p">[</span><span class="n">pxs</span><span class="p">[</span><span class="mi">0</span><span class="p">,:],</span> <span class="n">pxs</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]]</span> <span class="o">=</span> <span class="mi">255</span>
@@ -731,11 +731,10 @@
         <span class="n">save_preprocessing_step_image</span><span class="p">(</span><span class="n">new_bounding_box_image</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;2_blob_bw_dilated&#39;</span><span class="p">,</span>  <span class="n">min_max</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
     <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">temp_image</span> <span class="o">==</span> <span class="mi">255</span><span class="p">)</span>
     <span class="n">dilated_pixels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">])</span>
-
     <span class="n">temp_image</span><span class="p">[</span><span class="n">dilated_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">,:],</span> <span class="n">dilated_pixels</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]]</span> <span class="o">=</span> <span class="n">bounding_box_image</span><span class="p">[</span><span class="n">dilated_pixels</span><span class="p">[</span><span class="mi">0</span><span class="p">,:],</span> <span class="n">dilated_pixels</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]]</span>
     <span class="k">if</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">:</span>
-        <span class="n">save_preprocessing_step_image</span><span class="p">(</span><span class="n">temp_image</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;3_blob_contour_dilated&#39;</span><span class="p">,</span>  <span class="n">min_max</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span></div>
-    <span class="k">return</span> <span class="n">temp_image</span>
+        <span class="n">save_preprocessing_step_image</span><span class="p">(</span><span class="n">temp_image</span><span class="o">/</span><span class="mi">255</span><span class="p">,</span> <span class="n">folder_to_save_for_paper_figure</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;3_blob_contour_dilated&#39;</span><span class="p">,</span>  <span class="n">min_max</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">temp_image</span></div>
 
 <div class="viewcode-block" id="full2miniframe"><a class="viewcode-back" href="../preprocessing.html#blob.full2miniframe">[docs]</a><span class="k">def</span> <span class="nf">full2miniframe</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">boundingBox</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Maps a point in the fullframe to the coordinate system defined by the image</span>
@@ -754,8 +753,8 @@
 <span class="sd">    tuple</span>
 <span class="sd">        :math:`(x^\prime, y^\prime)`</span>
 
-<span class="sd">    &quot;&quot;&quot;</span></div>
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]]))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">boundingBox</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]]))</span></div>
 
 <span class="k">def</span> <span class="nf">save_preprocessing_step_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">save_folder</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">min_max</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">draw_line</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
@@ -795,10 +794,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

@@ -617,7 +617,7 @@ def remove_background_pixels(height, width, bounding_box_image, pixels, bounding
         Image with black background pixels
 
     """
-    pxs = np.array(np.unravel_index(pixels,(height, width))).T
+    pxs = np.array(np.unravel_index(pixels, (height, width))).T
     pxs = np.array([pxs[:, 0] - bounding_box_in_frame_coordinates[0][1], pxs[:, 1] - bounding_box_in_frame_coordinates[0][0]])
     temp_image = np.zeros_like(bounding_box_image).astype('uint8')
     temp_image[pxs[0,:], pxs[1,:]] = 255
@@ -638,7 +638,6 @@ def remove_background_pixels(height, width, bounding_box_image, pixels, bounding
         save_preprocessing_step_image(new_bounding_box_image/255, folder_to_save_for_paper_figure, name = '2_blob_bw_dilated',  min_max = [0, 1])
     rows, columns = np.where(temp_image == 255)
     dilated_pixels = np.array([rows, columns])
-
     temp_image[dilated_pixels[0,:], dilated_pixels[1,:]] = bounding_box_image[dilated_pixels[0,:], dilated_pixels[1,:]]
     if folder_to_save_for_paper_figure:
         save_preprocessing_step_image(temp_image/255, folder_to_save_for_paper_figure, name = '3_blob_contour_dilated',  min_max = [0, 1])

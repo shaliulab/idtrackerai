@@ -54,6 +54,7 @@ import os
 import sys
 import copy
 import numpy as np
+import time
 from scipy.stats import mode
 import cv2
 from idtrackerai.preprocessing.segmentation import segment_frame, segment
@@ -110,6 +111,11 @@ class Tracker(BoxLayout):
             self.start_tracking_button.bind(on_release = self.track_single_animal)
             self.start_tracking_button.text = "Get animal\ntrajectory"
             self.start_tracking_button.size_hint = (.2,.3)
+        elif CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments == 1:
+            self.create_main_layout()
+            self.start_tracking_button.bind(on_release = self.track_single_global_fragment_video)
+            self.start_tracking_button.text = "Only one global\nfragment\nwas found.\nThere is not\nneed the\nidentification CNN.\nGet animals\ntrajectories"
+            self.start_tracking_button.size_hint = (.2,.3)
         else:
             CHOSEN_VIDEO.video.accumulation_trial = 0
             delete = not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2'] if 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore.keys() else True
@@ -130,12 +136,16 @@ class Tracker(BoxLayout):
                 self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
                 self.start_tracking_button.text = "Show estimated\naccuracy"
             elif 'residual_identification' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['residual_identification']:
-                print('-',1)
-                Logger.info("Restoring residual identification")
-                self.restore_identification()
-                CHOSEN_VIDEO.video._has_been_assigned = True
-                self.start_tracking_button.bind(on_release = self.start_from_post_processing)
-                self.start_tracking_button.text = "Start\npost-processing"
+                if CHOSEN_VIDEO.video.track_wo_identities:
+                    self.restore_trajectories()
+                    self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
+                    self.start_tracking_button.text = "Show estimated\naccuracy"
+                else:
+                    Logger.info("Restoring residual identification")
+                    self.restore_identification()
+                    CHOSEN_VIDEO.video._has_been_assigned = True
+                    self.start_tracking_button.bind(on_release = self.start_from_post_processing)
+                    self.start_tracking_button.text = "Start\npost-processing"
             elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
                 print('-',2)
                 Logger.info("Restoring second accumulation")
@@ -162,8 +172,7 @@ class Tracker(BoxLayout):
                 self.start_tracking_button.bind(on_release = self.accumulate)
                 self.start_tracking_button.text = "Start\naccumulation\n(protocol 3)"
             elif 'protocols1_and_2' in CHOSEN_VIDEO.processes_to_restore and CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
-                print('-',4)
-                Logger.info("Restoring protocol 1")
+                Logger.info("Restoring protocol 1 and 2")
                 self.restoring_first_accumulation = True
                 self.restore_first_accumulation()
                 self.accumulation_manager.ratio_accumulated_images = CHOSEN_VIDEO.video.percentage_of_accumulated_images[0]
@@ -177,10 +186,30 @@ class Tracker(BoxLayout):
                 print('-',5)
                 Logger.info("Starting protocol cascade")
                 self.start_tracking_button.bind(on_release = self.protocol1)
+                self.track_wo_identities_button.bind(on_release = self.track_wo_identities)
 
     def track_single_animal(self, *args):
-        [setattr(blob, '_identity', 1) for blobs_in_frame in
-         CHOSEN_VIDEO.list_of_blobs.blobs_in_video for blob in blobs_in_frame]
+        [setattr(b, '_identity', 1) for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
+        [setattr(b, '_P2_vector', [1.]) for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
+        [setattr(b, 'frame_number', frame_number) for frame_number, bf in enumerate(CHOSEN_VIDEO.list_of_blobs.blobs_in_video) for b in bf]
+        self.trajectories_popup.open()
+
+    def track_single_global_fragment_video(self, *args):
+        def get_P2_vector(identity, number_of_animals):
+            P2_vector = np.zeros(number_of_animals)
+            P2_vector[identity] = 1.
+            return P2_vector
+        [setattr(b, '_identity', b.fragment_identifier+1) for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
+        [setattr(b, '_P2_vector', get_P2_vector(b.fragment_identifier, CHOSEN_VIDEO.video.number_of_animals))
+            for bf in CHOSEN_VIDEO.list_of_blobs.blobs_in_video for b in bf]
+        CHOSEN_VIDEO.video.accumulation_trial = 0
+        CHOSEN_VIDEO.video._first_frame_first_global_fragment = [0] # in case
+        self.trajectories_popup.open()
+
+    def track_wo_identities(self, *args):
+        CHOSEN_VIDEO.video.accumulation_trial = 0
+        CHOSEN_VIDEO.video._first_frame_first_global_fragment = [0]
+        CHOSEN_VIDEO.video._track_wo_identities = True
         self.trajectories_popup.open()
 
     def init_accumulation_network(self):
@@ -193,11 +222,14 @@ class Tracker(BoxLayout):
                                     video_path = CHOSEN_VIDEO.video.video_path)
 
     def protocol1(self, *args):
+        Logger.debug("****** setting protocol1 time")
+        CHOSEN_VIDEO.video._protocol1_time = time.time()
         CHOSEN_VIDEO.list_of_fragments.reset(roll_back_to = 'fragmentation')
         CHOSEN_VIDEO.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
-        if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
-            Logger.debug('Setting layers to optimize for knowledge_transfer')
-            self.accumulation_network_params.scopes_layers_to_optimize = None
+        # print("self.accumulation_network_params", self.accumulation_network_params.__dict__)
+        # if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
+        #     Logger.debug('Setting layers to optimize for knowledge_transfer')
+        #     self.accumulation_network_params.scopes_layers_to_optimize = None #['fully-connected1','fully_connected_pre_softmax']
         self.net = ConvNetwork(self.accumulation_network_params)
         if CHOSEN_VIDEO.video.tracking_with_knowledge_transfer:
             Logger.debug('Restoring for knowledge transfer')
@@ -260,29 +292,46 @@ class Tracker(BoxLayout):
         Logger.info("------------------------> Calling accumulate")
         if self.accumulation_step_finished and self.accumulation_manager.continue_accumulation:
             Logger.info("--------------------> Performing accumulation")
+            if self.accumulation_manager.counter == 1 and CHOSEN_VIDEO.video.accumulation_trial == 0:
+                CHOSEN_VIDEO.video._protocol1_time = time.time()-CHOSEN_VIDEO.video.protocol1_time
+                CHOSEN_VIDEO.video._protocol2_time = time.time()
             self.one_shot_accumulation()
         elif not self.accumulation_manager.continue_accumulation\
             and not CHOSEN_VIDEO.video.first_accumulation_finished\
             and self.accumulation_manager.ratio_accumulated_images > THRESHOLD_EARLY_STOP_ACCUMULATION:
             Logger.info("Protocol 1 successful")
             self.save_after_first_accumulation()
+            if 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
+                CHOSEN_VIDEO.video._protocol1_time = time.time()-CHOSEN_VIDEO.video.protocol1_time
             self.identification_popup.open()
         elif not self.accumulation_manager.continue_accumulation\
             and not CHOSEN_VIDEO.video.has_been_pretrained:
             self.save_after_first_accumulation()
             if self.accumulation_manager.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                 Logger.info("Protocol 2 successful")
+                Logger.warning("------------------------ dismissing one shot accumulation popup")
+                self.one_shot_accumulation_popup.dismiss()
+                self.save_after_first_accumulation()
+                if 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
+                    CHOSEN_VIDEO.video._protocol2_time = time.time()-CHOSEN_VIDEO.video.protocol2_time
                 self.identification_popup.open()
             elif self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
                 Logger.info("Protocol 2 failed -> Start protocol 3")
+                if 'protocols1_and_2' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['protocols1_and_2']:
+                    CHOSEN_VIDEO.video._protocol1_time = time.time()-CHOSEN_VIDEO.video.protocol1_time
+                    if CHOSEN_VIDEO.video.protocol2_time != 0:
+                        CHOSEN_VIDEO.video._protocol2_time = time.time()-CHOSEN_VIDEO.video.protocol2_time
+                CHOSEN_VIDEO.video._protocol3_pretraining_time = time.time()
                 self.create_pretraining_popup()
                 self.protocol3()
         elif CHOSEN_VIDEO.video.has_been_pretrained\
             and CHOSEN_VIDEO.video.accumulation_trial < MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS\
-            and self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION :
+            and self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
             Logger.info("Accumulation in protocol 3 is not successful. Opening parachute ...")
+            if CHOSEN_VIDEO.video.accumulation_trial == 0:
+                CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()
             CHOSEN_VIDEO.video.accumulation_trial += 1
-            if not self.accumulation_manager.continue_accumulation:
+            if not self.accumulation_manager.continue_accumulation and CHOSEN_VIDEO.video.accumulation_trial > 1:
                 self.save_and_update_accumulation_parameters_in_parachute()
             self.accumulation_parachute_init(CHOSEN_VIDEO.video.accumulation_trial)
             self.accumulation_loop()
@@ -290,6 +339,12 @@ class Tracker(BoxLayout):
             (self.accumulation_manager.ratio_accumulated_images >= THRESHOLD_ACCEPTABLE_ACCUMULATION\
             or CHOSEN_VIDEO.video.accumulation_trial >= MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS):
             Logger.info("Accumulation after protocol 3 has been successful")
+            if 'protocol3_accumulation' not in CHOSEN_VIDEO.processes_to_restore:
+                CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()-CHOSEN_VIDEO.video.protocol3_accumulation_time
+            elif 'protocol3_accumulation' in CHOSEN_VIDEO.processes_to_restore and not CHOSEN_VIDEO.processes_to_restore['protocol3_accumulation']:
+                CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()-CHOSEN_VIDEO.video.protocol3_accumulation_time
+            else:
+                CHOSEN_VIDEO.video._protocol3_accumulation_time = time.time()-CHOSEN_VIDEO.video.protocol3_accumulation_time
             Logger.warning("************************ Unscheduling accumulate")
             Clock.unschedule(self.accumulate)
             Logger.warning("------------------------ dismissing one shot accumulation popup")
@@ -371,10 +426,13 @@ class Tracker(BoxLayout):
             CHOSEN_VIDEO.video._first_accumulation_finished = True
             CHOSEN_VIDEO.video._ratio_accumulated_images = self.accumulation_manager.ratio_accumulated_images
             CHOSEN_VIDEO.video._percentage_of_accumulated_images = [CHOSEN_VIDEO.video.ratio_accumulated_images]
+            CHOSEN_VIDEO.video._accumulation_network_params = self.accumulation_network_params
             CHOSEN_VIDEO.video.save()
             CHOSEN_VIDEO.list_of_fragments.save(CHOSEN_VIDEO.video.fragments_path)
             CHOSEN_VIDEO.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
             CHOSEN_VIDEO.list_of_fragments.save_light_list(CHOSEN_VIDEO.video._accumulation_folder)
+
+
 
     def save_after_second_accumulation(self):
         Logger.info("Saving second accumulation parameters")
@@ -388,6 +446,11 @@ class Tracker(BoxLayout):
         Logger.info("Saving global fragments")
         CHOSEN_VIDEO.list_of_fragments.save(CHOSEN_VIDEO.video.fragments_path)
         CHOSEN_VIDEO.list_of_global_fragments.save(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
+        Logger.info("Restoring networks to best second accumulation")
+        self.accumulation_network_params.restore_folder = CHOSEN_VIDEO.video._accumulation_folder
+        self.net = ConvNetwork(self.accumulation_network_params)
+        self.net.restore()
+        CHOSEN_VIDEO.video._accumulation_network_params = self.accumulation_network_params
         CHOSEN_VIDEO.video.save()
 
 
@@ -402,6 +465,7 @@ class Tracker(BoxLayout):
                                                 save_folder = CHOSEN_VIDEO.video.pretraining_folder,
                                                 image_size = CHOSEN_VIDEO.video.identification_image_size,
                                                 video_path = CHOSEN_VIDEO.video.video_path)
+        CHOSEN_VIDEO.video._pretraining_network_params = self.pretrain_network_params
 
     def init_pretraining_variables(self):
         self.init_pretraining_net()
@@ -432,6 +496,8 @@ class Tracker(BoxLayout):
             CHOSEN_VIDEO.video._has_been_pretrained = True
             Clock.unschedule(self.continue_pretraining)
             Logger.warning('Calling accumulate from continue_pretraining')
+            Logger.debug('****** saving protocol3 pretraining time')
+            CHOSEN_VIDEO.video._protocol3_pretraining_time = time.time()-CHOSEN_VIDEO.video.protocol3_pretraining_time
             self.accumulate()
 
     def one_shot_pretraining(self, *args):
@@ -452,7 +518,7 @@ class Tracker(BoxLayout):
                                                     self.store_validation_accuracy_and_loss_data_pretrain,
                                                     print_flag = False,
                                                     plot_flag = False,
-                                                    batch_size = self.batch_size,
+                                                    batch_size = BATCH_SIZE_IDCNN,
                                                     canvas_from_GUI = self.pretrain_fig_canvas)
         self.pretraining_counter += 1
         self.pretraining_counter_value.text = str(self.pretraining_counter)
@@ -475,6 +541,7 @@ class Tracker(BoxLayout):
         self.pretraining_step_finished = True
 
     def identify(self, *args):
+        CHOSEN_VIDEO.video._identify_time = time.time()
         Logger.warning("In identify")
         CHOSEN_VIDEO.list_of_fragments.reset(roll_back_to = 'accumulation')
         Logger.warning("Calling assigner")
@@ -511,24 +578,33 @@ class Tracker(BoxLayout):
         CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video,
                                         CHOSEN_VIDEO.video.blobs_path,
                                         number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
+        CHOSEN_VIDEO.video._identify_time = time.time()-CHOSEN_VIDEO.video.identify_time
         self.trajectories_popup.open()
 
     def create_trajectories(self, *args):
+        CHOSEN_VIDEO.video._create_trajectories_time = time.time()
         if 'post_processing' not in CHOSEN_VIDEO.processes_to_restore or not CHOSEN_VIDEO.processes_to_restore['post_processing']:
-            CHOSEN_VIDEO.video.create_trajectories_folder()
-            trajectories_file = os.path.join(CHOSEN_VIDEO.video.trajectories_folder, 'trajectories.npy')
-            trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
+            if not CHOSEN_VIDEO.video.track_wo_identities:
+                CHOSEN_VIDEO.video.create_trajectories_folder()
+                trajectories_file = os.path.join(CHOSEN_VIDEO.video.trajectories_folder, 'trajectories.npy')
+                trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
+            else:
+                CHOSEN_VIDEO.video.create_trajectories_wo_identities_folder()
+                trajectories_file = os.path.join(CHOSEN_VIDEO.video.trajectories_wo_identities_folder, 'trajectories_wo_identities.npy')
+                trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
             np.save(trajectories_file, trajectories)
             Logger.info("Saving trajectories")
+            np.save(trajectories_file, trajectories)
         CHOSEN_VIDEO.video._has_trajectories = True
         CHOSEN_VIDEO.video.save()
         self.trajectories_popup.dismiss()
-        if CHOSEN_VIDEO.video.number_of_animals != 1:
+        if CHOSEN_VIDEO.video.number_of_animals != 1 and CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments != 1 and not CHOSEN_VIDEO.video.track_wo_identities:
             self.interpolate_crossings_popup.open()
         else:
             CHOSEN_VIDEO.video.overall_P2 = 1.
             CHOSEN_VIDEO.video._has_been_assigned = True
             CHOSEN_VIDEO.video._has_crossings_solved = False
+            CHOSEN_VIDEO.video._has_trajectories_wo_gaps = False
             CHOSEN_VIDEO.list_of_blobs.save(CHOSEN_VIDEO.video,
                                             CHOSEN_VIDEO.video.blobs_path,
                                             number_of_chunks = CHOSEN_VIDEO.video.number_of_frames)
@@ -562,6 +638,7 @@ class Tracker(BoxLayout):
         trajectories = produce_output_dict(CHOSEN_VIDEO.list_of_blobs.blobs_in_video, CHOSEN_VIDEO.video)
         np.save(trajectories_file, trajectories)
         CHOSEN_VIDEO.video.save()
+        CHOSEN_VIDEO.video._create_trajectories_time = time.time()-CHOSEN_VIDEO.video.create_trajectories_time
         self.trajectories_wo_gaps_popup.dismiss()
 
     def update_and_show_happy_ending_popup(self, *args):
@@ -589,10 +666,14 @@ class Tracker(BoxLayout):
                     'first_frame_first_global_fragment', 'pretraining_folder',
                     'has_been_pretrained', 'has_been_assigned',
                     'has_crossings_solved','has_trajectories',
-                    'has_trajectories_wo_gaps']
+                    'has_trajectories_wo_gaps',
+                    'protocol1_time', 'protocol2_time',
+                    'protocol3_pretraining_time', 'protocol3_accumulation_time',
+                    'identify_time', 'create_trajectories_time']
         is_property = [True, True, False, False, False, False, False, False,
                         False, False, False, False, True, False, True, True,
-                        True, False, True, True, True, True, True, True, True]
+                        True, False, True, True, True, True, True, True, True,
+                        True, True, True, True, True, True]
         CHOSEN_VIDEO.video.copy_attributes_between_two_video_objects(CHOSEN_VIDEO.old_video, list_of_attributes, is_property = is_property)
 
     def restore_first_accumulation(self):
@@ -605,6 +686,7 @@ class Tracker(BoxLayout):
         self.net = ConvNetwork(self.accumulation_network_params)
         self.net.restore()
         Logger.info("Saving video")
+        CHOSEN_VIDEO.video._has_been_pretrained = False
         CHOSEN_VIDEO.video.save()
         CHOSEN_VIDEO.list_of_fragments.save_light_list(CHOSEN_VIDEO.video._accumulation_folder)
 
@@ -617,6 +699,7 @@ class Tracker(BoxLayout):
         self.accumulation_manager = AccumulationManager(CHOSEN_VIDEO.video, CHOSEN_VIDEO.list_of_fragments,
                                                     CHOSEN_VIDEO.list_of_global_fragments,
                                                     threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+        CHOSEN_VIDEO.video.accumulation_trial = 0
         CHOSEN_VIDEO.video.save()
 
     def restore_second_accumulation(self):
@@ -662,9 +745,11 @@ class Tracker(BoxLayout):
     def create_main_layout(self):
         self.start_tracking_button = Button(text = "Start protocol cascade")
         self.control_panel.add_widget(self.start_tracking_button)
-        if CHOSEN_VIDEO.video.number_of_animals != 1:
+        if CHOSEN_VIDEO.video.number_of_animals != 1 and CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments != 1:
             self.advanced_controls_button = Button(text = "Advanced idCNN\ncontrols")
             self.control_panel.add_widget(self.advanced_controls_button)
+            self.track_wo_identities_button = Button(text = "Track without identities")
+            self.control_panel.add_widget(self.track_wo_identities_button)
             self.generate_tensorboard_label = CustomLabel(font_size = 16,
                                                         text = "Save tensorboard summaries",
                                                         size_hint = (1.,.5))
@@ -697,20 +782,18 @@ class Tracker(BoxLayout):
     def create_advanced_controls_popup(self):
         self.container = BoxLayout(orientation = "vertical")
         self.parameters_grid = GridLayout(cols = 2)
-        self.disclaimer_box = BoxLayout(size_hint = (1.,.2))
-        self.disclaimer = CustomLabel(font_size = 14, text = "Modify the idCNN parameters only if you fully understand the feature that you are changing. "+
+        self.disclaimer_box = BoxLayout(size_hint = (1,.3))
+        self.disclaimer = CustomLabel(font_size = 14, text = "Modify the identification network parameters only if you fully understand the feature that you are changing. "+
                                                     "After modifying each parameter press return. Click outside of the popup to go back to the main window")
         self.disclaimer_box.add_widget(self.disclaimer)
         self.container.add_widget(self.disclaimer_box)
         self.container.add_widget(self.parameters_grid)
-        self.mod_cnn_model_label = CustomLabel(font_size = 14, text = "CNN model: ")
+        self.mod_cnn_model_label = CustomLabel(font_size = 14, text = "CNN model (add your model in the cnn_architectures.py module): ")
         self.mod_cnn_model_text_input = TextInput(text = self.str_model, multiline=False)
         self.mod_learning_rate_label = CustomLabel(font_size = 14, text = "Learning rate")
         self.mod_learning_rate_text_input = TextInput(text = self.str_lr, multiline=False)
         self.mod_keep_prob_label = CustomLabel(font_size = 14, text = "Dropout ratio. If 1.0, no dropout is performed (for fully connected layers excluding softmax): ")
         self.mod_keep_prob_text_input = TextInput(text = self.str_kp, multiline=False)
-        self.mod_batch_size_label = CustomLabel(font_size = 14, text = "Batch size (at current state it does nothing!!!!):")
-        self.mod_batch_size_text_input = TextInput(text = self.str_batch_size, multiline=False)
         self.mod_optimiser_label = CustomLabel(font_size = 14, text = "Optimiser. Acceptable optimisers: SGD and Adam ")
         self.mod_optimiser_text_input = TextInput(text = self.str_optimiser, multiline=False)
         self.mod_scopes_layers_to_optimize_label = CustomLabel(font_size = 14, text = "Layers to train. Either all or fully")
@@ -719,10 +802,11 @@ class Tracker(BoxLayout):
         self.mod_save_folder_text_input = TextInput(text = self.save_folder, multiline=False)
         self.mod_knowledge_transfer_folder_label = CustomLabel(font_size = 14, text = "Knowledge transfer folder [path to load convolutional weights from a pre-trained model]: ")
         self.mod_knowledge_transfer_folder_text_input = TextInput(text = self.knowledge_transfer_folder, multiline=False)
+        # self.mod_kt_conv_layers_to_discard_label = CustomLabel(font_size = 14, text = "Convolutional layers to discard from the transfered network. (e.g: conv3, conv2)")
+        # self.mod_kt_conv_layers_to_discard_text_input = TextInput(text = self.kt_conv_layers_to_discard, multiline=False)
         items_to_add = [self.mod_cnn_model_label, self.mod_cnn_model_text_input,
                         self.mod_learning_rate_label, self.mod_learning_rate_text_input,
                         self.mod_keep_prob_label, self.mod_keep_prob_text_input,
-                        self.mod_batch_size_label, self.mod_batch_size_text_input,
                         self.mod_optimiser_label, self.mod_optimiser_text_input,
                         self.mod_scopes_layers_to_optimize_label,
                         self.mod_scopes_layers_to_optimize_text_input,
@@ -730,21 +814,23 @@ class Tracker(BoxLayout):
                         self.mod_save_folder_text_input,
                         self.mod_knowledge_transfer_folder_label,
                         self.mod_knowledge_transfer_folder_text_input]
+                        # self.mod_kt_conv_layers_to_discard_label,
+                        # self.mod_kt_conv_layers_to_discard_text_input]
         [self.parameters_grid.add_widget(item) for item in items_to_add]
-        self.advanced_controls_popup = Popup(title='Advanced idCNN controls',
-            content=self.container,
-            size_hint=(.8,.66))
+        self.advanced_controls_popup = Popup(title='Advanced identification network controls',
+                                             content=self.container,
+                                             size_hint=(.9,.9))
         self.bind_network_controls()
 
     def bind_network_controls(self):
         self.mod_cnn_model_text_input.bind(on_text_validate = self.on_enter_mod_cnn_model_text_input)
         self.mod_learning_rate_text_input.bind(on_text_validate = self.on_enter_mod_learning_rate_text_input)
         self.mod_keep_prob_text_input.bind(on_text_validate = self.on_enter_mod_keep_prob_text_input)
-        self.mod_batch_size_text_input.bind(on_text_validate = self.on_enter_mod_batch_size_text_input)
         self.mod_optimiser_text_input.bind(on_text_validate = self.on_enter_mod_optimiser_text_input)
         self.mod_scopes_layers_to_optimize_text_input.bind(on_text_validate = self.on_enter_mod_scopes_layers_to_optimize_text_input)
         self.mod_save_folder_text_input.bind(on_text_validate = self.on_enter_mod_save_folder_text_input)
         self.mod_knowledge_transfer_folder_text_input.bind(on_text_validate = self.on_enter_mod_knowledge_transfer_folder_text_input)
+        # self.mod_kt_conv_layers_to_discard_text_input.bind(on_text_validate = self.on_enter_mod_kt_conv_layers_to_discard_text_input)
 
     def on_enter_mod_cnn_model_text_input(self, *args):
         self.accumulation_network_params._cnn_model = int(self.mod_cnn_model_text_input.text)
@@ -758,9 +844,6 @@ class Tracker(BoxLayout):
         self.accumulation_network_params.keep_prob = float(self.mod_keep_prob_text_input.text)
         self.keep_prob_value.text = self.mod_keep_prob_text_input.text
 
-    def on_enter_mod_batch_size_text_input(self, *args):
-        self.batch_size = int(self.mod_batch_size_text_input.text)
-        self.batch_size_value.text = sself.mod_batch_size_text_input.text
 
     def on_enter_mod_optimiser_text_input(self, *args):
         if  self.mod_optimiser_text_input.text == "SGD":
@@ -775,7 +858,7 @@ class Tracker(BoxLayout):
             scopes_layers_to_optimize = None
         elif self.mod_scopes_layers_to_optimize_text_input.text == "fully":
             scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax']
-        self.accumulation_network_params = scopes_layers_to_optimize
+        self.accumulation_network_params.scopes_layers_to_optimize = scopes_layers_to_optimize
         self.scopes_layers_to_optimize_value.text = self.mod_scopes_layers_to_optimize_text_input.text
 
     def on_enter_mod_save_folder_text_input(self, *args):
@@ -785,27 +868,36 @@ class Tracker(BoxLayout):
     def on_enter_mod_knowledge_transfer_folder_text_input(self, *args):
         self.accumulation_network_params._knowledge_transfer_folder = self.mod_knowledge_transfer_folder_text_input.text
         self.knowledge_transfer_folder_value.text = self.mod_knowledge_transfer_folder_text_input.text
-        # print("------------ ", self.accumulation_network_params.knowledge_transfer_folder)
         if os.path.isdir(self.accumulation_network_params.knowledge_transfer_folder):
             CHOSEN_VIDEO.video._tracking_with_knowledge_transfer = True
+            CHOSEN_VIDEO.video._knowledge_transfer_model_folder = self.accumulation_network_params._knowledge_transfer_folder
+
+    # def on_enter_mod_kt_conv_layers_to_discard_text_input(self, *args):
+    #     print("******",self.mod_kt_conv_layers_to_discard_text_input.text)
+    #     if self.mod_kt_conv_layers_to_discard_text_input.text == 'None':
+    #         print("is None")
+    #         self.accumulation_network_params._kt_conv_layers_to_discard = None
+    #     else:
+    #         print("is not None")
+    #         self.accumulation_network_params._kt_conv_layers_to_discard = self.mod_kt_conv_layers_to_discard_text_input.text
+    #         CHOSEN_VIDEO.video._kt_conv_layers_to_discard = self.accumulation_network_params._kt_conv_layers_to_discard
+
 
     def network_params_to_string(self):
         self.str_model = str(self.accumulation_network_params.cnn_model)
         self.str_lr = str(self.accumulation_network_params.learning_rate)
         self.str_kp = str(self.accumulation_network_params.keep_prob)
-        self.batch_size = BATCH_SIZE_IDCNN
-        self.str_batch_size = str(self.batch_size)
         self.str_optimiser = "SGD" if not self.accumulation_network_params.use_adam_optimiser else "Adam"
         self.str_layers_to_train = "all" if self.accumulation_network_params.scopes_layers_to_optimize is None else str(self.accumulation_network_params.scopes_layers_to_optimize)
         self.restore_folder = self.accumulation_network_params.restore_folder if self.accumulation_network_params.restore_folder is not None else 'None'
         self.save_folder = self.accumulation_network_params.save_folder if self.accumulation_network_params.save_folder is not None else 'None'
         self.knowledge_transfer_folder = self.accumulation_network_params.knowledge_transfer_folder if self.accumulation_network_params.knowledge_transfer_folder is not None else 'None'
+        # self.kt_conv_layers_to_discard = self.accumulation_network_params.kt_conv_layers_to_discard if self.accumulation_network_params.kt_conv_layers_to_discard is not None else 'None'
 
     def create_network_params_labels(self):
         self.cnn_model_label = CustomLabel(font_size = 14, text = "CNN model: ", halign = "left")
         self.learning_rate_label = CustomLabel(font_size = 14, text = "learning_rate: ", halign = "left")
         self.keep_prob_label = CustomLabel(font_size = 14, text = "Dropout ratio: ", halign = "left")
-        self.batch_size_label = CustomLabel(font_size = 14, text = "Batch size: ", halign = "left")
         self.optimiser_label = CustomLabel(font_size = 14, text = "Optimiser: ", halign = "left")
         self.scopes_layers_to_optimize_label = CustomLabel(font_size = 14, text = "Layers to train: ", halign = "left")
         self.restore_folder_label = CustomLabel(font_size = 14, text = "Restore Folder: ", halign = "left")
@@ -818,7 +910,6 @@ class Tracker(BoxLayout):
         self.cnn_model_value = CustomLabel(font_size = 14, text = self.str_model, halign = "left")
         self.learning_rate_value = CustomLabel(font_size = 14, text = self.str_lr, halign = "left")
         self.keep_prob_value = CustomLabel(font_size = 14, text = self.str_kp, halign = "left")
-        self.batch_size_value = CustomLabel(font_size = 14, text = self.str_batch_size, halign = "left")
         self.optimiser_value = CustomLabel(font_size = 14, text = self.str_optimiser, halign = "left")
         self.scopes_layers_to_optimize_value = CustomLabel(font_size = 14, text = self.str_layers_to_train, halign = "left")
         self.restore_folder_value = CustomLabel(font_size = 14, text = self.restore_folder, halign = "left")
@@ -829,14 +920,12 @@ class Tracker(BoxLayout):
     def create_display_network_parameters(self):
         self.get_network_parameters()
         self.network_parameters_box = BoxLayout(orientation = "vertical")
-        self.network_parameters_box_title = CustomLabel(font_size = 20, text = "idCNN parameters:", size_hint = (1.,.1), halign = "left")
+        self.network_parameters_box_title = CustomLabel(font_size = 20, text = "identificaiton network parameters:", size_hint = (1.,.1), halign = "left")
         self.network_parameters_grid = GridLayout(cols = 2)
         network_parameters_labels = [self.cnn_model_label, self.cnn_model_value,
                                     self.learning_rate_label,
                                     self.learning_rate_value,
                                     self.keep_prob_label, self.keep_prob_value,
-                                    self.batch_size_label,
-                                    self.batch_size_value,
                                     self.optimiser_label, self.optimiser_value,
                                     self.scopes_layers_to_optimize_label,
                                     self.scopes_layers_to_optimize_value,

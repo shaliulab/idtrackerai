@@ -160,16 +160,16 @@
 <div class="viewcode-block" id="DataSet.consistency_check"><a class="viewcode-back" href="../idCNN.html#get_data.DataSet.consistency_check">[docs]</a>    <span class="k">def</span> <span class="nf">consistency_check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Checks that the length of :attr:`images` and :attr:`labels` is the same</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span></div>
-            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DataSet.convert_labels_to_one_hot"><a class="viewcode-back" href="../idCNN.html#get_data.DataSet.convert_labels_to_one_hot">[docs]</a>    <span class="k">def</span> <span class="nf">convert_labels_to_one_hot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Converts labels from dense format to one hot format</span>
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
 <span class="sd">        :func:`~get_data.shuffle_images_and_labels`</span>
-<span class="sd">        &quot;&quot;&quot;</span></div></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">dense_to_one_hot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">n_classes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">dense_to_one_hot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">n_classes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="duplicate_PCA_images"><a class="viewcode-back" href="../idCNN.html#get_data.duplicate_PCA_images">[docs]</a><span class="k">def</span> <span class="nf">duplicate_PCA_images</span><span class="p">(</span><span class="n">training_images</span><span class="p">,</span> <span class="n">training_labels</span><span class="p">):</span>
@@ -195,8 +195,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">augmented_images</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">rot90</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">training_images</span><span class="p">]</span>
     <span class="n">training_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">training_images</span><span class="p">,</span> <span class="n">augmented_images</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="n">training_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">training_labels</span><span class="p">,</span> <span class="n">training_labels</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span></div>
-    <span class="k">return</span> <span class="n">training_images</span><span class="p">,</span> <span class="n">training_labels</span>
+    <span class="n">training_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">training_labels</span><span class="p">,</span> <span class="n">training_labels</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">training_images</span><span class="p">,</span> <span class="n">training_labels</span></div>
 
 <div class="viewcode-block" id="split_data_train_and_validation"><a class="viewcode-back" href="../idCNN.html#get_data.split_data_train_and_validation">[docs]</a><span class="k">def</span> <span class="nf">split_data_train_and_validation</span><span class="p">(</span><span class="n">number_of_animals</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">validation_proportion</span> <span class="o">=</span> <span class="n">VALIDATION_PROPORTION</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Splits a set of `images` and `labels` into training and validation sets</span>
@@ -253,8 +253,8 @@
     <span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span> <span class="o">=</span> <span class="n">duplicate_PCA_images</span><span class="p">(</span><span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">)</span>
     <span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span> <span class="o">=</span> <span class="n">shuffle_images_and_labels</span><span class="p">(</span><span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">)</span>
     <span class="n">validation_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">validation_images</span><span class="p">)</span>
-    <span class="n">validation_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">validation_labels</span><span class="p">)</span></div>
-    <span class="k">return</span> <span class="n">DataSet</span><span class="p">(</span><span class="n">number_of_animals</span><span class="p">,</span> <span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">),</span> <span class="n">DataSet</span><span class="p">(</span><span class="n">number_of_animals</span><span class="p">,</span> <span class="n">validation_images</span><span class="p">,</span> <span class="n">validation_labels</span><span class="p">)</span>
+    <span class="n">validation_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">validation_labels</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">DataSet</span><span class="p">(</span><span class="n">number_of_animals</span><span class="p">,</span> <span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">),</span> <span class="n">DataSet</span><span class="p">(</span><span class="n">number_of_animals</span><span class="p">,</span> <span class="n">validation_images</span><span class="p">,</span> <span class="n">validation_labels</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="shuffle_images_and_labels"><a class="viewcode-back" href="../idCNN.html#get_data.shuffle_images_and_labels">[docs]</a><span class="k">def</span> <span class="nf">shuffle_images_and_labels</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Shuffles images and labels with a random</span>
@@ -262,8 +262,8 @@
     <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
     <span class="n">images</span> <span class="o">=</span> <span class="n">images</span><span class="p">[</span><span class="n">perm</span><span class="p">]</span>
-    <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">perm</span><span class="p">]</span></div>
-    <span class="k">return</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">perm</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span></div>
 
 <div class="viewcode-block" id="dense_to_one_hot"><a class="viewcode-back" href="../idCNN.html#get_data.dense_to_one_hot">[docs]</a><span class="k">def</span> <span class="nf">dense_to_one_hot</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">n_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convert class labels from scalars to one-hot vectors.&quot;&quot;&quot;</span>
@@ -271,8 +271,8 @@
     <span class="n">n_labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">index_offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_labels</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_classes</span>
     <span class="n">labels_one_hot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_labels</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-    <span class="n">labels_one_hot</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">index_offset</span> <span class="o">+</span> <span class="n">labels</span><span class="o">.</span><span class="n">ravel</span><span class="p">()]</span> <span class="o">=</span> <span class="mi">1</span></div>
-    <span class="k">return</span> <span class="n">labels_one_hot</span>
+    <span class="n">labels_one_hot</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="n">index_offset</span> <span class="o">+</span> <span class="n">labels</span><span class="o">.</span><span class="n">ravel</span><span class="p">()]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">labels_one_hot</span></div>
 </pre></div>
 
           </div>
@@ -295,10 +295,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

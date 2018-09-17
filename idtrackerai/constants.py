@@ -34,7 +34,7 @@ MAX_FLOAT = sys.float_info[0]
 #######################################
 ##########       video      ###########
 #######################################
-AVAILABLE_VIDEO_EXTENSION = ['.avi', '.mp4', '.mpg', '.MOV']
+AVAILABLE_VIDEO_EXTENSION = ['.avi', '.AVI', '.mp4', '.MP4', '.mpg', '.MPG', '.mov', '.MOV']
 '''***FRAMES_PER_EPISODE***
 Number of frames per video chunk. Used to parallelise processes
 '''
@@ -43,6 +43,30 @@ FRAMES_PER_EPISODE = 500
 #######################################
 ##########   preprocessing  ###########
 #######################################
+"""***MIN_AREA_LOWER, MIN_AREA_UPPER***
+Lower and upper bounds for the minimum area slider
+"""
+MIN_AREA_LOWER, MIN_AREA_UPPER = 0, 10000
+"""***MIN_AREA_DEFAULT***
+Default value for min area in preprocessing
+"""
+MIN_AREA_DEFAULT = 150
+"""***MAX_AREA_LOWER, MAX_AREA_UPPER***
+Lower and upper bounds for the maximum area slider
+"""
+MAX_AREA_LOWER, MAX_AREA_UPPER = 0, 60000
+"""***MAX_AREA_DEFAULT***
+Default value for min area in preprocessing
+"""
+MAX_AREA_DEFAULT = 60000
+"""***MIN_THRESHOLD, MAX_AREA_UPPER***
+Lower and upper bounds for the maximum area slider
+"""
+MIN_THRESHOLD, MAX_THRESHOLD = 0, 255
+"""***MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT***
+Default value for min area in preprocessing
+"""
+MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT = 0, 135
 """***VEL_PERCENTILE***
 percentile on the average speed of the individuals used to compute the maximal
 velocity threshold
@@ -64,7 +88,14 @@ NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION = None # Set None to use the default 
 Number of jobs used to perform the segmentation
 """
 NUMBER_OF_CORES_FOR_SEGMENTATION = None # Set None to use the default mode of the system. (see segmentation.py module for details)
-
+"""***IDENTIFICATION_IMAGE_SIZE***
+size of the identification images. Used for idmatcher.ai
+"""
+IDENTIFICATION_IMAGE_SIZE = None #(46, 46, 1)
+"""***SIGMA_GAUSSIAN_BLURRING***
+sigma for gaussian blurring tests
+"""
+SIGMA_GAUSSIAN_BLURRING = None
 #######################################
 #########  global fragments  ##########
 #######################################
@@ -108,6 +139,7 @@ Number of consecutive overfitting epochs in order to stop the training
 '''
 OVERFITTING_COUNTER_THRESHOLD_DCD = 5
 OVERFITTING_COUNTER_THRESHOLD_IDCNN = 5
+OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM = 10
 '''***MAXIMUM_NUMBER_OF_EPOCHS ***
 Maximum number of epochs before forcing the training to stop
 '''
@@ -123,6 +155,11 @@ Default dropout in fully-connected layers if the CNN models (can be changed
 when instantiating the parameter class to be init the CNN)
 '''
 KEEP_PROB = 1.0
+'''***MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR***
+Minimum number of crossings required to train the crossing detector, otherwise
+only the model area is used to distinguish crossings from individuals
+'''
+MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR = 10
 
 #######################################
 # Deep fingerprint protocols cascade  #

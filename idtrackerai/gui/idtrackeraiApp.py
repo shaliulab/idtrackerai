@@ -235,19 +235,23 @@ class Root(TabbedPanel):
         print('VALUE', value.__dict__)
         print('CONTENT', value.content)
         print("OBJECT", obj)
+        ### FIXME: disabled feature not working well and had to add a condition
+        # Added this condition after switching to kivy 1.10.1 because the disabled"
+        # feature is working differently than for kivy 1.9.
         print("ID", value.content.id)
-        if value.content.id == 'roi_selector':
-            if not self.roi_selector.has_been_executed:
-                self.roi_selector.do()
-        if value.content.id == 'preprocessor':
-            if not self.preprocessor.has_been_executed:
-                self.preprocessor.do()
-        if value.content.id == "tracker":
-            self.tracker.do()
-        if value.content.id == "validator":
-            self.validator.do()
-        if value.content.id == "individual_validator":
-            self.individual_validator.do()
+        if value.content is not None:
+            if value.content.id == 'roi_selector':
+                if not self.roi_selector.has_been_executed:
+                    self.roi_selector.do()
+            if value.content.id == 'preprocessor':
+                if not self.preprocessor.has_been_executed:
+                    self.preprocessor.do()
+            if value.content.id == "tracker":
+                self.tracker.do()
+            if value.content.id == "validator":
+                self.validator.do()
+            if value.content.id == "individual_validator":
+                self.individual_validator.do()
 
     def switch(self, tab, *args):
         print("0000000000000000 ", hasattr(self, 'tracker') and hasattr(self.tracker, 'this_is_the_end_popup'))

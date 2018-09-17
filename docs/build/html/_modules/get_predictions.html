@@ -191,8 +191,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span> <span class="o">+=</span> <span class="n">batch_size</span>
-        <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span></div>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="GetPrediction.get_predictions_softmax"><a class="viewcode-back" href="../idCNN.html#get_predictions.GetPrediction.get_predictions_softmax">[docs]</a>    <span class="k">def</span> <span class="nf">get_predictions_softmax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_operation</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Runs a `batch_operation` (typically :meth:`~id_CNN.predict`)</span>
@@ -208,8 +208,8 @@
             <span class="n">softmax_probs_batch</span><span class="p">,</span> <span class="n">predictions_batch</span> <span class="o">=</span> <span class="n">batch_operation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next_batch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_softmax_probs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">softmax_probs_batch</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predictions_batch</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_softmax_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_softmax_probs</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span></div>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_softmax_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_softmax_probs</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GetPrediction.get_predictions_fully_connected_embedding"><a class="viewcode-back" href="../idCNN.html#get_predictions.GetPrediction.get_predictions_fully_connected_embedding">[docs]</a>    <span class="k">def</span> <span class="nf">get_predictions_fully_connected_embedding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_operation</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Not used in the current version of the algorithm. Only for analysis.</span>
@@ -218,8 +218,8 @@
         <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_in_epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set</span><span class="o">.</span><span class="n">_num_images</span><span class="p">:</span>
             <span class="n">fc_vectors</span> <span class="o">=</span> <span class="n">batch_operation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next_batch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fc_vectors</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span></div></div>
-        <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predictions_KNN</span> <span class="o">=</span> <span class="n">kMeansCluster</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predictions_KNN</span> <span class="o">=</span> <span class="n">kMeansCluster</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fc_vectors</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="kMeansCluster"><a class="viewcode-back" href="../idCNN.html#get_predictions.kMeansCluster">[docs]</a><span class="k">def</span> <span class="nf">kMeansCluster</span><span class="p">(</span><span class="n">vector_values</span><span class="p">,</span> <span class="n">num_clusters</span><span class="p">,</span> <span class="n">max_num_steps</span><span class="p">,</span> <span class="n">stop_coeficient</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Not used in the current version of the algorithm. Only for analysis.</span>
@@ -257,8 +257,8 @@
             <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">check_stop</span><span class="p">)</span>
             <span class="n">current_stop_coeficient</span> <span class="o">=</span> <span class="n">check_stop</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">current_stop_coeficient</span> <span class="o">&lt;=</span> <span class="n">stop_coeficient</span><span class="p">:</span>
-                <span class="k">break</span></div>
-        <span class="k">return</span> <span class="n">centroid_values</span><span class="p">,</span> <span class="n">assignment_values</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">centroid_values</span><span class="p">,</span> <span class="n">assignment_values</span></div>
 </pre></div>
 
           </div>
@@ -281,10 +281,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>

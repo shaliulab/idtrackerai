@@ -31,15 +31,13 @@ import sys
 import numpy as np
 import multiprocessing
 import cv2
-try:
-    import cPickle as pickle
-except:
-    import pickle
+# import cPickle as pickle
 from joblib import Parallel, delayed
 import gc
 from tqdm import tqdm
 from scipy import ndimage
-from idtrackerai.constants import NUMBER_OF_CORES_FOR_SEGMENTATION
+from idtrackerai.constants import NUMBER_OF_CORES_FOR_SEGMENTATION,\
+                                SIGMA_GAUSSIAN_BLURRING
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import flatten, set_mkl_to_single_thread, set_mkl_to_multi_thread
 from idtrackerai.utils.video_utils import segment_frame, blob_extractor
@@ -125,13 +123,15 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
     """
     blobs_in_frame = []
     ret, frame = cap.read()
+    if SIGMA_GAUSSIAN_BLURRING is not None:
+        frame = cv2.GaussianBlur(frame, (0, 0), SIGMA_GAUSSIAN_BLURRING)
 
     try:
         if video.resolution_reduction != 1 and ret:
             frame = cv2.resize(frame, None,
                                 fx = video.resolution_reduction,
                                 fy = video.resolution_reduction,
-                                interpolation = cv2.INTER_CUBIC)
+                                interpolation = cv2.INTER_AREA)
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         avIntensity = np.float32(np.mean(frameGray))
         segmentedFrame = segment_frame(frameGray/avIntensity,
@@ -173,6 +173,14 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
         max_number_of_blobs = len(centroids)
 
     return blobs_in_frame, max_number_of_blobs
+
+
+def frame_in_intervals(frame_number, intervals):
+    for interval in intervals:
+        if frame_number >= interval[0] and frame_number <= interval[1]:
+            return True
+    return False
+
 
 def segment_episode(video, segmentation_thresholds, path = None, episode_start_end_frames = None):
     """Gets list of blobs segmented in every frame of the episode of the video
@@ -216,14 +224,15 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
     while frame_number < number_of_frames_in_episode:
         
         global_frame_number = episode_start_end_frames[0] + frame_number
-        
-        if video.tracking_interval is None or global_frame_number >= video.tracking_interval[0] and global_frame_number <= video.tracking_interval[1]:
+        if video.tracking_interval is None or frame_in_intervals(global_frame_number, video.tracking_interval):
             blobs_in_frame, max_number_of_blobs = get_blobs_in_frame(cap, video,
                                                                     segmentation_thresholds,
                                                                     max_number_of_blobs,
                                                                     frame_number)
         else:
             ret, frame = cap.read()
+            if SIGMA_GAUSSIAN_BLURRING is not None:
+                frame = cv2.GaussianBlur(frame, (0, 0), SIGMA_GAUSSIAN_BLURRING)
             blobs_in_frame = []
         #store all the blobs encountered in the episode
         blobs_in_episode.append(blobs_in_frame)
@@ -301,7 +310,7 @@ def segment(video):
             maximum_number_of_blobs_in_episode.append([out[1] for out in OupPutParallel])
             blobs_in_video.append(blobs_in_episode)
     set_mkl_to_multi_thread()
-
+    print(maximum_number_of_blobs_in_episode)
     video._maximum_number_of_blobs = max(flatten(maximum_number_of_blobs_in_episode))
     #blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs
     blobs_in_video = flatten(flatten(blobs_in_video))

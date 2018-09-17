@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, print_function, division
 import os
@@ -304,6 +304,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type = 
             video.gt_accuracy_no_gaps = accuracies
             video.gt_results_no_gaps = results
         video.save()
+
 
 if __name__ == '__main__':
     from idtrackerai.utils.GUI_utils import selectDir

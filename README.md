@@ -1,14 +1,6 @@
-# idtracker.ai (v1.0.1-alpha)
+# idtracker.ai (v1.0.3-alpha)
 
 [idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
-
-## What is new?
-
-* Update installation to work with Linux Mint 18.3 (kernel 4.10.0-38-generic)
-* Cuda toolkit and cudnn libraries are now installed within the conda environment.
-This allows users to have other versions of TensorFlow in their system without
-entering into conflict with the versions used by idtracker.ai.
-* Currently running TensorFlow 1.7.0 (only the GPU version is working)
 
 ## Hardware requirements
 
@@ -127,7 +119,7 @@ Type "yes" to continue with the default installation.
 Using the terminal, download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/cuda_in_conda/install.sh)
 using the following command.
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.1-alpha/install.sh
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.2-alpha/install.sh
 
 Give install.sh executable permissions by typing
 
@@ -149,8 +141,8 @@ of the terminal should show a message similar to this:
 If the installation did not succeed try proceeding step by step, by running
 the following commands in your terminal:
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.1-alpha/env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml
-    conda env create -f env-mint18.3-tf1.7-ocv2.13-kivy1.9.yml
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.3-alpha/env-mint18.3-tf1.2-ocv2.13-kivy1.9.yml
+    conda env create -f env-mint18.3-tf1.2-ocv2.13-kivy1.9.yml
     source activate idtrackerai-environment
     git clone https://gitlab.com/polavieja_lab/idtrackerai.git
     pip install idtrackerai/.

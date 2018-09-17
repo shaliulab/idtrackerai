@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import division, absolute_import, print_function
 import sys
@@ -35,8 +35,7 @@ import cv2
 import pandas as pd
 from joblib import Parallel, delayed
 from sklearn.decomposition import PCA
-from idtrackerai.utils.py_utils import  loadFile, saveFile
-from idtrackerai.utils.video_utils import cntBB2Full
+# from idtrackerai.utils.py_utils import  loadFile, saveFile
 from idtrackerai.preprocessing.fishcontour import FishContour
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger

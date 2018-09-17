@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import kivy
@@ -42,6 +42,7 @@ from kivy.graphics import *
 from kivy.graphics.transformation import Matrix
 from idtrackerai.gui.kivy_utils import CustomLabel
 import cv2
+from idtrackerai.constants import SIGMA_GAUSSIAN_BLURRING
 
 class VisualiseVideo(BoxLayout):
     def __init__(self,
@@ -93,9 +94,12 @@ class VisualiseVideo(BoxLayout):
         else:
             self.cap.set(1,trackbar_value)
         ret, self.frame = self.cap.read()
+        if SIGMA_GAUSSIAN_BLURRING is not None:
+            self.frame = cv2.GaussianBlur(self.frame, (0, 0), SIGMA_GAUSSIAN_BLURRING)
         if ret == True:
             if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and CHOSEN_VIDEO.video.resolution_reduction != 1:
-                self.frame = cv2.resize(self.frame, None, fx = CHOSEN_VIDEO.video.resolution_reduction, fy = CHOSEN_VIDEO.video.resolution_reduction)
+                self.frame = cv2.resize(self.frame, None, fx=CHOSEN_VIDEO.video.resolution_reduction, fy=CHOSEN_VIDEO.video.resolution_reduction,
+                                        interpolation=cv2.INTER_AREA)
             if self.func is None:
                 self.func = self.simple_visualisation
             self.func(self.frame)

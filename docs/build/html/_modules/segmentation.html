@@ -129,7 +129,8 @@
 <span class="kn">import</span> <span class="nn">gc</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">ndimage</span>
-<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span> <span class="n">NUMBER_OF_CORES_FOR_SEGMENTATION</span>
+<span class="kn">from</span> <span class="nn">idtrackerai.constants</span> <span class="k">import</span> <span class="n">NUMBER_OF_CORES_FOR_SEGMENTATION</span><span class="p">,</span>\
+                                <span class="n">SIGMA_GAUSSIAN_BLURRING</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.blob</span> <span class="k">import</span> <span class="n">Blob</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.utils.py_utils</span> <span class="k">import</span> <span class="n">flatten</span><span class="p">,</span> <span class="n">set_mkl_to_single_thread</span><span class="p">,</span> <span class="n">set_mkl_to_multi_thread</span>
 <span class="kn">from</span> <span class="nn">idtrackerai.utils.video_utils</span> <span class="k">import</span> <span class="n">segment_frame</span><span class="p">,</span> <span class="n">blob_extractor</span>
@@ -175,8 +176,8 @@
         <span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">video</span><span class="o">.</span><span class="n">video_path</span><span class="p">)</span>
         <span class="n">number_of_frames_in_episode</span> <span class="o">=</span> <span class="n">episode_start_end_frames</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">episode_start_end_frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="n">cap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">episode_start_end_frames</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</div>
-    <span class="k">return</span> <span class="n">cap</span><span class="p">,</span> <span class="n">number_of_frames_in_episode</span>
+
+    <span class="k">return</span> <span class="n">cap</span><span class="p">,</span> <span class="n">number_of_frames_in_episode</span></div>
 
 <div class="viewcode-block" id="get_blobs_in_frame"><a class="viewcode-back" href="../preprocessing.html#segmentation.get_blobs_in_frame">[docs]</a><span class="k">def</span> <span class="nf">get_blobs_in_frame</span><span class="p">(</span><span class="n">cap</span><span class="p">,</span> <span class="n">video</span><span class="p">,</span> <span class="n">segmentation_thresholds</span><span class="p">,</span> <span class="n">max_number_of_blobs</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Segments a frame read from `cap` according to the preprocessing parameters</span>
@@ -215,13 +216,15 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">blobs_in_frame</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">SIGMA_GAUSSIAN_BLURRING</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">GaussianBlur</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">SIGMA_GAUSSIAN_BLURRING</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">video</span><span class="o">.</span><span class="n">resolution_reduction</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">ret</span><span class="p">:</span>
             <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
                                 <span class="n">fx</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">resolution_reduction</span><span class="p">,</span>
                                 <span class="n">fy</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">resolution_reduction</span><span class="p">,</span>
-                                <span class="n">interpolation</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_CUBIC</span><span class="p">)</span>
+                                <span class="n">interpolation</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_AREA</span><span class="p">)</span>
         <span class="n">frameGray</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
         <span class="n">avIntensity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">frameGray</span><span class="p">))</span>
         <span class="n">segmentedFrame</span> <span class="o">=</span> <span class="n">segment_frame</span><span class="p">(</span><span class="n">frameGray</span><span class="o">/</span><span class="n">avIntensity</span><span class="p">,</span>
@@ -261,8 +264,8 @@
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">centroids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_number_of_blobs</span><span class="p">:</span>
         <span class="n">max_number_of_blobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">centroids</span><span class="p">)</span>
-</div>
-    <span class="k">return</span> <span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">max_number_of_blobs</span>
+
+    <span class="k">return</span> <span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">max_number_of_blobs</span></div>
 
 <div class="viewcode-block" id="segment_episode"><a class="viewcode-back" href="../preprocessing.html#segmentation.segment_episode">[docs]</a><span class="k">def</span> <span class="nf">segment_episode</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">segmentation_thresholds</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">episode_start_end_frames</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Gets list of blobs segmented in every frame of the episode of the video</span>
@@ -311,14 +314,16 @@
                                                                     <span class="n">frame_number</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">SIGMA_GAUSSIAN_BLURRING</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">GaussianBlur</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">SIGMA_GAUSSIAN_BLURRING</span><span class="p">)</span>
             <span class="n">blobs_in_frame</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1">#store all the blobs encountered in the episode</span>
         <span class="n">blobs_in_episode</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">)</span>
         <span class="n">frame_number</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
     <span class="c1">#cv2.destroyAllWindows()</span>
-    <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span></div>
-    <span class="k">return</span> <span class="n">blobs_in_episode</span><span class="p">,</span> <span class="n">max_number_of_blobs</span>
+    <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">blobs_in_episode</span><span class="p">,</span> <span class="n">max_number_of_blobs</span></div>
 
 <div class="viewcode-block" id="segment"><a class="viewcode-back" href="../preprocessing.html#segmentation.segment">[docs]</a><span class="k">def</span> <span class="nf">segment</span><span class="p">(</span><span class="n">video</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Segment the video giving a list of `blobs` for every frame in the video.</span>
@@ -389,8 +394,8 @@
 
     <span class="n">video</span><span class="o">.</span><span class="n">_maximum_number_of_blobs</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">maximum_number_of_blobs_in_episode</span><span class="p">))</span>
     <span class="c1">#blobs_in_video is flattened to obtain a list of blobs per episode and then the list of all blobs</span>
-    <span class="n">blobs_in_video</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">))</span></div>
-    <span class="k">return</span> <span class="n">blobs_in_video</span>
+    <span class="n">blobs_in_video</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">blobs_in_video</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">blobs_in_video</span></div>
 
 <div class="viewcode-block" id="resegment"><a class="viewcode-back" href="../preprocessing.html#segmentation.resegment">[docs]</a><span class="k">def</span> <span class="nf">resegment</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">,</span> <span class="n">list_of_blobs</span><span class="p">,</span> <span class="n">new_segmentation_thresholds</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Updates the `list_of_blobs` for a particular `frame_number` by performing</span>
@@ -435,8 +440,8 @@
                                                 <span class="mi">0</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">)</span>
     <span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">[</span><span class="n">frame_number</span><span class="p">]</span> <span class="o">=</span> <span class="n">blobs_in_resegmanted_frame</span>
     <span class="n">cap</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
-    <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span></div>
-    <span class="k">return</span> <span class="n">number_of_blobs_in_frame</span>
+    <span class="n">cv2</span><span class="o">.</span><span class="n">destroyAllWindows</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">number_of_blobs_in_frame</span></div>
 </pre></div>
 
           </div>
@@ -459,10 +464,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on May 03, 2018.
+      Last updated on Jul 20, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.0.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
       </li>
     </ul>
     </div>
