@@ -1,0 +1,3 @@
+[submodule "pyforms-gui"]
+	path = pyforms-gui
+	url = https://github.com/UmSenhorQualquer/pyforms-gui.git
