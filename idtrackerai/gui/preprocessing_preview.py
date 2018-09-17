@@ -171,7 +171,7 @@ class PreprocessingPreview(BoxLayout):
 
     def create_frame_interval_popup(self):
         self.tracking_interval_container = BoxLayout(orientation = "vertical")
-        self.tracking_interval_label = CustomLabel(text = "Insert the the video interval (e.g. 100 - 2050) on which the tracking will be performed")
+        self.tracking_interval_label = CustomLabel(text = "Insert the video intervals in frames separated by commas (e.g. 100-250, 300-500) on which the tracking will be performed")
         self.tracking_interval_container.add_widget(self.tracking_interval_label)
         self.tracking_interval_text_input = TextInput(text = '', multiline=False)
         self.tracking_interval_container.add_widget(self.tracking_interval_text_input)

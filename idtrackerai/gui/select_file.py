@@ -247,15 +247,16 @@ class SelectFile(BoxLayout):
                                 'number_of_unique_images_in_global_fragments',
                                 'maximum_number_of_images_in_global_fragments',
                                 'segmentation_time', 'crossing_detector_time',
-                                'fragmentation_time']
+                                'fragmentation_time','there_are_crossings',
+                                'track_wo_identities']
             CHOSEN_VIDEO.video.copy_attributes_between_two_video_objects(CHOSEN_VIDEO.old_video, path_attributes)
             CHOSEN_VIDEO.video._has_preprocessing_parameters = True
             CHOSEN_VIDEO.video._has_been_segmented = True
             CHOSEN_VIDEO.video._has_been_preprocessed = True
             CHOSEN_VIDEO.video.save()
             CHOSEN_VIDEO.list_of_blobs = ListOfBlobs.load(CHOSEN_VIDEO.video, CHOSEN_VIDEO.video.blobs_path)
-            CHOSEN_VIDEO.list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
             if CHOSEN_VIDEO.video.number_of_animals != 1:
+                CHOSEN_VIDEO.list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
                 CHOSEN_VIDEO.list_of_global_fragments = ListOfGlobalFragments.load(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
             DEACTIVATE_ROI.restored = '(restored)'
             DEACTIVATE_PREPROCESSING.restored = '(restored)'
