@@ -8,10 +8,8 @@ from idtrackerai.list_of_blobs                               import ListOfBlobs
 class TrackerAPI(object):
 
 
-    def __init__(self, 
-        chosen_video = None,
-        **kwargs
-    ):
+    def __init__(self, chosen_video=None, **kwargs):
+        
         self.chosen_video = chosen_video
         
         self.number_of_animals            = None # Number of animals

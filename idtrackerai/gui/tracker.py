@@ -93,6 +93,13 @@ class Tracker(TrackerAPI, BoxLayout):
         TrackerAPI.__init__(self, chosen_video)
     
         ## GUI ###################################################
+
+        # To remove in the future
+        global CHOSEN_VIDEO, DEACTIVATE_TRACKING, DEACTIVATE_VALIDATION
+        CHOSEN_VIDEO          = chosen_video
+        DEACTIVATE_TRACKING   = deactivate_tracking
+        DEACTIVATE_VALIDATION = deactivate_validation
+
         self.deactivate_tracking   = deactivate_tracking
         self.deactivate_validation = deactivate_validation
 
