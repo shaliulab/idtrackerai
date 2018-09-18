@@ -15,10 +15,13 @@ from idtrackerai.network.identification_model.network_params import NetworkParam
 from idtrackerai.network.identification_model.id_CNN import ConvNetwork
 from idtrackerai.accumulation_manager import AccumulationManager
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class ConsistanceException(Exception): pass
 
-def step1_pre_processing(
-    video, n_animals, chk_segm_consist, update_func=None):
+def step1_pre_processing(video, n_animals, chk_segm_consist, update_func=None):
 
     logging.info('create_preprocessing_folder()')
 
@@ -181,8 +184,7 @@ def step2_tracking(video):
         pass
 
     else:
-
-
+        # gui/tracker.py line 120
         video.accumulation_trial = 0
         
         delete = True
@@ -214,9 +216,7 @@ def step2_tracking(video):
             video_path  = video.video_path
         )
 
-
-
-
+       
 
 
 
@@ -288,6 +288,8 @@ def protocol1(video, list_of_fragments, list_of_global_fragments):
     )
 
     video.init_accumulation_statistics_attributes()
+
+    #gui/tracker.py line 247
     accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
     #self.global_step = 0
     #self.create_one_shot_accumulation_popup()
@@ -296,8 +298,12 @@ def protocol1(video, list_of_fragments, list_of_global_fragments):
 
     accumulation_step_finished = True
 
+    logger.info("--------------------> Calling accumulate")
+    # gui/tracker.py line 293
     if accumulation_step_finished and accumulation_manager.continue_accumulation:
         #self.one_shot_accumulation()
+
+        logger.info("--------------------> Performing accumulation")
         
         accumulation_step_finished = False
         accumulation_manager.ratio_accumulated_images,\
@@ -313,9 +319,10 @@ def protocol1(video, list_of_fragments, list_of_global_fragments):
             net_properties = None,
             plot_flag = False
         )
-        if accumulation_manager.counter == 1:
-            #self.create_tracking_figures_axes()
-            pass
+        
+        #if accumulation_manager.counter == 1:
+        #    self.create_tracking_figures_axes()
+        #    pass
         
     
     
@@ -323,6 +330,8 @@ def protocol1(video, list_of_fragments, list_of_global_fragments):
         and not video.first_accumulation_finished\
         and accumulation_manager.ratio_accumulated_images > THRESHOLD_EARLY_STOP_ACCUMULATION:
         
+        logger.info("Protocol 1 successful")
+
         video._first_accumulation_finished = True
         video._ratio_accumulated_images = accumulation_manager.ratio_accumulated_images
         video._percentage_of_accumulated_images = [video.ratio_accumulated_images]
@@ -332,8 +341,8 @@ def protocol1(video, list_of_fragments, list_of_global_fragments):
         list_of_fragments.save_light_list(video._accumulation_folder)
 
         
-    elif not self.accumulation_manager.continue_accumulation\
-        and not CHOSEN_VIDEO.video.has_been_pretrained:
+    elif not accumulation_manager.continue_accumulation\
+        and not video.has_been_pretrained:
         
         video._first_accumulation_finished = True
         video._ratio_accumulated_images = accumulation_manager.ratio_accumulated_images
@@ -344,11 +353,48 @@ def protocol1(video, list_of_fragments, list_of_global_fragments):
         list_of_fragments.save_light_list(video._accumulation_folder)
 
         if accumulation_manager.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
-            pass
+            
+            logger.info("Protocol 2 successful")
+            logger.warning("------------------------ dismissing one shot accumulation popup")
+                
         elif accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
-            #self.protocol3()
+            
+            logger.info("Protocol 2 failed -> Start protocol 3")
+                
+            #self.init_pretraining_variables()
+            self.init_pretraining_net()
+            
+            pretraining_global_step = 0
+            net = ConvNetwork(self.pretrain_network_params)
+            ratio_of_pretrained_images = 0
+            if video.tracking_with_knowledge_transfer:
+                net.restore()
+            store_training_accuracy_and_loss_data_pretrain = Store_Accuracy_and_Loss(
+                net,
+                name = 'training',
+                scope = 'pretraining'
+            )
+            store_validation_accuracy_and_loss_data_pretrain = Store_Accuracy_and_Loss(
+                net,
+                name = 'validation',
+                scope = 'pretraining'
+            )
+            """
+            number_of_images_in_global_fragments = video.number_of_unique_images_in_global_fragments
+            if CHOSEN_VIDEO.old_video and CHOSEN_VIDEO.old_video.first_accumulation_finished == True:
+                list_of_global_fragments.reset(roll_back_to = 'fragmentation')
+                list_of_fragments.reset(roll_back_to = 'fragmentation')
+            
+            logger.info("Starting pretraining. Checkpoints will be stored in %s" %CHOSEN_VIDEO.video.pretraining_folder)
+            if video.tracking_with_knowledge_transfer:
+                logger.info("Performing knowledge transfer from %s" %CHOSEN_VIDEO.video.knowledge_transfer_model_folder)
+                self.pretrain_network_params.knowledge_transfer_folder = CHOSEN_VIDEO.video.knowledge_transfer_model_folder
+            
+            logger.info("Start pretraining")
+            pretraining_step_finished = True
+            self.pretraining_loop()
             pass
-
+            """
 
     elif video.has_been_pretrained\
         and video.accumulation_trial < MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS\
