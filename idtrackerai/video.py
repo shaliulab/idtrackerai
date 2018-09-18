@@ -129,7 +129,7 @@ class Video(object):
         self._percentage_of_accumulated_images = None
         self._first_accumulation_finished = None
         self._second_accumulation_finished = None
-        self._has_been_assigned = None
+        self._has_been_assigned = None # ?
         self._has_duplications_solved = None
         self._has_crossings_solved = None
         self._has_trajectories = None
@@ -146,7 +146,7 @@ class Video(object):
         self._identify_time = 0.
         self._create_trajectories_time = 0.
         self._there_are_crossings = True
-        self._track_wo_identities = False
+        self._track_wo_identities = False # Track without identities
         if SIGMA_GAUSSIAN_BLURRING is not None:
             self.sigma_gaussian_blurring = SIGMA_GAUSSIAN_BLURRING
 
@@ -397,6 +397,11 @@ class Video(object):
 
     @property
     def track_wo_identities(self):
+        """
+        Flag track without identities
+
+        returns: Boolean
+        """
         return self._track_wo_identities
 
     @property
