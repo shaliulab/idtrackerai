@@ -10,31 +10,18 @@ class TrackerAPI(object):
 
     def __init__(self, 
         chosen_video = None,
-        deactivate_tracking = None,
-        deactivate_validation = None,
         **kwargs
     ):
-        self.chosen_video          = chosen_video
-        self.deactivate_tracking   = deactivate_tracking
-        self.deactivate_validation = deactivate_validation
-
+        self.chosen_video = chosen_video
+        
         self.number_of_animals            = None # Number of animals
         self.accumulation_network_params  = None # Network params
         self.restoring_first_accumulation = False # Flag restores first accumulation
         self.accumulation_step_finished   = False # Flag accumulation step finished
 
 
-    def init_accumulation_network(self):
-        
-        self.accumulation_network_params = NetworkParams(
-            self.number_of_animals,
-            learning_rate = 0.005,
-            keep_prob = 1.0,
-            scopes_layers_to_optimize = None,
-            save_folder = self.chosen_video.video.accumulation_folder,
-            image_size = self.chosen_video.video.identification_image_size,
-            video_path = self.chosen_video.video.video_path
-        )
+
+
 
 
     def init_tracking(self, update_gui=None):
@@ -58,7 +45,15 @@ class TrackerAPI(object):
         
         self.restoring_first_accumulation = False
 
-        self.init_accumulation_network()
+        self.accumulation_network_params = NetworkParams(
+            self.number_of_animals,
+            learning_rate = 0.005,
+            keep_prob = 1.0,
+            scopes_layers_to_optimize = None,
+            save_folder = self.chosen_video.video.accumulation_folder,
+            image_size = self.chosen_video.video.identification_image_size,
+            video_path = self.chosen_video.video.video_path
+        )
 
         # CHECK STATUS ################################### 
 

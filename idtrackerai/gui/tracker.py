@@ -90,9 +90,12 @@ class Tracker(TrackerAPI, BoxLayout):
         deactivate_validation = None,
         **kwargs
     ):
-        TrackerAPI.__init__(self, chosen_video, deactivate_tracking, deactivate_validation)
+        TrackerAPI.__init__(self, chosen_video)
     
         ## GUI ###################################################
+        self.deactivate_tracking   = deactivate_tracking
+        self.deactivate_validation = deactivate_validation
+
         BoxLayout.__init__(self, **kwargs)
         
         self.has_been_executed = False
