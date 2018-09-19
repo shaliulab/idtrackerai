@@ -16,8 +16,32 @@ class PreprocessingPreviewAPI(object):
 
     def __init__(self, chosen_video=None, **kwargs):
 
-        self.chosen_video = chosen_video
+        #: Chosen_Video: ?
+        self.chosen_video  = chosen_video
+        #: int: Used to filter the image to find the blobs
+        self.min_threshold = 0 
+        #: int: Used to filter the image to find the blobs
+        self.max_threshold = 135
+        #: int: Minimum area of a blob
+        self.min_area      = 150
+        #: int: Maximum area of a blob
+        self.max_area      = 60000
 
+        #: float: ?
+        self.resolution_reduction = 1
+        #: int: Number of animals to track
+        self.number_of_animals    = 1
+        #: ListOfFragments: List of fragments ( blobs paths before crossing )
+        self.list_of_fragments    = None
+        #: list(GlobalFragment): ? 
+        self.list_of_global_fragments = None
+        #: ?: ?
+        self.crossing_detector_trainer= None
+        #: boolean: ?
+        self.resegmentation_step_finished = True
+        #: list(int): Indexes of the frames with more blobs than animals to track
+        self.frames_with_more_blobs_than_animals = None
+        
 
     def init_preview(self):
         

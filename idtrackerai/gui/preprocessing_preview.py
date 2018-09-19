@@ -213,7 +213,6 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
             self.ROI_switch.active = not (num_pxs_in_frame == num_valid_pxs_in_ROI or num_valid_pxs_in_ROI == 0)
             self.bkg_subtractor_switch.active = False
             self.bkg_subtractor_switch.bind(active = self.apply_bkg_subtraction)
-            self.chosen_video.video.resolution_reduction = self.chosen_video.video.resolution_reduction
             self.create_number_of_animals_popup()
             self.num_of_animals_input.bind(on_text_validate = self.set_number_of_animals)
             self.num_of_animals_popup.bind(on_dismiss = self.show_segmenting_popup)
