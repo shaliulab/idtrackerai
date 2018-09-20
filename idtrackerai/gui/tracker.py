@@ -469,6 +469,8 @@ class Tracker(BoxLayout):
 
     def one_shot_pretraining(self, *args):
         self.pretraining_step_finished = False
+        print(self.ratio_of_pretrained_images)
+        print(len(CHOSEN_VIDEO.list_of_global_fragments.global_fragments), self.pretraining_counter)
         self.pretraining_global_fragment = CHOSEN_VIDEO.list_of_global_fragments.global_fragments[self.pretraining_counter]
         self.net,\
         self.ratio_of_pretrained_images,\
@@ -487,6 +489,8 @@ class Tracker(BoxLayout):
                                                     plot_flag = False,
                                                     batch_size = BATCH_SIZE_IDCNN,
                                                     canvas_from_GUI = self.pretrain_fig_canvas)
+        print([f.used_for_pretraining for f in CHOSEN_VIDEO.list_of_fragments.fragments if f.is_in_a_global_fragment])
+        print([[f.used_for_pretraining for f in gf.individual_fragments] for gf in CHOSEN_VIDEO.list_of_global_fragments.global_fragments])
         self.pretraining_counter += 1
         self.pretraining_counter_value.text = str(self.pretraining_counter)
         self.percentage_pretrained_images_value.text = str(self.ratio_of_pretrained_images)

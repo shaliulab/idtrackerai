@@ -161,48 +161,48 @@ def perform_one_accumulation_step(accumulation_manager,
     return accumulation_manager.ratio_accumulated_images, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data
 
 
-def accumulate(accumulation_manager,
-                video,
-                global_step,
-                net,
-                identity_transfer):
-    """take care of managing  the process of accumulation
-    of labelled images. Such process, in complex video, allows us to train  the
-    idCNN (or whatever function approximator passed in input as `net`).
-
-    Parameters
-    ----------
-    accumulation_manager : <accumulation_manager.AccumulationManager object>
-        Description of parameter `accumulation_manager`.
-    video : <video.Video object>
-        Object collecting all the parameters of the video and paths for saving and loading
-    global_step : int
-        network epoch counter
-    net : <net.ConvNetwork object>
-        Convolutional neural network object created according to net.params
-    identity_transfer : bool
-        If true the identity of the individual is also tranferred
-
-    Returns
-    -------
-    float
-        Ratio of accumulated images
-
-    See Also
-    --------
-    early_stop_criteria_for_accumulation
-
-    """
-    video.init_accumulation_statistics_attributes()
-    accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
-
-    while accumulation_manager.continue_accumulation:
-        perform_one_accumulation_step(accumulation_manager,
-                        video,
-                        global_step,
-                        net,
-                        identity_transfer,
-                        GUI_axes = None,
-                        net_properties = None,
-                        plot_flag = False)
-    return accumulation_manager.ratio_accumulated_images
+# def accumulate(accumulation_manager,
+#                 video,
+#                 global_step,
+#                 net,
+#                 identity_transfer):
+#     """take care of managing  the process of accumulation
+#     of labelled images. Such process, in complex video, allows us to train  the
+#     idCNN (or whatever function approximator passed in input as `net`).
+#
+#     Parameters
+#     ----------
+#     accumulation_manager : <accumulation_manager.AccumulationManager object>
+#         Description of parameter `accumulation_manager`.
+#     video : <video.Video object>
+#         Object collecting all the parameters of the video and paths for saving and loading
+#     global_step : int
+#         network epoch counter
+#     net : <net.ConvNetwork object>
+#         Convolutional neural network object created according to net.params
+#     identity_transfer : bool
+#         If true the identity of the individual is also tranferred
+#
+#     Returns
+#     -------
+#     float
+#         Ratio of accumulated images
+#
+#     See Also
+#     --------
+#     early_stop_criteria_for_accumulation
+#
+#     """
+#     video.init_accumulation_statistics_attributes()
+#     accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
+#
+#     while accumulation_manager.continue_accumulation:
+#         perform_one_accumulation_step(accumulation_manager,
+#                         video,
+#                         global_step,
+#                         net,
+#                         identity_transfer,
+#                         GUI_axes = None,
+#                         net_properties = None,
+#                         plot_flag = False)
+#     return accumulation_manager.ratio_accumulated_images
