@@ -214,7 +214,12 @@ def check_and_change_video_path(video_object, old_video):
     current_video_folder = os.path.split(video_object.video_path)[0]
     old_video_folder = os.path.split(old_video.video_path)[0]
     old_video_session_name = old_video.session_folder
+    print("in check and change video path")
+    print("current_video_folder: ", current_video_folder)
+    print("old_video_folder: ", old_video_folder)
+    print("old_video_session_name: ", old_video_session_name)
     if current_video_folder != old_video_folder:
+        print("updating attributes")
         attributes_to_modify = {key: getattr(old_video, key) for key in old_video.__dict__
         if isinstance(getattr(old_video, key), basestring)
         and old_video_folder in getattr(old_video, key) }
@@ -254,6 +259,7 @@ def check_and_change_video_path(video_object, old_video):
     return old_video
 
 def set_load_previous_dict(old_video, processes, existentFile):
+    print("in set load previous dict")
     attributes = [ 'has_been_preprocessed',
                     'first_accumulation_finished',
                     'has_been_pretrained', 'second_accumulation_finished',
@@ -274,8 +280,9 @@ def set_load_previous_dict(old_video, processes, existentFile):
     for process in processes:
         attributes = processes_to_attributes[process]
         attributes_values = []
-
+        print(process)
         for attribute in attributes:
+            print(attribute, getattr(old_video, attribute))
             attributes_values.append(getattr(old_video, attribute))
         if None in attributes_values:
             existentFile[process] = '-1'
@@ -304,11 +311,14 @@ def getExistentFiles(video_object, processes):
     if os.path.isdir(video_object._previous_session_folder):
         logger.debug("loading old video object from get existent files")
         if os.path.isfile(os.path.join(video_object._previous_session_folder, 'video_object.npy')):
+            print(video_object._previous_session_folder)
             old_video = np.load(os.path.join(video_object._previous_session_folder, 'video_object.npy')).item()
+            old_video.update_paths(os.path.join(video_object._previous_session_folder, 'video_object.npy'))
             logger.info("old video_object loaded")
         else:
             logger.info("The folder %s is empty. The tracking cannot be restored." %video_object._previous_session_folder)
             return existentFile, old_video
+
         old_video = check_and_change_video_path(video_object,old_video)
         existentFile = set_load_previous_dict(old_video, processes, existentFile)
 
