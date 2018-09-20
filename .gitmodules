@@ -1,3 +1,3 @@
-[submodule "pyforms-gui"]
-	path = pyforms-gui
-	url = https://github.com/UmSenhorQualquer/pyforms-gui.git
+[submodule "idtrackerai-gui"]
+	path = idtrackerai-gui
+	url = https://UmSenhorQualquer@bitbucket.org/fchampalimaud/idtrackerai-gui.git
