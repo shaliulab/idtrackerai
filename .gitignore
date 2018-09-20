@@ -1,5 +1,6 @@
 #ignore all kind of files
 *
+*.pyc
 !*/
 #except files with extension
 !*.py
@@ -34,5 +35,7 @@
 #ignore idtrackerAI and videos folder because they have .png files
 videos
 docs/sphinx-contrib
+
+__pycache__
 
 idtrackerai\.egg-info/
