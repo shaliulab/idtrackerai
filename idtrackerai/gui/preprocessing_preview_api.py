@@ -1,4 +1,10 @@
-import numpy as np, logging, time
+import numpy as np, time
+import sys
+if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+    from kivy.logger import Logger as logger
+else:
+    import logging; logger = logging.getLogger(__name__)
+
 
 from idtrackerai.constants import MIN_AREA_DEFAULT, MAX_AREA_DEFAULT
 from idtrackerai.constants import MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT
@@ -9,8 +15,6 @@ from idtrackerai.crossing_detector import detect_crossings
 
 from idtrackerai.list_of_global_fragments import ListOfGlobalFragments, create_list_of_global_fragments
 from idtrackerai.list_of_fragments        import ListOfFragments, create_list_of_fragments
-
-logger = logging.getLogger(__name__)
 
 class PreprocessingPreviewAPI(object):
 
@@ -92,6 +96,7 @@ class PreprocessingPreviewAPI(object):
         
 
     def segment(self, min_threshold, max_threshold, min_area, max_area):
+        self.chosen_video.video._segmentation_time = time.time()
         logger.debug("segment")
         self.chosen_video.video._max_threshold = max_threshold
         self.chosen_video.video._min_threshold = min_threshold
@@ -129,8 +134,12 @@ class PreprocessingPreviewAPI(object):
             self.chosen_video.video.blobs_path_segmented,
             number_of_chunks = self.chosen_video.video.number_of_frames
         )
+        self.chosen_video.video._segmentation_time = time.time() - self.chosen_video.video.segmentation_time
+        
 
     def model_area_and_crossing_detector(self):
+        self.chosen_video.video._crossing_detector_time = time.time()
+        
         self.chosen_video.video._model_area, self.chosen_video.video._median_body_length = self.chosen_video.list_of_blobs.compute_model_area_and_body_length(
             self.chosen_video.video.number_of_animals
         )
@@ -170,6 +179,7 @@ class PreprocessingPreviewAPI(object):
 
 
     def generate_list_of_fragments_and_global_fragments(self):
+        self.chosen_video.video._fragmentation_time = time.time()
         
         if self.chosen_video.video.number_of_animals != 1:
             self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()

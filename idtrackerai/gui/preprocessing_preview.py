@@ -236,7 +236,6 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
         self.segmenting_popup.dismiss()
 
     def segment(self, *args):
-        self.chosen_video.video._segmentation_time = time.time()
         super().segment(
             self.min_threshold_slider.value,
             self.max_threshold_slider.value,
@@ -363,12 +362,9 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
 
     def save_list_of_blobs(self, *args):
         super().save_list_of_blobs()
-
-        self.chosen_video.video._segmentation_time = time.time() - self.chosen_video.video.segmentation_time
         self.consistency_success_popup.dismiss()
 
     def model_area_and_crossing_detector(self, *args):
-        self.chosen_video.video._crossing_detector_time = time.time()
         super().model_area_and_crossing_detector()
         self.DCD_popup.open()
 
@@ -424,7 +420,6 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
         self.crossing_detector_accuracy_popup.open()
 
     def generate_list_of_fragments_and_global_fragments(self, *args):
-        self.chosen_video.video._fragmentation_time = time.time()
         super().generate_list_of_fragments_and_global_fragments()
         self.deactivate_tracking.setter(False)
 
