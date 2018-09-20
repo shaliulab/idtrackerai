@@ -198,12 +198,12 @@ class PreprocessingPreviewAPI(object):
             self.chosen_video.video.number_of_global_fragments_candidates_for_accumulation = self.list_of_global_fragments.number_of_global_fragments
             #XXX I skip the fit of the gamma ...
             self.list_of_global_fragments.relink_fragments_to_global_fragments(self.list_of_fragments.fragments)
-            self.chosen_video.video._number_of_unique_images_in_global_fragments = self.list_of_fragments.compute_total_number_of_images_in_global_fragments()
             self.list_of_global_fragments.compute_maximum_number_of_images()
             self.chosen_video.video._maximum_number_of_images_in_global_fragments = self.list_of_global_fragments.maximum_number_of_images
             self.list_of_fragments.get_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
             self.list_of_fragments.get_not_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
             self.list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
+            self.chosen_video.video._number_of_unique_images_in_global_fragments = self.list_of_fragments.compute_total_number_of_images_in_global_fragments()
             self.list_of_fragments.save(self.chosen_video.video.fragments_path)
             self.chosen_video.list_of_fragments = self.list_of_fragments
         else:

@@ -93,6 +93,7 @@ class SelectFile(BoxLayout):
         new_name_session_folder = self.session_name_input.text
         CHOSEN_VIDEO.video.create_session_folder(name = new_name_session_folder)
         self.welcome_popup.dismiss()
+        print("******** previous_session_folder: ", CHOSEN_VIDEO.video.previous_session_folder)
         if CHOSEN_VIDEO.video.previous_session_folder != '':
             CHOSEN_VIDEO.existent_files, CHOSEN_VIDEO.old_video = getExistentFiles(CHOSEN_VIDEO.video, CHOSEN_VIDEO.processes_list)
             if CHOSEN_VIDEO.old_video is not None and hasattr(CHOSEN_VIDEO.old_video, 'first_frame_first_global_fragment'):
@@ -250,6 +251,7 @@ class SelectFile(BoxLayout):
                                 'fragmentation_time','there_are_crossings',
                                 'track_wo_identities']
             CHOSEN_VIDEO.video.copy_attributes_between_two_video_objects(CHOSEN_VIDEO.old_video, path_attributes)
+            CHOSEN_VIDEO.video.update_paths(CHOSEN_VIDEO.video.path_to_video_object)
             CHOSEN_VIDEO.video._has_preprocessing_parameters = True
             CHOSEN_VIDEO.video._has_been_segmented = True
             CHOSEN_VIDEO.video._has_been_preprocessed = True
@@ -258,6 +260,8 @@ class SelectFile(BoxLayout):
             if CHOSEN_VIDEO.video.number_of_animals != 1:
                 CHOSEN_VIDEO.list_of_fragments = ListOfFragments.load(CHOSEN_VIDEO.video.fragments_path)
                 CHOSEN_VIDEO.list_of_global_fragments = ListOfGlobalFragments.load(CHOSEN_VIDEO.video.global_fragments_path, CHOSEN_VIDEO.list_of_fragments.fragments)
+            ### Patch to recompute the number of images in global fragments
+            CHOSEN_VIDEO.video._number_of_unique_images_in_global_fragments = CHOSEN_VIDEO.list_of_fragments.compute_total_number_of_images_in_global_fragments()
             DEACTIVATE_ROI.restored = '(restored)'
             DEACTIVATE_PREPROCESSING.restored = '(restored)'
             DEACTIVATE_TRACKING.setter(False)
