@@ -84,14 +84,14 @@ from .tracker_api import TrackerAPI
 
 class Tracker(TrackerAPI, BoxLayout):
 
-    def __init__(self, 
+    def __init__(self,
         chosen_video = None,
         deactivate_tracking = None,
         deactivate_validation = None,
         **kwargs
     ):
         TrackerAPI.__init__(self, chosen_video)
-    
+
         ## GUI ###################################################
 
         # To remove in the future
@@ -104,7 +104,7 @@ class Tracker(TrackerAPI, BoxLayout):
         self.deactivate_validation = deactivate_validation
 
         BoxLayout.__init__(self, **kwargs)
-        
+
         self.has_been_executed = False
         self.control_panel = BoxLayout(orientation = "vertical", size_hint = (.26,1.))
         self.add_widget(self.control_panel)
@@ -122,53 +122,53 @@ class Tracker(TrackerAPI, BoxLayout):
             "press the upper botton which will indicate the process that will be computed."
         )
         ## GUI ###################################################
-    
-    
+
+
     def __init_tracking_gui_handler(self, status=None):
 
         if not self.has_been_executed:
             self.create_main_layout()
             self.control_panel.add_widget(self.help_button_tracker)
             self.has_been_executed = True
-        
+
         if status==0: # status_post_processing
 
             self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
             self.start_tracking_button.text = "Show estimated\naccuracy"
-        
+
         elif 1<=status<2: # status_residual_identification
-            
+
             if status==1.1:
                 self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
                 self.start_tracking_button.text = "Show estimated\naccuracy"
-                
+
             elif status==1.2:
                 self.start_tracking_button.bind(on_release = self.start_from_post_processing)
                 self.start_tracking_button.text = "Start\npost-processing"
-        
+
         elif status==2: # status_protocol3_accumulation
 
             self.start_tracking_button.bind(on_release = self.start_from_identification)
             self.start_tracking_button.text = "Start\nresidual identification"
-        
+
         elif status==3: # status_protocol3_pretraining
 
             self.create_one_shot_accumulation_popup()
             self.start_tracking_button.bind(on_release = self.accumulate)
             self.start_tracking_button.text = "Start\naccumulation\n(protocol 3)"
-        
+
         elif status==4: # status_protocols1_and_2
-        
+
             self.create_one_shot_accumulation_popup()
             self.start_tracking_button.bind(on_release = self.accumulate)
             self.start_tracking_button.text = "Start\nidentification\nor\nprotocol 3"
-        
+
         elif status==5: # status_protocols1_and_2_not_def
-        
+
             Logger.info("Starting protocol cascade")
             self.start_tracking_button.bind(on_release = self.protocol1)
             self.track_wo_identities_button.bind(on_release = self.track_wo_identities)
-        
+
 
 
 
@@ -202,39 +202,39 @@ class Tracker(TrackerAPI, BoxLayout):
         self.chosen_video.video._track_wo_identities = True
         self.trajectories_popup.open()
 
-    
+
 
     def protocol1(self, *args):
         super().protocol1(create_popup=self.create_one_shot_accumulation_popup)
 
-        
+
 
     def one_shot_accumulation(self, *args):
         super().one_shot_accumulation(save_summaries = self.generate_tensorboard_switch.active)
-        
+
         self.accumulation_counter_value.text = str(self.accumulation_manager.counter + 1)
         if self.accumulation_manager.counter == 1:
             self.create_tracking_figures_axes()
         self.percentage_accumulated_images_value.text = str(self.accumulation_manager.ratio_accumulated_images)
         self.protocol_value.text = '2' if self.chosen_video.video.accumulation_trial == 0 else '3'
-        store_training_accuracy_and_loss_data.plot_global_fragments(self.ax_arr,
+        self.store_training_accuracy_and_loss_data.plot_global_fragments(self.ax_arr,
                                                                     self.chosen_video.video,
                                                                     self.accumulation_manager.list_of_fragments.fragments,
                                                                     black = False,
                                                                     canvas_from_GUI = self.tracking_fig_canvas)
-        store_validation_accuracy_and_loss_data.plot(self.ax_arr,
+        self.store_validation_accuracy_and_loss_data.plot(self.ax_arr,
                                                     color ='b',
                                                     canvas_from_GUI = self.tracking_fig_canvas,
                                                     index = self.accumulation_manager.counter - 1,
                                                     legend_font_color = 'w')
-        store_training_accuracy_and_loss_data.plot(self.ax_arr,
+        self.store_training_accuracy_and_loss_data.plot(self.ax_arr,
                                                     color = 'r',
                                                     canvas_from_GUI = self.tracking_fig_canvas,
                                                     index = self.accumulation_manager.counter - 1,
                                                     legend_font_color = 'w')
-        
 
-    
+
+
     def __accumulate_handler(self, status):
 
         if status==1:
@@ -256,7 +256,7 @@ class Tracker(TrackerAPI, BoxLayout):
 
     def accumulate(self, *args):
         super().accumulate(gui_handler=self.__accumulate_handler)
-        
+
 
 
     def save_and_update_accumulation_parameters_in_parachute(self):
@@ -359,7 +359,7 @@ class Tracker(TrackerAPI, BoxLayout):
         self.chosen_video.video.save()
 
 
-    
+
 
     def init_pretraining_variables(self):
         self.init_pretraining_net()
@@ -548,7 +548,7 @@ class Tracker(TrackerAPI, BoxLayout):
         self.this_is_the_end_popup.open()
         self.deactivate_validation.setter(False)
 
-    
+
 
     def start_from_identification(self, *args):
         self.identification_popup.open()

@@ -18,9 +18,9 @@ class TrackerAPI(object):
 
 
     def __init__(self, chosen_video=None, **kwargs):
-        
+
         self.chosen_video = chosen_video
-        
+
         self.number_of_animals            = None # Number of animals
         self.accumulation_network_params  = None # Network params
         self.restoring_first_accumulation = False # Flag restores first accumulation
@@ -39,17 +39,17 @@ class TrackerAPI(object):
             delete = True
 
         self.chosen_video.video.accumulation_trial = 0
-        
+
         self.chosen_video.video.create_accumulation_folder(
             iteration_number = 0,
             delete = delete
         )
-        
+
         if not self.chosen_video.video.identity_transfer:
             self.number_of_animals = self.chosen_video.video.number_of_animals
         else:
             self.number_of_animals = self.chosen_video.video.knowledge_transfer_info_dict['number_of_animals']
-        
+
         self.restoring_first_accumulation = False
 
         self.accumulation_network_params = NetworkParams(
@@ -62,7 +62,7 @@ class TrackerAPI(object):
             video_path = self.chosen_video.video.video_path
         )
 
-        # CHECK STATUS ################################### 
+        # CHECK STATUS ###################################
 
         if self.status_post_processing: # POST PROCESSING
 
@@ -71,9 +71,9 @@ class TrackerAPI(object):
             self.restore_trajectories_wo_gaps()
 
             if gui_handler: gui_handler(0) # UPDATE GUI
-        
+
         elif self.status_residual_identification: # RESIDUAL IDENTIFICATION
-            
+
             if self.chosen_video.video.track_wo_identities: # TRACK WITHOUT IDENTITIES
                 self.restore_trajectories()
                 if gui_handler: gui_handler(1.1) # UPDATE GUI
@@ -82,7 +82,7 @@ class TrackerAPI(object):
                 logger.info("Restoring residual identification")
                 self.restore_identification()
                 self.chosen_video.video._has_been_assigned = True
-                
+
                 if gui_handler: gui_handler(1.2) # UPDATE GUI
 
         elif self.status_protocol3_accumulation: # PROTOCOL3 ACCUMULATION
@@ -112,7 +112,7 @@ class TrackerAPI(object):
             logger.info("Start accumulation parachute")
 
             if gui_handler: gui_handler(3) # UPDATE GUI
-        
+
         elif self.status_protocols1_and_2: # PROTOCOLS 1 AND 2
 
             logger.info("Restoring protocol 1 and 2")
@@ -135,7 +135,7 @@ class TrackerAPI(object):
         [setattr(b, '_identity', 1) for bf in self.chosen_video.list_of_blobs.blobs_in_video for b in bf]
         [setattr(b, '_P2_vector', [1.]) for bf in self.chosen_video.list_of_blobs.blobs_in_video for b in bf]
         [setattr(b, 'frame_number', frame_number) for frame_number, bf in enumerate(self.chosen_video.list_of_blobs.blobs_in_video) for b in bf]
-        
+
     def track_single_global_fragment_video(self):
         logger.debug("------------------------> track_single_global_fragment_video")
         def get_P2_vector(identity, number_of_animals):
@@ -181,7 +181,7 @@ class TrackerAPI(object):
 
         if create_popup: create_popup()
         #self.create_one_shot_accumulation_popup()
-        
+
         self.accumulation_step_finished = True
         self.accumulation_loop()
 
@@ -191,8 +191,8 @@ class TrackerAPI(object):
         logger.warning('Starting one_shot_accumulation')
         self.accumulation_step_finished = False
         self.accumulation_manager.ratio_accumulated_images,\
-        store_validation_accuracy_and_loss_data,\
-        store_training_accuracy_and_loss_data = perform_one_accumulation_step(
+        self.store_validation_accuracy_and_loss_data,\
+        self.store_training_accuracy_and_loss_data = perform_one_accumulation_step(
             self.accumulation_manager,
             self.chosen_video.video,
             self.global_step,
@@ -215,7 +215,7 @@ class TrackerAPI(object):
         logger.info("------------------------> Calling accumulate")
 
         if self.accumulation_step_finished and self.accumulation_manager.continue_accumulation:
-            
+
             logger.info("--------------------> Performing accumulation")
             if self.accumulation_manager.counter == 1 and self.chosen_video.video.accumulation_trial == 0:
                 self.chosen_video.video._protocol1_time = time.time()-self.chosen_video.video.protocol1_time
@@ -226,17 +226,17 @@ class TrackerAPI(object):
         elif not self.accumulation_manager.continue_accumulation\
             and not self.chosen_video.video.first_accumulation_finished\
             and self.accumulation_manager.ratio_accumulated_images > THRESHOLD_EARLY_STOP_ACCUMULATION:
-            
+
             logger.info("Protocol 1 successful")
             self.save_after_first_accumulation()
             if 'protocols1_and_2' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore['protocols1_and_2']:
                 self.chosen_video.video._protocol1_time = time.time()-self.chosen_video.video.protocol1_time
-            
+
             if gui_handler: gui_handler(1) # UPDATE GUI
 
         elif not self.accumulation_manager.continue_accumulation\
             and not self.chosen_video.video.has_been_pretrained:
-            
+
             self.save_after_first_accumulation()
 
             if self.accumulation_manager.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
@@ -249,21 +249,21 @@ class TrackerAPI(object):
                     self.chosen_video.video._protocol2_time = time.time()-self.chosen_video.video.protocol2_time
                 if gui_handler: gui_handler(2.2) # UPDATE GUI
             elif self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
-                
+
                 logger.info("Protocol 2 failed -> Start protocol 3")
                 if 'protocols1_and_2' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore['protocols1_and_2']:
                     self.chosen_video.video._protocol1_time = time.time()-self.chosen_video.video.protocol1_time
                     if self.chosen_video.video.protocol2_time != 0:
                         self.chosen_video.video._protocol2_time = time.time()-self.chosen_video.video.protocol2_time
                 self.chosen_video.video._protocol3_pretraining_time = time.time()
-                
+
                 if gui_handler: gui_handler(2.3) # UPDATE GUI
                 self.protocol3()
 
         elif self.chosen_video.video.has_been_pretrained\
             and self.chosen_video.video.accumulation_trial < MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS\
             and self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
-            
+
             logger.info("Accumulation in protocol 3 is not successful. Opening parachute ...")
             if self.chosen_video.video.accumulation_trial == 0:
                 self.chosen_video.video._protocol3_accumulation_time = time.time()
@@ -272,11 +272,11 @@ class TrackerAPI(object):
                 self.save_and_update_accumulation_parameters_in_parachute()
             self.accumulation_parachute_init(self.chosen_video.video.accumulation_trial)
             self.accumulation_loop()
-        
+
         elif self.chosen_video.video.has_been_pretrained and\
             (self.accumulation_manager.ratio_accumulated_images >= THRESHOLD_ACCEPTABLE_ACCUMULATION\
             or self.chosen_video.video.accumulation_trial >= MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS):
-        
+
             logger.info("Accumulation after protocol 3 has been successful")
             if 'protocol3_accumulation' not in self.chosen_video.processes_to_restore:
                 self.chosen_video.video._protocol3_accumulation_time = time.time()-self.chosen_video.video.protocol3_accumulation_time
@@ -284,7 +284,7 @@ class TrackerAPI(object):
                 self.chosen_video.video._protocol3_accumulation_time = time.time()-self.chosen_video.video.protocol3_accumulation_time
             else:
                 self.chosen_video.video._protocol3_accumulation_time = time.time()-self.chosen_video.video.protocol3_accumulation_time
-            
+
             logger.warning("************************ Unscheduling accumulate")
             if gui_handler: gui_handler(3.1) # UPDATE GUI
             logger.warning("------------------------ dismissing one shot accumulation popup")
@@ -302,7 +302,7 @@ class TrackerAPI(object):
         self.chosen_video.video.init_accumulation_statistics_attributes()
         self.accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
         logger.warning('Calling accumulate from accumulation_loop')
-        
+
 
 
 
@@ -407,23 +407,23 @@ class TrackerAPI(object):
     def restore_trajectories_wo_gaps(self):
         self.restore_video_attributes()
         self.chosen_video.video.save()
-            
 
 
 
-    
+
+
 
     ############################################################################################
     ### PROPERTIES #############################################################################
     ############################################################################################
 
     ### STATUS ###
-    
+
     @property
     def status_post_processing(self):
         #return 'post_processing' in self.chosen_video.processes_to_restore and self.chosen_video.processes_to_restore['post_processing']
         return self.chosen_video.processes_to_restore.get('post_processing', None) is not None
-        
+
     @property
     def status_residual_identification(self):
         #return 'residual_identification' in self.chosen_video.processes_to_restore and self.chosen_video.processes_to_restore['residual_identification']
@@ -433,19 +433,18 @@ class TrackerAPI(object):
     def status_protocol3_accumulation(self):
         #return 'protocol3_accumulation' in self.chosen_video.processes_to_restore and self.chosen_video.processes_to_restore['protocol3_accumulation']
         return self.chosen_video.processes_to_restore.get('protocol3_accumulation', None) is not None
-    
+
     @property
     def status_protocol3_pretraining(self):
         #return 'protocol3_pretraining' in self.chosen_video.processes_to_restore and self.chosen_video.processes_to_restore['protocol3_pretraining']
         return self.chosen_video.processes_to_restore.get('protocol3_pretraining', None) is not None
-    
+
     @property
     def status_protocols1_and_2(self):
         #return 'protocols1_and_2' in self.chosen_video.processes_to_restore and self.chosen_video.processes_to_restore['protocols1_and_2']
         return self.chosen_video.processes_to_restore.get('protocols1_and_2', None) is not None
-    
+
     @property
     def status_protocols1_and_2_not_def(self):
         #return 'protocols1_and_2' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore['protocols1_and_2']
         return self.chosen_video.processes_to_restore.get('protocols1_and_2', None) is None
-    
