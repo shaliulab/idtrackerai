@@ -385,7 +385,7 @@ class IndividualValidator(BoxLayout):
                     root = roots[0]
                 else:
                     root  = ''
-                if isinstance(cur_id, int):
+                if isinstance(cur_id, int) or isinstance(cur_id, np.integer):
                     cur_id_str = root + cur_id_str
                     int_centroid = np.asarray(blob.centroid).astype('int')
                     cv2.circle(frame, tuple(int_centroid), 2, self.colors[cur_id], -1)

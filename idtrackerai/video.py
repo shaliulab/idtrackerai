@@ -145,6 +145,8 @@ class Video(object):
         self._protocol3_accumulation_time = 0.
         self._identify_time = 0.
         self._create_trajectories_time = 0.
+        self._there_are_crossings = True
+        self._track_wo_identities = False
         if SIGMA_GAUSSIAN_BLURRING is not None:
             self.sigma_gaussian_blurring = SIGMA_GAUSSIAN_BLURRING
 
@@ -394,6 +396,10 @@ class Video(object):
         return self._tracking_with_knowledge_transfer
 
     @property
+    def track_wo_identities(self):
+        return self._track_wo_identities
+
+    @property
     def video_path(self):
         return self._video_path
 
@@ -493,6 +499,10 @@ class Video(object):
         return self._number_of_unique_images_in_global_fragments
 
     @property
+    def there_are_crossings(self):
+        return self._there_are_crossings
+
+    @property
     def ratio_accumulated_images(self):
         return self._ratio_accumulated_images
 
@@ -544,7 +554,7 @@ class Video(object):
         self._video_folder = os.path.split(new_session_path)[0]
         self.video_path = os.path.join(self.video_folder,video_name)
         attributes_to_modify = {key: getattr(self, key) for key in self.__dict__
-        if isinstance(getattr(self, key), basestring)
+        if isinstance(getattr(self, key), str)
         and old_session_path in getattr(self, key) }
 
         for key in attributes_to_modify:
@@ -628,7 +638,7 @@ class Video(object):
                             logger.warn('No checkpoint found in %s ' %os.path.join(getattr(self, folder), sub_folder))
 
         attributes_to_modify = {key: getattr(self, key) for key in self.__dict__
-        if isinstance(getattr(self, key), basestring)
+        if isinstance(getattr(self, key), str)
         and current_session_name in getattr(self, key) }
         logger.info("Modifying folder name from %s to %s "  %(current_session_name, new_session_name))
         os.rename(self.session_folder,
@@ -794,6 +804,15 @@ class Video(object):
             os.makedirs(self.trajectories_folder)
             logger.info("the folder %s has been created" %self.trajectories_folder)
 
+    def create_trajectories_wo_identities_folder(self):
+        """Folder in which trajectories without identites are stored
+        """
+        self.trajectories_wo_identities_folder = os.path.join(self.session_folder,'trajectories_wo_identities')
+        if not os.path.isdir(self.trajectories_wo_identities_folder):
+            logger.info("Creating trajectories folder...")
+            os.makedirs(self.trajectories_wo_identities_folder)
+            logger.info("the folder %s has been created" %self.trajectories_wo_identities_folder)
+
     def create_trajectories_wo_gaps_folder(self):
         """Folder in which trajectories files are stored
         """
@@ -816,7 +835,7 @@ class Video(object):
         for parallelisation"""
         starting_frames = np.arange(0, self.number_of_frames, FRAMES_PER_EPISODE)
         ending_frames = np.hstack((starting_frames[1:]-1, self.number_of_frames))
-        self._episodes_start_end = zip(starting_frames, ending_frames)
+        self._episodes_start_end = list(zip(starting_frames, ending_frames))
         self._number_of_episodes = len(starting_frames)
 
     def in_which_episode(self, frame_number):
@@ -832,15 +851,17 @@ class Video(object):
 
     def copy_attributes_between_two_video_objects(self, video_object_source, list_of_attributes, is_property = None):
         for i, attribute in enumerate(list_of_attributes):
-            if not hasattr(video_object_source, attribute): raise ValueError("attribute %s does not exist" %attribute)
-            if is_property is not None:
-                attribute_is_property = is_property[i]
-                if attribute_is_property:
-                    setattr(self, '_' + attribute, getattr(video_object_source, attribute))
-                else:
-                    setattr(self, attribute, getattr(video_object_source, attribute))
+            if not hasattr(video_object_source, attribute):
+                logger.warning("attribute %s does not exist" %attribute)
             else:
-                setattr(self, '_' + attribute, getattr(video_object_source, attribute))
+                if is_property is not None:
+                    attribute_is_property = is_property[i]
+                    if attribute_is_property:
+                        setattr(self, '_' + attribute, getattr(video_object_source, attribute))
+                    else:
+                        setattr(self, attribute, getattr(video_object_source, attribute))
+                else:
+                    setattr(self, '_' + attribute, getattr(video_object_source, attribute))
 
     def compute_overall_P2(self, fragments):
         weighted_P2 = 0
@@ -874,12 +895,3 @@ if __name__ == "__main__":
 
     video = Video()
     video.video_path = '/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi'
-
-# 'time_preprocessing': None,
-# 'time_accumulation_before_pretraining': None,
-# 'time_pretraining': None,
-# 'time_accumulation_after_pretraining': None,
-# 'time_assignment': None,
-# 'time_postprocessing': None,
-# 'total_time': None,
-#  }, ignore_index=True)

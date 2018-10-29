@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, print_function, division
 import os
@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 from idtrackerai.blob import Blob
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.network.identification_model.get_data import duplicate_PCA_images
+from idtrackerai.constants import MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -49,12 +50,14 @@ class CrossingDataset(object):
         self.scope = scope
         self.dataset_image_size = dataset_image_size
         self.blobs = blobs_list
+        self.there_are_crossings = True 
         self.get_video_height_and_width_according_to_resolution_reduction()
         if (scope == 'training' or scope == 'validation'):
             self.get_list_of_crossing_blobs_for_training(crossings, image_size)
-            self.get_list_of_individual_blobs_for_training(individual_blobs)
-            logger.info("number of sure crossing images used for training: %i" %len(self.crossing_blobs))
-            logger.info("number of individual images used for training: %i" %len(self.individual_blobs))
+            if self.there_are_crossings:
+                self.get_list_of_individual_blobs_for_training(individual_blobs)
+                logger.info("number of sure crossing images used for training: %i" %len(self.crossing_blobs))
+                logger.info("number of individual images used for training: %i" %len(self.individual_blobs))
         if scope == 'test':
             self.image_size = image_size
             self.get_list_of_blobs_for_test(test)
@@ -85,13 +88,17 @@ class CrossingDataset(object):
 
     def get_list_of_crossing_blobs_for_training(self, crossings, image_size):
         if len(crossings) == 0 or image_size is None:
-
             self.crossing_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
                                     if blob.is_a_sure_crossing()]
             logger.debug("number of crossing blobs (in get list): %i" %len(self.crossing_blobs))
-            np.random.seed(0)
-            np.random.shuffle(self.crossing_blobs)
-            self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossing_blobs]) + 5
+            if len(self.crossing_blobs) <= MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR:
+                logger.debug("Not enough crossings where found")
+                self.there_are_crossings = False
+            else:
+                self.there_are_crossings = True
+                np.random.seed(0)
+                np.random.shuffle(self.crossing_blobs)
+                self.image_size = np.max([np.max(crossing.bounding_box_image.shape) for crossing in self.crossing_blobs]) + 5
         else:
             self.crossing_blobs = crossings
             self.image_size = image_size
