@@ -91,7 +91,7 @@ class Chosen_Video(EventDispatcher):
             print('000', value)
             self.video.video_path = value
             print('111')
-        except Exception,e:
+        except Exception as e:
             print(str(e))
             print("Choose a video to proceed")
 

@@ -533,7 +533,7 @@ class Blob(object):
         bounding_box_image = remove_background_pixels(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, folder_to_save_for_paper_figure)
         pca = PCA()
         pxs = np.unravel_index(pixels,(height,width))
-        pxs1 = np.asarray(zip(pxs[1],pxs[0]))
+        pxs1 = np.asarray(list(zip(pxs[1],pxs[0])))
         pca.fit(pxs1)
         rot_ang = np.arctan(pca.components_[0][1]/pca.components_[0][0])*180/np.pi + 45 # we substract 45 so that the fish is aligned in the diagonal. This way we have smaller frames
         center = (pca.mean_[0], pca.mean_[1])
@@ -558,8 +558,8 @@ class Blob(object):
 
 
         crop_distance = int(identification_image_size/2)
-        x_range = xrange(center[0] - crop_distance, center[0] + crop_distance)
-        y_range = xrange(center[1] - crop_distance, center[1] + crop_distance)
+        x_range = range(center[0] - crop_distance, center[0] + crop_distance)
+        y_range = range(center[1] - crop_distance, center[1] + crop_distance)
         image_for_identification = minif_rot.take(y_range, mode = 'wrap', axis=0).take(x_range, mode = 'wrap', axis=1)
         height, width = image_for_identification.shape
 

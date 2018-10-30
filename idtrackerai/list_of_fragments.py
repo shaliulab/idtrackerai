@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -122,7 +122,10 @@ class ListOfFragments(object):
     def compute_total_number_of_images_in_global_fragments(self):
         """Sets the number of images available in global fragments (without repetitions)
         """
-        self.number_of_images_in_global_fragments = sum([fragment.number_of_images for fragment in self.fragments if fragment.is_in_a_global_fragment])
+        self.number_of_images_in_global_fragments = sum([fragment.number_of_images
+                                                 for fragment in self.fragments
+                                                 if fragment.identifier in self.accumulable_individual_fragments])
+        return self.number_of_images_in_global_fragments
 
     def compute_ratio_of_images_used_for_pretraining(self):
         """Returns the ratio of images used for pretraining over the number of

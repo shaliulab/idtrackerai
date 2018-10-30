@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, print_function, division
 import os
@@ -32,7 +32,7 @@ import numpy as np
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.list_of_fragments import ListOfFragments
 from idtrackerai.blob import Blob
-from idtrackerai.utils.GUI_utils import selectDir, getInput
+# from idtrackerai.utils.GUI_utils import selectDir, getInput
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -111,7 +111,7 @@ def generate_groundtruth(video, blobs_in_video = None, start = None, end = None,
 
 if __name__ == "__main__":
 
-    session_path = selectDir('./') #select path to video
+    # session_path = selectDir('./') #select path to video
     video_path = os.path.join(session_path,'video_object.npy')
     video = np.load(video_path).item()
     start = getInput('GroundTruth (start)', 'Input the starting frame for the interval in which the video has been validated')

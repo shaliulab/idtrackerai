@@ -171,7 +171,7 @@ class PreprocessingPreview(BoxLayout):
 
     def create_frame_interval_popup(self):
         self.tracking_interval_container = BoxLayout(orientation = "vertical")
-        self.tracking_interval_label = CustomLabel(text = "Insert the the video interval (e.g. 100 - 2050) on which the tracking will be performed")
+        self.tracking_interval_label = CustomLabel(text = "Insert the video intervals in frames separated by commas (e.g. 100-250, 300-500) on which the tracking will be performed")
         self.tracking_interval_container.add_widget(self.tracking_interval_label)
         self.tracking_interval_text_input = TextInput(text = '', multiline=False)
         self.tracking_interval_container.add_widget(self.tracking_interval_text_input)
@@ -455,12 +455,12 @@ class PreprocessingPreview(BoxLayout):
             CHOSEN_VIDEO.video.number_of_global_fragments_candidates_for_accumulation = self.list_of_global_fragments.number_of_global_fragments
             #XXX I skip the fit of the gamma ...
             self.list_of_global_fragments.relink_fragments_to_global_fragments(self.list_of_fragments.fragments)
-            CHOSEN_VIDEO.video._number_of_unique_images_in_global_fragments = self.list_of_fragments.compute_total_number_of_images_in_global_fragments()
             self.list_of_global_fragments.compute_maximum_number_of_images()
             CHOSEN_VIDEO.video._maximum_number_of_images_in_global_fragments = self.list_of_global_fragments.maximum_number_of_images
             self.list_of_fragments.get_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
             self.list_of_fragments.get_not_accumulable_individual_fragments_identifiers(self.list_of_global_fragments)
             self.list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
+            CHOSEN_VIDEO.video._number_of_unique_images_in_global_fragments = self.list_of_fragments.compute_total_number_of_images_in_global_fragments()
             self.list_of_fragments.save(CHOSEN_VIDEO.video.fragments_path)
             CHOSEN_VIDEO.list_of_fragments = self.list_of_fragments
         else:

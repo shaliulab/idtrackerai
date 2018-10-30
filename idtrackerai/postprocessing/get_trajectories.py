@@ -126,7 +126,7 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
 
         for blob in blobs_in_frame:
 
-            if isinstance(blob.final_identity, int):
+            if isinstance(blob.final_identity, int) or isinstance(blob.final_identity, np.integer):
                 centroid_trajectories = assign_point_to_identity(blob.centroid,
                                                                 blob.final_identity,
                                                                 blob.frame_number,
@@ -143,6 +143,30 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
                                                                     centroid_trajectories)
 
     return centroid_trajectories, id_probabilities
+
+
+def produce_trajectories_wo_identities(blobs_in_video, number_of_frames, number_of_animals):
+    centroid_trajectories = np.ones((number_of_frames, number_of_animals, 2))*np.nan
+    identifiers_prev = np.arange(number_of_animals).astype(np.float32)
+    for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video, "creating trajectories")):
+        if frame_number != len(blobs_in_video)-1:
+            identifiers_next = [b.fragment_identifier for b in blobs_in_video[frame_number+1]]
+        else:
+            identifiers_next = [b.fragment_identifier for b in blobs_in_video[frame_number]]
+        for blob_number, blob in enumerate(blobs_in_frame):
+            if blob.is_an_individual:
+                if blob.fragment_identifier in identifiers_prev:
+                    column = np.where(identifiers_prev == blob.fragment_identifier)[0][0]
+                else:
+                    column = np.where(np.isnan(identifiers_prev))[0][0]
+                    identifiers_prev[column] = blob.fragment_identifier
+
+                blob._identity = int(column+1)
+                centroid_trajectories[frame_number, column, :] = blob.centroid
+
+                if blob.fragment_identifier not in identifiers_next:
+                    identifiers_prev[column] = np.nan
+    return centroid_trajectories, None
 
 
 def produce_output_dict(blobs_in_video, video):
@@ -163,9 +187,16 @@ def produce_output_dict(blobs_in_video, video):
         Output dictionary containing trajectories as values
 
     """
-    centroid_trajectories, id_probabilities = \
-        produce_trajectories(blobs_in_video, video.number_of_frames,
-                             video.number_of_animals)
+    if not video.track_wo_identities:
+        centroid_trajectories, id_probabilities = \
+            produce_trajectories(blobs_in_video, video.number_of_frames,
+                                 video.number_of_animals)
+    else:
+        video._number_of_animals = np.max([len(bf) for bf in blobs_in_video])
+        centroid_trajectories, id_probabilities = \
+            produce_trajectories_wo_identities(blobs_in_video,
+                                                video.number_of_frames,
+                                                video.number_of_animals)
     output_dict = {'trajectories': centroid_trajectories,
                    'id_probabilities': id_probabilities,
                    'git_commit': video.git_commit,

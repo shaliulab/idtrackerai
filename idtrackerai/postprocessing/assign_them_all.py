@@ -71,7 +71,7 @@ def generate_temp_image(video, pixels, bounding_box_in_frame_coordinates):
 
 def compute_max_distance_transform(video, blob):
     temp_image = generate_temp_image(video, blob.pixels, blob.bounding_box_in_frame_coordinates)
-    return np.max(cv2.distanceTransform(temp_image, cv2.cv.CV_DIST_L2, cv2.cv.CV_DIST_MASK_PRECISE))
+    return np.max(cv2.distanceTransform(temp_image, cv2.DIST_L2, cv2.DIST_MASK_PRECISE))
 
 def erode(image, kernel_size):
     kernel = np.ones(kernel_size, np.uint8)
@@ -140,7 +140,7 @@ def get_blob_by_identity(blobs_in_frame, identity):
             identity in blob.identity_corrected_closing_gaps):
             return [blob]
         elif (hasattr(blob, 'identity_corrected_closing_gaps')
-            and isinstance(blob.identity_corrected_closing_gaps, int) and
+            and (isinstance(blob.identity_corrected_closing_gaps, int) or isinstance(blob.identity_corrected_closing_gaps, np.integer)) and
             identity == blob.identity_corrected_closing_gaps):
             return [blob]
     return None
@@ -155,7 +155,7 @@ def get_candidate_blobs_by_overlapping(blob_to_test, eroded_blobs_in_frame):
 def get_missing_identities_from_blobs_in_frame(possible_identities, blobs_in_frame, occluded_identities_in_frame):
     identities_in_frame = []
     for blob in blobs_in_frame:
-        if isinstance(blob.final_identity, int):
+        if isinstance(blob.final_identity, int) or isinstance(blob.final_identity, np.integer):
             identities_in_frame.append(blob.final_identity)
         elif isinstance(blob.final_identity, list):
             identities_in_frame.extend(blob.final_identity)
@@ -168,7 +168,7 @@ def get_candidate_centroid(individual_gap_interval, previous_blob_to_the_gap, ne
                                 if blob_for_interpolation.is_an_individual else
                                 blob_for_interpolation.interpolated_centroids[blob_for_interpolation.identity_corrected_closing_gaps.index(identity)]
                                 for blob_for_interpolation in blobs_for_interpolation]
-    centroids_to_interpolate = np.asarray(zip(*centroids_to_interpolate))
+    centroids_to_interpolate = np.asarray(list(zip(*centroids_to_interpolate)))
     argsort_x = np.argsort(centroids_to_interpolate[0])
     centroids_to_interpolate[0] = centroids_to_interpolate[0][argsort_x]
     centroids_to_interpolate[1] = centroids_to_interpolate[1][argsort_x]
@@ -177,16 +177,16 @@ def get_candidate_centroid(individual_gap_interval, previous_blob_to_the_gap, ne
     y_interp = np.interp(x_interp, centroids_to_interpolate[0], centroids_to_interpolate[1])
     if border == 'start' and np.all(argsort_x == np.asarray([0, 1])):
         # logger.debug('Finished getting candidate centroids')
-        return zip(x_interp, y_interp)[1]
+        return list(zip(x_interp, y_interp))[1]
     elif border == 'start' and np.all(argsort_x == np.asarray([1, 0])):
         # logger.debug('Finished getting candidate centroids')
-        return zip(x_interp, y_interp)[-2]
+        return list(zip(x_interp, y_interp))[-2]
     elif border == 'end' and np.all(argsort_x == np.asarray([0, 1])):
         # logger.debug('Finished getting candidate centroids')
-        return zip(x_interp, y_interp)[-2]
+        return list(zip(x_interp, y_interp))[-2]
     elif border == 'end' and np.all(argsort_x == np.asarray([1, 0])):
         # logger.debug('Finished getting candidate centroids')
-        return zip(x_interp, y_interp)[1]
+        return list(zip(x_interp, y_interp))[1]
     else:
         raise ValueError('border must be start or end: %s was given instead' %border)
 
@@ -359,9 +359,9 @@ def assign_identity_to_new_blobs(video, fragments, blobs_in_video, possible_iden
             new_original_blobs.append(original_blob)
         elif len(candidate_tuples_with_centroids_in_original_blob) > 1 and original_blob.is_a_crossing: # Note that the original blobs that were unidentified (identity 0) are set to zero before starting the main while loop
             # logger.debug('Many candidate tuples for this original blob, and the original blob is a crossing')
-            candidate_eroded_blobs = zip(*candidate_tuples_with_centroids_in_original_blob)[0]
-            candidate_eroded_blobs_centroids = zip(*candidate_tuples_with_centroids_in_original_blob)[1]
-            candidate_eroded_blobs_identities = zip(*candidate_tuples_with_centroids_in_original_blob)[2]
+            candidate_eroded_blobs = list(zip(*candidate_tuples_with_centroids_in_original_blob))[0]
+            candidate_eroded_blobs_centroids = list(zip(*candidate_tuples_with_centroids_in_original_blob))[1]
+            candidate_eroded_blobs_identities = list(zip(*candidate_tuples_with_centroids_in_original_blob))[2]
             if len(set(candidate_eroded_blobs)) == 1: # crossing not split
                 original_blob.interpolated_centroids = [candidate_eroded_blob_centroid
                                                                     for candidate_eroded_blob_centroid in candidate_eroded_blobs_centroids]
