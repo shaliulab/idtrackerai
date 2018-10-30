@@ -4,15 +4,19 @@ if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
 else:
     import logging; logger = logging.getLogger(__name__)
 
-
-from idtrackerai.network.identification_model.network_params import NetworkParams
-from idtrackerai.network.identification_model.id_CNN         import ConvNetwork
-from idtrackerai.accumulation_manager                        import AccumulationManager
-from idtrackerai.list_of_blobs                               import ListOfBlobs
-from idtrackerai.accumulator                                 import perform_one_accumulation_step
+from idtrackerai.postprocessing.identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
+from idtrackerai.postprocessing.correct_impossible_velocity_jumps        import correct_impossible_velocity_jumps
+from idtrackerai.network.identification_model.network_params             import NetworkParams
+from idtrackerai.postprocessing.compute_velocity_model                   import compute_model_velocity
+from idtrackerai.network.identification_model.id_CNN                     import ConvNetwork
+from idtrackerai.postprocessing.get_trajectories                         import produce_output_dict
+from idtrackerai.accumulation_manager                                    import AccumulationManager
+from idtrackerai.list_of_blobs                                           import ListOfBlobs
+from idtrackerai.accumulator                                             import perform_one_accumulation_step
 
 from idtrackerai.constants import THRESHOLD_ACCEPTABLE_ACCUMULATION
 from idtrackerai.constants import THRESHOLD_EARLY_STOP_ACCUMULATION
+from idtrackerai.constants import VEL_PERCENTILE
 
 class TrackerAPI(object):
 
@@ -290,7 +294,7 @@ class TrackerAPI(object):
             logger.warning("------------------------ dismissing one shot accumulation popup")
             if gui_handler: gui_handler(3.2) # UPDATE GUI
             self.save_after_second_accumulation()
-            Logger.info("Start residual indentification")
+            logger.info("Start residual indentification")
             if gui_handler: gui_handler(3.3) # UPDATE GUI
 
 
@@ -409,9 +413,111 @@ class TrackerAPI(object):
         self.chosen_video.video.save()
 
 
+    def postprocess_impossible_jumps(self, *args):
+        if not hasattr(self.chosen_video.video, 'velocity_threshold') and hasattr(self.chosen_video.old_video,'velocity_threshold'):
+            self.chosen_video.video.velocity_threshold = self.chosen_video.old_video.velocity_threshold
+        elif not hasattr(self.chosen_video.old_video, 'velocity_threshold'):
+            self.chosen_video.video.velocity_threshold = compute_model_velocity(
+                                                                self.chosen_video.list_of_fragments.fragments,
+                                                                self.chosen_video.video.number_of_animals,
+                                                                percentile = VEL_PERCENTILE)
+        correct_impossible_velocity_jumps(self.chosen_video.video, self.chosen_video.list_of_fragments)
+        self.chosen_video.list_of_fragments.save(self.chosen_video.video.fragments_path)
+        self.chosen_video.video.save()
+        
+
+    def update_list_of_blobs(self, *args):
+        self.chosen_video.video.individual_fragments_stats = self.chosen_video.list_of_fragments.get_stats(self.chosen_video.list_of_global_fragments)
+        self.chosen_video.video.compute_overall_P2(self.chosen_video.list_of_fragments.fragments)
+        self.chosen_video.list_of_fragments.save_light_list(self.chosen_video.video._accumulation_folder)
+        self.chosen_video.video.save()
+        if not hasattr(self.chosen_video, 'list_of_blobs'):
+            self.chosen_video.list_of_blobs = ListOfBlobs.load(self.chosen_video.video, self.chosen_video.old_video.blobs_path)
+        self.chosen_video.list_of_blobs.update_from_list_of_fragments(self.chosen_video.list_of_fragments.fragments,
+                                                    self.chosen_video.video.fragment_identifier_to_index)
+        # if False:
+        #     self.chosen_video.list_of_blobs.compute_nose_and_head_coordinates()
+        self.chosen_video.list_of_blobs.save(self.chosen_video.video,
+                                        self.chosen_video.video.blobs_path,
+                                        number_of_chunks = self.chosen_video.video.number_of_frames)
+        self.chosen_video.video._identify_time = time.time()-self.chosen_video.video.identify_time
+
+
+    def create_trajectories(self, *args, 
+        trajectories_popup_dismiss=None,
+        interpolate_crossings_popup_open=None,
+        update_and_show_happy_ending_popup=None ):
+
+        self.chosen_video.video._create_trajectories_time = time.time()
+        if 'post_processing' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore['post_processing']:
+            if not self.chosen_video.video.track_wo_identities:
+                self.chosen_video.video.create_trajectories_folder()
+                trajectories_file = os.path.join(self.chosen_video.video.trajectories_folder, 'trajectories.npy')
+                trajectories = produce_output_dict(self.chosen_video.list_of_blobs.blobs_in_video, self.chosen_video.video)
+            else:
+                self.chosen_video.video.create_trajectories_wo_identities_folder()
+                trajectories_file = os.path.join(self.chosen_video.video.trajectories_wo_identities_folder, 'trajectories_wo_identities.npy')
+                trajectories = produce_output_dict(self.chosen_video.list_of_blobs.blobs_in_video, self.chosen_video.video)
+            np.save(trajectories_file, trajectories)
+            logger.info("Saving trajectories")
+            np.save(trajectories_file, trajectories)
+        self.chosen_video.video._has_trajectories = True
+        self.chosen_video.video.save()
+
+        # Call GUI function
+        if trajectories_popup_dismiss: trajectories_popup_dismiss()
+
+
+        if self.chosen_video.video.number_of_animals != 1 and self.chosen_video.list_of_global_fragments.number_of_global_fragments != 1 and not self.chosen_video.video.track_wo_identities:
+            # Call GUI function
+            if interpolate_crossings_popup_open: interpolate_crossings_popup_open()
+        else:
+            self.chosen_video.video.overall_P2 = 1.
+            self.chosen_video.video._has_been_assigned = True
+            self.chosen_video.video._has_crossings_solved = False
+            self.chosen_video.video._has_trajectories_wo_gaps = False
+            self.chosen_video.list_of_blobs.save(self.chosen_video.video,
+                                            self.chosen_video.video.blobs_path,
+                                            number_of_chunks = self.chosen_video.video.number_of_frames)
+            # Call GUI function
+            if update_and_show_happy_ending_popup: update_and_show_happy_ending_popup()
 
 
 
+    def interpolate_crossings(self, *args):
+        self.chosen_video.list_of_blobs_no_gaps = copy.deepcopy(self.chosen_video.list_of_blobs)
+        # if not hasattr(self.chosen_video.list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
+        #     Logger.debug("adding attribute was_a_crossing to every blob")
+        #     [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
+        #         self.chosen_video.list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
+        self.chosen_video.video._has_crossings_solved = False
+        self.chosen_video.list_of_blobs_no_gaps = close_trajectories_gaps(self.chosen_video.video, self.chosen_video.list_of_blobs_no_gaps, self.chosen_video.list_of_fragments)
+        self.chosen_video.video.blobs_no_gaps_path = os.path.join(os.path.split(self.chosen_video.video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
+        self.chosen_video.list_of_blobs_no_gaps.save(self.chosen_video.video, path_to_save = self.chosen_video.video.blobs_no_gaps_path, number_of_chunks = self.chosen_video.video.number_of_frames)
+        self.chosen_video.video._has_crossings_solved = True
+        self.chosen_video.video.save()
+        
+
+    def create_trajectories_wo_gaps(self, *args):
+        self.chosen_video.video.create_trajectories_wo_gaps_folder()
+        logger.info("Generating trajectories. The trajectories files are stored in %s" %self.chosen_video.video.trajectories_wo_gaps_folder)
+        trajectories_wo_gaps_file = os.path.join(self.chosen_video.video.trajectories_wo_gaps_folder, 'trajectories_wo_gaps.npy')
+        trajectories_wo_gaps = produce_output_dict(self.chosen_video.list_of_blobs_no_gaps.blobs_in_video, self.chosen_video.video)
+        np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
+        self.chosen_video.video._has_trajectories_wo_gaps = True
+        logger.info("Saving trajectories")
+        self.chosen_video.list_of_blobs = assign_zeros_with_interpolation_identities(self.chosen_video.list_of_blobs, self.chosen_video.list_of_blobs_no_gaps)
+        trajectories_file = os.path.join(self.chosen_video.video.trajectories_folder, 'trajectories.npy')
+        trajectories = produce_output_dict(self.chosen_video.list_of_blobs.blobs_in_video, self.chosen_video.video)
+        np.save(trajectories_file, trajectories)
+        self.chosen_video.video.save()
+        self.chosen_video.video._create_trajectories_time = time.time()-self.chosen_video.video.create_trajectories_time
+        
+    def update_and_show_happy_ending_popup(self, *args):
+        if not hasattr(self.chosen_video.video, 'overall_P2'):
+            self.chosen_video.video.compute_overall_P2(self.chosen_video.list_of_fragments.fragments)
+        self.chosen_video.video.save()
+        
 
     ############################################################################################
     ### PROPERTIES #############################################################################

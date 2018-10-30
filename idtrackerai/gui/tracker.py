@@ -417,8 +417,6 @@ class Tracker(TrackerAPI, BoxLayout):
                                                     plot_flag = False,
                                                     batch_size = BATCH_SIZE_IDCNN,
                                                     canvas_from_GUI = self.pretrain_fig_canvas)
-        print([f.used_for_pretraining for f in CHOSEN_VIDEO.list_of_fragments.fragments if f.is_in_a_global_fragment])
-        print([[f.used_for_pretraining for f in gf.individual_fragments] for gf in CHOSEN_VIDEO.list_of_global_fragments.global_fragments])
         self.pretraining_counter += 1
         self.pretraining_counter_value.text = str(self.pretraining_counter)
         self.percentage_pretrained_images_value.text = str(self.ratio_of_pretrained_images)
@@ -451,100 +449,32 @@ class Tracker(TrackerAPI, BoxLayout):
         self.impossible_jumps_popup.open()
 
     def postprocess_impossible_jumps(self, *args):
-        if not hasattr(self.chosen_video.video, 'velocity_threshold') and hasattr(self.chosen_video.old_video,'velocity_threshold'):
-            self.chosen_video.video.velocity_threshold = self.chosen_video.old_video.velocity_threshold
-        elif not hasattr(self.chosen_video.old_video, 'velocity_threshold'):
-            self.chosen_video.video.velocity_threshold = compute_model_velocity(
-                                                                self.chosen_video.list_of_fragments.fragments,
-                                                                self.chosen_video.video.number_of_animals,
-                                                                percentile = VEL_PERCENTILE)
-        correct_impossible_velocity_jumps(self.chosen_video.video, self.chosen_video.list_of_fragments)
-        self.chosen_video.list_of_fragments.save(self.chosen_video.video.fragments_path)
-        self.chosen_video.video.save()
+        super().postprocess_impossible_jumps(*args)
         self.impossible_jumps_popup.dismiss()
 
     def update_list_of_blobs(self, *args):
-        self.chosen_video.video.individual_fragments_stats = self.chosen_video.list_of_fragments.get_stats(self.chosen_video.list_of_global_fragments)
-        self.chosen_video.video.compute_overall_P2(self.chosen_video.list_of_fragments.fragments)
-        self.chosen_video.list_of_fragments.save_light_list(self.chosen_video.video._accumulation_folder)
-        self.chosen_video.video.save()
-        if not hasattr(self.chosen_video, 'list_of_blobs'):
-            self.chosen_video.list_of_blobs = ListOfBlobs.load(self.chosen_video.video, self.chosen_video.old_video.blobs_path)
-        self.chosen_video.list_of_blobs.update_from_list_of_fragments(self.chosen_video.list_of_fragments.fragments,
-                                                    self.chosen_video.video.fragment_identifier_to_index)
-        # if False:
-        #     self.chosen_video.list_of_blobs.compute_nose_and_head_coordinates()
-        self.chosen_video.list_of_blobs.save(self.chosen_video.video,
-                                        self.chosen_video.video.blobs_path,
-                                        number_of_chunks = self.chosen_video.video.number_of_frames)
-        self.chosen_video.video._identify_time = time.time()-self.chosen_video.video.identify_time
+        super().update_list_of_blobs(*args)
         self.trajectories_popup.open()
 
     def create_trajectories(self, *args):
-        self.chosen_video.video._create_trajectories_time = time.time()
-        if 'post_processing' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore['post_processing']:
-            if not self.chosen_video.video.track_wo_identities:
-                self.chosen_video.video.create_trajectories_folder()
-                trajectories_file = os.path.join(self.chosen_video.video.trajectories_folder, 'trajectories.npy')
-                trajectories = produce_output_dict(self.chosen_video.list_of_blobs.blobs_in_video, self.chosen_video.video)
-            else:
-                self.chosen_video.video.create_trajectories_wo_identities_folder()
-                trajectories_file = os.path.join(self.chosen_video.video.trajectories_wo_identities_folder, 'trajectories_wo_identities.npy')
-                trajectories = produce_output_dict(self.chosen_video.list_of_blobs.blobs_in_video, self.chosen_video.video)
-            np.save(trajectories_file, trajectories)
-            Logger.info("Saving trajectories")
-            np.save(trajectories_file, trajectories)
-        self.chosen_video.video._has_trajectories = True
-        self.chosen_video.video.save()
-        self.trajectories_popup.dismiss()
-        if self.chosen_video.video.number_of_animals != 1 and self.chosen_video.list_of_global_fragments.number_of_global_fragments != 1 and not self.chosen_video.video.track_wo_identities:
-            self.interpolate_crossings_popup.open()
-        else:
-            self.chosen_video.video.overall_P2 = 1.
-            self.chosen_video.video._has_been_assigned = True
-            self.chosen_video.video._has_crossings_solved = False
-            self.chosen_video.video._has_trajectories_wo_gaps = False
-            self.chosen_video.list_of_blobs.save(self.chosen_video.video,
-                                            self.chosen_video.video.blobs_path,
-                                            number_of_chunks = self.chosen_video.video.number_of_frames)
-            self.update_and_show_happy_ending_popup()
+        super().create_trajectories(*args,
+            trajectories_popup_dismiss=self.trajectories_popup.dismiss,
+            interpolate_crossings_popup_open=self.interpolate_crossings_popup.open,
+            update_and_show_happy_ending_popup=self.update_and_show_happy_ending_popup
+        )
 
     def interpolate_crossings(self, *args):
-        self.chosen_video.list_of_blobs_no_gaps = copy.deepcopy(self.chosen_video.list_of_blobs)
-        # if not hasattr(self.chosen_video.list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
-        #     Logger.debug("adding attribute was_a_crossing to every blob")
-        #     [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
-        #         self.chosen_video.list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
-        self.chosen_video.video._has_crossings_solved = False
-        self.chosen_video.list_of_blobs_no_gaps = close_trajectories_gaps(self.chosen_video.video, self.chosen_video.list_of_blobs_no_gaps, self.chosen_video.list_of_fragments)
-        self.chosen_video.video.blobs_no_gaps_path = os.path.join(os.path.split(self.chosen_video.video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
-        self.chosen_video.list_of_blobs_no_gaps.save(self.chosen_video.video, path_to_save = self.chosen_video.video.blobs_no_gaps_path, number_of_chunks = self.chosen_video.video.number_of_frames)
-        self.chosen_video.video._has_crossings_solved = True
-        self.chosen_video.video.save()
+        super().interpolate_crossings(*args)
         self.interpolate_crossings_popup.dismiss()
         self.trajectories_wo_gaps_popup.open()
 
     def create_trajectories_wo_gaps(self, *args):
-        self.chosen_video.video.create_trajectories_wo_gaps_folder()
-        Logger.info("Generating trajectories. The trajectories files are stored in %s" %self.chosen_video.video.trajectories_wo_gaps_folder)
-        trajectories_wo_gaps_file = os.path.join(self.chosen_video.video.trajectories_wo_gaps_folder, 'trajectories_wo_gaps.npy')
-        trajectories_wo_gaps = produce_output_dict(self.chosen_video.list_of_blobs_no_gaps.blobs_in_video, self.chosen_video.video)
-        np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
-        self.chosen_video.video._has_trajectories_wo_gaps = True
-        Logger.info("Saving trajectories")
-        self.chosen_video.list_of_blobs = assign_zeros_with_interpolation_identities(self.chosen_video.list_of_blobs, self.chosen_video.list_of_blobs_no_gaps)
-        trajectories_file = os.path.join(self.chosen_video.video.trajectories_folder, 'trajectories.npy')
-        trajectories = produce_output_dict(self.chosen_video.list_of_blobs.blobs_in_video, self.chosen_video.video)
-        np.save(trajectories_file, trajectories)
-        self.chosen_video.video.save()
-        self.chosen_video.video._create_trajectories_time = time.time()-self.chosen_video.video.create_trajectories_time
+        super().create_trajectories_wo_gaps(*args)
         self.trajectories_wo_gaps_popup.dismiss()
 
     def update_and_show_happy_ending_popup(self, *args):
-        if not hasattr(self.chosen_video.video, 'overall_P2'):
-            self.chosen_video.video.compute_overall_P2(self.chosen_video.list_of_fragments.fragments)
+        super().update_and_show_happy_ending_popup(*args)
         self.create_happy_ending_popup(self.chosen_video.video.overall_P2)
-        self.chosen_video.video.save()
         self.this_is_the_end_popup.open()
         self.deactivate_validation.setter(False)
 
