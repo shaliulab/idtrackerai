@@ -4,15 +4,20 @@ if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
 else:
     import logging; logger = logging.getLogger(__name__)
 
+import copy
+import numpy as np
+
 from idtrackerai.postprocessing.identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
 from idtrackerai.postprocessing.correct_impossible_velocity_jumps        import correct_impossible_velocity_jumps
 from idtrackerai.network.identification_model.network_params             import NetworkParams
 from idtrackerai.postprocessing.compute_velocity_model                   import compute_model_velocity
 from idtrackerai.network.identification_model.id_CNN                     import ConvNetwork
 from idtrackerai.postprocessing.get_trajectories                         import produce_output_dict
+from idtrackerai.postprocessing.assign_them_all                          import close_trajectories_gaps
 from idtrackerai.accumulation_manager                                    import AccumulationManager
 from idtrackerai.list_of_blobs                                           import ListOfBlobs
 from idtrackerai.accumulator                                             import perform_one_accumulation_step
+from idtrackerai.assigner                                                import assigner
 
 from idtrackerai.constants import THRESHOLD_ACCEPTABLE_ACCUMULATION
 from idtrackerai.constants import THRESHOLD_EARLY_STOP_ACCUMULATION
@@ -313,11 +318,13 @@ class TrackerAPI(object):
 
 
 
-    def accumulation_loop(self):
+    def accumulation_loop(self, do_accumulate=True):
         logger.warning('------------Calling accumulation loop')
         self.chosen_video.video.init_accumulation_statistics_attributes()
         self.accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
         logger.warning('Calling accumulate from accumulation_loop')
+
+        if do_accumulate: self.accumulate()
 
 
     def accumulation_parachute_init(self, 
@@ -363,6 +370,8 @@ class TrackerAPI(object):
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
+        logger.info("Saving first accumulation paramters")
+        
         if not self.restoring_first_accumulation:
             self.chosen_video.video._first_accumulation_finished = True
             self.chosen_video.video._ratio_accumulated_images = self.accumulation_manager.ratio_accumulated_images
@@ -433,6 +442,46 @@ class TrackerAPI(object):
             self.chosen_video.video._protocol3_pretraining_time = time.time()-self.chosen_video.video.protocol3_pretraining_time
             self.accumulate()
 
+    def one_shot_pretraining(self, *args):
+        logger.debug("------------------------> one_shot_pretraining")
+        self.pretraining_step_finished = False
+        self.pretraining_global_fragment = self.chosen_video.list_of_global_fragments.global_fragments[self.pretraining_counter]
+        self.net,\
+        self.ratio_of_pretrained_images,\
+        pretraining_global_step,\
+        self.store_training_accuracy_and_loss_data_pretrain,\
+        self.store_validation_accuracy_and_loss_data_pretrain,\
+        self.chosen_video.list_of_fragments = pre_train_global_fragment(self.net,
+                                                    self.pretraining_global_fragment,
+                                                    self.chosen_video.list_of_fragments,
+                                                    self.pretraining_global_step,
+                                                    True, True,
+                                                    self.generate_tensorboard_switch.active,
+                                                    self.store_training_accuracy_and_loss_data_pretrain,
+                                                    self.store_validation_accuracy_and_loss_data_pretrain,
+                                                    print_flag = False,
+                                                    plot_flag = False,
+                                                    batch_size = BATCH_SIZE_IDCNN,
+                                                    canvas_from_GUI = self.pretrain_fig_canvas)
+        self.pretraining_counter += 1
+        self.pretraining_counter_value.text = str(self.pretraining_counter)
+        self.percentage_pretrained_images_value.text = str(self.ratio_of_pretrained_images)
+        self.store_training_accuracy_and_loss_data_pretrain.plot_global_fragments(self.pretrain_ax_arr,
+                                                                    self.chosen_video.video,
+                                                                    self.chosen_video.list_of_fragments.fragments,
+                                                                    black = False,
+                                                                    canvas_from_GUI = self.pretrain_fig_canvas)
+        self.store_validation_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
+                                                    color ='b',
+                                                    canvas_from_GUI = self.pretrain_fig_canvas,
+                                                    index = self.pretraining_global_step,
+                                                    legend_font_color = 'w')
+        self.store_training_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
+                                                    color = 'r',
+                                                    canvas_from_GUI = self.pretrain_fig_canvas,
+                                                    index = self.pretraining_global_step,
+                                                    legend_font_color = 'w')
+        self.pretraining_step_finished = True
 
     def protocol3(self):
         logger.debug("------------------------> protocol3")

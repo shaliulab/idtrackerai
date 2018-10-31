@@ -259,11 +259,10 @@ class Tracker(TrackerAPI, BoxLayout):
 
     
     def accumulation_loop(self):
-        Logger.warning('------------Calling accumulation loop')
         if hasattr(self, 'one_shot_accumulation_popup'):
             delattr(self, 'one_shot_accumulation_popup')
             self.create_one_shot_accumulation_popup()
-        super().accumulation_loop()
+        super().accumulation_loop(do_accumulate=False)
         self.one_shot_accumulation_popup.open()
         Clock.schedule_interval(self.accumulate, 2)
 
@@ -277,7 +276,6 @@ class Tracker(TrackerAPI, BoxLayout):
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
-        Logger.info("Saving first accumulation paramters")
         Clock.unschedule(self.accumulate)
         super().save_after_first_accumulation()
 
@@ -288,7 +286,7 @@ class Tracker(TrackerAPI, BoxLayout):
 
 
     def init_pretraining_variables(self):
-        super().init_pretraining_variables()                                                                            scope = 'pretraining')
+        super().init_pretraining_variables()
         self.create_pretraining_figure()
 
     def pretraining_loop(self):
@@ -305,49 +303,10 @@ class Tracker(TrackerAPI, BoxLayout):
             self.continue_pretraining_clock_unschedule
         )
 
-    def one_shot_pretraining(self, *args):
-        Logger.debug("------------------------> one_shot_pretraining")
-        self.pretraining_step_finished = False
-        self.pretraining_global_fragment = self.chosen_video.list_of_global_fragments.global_fragments[self.pretraining_counter]
-        self.net,\
-        self.ratio_of_pretrained_images,\
-        pretraining_global_step,\
-        self.store_training_accuracy_and_loss_data_pretrain,\
-        self.store_validation_accuracy_and_loss_data_pretrain,\
-        self.chosen_video.list_of_fragments = pre_train_global_fragment(self.net,
-                                                    self.pretraining_global_fragment,
-                                                    self.chosen_video.list_of_fragments,
-                                                    self.pretraining_global_step,
-                                                    True, True,
-                                                    self.generate_tensorboard_switch.active,
-                                                    self.store_training_accuracy_and_loss_data_pretrain,
-                                                    self.store_validation_accuracy_and_loss_data_pretrain,
-                                                    print_flag = False,
-                                                    plot_flag = False,
-                                                    batch_size = BATCH_SIZE_IDCNN,
-                                                    canvas_from_GUI = self.pretrain_fig_canvas)
-        self.pretraining_counter += 1
-        self.pretraining_counter_value.text = str(self.pretraining_counter)
-        self.percentage_pretrained_images_value.text = str(self.ratio_of_pretrained_images)
-        self.store_training_accuracy_and_loss_data_pretrain.plot_global_fragments(self.pretrain_ax_arr,
-                                                                    self.chosen_video.video,
-                                                                    self.chosen_video.list_of_fragments.fragments,
-                                                                    black = False,
-                                                                    canvas_from_GUI = self.pretrain_fig_canvas)
-        self.store_validation_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
-                                                    color ='b',
-                                                    canvas_from_GUI = self.pretrain_fig_canvas,
-                                                    index = self.pretraining_global_step,
-                                                    legend_font_color = 'w')
-        self.store_training_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
-                                                    color = 'r',
-                                                    canvas_from_GUI = self.pretrain_fig_canvas,
-                                                    index = self.pretraining_global_step,
-                                                    legend_font_color = 'w')
-        self.pretraining_step_finished = True
+    
 
     def identify(self, *args):
-        super()identify(*args)
+        super().identify(*args)
         self.identification_popup.dismiss()
         self.impossible_jumps_popup.open()
 
