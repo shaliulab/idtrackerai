@@ -1,4 +1,4 @@
-# idtracker.ai (v1.0.3-alpha)
+# idtracker.ai (v2.0.0-alpha)
 
 [idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
 
@@ -12,11 +12,11 @@ idtracker.ai has been tested in computers with the following specifications:
 - RAM: 32Gb (for small groups) or 128Gb (for large groups)
 - Disk: 1TB SSD
 
-idtracker.ai is coded in python 2.7 and uses Tensorflow libraries. Due to the intense use of deep neural networks, 
-we recommend using a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher. 
+idtracker.ai is coded in Python and uses Tensorflow libraries. Due to the intense use of deep neural networks,
+we recommend using a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher.
 Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU.
 
-## Installation (v1.0.3-alpha).
+## Installation (v2.0.0-alpha).
 
 The installation of idtracker.ai requires some amount of interaction with the linux
 terminal. Read the following paragraph only if your are not familiar with the terminal in linux operating systems.
@@ -25,7 +25,7 @@ In Linux Mint you can open a terminal using the icon with the gray symbol ">_" o
 Right-click with your mouse to copy and paste commands from the instructions to the terminal.
 (NOTE: do not use the shortcut Ctrl+C and Ctrl+V as they do not work in the terminal)
 
-The time needed to install the system varies with the output of the pre-installation checks and the download speed of the network when cloning the repository and dowloading the dependencies. In our computers and network, the total installation time is typicall of 15 minutes.
+The time needed to install the system varies with the output of the pre-installation checks and the download speed of the network when cloning the repository and dowloading the dependencies. In our computers and network, the total installation time is typically of <15 minutes.
 
 ### Pre-installation checks
 
@@ -70,8 +70,8 @@ in your terminal. You should get an output that looks like:
     |    0      3869      G   ...-token=B623FBCDF5B2B7F30ECB74EC9ADEFC8F   117MiB |
     +-----------------------------------------------------------------------------+
 
-If the command *nvidia-smi* does not show an output similar to this one, is possible
-thay the NVIDIA drivers are not installed. In Linux Mint 18.3 you can install the NVIDIA
+If the command *nvidia-smi* does not show an output similar to this one, iit s possible
+that the NVIDIA drivers are not installed. In Linux Mint 18.3 you can install the NVIDIA
 drivers using the Driver Manager that can be found in the Menu button in the bottom left of the screen.
 
 **NOTE** Do not install the *intel-microcode* driver
@@ -93,15 +93,15 @@ miniconda is not installed in your system. Follow the next instructions to insta
 
 Using the terminal, download the miniconda installation file
 
-    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
 
 and give it executable permissions.
 
-    chmod u+x Miniconda2-latest-Linux-x86_64.sh
+    chmod u+x Miniconda3-latest-Linux-x86_64.sh
 
 Execute the file
 
-    ./Miniconda2-latest-Linux-x86_64.sh
+    ./Miniconda3-latest-Linux-x86_64.sh
 
 You will be asked to review the license agreement and accept the terms and conditions.  
 Review the license agreement by pressing ENTER and accept the terms typing "yes".
