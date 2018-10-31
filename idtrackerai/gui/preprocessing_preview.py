@@ -397,7 +397,7 @@ class PreprocessingPreview(BoxLayout):
                                         "In the figure the loss, accuracy and accuracy per class, respectively. "+
                                         "The video is currenly being fragmented. The 'Go to the tracking tab' button will"+
                                         " activate at the end of the process.", size_hint = (1., .2))
-        if CHOSEN_VIDEO.video.number_of_animals != 1 and not self.crossing_detector_trainer.model_diverged:
+        if CHOSEN_VIDEO.video.number_of_animals != 1 and CHOSEN_VIDEO.video._there_are_crossings and not self.crossing_detector_trainer.model_diverged:
             matplotlib.rcParams.update({'font.size': 8,
                                         'axes.labelsize': 8,
                                         'xtick.labelsize' : 8,
@@ -418,14 +418,19 @@ class PreprocessingPreview(BoxLayout):
             content.add_widget(self.go_to_tracking_button)
             content.add_widget(crossing_detector_accuracy)
         elif CHOSEN_VIDEO.video.number_of_animals == 1:
-            content.add_widget(CustomLabel(text = "Ok, tracking a single animal...", size_hint = (1.,.1)))
+            content.add_widget(CustomLabel(text = "Tracking a single animal...", size_hint = (1.,.1)))
             self.go_to_tracking_button = Button(text = "Go to the tracking tab", size_hint = (1.,.1))
             self.go_to_tracking_button.disabled = True
-            self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
-            content.add_widget(self.disappointed)
+            # self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
+            # content.add_widget(self.disappointed)
             content.add_widget(self.go_to_tracking_button)
-        else:
-            content.add_widget(CustomLabel(text = "The model diverged, crossing and individuals will be discriminated only by area."))
+        elif not CHOSEN_VIDEO.video._there_are_crossings:
+            content.add_widget(CustomLabel(text = "There were not enough crossings to train the crossing detector. \nCrossings and individuals will be discriminated only by area."))
+            self.go_to_tracking_button = Button(text = "Go to the tracking tab", size_hint = (1.,.1))
+            self.go_to_tracking_button.disabled = True
+            # self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
+            # content.add_widget(self.disappointed)
+            content.add_widget(self.go_to_tracking_button)
         self.crossing_detector_accuracy_popup = Popup(title = 'Crossing/individual images discrimination',
                             content = content,
                             size_hint = (1., 1.))

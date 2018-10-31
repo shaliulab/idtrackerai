@@ -417,6 +417,8 @@ class Blob(object):
     def assigned_identity(self):
         if hasattr(self, 'identity_corrected_closing_gaps') and self.identity_corrected_closing_gaps is not None:
             return self.identity_corrected_closing_gaps
+        elif hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
+            return self.identity_corrected_solving_duplication
         else:
             return self.identity
 

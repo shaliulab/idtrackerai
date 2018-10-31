@@ -114,7 +114,7 @@ class Tracker(BoxLayout):
         elif CHOSEN_VIDEO.list_of_global_fragments.number_of_global_fragments == 1:
             self.create_main_layout()
             self.start_tracking_button.bind(on_release = self.track_single_global_fragment_video)
-            self.start_tracking_button.text = "Only one global\nfragment\nwas found.\nThere is not\nneed the\nidentification CNN.\nGet animals\ntrajectories"
+            self.start_tracking_button.text = "Only one global\nfragment\nwas found.\nNot need\nto train the\nidentification CNN.\nGet animals\ntrajectories"
             self.start_tracking_button.size_hint = (.2,.3)
         else:
             CHOSEN_VIDEO.video.accumulation_trial = 0
