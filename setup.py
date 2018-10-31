@@ -43,7 +43,7 @@ install it on Python {}.{}.
 """.format(*(REQUIRED_PYTHON + CURRENT_PYTHON)))
     sys.exit(1)
 
-requirements = ['cython == 0.29'
+requirements = ['cython == 0.29',
                 'pygame == 1.9.4',
                 'numpy == 1.15.3',
                 'natsort == 5.4.1',
