@@ -20,6 +20,7 @@
 
 #except gitignore
 !*.gitignore
+!*.gitattributes
 
 #except docs folder and subfolders
 !docs/scipy-sphinx-theme/*
