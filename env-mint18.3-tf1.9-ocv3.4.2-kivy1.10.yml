@@ -77,7 +77,6 @@ dependencies:
     - dask==0.20.0
     - h5py==2.8.0
     - idna==2.7
-    - idtrackerai==2.0.0a0
     - joblib==0.12.5
     - kivy-garden==0.1.4
     - kiwisolver==1.0.1
@@ -109,4 +108,3 @@ dependencies:
     - urllib3==1.24
     - xlib==0.21
 prefix: /home/polaviejalab/miniconda2/envs/idtrackerai-env
-
