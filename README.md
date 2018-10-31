@@ -2,6 +2,21 @@
 
 [idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
 
+## NEW in v2.0.0-alpha
+
+In this new version we made an effort to migrate the software from Python 2.7 to Python 3.6. Moreover, we also updated some libraries that are core for the system.
+* Tensorflow 1.2.0 -> Tensorflow 1.9.0
+* Kivy 1.9 -> Kivy 1.10
+* OpenCV 2.13 -> OpenCV 3.4.2
+
+Also, we have made the system more robust allowing to track single individuals and groups under more general conditions:
+
+* Tracking of a single individual (skips the core of idtracker.ai)
+* Tracking of individuals in groups where animals do not cross/touch/interact or do it not very frequently.
+* Tracking groups without keeping the identities.
+* Allow for several tracking intervals
+* Create new trajectories_wo_gaps.npy file when identities are corrected in the Global Validation tab. This feature is only available when correcting the identities in the option "With animals not identified during crossings". The identity during the crossings is automatically interpolated.
+
 ## Hardware requirements
 
 idtracker.ai has been tested in computers with the following specifications:
@@ -147,13 +162,12 @@ the following commands in your terminal:
     pip install idtrackerai/.
     garden install matplotlib
 
-### Troubleshooting installation
+### Install as a developer
 
-*coming soon*
+If you want to develop or modify parts of the code you might want to install idtracker.ai with the following command.
 
-### Uninstall and remove software
+    pip install -e idtrackerai/.
 
-*coming soon*
 
 ## Open idtracker.ai
 
@@ -176,6 +190,21 @@ Then run the script idtrackeraiApp.py using Python.
 
 Go to the [Quick start](http://idtracker.ai/quickstart.html) and follow the instructions
 to track a simple example video.
+
+## Monitoring idtracker.ai
+
+As the GUI does not include many progress indicators and some processes can be computationally demanding, we recommend to monitor the flow of the system using the terminal. Also, we typically monitor the state of the CPU and RAM memory using the command
+
+    htop
+
+*htop* can be installed doing:
+
+    sudo apt install htop
+
+We monitor the performance and the state of the GPU running the command:
+
+    watch nvidia-smi
+
 
 ## Documentation and examples of tracked videos
 
