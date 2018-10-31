@@ -64,7 +64,7 @@ requirements = ['cython == 0.29',
                 'pandas == 0.23.4',
                 'PyYAML == 3.13',
                 'scipy == 1.1.0',
-                'sklearn == 0.20',
+                'sklearn >= 0.0',
                 'tables == 3.4.4',
                 'dask == 0.20.0']
 
