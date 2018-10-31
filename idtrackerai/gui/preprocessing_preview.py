@@ -182,9 +182,14 @@ class PreprocessingPreview(BoxLayout):
                     size_hint=(.4,.4))
 
     def on_enter_tracking_interval(self, value):
-        start, end = self.tracking_interval_text_input.text.split('-')
-        CHOSEN_VIDEO.video._tracking_interval = (int(start), int(end))
+        intervals = self.tracking_interval_text_input.text.split(',')
+        tracking_intervals = []
+        for interval in intervals:
+            start, end = interval.split('-')
+            tracking_intervals.append((int(start), int(end)))
+        CHOSEN_VIDEO.video._tracking_interval = tracking_intervals
         self.popup_tracking_interval.dismiss()
+
 
     def activate_ROI_switch(self, *args):
         if hasattr(self,'visualiser'):
