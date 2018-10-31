@@ -12,12 +12,11 @@ idtracker.ai has been tested in computers with the following specifications:
 - RAM: 32Gb (for small groups) or 128Gb (for large groups)
 - Disk: 1TB SSD
 
-idtracker.ai is coded in python 2.7 and uses Tensorflow libraries
-(version 1.7.0). Due to the intense use of deep neural networks, we recommend using
- a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher.
- Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU.
+idtracker.ai is coded in python 2.7 and uses Tensorflow libraries. Due to the intense use of deep neural networks, 
+we recommend using a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher. 
+Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU.
 
-## Installation (v1.0.1-alpha).
+## Installation (v1.0.3-alpha).
 
 The installation of idtracker.ai requires some amount of interaction with the linux
 terminal. Read the following paragraph only if your are not familiar with the terminal in linux operating systems.
@@ -119,7 +118,7 @@ Type "yes" to continue with the default installation.
 Using the terminal, download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/cuda_in_conda/install.sh)
 using the following command.
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.2-alpha/install.sh
+    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/1.0.3-alpha/install.sh
 
 Give install.sh executable permissions by typing
 
