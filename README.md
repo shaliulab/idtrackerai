@@ -160,7 +160,7 @@ the following commands in your terminal:
 If the installation succeed correctly you can test the system by launching the GUI.
 Open a terminal and activate the conda environment idtrackerai-environment
 
-    source activate idtrackerai-environment
+    source activate idtrackerai-env
 
 Once the environment is activate launch the GUI
 
