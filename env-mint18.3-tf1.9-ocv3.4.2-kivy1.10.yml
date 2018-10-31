@@ -1,4 +1,4 @@
-name: idtrackerai_py3
+name: idtrackerai-env
 channels:
   - conda-forge
   - defaults
