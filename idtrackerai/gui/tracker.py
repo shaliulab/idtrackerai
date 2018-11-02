@@ -84,14 +84,14 @@ from .tracker_api import TrackerAPI
 
 class Tracker(TrackerAPI, BoxLayout):
 
-    def __init__(self, 
+    def __init__(self,
         chosen_video = None,
         deactivate_tracking = None,
         deactivate_validation = None,
         **kwargs
     ):
         TrackerAPI.__init__(self, chosen_video)
-    
+
         ## GUI ###################################################
 
         # To remove in the future
@@ -104,7 +104,7 @@ class Tracker(TrackerAPI, BoxLayout):
         self.deactivate_validation = deactivate_validation
 
         BoxLayout.__init__(self, **kwargs)
-        
+
         self.has_been_executed = False
         self.control_panel = BoxLayout(orientation = "vertical", size_hint = (.26,1.))
         self.add_widget(self.control_panel)
@@ -122,53 +122,53 @@ class Tracker(TrackerAPI, BoxLayout):
             "press the upper botton which will indicate the process that will be computed."
         )
         ## GUI ###################################################
-    
-    
+
+
     def __init_tracking_gui_handler(self, status=None):
 
         if not self.has_been_executed:
             self.create_main_layout()
             self.control_panel.add_widget(self.help_button_tracker)
             self.has_been_executed = True
-        
+
         if status==0: # status_post_processing
 
             self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
             self.start_tracking_button.text = "Show estimated\naccuracy"
-        
+
         elif 1<=status<2: # status_residual_identification
-            
+
             if status==1.1:
                 self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
                 self.start_tracking_button.text = "Show estimated\naccuracy"
-                
+
             elif status==1.2:
                 self.start_tracking_button.bind(on_release = self.start_from_post_processing)
                 self.start_tracking_button.text = "Start\npost-processing"
-        
+
         elif status==2: # status_protocol3_accumulation
 
             self.start_tracking_button.bind(on_release = self.start_from_identification)
             self.start_tracking_button.text = "Start\nresidual identification"
-        
+
         elif status==3: # status_protocol3_pretraining
 
             self.create_one_shot_accumulation_popup()
             self.start_tracking_button.bind(on_release = self.accumulate)
             self.start_tracking_button.text = "Start\naccumulation\n(protocol 3)"
-        
+
         elif status==4: # status_protocols1_and_2
-        
+
             self.create_one_shot_accumulation_popup()
             self.start_tracking_button.bind(on_release = self.accumulate)
             self.start_tracking_button.text = "Start\nidentification\nor\nprotocol 3"
-        
+
         elif status==5: # status_protocols1_and_2_not_def
-        
+
             Logger.info("Starting protocol cascade")
             self.start_tracking_button.bind(on_release = self.protocol1)
             self.track_wo_identities_button.bind(on_release = self.track_wo_identities)
-        
+
 
 
 
@@ -197,44 +197,42 @@ class Tracker(TrackerAPI, BoxLayout):
         self.trajectories_popup.open()
 
     def track_wo_identities(self, *args):
-        self.chosen_video.video.accumulation_trial = 0
-        self.chosen_video.video._first_frame_first_global_fragment = [0]
-        self.chosen_video.video._track_wo_identities = True
+        super().track_wo_identities(*args)
         self.trajectories_popup.open()
 
-    
+
 
     def protocol1(self, *args):
         super().protocol1(create_popup=self.create_one_shot_accumulation_popup)
 
-        
+
 
     def one_shot_accumulation(self, *args):
         super().one_shot_accumulation(save_summaries = self.generate_tensorboard_switch.active)
-        
+
         self.accumulation_counter_value.text = str(self.accumulation_manager.counter + 1)
         if self.accumulation_manager.counter == 1:
             self.create_tracking_figures_axes()
         self.percentage_accumulated_images_value.text = str(self.accumulation_manager.ratio_accumulated_images)
         self.protocol_value.text = '2' if self.chosen_video.video.accumulation_trial == 0 else '3'
-        store_training_accuracy_and_loss_data.plot_global_fragments(self.ax_arr,
+        self.store_training_accuracy_and_loss_data.plot_global_fragments(self.ax_arr,
                                                                     self.chosen_video.video,
                                                                     self.accumulation_manager.list_of_fragments.fragments,
                                                                     black = False,
                                                                     canvas_from_GUI = self.tracking_fig_canvas)
-        store_validation_accuracy_and_loss_data.plot(self.ax_arr,
+        self.store_validation_accuracy_and_loss_data.plot(self.ax_arr,
                                                     color ='b',
                                                     canvas_from_GUI = self.tracking_fig_canvas,
                                                     index = self.accumulation_manager.counter - 1,
                                                     legend_font_color = 'w')
-        store_training_accuracy_and_loss_data.plot(self.ax_arr,
+        self.store_training_accuracy_and_loss_data.plot(self.ax_arr,
                                                     color = 'r',
                                                     canvas_from_GUI = self.tracking_fig_canvas,
                                                     index = self.accumulation_manager.counter - 1,
                                                     legend_font_color = 'w')
-        
 
-    
+
+
     def __accumulate_handler(self, status):
 
         if status==1:
@@ -256,299 +254,93 @@ class Tracker(TrackerAPI, BoxLayout):
 
     def accumulate(self, *args):
         super().accumulate(gui_handler=self.__accumulate_handler)
-        
 
 
-    def save_and_update_accumulation_parameters_in_parachute(self):
-        Logger.warning("self.accumulation_manager.ratio_accumulated_images %.4f" %self.accumulation_manager.ratio_accumulated_images)
-        self.chosen_video.video._ratio_accumulated_images = self.accumulation_manager.ratio_accumulated_images
-        self.chosen_video.video._percentage_of_accumulated_images.append(self.chosen_video.video.ratio_accumulated_images)
-        self.chosen_video.list_of_fragments.save_light_list(self.chosen_video.video._accumulation_folder)
 
+    
     def accumulation_loop(self):
-        Logger.warning('------------Calling accumulation loop')
         if hasattr(self, 'one_shot_accumulation_popup'):
             delattr(self, 'one_shot_accumulation_popup')
             self.create_one_shot_accumulation_popup()
-        super().accumulation_loop()
+        super().accumulation_loop(do_accumulate=False)
         self.one_shot_accumulation_popup.open()
         Clock.schedule_interval(self.accumulate, 2)
 
-    def protocol3(self):
-        Logger.debug("------------------------> protocol3")
-        self.init_pretraining_variables()
-        number_of_images_in_global_fragments = self.chosen_video.video.number_of_unique_images_in_global_fragments
-        if self.chosen_video.old_video and self.chosen_video.old_video.first_accumulation_finished == True:
-            self.chosen_video.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
-            self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
-        Logger.info("Starting pretraining. Checkpoints will be stored in %s" %self.chosen_video.video.pretraining_folder)
-        if self.chosen_video.video.tracking_with_knowledge_transfer:
-            Logger.info("Performing knowledge transfer from %s" %self.chosen_video.video.knowledge_transfer_model_folder)
-            self.pretrain_network_params.knowledge_transfer_folder = self.chosen_video.video.knowledge_transfer_model_folder
-        Logger.info("Start pretraining")
-        self.pretraining_step_finished = True
-        self.pretraining_loop()
+    
 
     def accumulation_parachute_init(self, iteration_number):
-        Logger.debug("------------------------> accumulation_parachute_init")
-        Logger.info("Starting accumulation %i" %iteration_number)
-        self.one_shot_accumulation_popup.dismiss()
-        delete = not self.chosen_video.processes_to_restore['protocol3_accumulation'] if 'protocol3_accumulation' in self.chosen_video.processes_to_restore.keys() else True
-        self.chosen_video.video.create_accumulation_folder(iteration_number = iteration_number, delete = delete)
-        self.chosen_video.video.accumulation_trial = iteration_number
-        self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
-        self.chosen_video.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
-        Logger.info("We will restore the network from a previous pretraining: %s" %self.chosen_video.video.pretraining_folder)
-        self.accumulation_network_params.save_folder = self.chosen_video.video.accumulation_folder
-        self.accumulation_network_params.restore_folder = self.chosen_video.video.pretraining_folder
-        self.accumulation_network_params.scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax']
-        Logger.info("Initialising accumulation network")
-        self.net = ConvNetwork(self.accumulation_network_params)
-        self.net.restore()
-        self.net.reinitialize_softmax_and_fully_connected()
-        Logger.info("Initialising accumulation manager")
-        self.chosen_video.video._first_frame_first_global_fragment.append(self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = iteration_number - 1))
-        Logger.warning('first_frame_first_global_fragment ' + str(self.chosen_video.video.first_frame_first_global_fragment))
-        if self.chosen_video.video.identity_transfer and self.chosen_video.video.number_of_animals < self.chosen_video.video.knowledge_transfer_info_dict['number_of_animals']:
-            tf.reset_default_graph()
-            self.accumulation_network_params.number_of_animals = self.chosen_video.video.number_of_animals
-            self.accumulation_network_params.restore_folder = self.chosen_video.video.pretraining_folder
-            self.net = ConvNetwork(self.accumulation_network_params)
-            self.net.restore()
-            self.net.reinitialize_softmax_and_fully_connected()
-        self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = iteration_number - 1)
-        self.accumulation_manager = AccumulationManager(self.chosen_video.video,
-                                                    self.chosen_video.list_of_fragments, self.chosen_video.list_of_global_fragments,
-                                                    threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
-        Logger.info("Start accumulation")
-        self.global_step = 0
+        super().accumulation_parachute_init(self, 
+            iteration_number,
+            one_shot_accumulation_popup_dismiss=self.one_shot_accumulation_popup.dismiss
+        )
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
-        Logger.info("Saving first accumulation paramters")
         Clock.unschedule(self.accumulate)
-        if not self.restoring_first_accumulation:
-            self.chosen_video.video._first_accumulation_finished = True
-            self.chosen_video.video._ratio_accumulated_images = self.accumulation_manager.ratio_accumulated_images
-            self.chosen_video.video._percentage_of_accumulated_images = [self.chosen_video.video.ratio_accumulated_images]
-            self.chosen_video.video._accumulation_network_params = self.accumulation_network_params
-            self.chosen_video.video.save()
-            self.chosen_video.list_of_fragments.save(self.chosen_video.video.fragments_path)
-            self.chosen_video.list_of_global_fragments.save(self.chosen_video.video.global_fragments_path, self.chosen_video.list_of_fragments.fragments)
-            self.chosen_video.list_of_fragments.save_light_list(self.chosen_video.video._accumulation_folder)
-
-
-
-    def save_after_second_accumulation(self):
-        Logger.info("Saving second accumulation parameters")
-        self.save_and_update_accumulation_parameters_in_parachute()
-        self.chosen_video.video.accumulation_trial = np.argmax(self.chosen_video.video.percentage_of_accumulated_images)
-        self.chosen_video.video._ratio_accumulated_images = self.chosen_video.video.percentage_of_accumulated_images[self.chosen_video.video.accumulation_trial]
-        accumulation_folder_name = 'accumulation_' + str(self.chosen_video.video.accumulation_trial)
-        self.chosen_video.video._accumulation_folder = os.path.join(self.chosen_video.video.session_folder, accumulation_folder_name)
-        self.chosen_video.list_of_fragments.load_light_list(self.chosen_video.video._accumulation_folder)
-        self.chosen_video.video._second_accumulation_finished = True
-        Logger.info("Saving global fragments")
-        self.chosen_video.list_of_fragments.save(self.chosen_video.video.fragments_path)
-        self.chosen_video.list_of_global_fragments.save(self.chosen_video.video.global_fragments_path, self.chosen_video.list_of_fragments.fragments)
-        Logger.info("Restoring networks to best second accumulation")
-        self.accumulation_network_params.restore_folder = self.chosen_video.video._accumulation_folder
-        self.net = ConvNetwork(self.accumulation_network_params)
-        self.net.restore()
-        self.chosen_video.video._accumulation_network_params = self.accumulation_network_params
-        self.chosen_video.video.save()
+        super().save_after_first_accumulation()
 
 
     
 
+
+
+
     def init_pretraining_variables(self):
-        self.init_pretraining_net()
-        self.pretraining_global_step = 0
-        self.net = ConvNetwork(self.pretrain_network_params)
-        self.ratio_of_pretrained_images = 0
-        if self.chosen_video.video.tracking_with_knowledge_transfer:
-            self.net.restore()
-        self.store_training_accuracy_and_loss_data_pretrain = Store_Accuracy_and_Loss(self.net,
-                                                                                    name = 'training',
-                                                                                    scope = 'pretraining')
-        self.store_validation_accuracy_and_loss_data_pretrain = Store_Accuracy_and_Loss(self.net,
-                                                                                    name = 'validation',
-                                                                                    scope = 'pretraining')
+        super().init_pretraining_variables()
         self.create_pretraining_figure()
 
     def pretraining_loop(self):
-        Logger.debug("------------------------> pretraining_loop")
-        self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
-        self.chosen_video.list_of_global_fragments.order_by_distance_travelled()
+        super().pretraining_loop(do_continue_pretraining=False)
         self.pretraining_popup.bind(on_open = self.one_shot_pretraining)
         self.pretraining_popup.open()
         Clock.schedule_interval(self.continue_pretraining, 2)
 
-    def continue_pretraining(self, *args):
-        Logger.debug("------------------------> continue_pretraining")
-        if self.pretraining_step_finished and self.ratio_of_pretrained_images < MAX_RATIO_OF_PRETRAINED_IMAGES:
-            self.one_shot_pretraining()
-        elif self.ratio_of_pretrained_images > MAX_RATIO_OF_PRETRAINED_IMAGES:
-            self.chosen_video.video._has_been_pretrained = True
-            Clock.unschedule(self.continue_pretraining)
-            Logger.warning('Calling accumulate from continue_pretraining')
-            Logger.debug('****** saving protocol3 pretraining time')
-            self.chosen_video.video._protocol3_pretraining_time = time.time()-self.chosen_video.video.protocol3_pretraining_time
-            self.accumulate()
+    def continue_pretraining_clock_unschedule(self):
+        Clock.unschedule(self.continue_pretraining)
 
-    def one_shot_pretraining(self, *args):
-        Logger.debug("------------------------> one_shot_pretraining")
-        self.pretraining_step_finished = False
-        self.pretraining_global_fragment = self.chosen_video.list_of_global_fragments.global_fragments[self.pretraining_counter]
-        self.net,\
-        self.ratio_of_pretrained_images,\
-        pretraining_global_step,\
-        self.store_training_accuracy_and_loss_data_pretrain,\
-        self.store_validation_accuracy_and_loss_data_pretrain,\
-        self.chosen_video.list_of_fragments = pre_train_global_fragment(self.net,
-                                                    self.pretraining_global_fragment,
-                                                    self.chosen_video.list_of_fragments,
-                                                    self.pretraining_global_step,
-                                                    True, True,
-                                                    self.generate_tensorboard_switch.active,
-                                                    self.store_training_accuracy_and_loss_data_pretrain,
-                                                    self.store_validation_accuracy_and_loss_data_pretrain,
-                                                    print_flag = False,
-                                                    plot_flag = False,
-                                                    batch_size = BATCH_SIZE_IDCNN,
-                                                    canvas_from_GUI = self.pretrain_fig_canvas)
-        print([f.used_for_pretraining for f in CHOSEN_VIDEO.list_of_fragments.fragments if f.is_in_a_global_fragment])
-        print([[f.used_for_pretraining for f in gf.individual_fragments] for gf in CHOSEN_VIDEO.list_of_global_fragments.global_fragments])
-        self.pretraining_counter += 1
-        self.pretraining_counter_value.text = str(self.pretraining_counter)
-        self.percentage_pretrained_images_value.text = str(self.ratio_of_pretrained_images)
-        self.store_training_accuracy_and_loss_data_pretrain.plot_global_fragments(self.pretrain_ax_arr,
-                                                                    self.chosen_video.video,
-                                                                    self.chosen_video.list_of_fragments.fragments,
-                                                                    black = False,
-                                                                    canvas_from_GUI = self.pretrain_fig_canvas)
-        self.store_validation_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
-                                                    color ='b',
-                                                    canvas_from_GUI = self.pretrain_fig_canvas,
-                                                    index = self.pretraining_global_step,
-                                                    legend_font_color = 'w')
-        self.store_training_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
-                                                    color = 'r',
-                                                    canvas_from_GUI = self.pretrain_fig_canvas,
-                                                    index = self.pretraining_global_step,
-                                                    legend_font_color = 'w')
-        self.pretraining_step_finished = True
+    def continue_pretraining(self, *args):
+        super().continue_pretraining(*args, 
+            self.continue_pretraining_clock_unschedule
+        )
+
+    
 
     def identify(self, *args):
-        self.chosen_video.video._identify_time = time.time()
-        Logger.warning("In identify")
-        self.chosen_video.list_of_fragments.reset(roll_back_to = 'accumulation')
-        Logger.warning("Calling assigner")
-        assigner(self.chosen_video.list_of_fragments, self.chosen_video.video, self.net)
-        self.chosen_video.video._has_been_assigned = True
-        self.chosen_video.video.save()
+        super().identify(*args)
         self.identification_popup.dismiss()
         self.impossible_jumps_popup.open()
 
     def postprocess_impossible_jumps(self, *args):
-        if not hasattr(self.chosen_video.video, 'velocity_threshold') and hasattr(self.chosen_video.old_video,'velocity_threshold'):
-            self.chosen_video.video.velocity_threshold = self.chosen_video.old_video.velocity_threshold
-        elif not hasattr(self.chosen_video.old_video, 'velocity_threshold'):
-            self.chosen_video.video.velocity_threshold = compute_model_velocity(
-                                                                self.chosen_video.list_of_fragments.fragments,
-                                                                self.chosen_video.video.number_of_animals,
-                                                                percentile = VEL_PERCENTILE)
-        correct_impossible_velocity_jumps(self.chosen_video.video, self.chosen_video.list_of_fragments)
-        self.chosen_video.list_of_fragments.save(self.chosen_video.video.fragments_path)
-        self.chosen_video.video.save()
+        super().postprocess_impossible_jumps(*args)
         self.impossible_jumps_popup.dismiss()
 
     def update_list_of_blobs(self, *args):
-        self.chosen_video.video.individual_fragments_stats = self.chosen_video.list_of_fragments.get_stats(self.chosen_video.list_of_global_fragments)
-        self.chosen_video.video.compute_overall_P2(self.chosen_video.list_of_fragments.fragments)
-        self.chosen_video.list_of_fragments.save_light_list(self.chosen_video.video._accumulation_folder)
-        self.chosen_video.video.save()
-        if not hasattr(self.chosen_video, 'list_of_blobs'):
-            self.chosen_video.list_of_blobs = ListOfBlobs.load(self.chosen_video.video, self.chosen_video.old_video.blobs_path)
-        self.chosen_video.list_of_blobs.update_from_list_of_fragments(self.chosen_video.list_of_fragments.fragments,
-                                                    self.chosen_video.video.fragment_identifier_to_index)
-        # if False:
-        #     self.chosen_video.list_of_blobs.compute_nose_and_head_coordinates()
-        self.chosen_video.list_of_blobs.save(self.chosen_video.video,
-                                        self.chosen_video.video.blobs_path,
-                                        number_of_chunks = self.chosen_video.video.number_of_frames)
-        self.chosen_video.video._identify_time = time.time()-self.chosen_video.video.identify_time
+        super().update_list_of_blobs(*args)
         self.trajectories_popup.open()
 
     def create_trajectories(self, *args):
-        self.chosen_video.video._create_trajectories_time = time.time()
-        if 'post_processing' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore['post_processing']:
-            if not self.chosen_video.video.track_wo_identities:
-                self.chosen_video.video.create_trajectories_folder()
-                trajectories_file = os.path.join(self.chosen_video.video.trajectories_folder, 'trajectories.npy')
-                trajectories = produce_output_dict(self.chosen_video.list_of_blobs.blobs_in_video, self.chosen_video.video)
-            else:
-                self.chosen_video.video.create_trajectories_wo_identities_folder()
-                trajectories_file = os.path.join(self.chosen_video.video.trajectories_wo_identities_folder, 'trajectories_wo_identities.npy')
-                trajectories = produce_output_dict(self.chosen_video.list_of_blobs.blobs_in_video, self.chosen_video.video)
-            np.save(trajectories_file, trajectories)
-            Logger.info("Saving trajectories")
-            np.save(trajectories_file, trajectories)
-        self.chosen_video.video._has_trajectories = True
-        self.chosen_video.video.save()
-        self.trajectories_popup.dismiss()
-        if self.chosen_video.video.number_of_animals != 1 and self.chosen_video.list_of_global_fragments.number_of_global_fragments != 1 and not self.chosen_video.video.track_wo_identities:
-            self.interpolate_crossings_popup.open()
-        else:
-            self.chosen_video.video.overall_P2 = 1.
-            self.chosen_video.video._has_been_assigned = True
-            self.chosen_video.video._has_crossings_solved = False
-            self.chosen_video.video._has_trajectories_wo_gaps = False
-            self.chosen_video.list_of_blobs.save(self.chosen_video.video,
-                                            self.chosen_video.video.blobs_path,
-                                            number_of_chunks = self.chosen_video.video.number_of_frames)
-            self.update_and_show_happy_ending_popup()
+        super().create_trajectories(*args,
+            trajectories_popup_dismiss=self.trajectories_popup.dismiss,
+            interpolate_crossings_popup_open=self.interpolate_crossings_popup.open,
+            update_and_show_happy_ending_popup=self.update_and_show_happy_ending_popup
+        )
 
     def interpolate_crossings(self, *args):
-        self.chosen_video.list_of_blobs_no_gaps = copy.deepcopy(self.chosen_video.list_of_blobs)
-        # if not hasattr(self.chosen_video.list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
-        #     Logger.debug("adding attribute was_a_crossing to every blob")
-        #     [setattr(blob, '_was_a_crossing', False) for blobs_in_frame in
-        #         self.chosen_video.list_of_blobs_no_gaps.blobs_in_video for blob in blobs_in_frame]
-        self.chosen_video.video._has_crossings_solved = False
-        self.chosen_video.list_of_blobs_no_gaps = close_trajectories_gaps(self.chosen_video.video, self.chosen_video.list_of_blobs_no_gaps, self.chosen_video.list_of_fragments)
-        self.chosen_video.video.blobs_no_gaps_path = os.path.join(os.path.split(self.chosen_video.video.blobs_path)[0], 'blobs_collection_no_gaps.npy')
-        self.chosen_video.list_of_blobs_no_gaps.save(self.chosen_video.video, path_to_save = self.chosen_video.video.blobs_no_gaps_path, number_of_chunks = self.chosen_video.video.number_of_frames)
-        self.chosen_video.video._has_crossings_solved = True
-        self.chosen_video.video.save()
+        super().interpolate_crossings(*args)
         self.interpolate_crossings_popup.dismiss()
         self.trajectories_wo_gaps_popup.open()
 
     def create_trajectories_wo_gaps(self, *args):
-        self.chosen_video.video.create_trajectories_wo_gaps_folder()
-        Logger.info("Generating trajectories. The trajectories files are stored in %s" %self.chosen_video.video.trajectories_wo_gaps_folder)
-        trajectories_wo_gaps_file = os.path.join(self.chosen_video.video.trajectories_wo_gaps_folder, 'trajectories_wo_gaps.npy')
-        trajectories_wo_gaps = produce_output_dict(self.chosen_video.list_of_blobs_no_gaps.blobs_in_video, self.chosen_video.video)
-        np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)
-        self.chosen_video.video._has_trajectories_wo_gaps = True
-        Logger.info("Saving trajectories")
-        self.chosen_video.list_of_blobs = assign_zeros_with_interpolation_identities(self.chosen_video.list_of_blobs, self.chosen_video.list_of_blobs_no_gaps)
-        trajectories_file = os.path.join(self.chosen_video.video.trajectories_folder, 'trajectories.npy')
-        trajectories = produce_output_dict(self.chosen_video.list_of_blobs.blobs_in_video, self.chosen_video.video)
-        np.save(trajectories_file, trajectories)
-        self.chosen_video.video.save()
-        self.chosen_video.video._create_trajectories_time = time.time()-self.chosen_video.video.create_trajectories_time
+        super().create_trajectories_wo_gaps(*args)
         self.trajectories_wo_gaps_popup.dismiss()
 
     def update_and_show_happy_ending_popup(self, *args):
-        if not hasattr(self.chosen_video.video, 'overall_P2'):
-            self.chosen_video.video.compute_overall_P2(self.chosen_video.list_of_fragments.fragments)
+        super().update_and_show_happy_ending_popup(*args)
         self.create_happy_ending_popup(self.chosen_video.video.overall_P2)
-        self.chosen_video.video.save()
         self.this_is_the_end_popup.open()
         self.deactivate_validation.setter(False)
 
-    
+
 
     def start_from_identification(self, *args):
         self.identification_popup.open()
@@ -703,17 +495,7 @@ class Tracker(TrackerAPI, BoxLayout):
     #         self.chosen_video.video._kt_conv_layers_to_discard = self.accumulation_network_params._kt_conv_layers_to_discard
 
 
-    def network_params_to_string(self):
-        self.str_model = str(self.accumulation_network_params.cnn_model)
-        self.str_lr = str(self.accumulation_network_params.learning_rate)
-        self.str_kp = str(self.accumulation_network_params.keep_prob)
-        self.str_optimiser = "SGD" if not self.accumulation_network_params.use_adam_optimiser else "Adam"
-        self.str_layers_to_train = "all" if self.accumulation_network_params.scopes_layers_to_optimize is None else str(self.accumulation_network_params.scopes_layers_to_optimize)
-        self.restore_folder = self.accumulation_network_params.restore_folder if self.accumulation_network_params.restore_folder is not None else 'None'
-        self.save_folder = self.accumulation_network_params.save_folder if self.accumulation_network_params.save_folder is not None else 'None'
-        self.knowledge_transfer_folder = self.accumulation_network_params.knowledge_transfer_folder if self.accumulation_network_params.knowledge_transfer_folder is not None else 'None'
-        # self.kt_conv_layers_to_discard = self.accumulation_network_params.kt_conv_layers_to_discard if self.accumulation_network_params.kt_conv_layers_to_discard is not None else 'None'
-
+    
     def create_network_params_labels(self):
         self.cnn_model_label = CustomLabel(font_size = 14, text = "CNN model: ", halign = "left")
         self.learning_rate_label = CustomLabel(font_size = 14, text = "learning_rate: ", halign = "left")
