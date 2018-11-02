@@ -3,18 +3,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script type="text/javascript">
-
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-114600635-1']);
-      _gaq.push(['_trackPageview']);
-
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-    </script>
+    
     <title>network_params &mdash; idtrackerai v0.0 Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
@@ -159,10 +148,12 @@
 <span class="sd">        Tuple (height, width, channels) for the input images</span>
 <span class="sd">    number_of_channels : int</span>
 <span class="sd">        Number of channels of the input image</span>
+<span class="sd">    kt_conv_layers_to_discard : str</span>
+<span class="sd">        convolutional layers to discard when performing knowledge transfer</span>
 
 <span class="sd">    .. [2] Kingma, Diederik P., and Jimmy Ba. &quot;Adam: A method for stochastic optimization.&quot; arXiv preprint arXiv:1412.6980 (2014).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_animals</span><span class="p">,</span> <span class="n">cnn_model</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">learning_rate</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="n">keep_prob</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">use_adam_optimiser</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="n">scopes_layers_to_optimize</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">restore_folder</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -186,6 +177,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">pre_target_image_size</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">action_on_image</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">number_of_channels</span> <span class="o">=</span> <span class="n">number_of_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kt_conv_layers_to_discard</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">cnn_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -214,6 +206,10 @@
     <span class="k">def</span> <span class="nf">knowledge_transfer_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_transfer_folder</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">kt_conv_layers_to_discard</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kt_conv_layers_to_discard</span>
+
     <span class="nd">@knowledge_transfer_folder</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">knowledge_transfer_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
@@ -240,10 +236,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Oct 04, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.1.
       </li>
     </ul>
     </div>

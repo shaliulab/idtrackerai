@@ -3,18 +3,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script type="text/javascript">
-
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-114600635-1']);
-      _gaq.push(['_trackPageview']);
-
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-    </script>
+    
     <title>assign_them_all &mdash; idtrackerai v0.0 Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
@@ -194,7 +183,7 @@
         <span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;_identity_corrected_solving_duplications&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">list_of_blobs_no_gaps</span><span class="o">.</span><span class="n">blobs_in_video</span>
         <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span>
-        <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
 
 <span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
@@ -226,7 +215,7 @@
 
 <span class="k">def</span> <span class="nf">get_blob_by_identity</span><span class="p">(</span><span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">identity</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">==</span> <span class="n">identity</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="o">==</span> <span class="n">identity</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">blob</span><span class="p">]</span>
         <span class="k">elif</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="s1">&#39;identity_corrected_closing_gaps&#39;</span><span class="p">)</span>
             <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_closing_gaps</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span>
@@ -248,10 +237,10 @@
 <span class="k">def</span> <span class="nf">get_missing_identities_from_blobs_in_frame</span><span class="p">(</span><span class="n">possible_identities</span><span class="p">,</span> <span class="n">blobs_in_frame</span><span class="p">,</span> <span class="n">occluded_identities_in_frame</span><span class="p">):</span>
     <span class="n">identities_in_frame</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="n">identities_in_frame</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">identities_in_frame</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">identities_in_frame</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">identities_in_frame</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">possible_identities</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">identities_in_frame</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">occluded_identities_in_frame</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">get_candidate_centroid</span><span class="p">(</span><span class="n">individual_gap_interval</span><span class="p">,</span> <span class="n">previous_blob_to_the_gap</span><span class="p">,</span> <span class="n">next_blob_to_the_gap</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">border</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">inner_frame_number</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -424,7 +413,7 @@
             <span class="c1"># logger.debug(&#39;Only a candidate tuple for this original blob&#39;)</span>
             <span class="n">identity</span> <span class="o">=</span> <span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
             <span class="n">centroid</span> <span class="o">=</span> <span class="n">candidate_tuples_with_centroids_in_original_blob</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
                 <span class="n">original_blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="n">identity</span>
                 <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span><span class="s1">&#39;_identity_corrected_closing_gaps&#39;</span><span class="p">,</span> <span class="n">identity</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">blobs_in_video</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span>
@@ -432,12 +421,12 @@
             <span class="k">elif</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">is_an_individual</span><span class="p">:</span>
                 <span class="n">list_of_occluded_identities</span><span class="p">[</span><span class="n">original_blob</span><span class="o">.</span><span class="n">frame_number</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">identity</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">original_blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                        <span class="n">identity</span> <span class="o">=</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">assigned_identity</span> <span class="o">+</span> <span class="p">[</span><span class="n">identity</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">original_blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                        <span class="n">identity</span> <span class="o">=</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="o">+</span> <span class="p">[</span><span class="n">identity</span><span class="p">]</span>
                         <span class="n">centroid</span> <span class="o">=</span> <span class="n">original_blob</span><span class="o">.</span><span class="n">interpolated_centroids</span> <span class="o">+</span> <span class="p">[</span><span class="n">centroid</span><span class="p">]</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">identity</span> <span class="o">=</span> <span class="p">[</span><span class="n">original_blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">,</span> <span class="n">identity</span><span class="p">]</span>
+                        <span class="n">identity</span> <span class="o">=</span> <span class="p">[</span><span class="n">original_blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="n">identity</span><span class="p">]</span>
                         <span class="n">centroid</span> <span class="o">=</span> <span class="p">[</span><span class="n">original_blob</span><span class="o">.</span><span class="n">centroid</span><span class="p">,</span> <span class="n">centroid</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">identity</span> <span class="o">=</span> <span class="p">[</span><span class="n">identity</span><span class="p">]</span>
@@ -631,7 +620,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">blobs_in_video</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">assigned_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">is_an_individual</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">blob</span><span class="o">.</span><span class="n">_identity_corrected_closing_gaps</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity_corrected_solving_duplication</span>
                 <span class="k">elif</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">blob</span><span class="o">.</span><span class="n">identity</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
@@ -678,8 +667,8 @@
     <span class="n">set_individual_with_identity_0_as_crossings</span><span class="p">(</span><span class="n">list_of_blobs</span><span class="p">)</span>
     <span class="n">continue_erosion_protocol</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">previous_number_of_non_split_crossings_blobs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span>
-                                                    <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span>
-                                                    <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">])</span>
+                                                        <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="n">list_of_fragments</span><span class="o">.</span><span class="n">fragments</span>
+                                                        <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_a_crossing</span><span class="p">])</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="s1">&#39;_erosion_kernel_size&#39;</span><span class="p">):</span>
         <span class="n">video</span><span class="o">.</span><span class="n">_erosion_kernel_size</span> <span class="o">=</span> <span class="n">compute_erosion_disk</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">list_of_blobs</span><span class="o">.</span><span class="n">blobs_in_video</span><span class="p">)</span>
         <span class="n">video</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -743,10 +732,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Oct 04, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.1.
       </li>
     </ul>
     </div>

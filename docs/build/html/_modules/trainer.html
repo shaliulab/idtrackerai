@@ -3,18 +3,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script type="text/javascript">
-
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-114600635-1']);
-      _gaq.push(['_trackPageview']);
-
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-    </script>
+    
     <title>trainer &mdash; idtrackerai v0.0 Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
@@ -138,20 +127,21 @@
     <span class="kn">import</span> <span class="nn">logging</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.trainer&quot;</span><span class="p">)</span>
 
+
 <div class="viewcode-block" id="train"><a class="viewcode-back" href="../fingerprint_protocol_cascade.html#trainer.train">[docs]</a><span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">video</span><span class="p">,</span>
-            <span class="n">fragments</span><span class="p">,</span>
-            <span class="n">net</span><span class="p">,</span>
-            <span class="n">images</span><span class="p">,</span>
-            <span class="n">labels</span><span class="p">,</span>
-            <span class="n">store_accuracy_and_error</span><span class="p">,</span>
-            <span class="n">check_for_loss_plateau</span><span class="p">,</span>
-            <span class="n">save_summaries</span><span class="p">,</span>
-            <span class="n">print_flag</span><span class="p">,</span>
-            <span class="n">plot_flag</span><span class="p">,</span>
-            <span class="n">global_step</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="n">identity_transfer</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="n">accumulation_manager</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">batch_size</span> <span class="o">=</span> <span class="n">BATCH_SIZE_IDCNN</span><span class="p">):</span>
+          <span class="n">fragments</span><span class="p">,</span>
+          <span class="n">net</span><span class="p">,</span>
+          <span class="n">images</span><span class="p">,</span>
+          <span class="n">labels</span><span class="p">,</span>
+          <span class="n">store_accuracy_and_error</span><span class="p">,</span>
+          <span class="n">check_for_loss_plateau</span><span class="p">,</span>
+          <span class="n">save_summaries</span><span class="p">,</span>
+          <span class="n">print_flag</span><span class="p">,</span>
+          <span class="n">plot_flag</span><span class="p">,</span>
+          <span class="n">global_step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+          <span class="n">identity_transfer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+          <span class="n">accumulation_manager</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+          <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE_IDCNN</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Short summary.</span>
 
 <span class="sd">    Parameters</span>
@@ -224,7 +214,7 @@
     <span class="k">if</span> <span class="n">video</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">video</span><span class="o">.</span><span class="n">accumulation_step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">net</span><span class="o">.</span><span class="n">reinitialize_softmax_and_fully_connected</span><span class="p">()</span>
     <span class="c1"># Train network</span>
-    <span class="c1">#compute weights to be fed to the loss function (weighted cross entropy)</span>
+    <span class="c1"># compute weights to be fed to the loss function (weighted cross entropy)</span>
     <span class="n">net</span><span class="o">.</span><span class="n">compute_loss_weights</span><span class="p">(</span><span class="n">training_dataset</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
     <span class="n">trainer</span> <span class="o">=</span> <span class="n">EpochRunner</span><span class="p">(</span><span class="n">training_dataset</span><span class="p">,</span>
                         <span class="n">starting_epoch</span> <span class="o">=</span> <span class="n">global_step</span><span class="p">,</span>
@@ -301,10 +291,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Oct 04, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.1.
       </li>
     </ul>
     </div>

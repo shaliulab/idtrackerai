@@ -3,18 +3,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script type="text/javascript">
-
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-114600635-1']);
-      _gaq.push(['_trackPageview']);
-
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-    </script>
+    
     <title>id_CNN &mdash; idtrackerai v0.0 Manual</title>
     
     <link rel="stylesheet" type="text/css" href="../_static/css/spc-bootstrap.css">
@@ -239,7 +228,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">training_flag</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">restore_index</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;*** params&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
         <span class="c1"># Set main attibutes of the class</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">image_width</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">image_height</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -256,7 +245,8 @@
         <span class="n">knowledge_transfer_info_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;input_image_size&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">target_image_size</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">target_image_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">image_size</span><span class="p">,</span>
                                 <span class="s1">&#39;video_path&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">video_path</span><span class="p">,</span>
                                 <span class="s1">&#39;number_of_animals&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_animals</span><span class="p">,</span>
-                                <span class="s1">&#39;number_of_channels&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_channels</span><span class="p">}</span>
+                                <span class="s1">&#39;number_of_channels&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">number_of_channels</span><span class="p">,</span>
+                                <span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="n">params</span><span class="p">}</span>
         <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">save_folder</span><span class="p">,</span> <span class="s1">&#39;info.npy&#39;</span><span class="p">),</span> <span class="n">knowledge_transfer_info_dict</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_savers</span><span class="p">()</span>
         <span class="c1"># Create list of operations to run during training and validation</span>
@@ -405,10 +395,33 @@
         <span class="k">return</span> <span class="n">accuracy</span><span class="p">,</span> <span class="n">individual_accuracy</span></div>
 
 <div class="viewcode-block" id="ConvNetwork.reinitialize_softmax_and_fully_connected"><a class="viewcode-back" href="../idCNN.html#id_CNN.ConvNetwork.reinitialize_softmax_and_fully_connected">[docs]</a>    <span class="k">def</span> <span class="nf">reinitialize_softmax_and_fully_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Reinizializes the weights in the two last fully connected layers of the network</span>
+        <span class="sd">&quot;&quot;&quot;Reinizializes the weights in the two last fully connected layers</span>
+<span class="sd">        of the network</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Reinitializing softmax and fully connected&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">variables_initializer</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">global_variables</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;soft&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s1">&#39;full&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="p">]))</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">variables_initializer</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">global_variables</span><span class="p">()</span>
+             <span class="k">if</span> <span class="s1">&#39;soft&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s1">&#39;full&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="ConvNetwork.reinitialize_conv_layers"><a class="viewcode-back" href="../idCNN.html#id_CNN.ConvNetwork.reinitialize_conv_layers">[docs]</a>    <span class="k">def</span> <span class="nf">reinitialize_conv_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reinizializes the weights in the conv layers indicated in the list</span>
+<span class="sd">        conv_layers_list. The list can include the names &#39;conv1&#39;, &#39;conv2&#39; or</span>
+<span class="sd">        &#39;conv3&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">kt_conv_layers_to_discard</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Reinitializing conv layers&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">kt_conv_layers_to_discard</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">variables_initializer</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">global_variables</span><span class="p">()</span>
+                 <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">kt_conv_layers_to_discard</span><span class="p">]))</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check_checkpoint_path</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">restore_folder</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">checkpoint_path</span> <span class="o">+</span> <span class="s1">&#39;.meta&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">checkpoint_path</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">checkpoint_path</span> <span class="o">+</span> <span class="s1">&#39;.meta&#39;</span><span class="p">):</span>
+            <span class="n">ckpt</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">restore_folder</span><span class="p">,</span> <span class="n">ckpt</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ConvNetwork.restore_convolutional_layers"><a class="viewcode-back" href="../idCNN.html#id_CNN.ConvNetwork.restore_convolutional_layers">[docs]</a>    <span class="k">def</span> <span class="nf">restore_convolutional_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Restores the weights of the convolutional layers from a checkpoint file</span>
@@ -420,11 +433,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ckpt</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">get_checkpoint_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_conv</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">saver_conv</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">model_checkpoint_path</span><span class="p">)</span> <span class="c1"># restore convolutional variables</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Restoring convolutional part from </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">ckpt</span><span class="o">.</span><span class="n">model_checkpoint_path</span><span class="p">)</span>
+            <span class="n">ckpt_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_checkpoint_path</span><span class="p">(</span><span class="n">ckpt</span><span class="o">.</span><span class="n">model_checkpoint_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">restore_folder_conv</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Restoring convolutional part from </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">ckpt_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saver_conv</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">ckpt_path</span><span class="p">)</span> <span class="c1"># restore convolutional variables</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">saver_conv</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">all_model_checkpoint_paths</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span><span class="p">])</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Restoring convolutional part from </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">ckpt</span><span class="o">.</span><span class="n">all_model_checkpoint_paths</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span><span class="p">])</span></div>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Restoring convolutional part from </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">ckpt</span><span class="o">.</span><span class="n">all_model_checkpoint_paths</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saver_conv</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">all_model_checkpoint_paths</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">restore_index</span><span class="p">])</span></div>
+
 
 <div class="viewcode-block" id="ConvNetwork.restore_classifier"><a class="viewcode-back" href="../idCNN.html#id_CNN.ConvNetwork.restore_classifier">[docs]</a>    <span class="k">def</span> <span class="nf">restore_classifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Restores the weights of the convolutional layers from a checkpoint file</span>
@@ -650,10 +665,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jul 20, 2018.
+      Last updated on Oct 04, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.7.6.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.1.
       </li>
     </ul>
     </div>
