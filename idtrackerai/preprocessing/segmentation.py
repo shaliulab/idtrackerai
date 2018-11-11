@@ -268,7 +268,7 @@ def segment(video):
         except:
             logger.info('NUMBER_OF_CORES_FOR_SEGMENTATION > multiprocessing.cpu_count(). Setting NUMBER_OF_CORES_FOR_SEGMENTATION set to 1')
             num_cores = 1
-
+    logger.info('NUMBER_OF_CORES_FOR_SEGMENTATION set to %i' %num_cores)
     #init variables to store data
     blobs_in_video = []
     maximum_number_of_blobs_in_episode = []
