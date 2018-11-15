@@ -185,7 +185,7 @@ this will install idtracker.ai with GPU support. If you want to install idtracke
 
     conda env create -f env-win10-tf1.9_nogpu-ocv3.4.2-kivy1.10.yml
 
-3.- Asing the Anaconda Prompt and from the *idtrackerai* folder run the command:
+3.- Using the Anaconda Prompt and from the *idtrackerai* folder run the command:
 
     pip install .
 
