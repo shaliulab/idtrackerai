@@ -72,7 +72,7 @@ requirements = ['cython == 0.29',
 EXCLUDE_FROM_PACKAGES = [ "plots", "plots.*",
                         "test", "test.*",
                         "docs", "docs.*"]
-
+print(find_packages(exclude=EXCLUDE_FROM_PACKAGES))
 setup(
     name='idtrackerai',
     version='2.0.0-alpha',
@@ -86,7 +86,7 @@ setup(
     include_package_data=True,
     install_requires=requirements,
     entry_points={
-          'gui_scripts': [
+          'console_scripts': [
               'idtrackeraiGUI = idtrackerai.gui.idtrackeraiApp:run_app',
                 ]
               },
