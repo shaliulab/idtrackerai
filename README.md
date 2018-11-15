@@ -168,11 +168,39 @@ If you want to develop or modify parts of the code you might want to install idt
 
     pip install -e idtrackerai/.
 
+### Install in Windows 10
+
+With the migration to python3 it is not possible to install idtracker.ai in Windows 10.
+We remind the user that the system has not been tested in Windows 10, so different problems might arise. We appreciate users and developers to report the possible issues they might find.
+
+1.- Clone the repository using git bash:
+
+    git clone https://gitlab.com/polavieja_lab/idtrackerai.git
+
+2.- Using Anaconda Prompt (https://conda.io/docs/user-guide/install/windows.html) access the *idtrackerai* folder and run the command:
+
+    conda env create -f env-win10-tf1.9-ocv3.4.2-kivy1.10.yml
+
+this will install idtracker.ai with GPU support. If you want to install idtracker.ai withouth GPU support (e.g. you are tracking a single animal, or you want to track groups without identification) run the command
+
+    conda env create -f env-win10-tf1.9_nogpu-ocv3.4.2-kivy1.10.yml
+
+3.- Asing the Anaconda Prompt and from the *idtrackerai* folder run the command:
+
+    pip install .
+
+If you want to make modifications in the code or you don't want to reinstall idtracker.ai everytime you update the software with the *git pull* command, you can install it as a developer by doing:
+
+    pip install -e .
+
+4.- Install *matplotlib* for *kivy* doing:
+
+    garden install matplotlib
 
 ## Open idtracker.ai
 
 If the installation succeed correctly you can test the system by launching the GUI.
-Open a terminal and activate the conda environment idtrackerai-environment
+Open a terminal (Anaconda Prompt in Windows machines) and activate the conda environment idtrackerai-env (idtrackerai-win or idtrackerai-win-nogpu in Windows machines)
 
     source activate idtrackerai-env
 
