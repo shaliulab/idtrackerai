@@ -1,0 +1,58 @@
+name: idtrackerai-win
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - docutils=0.14=py36_1001
+  - freetype=2.6.3=vc14_1
+  - glew=2.0.0=vc14_0
+  - grpcio=1.14.1=py36he089993_1000
+  - jpeg=9b=vc14_2
+  - kivy=1.10.1=py36h47ee06f_1
+  - libpng=1.6.34=vc14_0
+  - libprotobuf=3.5.2=vc14_0
+  - libtiff=4.0.9=vc14_0
+  - olefile=0.46=py_0
+  - pillow=4.0.0=py36_1
+  - protobuf=3.5.2=py36_vc14_0
+  - pygments=2.2.0=py_1
+  - python=3.6.6=he025d50_0
+  - sdl2=2.0.8=vc14_1
+  - sdl2_image=2.0.2=vc14_0
+  - sdl2_mixer=2.0.1=vc14_0
+  - sdl2_ttf=2.0.14=vc14_0
+  - smpeg2=2.0.0=vc14_0
+  - vc=14=0
+  - zlib=1.2.11=vc14_0
+  - _tflow_190_select=0.0.1=gpu
+  - absl-py=0.6.1=py36_0
+  - astor=0.7.1=py36_0
+  - blas=1.0=mkl
+  - ca-certificates=2018.03.07=0
+  - certifi=2018.10.15=py36_0
+  - cudatoolkit=9.0=1
+  - cudnn=7.1.4=cuda9.0_0
+  - gast=0.2.0=py36_0
+  - icc_rt=2017.0.4=h97af966_0
+  - intel-openmp=2019.0=118
+  - markdown=3.0.1=py36_0
+  - mkl=2019.0=118
+  - mkl_fft=1.0.6=py36hdbbee80_0
+  - mkl_random=1.0.1=py36h77b88f5_1
+  - numpy=1.15.4=py36ha559c80_0
+  - numpy-base=1.15.4=py36h8128ebf_0
+  - openssl=1.0.2p=hfa6e2cd_0
+  - pip=18.1=py36_0
+  - setuptools=40.5.0=py36_0
+  - six=1.11.0=py36_1
+  - tensorboard=1.9.0=py36he025d50_0
+  - tensorflow=1.9.0=gpu_py36hfdee9c2_1
+  - tensorflow-base=1.9.0=gpu_py36h6e53903_0
+  - tensorflow-gpu=1.9.0=hf154084_0
+  - termcolor=1.1.0=py36_1
+  - vs2015_runtime=14.15.26706=h3a45250_0
+  - werkzeug=0.14.1=py36_0
+  - wheel=0.32.2=py36_0
+  - wincertstore=0.2=py36h7fe50ca_0
+prefix: C:\Users\Robert\AppData\Local\conda\conda\envs\idtrackerai-win
+
