@@ -34,7 +34,7 @@ class PreprocessingPreviewAPI(object):
         #: float: ?
         self.resolution_reduction = chosen_video.video.resolution_reduction if chosen_video.video is not None else 1
         #: int: Number of animals to track
-        self.number_of_animals    = chosen_video.video.number_of_animals if chosen_video.video is not None else 1
+        self.number_of_animals    = chosen_video.video.number_of_animals if chosen_video.video.number_of_animals is not None else 1
         #: ListOfFragments: List of fragments ( blobs paths before crossing )
         self.list_of_fragments    = None
         #: list(GlobalFragment): ? 

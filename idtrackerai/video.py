@@ -101,7 +101,7 @@ class Video(object):
         self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split for parallel computation]
         self._original_bkg = None #matrix [shape = shape of a frame] background used to do bkg subtraction
         self._bkg = None
-        self._resolution_reduction = 1
+        self._resolution_reduction = 1.
         self._subtract_bkg = None #boolean: True if the user specifies to subtract the background
         self._original_ROI = None #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
         self._ROI = None
@@ -667,8 +667,9 @@ class Video(object):
         """
         self._paths_to_video_segments = self.check_split_video()
         cap = cv2.VideoCapture(self.video_path)
-        self._original_width = int(cap.get(3))
-        self._original_height = int(cap.get(4))
+        self._width  = self._original_width = int(cap.get(3))
+        self._height = self._original_height = int(cap.get(4))
+
         try:
             self._frames_per_second = int(cap.get(5))
         except:
