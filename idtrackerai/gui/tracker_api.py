@@ -223,10 +223,28 @@ class TrackerAPI(object):
 
 
 
+    def __accumulate_handler_call_accumulate(self):
+        if self.accumulation_manager.continue_accumulation:
+            self.accumulate()
+
+    def __accumulate_handler_identification_popup_open(self):
+        self.identify()
+        self.postprocess_impossible_jumps()
+        self.update_list_of_blobs()
+        self.create_trajectories(interpolate_crossings_popup_open=self.interpolate_crossings)
 
 
+    def accumulate(self,
+            identification_popup_open           = None,
+            one_shot_accumulation_popup_dismiss = None,
+            create_pretraining_popup            = None,
+            unschedule_accumulate               = None,
+            call_accumulate                     = True
+        ):
 
-    def accumulate(self, gui_handler=None):
+        if identification_popup_open is None: 
+            identification_popup_open = self.__accumulate_handler_identification_popup_open
+
         logger.info("------------------------> Calling accumulate")
 
         if self.accumulation_step_finished and self.accumulation_manager.continue_accumulation:
@@ -247,7 +265,8 @@ class TrackerAPI(object):
             if 'protocols1_and_2' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore['protocols1_and_2']:
                 self.chosen_video.video._protocol1_time = time.time()-self.chosen_video.video.protocol1_time
 
-            if gui_handler: gui_handler(1) # UPDATE GUI
+            # call handler
+            identification_popup_open()
 
         elif not self.accumulation_manager.continue_accumulation\
             and not self.chosen_video.video.has_been_pretrained:
@@ -257,12 +276,15 @@ class TrackerAPI(object):
             if self.accumulation_manager.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
                 logger.info("Protocol 2 successful")
                 logger.warning("------------------------ dismissing one shot accumulation popup")
-                if gui_handler: gui_handler(2.1) # UPDATE GUI
+                if one_shot_accumulation_popup_dismiss: one_shot_accumulation_popup_dismiss() # UPDATE GUI
 
                 self.save_after_first_accumulation()
                 if 'protocols1_and_2' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore['protocols1_and_2']:
                     self.chosen_video.video._protocol2_time = time.time()-self.chosen_video.video.protocol2_time
-                if gui_handler: gui_handler(2.2) # UPDATE GUI
+
+                # call handler
+                identification_popup_open()
+
             elif self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
 
                 logger.info("Protocol 2 failed -> Start protocol 3")
@@ -272,7 +294,10 @@ class TrackerAPI(object):
                         self.chosen_video.video._protocol2_time = time.time()-self.chosen_video.video.protocol2_time
                 self.chosen_video.video._protocol3_pretraining_time = time.time()
 
-                if gui_handler: gui_handler(2.3) # UPDATE GUI
+                # call handler
+                if create_pretraining_popup:
+                    create_pretraining_popup()
+                
                 self.protocol3()
 
         elif self.chosen_video.video.has_been_pretrained\
@@ -301,13 +326,24 @@ class TrackerAPI(object):
                 self.chosen_video.video._protocol3_accumulation_time = time.time()-self.chosen_video.video.protocol3_accumulation_time
 
             logger.warning("************************ Unscheduling accumulate")
-            if gui_handler: gui_handler(3.1) # UPDATE GUI
+            # call handler
+            if unschedule_accumulate:
+                unschedule_accumulate()
+            
             logger.warning("------------------------ dismissing one shot accumulation popup")
-            if gui_handler: gui_handler(3.2) # UPDATE GUI
+            # call handler
+            if one_shot_accumulation_popup_dismiss:
+                one_shot_accumulation_popup_dismiss()
+            
             self.save_after_second_accumulation()
             logger.info("Start residual indentification")
-            if gui_handler: gui_handler(3.3) # UPDATE GUI
+            # call handler
+            identification_popup_open()
 
+        # call handler
+        if call_accumulate:
+            self.__accumulate_handler_call_accumulate()
+        
 
     def save_and_update_accumulation_parameters_in_parachute(self):
         logger.warning("self.accumulation_manager.ratio_accumulated_images %.4f" %self.accumulation_manager.ratio_accumulated_images)

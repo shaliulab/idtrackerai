@@ -23,18 +23,18 @@ class PreprocessingPreviewAPI(object):
         #: Chosen_Video: ?
         self.chosen_video  = chosen_video
         #: int: Used to filter the image to find the blobs
-        self.min_threshold = 0 
+        self.min_threshold = chosen_video.video.min_threshold if chosen_video.video is not None else 0
         #: int: Used to filter the image to find the blobs
-        self.max_threshold = 135
+        self.max_threshold = chosen_video.video.max_threshold if chosen_video.video is not None else 135
         #: int: Minimum area of a blob
-        self.min_area      = 150
+        self.min_area      = chosen_video.video.min_area if chosen_video.video is not None else 150
         #: int: Maximum area of a blob
-        self.max_area      = 60000
+        self.max_area      = chosen_video.video.max_area if chosen_video.video is not None else 60000
 
         #: float: ?
-        self.resolution_reduction = 1
+        self.resolution_reduction = chosen_video.video.resolution_reduction if chosen_video.video is not None else 1
         #: int: Number of animals to track
-        self.number_of_animals    = 1
+        self.number_of_animals    = chosen_video.video.number_of_animals if chosen_video.video is not None else 1
         #: ListOfFragments: List of fragments ( blobs paths before crossing )
         self.list_of_fragments    = None
         #: list(GlobalFragment): ? 
@@ -85,10 +85,9 @@ class PreprocessingPreviewAPI(object):
             self.min_threshold = MIN_THRESHOLD_DEFAULT
             self.min_area      = MIN_AREA_DEFAULT
             self.max_area      = MAX_AREA_DEFAULT
-            self.chosen_video.video.resolution_reduction = 1.
             self.resolution_reduction = self.chosen_video.video.resolution_reduction
             if self.chosen_video.video._original_ROI is None:
-                self.chosen_video.video._original_ROI = np.ones( (self.chosen_video.video.height, self.chosen_video.video.width), dtype='uint8') * 255
+                self.chosen_video.video._original_ROI = np.ones( (self.chosen_video.video.original_height, self.chosen_video.video.original_width), dtype='uint8') * 255
 
 
     def compute_list_of_blobs(self, *args):

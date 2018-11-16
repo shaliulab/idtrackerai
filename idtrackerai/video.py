@@ -101,6 +101,7 @@ class Video(object):
         self._episodes_start_end = None #list of lists: starting and ending frame per chunk [video is split for parallel computation]
         self._original_bkg = None #matrix [shape = shape of a frame] background used to do bkg subtraction
         self._bkg = None
+        self._resolution_reduction = 1
         self._subtract_bkg = None #boolean: True if the user specifies to subtract the background
         self._original_ROI = None #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
         self._ROI = None
@@ -147,6 +148,7 @@ class Video(object):
         self._create_trajectories_time = 0.
         self._there_are_crossings = True
         self._track_wo_identities = False # Track without identities
+        self._number_of_channels = 1
         if SIGMA_GAUSSIAN_BLURRING is not None:
             self.sigma_gaussian_blurring = SIGMA_GAUSSIAN_BLURRING
 

@@ -233,27 +233,20 @@ class Tracker(TrackerAPI, BoxLayout):
 
 
 
-    def __accumulate_handler(self, status):
 
-        if status==1:
-            self.identification_popup.open()
-        elif status==2.1:
-            self.one_shot_accumulation_popup.dismiss()
-        elif status==2.2:
-            self.identification_popup.open()
-        elif status==2.3:
-            self.create_pretraining_popup()
-        elif status==3.1:
-            Clock.unschedule(self.accumulate)
-        elif status==3.2:
-            self.one_shot_accumulation_popup.dismiss()
-        elif status==3.3:
-            self.identification_popup.open()
 
+    def __accumulate_handler_unschedule_accumulate(self):
+        Clock.unschedule(self.accumulate)
 
 
     def accumulate(self, *args):
-        super().accumulate(gui_handler=self.__accumulate_handler)
+        super().accumulate(
+            identification_popup_open           = self.identification_popup.open,
+            one_shot_accumulation_popup_dismiss = self.one_shot_accumulation_popup.dismiss,
+            create_pretraining_popup            = self.create_pretraining_popup,
+            unschedule_accumulate               = self.__accumulate_handler_unschedule_accumulate,
+            call_accumulate                     = False
+        )
 
 
 

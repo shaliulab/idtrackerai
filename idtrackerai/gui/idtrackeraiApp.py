@@ -64,7 +64,7 @@ from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.list_of_fragments import ListOfFragments
 from idtrackerai.groundtruth_utils.generate_groundtruth import generate_groundtruth
 from idtrackerai.groundtruth_utils.compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
-from idtrackerai.constants import THRESHOLD_ACCEPTABLE_ACCUMULATION, RESTORE_CRITERION, VEL_PERCENTILE
+from idtrackerai.constants import THRESHOLD_ACCEPTABLE_ACCUMULATION, RESTORE_CRITERION, VEL_PERCENTILE, PROCESSES
 
 print('\n************************************************************************************')
 print('LICENSE')
@@ -82,9 +82,9 @@ Init variables
         list of all the processes that can be saved and loaded while
         tracking a video
 """
-PROCESSES = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
-            'protocol3_accumulation', 'residual_identification',
-            'post_processing']
+# PROCESSES = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
+#             'protocol3_accumulation', 'residual_identification',
+#             'post_processing']
 
 class Root(TabbedPanel):
     global DEACTIVATE_ROI, DEACTIVATE_PREPROCESSING, DEACTIVATE_TRACKING, DEACTIVATE_VALIDATION, CHOSEN_VIDEO

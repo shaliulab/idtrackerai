@@ -31,6 +31,10 @@ import sys
 MIN_FLOAT = sys.float_info[3]
 MAX_FLOAT = sys.float_info[0]
 
+PROCESSES = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
+            'protocol3_accumulation', 'residual_identification',
+            'post_processing']
+
 #######################################
 ##########       video      ###########
 #######################################
