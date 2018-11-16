@@ -107,16 +107,19 @@ class PreprocessingPreviewAPI(object):
         self.chosen_video.video.save()
 
 
-    def check_segmentation_consistency(self, check_segmentation_consistency, resegment=True):
+    def check_segmentation_consistency(self, check_segmentation_consistency):
         self.chosen_video.list_of_blobs = ListOfBlobs(blobs_in_video = self.blobs)
         self.chosen_video.video.create_preprocessing_folder()
         self.frames_with_more_blobs_than_animals, self.chosen_video.video._maximum_number_of_blobs = self.chosen_video.list_of_blobs.check_maximal_number_of_blob(self.chosen_video.video.number_of_animals, return_maximum_number_of_blobs = True)
-        
+
+        """
+        #This call is used in the GUI to re-segment the image in the case the tracking returned more blobs than expected
+        #In the case of the API this is not necessary
         if len(self.frames_with_more_blobs_than_animals) > 0 and (check_segmentation_consistency or self.chosen_video.video.number_of_animals == 1):
             self.resegmentation_step_finished = True
 
             if resegment: self.resegmentation()
-
+        """
 
     def save_list_of_blobs(self):
         

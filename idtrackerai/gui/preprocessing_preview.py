@@ -348,7 +348,7 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
             self.consistency_success_popup.open()
 
     def check_segmentation_consistency(self, *args):
-        super().check_segmentation_consistency(self.check_segmentation_consistency_switch.active, resegment=False)
+        super().check_segmentation_consistency(self.check_segmentation_consistency_switch.active)
         
         if len(self.frames_with_more_blobs_than_animals) > 0 and (self.check_segmentation_consistency_switch.active or self.chosen_video.video.number_of_animals == 1):
             self.resegmentation_step_finished = True
