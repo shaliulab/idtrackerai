@@ -197,7 +197,7 @@ class Tracker(TrackerAPI, BoxLayout):
         self.trajectories_popup.open()
 
     def track_wo_identities(self, *args):
-        super().track_wo_identities(*args)
+        super().track_wo_identities()
         self.trajectories_popup.open()
 
 
@@ -262,7 +262,7 @@ class Tracker(TrackerAPI, BoxLayout):
     
 
     def accumulation_parachute_init(self, iteration_number):
-        super().accumulation_parachute_init(self, 
+        super().accumulation_parachute_init(
             iteration_number,
             one_shot_accumulation_popup_dismiss=self.one_shot_accumulation_popup.dismiss
         )
@@ -282,53 +282,76 @@ class Tracker(TrackerAPI, BoxLayout):
         super().init_pretraining_variables()
         self.create_pretraining_figure()
 
-    def pretraining_loop(self):
-        super().pretraining_loop(do_continue_pretraining=False)
+    def _loop(self):
+        super().pretraining_loop(call_from_gui=True)
         self.pretraining_popup.bind(on_open = self.one_shot_pretraining)
         self.pretraining_popup.open()
         Clock.schedule_interval(self.continue_pretraining, 2)
+
+    def one_shot_pretraining(self, *args):
+        super().one_shot_pretraining(
+            generate_tensorboard=self.generate_tensorboard_switch.active,
+            gui_graph_canvas=self.pretrain_fig_canvas
+        )
+        self.pretraining_counter_value.text = str(self.pretraining_counter)
+        self.percentage_pretrained_images_value.text = str(self.ratio_of_pretrained_images)
+        self.store_training_accuracy_and_loss_data_pretrain.plot_global_fragments(self.pretrain_ax_arr,
+                                                                                  self.chosen_video.video,
+                                                                                  self.chosen_video.list_of_fragments.fragments,
+                                                                                  black=False,
+                                                                                  canvas_from_GUI=self.pretrain_fig_canvas)
+        self.store_validation_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
+                                                                   color='b',
+                                                                   canvas_from_GUI=self.pretrain_fig_canvas,
+                                                                   index=self.pretraining_global_step,
+                                                                   legend_font_color='w')
+        self.store_training_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
+                                                                 color='r',
+                                                                 canvas_from_GUI=self.pretrain_fig_canvas,
+                                                                 index=self.pretraining_global_step,
+                                                                 legend_font_color='w')
 
     def continue_pretraining_clock_unschedule(self):
         Clock.unschedule(self.continue_pretraining)
 
     def continue_pretraining(self, *args):
-        super().continue_pretraining(*args, 
+        super().continue_pretraining(
             self.continue_pretraining_clock_unschedule
         )
 
     
 
     def identify(self, *args):
-        super().identify(*args)
+        super().identify()
         self.identification_popup.dismiss()
         self.impossible_jumps_popup.open()
 
     def postprocess_impossible_jumps(self, *args):
-        super().postprocess_impossible_jumps(*args)
+        super().postprocess_impossible_jumps()
         self.impossible_jumps_popup.dismiss()
 
     def update_list_of_blobs(self, *args):
-        super().update_list_of_blobs(*args)
+        super().update_list_of_blobs()
         self.trajectories_popup.open()
 
     def create_trajectories(self, *args):
-        super().create_trajectories(*args,
+        super().create_trajectories(
             trajectories_popup_dismiss=self.trajectories_popup.dismiss,
             interpolate_crossings_popup_open=self.interpolate_crossings_popup.open,
             update_and_show_happy_ending_popup=self.update_and_show_happy_ending_popup
         )
 
     def interpolate_crossings(self, *args):
-        super().interpolate_crossings(*args)
+        super().interpolate_crossings()
         self.interpolate_crossings_popup.dismiss()
         self.trajectories_wo_gaps_popup.open()
 
     def create_trajectories_wo_gaps(self, *args):
-        super().create_trajectories_wo_gaps(*args)
+        super().create_trajectories_wo_gaps()
         self.trajectories_wo_gaps_popup.dismiss()
 
     def update_and_show_happy_ending_popup(self, *args):
-        super().update_and_show_happy_ending_popup(*args)
+        super().update_and_show_happy_ending_popup()
         self.create_happy_ending_popup(self.chosen_video.video.overall_P2)
         self.this_is_the_end_popup.open()
         self.deactivate_validation.setter(False)

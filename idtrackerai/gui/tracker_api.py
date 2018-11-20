@@ -6,8 +6,10 @@ else:
 
 import copy
 import numpy as np
+import tensorflow as tf
 
 from idtrackerai.postprocessing.identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
+from idtrackerai.network.identification_model.store_accuracy_and_loss    import Store_Accuracy_and_Loss
 from idtrackerai.postprocessing.correct_impossible_velocity_jumps        import correct_impossible_velocity_jumps
 from idtrackerai.network.identification_model.network_params             import NetworkParams
 from idtrackerai.postprocessing.compute_velocity_model                   import compute_model_velocity
@@ -17,10 +19,15 @@ from idtrackerai.postprocessing.assign_them_all                          import 
 from idtrackerai.accumulation_manager                                    import AccumulationManager
 from idtrackerai.list_of_blobs                                           import ListOfBlobs
 from idtrackerai.accumulator                                             import perform_one_accumulation_step
+from idtrackerai.pre_trainer                                             import pre_train_global_fragment
 from idtrackerai.assigner                                                import assigner
 
+
+from idtrackerai.constants import BATCH_SIZE_IDCNN
 from idtrackerai.constants import THRESHOLD_ACCEPTABLE_ACCUMULATION
 from idtrackerai.constants import THRESHOLD_EARLY_STOP_ACCUMULATION
+from idtrackerai.constants import MAX_RATIO_OF_PRETRAINED_IMAGES
+from idtrackerai.constants import MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
 from idtrackerai.constants import VEL_PERCENTILE
 
 class TrackerAPI(object):
@@ -157,7 +164,7 @@ class TrackerAPI(object):
         self.chosen_video.video.accumulation_trial = 0
         self.chosen_video.video._first_frame_first_global_fragment = [0] # in case
 
-    def track_wo_identities(self, *args):
+    def track_wo_identities(self):
         self.chosen_video.video.accumulation_trial = 0
         self.chosen_video.video._first_frame_first_global_fragment = [0]
         self.chosen_video.video._track_wo_identities = True
@@ -293,6 +300,8 @@ class TrackerAPI(object):
                     if self.chosen_video.video.protocol2_time != 0:
                         self.chosen_video.video._protocol2_time = time.time()-self.chosen_video.video.protocol2_time
                 self.chosen_video.video._protocol3_pretraining_time = time.time()
+
+                self.pretraining_counter = 0
 
                 # call handler
                 if create_pretraining_popup:
@@ -454,19 +463,23 @@ class TrackerAPI(object):
                                                                                     name = 'validation',
                                                                                     scope = 'pretraining')
 
-    def pretraining_loop(self, do_continue_pretraining=True):
+    def pretraining_loop(self, call_from_gui=False):
         logger.debug("------------------------> pretraining_loop")
         self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
         self.chosen_video.list_of_global_fragments.order_by_distance_travelled()
-        
-        ## IT SHOULD NOT BE CALLED BY THE G
-        if do_continue_pretraining:
+
+        ## IT SHOULD NOT BE CALLED BY THE GUI
+        if not call_from_gui:
+            self.one_shot_pretraining()
             self.continue_pretraining()
         
-    def continue_pretraining(self, *args, clock_unschedule=None):
+    def continue_pretraining(self, clock_unschedule=None):
         logger.debug("------------------------> continue_pretraining")
         if self.pretraining_step_finished and self.ratio_of_pretrained_images < MAX_RATIO_OF_PRETRAINED_IMAGES:
             self.one_shot_pretraining()
+            if not clock_unschedule:
+                self.continue_pretraining()
+
         elif self.ratio_of_pretrained_images > MAX_RATIO_OF_PRETRAINED_IMAGES:
             self.chosen_video.video._has_been_pretrained = True
             
@@ -478,7 +491,7 @@ class TrackerAPI(object):
             self.chosen_video.video._protocol3_pretraining_time = time.time()-self.chosen_video.video.protocol3_pretraining_time
             self.accumulate()
 
-    def one_shot_pretraining(self, *args):
+    def one_shot_pretraining(self, generate_tensorboard=False, gui_graph_canvas=None):
         logger.debug("------------------------> one_shot_pretraining")
         self.pretraining_step_finished = False
         self.pretraining_global_fragment = self.chosen_video.list_of_global_fragments.global_fragments[self.pretraining_counter]
@@ -492,31 +505,14 @@ class TrackerAPI(object):
                                                     self.chosen_video.list_of_fragments,
                                                     self.pretraining_global_step,
                                                     True, True,
-                                                    self.generate_tensorboard_switch.active,
+                                                    generate_tensorboard,
                                                     self.store_training_accuracy_and_loss_data_pretrain,
                                                     self.store_validation_accuracy_and_loss_data_pretrain,
                                                     print_flag = False,
                                                     plot_flag = False,
                                                     batch_size = BATCH_SIZE_IDCNN,
-                                                    canvas_from_GUI = self.pretrain_fig_canvas)
+                                                    canvas_from_GUI = gui_graph_canvas)
         self.pretraining_counter += 1
-        self.pretraining_counter_value.text = str(self.pretraining_counter)
-        self.percentage_pretrained_images_value.text = str(self.ratio_of_pretrained_images)
-        self.store_training_accuracy_and_loss_data_pretrain.plot_global_fragments(self.pretrain_ax_arr,
-                                                                    self.chosen_video.video,
-                                                                    self.chosen_video.list_of_fragments.fragments,
-                                                                    black = False,
-                                                                    canvas_from_GUI = self.pretrain_fig_canvas)
-        self.store_validation_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
-                                                    color ='b',
-                                                    canvas_from_GUI = self.pretrain_fig_canvas,
-                                                    index = self.pretraining_global_step,
-                                                    legend_font_color = 'w')
-        self.store_training_accuracy_and_loss_data_pretrain.plot(self.pretrain_ax_arr,
-                                                    color = 'r',
-                                                    canvas_from_GUI = self.pretrain_fig_canvas,
-                                                    index = self.pretraining_global_step,
-                                                    legend_font_color = 'w')
         self.pretraining_step_finished = True
 
     def protocol3(self):
@@ -635,7 +631,7 @@ class TrackerAPI(object):
         self.restore_video_attributes()
         self.chosen_video.video.save()
 
-    def identify(self, *args):
+    def identify(self):
         self.chosen_video.video._identify_time = time.time()
         logger.warning("In identify")
         self.chosen_video.list_of_fragments.reset(roll_back_to = 'accumulation')
@@ -645,7 +641,7 @@ class TrackerAPI(object):
         self.chosen_video.video.save()
 
 
-    def postprocess_impossible_jumps(self, *args):
+    def postprocess_impossible_jumps(self):
         if not hasattr(self.chosen_video.video, 'velocity_threshold') and hasattr(self.chosen_video.old_video,'velocity_threshold'):
             self.chosen_video.video.velocity_threshold = self.chosen_video.old_video.velocity_threshold
         elif not hasattr(self.chosen_video.old_video, 'velocity_threshold'):
@@ -658,7 +654,7 @@ class TrackerAPI(object):
         self.chosen_video.video.save()
         
 
-    def update_list_of_blobs(self, *args):
+    def update_list_of_blobs(self):
         self.chosen_video.video.individual_fragments_stats = self.chosen_video.list_of_fragments.get_stats(self.chosen_video.list_of_global_fragments)
         self.chosen_video.video.compute_overall_P2(self.chosen_video.list_of_fragments.fragments)
         self.chosen_video.list_of_fragments.save_light_list(self.chosen_video.video._accumulation_folder)
@@ -675,7 +671,7 @@ class TrackerAPI(object):
         self.chosen_video.video._identify_time = time.time()-self.chosen_video.video.identify_time
 
 
-    def create_trajectories(self, *args, 
+    def create_trajectories(self,
         trajectories_popup_dismiss=None,
         interpolate_crossings_popup_open=None,
         update_and_show_happy_ending_popup=None ):
@@ -716,7 +712,7 @@ class TrackerAPI(object):
 
 
 
-    def interpolate_crossings(self, *args):
+    def interpolate_crossings(self):
         self.chosen_video.list_of_blobs_no_gaps = copy.deepcopy(self.chosen_video.list_of_blobs)
         # if not hasattr(self.chosen_video.list_of_blobs_no_gaps.blobs_in_video[0][0], '_was_a_crossing'):
         #     Logger.debug("adding attribute was_a_crossing to every blob")
@@ -730,7 +726,7 @@ class TrackerAPI(object):
         self.chosen_video.video.save()
         
 
-    def create_trajectories_wo_gaps(self, *args):
+    def create_trajectories_wo_gaps(self):
         self.chosen_video.video.create_trajectories_wo_gaps_folder()
         logger.info("Generating trajectories. The trajectories files are stored in %s" %self.chosen_video.video.trajectories_wo_gaps_folder)
         trajectories_wo_gaps_file = os.path.join(self.chosen_video.video.trajectories_wo_gaps_folder, 'trajectories_wo_gaps.npy')
@@ -745,7 +741,7 @@ class TrackerAPI(object):
         self.chosen_video.video.save()
         self.chosen_video.video._create_trajectories_time = time.time()-self.chosen_video.video.create_trajectories_time
         
-    def update_and_show_happy_ending_popup(self, *args):
+    def update_and_show_happy_ending_popup(self):
         if not hasattr(self.chosen_video.video, 'overall_P2'):
             self.chosen_video.video.compute_overall_P2(self.chosen_video.list_of_fragments.fragments)
         self.chosen_video.video.save()
