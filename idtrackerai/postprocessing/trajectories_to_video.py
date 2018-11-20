@@ -50,7 +50,8 @@ def generate_video(video_object,
                 func = None,
                 centroid_trace_length = 10,
                 starting_frame = 0,
-                ending_frame = None):
+                ending_frame = None,
+                tracking_frame=0):
     if video_object.paths_to_video_segments is None:
         cap = cv2.VideoCapture(video_object.video_path)
     else:
@@ -68,7 +69,8 @@ def generate_video(video_object,
                             colors,
                             cap = cap,
                             func = writeIds,
-                            centroid_trace_length  = centroid_trace_length)
+                            centroid_trace_length  = centroid_trace_length,
+                            tracking_frame=tracking_frame)
         video_writer.write(frame)
 
 def apply_func_on_frame(video_object,
@@ -78,7 +80,8 @@ def apply_func_on_frame(video_object,
                         colors,
                         cap = None,
                         func = None,
-                        centroid_trace_length = 10):
+                        centroid_trace_length = 10,
+                        tracking_frame=0):
     segment_number = video_object.in_which_episode(frame_number)
     current_segment = segment_number
     if cap is None:
@@ -95,11 +98,11 @@ def apply_func_on_frame(video_object,
                                 fy = video_object.resolution_reduction,
                                 interpolation = cv2.INTER_AREA)
         frame = func(video_object, frame, frame_number, trajectories, centroid_trace_length,
-                    colors)
+                    colors, tracking_frame)
         return frame
 
 
-def writeIds(video_object, frame, frame_number, trajectories, centroid_trace_length, colors):
+def writeIds(video_object, frame, frame_number, trajectories, centroid_trace_length, colors, tracking_frame):
     ordered_centroid = trajectories[frame_number]
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_size = 1 * video_object.resolution_reduction
@@ -109,18 +112,19 @@ def writeIds(video_object, frame, frame_number, trajectories, centroid_trace_len
 
     for cur_id, centroid in enumerate(ordered_centroid):
         if sum(np.isnan(centroid)) == 0:
-            if frame_number > centroid_trace_length:
-                centroids_trace = trajectories[frame_number - centroid_trace_length : frame_number, cur_id]
-            else:
-                centroids_trace = trajectories[: frame_number, cur_id]
-            cur_id_str = str(cur_id + 1)
-            int_centroid = np.asarray(centroid).astype('int')
-            cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
-            cv2.putText(frame, cur_id_str,tuple(int_centroid), font, font_size, colors[cur_id], font_width)
-            for centroid_trace in centroids_trace:
-                if sum(np.isnan(centroid_trace)) == 0:
-                    int_centroid = np.asarray(centroid_trace).astype('int')
-                    cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
+            if frame_number > tracking_frame:
+                if frame_number > centroid_trace_length:
+                    centroids_trace = trajectories[frame_number - centroid_trace_length : frame_number, cur_id]
+                else:
+                    centroids_trace = trajectories[: frame_number, cur_id]
+                cur_id_str = str(cur_id + 1)
+                int_centroid = np.asarray(centroid).astype('int')
+                cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
+                cv2.putText(frame, cur_id_str,tuple(int_centroid), font, font_size, colors[cur_id], font_width)
+                for centroid_trace in centroids_trace:
+                    if sum(np.isnan(centroid_trace)) == 0:
+                        int_centroid = np.asarray(centroid_trace).astype('int')
+                        cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
     return frame
 
 def main(args):
@@ -136,7 +140,8 @@ def main(args):
                     func = writeIds,
                     centroid_trace_length = number_of_points_in_past_trace,
                     starting_frame = args.starting_frame,
-                    ending_frame = args.ending_frame)
+                    ending_frame = args.ending_frame,
+                    tracking_frame=args.tracking_frame)
 
 if __name__ == "__main__":
     import argparse
@@ -149,5 +154,8 @@ if __name__ == "__main__":
                         help = "Frame where to start the video")
     parser.add_argument("-ef", "--ending_frame", type = int, default = None,
                         help = "Frame where to end the video")
+    parser.add_argument("-tf", "--tracking_frame", type=int,
+                        help="Frame when to start adding the trajectories",
+                        default=0)
     args = parser.parse_args()
     main(args)
