@@ -241,7 +241,8 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         Pixels with value 1 are valid pixels given the thresholds and the mask.
     """
     if useBkg:
-        frame = cv2.absdiff(bkg,frame) #only step where frame normalization is important, because the background is normalised
+        # frame = cv2.absdiff(bkg,frame) #only step where frame normalization is important, because the background is normalised
+        frame = bkg - frame
         frame = 255 - frame * (255.0/frame.max())
         frame_segmented = cv2.inRange(frame, min_threshold, max_threshold) #output: 255 in range, else 0
     elif not useBkg:
