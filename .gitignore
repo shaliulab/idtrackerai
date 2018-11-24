@@ -1,6 +1,7 @@
 #ignore all kind of files
 *
 *.pyc
+*.log
 !*/
 #except files with extension
 !*.py
