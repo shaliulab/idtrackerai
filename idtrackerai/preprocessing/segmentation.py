@@ -222,7 +222,7 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
     max_number_of_blobs = 0
     frame_number = 0
     while frame_number < number_of_frames_in_episode:
-        
+
         global_frame_number = episode_start_end_frames[0] + frame_number
         if video.tracking_interval is None or frame_in_intervals(global_frame_number, video.tracking_interval):
             blobs_in_frame, max_number_of_blobs = get_blobs_in_frame(cap, video,
@@ -230,9 +230,7 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
                                                                     max_number_of_blobs,
                                                                     frame_number)
         else:
-            ret, frame = cap.read()
-            if SIGMA_GAUSSIAN_BLURRING is not None:
-                frame = cv2.GaussianBlur(frame, (0, 0), SIGMA_GAUSSIAN_BLURRING)
+            ret, _ = cap.read()
             blobs_in_frame = []
         #store all the blobs encountered in the episode
         blobs_in_episode.append(blobs_in_frame)
