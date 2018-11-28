@@ -1,6 +1,9 @@
 import numpy as np, time
 import sys
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+
+from confapp import conf
+
+if not hasattr(conf,'PYFORMS_MODE'):
     from kivy.logger import Logger as logger
 else:
     import logging; logger = logging.getLogger(__name__)

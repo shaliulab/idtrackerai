@@ -282,11 +282,19 @@ class Tracker(TrackerAPI, BoxLayout):
         super().init_pretraining_variables()
         self.create_pretraining_figure()
 
-    def _loop(self):
+    def pretraining_loop(self):
         super().pretraining_loop(call_from_gui=True)
         self.pretraining_popup.bind(on_open = self.one_shot_pretraining)
         self.pretraining_popup.open()
         Clock.schedule_interval(self.continue_pretraining, 2)
+
+    def continue_pretraining_clock_unschedule(self):
+        Clock.unschedule(self.continue_pretraining)
+
+    def continue_pretraining(self, *args):
+        super().continue_pretraining(
+            clock_unschedule=self.continue_pretraining_clock_unschedule
+        )
 
     def one_shot_pretraining(self, *args):
         super().one_shot_pretraining(
@@ -311,15 +319,11 @@ class Tracker(TrackerAPI, BoxLayout):
                                                                  index=self.pretraining_global_step,
                                                                  legend_font_color='w')
 
-    def continue_pretraining_clock_unschedule(self):
-        Clock.unschedule(self.continue_pretraining)
 
-    def continue_pretraining(self, *args):
-        super().continue_pretraining(
-            self.continue_pretraining_clock_unschedule
-        )
 
-    
+
+
+
 
     def identify(self, *args):
         super().identify()

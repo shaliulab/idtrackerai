@@ -1,5 +1,9 @@
 import sys, time, os
-if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
+
+from confapp import conf
+
+
+if not hasattr(conf,'PYFORMS_MODE'):
     from kivy.logger import Logger as logger
 else:
     import logging; logger = logging.getLogger(__name__)
@@ -173,7 +177,6 @@ class TrackerAPI(object):
 
 
     def protocol1(self, create_popup=None):
-        logger.debug("------------------------> protocol1")
         logger.debug("****** setting protocol1 time")
         self.chosen_video.video._protocol1_time = time.time()
         self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
@@ -209,7 +212,6 @@ class TrackerAPI(object):
 
 
     def one_shot_accumulation(self, save_summaries=True):
-        logger.debug("------------------------> one_shot_accumulation")
         logger.warning('Starting one_shot_accumulation')
         self.accumulation_step_finished = False
         self.accumulation_manager.ratio_accumulated_images,\
@@ -464,7 +466,6 @@ class TrackerAPI(object):
                                                                                     scope = 'pretraining')
 
     def pretraining_loop(self, call_from_gui=False):
-        logger.debug("------------------------> pretraining_loop")
         self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
         self.chosen_video.list_of_global_fragments.order_by_distance_travelled()
 
@@ -474,10 +475,10 @@ class TrackerAPI(object):
             self.continue_pretraining()
         
     def continue_pretraining(self, clock_unschedule=None):
-        logger.debug("------------------------> continue_pretraining")
         if self.pretraining_step_finished and self.ratio_of_pretrained_images < MAX_RATIO_OF_PRETRAINED_IMAGES:
             self.one_shot_pretraining()
-            if not clock_unschedule:
+
+            if clock_unschedule is None:
                 self.continue_pretraining()
 
         elif self.ratio_of_pretrained_images > MAX_RATIO_OF_PRETRAINED_IMAGES:
@@ -492,7 +493,6 @@ class TrackerAPI(object):
             self.accumulate()
 
     def one_shot_pretraining(self, generate_tensorboard=False, gui_graph_canvas=None):
-        logger.debug("------------------------> one_shot_pretraining")
         self.pretraining_step_finished = False
         self.pretraining_global_fragment = self.chosen_video.list_of_global_fragments.global_fragments[self.pretraining_counter]
         self.net,\
@@ -516,7 +516,7 @@ class TrackerAPI(object):
         self.pretraining_step_finished = True
 
     def protocol3(self):
-        logger.debug("------------------------> protocol3")
+
         self.init_pretraining_variables()
         number_of_images_in_global_fragments = self.chosen_video.video.number_of_unique_images_in_global_fragments
         if self.chosen_video.old_video and self.chosen_video.old_video.first_accumulation_finished == True:
