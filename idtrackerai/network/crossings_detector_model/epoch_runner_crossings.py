@@ -39,7 +39,7 @@ else:
 class EpochRunner(object):
     def __init__(self, data_set,
                 starting_epoch = 0,
-                print_flag = True):
+                print_flag = False):
         """Runs training a model given the network and the data set
         """
         # Counters

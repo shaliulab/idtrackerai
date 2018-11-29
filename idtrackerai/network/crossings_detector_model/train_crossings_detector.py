@@ -64,7 +64,7 @@ class TrainDeepCrossing(object):
 
     def train_model(self, global_step = 0,
                             check_for_loss_plateau = None,
-                            print_flag = True,
+                            print_flag = False,
                             store_accuracy_and_error = False):
         logger.info("\nTraining Deep Crossing Detector")
         store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(self.net, name = 'training')

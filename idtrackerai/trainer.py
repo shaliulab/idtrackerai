@@ -115,7 +115,7 @@ def train(video,
     """
     # Save accuracy and error during training and validation
     # The loss and accuracy of the validation are saved to allow the automatic stopping of the training
-    logger.info("Training...")
+    #logger.info("Training...")
     store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'training', scope = 'training')
     store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(net, name = 'validation', scope = 'training')
     if plot_flag:
@@ -169,9 +169,9 @@ def train(video,
         raise ValueError("The model diverged")
     else:
         global_step += trainer.epochs_completed
-        logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss[global_step0:]))
+        #logger.debug('loss values in validation: %s' %str(store_validation_accuracy_and_loss_data.loss[global_step0:]))
         # update used_for_training flag to True for fragments used
-        logger.info("Accumulation step completed. Updating global fragments used for training")
+        #logger.info("Accumulation step completed. Updating global fragments used for training")
         if accumulation_manager is not None:
             accumulation_manager.update_fragments_used_for_training()
         # plot if asked

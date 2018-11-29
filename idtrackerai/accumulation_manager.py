@@ -190,14 +190,14 @@ class AccumulationManager(object):
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training
         """
-        logger.debug("Updating used_images...")
+        #logger.debug("Updating used_images...")
         if self.counter == 0:
             self.used_images = self.new_images
             self.used_labels = self.new_labels
         elif self.new_images is not None:
             self.used_images = np.concatenate([self.used_images, self.new_images], axis = 0)
             self.used_labels = np.concatenate([self.used_labels, self.new_labels], axis = 0)
-        logger.info("number of images used for training: %s %s" %(str(self.used_images.shape), str(self.used_labels.shape)))
+        #logger.info("number of images used for training: %s %s" %(str(self.used_images.shape), str(self.used_labels.shape)))
 
     def update_fragments_used_for_training(self):
         """ Once a global fragment has been used for training, sets the flags
@@ -626,6 +626,6 @@ def get_predictions_of_candidates_fragments(net, video, fragments):
 
     if len(images) != 0:
         images = np.asarray(images)
-        assigner = assign(net, images, print_flag = True)
+        assigner = assign(net, images, print_flag = False)
 
     return assigner._predictions, assigner._softmax_probs, np.cumsum(lengths)[:-1], candidate_individual_fragments_identifiers

@@ -286,5 +286,5 @@ def pre_trainer(old_video, video, list_of_fragments, list_of_global_fragments, p
                     store_accuracy_and_error = True,
                     check_for_loss_plateau = True,
                     save_summaries = False,
-                    print_flag = True,
+                    print_flag = False,
                     plot_flag = False)

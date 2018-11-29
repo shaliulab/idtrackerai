@@ -124,53 +124,53 @@ class Tracker(TrackerAPI, BoxLayout):
         ## GUI ###################################################
 
 
-    def __init_tracking_gui_handler(self, status=None):
+    def __one_animal_call(self):
+        self.create_main_layout()
+        self.start_tracking_button.bind(on_release=self.track_single_animal)
+        self.start_tracking_button.text = "Get animal\ntrajectory"
+        self.start_tracking_button.size_hint = (.2, .3)
 
+    def __one_global_fragment_call(self):
+        self.create_main_layout()
+        self.start_tracking_button.bind(on_release=self.track_single_global_fragment_video)
+        self.start_tracking_button.text = "Only one global\nfragment\nwas found.\nNot need\nto train the\nidentification CNN.\nGet animals\ntrajectories"
+        self.start_tracking_button.size_hint = (.2, .3)
+
+    def __not_been_executed_call(self):
         if not self.has_been_executed:
             self.create_main_layout()
             self.control_panel.add_widget(self.help_button_tracker)
             self.has_been_executed = True
 
-        if status==0: # status_post_processing
+    def __post_processing_call(self):
+        self.start_tracking_button.bind(on_release=self.update_and_show_happy_ending_popup)
+        self.start_tracking_button.text = "Show estimated\naccuracy"
 
-            self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
-            self.start_tracking_button.text = "Show estimated\naccuracy"
+    def __residual_identification_wo_ident_call(self):
+        self.start_tracking_button.bind(on_release=self.update_and_show_happy_ending_popup)
+        self.start_tracking_button.text = "Show estimated\naccuracy"
 
-        elif 1<=status<2: # status_residual_identification
+    def __residual_identification_no_wo_ident_call(self):
+        self.start_tracking_button.bind(on_release=self.start_from_post_processing)
+        self.start_tracking_button.text = "Start\npost-processing"
 
-            if status==1.1:
-                self.start_tracking_button.bind(on_release = self.update_and_show_happy_ending_popup)
-                self.start_tracking_button.text = "Show estimated\naccuracy"
+    def __protocol3_accumulation_call(self):
+        self.start_tracking_button.bind(on_release=self.start_from_identification)
+        self.start_tracking_button.text = "Start\nresidual identification"
 
-            elif status==1.2:
-                self.start_tracking_button.bind(on_release = self.start_from_post_processing)
-                self.start_tracking_button.text = "Start\npost-processing"
+    def __protocol3_pretraining_call(self):
+        self.create_one_shot_accumulation_popup()
+        self.start_tracking_button.bind(on_release=self.accumulate)
+        self.start_tracking_button.text = "Start\naccumulation\n(protocol 3)"
 
-        elif status==2: # status_protocol3_accumulation
+    def __protocols1_and_2_call(self):
+        self.create_one_shot_accumulation_popup()
+        self.start_tracking_button.bind(on_release=self.accumulate)
+        self.start_tracking_button.text = "Start\nidentification\nor\nprotocol 3"
 
-            self.start_tracking_button.bind(on_release = self.start_from_identification)
-            self.start_tracking_button.text = "Start\nresidual identification"
-
-        elif status==3: # status_protocol3_pretraining
-
-            self.create_one_shot_accumulation_popup()
-            self.start_tracking_button.bind(on_release = self.accumulate)
-            self.start_tracking_button.text = "Start\naccumulation\n(protocol 3)"
-
-        elif status==4: # status_protocols1_and_2
-
-            self.create_one_shot_accumulation_popup()
-            self.start_tracking_button.bind(on_release = self.accumulate)
-            self.start_tracking_button.text = "Start\nidentification\nor\nprotocol 3"
-
-        elif status==5: # status_protocols1_and_2_not_def
-
-            Logger.info("Starting protocol cascade")
-            self.start_tracking_button.bind(on_release = self.protocol1)
-            self.track_wo_identities_button.bind(on_release = self.track_wo_identities)
-
-
-
+    def __not_protocols1_and_2_call(self):
+        self.start_tracking_button.bind(on_release=self.protocol1)
+        self.track_wo_identities_button.bind(on_release=self.track_wo_identities)
 
 
     def do(self):
@@ -185,20 +185,31 @@ class Tracker(TrackerAPI, BoxLayout):
             self.start_tracking_button.text = "Only one global\nfragment\nwas found.\nThere is not\nneed the\nidentification CNN.\nGet animals\ntrajectories"
             self.start_tracking_button.size_hint = (.2,.3)
         else:
-            self.init_tracking( gui_handler=self.__init_tracking_gui_handler )
+            self.start_tracking(
+                one_animal_call=self.__one_animal_call,
+                one_global_fragment_call=self.__one_global_fragment_call,
+                not_been_executed_call=self.__not_been_executed_call,
+                post_processing_call=self.__post_processing_call,
+                residual_identification_wo_ident_call=self.__residual_identification_wo_ident_call,
+                residual_identification_no_wo_ident_call=self.__residual_identification_no_wo_ident_call,
+                protocol3_accumulation_call=self.__protocol3_accumulation_call,
+                protocol3_pretraining_call=self.__protocol3_pretraining_call,
+                protocols1_and_2_call=self.__protocols1_and_2_call,
+                not_protocols1_and_2_call=self.__not_protocols1_and_2_call
+            )
 
 
     def track_single_animal(self, *args):
-        super().track_single_animal()
-        self.trajectories_popup.open()
+        super().track_single_animal(
+            create_trajectories=self.trajectories_popup.open)
 
     def track_single_global_fragment_video(self, *args):
-        super().track_single_global_fragment_video()
-        self.trajectories_popup.open()
+        super().track_single_global_fragment_video(
+            create_trajectories=self.trajectories_popup.open)
 
     def track_wo_identities(self, *args):
-        super().track_wo_identities()
-        self.trajectories_popup.open()
+        super().track_wo_identities(
+            create_trajectories=self.trajectories_popup.open)
 
 
 
@@ -208,7 +219,7 @@ class Tracker(TrackerAPI, BoxLayout):
 
 
     def one_shot_accumulation(self, *args):
-        super().one_shot_accumulation(save_summaries = self.generate_tensorboard_switch.active)
+        super().one_shot_accumulation(save_summaries = self.generate_tensorboard_switch.active, call_accumulate=False)
 
         self.accumulation_counter_value.text = str(self.accumulation_manager.counter + 1)
         if self.accumulation_manager.counter == 1:
@@ -331,24 +342,33 @@ class Tracker(TrackerAPI, BoxLayout):
         self.impossible_jumps_popup.open()
 
     def postprocess_impossible_jumps(self, *args):
-        super().postprocess_impossible_jumps()
+        super().postprocess_impossible_jumps(call_update_list_of_blobs=False)
         self.impossible_jumps_popup.dismiss()
 
     def update_list_of_blobs(self, *args):
-        super().update_list_of_blobs()
-        self.trajectories_popup.open()
+        super().update_list_of_blobs(
+            create_trajectories=self.trajectories_popup.open
+        )
+
 
     def create_trajectories(self, *args):
         super().create_trajectories(
             trajectories_popup_dismiss=self.trajectories_popup.dismiss,
-            interpolate_crossings_popup_open=self.interpolate_crossings_popup.open,
+            interpolate_crossings=self.interpolate_crossings_popup.open,
             update_and_show_happy_ending_popup=self.update_and_show_happy_ending_popup
         )
 
-    def interpolate_crossings(self, *args):
-        super().interpolate_crossings()
+
+    def __interpolate_crossings_popups_actions(self):
         self.interpolate_crossings_popup.dismiss()
         self.trajectories_wo_gaps_popup.open()
+
+
+    def interpolate_crossings(self, *args):
+        super().interpolate_crossings(
+            interpolate_crossings_popups_actions = self.__interpolate_crossings_popups_actions
+        )
+
 
     def create_trajectories_wo_gaps(self, *args):
         super().create_trajectories_wo_gaps()

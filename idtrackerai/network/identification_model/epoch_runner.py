@@ -62,7 +62,7 @@ class EpochRunner(object):
     """
     def __init__(self, data_set,
                 starting_epoch = 0,
-                print_flag = True,
+                print_flag = False,
                 batch_size = None):
         self._epochs_completed = 0
         self.starting_epoch = starting_epoch
