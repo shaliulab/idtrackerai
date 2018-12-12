@@ -80,7 +80,7 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
         PreprocessingPreviewAPI.__init__(self, chosen_video)
 
         ## GUI ###################################################
-        
+
         # To remove in the future
         global CHOSEN_VIDEO, DEACTIVATE_PREPROCESSING, DEACTIVATE_TRACKING
         CHOSEN_VIDEO             = chosen_video
@@ -89,7 +89,7 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
 
         self.deactivate_preprocessing = deactivate_preprocessing
         self.deactivate_tracking      = deactivate_tracking
-        
+
         BoxLayout.__init__(self, **kwargs)
 
         self.chosen_video.bind(chosen=self.do)
@@ -168,7 +168,7 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
         self.container_layout.add_widget(self.segment_video_btn)
         self.container_layout.add_widget(self.help_button_preprocessing)
 
-    
+
 
     def get_tracking_interval(self, *args):
         self.create_frame_interval_popup()
@@ -201,7 +201,7 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
 
     def do(self, *args):
         if self.chosen_video.video is not None and self.chosen_video.video.video_path is not None:
-            
+
             self.init_preview()
 
             self.create_resolution_reduction_popup()
@@ -349,7 +349,7 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
 
     def check_segmentation_consistency(self, *args):
         super().check_segmentation_consistency(self.check_segmentation_consistency_switch.active)
-        
+
         if len(self.frames_with_more_blobs_than_animals) > 0 and (self.check_segmentation_consistency_switch.active or self.chosen_video.video.number_of_animals == 1):
             self.resegmentation_step_finished = True
             self.consistency_popup.dismiss()
@@ -401,11 +401,9 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
             content.add_widget(self.go_to_tracking_button)
             content.add_widget(crossing_detector_accuracy)
         elif self.chosen_video.video.number_of_animals == 1:
-            content.add_widget(CustomLabel(text = "Ok, tracking a single animal...", size_hint = (1.,.1)))
+            content.add_widget(CustomLabel(text = "Tracking a single animal...", size_hint = (1.,.1)))
             self.go_to_tracking_button = Button(text = "Go to the tracking tab", size_hint = (1.,.1))
             self.go_to_tracking_button.disabled = True
-            self.disappointed = Image(source = os.path.join(os.path.dirname(__file__), 'single_animal.png'))
-            content.add_widget(self.disappointed)
             content.add_widget(self.go_to_tracking_button)
         else:
             content.add_widget(CustomLabel(text = "The model diverged, crossing and individuals will be discriminated only by area."))
