@@ -198,16 +198,19 @@ of the portions)</p>
 <tr class="row-odd"><td><a class="reference internal" href="#video.Video.create_trajectories_wo_gaps_folder" title="video.Video.create_trajectories_wo_gaps_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_trajectories_wo_gaps_folder</span></code></a>()</td>
 <td>Folder in which trajectories files are stored</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#video.Video.get_episodes" title="video.Video.get_episodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_episodes</span></code></a>()</td>
+<tr class="row-even"><td><a class="reference internal" href="#video.Video.create_trajectories_wo_identities_folder" title="video.Video.create_trajectories_wo_identities_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_trajectories_wo_identities_folder</span></code></a>()</td>
+<td>Folder in which trajectories without identites are stored</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#video.Video.get_episodes" title="video.Video.get_episodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_episodes</span></code></a>()</td>
 <td>Split video in episodes (chunks) of 500 frames for parallelisation</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#video.Video.get_info" title="video.Video.get_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_info</span></code></a>()</td>
+<tr class="row-even"><td><a class="reference internal" href="#video.Video.get_info" title="video.Video.get_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_info</span></code></a>()</td>
 <td>Retrieves basic information concerning the video.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#video.Video.in_which_episode" title="video.Video.in_which_episode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">in_which_episode</span></code></a>(frame_number)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#video.Video.in_which_episode" title="video.Video.in_which_episode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">in_which_episode</span></code></a>(frame_number)</td>
 <td>Check to which episode a frame index belongs</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#video.Video.save" title="video.Video.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>()</td>
+<tr class="row-even"><td><a class="reference internal" href="#video.Video.save" title="video.Video.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>()</td>
 <td>save class</td>
 </tr>
 </tbody>
@@ -342,6 +345,12 @@ training a network for a certain video_path</p>
 <dd><p>Folder in which trajectories files are stored</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="video.Video.create_trajectories_wo_identities_folder">
+<code class="descname">create_trajectories_wo_identities_folder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/video.html#Video.create_trajectories_wo_identities_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#video.Video.create_trajectories_wo_identities_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Folder in which trajectories without identites are stored</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="video.Video.fragments_path">
 <code class="descname">fragments_path</code><a class="headerlink" href="#video.Video.fragments_path" title="Permalink to this definition">¶</a></dt>
@@ -415,10 +424,10 @@ be performed.</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Oct 04, 2018.
+      Last updated on Dec 04, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.2.
       </li>
     </ul>
     </div>

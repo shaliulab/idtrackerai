@@ -250,11 +250,12 @@
                     <span class="n">number_samples_used</span> <span class="o">=</span> <span class="n">MAXIMAL_IMAGES_PER_ANIMAL</span> <span class="o">-</span> <span class="n">number_samples_new</span>
                 <span class="c1"># we put together a random sample of the new images and the used images</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_images</span><span class="p">[</span><span class="n">new_images_indices</span><span class="p">],</span><span class="n">number_samples_new</span><span class="p">))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_images</span><span class="p">))</span>
+                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_images</span><span class="p">[</span><span class="n">new_images_indices</span><span class="p">]),</span><span class="n">number_samples_new</span><span class="p">))</span>
                     <span class="n">labels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">number_samples_new</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">used_images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># this condition is set because the first time we accumulate the variable used_images is None</span>
-                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_images</span><span class="p">[</span><span class="n">used_images_indices</span><span class="p">],</span><span class="n">number_samples_used</span><span class="p">))</span>
+                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_images</span><span class="p">[</span><span class="n">used_images_indices</span><span class="p">]),</span><span class="n">number_samples_used</span><span class="p">))</span>
                     <span class="n">labels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">number_samples_used</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># if the total number of images for this label does not exceed the MAXIMAL_IMAGES_PER_ANIMAL</span>
@@ -732,10 +733,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Oct 04, 2018.
+      Last updated on Dec 05, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.2.
       </li>
     </ul>
     </div>

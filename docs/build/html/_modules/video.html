@@ -227,6 +227,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_protocol3_accumulation_time</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_identify_time</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_create_trajectories_time</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_there_are_crossings</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_track_wo_identities</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">SIGMA_GAUSSIAN_BLURRING</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sigma_gaussian_blurring</span> <span class="o">=</span> <span class="n">SIGMA_GAUSSIAN_BLURRING</span>
 
@@ -476,6 +478,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracking_with_knowledge_transfer</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">track_wo_identities</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_track_wo_identities</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">video_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_video_path</span>
 
@@ -575,6 +581,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_unique_images_in_global_fragments</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">there_are_crossings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_there_are_crossings</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ratio_accumulated_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ratio_accumulated_images</span>
 
@@ -626,7 +636,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_video_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">new_session_path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">video_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_folder</span><span class="p">,</span><span class="n">video_name</span><span class="p">)</span>
         <span class="n">attributes_to_modify</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">basestring</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="nb">str</span><span class="p">)</span>
         <span class="ow">and</span> <span class="n">old_session_path</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="p">}</span>
 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">attributes_to_modify</span><span class="p">:</span>
@@ -710,7 +720,7 @@
                             <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No checkpoint found in </span><span class="si">%s</span><span class="s1"> &#39;</span> <span class="o">%</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">),</span> <span class="n">sub_folder</span><span class="p">))</span>
 
         <span class="n">attributes_to_modify</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">basestring</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="nb">str</span><span class="p">)</span>
         <span class="ow">and</span> <span class="n">current_session_name</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="p">}</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Modifying folder name from </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> &quot;</span>  <span class="o">%</span><span class="p">(</span><span class="n">current_session_name</span><span class="p">,</span> <span class="n">new_session_name</span><span class="p">))</span>
         <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span>
@@ -876,6 +886,15 @@
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories_folder</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;the folder </span><span class="si">%s</span><span class="s2"> has been created&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories_folder</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="Video.create_trajectories_wo_identities_folder"><a class="viewcode-back" href="../video_information_manager.html#video.Video.create_trajectories_wo_identities_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_trajectories_wo_identities_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Folder in which trajectories without identites are stored</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trajectories_wo_identities_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_folder</span><span class="p">,</span><span class="s1">&#39;trajectories_wo_identities&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories_wo_identities_folder</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating trajectories folder...&quot;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories_wo_identities_folder</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;the folder </span><span class="si">%s</span><span class="s2"> has been created&quot;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">trajectories_wo_identities_folder</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Video.create_trajectories_wo_gaps_folder"><a class="viewcode-back" href="../video_information_manager.html#video.Video.create_trajectories_wo_gaps_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_trajectories_wo_gaps_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Folder in which trajectories files are stored</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -898,7 +917,7 @@
 <span class="sd">        for parallelisation&quot;&quot;&quot;</span>
         <span class="n">starting_frames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">,</span> <span class="n">FRAMES_PER_EPISODE</span><span class="p">)</span>
         <span class="n">ending_frames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">starting_frames</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_frames</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_episodes_start_end</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">starting_frames</span><span class="p">,</span> <span class="n">ending_frames</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_episodes_start_end</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">starting_frames</span><span class="p">,</span> <span class="n">ending_frames</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_episodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">starting_frames</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Video.in_which_episode"><a class="viewcode-back" href="../video_information_manager.html#video.Video.in_which_episode">[docs]</a>    <span class="k">def</span> <span class="nf">in_which_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame_number</span><span class="p">):</span>
@@ -914,15 +933,17 @@
 
     <span class="k">def</span> <span class="nf">copy_attributes_between_two_video_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">video_object_source</span><span class="p">,</span> <span class="n">list_of_attributes</span><span class="p">,</span> <span class="n">is_property</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">list_of_attributes</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;attribute </span><span class="si">%s</span><span class="s2"> does not exist&quot;</span> <span class="o">%</span><span class="n">attribute</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">is_property</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">attribute_is_property</span> <span class="o">=</span> <span class="n">is_property</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">attribute_is_property</span><span class="p">:</span>
-                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;attribute </span><span class="si">%s</span><span class="s2"> does not exist&quot;</span> <span class="o">%</span><span class="n">attribute</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">is_property</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">attribute_is_property</span> <span class="o">=</span> <span class="n">is_property</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">attribute_is_property</span><span class="p">:</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">video_object_source</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">compute_overall_P2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
         <span class="n">weighted_P2</span> <span class="o">=</span> <span class="mi">0</span>
@@ -956,15 +977,6 @@
 
     <span class="n">video</span> <span class="o">=</span> <span class="n">Video</span><span class="p">()</span>
     <span class="n">video</span><span class="o">.</span><span class="n">video_path</span> <span class="o">=</span> <span class="s1">&#39;/home/lab/Desktop/TF_models/IdTrackerDeep/videos/Cafeina5pecesShort/Caffeine5fish_20140206T122428_1.avi&#39;</span>
-
-<span class="c1"># &#39;time_preprocessing&#39;: None,</span>
-<span class="c1"># &#39;time_accumulation_before_pretraining&#39;: None,</span>
-<span class="c1"># &#39;time_pretraining&#39;: None,</span>
-<span class="c1"># &#39;time_accumulation_after_pretraining&#39;: None,</span>
-<span class="c1"># &#39;time_assignment&#39;: None,</span>
-<span class="c1"># &#39;time_postprocessing&#39;: None,</span>
-<span class="c1"># &#39;total_time&#39;: None,</span>
-<span class="c1">#  }, ignore_index=True)</span>
 </pre></div>
 
           </div>
@@ -987,10 +999,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Oct 04, 2018.
+      Last updated on Dec 05, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.2.
       </li>
     </ul>
     </div>

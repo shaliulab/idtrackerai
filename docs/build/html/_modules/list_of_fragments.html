@@ -105,7 +105,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -204,7 +204,11 @@
 <div class="viewcode-block" id="ListOfFragments.compute_total_number_of_images_in_global_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.compute_total_number_of_images_in_global_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">compute_total_number_of_images_in_global_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets the number of images available in global fragments (without repetitions)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_images_in_global_fragments</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span> <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">is_in_a_global_fragment</span><span class="p">])</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_images_in_global_fragments</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">fragment</span><span class="o">.</span><span class="n">number_of_images</span>
+                                                         <span class="k">for</span> <span class="n">fragment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span>
+                                                         <span class="k">if</span> <span class="n">fragment</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">accumulable_individual_fragments</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_images_in_global_fragments</span></div>
+
 
 <div class="viewcode-block" id="ListOfFragments.compute_ratio_of_images_used_for_pretraining"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.compute_ratio_of_images_used_for_pretraining">[docs]</a>    <span class="k">def</span> <span class="nf">compute_ratio_of_images_used_for_pretraining</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the ratio of images used for pretraining over the number of</span>
@@ -748,10 +752,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Oct 04, 2018.
+      Last updated on Dec 05, 2018.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.2.
       </li>
     </ul>
     </div>
