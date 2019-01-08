@@ -5,19 +5,19 @@ Welcome to idtracker.ai's documentation!
 
 .. raw:: html
 
-  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/Imz3xvPsaEw?vq=hd1080&ecver=1&rel=0&showinfo=01&autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/Imz3xvPsaEw?vq=hd1080&ecver=1&rel=0&showinfo=01&autoplay=1&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 .. raw:: html
 
-  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/_M9xl4jBzVQ?ecver=1&rel=0&showinfo=01&autoplay=1&vq=hd1080" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/_M9xl4jBzVQ?ecver=1&rel=0&showinfo=01&autoplay=1&vq=hd1080&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 .. raw:: html
 
-  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/d0TTdu41NoA?autoplay=1&vq=hd1080" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/d0TTdu41NoA?autoplay=1&vq=hd1080&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 .. raw:: html
 
-  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/XbMn1KiI4Ic?ecver=1&autoplay=1&vq=hd1080" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/ANsThSPgBFM?ecver=1&autoplay=1&vq=hd1080&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 When using information from this web page please reference
 
