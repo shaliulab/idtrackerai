@@ -188,6 +188,14 @@ this will install idtracker.ai with GPU support. If you want to install idtracke
 3.- Access the enviroment created by typing
     
     conda activate idtrackerai-win
+    
+or simply
+
+    activate idtrackerai-win
+    
+if you installed the *nogpu* version then type:
+
+    activate idtrackerai-win-nogpu
 
 4.- Using the Anaconda Prompt and from the *idtrackerai* folder run the command:
 
@@ -206,9 +214,21 @@ If you want to make modifications in the code or you don't want to reinstall idt
 ## Open idtracker.ai
 
 If the installation succeed correctly you can test the system by launching the GUI.
-Open a terminal (Anaconda Prompt in Windows machines) and activate the conda environment idtrackerai-env (idtrackerai-win or idtrackerai-win-nogpu in Windows machines)
+Open a terminal (Anaconda Prompt in Windows machines) and activate the conda environment idtrackerai-env (idtrackerai-win or idtrackerai-win-nogpu in Windows machines).
 
     source activate idtrackerai-env
+    
+in the Anaconda Prompt you can activate the environment doing 
+
+    conda activate idtrackerai-env-win
+    
+or simply
+
+    activate idtrackerai-env-win
+    
+Depending on the configuration of your *conda*, in linux systems you can also activate the environment running
+
+    conda activate idtrackerai-env
 
 Once the environment is activate launch the GUI
 
