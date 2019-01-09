@@ -170,7 +170,7 @@ If you want to develop or modify parts of the code you might want to install idt
 
 ### Install in Windows 10
 
-With the migration to python3 it is not possible to install idtracker.ai in Windows 10.
+With the migration to python3 it is now possible to install idtracker.ai in Windows 10.
 We remind the user that the system has not been tested in Windows 10, so different problems might arise. We appreciate users and developers to report the possible issues they might find.
 
 1.- Clone the repository using git bash (https://gitforwindows.org/):
