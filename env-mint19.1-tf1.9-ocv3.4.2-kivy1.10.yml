@@ -78,7 +78,6 @@ dependencies:
     - dask==0.20.0
     - h5py==2.8.0
     - idna==2.8
-    - idtrackerai==2.0.0a0
     - joblib==0.13.0
     - kivy-garden==0.1.4
     - kiwisolver==1.0.1
