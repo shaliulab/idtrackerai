@@ -1,4 +1,4 @@
-name: idtrackerai-win-nogpu
+name: idtrackerai-nogpu
 channels:
   - conda-forge
   - defaults

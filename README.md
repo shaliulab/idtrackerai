@@ -1,44 +1,37 @@
 # idtracker.ai (v2.0.0-alpha)
 
+[idtracker.ai](http://idtracker.ai/) is a software that tracks animals in groups keeping the identity of every individual after they touch or cross.
+[idtracker.ai in Nature Methods](http://dx.doi.org/10.1038/s41592-018-0295-5)
 [idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
 
-## NEW in v2.0.0-alpha
+## Requirements
 
-In this new version we made an effort to migrate the software from Python 2.7 to Python 3.6. Moreover, we also updated some libraries that are core for the system.
-* Tensorflow 1.2.0 -> Tensorflow 1.9.0
-* Kivy 1.9 -> Kivy 1.10
-* OpenCV 2.13 -> OpenCV 3.4.2
+[idtracker.ai](http://idtracker.ai/) has been developed and tested in computers with the following specifications:
 
-Also, we have made the system more robust allowing to track single individuals and groups under more general conditions:
-
-* Tracking of a single individual (skips the core of idtracker.ai)
-* Tracking of individuals in groups where animals do not cross/touch/interact or do it not very frequently.
-* Tracking groups without keeping the identities.
-* Allow for several tracking intervals
-* Create new trajectories_wo_gaps.npy file when identities are corrected in the Global Validation tab. This feature is only available when correcting the identities in the option "With animals not identified during crossings". The identity during the crossings is automatically interpolated.
-
-## Hardware requirements
-
-idtracker.ai has been tested in computers with the following specifications:
-
-- Operating system: 64bit GNU/linux Mint 18.3
+- Operating systems: 64bit GNU/linux Mint 18.3
 - CPU: Core(TM) i7-7700K CPU @4.20GHz 6 core Intel(R) or Core(TM) i7-6800K CPU @3.40GHz 4 core
 - GPU: Nvidia TITAN X or GeForce GTX 1080 Ti
 - RAM: 32Gb (for small groups) or 128Gb (for large groups)
 - Disk: 1TB SSD
 
-idtracker.ai is coded in Python and uses Tensorflow libraries. Due to the intense use of deep neural networks,
+However, the software also works in Windows 10, in Ubuntu 18.04 and Linux Mint 19.1.
+
+[idtracker.ai](http://idtracker.ai/) is coded in Python and uses Tensorflow. Due to the intense use of deep neural networks,
 we recommend using a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher.
-Note that the parts of the algorithm using Tensorflow libraries will run faster with a GPU.
+Note that the parts of the algorithm using Tensorflow will run faster with a GPU.
 
-## Installation (v2.0.0-alpha).
+[idtracker.ai](http://idtracker.ai/) can also be used to track single individuals or groups of animals without keeping the identities. In these cases, the system does not require the intensive use of a GPU. We provide *Conda* environments to work without a GPU.
 
-The installation of idtracker.ai requires some amount of interaction with the linux
-terminal. Read the following paragraph only if your are not familiar with the terminal in linux operating systems.
+## Installation.
 
-In Linux Mint you can open a terminal using the icon with the gray symbol ">_" on the left in the bottom bar. We provide the commands needed to install idtracker.ai from the terminal. In this documentation inputs to the terminal and outputs are shown inside of a box. You can type them directly in the command line and press ENTER to execute them.
+The installation of idtracker.ai requires some amount of interaction with the
+terminal (command line). Read the following paragraph only if your are not familiar with the terminal.
+
+**In Linux Mint** you can open a terminal using the icon with the gray symbol **>_** on the left in the bottom bar. We provide the commands needed to install idtracker.ai from the terminal. In this documentation inputs to the terminal and outputs are shown inside of a box. You can type them directly in the command line and press ENTER to execute them.
 Right-click with your mouse to copy and paste commands from the instructions to the terminal.
 (NOTE: do not use the shortcut Ctrl+C and Ctrl+V as they do not work in the terminal)
+
+**In Windows** we recommend using the *git shell* terminal to interact with the git repositories and the *Anaconda Prompt* to install and run [idtracker.ai](http://idtracker.ai/).
 
 The time needed to install the system varies with the output of the pre-installation checks and the download speed of the network when cloning the repository and dowloading the dependencies. In our computers and network, the total installation time is typically of <15 minutes.
 
@@ -58,7 +51,7 @@ Upgrade your system running:
 
 Make sure that your GPU drivers are installed.
 
-If you are using an NVIDIA GPU you can check that the drivers are properly
+**In linux**, if you are using an NVIDIA GPU you can check that the drivers are properly
 installed typing.
 
     nvidia-smi
@@ -96,7 +89,7 @@ as it might enter in conflict with the parts of idtracker.ai that are paralleliz
 
 The installation process requires [miniconda](https://conda.io/miniconda.html) to be installed in your computer. Skip the next paragraphs if Miniconda2 or Miniconda3 are already installed.
 
-To check whether miniconda is installed in your computer type
+**In linux**, to check whether *miniconda* is installed in your computer type
 
     conda
 
@@ -104,7 +97,7 @@ if you get the following output
 
     conda: command not found
 
-miniconda is not installed in your system. Follow the next instructions to install it.
+*miniconda* is not installed in your system. Follow the next instructions to install it.
 
 Using the terminal, download the miniconda installation file
 
@@ -126,109 +119,103 @@ to continue with the default installation. Finally you will be asked to prepend
 the install location to PATH in your .bashrc file.
 Type "yes" to continue with the default installation.
 
-**IMPORTANT** At the end of the installation close the terminal and open a new one.
+At the end of the installation close the terminal and open a new one.
+
+**In Windows** you will need to install the [Anaconda distribution](https://https://conda.io/docs/user-guide/install/windows.html) in order to get the Anaconda Prompt which you will use to install and run [idtracker.ai](http://idtracker.ai/).
+
+###### Git
+
+To install [idtracker.ai](http://idtracker.ai/) you will need to clone this repository using the *git* version control system.
+
+**In Linux**, you can install *Git* with the following command in the terminal
+
+    sudo apt-get install git
+
+**In Windows**, you can get the *Git BASH* installing [git for Windows](https://gitforwindows.org/).
 
 ### Installation
 
-Using the terminal, download the file [install.sh](https://gitlab.com/polavieja_lab/idtrackerai/raw/cuda_in_conda/install.sh)
-using the following command.
+##### 1. Clone this repository
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/2.0.0-alpha/install.sh
+**In Linux**, in the terminal (**in Windows**, in the Git BASH) run the command:
 
-Give install.sh executable permissions by typing
+    git clone https://gitlab.com/polavieja_lab/idtrackerai.git
 
-    chmod u+x install.sh
 
-and execute it
 
-    ./install.sh
+##### 2. Access the *idtrackerai* folder created in the previous step
 
-The installation can take several minutes. At the end of the process the last lines
-of the terminal should show a message similar to this:
+**In Linux**, in the terminal (**in Windows**, in the Anaconda Prompt), run the command:
 
-    Download done (21059 downloaded)
-    Extracting...
-    Installing new version...
-    Done! garden.matplotlib is installed at: /home/rhea/.kivy/garden/garden.matplotlib
-    Cleaning...
+    cd idtrackerai
 
-If the installation did not succeed try proceeding step by step, by running
-the following commands in your terminal:
+**In Windows**, this step might change if the default folder for the Anaconda Prompt and the Git BASH is different. Just use the command ``cd directory`` and ``cd ..`` to move around the different folders until you get to the folder *idtrackerai* created in the previous step.  
 
-    wget https://gitlab.com/polavieja_lab/idtrackerai/raw/2.0.0-alpha/env-mint18.3-tf1.9-ocv3.4.2-kivy1.10.yml
-    conda env create -f env-mint18.3-tf1.9-ocv3.4.2-kivy1.10.yml
+##### 3. Install the corresponding conda environment
+
+**In Linux**, in the terminal, run the command:
+
+    conda env create -f idtrackerai-env_linux.yml
+
+
+if you want to install the version without GPU support substitute *idtrackerai-env_linux.yml* by *idtrackerai-env_linux_nogpu.yml*
+
+**In Windows**, in the Anaconda Prompt, run the command:
+
+    conda env create -f idtrackerai-env_win.yml
+
+if you want to install the version without GPU support substitute *idtrackerai-env_win.yml* by *idtrackerai-env_win_nogpu.yml*
+
+##### 4. Activate the conda environment
+
+**In Linux**, in the terminal (**in Windows**, in the Anaconda Prompt), run the command:
+
+    conda activate idtrackerai-env
+
+In some installations of *miniconda* you will need to use the command
+
     source activate idtrackerai-env
-    git clone https://gitlab.com/polavieja_lab/idtrackerai.git
-    pip install idtrackerai/.
-    garden install matplotlib
 
-### Install as a developer
+In the Anaconda Prompt **in Windows** you can also use simply
 
-If you want to develop or modify parts of the code you might want to install idtracker.ai with the following command.
+    activate idtrackerai-env
 
-    pip install -e idtrackerai/.
+If you have installed the version without GPU support substitute *idtrackerai-env* by *idtrackerai-nogpu*.
 
-### Install in Windows 10
+##### 5. Install idtracker.ai
 
-With the migration to python3 it is now possible to install idtracker.ai in Windows 10.
-We remind the user that the system has not been tested in Windows 10, so different problems might arise. We appreciate users and developers to report the possible issues they might find.
-
-1.- Clone the repository using git bash (https://gitforwindows.org/):
-
-    git clone https://gitlab.com/polavieja_lab/idtrackerai.git
-
-2.- Using Anaconda Prompt (https://conda.io/docs/user-guide/install/windows.html) access the *idtrackerai* folder and run the command:
-
-    conda env create -f env-win10-tf1.9-ocv3.4.2-kivy1.10.yml
-
-this will install idtracker.ai with GPU support. If you want to install idtracker.ai withouth GPU support (e.g. you are tracking a single animal, or you want to track groups without identification) run the command
-
-    conda env create -f env-win10-tf1.9_nogpu-ocv3.4.2-kivy1.10.yml
-    
-3.- Access the enviroment created by typing
-    
-    conda activate idtrackerai-win
-    
-or simply
-
-    activate idtrackerai-win
-    
-if you installed the *nogpu* version then type:
-
-    activate idtrackerai-win-nogpu
-
-4.- Using the Anaconda Prompt and from the *idtrackerai* folder run the command:
+**In Linux**, in the terminal (**in Windows**, in the Anaconda Prompt) run the command:
 
     pip install .
-    
-Remember to do this step inside of the conda environment.
 
-If you want to make modifications in the code or you don't want to reinstall idtracker.ai everytime you update the software with the *git pull* command, you can install it as a developer by doing:
+if you want to install the software with developer options, use the command:
 
     pip install -e .
 
-5.- Install *matplotlib* for *kivy* doing:
+##### 6. Install matplotlib for Kivy
+
+**In Linux**, in the terminal (**in Windows**, in the Anaconda Prompt) run the command:
 
     garden install matplotlib
 
 ## Open idtracker.ai
 
 If the installation succeed correctly you can test the system by launching the GUI.
-Open a terminal (Anaconda Prompt in Windows machines) and activate the conda environment idtrackerai-env (idtrackerai-win or idtrackerai-win-nogpu in Windows machines).
+Open a terminal in **Linux** or an Anaconda Prompt in **Windows** and activate the conda environment idtrackerai-env (idtrackerai-win or idtrackerai-win-nogpu in Windows machines).
 
     source activate idtrackerai-env
-    
-in the Anaconda Prompt you can activate the environment doing 
 
-    conda activate idtrackerai-env-win
-    
-or simply
-
-    activate idtrackerai-env-win
-    
 Depending on the configuration of your *conda*, in linux systems you can also activate the environment running
 
     conda activate idtrackerai-env
+
+In the Anaconda Prompt you can activate the environment doing
+
+    conda activate idtrackerai-env
+
+or simply
+
+    activate idtrackerai-env
 
 Once the environment is activate launch the GUI
 
@@ -247,7 +234,7 @@ to track a simple example video.
 
 ## Monitoring idtracker.ai
 
-As the GUI does not include many progress indicators and some processes can be computationally demanding, we recommend to monitor the flow of the system using the terminal. Also, we typically monitor the state of the CPU and RAM memory using the command
+As the GUI does not include many progress indicators and some processes can be computationally demanding, we recommend to monitor the flow of the system using the terminal **in Linux**. Also, we typically monitor the state of the CPU and RAM memory using the command
 
     htop
 
@@ -265,8 +252,8 @@ We monitor the performance and the state of the GPU running the command:
 http://idtracker.ai
 
 ## Contributors
-* Mattia G. Bergomi
 * Francisco Romero-Ferrero
+* Mattia G. Bergomi
 * Francisco J.H. Heras
 
 ## License
