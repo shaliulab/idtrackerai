@@ -1,8 +1,16 @@
 # idtracker.ai (v2.0.0-alpha)
 
 [idtracker.ai](http://idtracker.ai/) is a software that tracks animals in groups keeping the identity of every individual after they touch or cross.
+
 [idtracker.ai in Nature Methods](http://dx.doi.org/10.1038/s41592-018-0295-5)
+
 [idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
+
+[![Watch the video](https://img.youtube.com/vi/Imz3xvPsaEw/hqdefault.jpg)](https://youtu.be/Imz3xvPsaEw)
+
+
+
+
 
 ## Requirements
 
