@@ -6,7 +6,7 @@
 
 [idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
 
-[![Watch the video](https://img.youtube.com/vi/Imz3xvPsaEw/hqdefault.jpg)](https://youtu.be/Imz3xvPsaEw)
+[![Watch the video](https://img.youtube.com/vi/Imz3xvPsaEw/maxresdefault.jpg)](https://youtu.be/Imz3xvPsaEw)
 
 
 
