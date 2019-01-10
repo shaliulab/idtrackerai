@@ -2,14 +2,19 @@
 
 [idtracker.ai](http://idtracker.ai/) is a software that tracks animals in groups keeping the identity of every individual after they touch or cross.
 
-[idtracker.ai in Nature Methods](http://dx.doi.org/10.1038/s41592-018-0295-5)
+You can find all the details of the software in the [Nature Methods paper](http://dx.doi.org/10.1038/s41592-018-0295-5) where [idtracker.ai](http://idtracker.ai/) was published.
 
 [idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
 
-[![Watch the video](https://img.youtube.com/vi/Imz3xvPsaEw/maxresdefault.jpg)](https://youtu.be/Imz3xvPsaEw)
+<center>
+[<img src="100fish.png" alt="drawing" height="310"/>](https://www.youtube.com/watch?v=Imz3xvPsaEw&feature=youtu.be)
+[<img src="72flies.png" alt="drawing" height="310"/>](https://www.youtube.com/watch?v=_M9xl4jBzVQ)
 
 
-
+[<img src="2fish.png" alt="drawing" height="150"/>](https://www.youtube.com/watch?v=dT28-VcXaCc)
+[<img src="14ants.png" alt="drawing" height="150"/>](https://www.youtube.com/watch?v=d0TTdu41NoA)
+[<img src="4mice.png" alt="drawing" height="150"/>](https://www.youtube.com/watch?v=ANsThSPgBFM&t=202s)
+</center>
 
 
 ## Requirements
