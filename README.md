@@ -6,13 +6,13 @@ You can find all the details of the software in the [Nature Methods paper](http:
 
 [idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
 
-[<img src="100fish.png" alt="drawing" height="310"/>](https://www.youtube.com/watch?v=Imz3xvPsaEw&feature=youtu.be)
-[<img src="72flies.png" alt="drawing" height="310"/>](https://www.youtube.com/watch?v=_M9xl4jBzVQ)
+[<img src="100fish.png" alt="drawing" height="350"/>](https://www.youtube.com/watch?v=Imz3xvPsaEw&feature=youtu.be)
+[<img src="72flies.png" alt="drawing" height="350"/>](https://www.youtube.com/watch?v=_M9xl4jBzVQ)
 
 
-[<img src="2fish.png" alt="drawing" height="150"/>](https://www.youtube.com/watch?v=dT28-VcXaCc)
-[<img src="14ants.png" alt="drawing" height="150"/>](https://www.youtube.com/watch?v=d0TTdu41NoA)
-[<img src="4mice.png" alt="drawing" height="150"/>](https://www.youtube.com/watch?v=ANsThSPgBFM&t=202s)
+[<img src="2fish.png" alt="drawing" height="170"/>](https://www.youtube.com/watch?v=dT28-VcXaCc)
+[<img src="14ants.png" alt="drawing" height="170"/>](https://www.youtube.com/watch?v=d0TTdu41NoA)
+[<img src="4mice.png" alt="drawing" height="170"/>](https://www.youtube.com/watch?v=ANsThSPgBFM&t=202s)
 
 
 ## Requirements
