@@ -223,7 +223,7 @@ Once the environment is activate launch the GUI
 
 The GUI can also be launched from its main script. First go the the gui folder:
 
-    cd idtrackerai/gui/
+    cd idtrackerai/idtrackerai/gui/
 
 Then run the script idtrackeraiApp.py using Python.
 
