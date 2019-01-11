@@ -1,7 +1,7 @@
 Welcome to idtracker.ai's documentation!
 ========================================
 
-`idtracker.ai <idtracker.ai>`_ allows to track groups of animals in videos recorded in laboratory conditions.
+`idtracker.ai <idtracker.ai>`_ allows to track groups of unmarked animals in videos recorded in laboratory conditions.
 
 .. raw:: html
 
@@ -32,9 +32,12 @@ The source code can be found in https://gitlab.com/polavieja_lab/idtrackerai.git
 
 The links to the data can be found in the :doc:`./data` section of this webpage.
 
-We are doing more science using `idtracker.ai <idtracker.ai>`_ and attention networks to understand how fish aggregate
-information from their neighbours when navigating in a group of conspecifics. Check
-`the preprint here <https://www.biorxiv.org/content/early/2018/12/21/400747>`_.
+We have also developed a toolbox to match identities between videos, called `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>`_.
+
+Let us know if you are using `idtracker.ai <http://idtracker.ai/>`_ in your research. We are using it to study collective behavior and aggression in zebrafish.
+
+  - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2018). Aggregation rule in animal collectives dynamically changes between majority and minority influence. bioRxiv, 400747. <https://www.biorxiv.org/content/early/2018/08/26/400747>`_
+  - `Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679. <https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339>`_
 
 Contents
 ********

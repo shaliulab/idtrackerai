@@ -24,7 +24,8 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'numpydoc']
+    'numpydoc',
+    'sphinxcontrib.googleanalytics']
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'

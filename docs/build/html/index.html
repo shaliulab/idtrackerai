@@ -3,7 +3,18 @@
 <html>
   <head>
     <meta charset="utf-8">
-    
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-114600635-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
     <title>Welcome to idtracker.ai’s documentation! &mdash; idtrackerai v0.0 Manual</title>
     
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
@@ -92,7 +103,7 @@
             
   <div class="section" id="welcome-to-idtracker-ai-s-documentation">
 <h1>Welcome to idtracker.ai’s documentation!<a class="headerlink" href="#welcome-to-idtracker-ai-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="idtracker.ai">idtracker.ai</a> allows to track groups of animals in videos recorded in laboratory conditions.</p>
+<p><a class="reference external" href="idtracker.ai">idtracker.ai</a> allows to track groups of unmarked animals in videos recorded in laboratory conditions.</p>
 <iframe width="560" height="320" style="padding:2px;border:2px solid white;" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/Imz3xvPsaEw?vq=hd1080&ecver=1&rel=0&showinfo=01&autoplay=1&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/_M9xl4jBzVQ?ecver=1&rel=0&showinfo=01&autoplay=1&vq=hd1080&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/d0TTdu41NoA?autoplay=1&vq=hd1080&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/ANsThSPgBFM?ecver=1&autoplay=1&vq=hd1080&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><p>When using information from this web page please reference</p>
 <blockquote>
 <div><a class="reference external" href="http://dx.doi.org/10.1038/s41592-018-0295-5">Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
@@ -101,9 +112,14 @@ idtracker.ai: tracking all individuals in small or large collectives of unmarked
 <p>Find <a class="reference external" href="https://arxiv.org/abs/1803.04351">here the preprint</a> version of the manuscript.</p>
 <p>The source code can be found in <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai.git">https://gitlab.com/polavieja_lab/idtrackerai.git</a>.</p>
 <p>The links to the data can be found in the <a class="reference internal" href="data.html"><span class="doc">Data</span></a> section of this webpage.</p>
-<p>We are doing more science using <a class="reference external" href="idtracker.ai">idtracker.ai</a> and attention networks to understand how fish aggregate
-information from their neighbours when navigating in a group of conspecifics. Check
-<a class="reference external" href="https://www.biorxiv.org/content/early/2018/12/21/400747">the preprint here</a>.</p>
+<p>We have also developed a toolbox to match identities between videos, called <a class="reference external" href="https://gitlab.com/polavieja_lab/idmatcherai">idmatcher.ai</a>.</p>
+<p>Let us know if you are using <a class="reference external" href="http://idtracker.ai/">idtracker.ai</a> in your research. We are using it to study collective behavior and aggression in zebrafish.</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="https://www.biorxiv.org/content/early/2018/08/26/400747">Heras, F. J., Romero-Ferrero, F., Hinz, R. C., &amp; de Polavieja, G. G. (2018). Aggregation rule in animal collectives dynamically changes between majority and minority influence. bioRxiv, 400747.</a></li>
+<li><a class="reference external" href="https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339">Laan, A., Iglesias-Julios, M., &amp; de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679.</a></li>
+</ul>
+</div></blockquote>
 <div class="section" id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
@@ -148,7 +164,7 @@ information from their neighbours when navigating in a group of conspecifics. Ch
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jan 08, 2019.
+      Last updated on Jan 11, 2019.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.

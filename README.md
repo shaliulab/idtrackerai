@@ -1,10 +1,12 @@
 # idtracker.ai (v2.0.0-alpha)
 
-[idtracker.ai](http://idtracker.ai/) is a software that tracks animals in groups keeping the identity of every individual after they touch or cross.
+[idtracker.ai](http://idtracker.ai/) is a software that tracks and identifies animals in collectives from videos recorded under laboratory conditions.
 
-You can find all the details of the software in the [Nature Methods paper](http://dx.doi.org/10.1038/s41592-018-0295-5) where [idtracker.ai](http://idtracker.ai/) was published.
+You can find all the details of the software in the [Nature Methods paper](http://dx.doi.org/10.1038/s41592-018-0295-5) where [idtracker.ai](http://idtracker.ai/) is published.
 
-[idtracker.ai in arXiv](https://arxiv.org/abs/1803.04351)
+You can also find an early version of the article in [arXiv](https://arxiv.org/abs/1803.04351)
+
+Click on the images below to see some examples of videos tracked with [idtracker.ai](http://idtracker.ai/).
 
 [<img src="100fish.png" alt="drawing" height="350"/>](https://www.youtube.com/watch?v=Imz3xvPsaEw&feature=youtu.be)
 [<img src="72flies.png" alt="drawing" height="350"/>](https://www.youtube.com/watch?v=_M9xl4jBzVQ)
@@ -14,6 +16,10 @@ You can find all the details of the software in the [Nature Methods paper](http:
 [<img src="14ants.png" alt="drawing" height="170"/>](https://www.youtube.com/watch?v=d0TTdu41NoA)
 [<img src="4mice.png" alt="drawing" height="170"/>](https://www.youtube.com/watch?v=ANsThSPgBFM&t=202s)
 
+Let us know if you are using [idtracker.ai](http://idtracker.ai/) in your research. We are using it to study collective behavior and aggression in zebrafish.
+
+  * [Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2018). Aggregation rule in animal collectives dynamically changes between majority and minority influence. bioRxiv, 400747.](https://www.biorxiv.org/content/early/2018/08/26/400747)
+  * [Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679.](https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339)
 
 ## Requirements
 
@@ -25,9 +31,9 @@ You can find all the details of the software in the [Nature Methods paper](http:
 - RAM: 32Gb (for small groups) or 128Gb (for large groups)
 - Disk: 1TB SSD
 
-However, the software also works in Windows 10, in Ubuntu 18.04 and Linux Mint 19.1.
+However, the software also works in Windows 10, in Ubuntu 18.04 and Linux Mint 19.1. We give installation instructions for both Windows and Linux.
 
-[idtracker.ai](http://idtracker.ai/) is coded in Python and uses Tensorflow. Due to the intense use of deep neural networks,
+[idtracker.ai](http://idtracker.ai/) is coded in Python3 and uses Tensorflow. Due to the intense use of deep neural networks,
 we recommend using a computer with a dedicated NVIDA GPU supporting compute capability 3.0 or higher.
 Note that the parts of the algorithm using Tensorflow will run faster with a GPU.
 
@@ -48,7 +54,7 @@ The time needed to install the system varies with the output of the pre-installa
 
 ### Pre-installation checks
 
-###### Make sure that your system is updated
+##### Make sure that your system is updated
 
 Check if your system is up to date running the following command in the terminal:
 
@@ -58,7 +64,7 @@ Upgrade your system running:
 
     sudo apt upgrade
 
-###### GPU Drivers.
+##### GPU Drivers.
 
 Make sure that your GPU drivers are installed.
 
@@ -96,7 +102,7 @@ drivers using the Driver Manager that can be found in the Menu button in the bot
 **NOTE** Do not install the *intel-microcode* driver
 as it might enter in conflict with the parts of idtracker.ai that are parallelized. When installing this driver we have experienced hangs in the background subtraction and in the segmentation parts of the algorithm.
 
-###### Miniconda package manager
+##### Miniconda package manager
 
 The installation process requires [miniconda](https://conda.io/miniconda.html) to be installed in your computer. Skip the next paragraphs if Miniconda2 or Miniconda3 are already installed.
 
@@ -134,7 +140,7 @@ At the end of the installation close the terminal and open a new one.
 
 **In Windows** you will need to install the [Anaconda distribution](https://https://conda.io/docs/user-guide/install/windows.html) in order to get the Anaconda Prompt which you will use to install and run [idtracker.ai](http://idtracker.ai/).
 
-###### Git
+##### Git version control system
 
 To install [idtracker.ai](http://idtracker.ai/) you will need to clone this repository using the *git* version control system.
 
@@ -258,9 +264,9 @@ We monitor the performance and the state of the GPU running the command:
     watch nvidia-smi
 
 
-## Documentation and examples of tracked videos
+## Documentation and more
 
-http://idtracker.ai
+Please checkout the webpage [idtracker.ai](http://idtracker.ai) for the [quickstart](http://idtracker.ai/quickstart.html), [code documentation](http://idtracker.ai/modules.html), [tools to analyze the trajectories](http://idtracker.ai/trajectories_analysis.html).
 
 ## Contributors
 * Francisco Romero-Ferrero
@@ -293,8 +299,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 For more information please send an email (idtrackerai@gmail.com) or
 use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
 
-**[1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
-(2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (submitted).**
+**[1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
+idtracker.ai: tracking all individuals in small or large collectives of unmarked animals.**
 
 *F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P:
 gonzalo.polavieja@neuro.fchampalimaud.org.*
