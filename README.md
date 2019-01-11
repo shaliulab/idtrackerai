@@ -8,13 +8,13 @@ You can also find an early version of the article in [arXiv](https://arxiv.org/a
 
 Click on the images below to see some examples of videos tracked with [idtracker.ai](http://idtracker.ai/).
 
-[<img src="100fish.png" alt="drawing" height="350"/>](https://www.youtube.com/watch?v=Imz3xvPsaEw&feature=youtu.be)
-[<img src="72flies.png" alt="drawing" height="350"/>](https://www.youtube.com/watch?v=_M9xl4jBzVQ)
+[<img src="docs/source/_static/fish_tracked.png" alt="drawing" height="350"/>](https://www.youtube.com/watch?v=Imz3xvPsaEw&feature=youtu.be)
+[<img src="docs/source/_static/flies_tracked.png" alt="drawing" height="350"/>](https://www.youtube.com/watch?v=_M9xl4jBzVQ)
 
 
-[<img src="2fish.png" alt="drawing" height="170"/>](https://www.youtube.com/watch?v=dT28-VcXaCc)
-[<img src="14ants.png" alt="drawing" height="170"/>](https://www.youtube.com/watch?v=d0TTdu41NoA)
-[<img src="4mice.png" alt="drawing" height="170"/>](https://www.youtube.com/watch?v=ANsThSPgBFM&t=202s)
+[<img src="docs/source/_static/2fish.png" alt="drawing" height="233"/>](https://www.youtube.com/watch?v=dT28-VcXaCc)
+[<img src="docs/source/_static/mice.png" alt="drawing" height="233"/>](https://www.youtube.com/watch?v=ANsThSPgBFM&t=202s)
+[<img src="docs/source/_static/14ants.png" alt="drawing" height="233"/>](https://www.youtube.com/watch?v=d0TTdu41NoA)
 
 Let us know if you are using [idtracker.ai](http://idtracker.ai/) in your research. We are using it to study collective behavior and aggression in zebrafish.
 
@@ -245,6 +245,8 @@ The GUI can also be launched from its main script. First go the the gui folder:
 Then run the script idtrackeraiApp.py using Python.
 
     python idtrackeraiApp.py
+
+## Track your first video
 
 Go to the [Quick start](http://idtracker.ai/quickstart.html) and follow the instructions
 to track a simple example video.

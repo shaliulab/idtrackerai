@@ -50,7 +50,7 @@ html_theme_options = {
     }
 html_sidebars = {
             '**': [
-                    'localtoc.html',
+                    'globaltoc.html',
                     'sourcelink.html',
                     'searchbox.html'
                     ]
@@ -85,7 +85,7 @@ latex_elements = {
 }
 latex_documents = [
     (master_doc, 'idtrackerai.tex', u'idtrackerai Documentation',
-     u'Mattia G. Bergomi, Francisco Romero Ferrero', 'manual'),
+     u'Mattia G. Bergomi, Francisco Romero-Ferrero', 'manual'),
 ]
 man_pages = [
     (master_doc, 'idtrackerai', u'idtrackerai Documentation',

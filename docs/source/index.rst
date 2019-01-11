@@ -1,43 +1,74 @@
 Welcome to idtracker.ai's documentation!
 ========================================
 
-`idtracker.ai <idtracker.ai>`_ allows to track groups of unmarked animals in videos recorded in laboratory conditions.
+`idtracker.ai <idtracker.ai>`_ allows to track groups of up to 100 unmarked animals from videos.
 
-.. raw:: html
+.. image:: /_static/fish_tracked.png
+    :width: 377
+    :target: https://www.youtube.com/watch?v=Imz3xvPsaEw
+.. image:: /_static/flies_tracked.png
+    :width: 377
+    :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
 
-  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/Imz3xvPsaEw?vq=hd1080&ecver=1&rel=0&showinfo=01&autoplay=1&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+.. image:: /_static/2fish.png
+    :width: 250
+    :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
+.. image:: /_static/mice.png
+    :width: 250
+    :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
+.. image:: /_static/14ants.png
+    :width: 250
+    :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
 
-.. raw:: html
 
-  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/_M9xl4jBzVQ?ecver=1&rel=0&showinfo=01&autoplay=1&vq=hd1080&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+`Installation and git repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
+*******************************
+The source code and installation instructions can be found at https://gitlab.com/polavieja_lab/idtrackerai.git.
 
-.. raw:: html
+:doc:`./quickstart`
+************
+Check out the :doc:`./quickstart` to learn how to use the software.
 
-  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/d0TTdu41NoA?autoplay=1&vq=hd1080&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+:doc:`./gallery`
+***************
+Send us your videos using `idtracker.ai <idtracker.ai>`_ and we will add them to our gallery with proper attribution.
 
-.. raw:: html
+:doc:`./trajectories_analysis`
+******************************
+We provide a set of :doc:`./trajectories_analysis` of the trajectories that idtracker.ai outputs.
 
-  <iframe width="560" height="320" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/ANsThSPgBFM?ecver=1&autoplay=1&vq=hd1080&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+:doc:`./modules`
+***************
+`idtracker.ai <idtracker.ai>`_ idtracker.ai is opensource and free software (both as in freedom and as in free beer).
+We have documented the code so that it is easier for developers to modify it to their needs.
 
+`idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>`_ matches identities between videos
+************************************************************************************************
+We have also developed a toolbox to match identities between videos, called `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>`_.
+
+Other works using idtracker.ai
+******************************
+Let us know if you are using `idtracker.ai <http://idtracker.ai/>`_ in your research.
+
+  - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2018). Aggregation rule in animal collectives dynamically changes between majority and minority influence. bioRxiv, 400747. <https://www.biorxiv.org/content/early/2018/08/26/400747>`_
+  - `Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679. <https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339>`_
+
+
+References
+**********
 When using information from this web page please reference
 
   `Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
   idtracker.ai: tracking all individuals in small or large collectives of unmarked animals <http://dx.doi.org/10.1038/s41592-018-0295-5>`_
   (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
 Find `here the preprint <https://arxiv.org/abs/1803.04351>`_ version of the manuscript.
 
-The source code can be found in https://gitlab.com/polavieja_lab/idtrackerai.git.
-
+Data
+****
 The links to the data can be found in the :doc:`./data` section of this webpage.
 
-We have also developed a toolbox to match identities between videos, called `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>`_.
 
-Let us know if you are using `idtracker.ai <http://idtracker.ai/>`_ in your research. We are using it to study collective behavior and aggression in zebrafish.
-
-  - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2018). Aggregation rule in animal collectives dynamically changes between majority and minority influence. bioRxiv, 400747. <https://www.biorxiv.org/content/early/2018/08/26/400747>`_
-  - `Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679. <https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339>`_
 
 Contents
 ********
@@ -45,13 +76,12 @@ Contents
 .. toctree::
    :maxdepth: 1
 
-   gallery
-   how_to_install
    quickstart
    GUI_explained
    trajectories_analysis
    modules
    data
+   gallery
 
 Documentation index and search
 ******************************
