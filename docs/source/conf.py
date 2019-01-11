@@ -32,8 +32,8 @@ master_doc = 'index'
 project = u'idtrackerai'
 copyright = u'2018, Champalimaud Center for the Unknown'
 author = u'Mattia G. Bergomi, Francisco Romero Ferrero'
-version = u'0.0'
-release = u'0.0.1'
+version = u'2.0.0-alpha'
+release = u'2.0.0-alpha'
 language = 'en'
 exclude_patterns = ['_build']
 pygments_style = 'sphinx'
@@ -50,6 +50,7 @@ html_theme_options = {
     }
 html_sidebars = {
             '**': [
+                    'localtoc.html',
                     'globaltoc.html',
                     'sourcelink.html',
                     'searchbox.html'

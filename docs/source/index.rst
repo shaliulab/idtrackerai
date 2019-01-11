@@ -10,22 +10,24 @@ Welcome to idtracker.ai's documentation!
     :width: 377
     :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
 
-.. image:: /_static/2fish.png
+.. image:: /_static/14ants.png
     :width: 250
     :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
 .. image:: /_static/mice.png
     :width: 250
     :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
-.. image:: /_static/14ants.png
+.. image:: /_static/2fish.png
     :width: 250
     :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
+
 
 
 `Installation and git repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
 *******************************
 The source code and installation instructions can be found at https://gitlab.com/polavieja_lab/idtrackerai.git.
 
-:doc:`./quickstart`
+
+:doc:`Quickstart <./quickstart>`
 ************
 Check out the :doc:`./quickstart` to learn how to use the software.
 
@@ -76,12 +78,14 @@ Contents
 .. toctree::
    :maxdepth: 1
 
+   video_conditions
    quickstart
    GUI_explained
+   gallery
    trajectories_analysis
    modules
    data
-   gallery
+
 
 Documentation index and search
 ******************************

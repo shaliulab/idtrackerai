@@ -10,6 +10,13 @@ good performance levels.
 The full process of tracking this sample video takes around 5-7 minutes in one of our computers (:doc:`./requirements`).
 The time varies with the amount of interaction with the GUI that the user needs to explore the video and set the parameters.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 0. Install idtracker.ai
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If you haven't installed the software yet, got to the `gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
+where you will find the instructions to install it in both Windows and Linux computers.
+
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1. Download the video example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

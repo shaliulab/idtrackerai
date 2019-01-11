@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>Quickstart &mdash; idtrackerai v0.0 Manual</title>
+    <title>Quickstart &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -39,9 +39,9 @@
     <script type="text/javascript" src="_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" >
     <link rel="search" title="Search" href="search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="index.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="index.html" >
     <link rel="next" title="Graphical user interface (GUI)" href="GUI_explained.html" >
-    <link rel="prev" title="Welcome to idtracker.ai’s documentation!" href="index.html" > 
+    <link rel="prev" title="General video conditions" href="video_conditions.html" > 
   </head>
   <body>
 
@@ -64,7 +64,7 @@
     <ul class="nav nav-pills pull-left">
         <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
 	
-        <li class="active"><a href="index.html">idtrackerai v0.0 Manual</a></li>
+        <li class="active"><a href="index.html">idtrackerai v2.0.0-alpha Manual</a></li>
 	 
     </ul>
               
@@ -79,7 +79,7 @@
            accesskey="N">next</a>
       </li>
       <li class="active">
-        <a href="index.html" title="Welcome to idtracker.ai’s documentation!"
+        <a href="video_conditions.html" title="General video conditions"
            accesskey="P">previous</a>
       </li>
     </ul>
@@ -92,14 +92,32 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Quickstart</a><ul>
+<li><a class="reference internal" href="#step-0-install-idtracker-ai">Step 0. Install idtracker.ai</a></li>
+<li><a class="reference internal" href="#step-1-download-the-video-example">Step 1. Download the video example</a></li>
+<li><a class="reference internal" href="#step-2-copy-video-to-an-adequate-location">Step 2. Copy video to an adequate location</a></li>
+<li><a class="reference internal" href="#step-3-start-a-tracking-session">Step 3. Start a tracking session</a></li>
+<li><a class="reference internal" href="#step-4-select-a-region-of-interests">Step 4. Select a region of interests</a></li>
+<li><a class="reference internal" href="#step-5-video-segmentation-and-preprocessing">Step 5. Video segmentation and preprocessing</a></li>
+<li><a class="reference internal" href="#step-6-start-tracking-the-video">Step 6. Start tracking the video</a></li>
+<li><a class="reference internal" href="#step-7-global-and-individual-validation">Step 7. Global and individual validation</a></li>
+<li><a class="reference internal" href="#step-8-output-files">Step 8. Output files</a></li>
+<li><a class="reference internal" href="#try-the-100-zebrafish-sample-video">Try the 100 zebrafish sample video</a></li>
+</ul>
+</li>
+</ul>
+
 <h3><a href="index.html">Table of Contents</a></h3>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="video_conditions.html">General video conditions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
 </ul>
 
         </div>
@@ -118,6 +136,11 @@ italics to get advice about how to set the parameters to track the sample videos
 good performance levels.</p>
 <p>The full process of tracking this sample video takes around 5-7 minutes in one of our computers (<a class="reference internal" href="requirements.html"><span class="doc">Requirements</span></a>).
 The time varies with the amount of interaction with the GUI that the user needs to explore the video and set the parameters.</p>
+<div class="section" id="step-0-install-idtracker-ai">
+<h2>Step 0. Install idtracker.ai<a class="headerlink" href="#step-0-install-idtracker-ai" title="Permalink to this headline">¶</a></h2>
+<p>If you haven’t installed the software yet, got to the <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai">gitlab repository</a>
+where you will find the instructions to install it in both Windows and Linux computers.</p>
+</div>
 <div class="section" id="step-1-download-the-video-example">
 <h2>Step 1. Download the video example<a class="headerlink" href="#step-1-download-the-video-example" title="Permalink to this headline">¶</a></h2>
 <p>If it is the first time that you are using this system, we recommend to start with

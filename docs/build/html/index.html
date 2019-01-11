@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>Welcome to idtracker.ai’s documentation! &mdash; idtrackerai v0.0 Manual</title>
+    <title>Welcome to idtracker.ai’s documentation! &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
@@ -25,7 +25,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.0.1',
+        VERSION:     '2.0.0-alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  false
@@ -39,8 +39,8 @@
     <script type="text/javascript" src="_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" >
     <link rel="search" title="Search" href="search.html" >
-    <link rel="top" title="idtrackerai v0.0 Manual" href="#" >
-    <link rel="next" title="Quickstart" href="quickstart.html" > 
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="#" >
+    <link rel="next" title="General video conditions" href="video_conditions.html" > 
   </head>
   <body>
 
@@ -72,7 +72,7 @@
            accesskey="I">index</a>
       </li>
       <li class="active">
-        <a href="quickstart.html" title="Quickstart"
+        <a href="video_conditions.html" title="General video conditions"
            accesskey="N">next</a>
       </li>
     </ul>
@@ -85,14 +85,33 @@
 	<div class="row-fluid">
       <div class="spc-rightsidebar span3">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to idtracker.ai’s documentation!</a><ul>
+<li><a class="reference internal" href="#id1">Installation and git repository</a></li>
+<li><a class="reference internal" href="#quickstart"><code class="docutils literal notranslate"><span class="pre">./quickstart</span></code></a></li>
+<li><a class="reference internal" href="#gallery"><code class="docutils literal notranslate"><span class="pre">./gallery</span></code></a></li>
+<li><a class="reference internal" href="#trajectories-analysis"><code class="docutils literal notranslate"><span class="pre">./trajectories_analysis</span></code></a></li>
+<li><a class="reference internal" href="#modules"><code class="docutils literal notranslate"><span class="pre">./modules</span></code></a></li>
+<li><a class="reference internal" href="#idmatcher-ai-matches-identities-between-videos">idmatcher.ai matches identities between videos</a></li>
+<li><a class="reference internal" href="#other-works-using-idtracker-ai">Other works using idtracker.ai</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+<li><a class="reference internal" href="#data">Data</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#documentation-index-and-search">Documentation index and search</a></li>
+</ul>
+</li>
+</ul>
+
 <h3><a href="#">Table of Contents</a></h3>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="video_conditions.html">General video conditions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
 </ul>
 
         </div>
@@ -107,9 +126,9 @@
 <p><a class="reference external" href="idtracker.ai">idtracker.ai</a> allows to track groups of up to 100 unmarked animals from videos.</p>
 <a class="reference external image-reference" href="https://www.youtube.com/watch?v=Imz3xvPsaEw"><img alt="_images/fish_tracked.png" src="_images/fish_tracked.png" style="width: 377px;" /></a>
 <a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/flies_tracked.png" src="_images/flies_tracked.png" style="width: 377px;" /></a>
-<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/2fish.png" src="_images/2fish.png" style="width: 250px;" /></a>
-<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/mice.png" src="_images/mice.png" style="width: 250px;" /></a>
 <a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/14ants.png" src="_images/14ants.png" style="width: 250px;" /></a>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/mice.png" src="_images/mice.png" style="width: 250px;" /></a>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/2fish.png" src="_images/2fish.png" style="width: 250px;" /></a>
 <div class="section" id="id1">
 <h2><a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai">Installation and git repository</a><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>The source code and installation instructions can be found at <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai.git">https://gitlab.com/polavieja_lab/idtrackerai.git</a>.</p>
@@ -162,12 +181,13 @@ idtracker.ai: tracking all individuals in small or large collectives of unmarked
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="video_conditions.html">General video conditions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
 </ul>
 </div>
 </div>

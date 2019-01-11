@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-114600635-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    <title>General video conditions &mdash; idtrackerai v2.0.0-alpha Manual</title>
+    
+    <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
+    <link rel="stylesheet" href="_static/scipy.css" type="text/css" >
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" >
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0.0-alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" >
+    <link rel="search" title="Search" href="search.html" >
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="index.html" >
+    <link rel="next" title="Quickstart" href="quickstart.html" >
+    <link rel="prev" title="Welcome to idtracker.ai’s documentation!" href="index.html" > 
+  </head>
+  <body>
+
+<div class="container">
+  <div class="top-scipy-org-logo-header">
+    <a href="index.html">
+      <img style="border: 0;" alt="idtrackerai" src="_static/img/idtracker_logo.gif"></a>
+    </div>
+  </div>
+</div>
+
+
+    <div class="container">
+      <div class="main">
+        
+	<div class="row-fluid">
+	  <div class="span12">
+	    <div class="spc-navbar">
+              
+    <ul class="nav nav-pills pull-left">
+        <li class="active"><a href="https://gitlab.com/polavieja_lab/idtrackerai.git">GitLab repo</a></li>
+	
+        <li class="active"><a href="index.html">idtrackerai v2.0.0-alpha Manual</a></li>
+	 
+    </ul>
+              
+              
+    <ul class="nav nav-pills pull-right">
+      <li class="active">
+        <a href="genindex.html" title="General Index"
+           accesskey="I">index</a>
+      </li>
+      <li class="active">
+        <a href="quickstart.html" title="Quickstart"
+           accesskey="N">next</a>
+      </li>
+      <li class="active">
+        <a href="index.html" title="Welcome to idtracker.ai’s documentation!"
+           accesskey="P">previous</a>
+      </li>
+    </ul>
+              
+	    </div>
+	  </div>
+	</div>
+        
+
+	<div class="row-fluid">
+      <div class="spc-rightsidebar span3">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">General video conditions</a><ul>
+<li><a class="reference internal" href="#resolution">Resolution</a></li>
+<li><a class="reference internal" href="#frame-rate">Frame rate</a></li>
+<li><a class="reference internal" href="#duration">Duration</a></li>
+<li><a class="reference internal" href="#video-format">Video format</a></li>
+<li><a class="reference internal" href="#illumination">Illumination</a></li>
+<li><a class="reference internal" href="#definition-and-focus">Definition and focus</a></li>
+<li><a class="reference internal" href="#background">Background</a></li>
+<li><a class="reference internal" href="#shadows">Shadows</a></li>
+<li><a class="reference internal" href="#reflections">Reflections</a></li>
+<li><a class="reference internal" href="#variability-in-number-of-pixels-per-animal">Variability in number of pixels per animal</a></li>
+</ul>
+</li>
+</ul>
+
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">General video conditions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
+</ul>
+
+        </div>
+      </div>
+          <div class="span9">
+            
+        <div class="bodywrapper">
+          <div class="body" id="spc-section-body">
+            
+  <div class="section" id="general-video-conditions">
+<h1>General video conditions<a class="headerlink" href="#general-video-conditions" title="Permalink to this headline">¶</a></h1>
+<p>It is advisable to adhere to some guidelines during the realisation of videos of freely-moving animals.
+Here follows a list of conditions that allow to maximise the probability of success and the accuracy of the tracking.</p>
+<div class="section" id="resolution">
+<h2>Resolution<a class="headerlink" href="#resolution" title="Permalink to this headline">¶</a></h2>
+<p>The higher the number of pixels per individual, the more information to distinguish it from the rest.
+Notice that, on the downside, the additional information makes the algorithm less time-efficient.</p>
+</div>
+<div class="section" id="frame-rate">
+<h2>Frame rate<a class="headerlink" href="#frame-rate" title="Permalink to this headline">¶</a></h2>
+<p>The frame rate must be high enough for the blobs associated with the same individual to overlap in consecutive frames, when moving at average speed.
+A low frame rate—with respect to the average speed of the animals can cause a bad fragmentation of the video: An essential process in the tracking pipeline,
+that allows to collect images belonging to the same individual and organise them in fragments.
+On the contrary, excessively high frame rates will make the information coming from the analysis of the fragments highly redundant.
+This will increase the computational time necessary to track the video, without guaranteeing an improvement of the identification of the individuals.
+In the examples provided in this paper, the frame rate ranges from <span class="math notranslate nohighlight">\(25 fps\)</span> to <span class="math notranslate nohighlight">\(50 fps\)</span>.</p>
+</div>
+<div class="section" id="duration">
+<h2>Duration<a class="headerlink" href="#duration" title="Permalink to this headline">¶</a></h2>
+<p>The length of the video for which the system works depends on the number of animals, the distribution of images per individual fragment and the number of pixels per animal.
+For few animals (8 zebrafish) we can track videos as short as <span class="math notranslate nohighlight">\(\approx 18\)</span> sec (<span class="math notranslate nohighlight">\(\approx 500\)</span> frames at <span class="math notranslate nohighlight">\(28fps\)</span>.
+For large groups we can track videos as short as <span class="math notranslate nohighlight">\(1 min\)</span> (<span class="math notranslate nohighlight">\(\approx 1950\)</span> frames at <span class="math notranslate nohighlight">\(32 fps\)</span>).
+The system works for longer videos as far as the overall conditions do not change abruptly in different parts of the video.
+Very large  videos with many animals will require a high amount of RAM and could block your computer.</p>
+</div>
+<div class="section" id="video-format">
+<h2>Video format<a class="headerlink" href="#video-format" title="Permalink to this headline">¶</a></h2>
+<p>The system works with any video format compatible with OpenCV. We recommend uncompressed or lossless video formats:
+Some compression algorithms work by deleting pieces of information that could be crucial for the identification of the individuals.
+However, we have successfully tracked videos with compressed formats: .avi (FPM4 video codec) and .MOV (avc1 video codec).</p>
+</div>
+<div class="section" id="illumination">
+<h2>Illumination<a class="headerlink" href="#illumination" title="Permalink to this headline">¶</a></h2>
+<p>Illumination has to be as uniform as possible, so that the appearance of the animals is homogeneous along the video.
+We recommend using indirect light either by making the light reflect on the walls of the setup, or by covering the setup with a light diffuse.
+Although, we have also tracked videos with retroilluminated arenas,
+recall that the tracking systems relies on visual features of the animals that this type of illumination could hide.</p>
+</div>
+<div class="section" id="definition-and-focus">
+<h2>Definition and focus<a class="headerlink" href="#definition-and-focus" title="Permalink to this headline">¶</a></h2>
+<p>Images of individuals should be as sharp and focused as possible for their features to be clearly displayed along the entire video.
+When using wide apertures on the camera, the depth of field can be quite narrow.
+Make sure that the plane of the sensor of the camera is parallel to the plane of the arena so that animals are focused in all parts of it.
+In addition, exposition time (shutter speed) should be high enough so that animals do not appear blurred when moving at average speed.
+Blurred and out of focus images are more difficult to be identified correctly.</p>
+</div>
+<div class="section" id="background">
+<h2>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h2>
+<p>The background should be as uniform as possible. To facilitate the detection of the animals during the segmentation process,
+the background colour has to be chosen in order to maximise the contrast with the animals.
+Small background inhomogeneity or noise are acceptable and can be removed by the user during the selection of the preprocessing parameters:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Static or moving objects much smaller or much larger than the animals can be removed by setting the appropriate maximum and minimum pixels size thresholds.</li>
+<li>Static objects of the same size and intensity of the animals can be removed by selecting the option “subtract background” in the preprocessing tab.</li>
+<li>Regions of the frame can be also excluded by selecting a region of interest.</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="shadows">
+<h2>Shadows<a class="headerlink" href="#shadows" title="Permalink to this headline">¶</a></h2>
+<p>Shadows projected by the individuals on the background can lead to a bad segmentation and hence, to a bad identification.
+Shadows can be diffused by using a transparent base separated from an opaque background or by using a retroilluminated arena.</p>
+</div>
+<div class="section" id="reflections">
+<h2>Reflections<a class="headerlink" href="#reflections" title="Permalink to this headline">¶</a></h2>
+<p>Reflections of individuals on the walls of the arena should be avoided: They could be mistaken for an actual individual during the segmentation process.
+Reflections in opaque walls can be reduced by using either very diffused light or matte walls. For aquatic arenas with transparent walls,
+reflections can be softened by having water at both sides of the walls. Furthermore, reflections can be removed by selecting an appropriate ROI.</p>
+</div>
+<div class="section" id="variability-in-number-of-pixels-per-animal">
+<h2>Variability in number of pixels per animal<a class="headerlink" href="#variability-in-number-of-pixels-per-animal" title="Permalink to this headline">¶</a></h2>
+<p>The number of pixels in a blob is one of the criteria used to distinguish individual fish from crossings.
+An optimal video should fulfil the two following conditions. First, the number of pixels associated with each individual should vary as little as possible along the video.
+Second, the size an individual should vary as little as possible depending on its position in the arena. In any case,
+strategies to avoid misidentification are put in place, even in case of variable animal sizes.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container container-navbar-bottom">
+      <div class="spc-navbar">
+        
+      </div>
+    </div>
+    <div class="container">
+    <div class="footer">
+    <div class="row-fluid">
+    <ul class="inline pull-left">
+      <li>
+        &copy; Copyright 2018, Champalimaud Center for the Unknown.
+      </li>
+      <li>
+      Last updated on Jan 11, 2019.
+      </li>
+      <li>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
+      </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+  </body>
+</html>
