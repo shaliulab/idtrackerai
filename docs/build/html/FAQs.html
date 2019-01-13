@@ -94,6 +94,7 @@
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">FAQs</a><ul>
+<li><a class="reference internal" href="#frequent-questions">Frequent questions</a><ul>
 <li><a class="reference internal" href="#can-i-use-idtracker-ai-in-my-videos">Can I use idtracker.ai in my videos?</a></li>
 <li><a class="reference internal" href="#does-idtracker-ai-work-in-windows">Does idtracker.ai work in Windows?</a></li>
 <li><a class="reference internal" href="#can-i-run-idtracker-ai-in-a-laptop">Can I run idtracker.ai in a laptop?</a></li>
@@ -106,6 +107,18 @@
 <li><a class="reference internal" href="#can-i-use-idtracker-ai-together-with-deeplabcut-or-leap">Can I use idtracker.ai together with DeepLabCut or LEAP?</a></li>
 <li><a class="reference internal" href="#does-idtracker-ai-track-single-animals">Does idtracker.ai track single animals?</a></li>
 <li><a class="reference internal" href="#can-i-track-humans-with-idtracker-ai">Can I track humans with idtracker.ai?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#common-installation-problems">Common installation problems</a><ul>
+<li><a class="reference internal" href="#solving-environment-failed">Solving environment: failed</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#common-gui-graphical-user-interface-bugs">Common GUI (Graphical User Interface) bugs</a><ul>
+<li><a class="reference internal" href="#empty-tabs">Empty tabs</a></li>
+<li><a class="reference internal" href="#roi-warning-popup-but-roi-is-selected">ROI warning popup but ROI is selected</a></li>
+<li><a class="reference internal" href="#idtracker-ai-crashes-when-selecting-video">idtracker.ai crashes when selecting video</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -131,24 +144,26 @@
             
   <div class="section" id="faqs">
 <h1>FAQs<a class="headerlink" href="#faqs" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="frequent-questions">
+<h2>Frequent questions<a class="headerlink" href="#frequent-questions" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="can-i-use-idtracker-ai-in-my-videos">
-<h2>Can I use idtracker.ai in my videos?<a class="headerlink" href="#can-i-use-idtracker-ai-in-my-videos" title="Permalink to this headline">¶</a></h2>
+<h3>Can I use idtracker.ai in my videos?<a class="headerlink" href="#can-i-use-idtracker-ai-in-my-videos" title="Permalink to this headline">¶</a></h3>
 <p>You can check our <a class="reference internal" href="gallery.html"><span class="doc">Gallery</span></a> to see the type of videos in which idtracker.ai worked well. We also give
 a set of <a class="reference internal" href="video_conditions.html"><span class="doc">General video conditions</span></a> that we advise users to follow to get the best results with idtracker.ai.</p>
 </div>
 <div class="section" id="does-idtracker-ai-work-in-windows">
-<h2>Does idtracker.ai work in Windows?<a class="headerlink" href="#does-idtracker-ai-work-in-windows" title="Permalink to this headline">¶</a></h2>
+<h3>Does idtracker.ai work in Windows?<a class="headerlink" href="#does-idtracker-ai-work-in-windows" title="Permalink to this headline">¶</a></h3>
 <p>Yes, in the <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai">Gitlab Repository</a> we provide instructions to
 install idtracker.ai in Windows. We have tested the intallation in computers running Windows 10 Pro.</p>
 </div>
 <div class="section" id="can-i-run-idtracker-ai-in-a-laptop">
-<h2>Can I run idtracker.ai in a laptop?<a class="headerlink" href="#can-i-run-idtracker-ai-in-a-laptop" title="Permalink to this headline">¶</a></h2>
+<h3>Can I run idtracker.ai in a laptop?<a class="headerlink" href="#can-i-run-idtracker-ai-in-a-laptop" title="Permalink to this headline">¶</a></h3>
 <p>Yes. We are running idtracker.ai with all its possibilities in high-end performance
 gamming laptops from <a class="reference external" href="https://shop.obsidian-pc.com/en/workstation.html">Obsidian</a>.
 If your laptop does not have a GPU you can still use idtracker.ai, see the previous FAQ.</p>
 </div>
 <div class="section" id="can-i-use-idtracker-ai-if-my-computer-does-not-have-a-good-gpu">
-<h2>Can I use idtracker.ai if my computer does not have a good GPU?<a class="headerlink" href="#can-i-use-idtracker-ai-if-my-computer-does-not-have-a-good-gpu" title="Permalink to this headline">¶</a></h2>
+<h3>Can I use idtracker.ai if my computer does not have a good GPU?<a class="headerlink" href="#can-i-use-idtracker-ai-if-my-computer-does-not-have-a-good-gpu" title="Permalink to this headline">¶</a></h3>
 <p>Yes, you can still use idtracker.ai if you don’t have a GPU. However, the parts of the tracking that
 use the GPU will be up to 100x slower. However, if you are tracking a single animal, or you are tracking
 groups of animals but you do not care about their identities, you can use idtracker.ai and track
@@ -157,14 +172,14 @@ their identity, just click the button <em>Tracking without identities</em> when 
 of idtracker.ai (after the video is segmented).</p>
 </div>
 <div class="section" id="can-i-use-idtracker-ai-in-an-amd-gpu">
-<h2>Can I use idtracker.ai in an AMD GPU?<a class="headerlink" href="#can-i-use-idtracker-ai-in-an-amd-gpu" title="Permalink to this headline">¶</a></h2>
+<h3>Can I use idtracker.ai in an AMD GPU?<a class="headerlink" href="#can-i-use-idtracker-ai-in-an-amd-gpu" title="Permalink to this headline">¶</a></h3>
 <p>Althought there are some efforts on making Tensorflow work with AMD GPUs, we do not
 provide support or installation instructions in this case. As idtracker.ai is free and open source,
 you can always download it and set your environment with Tensorflow supporting your AMD GPU. However,
 we are not aware of any user using idtracker.ai with AMD GPUs.</p>
 </div>
 <div class="section" id="can-i-use-idtracker-ai-with-google-colab">
-<h2>Can I use idtracker.ai with Google Colab?<a class="headerlink" href="#can-i-use-idtracker-ai-with-google-colab" title="Permalink to this headline">¶</a></h2>
+<h3>Can I use idtracker.ai with Google Colab?<a class="headerlink" href="#can-i-use-idtracker-ai-with-google-colab" title="Permalink to this headline">¶</a></h3>
 <p>Currently idtracker.ai is a GUI (Graphical User Interface) based software. This means that
 you cannot easily run it from a terminal. As idtracker.ai is free and open source,
 you can always modify and twick the code to run the GPU intensive parts from a terminal and hence from Google Colab.</p>
@@ -173,7 +188,7 @@ that will be released very soon. This will allow to interact with idtracker.ai u
 Then we will provide a Jupyter Notebook with the necessary commands to run idtracker.ai in Google Colab.</p>
 </div>
 <div class="section" id="do-we-provide-a-docker-image-for-idtracker-ai">
-<h2>Do we provide a Docker image for idtracker.ai?<a class="headerlink" href="#do-we-provide-a-docker-image-for-idtracker-ai" title="Permalink to this headline">¶</a></h2>
+<h3>Do we provide a Docker image for idtracker.ai?<a class="headerlink" href="#do-we-provide-a-docker-image-for-idtracker-ai" title="Permalink to this headline">¶</a></h3>
 <p>Currently idtracker.ai is a GUI (Graphical User Interface) based software. Docker typically works
 easily when you can run the software from the terminal (command line). Thus, for now it does not make
 sense to provide a Docker image.</p>
@@ -182,14 +197,14 @@ that will be released very soon. This will allow to interact with idtracker.ai u
 Then we will provide a Docker image that you will be able to use to run idtracker.ai from the terminal.</p>
 </div>
 <div class="section" id="can-idtracker-ai-track-multiple-videos-in-batch">
-<h2>Can idtracker.ai track multiple videos in batch?<a class="headerlink" href="#can-idtracker-ai-track-multiple-videos-in-batch" title="Permalink to this headline">¶</a></h2>
+<h3>Can idtracker.ai track multiple videos in batch?<a class="headerlink" href="#can-idtracker-ai-track-multiple-videos-in-batch" title="Permalink to this headline">¶</a></h3>
 <p>Currently to track every video you need to do it from the idtracker.ai GUI. In the near future we will
 release a version of idtracker.ai where you will be able to set the preprocessing parameters for
 multiple videos and then use a bash script to tell idtracker.ai to track those video, either in your computer
 or in a cluster.</p>
 </div>
 <div class="section" id="does-idtracker-ai-give-orientation-and-posture-information">
-<h2>Does idtracker.ai give orientation and posture information?<a class="headerlink" href="#does-idtracker-ai-give-orientation-and-posture-information" title="Permalink to this headline">¶</a></h2>
+<h3>Does idtracker.ai give orientation and posture information?<a class="headerlink" href="#does-idtracker-ai-give-orientation-and-posture-information" title="Permalink to this headline">¶</a></h3>
 <p>Orientation and posture can be computed a posteriori from the <em>blobs_collection.npy</em> file
 that idtracker.ai generates. In <a class="reference external" href="https://gitlab.com/polavieja_lab/midline">this repository</a>
 we provide an example where we compute the nose, tail and midline for fish.</p>
@@ -198,13 +213,13 @@ in the group and use it to get the posture with one of the AI based posture trac
 (<a class="reference external" href="https://github.com/AlexEMG/DeepLabCut">Deeplabcut</a>, <a class="reference external" href="https://github.com/talmo/leap">LEAP</a>, …).</p>
 </div>
 <div class="section" id="can-i-use-idtracker-ai-together-with-deeplabcut-or-leap">
-<h2>Can I use idtracker.ai together with DeepLabCut or LEAP?<a class="headerlink" href="#can-i-use-idtracker-ai-together-with-deeplabcut-or-leap" title="Permalink to this headline">¶</a></h2>
+<h3>Can I use idtracker.ai together with DeepLabCut or LEAP?<a class="headerlink" href="#can-i-use-idtracker-ai-together-with-deeplabcut-or-leap" title="Permalink to this headline">¶</a></h3>
 <p>As explained before, you can <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai_notebooks/blob/master/idtrackerai_helpers/extract_single_animal_video.ipynb">generate a small video for every animal</a>
 in the group and use it to track the body parts with one of the AI based posture trackings
 (<a class="reference external" href="https://github.com/AlexEMG/DeepLabCut">Deeplabcut</a>, <a class="reference external" href="https://github.com/talmo/leap">LEAP</a>, …).</p>
 </div>
 <div class="section" id="does-idtracker-ai-track-single-animals">
-<h2>Does idtracker.ai track single animals?<a class="headerlink" href="#does-idtracker-ai-track-single-animals" title="Permalink to this headline">¶</a></h2>
+<h3>Does idtracker.ai track single animals?<a class="headerlink" href="#does-idtracker-ai-track-single-animals" title="Permalink to this headline">¶</a></h3>
 <p>Yes. Although idtracker.ai is designed to track multiple animals keeping their
 identities along the video, you can also track videos with a single animal. When
 the system asks for the number of animals, just type <span class="math notranslate nohighlight">\(1\)</span> and follow the
@@ -215,12 +230,69 @@ a GPU. In this case, idtracker.ai will perform very fast as it will only need to
 segment the video to extract the position of yoru animal.</p>
 </div>
 <div class="section" id="can-i-track-humans-with-idtracker-ai">
-<h2>Can I track humans with idtracker.ai?<a class="headerlink" href="#can-i-track-humans-with-idtracker-ai" title="Permalink to this headline">¶</a></h2>
+<h3>Can I track humans with idtracker.ai?<a class="headerlink" href="#can-i-track-humans-with-idtracker-ai" title="Permalink to this headline">¶</a></h3>
 <p>We haven’t tried to track people with idtracker.ai. We think that idtracker.ai can track well
 people in videos recorded under laboratory conditions. Tracking humans on natural environments
 (streets, parks,…) it is a much more difficult task for which idtracker.ai was not designed.
 However, as idtracker.ai is free and open source, you can maybe use parts of our algorithm
 to set your human tracking for natural environments.</p>
+</div>
+</div>
+<div class="section" id="common-installation-problems">
+<h2>Common installation problems<a class="headerlink" href="#common-installation-problems" title="Permalink to this headline">¶</a></h2>
+<p>Some of the errors that you might encounter might have been already reported by other users and
+fixed. Please update your idtracker.ai to make sure you are using the latest version. To update
+idtracker.ai follow the instructions in the <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai">idtracker.ai gitlab repository</a></p>
+<p>If the error persists, please report the issue in the <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai">idtracker.ai gitlab repository</a>
+or send us an email to <a class="reference external" href="mailto:idtrackerai&#37;&#52;&#48;gmail&#46;com">idtrackerai<span>&#64;</span>gmail<span>&#46;</span>com</a>. We will try to fix it as soon as possible.</p>
+<div class="section" id="solving-environment-failed">
+<h3>Solving environment: failed<a class="headerlink" href="#solving-environment-failed" title="Permalink to this headline">¶</a></h3>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Solving</span> <span class="n">environment</span><span class="p">:</span> <span class="n">failed</span>
+
+<span class="n">ResolvePackageNotFound</span><span class="p">:</span>
+<span class="o">-</span> <span class="n">libtiff</span><span class="o">==</span><span class="mf">4.0</span><span class="o">.</span><span class="mi">9</span><span class="o">=</span><span class="n">vc14_0</span>
+</pre></div>
+</div>
+<p>This error occurs when one of the libraries listed in the <em>environment.yml</em> file
+(in this case the <em>libtiff</em> library) has been updated in the Conda cloud
+repository and the version does not match.
+You can try to solve the error by checking which is the latest version in the Conda cloud.</p>
+</div>
+</div>
+<div class="section" id="common-gui-graphical-user-interface-bugs">
+<h2>Common GUI (Graphical User Interface) bugs<a class="headerlink" href="#common-gui-graphical-user-interface-bugs" title="Permalink to this headline">¶</a></h2>
+<p>We are constantly improving the GUI. However, you might still find some bugs, please report them.
+The following bugs that we describe do not affect the tracking performance, and you can still use
+idtracker.ai is you learn how to avoid them.</p>
+<div class="section" id="empty-tabs">
+<h3>Empty tabs<a class="headerlink" href="#empty-tabs" title="Permalink to this headline">¶</a></h3>
+<p>idtracker.ai has a very lineal processing procedure. If some tabs appear empty it is because
+you haven’t perform the step necessary to move to the next tab. For example, at the beginning
+only the Welcome tab will have content, the rest of the tabs will be empty. First you need to
+select a video for the ROI Selection and Preprocessing tabs to become active. The same will occur if you
+are in the preprocessing tab and try to go to the Tracking or Global Validation tabs. First
+you need segment the video for the tab Tracking to become active.</p>
+</div>
+<div class="section" id="roi-warning-popup-but-roi-is-selected">
+<h3>ROI warning popup but ROI is selected<a class="headerlink" href="#roi-warning-popup-but-roi-is-selected" title="Permalink to this headline">¶</a></h3>
+<p>When moving form the Preprocessing tab to the ROI Selection tab, and trying to save a ROI,
+a ROI warning might pop with the following message:</p>
+<blockquote>
+<div>It seems that the ROI you are trying to apply corresponds to the entire frame.
+Please, go to the ROI Selection tab to select and save a ROI.</div></blockquote>
+<p>You should ignore it and press the save ROIs button again. Then your ROI will be saved.</p>
+</div>
+<div class="section" id="idtracker-ai-crashes-when-selecting-video">
+<h3>idtracker.ai crashes when selecting video<a class="headerlink" href="#idtracker-ai-crashes-when-selecting-video" title="Permalink to this headline">¶</a></h3>
+<p>If you select a video, the Session Name popup will appear for you to input the session name.
+If you go out of this popup and try to select the video again, you might get the following error.</p>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">File</span> <span class="s2">&quot;/home/polaviejalab/idtrackerai/idtrackerai/gui/select_file.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">121</span><span class="p">,</span> <span class="ow">in</span> <span class="nb">open</span> <span class="n">CHOSEN_VIDEO</span><span class="o">.</span><span class="n">set_chosen_item</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filechooser</span><span class="o">.</span><span class="n">selection</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="ne">IndexError</span><span class="p">:</span> <span class="nb">list</span> <span class="n">index</span> <span class="n">out</span> <span class="n">of</span> <span class="nb">range</span>
+</pre></div>
+</div>
+<p>Once you have selected a video, you should input the session name and pres ENTER. If you selected the
+wrong video, you should close the idtracker.ai GUI and open it again.</p>
+</div>
 </div>
 </div>
 
@@ -245,7 +317,7 @@ to set your human tracking for natural environments.</p>
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jan 12, 2019.
+      Last updated on Jan 13, 2019.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.2.

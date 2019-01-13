@@ -18,7 +18,7 @@ Click on the images below to see some examples of videos tracked with [idtracker
 
 Let us know if you are using [idtracker.ai](http://idtracker.ai/) in your research. We are using it to study collective behavior and aggression in zebrafish.
 
-  * [Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2018). Aggregation rule in animal collectives dynamically changes between majority and minority influence. bioRxiv, 400747.](https://www.biorxiv.org/content/early/2018/08/26/400747)
+  * [Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2018). Deep attention networks reveal the rules of collective motion in zebrafish. bioRxiv, 400747.](https://www.biorxiv.org/content/early/2018/12/21/400747)
   * [Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679.](https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339)
 
 ## Requirements
@@ -264,6 +264,41 @@ As the GUI does not include many progress indicators and some processes can be c
 We monitor the performance and the state of the GPU running the command:
 
     watch nvidia-smi
+
+## Updating idtracker.ai
+
+To update idtracker.ai:
+
+##### 1. Pull the latest modifications from the repository.
+
+First, using the terminal **in Linux** or the *Git BASH* **in Windows**, move to the idtrackerai folder.
+
+    cd idtrackerai
+
+and then pull from the repository:
+
+    git pull
+
+##### 2. Reinstall idtrackerai.
+
+(If you have installed idtracker.ai using the developer mode, you won't need to reinstall it).
+
+In the terminal (**in Linux**) or in the Anaconda Prompt **in Windows**.
+
+    pip install .
+
+This command must be executed inside of the folder idtrackerai (where the *setup.py* file is).
+
+## Reporting issues
+
+Please use the issues feature of Gitlab to report any bug, error, or crash that you might find.
+You can also email to idtrackerai@gmail.com but we appreciate if you can do it throught Gitlab.
+
+When reporting issues, add all the information that can help us to reproduce the error and fix it.
+If you can, send us a link with the video and the preprocessing paramenters that reproduce the error.
+
+
+
 
 
 ## Documentation and more

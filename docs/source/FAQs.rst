@@ -1,6 +1,9 @@
 FAQs
 =====
 
+Frequent questions
+------------------
+
 Can I use idtracker.ai in my videos?
 ************************************
 
@@ -117,3 +120,72 @@ people in videos recorded under laboratory conditions. Tracking humans on natura
 (streets, parks,...) it is a much more difficult task for which idtracker.ai was not designed.
 However, as idtracker.ai is free and open source, you can maybe use parts of our algorithm
 to set your human tracking for natural environments.
+
+Common installation problems
+----------------------------
+
+Some of the errors that you might encounter might have been already reported by other users and
+fixed. Please update your idtracker.ai to make sure you are using the latest version. To update
+idtracker.ai follow the instructions in the `idtracker.ai gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
+
+If the error persists, please report the issue in the `idtracker.ai gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
+or send us an email to idtrackerai@gmail.com. We will try to fix it as soon as possible.
+
+Solving environment: failed
+***************************
+
+.. code::
+
+    Solving environment: failed
+
+    ResolvePackageNotFound:
+    - libtiff==4.0.9=vc14_0
+
+This error occurs when one of the libraries listed in the *environment.yml* file
+(in this case the *libtiff* library) has been updated in the Conda cloud
+repository and the version does not match.
+You can try to solve the error by checking which is the latest version in the Conda cloud.
+
+
+Common GUI (Graphical User Interface) bugs
+------------------------------------------
+
+We are constantly improving the GUI. However, you might still find some bugs, please report them.
+The following bugs that we describe do not affect the tracking performance, and you can still use
+idtracker.ai is you learn how to avoid them.
+
+Empty tabs
+**********
+
+idtracker.ai has a very lineal processing procedure. If some tabs appear empty it is because
+you haven't perform the step necessary to move to the next tab. For example, at the beginning
+only the Welcome tab will have content, the rest of the tabs will be empty. First you need to
+select a video for the ROI Selection and Preprocessing tabs to become active. The same will occur if you
+are in the preprocessing tab and try to go to the Tracking or Global Validation tabs. First
+you need segment the video for the tab Tracking to become active.
+
+ROI warning popup but ROI is selected
+*************************************
+
+When moving form the Preprocessing tab to the ROI Selection tab, and trying to save a ROI,
+a ROI warning might pop with the following message:
+
+
+    It seems that the ROI you are trying to apply corresponds to the entire frame.
+    Please, go to the ROI Selection tab to select and save a ROI.
+
+You should ignore it and press the save ROIs button again. Then your ROI will be saved.
+
+idtracker.ai crashes when selecting video
+*****************************************
+
+If you select a video, the Session Name popup will appear for you to input the session name.
+If you go out of this popup and try to select the video again, you might get the following error.
+
+.. code::
+
+    File "/home/polaviejalab/idtrackerai/idtrackerai/gui/select_file.py", line 121, in open CHOSEN_VIDEO.set_chosen_item(self.filechooser.selection[0])
+    IndexError: list index out of range
+
+Once you have selected a video, you should input the session name and pres ENTER. If you selected the
+wrong video, you should close the idtracker.ai GUI and open it again.

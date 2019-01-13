@@ -56,7 +56,7 @@ Other works using idtracker.ai
 ******************************
 Let us know if you are using `idtracker.ai <http://idtracker.ai/>`_ in your research.
 
-  - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2018). Aggregation rule in animal collectives dynamically changes between majority and minority influence. bioRxiv, 400747. <https://www.biorxiv.org/content/early/2018/08/26/400747>`_
+  - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2018). Deep attention networks reveal the rules of collective motion in zebrafish. bioRxiv, 400747. <https://www.biorxiv.org/content/early/2018/12/21/400747>`_
   - `Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679. <https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339>`_
 
 
