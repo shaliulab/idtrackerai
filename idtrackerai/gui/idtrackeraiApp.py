@@ -238,7 +238,6 @@ class Root(TabbedPanel):
         ### FIXME: disabled feature not working well and had to add a condition
         # Added this condition after switching to kivy 1.10.1 because the disabled"
         # feature is working differently than for kivy 1.9.
-        print("ID", value.content.id)
         if value.content is not None:
             if value.content.id == 'roi_selector':
                 if not self.roi_selector.has_been_executed:

@@ -15,7 +15,7 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
-    <title>FAQ’s &mdash; idtrackerai v2.0.0-alpha Manual</title>
+    <title>FAQs &mdash; idtrackerai v2.0.0-alpha Manual</title>
     
     <link rel="stylesheet" type="text/css" href="_static/css/spc-bootstrap.css">
     <link rel="stylesheet" type="text/css" href="_static/css/spc-extend.css">
@@ -34,12 +34,13 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" >
     <link rel="search" title="Search" href="search.html" >
-    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="index.html" > 
+    <link rel="top" title="idtrackerai v2.0.0-alpha Manual" href="index.html" >
+    <link rel="next" title="Jupyter Notebooks for analysis" href="trajectories_analysis.html" >
+    <link rel="prev" title="Gallery" href="gallery.html" > 
   </head>
   <body>
 
@@ -72,6 +73,14 @@
         <a href="genindex.html" title="General Index"
            accesskey="I">index</a>
       </li>
+      <li class="active">
+        <a href="trajectories_analysis.html" title="Jupyter Notebooks for analysis"
+           accesskey="N">next</a>
+      </li>
+      <li class="active">
+        <a href="gallery.html" title="Gallery"
+           accesskey="P">previous</a>
+      </li>
     </ul>
               
 	    </div>
@@ -84,25 +93,30 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">FAQ’s</a><ul>
-<li><a class="reference internal" href="#does-idtracker-ai-track-single-animals">Does idtracker.ai track single animals?</a></li>
-<li><a class="reference internal" href="#does-idtracker-ai-give-orientation-and-posture-information">Does idtracker.ai give orientation and posture information?</a></li>
+<li><a class="reference internal" href="#">FAQs</a><ul>
+<li><a class="reference internal" href="#can-i-use-idtracker-ai-in-my-videos">Can I use idtracker.ai in my videos?</a></li>
+<li><a class="reference internal" href="#does-idtracker-ai-work-in-windows">Does idtracker.ai work in Windows?</a></li>
 <li><a class="reference internal" href="#can-i-run-idtracker-ai-in-a-laptop">Can I run idtracker.ai in a laptop?</a></li>
 <li><a class="reference internal" href="#can-i-use-idtracker-ai-if-my-computer-does-not-have-a-good-gpu">Can I use idtracker.ai if my computer does not have a good GPU?</a></li>
 <li><a class="reference internal" href="#can-i-use-idtracker-ai-in-an-amd-gpu">Can I use idtracker.ai in an AMD GPU?</a></li>
-<li><a class="reference internal" href="#does-idtracker-ai-work-in-windows">Does idtracker.ai work in Windows?</a></li>
+<li><a class="reference internal" href="#can-i-use-idtracker-ai-with-google-colab">Can I use idtracker.ai with Google Colab?</a></li>
+<li><a class="reference internal" href="#do-we-provide-a-docker-image-for-idtracker-ai">Do we provide a Docker image for idtracker.ai?</a></li>
+<li><a class="reference internal" href="#can-idtracker-ai-track-multiple-videos-in-batch">Can idtracker.ai track multiple videos in batch?</a></li>
+<li><a class="reference internal" href="#does-idtracker-ai-give-orientation-and-posture-information">Does idtracker.ai give orientation and posture information?</a></li>
+<li><a class="reference internal" href="#can-i-use-idtracker-ai-together-with-deeplabcut-or-leap">Can I use idtracker.ai together with DeepLabCut or LEAP?</a></li>
+<li><a class="reference internal" href="#does-idtracker-ai-track-single-animals">Does idtracker.ai track single animals?</a></li>
 <li><a class="reference internal" href="#can-i-track-humans-with-idtracker-ai">Can I track humans with idtracker.ai?</a></li>
-<li><a class="reference internal" href="#can-i-use-idtracker-ai-in-my-videos">Can I use idtracker.ai in my videos?</a></li>
 </ul>
 </li>
 </ul>
 
 <h3><a href="index.html">Table of Contents</a></h3>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="video_conditions.html">General video conditions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
@@ -115,31 +129,98 @@
         <div class="bodywrapper">
           <div class="body" id="spc-section-body">
             
-  <div class="section" id="faq-s">
-<h1>FAQ’s<a class="headerlink" href="#faq-s" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="does-idtracker-ai-track-single-animals">
-<h2>Does idtracker.ai track single animals?<a class="headerlink" href="#does-idtracker-ai-track-single-animals" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="does-idtracker-ai-give-orientation-and-posture-information">
-<h2>Does idtracker.ai give orientation and posture information?<a class="headerlink" href="#does-idtracker-ai-give-orientation-and-posture-information" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="can-i-run-idtracker-ai-in-a-laptop">
-<h2>Can I run idtracker.ai in a laptop?<a class="headerlink" href="#can-i-run-idtracker-ai-in-a-laptop" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="can-i-use-idtracker-ai-if-my-computer-does-not-have-a-good-gpu">
-<h2>Can I use idtracker.ai if my computer does not have a good GPU?<a class="headerlink" href="#can-i-use-idtracker-ai-if-my-computer-does-not-have-a-good-gpu" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="can-i-use-idtracker-ai-in-an-amd-gpu">
-<h2>Can I use idtracker.ai in an AMD GPU?<a class="headerlink" href="#can-i-use-idtracker-ai-in-an-amd-gpu" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="faqs">
+<h1>FAQs<a class="headerlink" href="#faqs" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="can-i-use-idtracker-ai-in-my-videos">
+<h2>Can I use idtracker.ai in my videos?<a class="headerlink" href="#can-i-use-idtracker-ai-in-my-videos" title="Permalink to this headline">¶</a></h2>
+<p>You can check our <a class="reference internal" href="gallery.html"><span class="doc">Gallery</span></a> to see the type of videos in which idtracker.ai worked well. We also give
+a set of <a class="reference internal" href="video_conditions.html"><span class="doc">General video conditions</span></a> that we advise users to follow to get the best results with idtracker.ai.</p>
 </div>
 <div class="section" id="does-idtracker-ai-work-in-windows">
 <h2>Does idtracker.ai work in Windows?<a class="headerlink" href="#does-idtracker-ai-work-in-windows" title="Permalink to this headline">¶</a></h2>
+<p>Yes, in the <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai">Gitlab Repository</a> we provide instructions to
+install idtracker.ai in Windows. We have tested the intallation in computers running Windows 10 Pro.</p>
+</div>
+<div class="section" id="can-i-run-idtracker-ai-in-a-laptop">
+<h2>Can I run idtracker.ai in a laptop?<a class="headerlink" href="#can-i-run-idtracker-ai-in-a-laptop" title="Permalink to this headline">¶</a></h2>
+<p>Yes. We are running idtracker.ai with all its possibilities in high-end performance
+gamming laptops from <a class="reference external" href="https://shop.obsidian-pc.com/en/workstation.html">Obsidian</a>.
+If your laptop does not have a GPU you can still use idtracker.ai, see the previous FAQ.</p>
+</div>
+<div class="section" id="can-i-use-idtracker-ai-if-my-computer-does-not-have-a-good-gpu">
+<h2>Can I use idtracker.ai if my computer does not have a good GPU?<a class="headerlink" href="#can-i-use-idtracker-ai-if-my-computer-does-not-have-a-good-gpu" title="Permalink to this headline">¶</a></h2>
+<p>Yes, you can still use idtracker.ai if you don’t have a GPU. However, the parts of the tracking that
+use the GPU will be up to 100x slower. However, if you are tracking a single animal, or you are tracking
+groups of animals but you do not care about their identities, you can use idtracker.ai and track
+animals at a faster speed. To track single animals read the previous FAQ. To track animals without keeping
+their identity, just click the button <em>Tracking without identities</em> when you get to the <em>Tracking</em> tab
+of idtracker.ai (after the video is segmented).</p>
+</div>
+<div class="section" id="can-i-use-idtracker-ai-in-an-amd-gpu">
+<h2>Can I use idtracker.ai in an AMD GPU?<a class="headerlink" href="#can-i-use-idtracker-ai-in-an-amd-gpu" title="Permalink to this headline">¶</a></h2>
+<p>Althought there are some efforts on making Tensorflow work with AMD GPUs, we do not
+provide support or installation instructions in this case. As idtracker.ai is free and open source,
+you can always download it and set your environment with Tensorflow supporting your AMD GPU. However,
+we are not aware of any user using idtracker.ai with AMD GPUs.</p>
+</div>
+<div class="section" id="can-i-use-idtracker-ai-with-google-colab">
+<h2>Can I use idtracker.ai with Google Colab?<a class="headerlink" href="#can-i-use-idtracker-ai-with-google-colab" title="Permalink to this headline">¶</a></h2>
+<p>Currently idtracker.ai is a GUI (Graphical User Interface) based software. This means that
+you cannot easily run it from a terminal. As idtracker.ai is free and open source,
+you can always modify and twick the code to run the GPU intensive parts from a terminal and hence from Google Colab.</p>
+<p>We are working on a new GUI and code structure using <a class="reference external" href="https://pyforms.readthedocs.io/en/v4/">Pyforms</a>
+that will be released very soon. This will allow to interact with idtracker.ai using the terminal.
+Then we will provide a Jupyter Notebook with the necessary commands to run idtracker.ai in Google Colab.</p>
+</div>
+<div class="section" id="do-we-provide-a-docker-image-for-idtracker-ai">
+<h2>Do we provide a Docker image for idtracker.ai?<a class="headerlink" href="#do-we-provide-a-docker-image-for-idtracker-ai" title="Permalink to this headline">¶</a></h2>
+<p>Currently idtracker.ai is a GUI (Graphical User Interface) based software. Docker typically works
+easily when you can run the software from the terminal (command line). Thus, for now it does not make
+sense to provide a Docker image.</p>
+<p>However, we are working on a new GUI and code structure using <a class="reference external" href="https://pyforms.readthedocs.io/en/v4/">Pyforms</a>
+that will be released very soon. This will allow to interact with idtracker.ai using the terminal.
+Then we will provide a Docker image that you will be able to use to run idtracker.ai from the terminal.</p>
+</div>
+<div class="section" id="can-idtracker-ai-track-multiple-videos-in-batch">
+<h2>Can idtracker.ai track multiple videos in batch?<a class="headerlink" href="#can-idtracker-ai-track-multiple-videos-in-batch" title="Permalink to this headline">¶</a></h2>
+<p>Currently to track every video you need to do it from the idtracker.ai GUI. In the near future we will
+release a version of idtracker.ai where you will be able to set the preprocessing parameters for
+multiple videos and then use a bash script to tell idtracker.ai to track those video, either in your computer
+or in a cluster.</p>
+</div>
+<div class="section" id="does-idtracker-ai-give-orientation-and-posture-information">
+<h2>Does idtracker.ai give orientation and posture information?<a class="headerlink" href="#does-idtracker-ai-give-orientation-and-posture-information" title="Permalink to this headline">¶</a></h2>
+<p>Orientation and posture can be computed a posteriori from the <em>blobs_collection.npy</em> file
+that idtracker.ai generates. In <a class="reference external" href="https://gitlab.com/polavieja_lab/midline">this repository</a>
+we provide an example where we compute the nose, tail and midline for fish.</p>
+<p>You can also <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai_notebooks/blob/master/idtrackerai_helpers/extract_single_animal_video.ipynb">generate a small video for every animal</a>
+in the group and use it to get the posture with one of the AI based posture trackings
+(<a class="reference external" href="https://github.com/AlexEMG/DeepLabCut">Deeplabcut</a>, <a class="reference external" href="https://github.com/talmo/leap">LEAP</a>, …).</p>
+</div>
+<div class="section" id="can-i-use-idtracker-ai-together-with-deeplabcut-or-leap">
+<h2>Can I use idtracker.ai together with DeepLabCut or LEAP?<a class="headerlink" href="#can-i-use-idtracker-ai-together-with-deeplabcut-or-leap" title="Permalink to this headline">¶</a></h2>
+<p>As explained before, you can <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai_notebooks/blob/master/idtrackerai_helpers/extract_single_animal_video.ipynb">generate a small video for every animal</a>
+in the group and use it to track the body parts with one of the AI based posture trackings
+(<a class="reference external" href="https://github.com/AlexEMG/DeepLabCut">Deeplabcut</a>, <a class="reference external" href="https://github.com/talmo/leap">LEAP</a>, …).</p>
+</div>
+<div class="section" id="does-idtracker-ai-track-single-animals">
+<h2>Does idtracker.ai track single animals?<a class="headerlink" href="#does-idtracker-ai-track-single-animals" title="Permalink to this headline">¶</a></h2>
+<p>Yes. Although idtracker.ai is designed to track multiple animals keeping their
+identities along the video, you can also track videos with a single animal. When
+the system asks for the number of animals, just type <span class="math notranslate nohighlight">\(1\)</span> and follow the
+instructions. The system will automatically skip the GPU intensive parts that are
+not necessary in this case. This means that you can use idtracker.ai to track
+single animals in a desktop or a laptop computer even if it does not have
+a GPU. In this case, idtracker.ai will perform very fast as it will only need to
+segment the video to extract the position of yoru animal.</p>
 </div>
 <div class="section" id="can-i-track-humans-with-idtracker-ai">
 <h2>Can I track humans with idtracker.ai?<a class="headerlink" href="#can-i-track-humans-with-idtracker-ai" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="can-i-use-idtracker-ai-in-my-videos">
-<h2>Can I use idtracker.ai in my videos?<a class="headerlink" href="#can-i-use-idtracker-ai-in-my-videos" title="Permalink to this headline">¶</a></h2>
+<p>We haven’t tried to track people with idtracker.ai. We think that idtracker.ai can track well
+people in videos recorded under laboratory conditions. Tracking humans on natural environments
+(streets, parks,…) it is a much more difficult task for which idtracker.ai was not designed.
+However, as idtracker.ai is free and open source, you can maybe use parts of our algorithm
+to set your human tracking for natural environments.</p>
 </div>
 </div>
 
@@ -164,10 +245,10 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jan 11, 2019.
+      Last updated on Jan 12, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.2.
       </li>
     </ul>
     </div>

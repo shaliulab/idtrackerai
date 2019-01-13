@@ -1,23 +1,23 @@
 Welcome to idtracker.ai's documentation!
 ========================================
 
-`idtracker.ai <idtracker.ai>`_ allows to track groups of up to 100 unmarked animals from videos.
+`idtracker.ai <http://idtracker.ai/>`_ allows to track groups of up to 100 unmarked animals from videos.
 
 .. image:: /_static/fish_tracked.png
-    :width: 377
+    :width: 150
     :target: https://www.youtube.com/watch?v=Imz3xvPsaEw
 .. image:: /_static/flies_tracked.png
-    :width: 377
+    :width: 150
     :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
 
 .. image:: /_static/14ants.png
-    :width: 250
+    :width: 150
     :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
 .. image:: /_static/mice.png
-    :width: 250
+    :width: 150
     :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
 .. image:: /_static/2fish.png
-    :width: 250
+    :width: 150
     :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
 
 
@@ -28,20 +28,24 @@ The source code and installation instructions can be found at https://gitlab.com
 
 
 :doc:`Quickstart <./quickstart>`
-************
+********************************
 Check out the :doc:`./quickstart` to learn how to use the software.
 
-:doc:`./gallery`
-***************
-Send us your videos using `idtracker.ai <idtracker.ai>`_ and we will add them to our gallery with proper attribution.
+:doc:`Gallery <./gallery>`
+**************************
+Send us your videos using `idtracker.ai <http://idtracker.ai/>`_ and we will add them to our gallery with proper attribution.
 
-:doc:`./trajectories_analysis`
-******************************
+:doc:`Frequently Asked Questions (FAQs) <./FAQs>`
+*************************************************
+We have summarized in the :doc:`./FAQs` some of the questions that we get more often.
+
+:doc:`Trajectory analysis <./trajectories_analysis>`
+****************************************************
 We provide a set of :doc:`./trajectories_analysis` of the trajectories that idtracker.ai outputs.
 
-:doc:`./modules`
-***************
-`idtracker.ai <idtracker.ai>`_ idtracker.ai is opensource and free software (both as in freedom and as in free beer).
+:doc:`Code documentation <./modules>`
+*************************************
+`idtracker.ai <http://idtracker.ai/>`_ is opensource and free software (both as in freedom and as in free beer).
 We have documented the code so that it is easier for developers to modify it to their needs.
 
 `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>`_ matches identities between videos
@@ -71,7 +75,6 @@ Data
 The links to the data can be found in the :doc:`./data` section of this webpage.
 
 
-
 Contents
 ********
 
@@ -82,6 +85,7 @@ Contents
    quickstart
    GUI_explained
    gallery
+   FAQs
    trajectories_analysis
    modules
    data

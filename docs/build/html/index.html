@@ -34,8 +34,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" >
     <link rel="search" title="Search" href="search.html" >
@@ -89,10 +88,11 @@
   <ul>
 <li><a class="reference internal" href="#">Welcome to idtracker.ai’s documentation!</a><ul>
 <li><a class="reference internal" href="#id1">Installation and git repository</a></li>
-<li><a class="reference internal" href="#quickstart"><code class="docutils literal notranslate"><span class="pre">./quickstart</span></code></a></li>
-<li><a class="reference internal" href="#gallery"><code class="docutils literal notranslate"><span class="pre">./gallery</span></code></a></li>
-<li><a class="reference internal" href="#trajectories-analysis"><code class="docutils literal notranslate"><span class="pre">./trajectories_analysis</span></code></a></li>
-<li><a class="reference internal" href="#modules"><code class="docutils literal notranslate"><span class="pre">./modules</span></code></a></li>
+<li><a class="reference internal" href="#quickstart"><code class="docutils literal notranslate"><span class="pre">Quickstart</span></code></a></li>
+<li><a class="reference internal" href="#gallery"><code class="docutils literal notranslate"><span class="pre">Gallery</span></code></a></li>
+<li><a class="reference internal" href="#frequently-asked-questions-faqs"><code class="docutils literal notranslate"><span class="pre">Frequently</span> <span class="pre">Asked</span> <span class="pre">Questions</span> <span class="pre">(FAQs)</span></code></a></li>
+<li><a class="reference internal" href="#trajectory-analysis"><code class="docutils literal notranslate"><span class="pre">Trajectory</span> <span class="pre">analysis</span></code></a></li>
+<li><a class="reference internal" href="#code-documentation"><code class="docutils literal notranslate"><span class="pre">Code</span> <span class="pre">documentation</span></code></a></li>
 <li><a class="reference internal" href="#idmatcher-ai-matches-identities-between-videos">idmatcher.ai matches identities between videos</a></li>
 <li><a class="reference internal" href="#other-works-using-idtracker-ai">Other works using idtracker.ai</a></li>
 <li><a class="reference internal" href="#references">References</a></li>
@@ -109,6 +109,7 @@
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQs.html">FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
@@ -123,12 +124,12 @@
             
   <div class="section" id="welcome-to-idtracker-ai-s-documentation">
 <h1>Welcome to idtracker.ai’s documentation!<a class="headerlink" href="#welcome-to-idtracker-ai-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="idtracker.ai">idtracker.ai</a> allows to track groups of up to 100 unmarked animals from videos.</p>
-<a class="reference external image-reference" href="https://www.youtube.com/watch?v=Imz3xvPsaEw"><img alt="_images/fish_tracked.png" src="_images/fish_tracked.png" style="width: 377px;" /></a>
-<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/flies_tracked.png" src="_images/flies_tracked.png" style="width: 377px;" /></a>
-<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/14ants.png" src="_images/14ants.png" style="width: 250px;" /></a>
-<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/mice.png" src="_images/mice.png" style="width: 250px;" /></a>
-<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/2fish.png" src="_images/2fish.png" style="width: 250px;" /></a>
+<p><a class="reference external" href="http://idtracker.ai/">idtracker.ai</a> allows to track groups of up to 100 unmarked animals from videos.</p>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=Imz3xvPsaEw"><img alt="_images/fish_tracked.png" src="_images/fish_tracked.png" style="width: 150px;" /></a>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/flies_tracked.png" src="_images/flies_tracked.png" style="width: 150px;" /></a>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/14ants.png" src="_images/14ants.png" style="width: 150px;" /></a>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/mice.png" src="_images/mice.png" style="width: 150px;" /></a>
+<a class="reference external image-reference" href="https://www.youtube.com/watch?v=_M9xl4jBzVQ"><img alt="_images/2fish.png" src="_images/2fish.png" style="width: 150px;" /></a>
 <div class="section" id="id1">
 <h2><a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai">Installation and git repository</a><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>The source code and installation instructions can be found at <a class="reference external" href="https://gitlab.com/polavieja_lab/idtrackerai.git">https://gitlab.com/polavieja_lab/idtrackerai.git</a>.</p>
@@ -139,15 +140,19 @@
 </div>
 <div class="section" id="gallery">
 <h2><a class="reference internal" href="gallery.html"><span class="doc">Gallery</span></a><a class="headerlink" href="#gallery" title="Permalink to this headline">¶</a></h2>
-<p>Send us your videos using <a class="reference external" href="idtracker.ai">idtracker.ai</a> and we will add them to our gallery with proper attribution.</p>
+<p>Send us your videos using <a class="reference external" href="http://idtracker.ai/">idtracker.ai</a> and we will add them to our gallery with proper attribution.</p>
 </div>
-<div class="section" id="trajectories-analysis">
-<h2><a class="reference internal" href="trajectories_analysis.html"><span class="doc">Jupyter Notebooks for analysis</span></a><a class="headerlink" href="#trajectories-analysis" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="frequently-asked-questions-faqs">
+<h2><a class="reference internal" href="FAQs.html"><span class="doc">Frequently Asked Questions (FAQs)</span></a><a class="headerlink" href="#frequently-asked-questions-faqs" title="Permalink to this headline">¶</a></h2>
+<p>We have summarized in the <a class="reference internal" href="FAQs.html"><span class="doc">FAQs</span></a> some of the questions that we get more often.</p>
+</div>
+<div class="section" id="trajectory-analysis">
+<h2><a class="reference internal" href="trajectories_analysis.html"><span class="doc">Trajectory analysis</span></a><a class="headerlink" href="#trajectory-analysis" title="Permalink to this headline">¶</a></h2>
 <p>We provide a set of <a class="reference internal" href="trajectories_analysis.html"><span class="doc">Jupyter Notebooks for analysis</span></a> of the trajectories that idtracker.ai outputs.</p>
 </div>
-<div class="section" id="modules">
-<h2><a class="reference internal" href="modules.html"><span class="doc">Code documentation</span></a><a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="idtracker.ai">idtracker.ai</a> idtracker.ai is opensource and free software (both as in freedom and as in free beer).
+<div class="section" id="code-documentation">
+<h2><a class="reference internal" href="modules.html"><span class="doc">Code documentation</span></a><a class="headerlink" href="#code-documentation" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://idtracker.ai/">idtracker.ai</a> is opensource and free software (both as in freedom and as in free beer).
 We have documented the code so that it is easier for developers to modify it to their needs.</p>
 </div>
 <div class="section" id="idmatcher-ai-matches-identities-between-videos">
@@ -185,6 +190,7 @@ idtracker.ai: tracking all individuals in small or large collectives of unmarked
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GUI_explained.html">Graphical user interface (GUI)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQs.html">FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trajectories_analysis.html">Jupyter Notebooks for analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Code documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
@@ -221,10 +227,10 @@ idtracker.ai: tracking all individuals in small or large collectives of unmarked
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jan 11, 2019.
+      Last updated on Jan 12, 2019.
       </li>
       <li>
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.2.
       </li>
     </ul>
     </div>
