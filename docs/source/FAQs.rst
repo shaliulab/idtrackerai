@@ -115,16 +115,16 @@ segment the video to extract the position of yoru animal.
 Can I track humans with idtracker.ai?
 *************************************
 
-We haven't tried to track people with idtracker.ai. We think that idtracker.ai can track well
+We haven't tried to track people with idtracker.ai. We think that idtracker.ai can successfully track
 people in videos recorded under laboratory conditions. Tracking humans on natural environments
 (streets, parks,...) it is a much more difficult task for which idtracker.ai was not designed.
 However, as idtracker.ai is free and open source, you can maybe use parts of our algorithm
-to set your human tracking for natural environments.
+to build your own human tracking program for natural environments.
 
 Common installation problems
 ----------------------------
 
-Some of the errors that you might encounter might have been already reported by other users and
+Some of the errors that you encounter might have been already reported by other users and
 fixed. Please update your idtracker.ai to make sure you are using the latest version. To update
 idtracker.ai follow the instructions in the `idtracker.ai gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
 
@@ -152,7 +152,7 @@ Common GUI (Graphical User Interface) bugs
 
 We are constantly improving the GUI. However, you might still find some bugs, please report them.
 The following bugs that we describe do not affect the tracking performance, and you can still use
-idtracker.ai is you learn how to avoid them.
+idtracker.ai if you learn how to avoid them.
 
 Empty tabs
 **********
@@ -168,7 +168,7 @@ ROI warning popup but ROI is selected
 *************************************
 
 When moving form the Preprocessing tab to the ROI Selection tab, and trying to save a ROI,
-a ROI warning might pop with the following message:
+a ROI warning might pop up with the following message:
 
 
     It seems that the ROI you are trying to apply corresponds to the entire frame.
