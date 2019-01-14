@@ -57,8 +57,8 @@ We have documented the code so that it is easier for developers to modify it to 
 ************************************************************************************************
 We have also developed a toolbox to match identities between videos, called `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>`_.
 
-Other works using idtracker.ai
-******************************
+Research using idtracker.ai
+***************************
 Let us know if you are using `idtracker.ai <http://idtracker.ai/>`_ in your research.
 
   - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2018). Deep attention networks reveal the rules of collective motion in zebrafish. bioRxiv, 400747. <https://www.biorxiv.org/content/early/2018/12/21/400747>`_
@@ -77,7 +77,7 @@ Find `here the preprint <https://arxiv.org/abs/1803.04351>`_ version of the manu
 
 Data
 ****
-The links to the data can be found in the :doc:`./data` section of this webpage.
+The data used in the article can be found in the :doc:`./data` section of this webpage.
 
 
 Contents

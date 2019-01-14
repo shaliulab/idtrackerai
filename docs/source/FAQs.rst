@@ -1,8 +1,8 @@
 FAQs
 =====
 
-Frequent questions
-------------------
+General questions
+-----------------
 
 Can I use idtracker.ai in my videos?
 ************************************
@@ -15,14 +15,14 @@ Does idtracker.ai work in Windows?
 **********************************
 
 Yes, in the `Gitlab Repository <https://gitlab.com/polavieja_lab/idtrackerai>`_ we provide instructions to
-install idtracker.ai in Windows. We have tested the intallation in computers running Windows 10 Pro.
+install idtracker.ai in Windows. We have tested the installation in computers running Windows 10 Pro.
 
 
 Can I run idtracker.ai in a laptop?
 ***********************************
 
-Yes. We are running idtracker.ai with all its possibilities in high-end performance
-gamming laptops from `Obsidian <https://shop.obsidian-pc.com/en/workstation.html>`_.
+Yes. We are running idtracker.ai with all its features in high-end performance
+gaming laptops from `Obsidian <https://shop.obsidian-pc.com/en/workstation.html>`_.
 If your laptop does not have a GPU you can still use idtracker.ai, see the previous FAQ.
 
 
@@ -30,7 +30,7 @@ Can I use idtracker.ai if my computer does not have a good GPU?
 ***************************************************************
 
 Yes, you can still use idtracker.ai if you don't have a GPU. However, the parts of the tracking that
-use the GPU will be up to 100x slower. However, if you are tracking a single animal, or you are tracking
+use the GPU will be up to 100x slower. However, if you are tracking a single animal, or if you are tracking
 groups of animals but you do not care about their identities, you can use idtracker.ai and track
 animals at a faster speed. To track single animals read the previous FAQ. To track animals without keeping
 their identity, just click the button *Tracking without identities* when you get to the *Tracking* tab
@@ -43,7 +43,7 @@ Can I use idtracker.ai in an AMD GPU?
 Althought there are some efforts on making Tensorflow work with AMD GPUs, we do not
 provide support or installation instructions in this case. As idtracker.ai is free and open source,
 you can always download it and set your environment with Tensorflow supporting your AMD GPU. However,
-we are not aware of any user using idtracker.ai with AMD GPUs.
+we have not heard from any user using idtracker.ai with AMD GPUs, so if you are successful, please let us know!
 
 
 Can I use idtracker.ai with Google Colab?
@@ -51,22 +51,22 @@ Can I use idtracker.ai with Google Colab?
 
 Currently idtracker.ai is a GUI (Graphical User Interface) based software. This means that
 you cannot easily run it from a terminal. As idtracker.ai is free and open source,
-you can always modify and twick the code to run the GPU intensive parts from a terminal and hence from Google Colab.
+you can always modify the code to run the GPU intensive parts from a terminal and hence from Google Colab.
 
-We are working on a new GUI and code structure using `Pyforms <https://pyforms.readthedocs.io/en/v4/>`_
-that will be released very soon. This will allow to interact with idtracker.ai using the terminal.
+We are currently working on a new GUI and code structure using `Pyforms <https://pyforms.readthedocs.io/en/v4/>`_
+that will be released by mid-2019. This will allow users to interact with idtracker.ai using the terminal.
 Then we will provide a Jupyter Notebook with the necessary commands to run idtracker.ai in Google Colab.
 
 
-Do we provide a Docker image for idtracker.ai?
-**********************************************
+Is there a Docker image for idtracker.ai?
+*****************************************
 
 Currently idtracker.ai is a GUI (Graphical User Interface) based software. Docker typically works
 easily when you can run the software from the terminal (command line). Thus, for now it does not make
 sense to provide a Docker image.
 
 However, we are working on a new GUI and code structure using `Pyforms <https://pyforms.readthedocs.io/en/v4/>`_
-that will be released very soon. This will allow to interact with idtracker.ai using the terminal.
+that will be released by mid-2019. This will allow users to interact with idtracker.ai using the terminal.
 Then we will provide a Docker image that you will be able to use to run idtracker.ai from the terminal.
 
 
