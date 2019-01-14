@@ -31,6 +31,11 @@ The source code and installation instructions can be found at https://gitlab.com
 ********************************
 Check out the :doc:`./quickstart` to learn how to use the software.
 
+:doc:`Video conditions <./video_conditions>`
+********************************************
+Check out the :doc:`./video_conditions` to get some advice in how to create videos
+that will give you the best tracking results with idtracker.ai.
+
 :doc:`Gallery <./gallery>`
 **************************
 Send us your videos using `idtracker.ai <http://idtracker.ai/>`_ and we will add them to our gallery with proper attribution.
