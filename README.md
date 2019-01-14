@@ -2,7 +2,7 @@
 
 [idtracker.ai](http://idtracker.ai/) is a software that tracks and identifies animals in collectives from videos. Check our webpage [idtracker.ai](http://idtracker.ai/).
 
-You can find all the details of the software in the [Nature Methods paper](http://dx.doi.org/10.1038/s41592-018-0295-5) where [idtracker.ai](http://idtracker.ai/) is published.
+You can find all the details of the software in the [Nature Methods paper](https://rdcu.be/bgN2R) where [idtracker.ai](http://idtracker.ai/) is published.
 
 You can also find an early version of the article in [arXiv](https://arxiv.org/abs/1803.04351)
 

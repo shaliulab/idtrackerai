@@ -115,16 +115,16 @@ segment the video to extract the position of yoru animal.
 Can I track humans with idtracker.ai?
 *************************************
 
-We haven't tried to track people with idtracker.ai. We think that idtracker.ai can successfully track
+We haven't tried to track people with idtracker.ai. We think that idtracker.ai can track well
 people in videos recorded under laboratory conditions. Tracking humans on natural environments
 (streets, parks,...) it is a much more difficult task for which idtracker.ai was not designed.
 However, as idtracker.ai is free and open source, you can maybe use parts of our algorithm
-to build your own human tracking program for natural environments.
+to set your human tracking for natural environments.
 
 Common installation problems
 ----------------------------
 
-Some of the errors that you encounter might have been already reported by other users and
+Some of the errors that you might encounter might have been already reported by other users and
 fixed. Please update your idtracker.ai to make sure you are using the latest version. To update
 idtracker.ai follow the instructions in the `idtracker.ai gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_
 
@@ -147,12 +147,27 @@ repository and the version does not match.
 You can try to solve the error by checking which is the latest version in the Conda cloud.
 
 
-Common GUI (Graphical User Interface) bugs
-------------------------------------------
+Common GUI (Graphical User Interface) bugs and questions
+--------------------------------------------------------
 
 We are constantly improving the GUI. However, you might still find some bugs, please report them.
 The following bugs that we describe do not affect the tracking performance, and you can still use
-idtracker.ai if you learn how to avoid them.
+idtracker.ai is you learn how to avoid them.
+
+Reopening and validating a previous tracking session
+****************************************************
+idtracker.ai allows you to revisit previous tracking sessions to, for example, validate the trajectories of a tracked video,
+or to recompute some step of the tracking pipeline.
+
+You can do this by starting idtracker.ai and selecting again the .avi file of the video
+that you want to revisit. When the GUI asks for the session name, input the name of the session you want to revisit
+(exclude the *session_* part). A pop-up with the different steps computed will appear.
+For example, if you restore all the steps, a pop-up will appear asking if you want to go to the
+Global or Individual Validation tabs. By selecting one of them, a last pop-up will ask if you want to check the trajectories with the animals
+identified during the crossings or without identities during crossings. Press one of them to validate the trajectories.
+
+Note that you can only modify the identities in the option "With animals not identified during crossings". When you save the new modified identities
+the software will automatically reinterpolated the trajectories to identify the animals during the crossings. 
 
 Empty tabs
 **********
@@ -168,7 +183,7 @@ ROI warning popup but ROI is selected
 *************************************
 
 When moving form the Preprocessing tab to the ROI Selection tab, and trying to save a ROI,
-a ROI warning might pop up with the following message:
+a ROI warning might pop with the following message:
 
 
     It seems that the ROI you are trying to apply corresponds to the entire frame.
