@@ -320,6 +320,7 @@ class Video(object):
     def blobs_path(self):
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
+        if self.preprocessing_folder is None: return None
         self._blobs_path = os.path.join(self.preprocessing_folder, 'blobs_collection.npy')
         return self._blobs_path
 

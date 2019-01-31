@@ -354,7 +354,7 @@ class Tracker(TrackerAPI, BoxLayout):
     def create_trajectories(self, *args):
         super().create_trajectories(
             trajectories_popup_dismiss=self.trajectories_popup.dismiss,
-            interpolate_crossings=self.interpolate_crossings_popup.open,
+            interpolate_crossings=self.interpolate_crossings_popup.open if hasattr(self, 'interpolate_crossings_popup') else None,
             update_and_show_happy_ending_popup=self.update_and_show_happy_ending_popup
         )
 
