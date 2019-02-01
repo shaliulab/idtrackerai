@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import sys
@@ -156,7 +156,7 @@ class Fragment(object):
         self._acceptable_for_training = None
         self._temporary_id = None
         self._identity = None
-        self._identity_corrected_solving_duplication = None
+        self._identity_corrected_solving_jumps = None
         self._user_generated_identity = user_generated_identity
         self._identity_is_fixed = False
         self._accumulated_globally = False
@@ -179,7 +179,7 @@ class Fragment(object):
             self._acceptable_for_training = None
             self._temporary_id = None
             self._identity = None
-            self._identity_corrected_solving_duplication = None
+            self._identity_corrected_solving_jumps = None
             self._identity_is_fixed = False
             self._accumulated_globally = False
             self._accumulated_partially = False
@@ -194,14 +194,14 @@ class Fragment(object):
             attributes_to_delete = []
             if not self.used_for_training:
                 self._identity = None
-                self._identity_corrected_solving_duplication = None
+                self._identity_corrected_solving_jumps = None
                 attributes_to_delete = ['_frequencies', '_P1_vector']
             attributes_to_delete.extend(['_P2_vector', '_ambiguous_identities',
                                         '_certainty_P2'])
             delete_attributes_from_object(self, attributes_to_delete)
         elif roll_back_to == 'assignment':
             self._user_generated_identity = None
-            self._identity_corrected_solving_duplication = None
+            self._identity_corrected_solving_jumps = None
 
     @property
     def is_in_a_global_fragment(self):
@@ -276,8 +276,8 @@ class Fragment(object):
         return self._identity_is_fixed
 
     @property
-    def identity_corrected_solving_duplication(self):
-        return self._identity_corrected_solving_duplication
+    def identity_corrected_solving_jumps(self):
+        return self._identity_corrected_solving_jumps
 
     @property
     def identity_corrected_closing_gaps(self):
@@ -298,8 +298,8 @@ class Fragment(object):
     def assigned_identity(self):
         if hasattr(self, 'identity_corrected_closing_gaps') and self.identity_corrected_closing_gaps is not None:
             return self.identity_corrected_closing_gaps
-        elif hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
-            return self.identity_corrected_solving_duplication
+        elif hasattr(self, 'identity_corrected_solving_jumps') and self.identity_corrected_solving_jumps is not None:
+            return self.identity_corrected_solving_jumps
         else:
             return self.identity
 
@@ -345,8 +345,8 @@ class Fragment(object):
         return [fragment.assigned_identity for fragment in self.coexisting_individual_fragments
                 if fragment.used_for_training
                 or fragment.user_generated_identity is not None
-                or (fragment.identity_corrected_solving_duplication is not None
-                and fragment.identity_corrected_solving_duplication != 0)]
+                or (fragment.identity_corrected_solving_jumps is not None
+                and fragment.identity_corrected_solving_jumps != 0)]
 
     def get_missing_identities_in_coexisting_fragments(self, fixed_identities):
         """Returns the identities that have not been assigned to the set of fragments coexisting with self
