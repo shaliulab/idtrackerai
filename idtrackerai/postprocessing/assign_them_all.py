@@ -98,7 +98,7 @@ def set_individual_with_identity_0_as_crossings(list_of_blobs_no_gaps):
     [(setattr(blob, '_is_an_individual', False),
         setattr(blob, '_is_a_crossing', True),
         setattr(blob, '_identity', None),
-        setattr(blob, '_identity_corrected_solving_duplications', None))
+        setattr(blob, '_identity_corrected_solving_jumps', None))
         for blobs_in_frame in list_of_blobs_no_gaps.blobs_in_video
         for blob in blobs_in_frame
         if blob.final_identity == 0]
@@ -539,8 +539,8 @@ def clean_individual_blob_before_saving(blobs_in_video):
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
             if blob.is_an_individual and isinstance(blob.final_identity, list):
-                if blob.identity_corrected_solving_duplication is not None:
-                    blob._identity_corrected_closing_gaps = blob.identity_corrected_solving_duplication
+                if blob.identity_corrected_solving_jumps is not None:
+                    blob._identity_corrected_closing_gaps = blob.identity_corrected_solving_jumps
                 elif blob.identity is not None and blob.identity != 0:
                     blob._identity_corrected_closing_gaps = blob.identity
                 elif blob.identity == 0:
