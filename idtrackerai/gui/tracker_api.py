@@ -349,7 +349,7 @@ class TrackerAPI(object):
             call_accumulate                     = True
         ):
 
-        if identification_popup_open is None: 
+        if identification_popup_open is None:
             identification_popup_open = self.__accumulate_handler_identification_popup_open
 
         logger.info("------------------------> Calling accumulate")
@@ -407,7 +407,7 @@ class TrackerAPI(object):
                 # call handler
                 if create_pretraining_popup:
                     create_pretraining_popup()
-                
+
                 self.protocol3()
 
         elif self.chosen_video.video.has_been_pretrained\
@@ -442,12 +442,12 @@ class TrackerAPI(object):
             # call handler
             if unschedule_accumulate:
                 unschedule_accumulate()
-            
+
             logger.warning("------------------------ dismissing one shot accumulation popup")
             # call handler
             if one_shot_accumulation_popup_dismiss:
                 one_shot_accumulation_popup_dismiss()
-            
+
             self.save_after_second_accumulation()
             logger.info("Start residual indentification")
             # call handler
@@ -456,7 +456,7 @@ class TrackerAPI(object):
         # call handler
         if call_accumulate:
             self.__accumulate_handler_call_accumulate()
-        
+
 
     def save_and_update_accumulation_parameters_in_parachute(self):
         logger.warning("self.accumulation_manager.ratio_accumulated_images %.4f" %self.accumulation_manager.ratio_accumulated_images)
@@ -476,12 +476,12 @@ class TrackerAPI(object):
         if do_accumulate: self.accumulate()
 
 
-    def accumulation_parachute_init(self, 
+    def accumulation_parachute_init(self,
         iteration_number,
         one_shot_accumulation_popup_dismiss=None):
         logger.debug("------------------------> accumulation_parachute_init")
         logger.info("Starting accumulation %i" %iteration_number)
-        
+
         # Call to GUI
         if one_shot_accumulation_popup_dismiss:
             one_shot_accumulation_popup_dismiss()
@@ -520,7 +520,7 @@ class TrackerAPI(object):
     def save_after_first_accumulation(self):
         """Set flags and save data"""
         logger.info("Saving first accumulation paramters")
-        
+
         if not self.restoring_first_accumulation:
             self.chosen_video.video._first_accumulation_finished = True
             self.chosen_video.video._ratio_accumulated_images = self.accumulation_manager.ratio_accumulated_images
@@ -575,7 +575,7 @@ class TrackerAPI(object):
         if not call_from_gui:
             self.one_shot_pretraining()
             self.continue_pretraining()
-        
+
     def continue_pretraining(self, clock_unschedule=None):
         if self.pretraining_step_finished and self.ratio_of_pretrained_images < MAX_RATIO_OF_PRETRAINED_IMAGES:
             self.one_shot_pretraining()
@@ -585,7 +585,7 @@ class TrackerAPI(object):
 
         elif self.ratio_of_pretrained_images > MAX_RATIO_OF_PRETRAINED_IMAGES:
             self.chosen_video.video._has_been_pretrained = True
-            
+
             # Call GUI
             if clock_unschedule: clock_unschedule()
 
@@ -757,7 +757,7 @@ class TrackerAPI(object):
 
         if call_update_list_of_blobs:
             self.update_list_of_blobs()
-        
+
 
     def update_list_of_blobs(self, create_trajectories=None):
 
@@ -841,7 +841,7 @@ class TrackerAPI(object):
 
         interpolate_crossings_popups_actions()
 
-        
+
 
     def create_trajectories_wo_gaps(self):
         self.chosen_video.video.create_trajectories_wo_gaps_folder()
@@ -857,12 +857,12 @@ class TrackerAPI(object):
         np.save(trajectories_file, trajectories)
         self.chosen_video.video.save()
         self.chosen_video.video._create_trajectories_time = time.time()-self.chosen_video.video.create_trajectories_time
-        
+
     def update_and_show_happy_ending_popup(self):
         if not hasattr(self.chosen_video.video, 'overall_P2'):
             self.chosen_video.video.compute_overall_P2(self.chosen_video.list_of_fragments.fragments)
         self.chosen_video.video.save()
-        
+
     def network_params_to_string(self):
         self.str_model = str(self.accumulation_network_params.cnn_model)
         self.str_lr = str(self.accumulation_network_params.learning_rate)
@@ -873,4 +873,3 @@ class TrackerAPI(object):
         self.save_folder = self.accumulation_network_params.save_folder if self.accumulation_network_params.save_folder is not None else 'None'
         self.knowledge_transfer_folder = self.accumulation_network_params.knowledge_transfer_folder if self.accumulation_network_params.knowledge_transfer_folder is not None else 'None'
         # self.kt_conv_layers_to_discard = self.accumulation_network_params.kt_conv_layers_to_discard if self.accumulation_network_params.kt_conv_layers_to_discard is not None else 'None'
-

@@ -285,7 +285,18 @@ def check_global_fragments(blobs_in_video, num_animals):
         """
         return all([blob.is_an_individual for blob in blobs_in_frame])
 
-    return [all_blobs_in_a_fragment(blobs_in_frame) and len(blobs_in_frame) == num_animals for blobs_in_frame in blobs_in_video]
+    def same_fragment_identifier(blobs_in_frame, blobs_in_frame_past):
+        """Return True if the set of fragments identifiers in the current frame
+        is the same as in the previous frame, otherwise returns false
+        """
+        condition_1 = set([blob.fragment_identifier for blob in blobs_in_frame]) == set([blob.fragment_identifier for blob in blobs_in_frame_past])
+        condition_2 = all_blobs_in_a_fragment(blobs_in_frame_past) and len(blobs_in_frame_past) == num_animals
+        return condition_1 or not condition_2
+
+    return [all_blobs_in_a_fragment(blobs_in_frame)
+            and len(blobs_in_frame) == num_animals
+            and same_fragment_identifier(blobs_in_frame, blobs_in_video[i-1])
+            for i, blobs_in_frame in enumerate(blobs_in_video)]
 
 def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
     """Creates the list of instances of the class
