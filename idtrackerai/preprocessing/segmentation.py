@@ -295,12 +295,14 @@ def segment(video):
             blobs_in_video.append(blobs_in_episode)
     else:
         #splitting videoPaths list into sublists
+        print("***************", video.paths_to_video_segments)
         pathsSubLists = [video.paths_to_video_segments[i:i+num_cores]
                             for i in range(0,len(video.paths_to_video_segments),num_cores)]
         episodes_start_end_sublists = [video.episodes_start_end[i:i+num_cores]
                                         for i in range(0,len(video.episodes_start_end),num_cores)]
 
-        for pathsSubList, episodes_start_end_sublist in tqdm(list(zip(pathsSubLists, episodes_start_end_sublists), desc = 'Segmentation progress')):
+        for pathsSubList, episodes_start_end_sublist in tqdm(list(zip(pathsSubLists, episodes_start_end_sublists)), desc = 'Segmentation progress'):
+            print(pathsSubList)
             OupPutParallel = Parallel(n_jobs=num_cores)(
                                 delayed(segment_episode)(video, segmentation_thresholds, path, episode_start_end_frames)
                                 for path, episode_start_end_frames in zip(pathsSubList, episodes_start_end_sublist))
