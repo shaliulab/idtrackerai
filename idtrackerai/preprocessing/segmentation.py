@@ -27,6 +27,7 @@
 
 from __future__ import absolute_import, division, print_function
 import os
+import uuid
 import sys
 import numpy as np
 import multiprocessing
@@ -86,7 +87,7 @@ def get_videoCapture(video, path, episode_start_end_frames):
 
     return cap, number_of_frames_in_episode
 
-def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs, frame_number):
+def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs, frame_number, global_frame_number):
     """Segments a frame read from `cap` according to the preprocessing parameters
     in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
     and the `max_number_of_blobs` found in the video so far. Frames are segmented
@@ -105,7 +106,12 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
         Maximum number of blobs found in the whole video so far in the segmentation process
     frame_number : int
         Number of the frame being segmented. It is used to print in the terminal the frames
-        where the segmentation fails
+        where the segmentation fails. This frame is the frame of the episode if the video
+        is chuncked.
+    global_frame_number : int
+        This is the frame number in the whole video. It will be different to the frame_number
+        if the video is chuncked.
+
 
     Returns
     -------
@@ -164,6 +170,7 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
                     areas[i],
                     bounding_box,
                     bounding_box_image = miniframes[i],
+                    bounding_box_image_path = os.path.join(video._segmentation_images_folder, str(uuid.uuid4()) + '.npy'),
                     estimated_body_length = estimated_body_lengths[i],
                     pixels = pixels[i],
                     number_of_animals = video.number_of_animals)
@@ -228,7 +235,8 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
             blobs_in_frame, max_number_of_blobs = get_blobs_in_frame(cap, video,
                                                                     segmentation_thresholds,
                                                                     max_number_of_blobs,
-                                                                    frame_number)
+                                                                    frame_number,
+                                                                    global_frame_number)
         else:
             ret, _ = cap.read()
             blobs_in_frame = []
@@ -261,7 +269,8 @@ def segment(video):
     segment_episode
     """
     # avoid computing with all the cores in very large videos. It fills the RAM.
-    num_cores = int(np.ceil(multiprocessing.cpu_count() / 2))
+    num_cores = int(multiprocessing.cpu_count())
+    # num_cores = 1
     if NUMBER_OF_CORES_FOR_SEGMENTATION is not None:
         try:
             logger.info('NUMBER_OF_CORES_FOR_SEGMENTATION set to a value different than the default')
@@ -356,7 +365,8 @@ def resegment(video, frame_number, list_of_blobs, new_segmentation_thresholds):
 
     blobs_in_resegmanted_frame, \
     number_of_blobs_in_frame = get_blobs_in_frame(cap, video, new_segmentation_thresholds,
-                                                0, frame_number)
+                                                0, frame_number, frame_number)
+    [os.remove(blob.bounding_box_image_path) for blob in list_of_blobs.blobs_in_video[frame_number]] ## for RAM optimization
     list_of_blobs.blobs_in_video[frame_number] = blobs_in_resegmanted_frame
     cap.release()
     cv2.destroyAllWindows()

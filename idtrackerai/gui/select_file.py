@@ -37,6 +37,7 @@ from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.image import Image
 from idtrackerai.gui.kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
 import os
+import glob
 import sys
 from idtrackerai.video import Video
 from idtrackerai.list_of_blobs import ListOfBlobs
@@ -92,6 +93,7 @@ class SelectFile(BoxLayout):
     def on_enter_session_folder(self,value):
         new_name_session_folder = self.session_name_input.text
         CHOSEN_VIDEO.video.create_session_folder(name = new_name_session_folder)
+        CHOSEN_VIDEO.video.create_images_folders() # for ram optimization
         self.welcome_popup.dismiss()
         print("******** previous_session_folder: ", CHOSEN_VIDEO.video.previous_session_folder)
         if CHOSEN_VIDEO.video.previous_session_folder != '':
@@ -116,6 +118,8 @@ class SelectFile(BoxLayout):
     def init_chosen_video_parameters(self):
         CHOSEN_VIDEO.video._apply_ROI = False
         CHOSEN_VIDEO.video._subtract_bkg = False
+        [os.remove(image) for image in glob.glob(os.path.join(CHOSEN_VIDEO.video._segmentation_images_folder, '*'))]
+        [os.remove(image) for image in glob.glob(os.path.join(CHOSEN_VIDEO.video._identification_images_folder, '*'))]
 
     def open(self, *args):
         #try:

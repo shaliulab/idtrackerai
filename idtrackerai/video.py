@@ -121,6 +121,7 @@ class Video(object):
         self._has_been_segmented = None
         self._has_been_preprocessed = None #boolean: True if a video has been fragmented in a past session
         self._preprocessing_folder = None
+        self._images_folder = None
         self._global_fragments_path = None #string: path to saved list of global fragments
         self._has_been_pretrained = None
         self._pretraining_folder = None
@@ -169,6 +170,10 @@ class Video(object):
         return self._preprocessing_folder
 
     @property
+    def images_folder(self):
+        return self._images_folder
+
+    @property
     def has_been_preprocessed(self):
         return self._has_been_preprocessed
 
@@ -183,7 +188,7 @@ class Video(object):
     @property
     def has_been_pretrained(self):
         return self._has_been_pretrained
-        
+
     @property
     def previous_session_folder(self):
         return self._previous_session_folder
@@ -731,6 +736,21 @@ class Video(object):
         self._path_to_video_object = os.path.join(self.session_folder, 'video_object.npy')
         logger.info("the folder %s has been created" %self.session_folder)
 
+    def create_images_folders(self):
+        """Create a folder named images inside of the session_folder
+        """
+        ## for RAM optimization
+        self._segmentation_images_folder = os.path.join(self.session_folder, 'segmentation_images')
+        self._identification_images_folder = os.path.join(self.session_folder, 'identification_images')
+        if not os.path.isdir(self._segmentation_images_folder):
+            os.makedirs(self._segmentation_images_folder)
+            logger.info("the folder %s has been created" %self._segmentation_images_folder)
+
+        if not os.path.isdir(self._identification_images_folder):
+            os.makedirs(self._identification_images_folder)
+            logger.info("the folder %s has been created" %self._identification_images_folder)
+
+
     def create_preprocessing_folder(self):
         """If it does not exist creates a folder called preprocessing
         in the video folder"""
@@ -738,6 +758,7 @@ class Video(object):
         if not os.path.isdir(self.preprocessing_folder):
             os.makedirs(self.preprocessing_folder)
             logger.info("the folder %s has been created" %self._preprocessing_folder)
+
 
     def create_crossings_detector_folder(self):
         """If it does not exist creates a folder called crossing_detector

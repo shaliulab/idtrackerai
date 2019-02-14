@@ -27,6 +27,7 @@
 
 from __future__ import absolute_import, division, print_function
 import os
+import uuid
 import sys
 import cv2
 import itertools
@@ -64,8 +65,8 @@ class Blob(object):
         Image obtained by clipping the frame to the bounding box
     estimated_body_length: float
         Body length estimated from the bounding box
-    _image_for_identification: ndarray
-        Image fed to the network to get the identity of the animal the blob is associated to
+    image_for_identification_path: string
+        Path to where the image for identification is saved
     pixels : list
         List of ravelled pixels belonging to the blob (wrt the full frame)
     _is_an_individual : bool
@@ -118,6 +119,7 @@ class Blob(object):
     """
     def __init__(self, centroid, contour, area,
                 bounding_box_in_frame_coordinates, bounding_box_image = None,
+                bounding_box_image_path = None,
                 estimated_body_length = None, pixels = None,
                 number_of_animals = None, frame_number = None):
         self.frame_number = frame_number
@@ -126,9 +128,10 @@ class Blob(object):
         self.contour = contour # openCV contour [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]]
         self.area = area # int: number of pixels in the blob
         self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates #tuple of tuples: ((x1,y1),(x2,y2)) (top-left corner, bottom-right corner) in pixels
-        self.bounding_box_image = bounding_box_image # numpy array (uint8): image of the fish cropped from the video according to the bounding_box_in_frame_coordinates
+        self.bounding_box_image_path = bounding_box_image_path # path to where the bounding_box_image is saved
+        np.save(bounding_box_image_path, bounding_box_image)
         self.estimated_body_length = estimated_body_length
-        self._image_for_identification = None # numpy array (float32)
+        self.image_for_identification_path = None # path where the image for identification is stored
         self.pixels = pixels # list of int's: linearized pixels of the blob
         self._is_an_individual = False
         self._is_a_crossing = False
@@ -145,6 +148,12 @@ class Blob(object):
         self._identity_corrected_closing_gaps = None
         self._identity_corrected_solving_jumps = None
         self._identity = None
+
+
+
+    @property
+    def bounding_box_image(self):
+        return np.load(self.bounding_box_image_path)
 
     @property
     def fragment_identifier(self):
@@ -347,7 +356,10 @@ class Blob(object):
 
     @property
     def image_for_identification(self):
-        return self._image_for_identification
+        if self.is_an_individual:
+            return np.load(self.image_for_identification_path)
+        else:
+            return None
 
     @property
     def nose_coordinates(self):
@@ -469,9 +481,15 @@ class Blob(object):
             Object containing all the parameters of the video.
 
         """
-        self._image_for_identification, \
+        image_for_identification, \
         self._extreme1_coordinates, \
         self._extreme2_coordinates, _ = self.get_image_for_identification(video)
+
+        # For RAM optimization
+        if self.image_for_identification_path is not None and os.path.isfile(self.image_for_identification_path):
+            os.remove(self.image_for_identification_path)
+        self.image_for_identification_path = os.path.join(video._identification_images_folder, 'id_' + str(uuid.uuid4()) + '.npy')
+        np.save(self.image_for_identification_path, image_for_identification)
 
     def get_image_for_identification(self, video, folder_to_save_for_paper_figure = '', image_size = None):
         """Compute the image that will be used to identify the animal with the idCNN
@@ -500,6 +518,7 @@ class Blob(object):
                                                 self.bounding_box_in_frame_coordinates,
                                                 image_size,
                                                 folder_to_save_for_paper_figure = folder_to_save_for_paper_figure)
+
 
     @staticmethod
     def _get_image_for_identification(height, width, bounding_box_image, pixels, bounding_box_in_frame_coordinates, identification_image_size, folder_to_save_for_paper_figure = ''):

@@ -596,8 +596,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
         list of instances of :class:`~fragment.Fragment`
 
     """
-    attributes_to_set = ['_image_for_identification',
-                        'bounding_box_image', '_next', '_previous']
+    attributes_to_set = ['_image_for_identification', '_next', '_previous']
     fragments = []
     used_fragment_identifiers = set()
 
