@@ -76,8 +76,8 @@ def perform_one_accumulation_step(accumulation_manager,
     #(we do not take images from individual fragments already used)
     accumulation_manager.get_new_images_and_labels()
     images, labels = accumulation_manager.get_images_and_labels_for_training()
-    #logger.debug("images: %s" %str(images.shape))
-    #logger.debug("labels: %s" %str(labels.shape))
+    logger.debug("images: %s" %str(images.shape))
+    logger.debug("labels: %s" %str(labels.shape))
     global_step, net,\
     store_validation_accuracy_and_loss_data,\
     store_training_accuracy_and_loss_data = train(video,

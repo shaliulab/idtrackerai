@@ -129,7 +129,7 @@ class Blob(object):
         self.area = area # int: number of pixels in the blob
         self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates #tuple of tuples: ((x1,y1),(x2,y2)) (top-left corner, bottom-right corner) in pixels
         self.bounding_box_image_path = bounding_box_image_path # path to where the bounding_box_image is saved
-        np.save(bounding_box_image_path, bounding_box_image)
+        if bounding_box_image_path is not None: np.save(bounding_box_image_path, bounding_box_image)
         self.estimated_body_length = estimated_body_length
         self.image_for_identification_path = None # path where the image for identification is stored
         self.pixels = pixels # list of int's: linearized pixels of the blob

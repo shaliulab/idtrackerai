@@ -127,11 +127,11 @@ class AccumulationManager(object):
         fragment have been added before"""
         self.new_images, self.new_labels = self.list_of_fragments.get_new_images_and_labels_for_training()
         if self.new_images is not None:
-            logger.info("New images for training: %s %s"  %(str(self.new_images.shape), str(self.new_labels.shape)))
+            logger.info("New images for training: %s %s"  %(str(len(self.new_images)), str(self.new_labels.shape)))
         else:
             logger.info("There are no new images in this accumulation")
         if self.used_images is not None:
-            logger.info("Old images for training: %s %s" %(str(self.used_images.shape), str(self.used_labels.shape)))
+            logger.info("Old images for training: %s %s" %(str(len(self.used_images)), str(self.used_labels.shape)))
 
     def get_images_and_labels_for_training(self):
         """ Create a new dataset of labelled images to train the idCNN in the following way:
@@ -168,23 +168,23 @@ class AccumulationManager(object):
                     number_samples_used = MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
                 # we put together a random sample of the new images and the used images
                 if self.new_images is not None:
-                    images.extend(random.sample(list(self.new_images[new_images_indices]),number_samples_new))
+                    images.extend(random.sample([self.new_images[i] for i in new_images_indices], number_samples_new))
                     labels.extend([i] * number_samples_new)
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate the variable used_images is None
-                    images.extend(random.sample(list(self.used_images[used_images_indices]),number_samples_used))
+                    images.extend(random.sample([self.used_images[i] for i in used_images_indices] ,number_samples_used))
                     labels.extend([i] * number_samples_used)
             else:
                 # if the total number of images for this label does not exceed the MAXIMAL_IMAGES_PER_ANIMAL
                 # we take all the new images and all the used images
                 if self.new_images is not None:
-                    images.extend(self.new_images[new_images_indices])
+                    images.extend([self.new_images[i] for i in new_images_indices])
                     labels.extend([i] * number_of_new_images)
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate the variable used_images is None
-                    images.extend(self.used_images[used_images_indices])
+                    images.extend([self.used_images[i] for i in used_images_indices])
                     labels.extend([i] * number_of_used_images)
-        return np.asarray(images), np.asarray(labels)
+        return np.asarray([np.load(image) for image in images]), np.asarray(labels)
 
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training
@@ -194,8 +194,8 @@ class AccumulationManager(object):
             self.used_images = self.new_images
             self.used_labels = self.new_labels
         elif self.new_images is not None:
-            self.used_images = np.concatenate([self.used_images, self.new_images], axis = 0)
-            self.used_labels = np.concatenate([self.used_labels, self.new_labels], axis = 0)
+            self.used_images = self.used_images + self.new_images
+            self.used_labels = np.concatenate([self.used_labels, self.new_labels], axis=0)
         #logger.info("number of images used for training: %s %s" %(str(self.used_images.shape), str(self.used_labels.shape)))
 
     def update_fragments_used_for_training(self):
@@ -624,7 +624,7 @@ def get_predictions_of_candidates_fragments(net, video, fragments):
             candidate_individual_fragments_identifiers.append(fragment.identifier)
 
     if len(images) != 0:
-        images = np.asarray(images)
+        images = np.asarray([np.load(image) for image in images])
         assigner = assign(net, images, print_flag = False)
 
     return assigner._predictions, assigner._softmax_probs, np.cumsum(lengths)[:-1], candidate_individual_fragments_identifiers

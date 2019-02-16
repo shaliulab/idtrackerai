@@ -284,7 +284,7 @@ class GlobalFragment(object):
             labels.extend([temporary_id] * fragment.number_of_images)
             fragment._temporary_id_for_pretraining = temporary_id
 
-        return images, labels
+        return np.asarray([np.load(image) for image in images]), labels
 
     def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
         """

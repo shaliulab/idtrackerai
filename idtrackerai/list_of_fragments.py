@@ -94,8 +94,9 @@ class ListOfFragments(object):
         ndarray
             [number_of_images, height, width, number_of_channels]
         """
-        return np.concatenate([np.asarray(fragment.images) for fragment in self.fragments
-                                if not fragment.used_for_training and fragment.is_an_individual], axis = 0)
+        images_lists = [fragment.images for fragment in self.fragments
+                        if not fragment.used_for_training and fragment.is_an_individual]
+        return np.asarray([np.load(image) for images in images_lists for image in images])
 
     def compute_number_of_unique_images_used_for_pretraining(self):
         """Returns the number of images used for pretraining
@@ -333,10 +334,10 @@ class ListOfFragments(object):
         for fragment in self.fragments:
             if fragment.acceptable_for_training and not fragment.used_for_training:
                 assert fragment.is_an_individual
-                images.append(fragment.images)
+                images.extend(fragment.images)
                 labels.extend([fragment.temporary_id] * fragment.number_of_images)
         if len(images) != 0:
-            return np.concatenate(images, axis = 0), np.asarray(labels)
+            return images, np.asarray(labels)
         else:
             return None, None
 
@@ -604,7 +605,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
         for blob in blobs_in_frame:
             current_fragment_identifier = blob.fragment_identifier
             if current_fragment_identifier not in used_fragment_identifiers:
-                images = [blob.image_for_identification] if blob.is_an_individual else [blob.bounding_box_image]
+                images = [blob.image_for_identification_path] if blob.is_an_individual else [blob.bounding_box_image]
                 bounding_boxes = [blob.bounding_box_in_frame_coordinates] if blob.is_a_crossing else []
                 centroids = [blob.centroid]
                 areas = [blob.area]
@@ -615,7 +616,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                 while len(current.next) > 0 and current.next[0].fragment_identifier == current_fragment_identifier:
                     current = current.next[0]
                     bounding_box_in_frame_coordinates = [current.bounding_box_in_frame_coordinates] if current.is_a_crossing else []
-                    images, bounding_boxes, centroids, areas, pixels = append_values_to_lists([current.image_for_identification,
+                    images, bounding_boxes, centroids, areas, pixels = append_values_to_lists([current.image_for_identification_path,
                                                                 bounding_box_in_frame_coordinates,
                                                                 current.centroid,
                                                                 current.area,
