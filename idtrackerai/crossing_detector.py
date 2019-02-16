@@ -119,4 +119,5 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True, retur
             if return_store_objects:
                 return trainer
     if video.number_of_animals == 1:
+        video._there_are_crossings = False
         return list_of_blobs
