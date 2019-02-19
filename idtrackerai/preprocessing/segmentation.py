@@ -139,7 +139,7 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
                                 fy = video.resolution_reduction,
                                 interpolation = cv2.INTER_AREA)
         frameGray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        avIntensity = np.float32(np.mean(frameGray))
+        avIntensity = np.float32(np.mean(np.ma.array(frameGray, mask=video.ROI==0)))
         segmentedFrame = segment_frame(frameGray/avIntensity,
                                         segmentation_thresholds['min_threshold'],
                                         segmentation_thresholds['max_threshold'],
