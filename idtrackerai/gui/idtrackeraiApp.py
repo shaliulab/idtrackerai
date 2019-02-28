@@ -36,35 +36,19 @@ import kivy
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.app import App
-from kivy.core.window import Window
-from kivy.logger import Logger
-from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.uix.tabbedpanel import TabbedPanelItem
-from kivy.uix.tabbedpanel import TabbedPanelHeader
-from kivy.uix.button import Button
-from kivy.uix.popup import Popup
-from kivy.uix.switch import Switch
 from kivy.graphics import *
 from kivy.config import Config
-from idtrackerai.gui.kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
+from idtrackerai.gui.kivy_utils import Chosen_Video, Deactivate_Process
 from idtrackerai.gui.select_file import SelectFile
 from idtrackerai.gui.preprocessing_preview import PreprocessingPreview
 from idtrackerai.gui.roi_selector import ROISelector
 from idtrackerai.gui.tracker import Tracker
 from idtrackerai.gui.validator import Validator
 from idtrackerai.gui.individual_validator import IndividualValidator
-from idtrackerai.gui.visualise_video import VisualiseVideo
-from idtrackerai.video import Video
-from idtrackerai.utils.py_utils import getExistentFiles, get_spaced_colors_util
-from idtrackerai.utils.video_utils import cumpute_background, blob_extractor
-from idtrackerai.preprocessing.segmentation import segment_frame
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.list_of_fragments import ListOfFragments
-from idtrackerai.groundtruth_utils.generate_groundtruth import generate_groundtruth
-from idtrackerai.groundtruth_utils.compute_groundtruth_statistics import get_accuracy_wrt_groundtruth
-from idtrackerai.constants import THRESHOLD_ACCEPTABLE_ACCUMULATION, RESTORE_CRITERION, VEL_PERCENTILE, PROCESSES
+from confapp import conf
 
 print('\n************************************************************************************')
 print('LICENSE')
@@ -78,11 +62,11 @@ print('*************************************************************************
 
 """
 Init variables
-    PROCESSES: list of strings.
+    conf.PROCESSES: list of strings.
         list of all the processes that can be saved and loaded while
         tracking a video
 """
-# PROCESSES = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
+# conf.PROCESSES = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
 #             'protocol3_accumulation', 'residual_identification',
 #             'post_processing']
 
@@ -92,7 +76,7 @@ class Root(TabbedPanel):
     DEACTIVATE_PREPROCESSING = Deactivate_Process()
     DEACTIVATE_TRACKING = Deactivate_Process()
     DEACTIVATE_VALIDATION = Deactivate_Process()
-    CHOSEN_VIDEO = Chosen_Video(processes_list = PROCESSES)
+    CHOSEN_VIDEO = Chosen_Video(processes_list = conf.PROCESSES)
 
     def __init__(self, **kwargs):
         super(Root, self).__init__(**kwargs)

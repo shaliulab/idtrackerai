@@ -28,18 +28,15 @@
 from __future__ import absolute_import, division, print_function
 import os
 import sys
-import itertools
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-import tensorflow as tf
-from idtrackerai.network.identification_model.network_params import NetworkParams
+from confapp import conf
 from idtrackerai.network.identification_model.get_data import DataSet, split_data_train_and_validation
 from idtrackerai.network.identification_model.id_CNN import ConvNetwork
 from idtrackerai.network.identification_model.epoch_runner import EpochRunner
 from idtrackerai.network.identification_model.stop_training_criteria import Stop_Training
 from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
-from idtrackerai.list_of_global_fragments import ListOfGlobalFragments
-from idtrackerai.constants import  MAX_RATIO_OF_PRETRAINED_IMAGES, BATCH_SIZE_IDCNN
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -168,7 +165,7 @@ def pre_train_global_fragment(net,
     if plot_flag:
         fig.savefig(os.path.join(net.params.save_folder,'pretraining_gf%i.pdf'%i))
     ratio_of_pretrained_images = list_of_fragments.compute_ratio_of_images_used_for_pretraining()
-    logger.debug("limit ratio of images to be used during pretraining: %.4f (if higher than %.2f we stop)" %(ratio_of_pretrained_images, MAX_RATIO_OF_PRETRAINED_IMAGES))
+    logger.debug("limit ratio of images to be used during pretraining: %.4f (if higher than %.2f we stop)" %(ratio_of_pretrained_images, conf.MAX_RATIO_OF_PRETRAINED_IMAGES))
     return net, ratio_of_pretrained_images, global_epoch, store_training_accuracy_and_loss_data, store_validation_accuracy_and_loss_data, list_of_fragments
 
 def pre_train(video, list_of_fragments, list_of_global_fragments,
@@ -177,7 +174,7 @@ def pre_train(video, list_of_fragments, list_of_global_fragments,
                 print_flag, plot_flag):
     """Performs pretraining by iterating on the list of global fragments
     sorted by distance travelled, until the threshold
-    :const:`~constants.MAX_RATIO_OF_PRETRAINED_IMAGES` is reached
+    :const:`conf.MAX_RATIO_OF_PRETRAINED_IMAGES` is reached
 
     Parameters
     ----------
@@ -246,9 +243,9 @@ def pre_train(video, list_of_fragments, list_of_global_fragments,
                                                                             store_validation_accuracy_and_loss_data,
                                                                             print_flag = print_flag,
                                                                             plot_flag = plot_flag,
-                                                                            batch_size = BATCH_SIZE_IDCNN)
-        if ratio_of_pretrained_images > MAX_RATIO_OF_PRETRAINED_IMAGES:
-            logger.info("pre-training ended: The network has been pre-trained on more than %.4f of the images in global fragment" %MAX_RATIO_OF_PRETRAINED_IMAGES)
+                                                                            batch_size = conf.BATCH_SIZE_IDCNN)
+        if ratio_of_pretrained_images > conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
+            logger.info("pre-training ended: The network has been pre-trained on more than %.4f of the images in global fragment" %conf.MAX_RATIO_OF_PRETRAINED_IMAGES)
             break
 
     return net

@@ -26,21 +26,19 @@
 
 
 from __future__ import absolute_import, division, print_function
-import os
-import sys
-import numpy as np
-import multiprocessing
 import cv2
+from confapp import conf
 from joblib import Parallel, delayed
 from idtrackerai.utils.py_utils import *
-from idtrackerai.video import Video
-from idtrackerai.constants import  BACKGROUND_SUBTRACTION_PERIOD, NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION, SIGMA_GAUSSIAN_BLURRING
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
 else:
     import logging
     logger = logging.getLogger("__main__.video_utils")
+
+
 """
 The utilities to segment and extract the blob information
 """
@@ -72,13 +70,13 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
     cap = cv2.VideoCapture(video_path)
     logger.debug('Adding from starting frame %i to background' %starting_frame)
     number_of_frames_for_bkg_in_episode = 0
-    frameInds = range(starting_frame,ending_frame, BACKGROUND_SUBTRACTION_PERIOD)
+    frameInds = range(starting_frame,ending_frame, conf.BACKGROUND_SUBTRACTION_PERIOD)
     for ind in frameInds:
         logger.debug('Frame %i' %ind)
         cap.set(1,ind)
         ret, frameBkg = cap.read()
-        if SIGMA_GAUSSIAN_BLURRING is not None:
-            frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), SIGMA_GAUSSIAN_BLURRING)
+        if conf.SIGMA_GAUSSIAN_BLURRING is not None:
+            frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING)
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
             gray = np.true_divide(gray,np.mean(gray))
@@ -112,12 +110,12 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
     counter = 0
     numFrame = int(cap.get(7))
     number_of_frames_for_bkg_in_episode = 0
-    frameInds = range(0,numFrame, BACKGROUND_SUBTRACTION_PERIOD)
+    frameInds = range(0,numFrame, conf.BACKGROUND_SUBTRACTION_PERIOD)
     for ind in frameInds:
         cap.set(1,ind)
         ret, frameBkg = cap.read()
-        if SIGMA_GAUSSIAN_BLURRING is not None:
-            frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), SIGMA_GAUSSIAN_BLURRING)
+        if conf.SIGMA_GAUSSIAN_BLURRING is not None:
+            frameBkg = cv2.GaussianBlur(frameBkg, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING)
         if ret:
             gray = cv2.cvtColor(frameBkg, cv2.COLOR_BGR2GRAY)
             gray = np.true_divide(gray,np.mean(gray))
@@ -149,11 +147,11 @@ def cumpute_background(video):
     # initialized as the full frame
     bkg = np.zeros((video.original_height, video.original_width))
     num_cores = multiprocessing.cpu_count()
-    if NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION is not None:
+    if conf.NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION is not None:
         try:
             logger.info('NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION set to a value different than the default')
-            assert NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION <= multiprocessing.cpu_count()
-            num_cores = NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION
+            assert conf.NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION <= multiprocessing.cpu_count()
+            num_cores = conf.NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION
         except:
             logger.info('NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION > multiprocessing.cpu_count(). Setting NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION set to 1')
             num_cores = 1

@@ -26,23 +26,15 @@
 
 
 from __future__ import absolute_import, division, print_function
-import kivy
-from kivy.app import App
-from kivy.core.window import Window
-from kivy.lang import Builder
+import cv2
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.label import Label
-from kivy.uix.button import Button
 from kivy.graphics.texture import Texture
 from kivy.uix.image import Image
 from kivy.uix.slider import Slider
-from kivy.uix.popup import Popup
-from kivy.uix.switch import Switch
 from kivy.graphics import *
-from kivy.graphics.transformation import Matrix
 from idtrackerai.gui.kivy_utils import CustomLabel
-import cv2
-from idtrackerai.constants import SIGMA_GAUSSIAN_BLURRING
+
+from confapp import conf
 
 class VisualiseVideo(BoxLayout):
     def __init__(self,
@@ -94,8 +86,8 @@ class VisualiseVideo(BoxLayout):
         else:
             self.cap.set(1,trackbar_value)
         ret, self.frame = self.cap.read()
-        if SIGMA_GAUSSIAN_BLURRING is not None:
-            self.frame = cv2.GaussianBlur(self.frame, (0, 0), SIGMA_GAUSSIAN_BLURRING)
+        if conf.SIGMA_GAUSSIAN_BLURRING is not None:
+            self.frame = cv2.GaussianBlur(self.frame, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING)
         if ret == True:
             if hasattr(CHOSEN_VIDEO.video, 'resolution_reduction') and CHOSEN_VIDEO.video.resolution_reduction != 1:
                 self.frame = cv2.resize(self.frame, None, fx=CHOSEN_VIDEO.video.resolution_reduction, fy=CHOSEN_VIDEO.video.resolution_reduction,

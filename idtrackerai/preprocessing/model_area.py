@@ -23,10 +23,9 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
 
 from __future__ import absolute_import, division, print_function
-from idtrackerai.constants import  STD_TOLERANCE
+from confapp import conf
 
 class ModelArea(object):
     """Model of the area used to perform a first discrimination between blobs
@@ -51,7 +50,7 @@ class ModelArea(object):
         self.median = median
         self.mean = mean
         self.std = std
-        self.std_tolerance = STD_TOLERANCE
+        self.std_tolerance = conf.STD_TOLERANCE
 
     def __call__(self, area, std_tolerance = None):
         if std_tolerance is not None:

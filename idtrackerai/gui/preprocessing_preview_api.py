@@ -9,8 +9,7 @@ else:
     import logging; logger = logging.getLogger(__name__)
 
 
-from idtrackerai.constants import MIN_AREA_DEFAULT, MAX_AREA_DEFAULT
-from idtrackerai.constants import MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT
+from confapp import conf
 
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.preprocessing.segmentation import segment_frame, segment, resegment
@@ -84,10 +83,10 @@ class PreprocessingPreviewAPI(object):
         
         else:
 
-            self.max_threshold = MAX_THRESHOLD_DEFAULT
-            self.min_threshold = MIN_THRESHOLD_DEFAULT
-            self.min_area      = MIN_AREA_DEFAULT
-            self.max_area      = MAX_AREA_DEFAULT
+            self.max_threshold = conf.MAX_THRESHOLD_DEFAULT
+            self.min_threshold = conf.MIN_THRESHOLD_DEFAULT
+            self.min_area      = conf.MIN_AREA_DEFAULT
+            self.max_area      = conf.MAX_AREA_DEFAULT
             self.resolution_reduction = self.chosen_video.video.resolution_reduction
             if self.chosen_video.video._original_ROI is None:
                 self.chosen_video.video._original_ROI = np.ones( (self.chosen_video.video.original_height, self.chosen_video.video.original_width), dtype='uint8') * 255

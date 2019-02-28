@@ -26,9 +26,9 @@
  
 
 from __future__ import absolute_import, division, print_function
-import numpy as np
-import sys
-from idtrackerai.constants import BATCH_SIZE_DCD
+import numpy as np, sys
+from confapp import conf
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -68,7 +68,7 @@ class EpochRunner(object):
         individual_accuracy_epoch = []
         self._index_in_epoch = 0
         while self._index_in_epoch < self._num_images:
-            loss_acc_batch, feed_dict = batch_operation(self.next_batch(BATCH_SIZE_DCD))
+            loss_acc_batch, feed_dict = batch_operation(self.next_batch(conf.BATCH_SIZE_DCD))
             loss_epoch.append(loss_acc_batch[0])
             accuracy_epoch.append(loss_acc_batch[1])
             individual_accuracy_epoch.append(loss_acc_batch[2])

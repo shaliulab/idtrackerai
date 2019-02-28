@@ -26,13 +26,9 @@
  
 
 from __future__ import absolute_import, division, print_function
-import itertools
-import tensorflow as tf
-import os
-import sys
-import matplotlib.pyplot as plt
-import numpy as np
-from idtrackerai.constants import  BATCH_SIZE_PREDICTIONS_IDCNN, KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN
+from confapp import conf
+import tensorflow as tf, sys, numpy as np
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -72,7 +68,7 @@ class GetPrediction(object):
         self._predictions = []
         self._predictions_KNN = []
         self._fc_vectors = []
-        self.batch_size = BATCH_SIZE_PREDICTIONS_IDCNN
+        self.batch_size = conf.BATCH_SIZE_PREDICTIONS_IDCNN
 
     @property
     def softmax_probs(self):
@@ -126,7 +122,7 @@ class GetPrediction(object):
             fc_vectors = batch_operation(self.next_batch(self.batch_size))
             self._fc_vectors.append(fc_vectors)
         self._fc_vectors = np.concatenate(self._fc_vectors, axis = 0)
-        _, self._predictions_KNN = kMeansCluster(self._fc_vectors, number_of_animals, KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN)
+        _, self._predictions_KNN = kMeansCluster(self._fc_vectors, number_of_animals, conf.KMEANS_NUMBER_OF_STEPS_EMBEDDING_EXPLORATION_IDCNN)
 
 def kMeansCluster(vector_values, num_clusters, max_num_steps, stop_coeficient = 0.0):
     """Not used in the current version of the algorithm. Only for analysis.

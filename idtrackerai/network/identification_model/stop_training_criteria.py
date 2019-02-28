@@ -26,12 +26,9 @@
 
 
 from __future__ import absolute_import, division, print_function
-import sys
-import numpy as np
-from idtrackerai.constants import  MAX_FLOAT, LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN, \
-                    LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN, OVERFITTING_COUNTER_THRESHOLD_IDCNN, \
-                    OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM,\
-                    MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
+from confapp import conf
+import sys, numpy as np
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -60,7 +57,7 @@ class Stop_Training(object):
 
     """
     def __init__(self, number_of_animals, epochs_before_checking_stopping_conditions = 10, check_for_loss_plateau = True, first_accumulation_flag = False):
-        self.num_epochs = MAXIMUM_NUMBER_OF_EPOCHS_IDCNN #maximal num of epochs
+        self.num_epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN #maximal num of epochs
         self.number_of_animals = number_of_animals
         self.epochs_before_checking_stopping_conditions = epochs_before_checking_stopping_conditions
         self.overfitting_counter = 0 #number of epochs in which the network is overfitting before stopping the training
@@ -95,15 +92,15 @@ class Stop_Training(object):
             current_loss = loss_accuracy_validation.loss[-1]
             previous_loss = np.nanmean(loss_accuracy_validation.loss[-self.epochs_before_checking_stopping_conditions:-1])
             #The validation loss in the first 10 epochs could have exploded but being decreasing.
-            if np.isnan(previous_loss): previous_loss = MAX_FLOAT
+            if np.isnan(previous_loss): previous_loss = conf.MAX_FLOAT
             losses_difference = (previous_loss-current_loss)
             #check overfitting
             if losses_difference < 0.:
                 self.overfitting_counter += 1
-                if self.overfitting_counter >= OVERFITTING_COUNTER_THRESHOLD_IDCNN and not self.first_accumulation_flag:
+                if self.overfitting_counter >= conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN and not self.first_accumulation_flag:
                     logger.info('Overfitting\n')
                     return True
-                elif self.first_accumulation_flag and self.overfitting_counter > OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM:
+                elif self.first_accumulation_flag and self.overfitting_counter > conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM:
                     print('Overfitting counter, ', self.overfitting_counter)
                     logger.info('Overfitting first accumulation\n')
                     return True
@@ -111,10 +108,10 @@ class Stop_Training(object):
                 self.overfitting_counter = 0
             #check if the error is not decreasing much
             if self.check_for_loss_plateau:
-                if self.first_accumulation_flag and np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN*10**(int(np.log10(current_loss))-1):
+                if self.first_accumulation_flag and np.abs(losses_difference) < conf.LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN*10**(int(np.log10(current_loss))-1):
                     logger.info('The losses difference is very small, we stop the training\n')
                     return True
-                elif np.abs(losses_difference) < LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN*10**(int(np.log10(current_loss))-1):
+                elif np.abs(losses_difference) < conf.LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN*10**(int(np.log10(current_loss))-1):
                     logger.info('The losses difference is very small, we stop the training\n')
                     return True
             # if the individual accuracies in validation are 1. for all the animals

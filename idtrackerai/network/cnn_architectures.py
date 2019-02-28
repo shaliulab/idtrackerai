@@ -29,10 +29,8 @@ from __future__ import division
 import sys
 sys.path.append('../utils')
 sys.path.append('../')
-import tensorflow as tf
-import numpy as np
 from idtrackerai.utils.cnn_utils import *
-from idtrackerai.constants import  KEEP_PROB
+from confapp import conf
 
 ''' original model'''
 def cnn_model_0(images, classes, width, height, channels):
@@ -82,7 +80,7 @@ def cnn_model_0(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, conf.KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
@@ -109,7 +107,7 @@ def cnn_model_1(images, classes, width, height, channels):
     conv1_flat = tf.reshape(relu1, [-1, resolutionS*n_filter1], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv1_flat, w1, h1, n_filter1, n_fc, KEEP_PROB)
+    fc_drop, WFC = buildFc('fully-connected1', conv1_flat, w1, h1, n_filter1, n_fc, conf.KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
@@ -150,7 +148,7 @@ def cnn_model_2(images, classes, width, height, channels):
     conv3_flat = tf.reshape(relu2, [-1, resolutionS*n_filter3], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv3_flat, w3, h3, n_filter3, n_fc, KEEP_PROB)
+    fc_drop, WFC = buildFc('fully-connected1', conv3_flat, w3, h3, n_filter3, n_fc, conf.KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
@@ -221,7 +219,7 @@ def cnn_model_3(images, classes, width, height, channels):
     conv7_flat = tf.reshape(relu8, [-1, resolutionS*d7], name = 'conv7_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv7_flat, w7, h7, d7, n_fc, KEEP_PROB)
+    fc_drop, WFC = buildFc('fully-connected1', conv7_flat, w7, h7, d7, n_fc, conf.KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
@@ -277,7 +275,7 @@ def cnn_model_4(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, conf.KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
 
@@ -327,7 +325,7 @@ def cnn_model_5(images, classes, width, height, channels):
     conv5_flat = tf.reshape(conv5, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, conf.KEEP_PROB)
     y_logits, WSoft = buildSoftMax('soffully_connected_pre_softmaxtmax1', fc_drop, n_fc, classes)
 
     return y_logits
@@ -381,7 +379,7 @@ def cnn_model_6(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 50
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, conf.KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('soffully_connected_pre_softmaxtmax1', relu, n_fc, classes)
 
@@ -436,7 +434,7 @@ def cnn_model_7(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 200
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, conf.KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('soffully_connected_pre_softmaxtmax1', relu, n_fc, classes)
     return y_logits
@@ -490,7 +488,7 @@ def cnn_model_8(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc_1 = 100
-    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, KEEP_PROB)
+    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, conf.KEEP_PROB)
     relu = reLU('relu4', fc_drop_1)
     n_fc_2 = 100
     fc_drop_2, WFC_2 = buildSoftMax('fully-connected2', relu, n_fc_1, n_fc_2)
@@ -548,7 +546,7 @@ def cnn_model_9(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc_1 = 100
-    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, KEEP_PROB)
+    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, conf.KEEP_PROB)
     relu = reLU('relu4', fc_drop_1)
     n_fc_2 = 50
     fc_drop_2, WFC_2 = buildSoftMax('fully-connected2', relu, n_fc_1, n_fc_2)
@@ -606,7 +604,7 @@ def cnn_model_10(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc_1 = 100
-    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, KEEP_PROB)
+    fc_drop_1, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc_1, conf.KEEP_PROB)
     relu = reLU('relu4', fc_drop_1)
     n_fc_2 = 200
     fc_drop_2, WFC_2 = buildSoftMax('fully-connected2', relu, n_fc_1, n_fc_2)
@@ -664,7 +662,7 @@ def cnn_model_11(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu3, [-1, resolutionS*d5], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 10
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, KEEP_PROB)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w5, h5, d5, n_fc, conf.KEEP_PROB)
     relu = reLU('relu4', fc_drop)
     y_logits, WSoft = buildSoftMax('soffully_connected_pre_softmaxtmax1', relu, n_fc, classes)
 
@@ -703,7 +701,7 @@ def cnn_model_crossing_detector(images, classes, width, height, channels):
     conv5_flat = tf.reshape(relu2, [-1, resolutionS*n_filter3], name = 'conv5_reshape')
     # fully-connected 1
     n_fc = 100
-    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w3, h3, n_filter3, n_fc, KEEP_PROB)
+    fc_drop, WFC = buildFc('fully-connected1', conv5_flat, w3, h3, n_filter3, n_fc, conf.KEEP_PROB)
     relu = reLU('relu1', fc_drop)
     y_logits, WSoft = buildSoftMax('fully_connected_pre_softmax', relu, n_fc, classes)
     return y_logits

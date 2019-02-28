@@ -24,16 +24,10 @@
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (R-F.,F. and B.,M. contributed equally to this work.)
 
-
 from __future__ import absolute_import, division, print_function
-import os
-import random
-import numpy as np
+import numpy as np, sys
 from idtrackerai.globalfragment import GlobalFragment
-from idtrackerai.assigner import assign, compute_identification_statistics_for_non_accumulated_fragments
-from idtrackerai.accumulation_manager import AccumulationManager
-from idtrackerai.constants import  CERTAINTY_THRESHOLD
-import sys
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -70,7 +64,7 @@ class ListOfGlobalFragments(object):
     A minimum number of images per individual fragments is required for a
     global fragment to be acceptable for the accumulation. This number is set
     in
-    :const:`~constants.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION`
+    :const:`conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION`
 
     """
     def __init__(self, global_fragments):

@@ -26,18 +26,13 @@
 
 
 from __future__ import absolute_import, division, print_function
-import os
-import sys
-import matplotlib.pyplot as plt
-import tensorflow as tf
-import numpy as np
-from idtrackerai.network.identification_model.network_params import NetworkParams
+import os, sys, matplotlib.pyplot as plt, numpy as np
+from confapp import conf
 from idtrackerai.network.identification_model.get_data import DataSet, split_data_train_and_validation
-from idtrackerai.network.identification_model.id_CNN import ConvNetwork
 from idtrackerai.network.identification_model.epoch_runner import EpochRunner
 from idtrackerai.network.identification_model.stop_training_criteria import Stop_Training
 from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
-from idtrackerai.constants import  BATCH_SIZE_IDCNN
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -59,7 +54,7 @@ def train(video,
           global_step=0,
           identity_transfer=False,
           accumulation_manager=None,
-          batch_size=BATCH_SIZE_IDCNN):
+          batch_size=conf.BATCH_SIZE_IDCNN):
     """Short summary.
 
     Parameters

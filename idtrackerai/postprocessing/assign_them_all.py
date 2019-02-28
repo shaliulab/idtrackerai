@@ -26,20 +26,16 @@
 
 
 from __future__ import absolute_import, print_function, division
-import os
-import sys
+import collections, numpy as np, cv2, sys, os
 from tqdm import tqdm
-import collections
-import numpy as np
-import cv2
-from pprint import pprint
 from scipy.spatial.distance import cdist
 from idtrackerai.utils.video_utils import blob_extractor
 from idtrackerai.list_of_fragments import ListOfFragments
 from idtrackerai.blob import Blob
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.postprocessing.compute_velocity_model import compute_model_velocity
-from idtrackerai.constants import  VEL_PERCENTILE
+from confapp import conf
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -593,7 +589,7 @@ def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
     if not hasattr(video, 'velocity_threshold'):
         video.velocity_threshold = compute_model_velocity(list_of_fragments.fragments,
                                                             video.number_of_animals,
-                                                            percentile = VEL_PERCENTILE)
+                                                            percentile = conf.VEL_PERCENTILE)
     possible_identities = range(1, video.number_of_animals + 1)
     erosion_counter = 0
     list_of_occluded_identities = [[] for i in range(len(list_of_blobs.blobs_in_video))]

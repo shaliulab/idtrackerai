@@ -26,15 +26,10 @@
 
 
 from __future__ import absolute_import, division, print_function
-from pprint import pprint
 import numpy as np
 import random
-import psutil
 from idtrackerai.assigner import assign
-from idtrackerai.trainer import train
-from idtrackerai.constants import  RATIO_OLD, RATIO_NEW, MAXIMAL_IMAGES_PER_ANIMAL, \
-                        CERTAINTY_THRESHOLD, \
-                        MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
+from confapp import conf
 import sys
 
 """
@@ -84,7 +79,7 @@ class AccumulationManager(object):
     """
     def __init__(self, video,
                 list_of_fragments, list_of_global_fragments,
-                certainty_threshold = CERTAINTY_THRESHOLD,
+                certainty_threshold = conf.CERTAINTY_THRESHOLD,
                 allow_partial_accumulation = False,
                 threshold_acceptable_accumulation = None):
         self.video = video
@@ -135,9 +130,9 @@ class AccumulationManager(object):
 
     def get_images_and_labels_for_training(self):
         """ Create a new dataset of labelled images to train the idCNN in the following way:
-        Per individual select MAXIMAL_IMAGES_PER_ANIMAL images. Such collection of images is composed
-        of a ratio corresponding to RATIO_NEW of new images (acquired in the current evaluation of the
-        global fragments) and RATIO_OLD of images already used
+        Per individual select conf.MAXIMAL_IMAGES_PER_ANIMAL images. Such collection of images is composed
+        of a ratio corresponding to conf.RATIO_NEW of new images (acquired in the current evaluation of the
+        global fragments) and conf.RATIO_OLD of images already used
         in the previous iteration. """
         logger.info("Getting images for training...")
         random.seed(0)
@@ -149,23 +144,23 @@ class AccumulationManager(object):
             number_of_new_images = len(new_images_indices)
             number_of_used_images = len(used_images_indices)
             number_of_images_for_individual = number_of_new_images + number_of_used_images
-            if number_of_images_for_individual > MAXIMAL_IMAGES_PER_ANIMAL:
+            if number_of_images_for_individual > conf.MAXIMAL_IMAGES_PER_ANIMAL:
                 # we take a proportion of the old images a new images only if the
-                # total number of images for this label is bigger than the limit MAXIMAL_IMAGES_PER_ANIMAL
-                number_samples_new = int(MAXIMAL_IMAGES_PER_ANIMAL * RATIO_NEW)
-                number_samples_used = int(MAXIMAL_IMAGES_PER_ANIMAL * RATIO_OLD)
+                # total number of images for this label is bigger than the limit conf.MAXIMAL_IMAGES_PER_ANIMAL
+                number_samples_new = int(conf.MAXIMAL_IMAGES_PER_ANIMAL * conf.RATIO_NEW)
+                number_samples_used = int(conf.MAXIMAL_IMAGES_PER_ANIMAL * conf.RATIO_OLD)
                 if number_of_used_images < number_samples_used:
                     # if the proportion of used images is bigger than the number of
                     # used images we take all the used images for this label and update
-                    # the number of new images to reach the MAXIMAL_IMAGES_PER_ANIMAL
+                    # the number of new images to reach the conf.MAXIMAL_IMAGES_PER_ANIMAL
                     number_samples_used = number_of_used_images
-                    number_samples_new = MAXIMAL_IMAGES_PER_ANIMAL - number_samples_used
+                    number_samples_new = conf.MAXIMAL_IMAGES_PER_ANIMAL - number_samples_used
                 if number_of_new_images < number_samples_new:
                     # if the proportion of new images is bigger than the number of
                     # new images we take all the new images for this label and update
-                    # the number of used images to reac the MAXIMAL_IMAGES_PER_ANIMAL
+                    # the number of used images to reac the conf.MAXIMAL_IMAGES_PER_ANIMAL
                     number_samples_new = number_of_new_images
-                    number_samples_used = MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
+                    number_samples_used = conf.MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
                 # we put together a random sample of the new images and the used images
                 if self.new_images is not None:
                     images.extend(random.sample([self.new_images[i] for i in new_images_indices], number_samples_new))
@@ -175,7 +170,7 @@ class AccumulationManager(object):
                     images.extend(random.sample([self.used_images[i] for i in used_images_indices] ,number_samples_used))
                     labels.extend([i] * number_samples_used)
             else:
-                # if the total number of images for this label does not exceed the MAXIMAL_IMAGES_PER_ANIMAL
+                # if the total number of images for this label does not exceed the conf.MAXIMAL_IMAGES_PER_ANIMAL
                 # we take all the new images and all the used images
                 if self.new_images is not None:
                     images.extend([self.new_images[i] for i in new_images_indices])
@@ -299,7 +294,7 @@ class AccumulationManager(object):
                                                                 and not global_fragment.used_for_training
                                                                 for global_fragment in self.list_of_global_fragments.global_fragments])
         if self.video.accumulation_trial == 0:
-            minimum_number_of_images_accumulated_to_start_partial_accumulation = MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
+            minimum_number_of_images_accumulated_to_start_partial_accumulation = conf.MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
         else:
             minimum_number_of_images_accumulated_to_start_partial_accumulation = 0
         if self.number_of_acceptable_global_fragments == 0\

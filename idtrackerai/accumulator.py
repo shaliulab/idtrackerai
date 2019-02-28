@@ -26,14 +26,11 @@
 
 
 from __future__ import absolute_import, division, print_function
-import numpy as np
-import random
-import psutil
-from idtrackerai.assigner import assign
+from confapp import conf
 from idtrackerai.trainer import train
-from idtrackerai.accumulation_manager import AccumulationManager, get_predictions_of_candidates_fragments
-from idtrackerai.constants import  THRESHOLD_EARLY_STOP_ACCUMULATION
-import sys
+from idtrackerai.accumulation_manager import get_predictions_of_candidates_fragments
+import numpy as np, sys
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -105,7 +102,7 @@ def perform_one_accumulation_step(accumulation_manager,
     # compute ratio of accumulated images and stop if it is above random
     accumulation_manager.ratio_accumulated_images = accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
     logger.info("The %f percent of the images has been accumulated" %(accumulation_manager.ratio_accumulated_images * 100))
-    if accumulation_manager.ratio_accumulated_images > THRESHOLD_EARLY_STOP_ACCUMULATION:
+    if accumulation_manager.ratio_accumulated_images > conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
         logger.debug("Stopping accumulation by early stopping criteria")
         return accumulation_manager.ratio_accumulated_images, store_validation_accuracy_and_loss_data, store_training_accuracy_and_loss_data
     # Set accumulation parameters for rest of the accumulation
@@ -193,7 +190,7 @@ def perform_one_accumulation_step(accumulation_manager,
 #
 #     """
 #     video.init_accumulation_statistics_attributes()
-#     accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
+#     accumulation_manager.threshold_early_stop_accumulation = conf.THRESHOLD_EARLY_STOP_ACCUMULATION
 #
 #     while accumulation_manager.continue_accumulation:
 #         perform_one_accumulation_step(accumulation_manager,

@@ -26,14 +26,9 @@
 
 
 from __future__ import absolute_import, division, print_function
-import os
-import numpy as np
-import random
-from matplotlib import pyplot as plt
-import matplotlib.lines as mlines
-import seaborn as sns
-from idtrackerai.constants import  MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
-import sys
+import numpy as np, sys
+from confapp import conf
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -62,7 +57,7 @@ class GlobalFragment(object):
         identity
     _is_certain : bool
         True if each of the individual fragments have scored a certaninty above
-        the threshold :const:`~constants.CERTAINTY_THRESHOLD`
+        the threshold :const:`conf.CERTAINTY_THRESHOLD`
     _ids_assigned : ndarray
         shape [1, number_of_animals] each componenents correspond to the
         identity assigned by the algorithm to each of the individual fragments
@@ -168,7 +163,7 @@ class GlobalFragment(object):
         """Sets the global fragment to be eligible for accumulation
         """
         self._candidate_for_accumulation = True
-        if np.min(self.number_of_images_per_individual_fragment) < MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION:
+        if np.min(self.number_of_images_per_individual_fragment) < conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION:
             self._candidate_for_accumulation = False
 
     @property

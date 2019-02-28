@@ -25,14 +25,8 @@ from idtrackerai.list_of_blobs                                           import 
 from idtrackerai.accumulator                                             import perform_one_accumulation_step
 from idtrackerai.pre_trainer                                             import pre_train_global_fragment
 from idtrackerai.assigner                                                import assigner
+from confapp                                                             import conf
 
-
-from idtrackerai.constants import BATCH_SIZE_IDCNN
-from idtrackerai.constants import THRESHOLD_ACCEPTABLE_ACCUMULATION
-from idtrackerai.constants import THRESHOLD_EARLY_STOP_ACCUMULATION
-from idtrackerai.constants import MAX_RATIO_OF_PRETRAINED_IMAGES
-from idtrackerai.constants import MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
-from idtrackerai.constants import VEL_PERCENTILE
 
 class TrackerAPI(object):
 
@@ -299,7 +293,7 @@ class TrackerAPI(object):
         self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = 0)
         self.accumulation_manager = AccumulationManager(self.chosen_video.video, self.chosen_video.list_of_fragments,
                                                     self.chosen_video.list_of_global_fragments,
-                                                    threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+                                                    threshold_acceptable_accumulation = conf.THRESHOLD_ACCEPTABLE_ACCUMULATION)
         self.global_step = 0
 
         if create_popup: create_popup()
@@ -366,7 +360,7 @@ class TrackerAPI(object):
 
         elif not self.accumulation_manager.continue_accumulation\
             and not self.chosen_video.video.first_accumulation_finished\
-            and self.accumulation_manager.ratio_accumulated_images > THRESHOLD_EARLY_STOP_ACCUMULATION:
+            and self.accumulation_manager.ratio_accumulated_images > conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
 
             logger.info("Protocol 1 successful")
             self.save_after_first_accumulation()
@@ -381,7 +375,7 @@ class TrackerAPI(object):
 
             self.save_after_first_accumulation()
 
-            if self.accumulation_manager.ratio_accumulated_images > THRESHOLD_ACCEPTABLE_ACCUMULATION:
+            if self.accumulation_manager.ratio_accumulated_images > conf.THRESHOLD_ACCEPTABLE_ACCUMULATION:
                 logger.info("Protocol 2 successful")
                 logger.warning("------------------------ dismissing one shot accumulation popup")
                 if one_shot_accumulation_popup_dismiss: one_shot_accumulation_popup_dismiss() # UPDATE GUI
@@ -393,7 +387,7 @@ class TrackerAPI(object):
                 # call handler
                 identification_popup_open()
 
-            elif self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
+            elif self.accumulation_manager.ratio_accumulated_images < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION:
 
                 logger.info("Protocol 2 failed -> Start protocol 3")
                 if 'protocols1_and_2' not in self.chosen_video.processes_to_restore or not self.chosen_video.processes_to_restore['protocols1_and_2']:
@@ -411,8 +405,8 @@ class TrackerAPI(object):
                 self.protocol3()
 
         elif self.chosen_video.video.has_been_pretrained\
-            and self.chosen_video.video.accumulation_trial < MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS\
-            and self.accumulation_manager.ratio_accumulated_images < THRESHOLD_ACCEPTABLE_ACCUMULATION:
+            and self.chosen_video.video.accumulation_trial < conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS\
+            and self.accumulation_manager.ratio_accumulated_images < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION:
 
             logger.info("Accumulation in protocol 3 is not successful. Opening parachute ...")
             if self.chosen_video.video.accumulation_trial == 0:
@@ -427,8 +421,8 @@ class TrackerAPI(object):
 
 
         elif self.chosen_video.video.has_been_pretrained and\
-            (self.accumulation_manager.ratio_accumulated_images >= THRESHOLD_ACCEPTABLE_ACCUMULATION\
-            or self.chosen_video.video.accumulation_trial >= MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS):
+            (self.accumulation_manager.ratio_accumulated_images >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION\
+            or self.chosen_video.video.accumulation_trial >= conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS):
 
             logger.info("Accumulation after protocol 3 has been successful")
             if 'protocol3_accumulation' not in self.chosen_video.processes_to_restore:
@@ -470,7 +464,7 @@ class TrackerAPI(object):
     def accumulation_loop(self, do_accumulate=True):
         logger.warning('------------Calling accumulation loop')
         self.chosen_video.video.init_accumulation_statistics_attributes()
-        self.accumulation_manager.threshold_early_stop_accumulation = THRESHOLD_EARLY_STOP_ACCUMULATION
+        self.accumulation_manager.threshold_early_stop_accumulation = conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         logger.warning('Calling accumulate from accumulation_loop')
 
         if do_accumulate: self.accumulate()
@@ -512,7 +506,7 @@ class TrackerAPI(object):
         self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = iteration_number - 1)
         self.accumulation_manager = AccumulationManager(self.chosen_video.video,
                                                     self.chosen_video.list_of_fragments, self.chosen_video.list_of_global_fragments,
-                                                    threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+                                                    threshold_acceptable_accumulation = conf.THRESHOLD_ACCEPTABLE_ACCUMULATION)
         logger.info("Start accumulation")
         self.global_step = 0
 
@@ -577,13 +571,13 @@ class TrackerAPI(object):
             self.continue_pretraining()
 
     def continue_pretraining(self, clock_unschedule=None):
-        if self.pretraining_step_finished and self.ratio_of_pretrained_images < MAX_RATIO_OF_PRETRAINED_IMAGES:
+        if self.pretraining_step_finished and self.ratio_of_pretrained_images < conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
             self.one_shot_pretraining()
 
             if clock_unschedule is None:
                 self.continue_pretraining()
 
-        elif self.ratio_of_pretrained_images > MAX_RATIO_OF_PRETRAINED_IMAGES:
+        elif self.ratio_of_pretrained_images > conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
             self.chosen_video.video._has_been_pretrained = True
 
             # Call GUI
@@ -612,7 +606,7 @@ class TrackerAPI(object):
                                                     self.store_validation_accuracy_and_loss_data_pretrain,
                                                     print_flag = False,
                                                     plot_flag = False,
-                                                    batch_size = BATCH_SIZE_IDCNN,
+                                                    batch_size = conf.BATCH_SIZE_IDCNN,
                                                     canvas_from_GUI = gui_graph_canvas)
         self.pretraining_counter += 1
         self.pretraining_step_finished = True
@@ -685,7 +679,7 @@ class TrackerAPI(object):
         self.accumulation_network_params.restore_folder = self.chosen_video.video._accumulation_folder
         self.accumulation_manager = AccumulationManager(self.chosen_video.video, self.chosen_video.list_of_fragments,
                                                     self.chosen_video.list_of_global_fragments,
-                                                    threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+                                                    threshold_acceptable_accumulation = conf.THRESHOLD_ACCEPTABLE_ACCUMULATION)
         self.net = ConvNetwork(self.accumulation_network_params)
         self.net.restore()
         logger.info("Saving video")
@@ -701,7 +695,7 @@ class TrackerAPI(object):
         self.net.restore()
         self.accumulation_manager = AccumulationManager(self.chosen_video.video, self.chosen_video.list_of_fragments,
                                                     self.chosen_video.list_of_global_fragments,
-                                                    threshold_acceptable_accumulation = THRESHOLD_ACCEPTABLE_ACCUMULATION)
+                                                    threshold_acceptable_accumulation = conf.THRESHOLD_ACCEPTABLE_ACCUMULATION)
         self.chosen_video.video.accumulation_trial = 0
         self.chosen_video.video.save()
 
@@ -750,7 +744,7 @@ class TrackerAPI(object):
             self.chosen_video.video.velocity_threshold = compute_model_velocity(
                                                                 self.chosen_video.list_of_fragments.fragments,
                                                                 self.chosen_video.video.number_of_animals,
-                                                                percentile = VEL_PERCENTILE)
+                                                                percentile = conf.VEL_PERCENTILE)
         correct_impossible_velocity_jumps(self.chosen_video.video, self.chosen_video.list_of_fragments)
         self.chosen_video.list_of_fragments.save(self.chosen_video.video.fragments_path)
         self.chosen_video.video.save()

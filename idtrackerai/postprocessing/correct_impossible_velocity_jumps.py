@@ -26,18 +26,9 @@
 
 
 from __future__ import absolute_import, print_function, division
-import sys
 import numpy as np
 from tqdm import tqdm
-import collections
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.assigner import assign
-from idtrackerai.network.identification_model.id_CNN import ConvNetwork
-from idtrackerai.network.identification_model.network_params import NetworkParams
-from idtrackerai.blob import Blob
-from idtrackerai.postprocessing.compute_velocity_model import compute_velocity_from_list_of_fragments, compute_model_velocity
-from idtrackerai.postprocessing.get_trajectories import produce_trajectories
-from idtrackerai.constants import VEL_PERCENTILE #percentile used to model velocity jumps
+
 """
 The correct_impossible_velocity_jumps module
 """

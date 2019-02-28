@@ -1,0 +1,1 @@
+from confapp import conf; conf += 'idtrackerai.constants'

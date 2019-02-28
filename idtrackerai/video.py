@@ -26,23 +26,12 @@
 
 
 from __future__ import absolute_import, division, print_function
-import sys
-import numpy as np
-import os
+import cv2, time, glob, os, numpy as np, sys
 from tempfile import mkstemp
 from shutil import move, rmtree
-import glob
 from natsort import natsorted
-import cv2
-import time
-from idtrackerai.utils.py_utils import get_git_revision_hash
-from idtrackerai.constants import AVAILABLE_VIDEO_EXTENSION,\
-                                FRAMES_PER_EPISODE,\
-                                MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
-from idtrackerai.constants import MIN_AREA_DEFAULT, MAX_AREA_DEFAULT
-from idtrackerai.constants import MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT
-from idtrackerai.constants import IDENTIFICATION_IMAGE_SIZE
-from idtrackerai.constants import SIGMA_GAUSSIAN_BLURRING
+from confapp import conf
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -106,10 +95,10 @@ class Video(object):
         self._original_ROI = None #matrix [shape = shape of a frame] 255 are valid (part of the ROI) pixels and 0 are invalid according to openCV convention
         self._ROI = None
         self._apply_ROI = None #boolean: True if the user applies a ROI to the video
-        self._min_threshold = MIN_THRESHOLD_DEFAULT
-        self._max_threshold = MAX_THRESHOLD_DEFAULT
-        self._min_area = MIN_AREA_DEFAULT
-        self._max_area = MAX_AREA_DEFAULT
+        self._min_threshold = conf.MIN_THRESHOLD_DEFAULT
+        self._max_threshold = conf.MAX_THRESHOLD_DEFAULT
+        self._min_area = conf.conf.MIN_AREA_DEFAULT
+        self._max_area = conf.MAX_AREA_DEFAULT
         self._resize = 1
         self._resegmentation_parameters = []
         self._tracking_interval = None
@@ -150,8 +139,8 @@ class Video(object):
         self._there_are_crossings = True
         self._track_wo_identities = False # Track without identities
         self._number_of_channels = 1
-        if SIGMA_GAUSSIAN_BLURRING is not None:
-            self.sigma_gaussian_blurring = SIGMA_GAUSSIAN_BLURRING
+        if conf.SIGMA_GAUSSIAN_BLURRING is not None:
+            self.sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
 
     @property
     def number_of_channels(self):
@@ -420,7 +409,7 @@ class Video(object):
     @video_path.setter
     def video_path(self, value):
         video_name, video_extension = os.path.splitext(value)
-        if video_extension in AVAILABLE_VIDEO_EXTENSION:
+        if video_extension in conf.AVAILABLE_VIDEO_EXTENSION:
             self._video_path = value
             #get video folder
             self._video_folder = os.path.dirname(self.video_path)
@@ -429,7 +418,7 @@ class Video(object):
                 self.get_info()
             self.modified = time.strftime("%c")
         else:
-            raise ValueError("Supported video extensions are ", AVAILABLE_VIDEO_EXTENSION)
+            raise ValueError("Supported video extensions are ", conf.AVAILABLE_VIDEO_EXTENSION)
 
     @property
     def video_folder(self):
@@ -700,12 +689,12 @@ class Video(object):
         compute the size of the square image that is generated from every
         blob to identify the animals
         """
-        if IDENTIFICATION_IMAGE_SIZE is None:
+        if conf.IDENTIFICATION_IMAGE_SIZE is None:
             identification_image_size = int(maximum_body_length / np.sqrt(2))
             identification_image_size = identification_image_size + identification_image_size % 2
             self._identification_image_size = (identification_image_size, identification_image_size, self.number_of_channels)
         else:
-            self._identification_image_size = IDENTIFICATION_IMAGE_SIZE
+            self._identification_image_size = conf.IDENTIFICATION_IMAGE_SIZE
     def init_processes_time_attributes(self):
         self.generate_trajectories_time = 0
         self.solve_impossible_jumps_time = 0
@@ -810,7 +799,7 @@ class Video(object):
     def store_accumulation_step_statistics_data(self, new_values):
         [getattr(self, attr).append(value) for attr, value in zip(self.accumulation_statistics_attributes_list, new_values)]
 
-    def store_accumulation_statistics_data(self, accumulation_trial, number_of_possible_accumulation = MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1):
+    def store_accumulation_statistics_data(self, accumulation_trial, number_of_possible_accumulation = conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1):
         if not hasattr(self, 'accumulation_statistics'): self.accumulation_statistics = [None] * number_of_possible_accumulation
         self.accumulation_statistics[accumulation_trial] = [getattr(self, stat_attr)
                                                             for stat_attr in self.accumulation_statistics_attributes_list]
@@ -864,7 +853,7 @@ class Video(object):
     def get_episodes(self):
         """Split video in episodes (chunks) of 500 frames
         for parallelisation"""
-        starting_frames = np.arange(0, self.number_of_frames, FRAMES_PER_EPISODE)
+        starting_frames = np.arange(0, self.number_of_frames, conf.FRAMES_PER_EPISODE)
         ending_frames = np.hstack((starting_frames[1:]-1, self.number_of_frames))
         self._episodes_start_end = list(zip(starting_frames, ending_frames))
         self._number_of_episodes = len(starting_frames)

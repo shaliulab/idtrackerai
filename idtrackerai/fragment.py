@@ -27,12 +27,9 @@
 
 from __future__ import absolute_import, division, print_function
 import sys
-import itertools
 import numpy as np
-from tqdm import tqdm
-from math import sqrt
+from confapp import conf
 from idtrackerai.utils.py_utils import delete_attributes_from_object
-from idtrackerai.constants import MAX_FLOAT, MIN_FLOAT, FIXED_IDENTITY_THRESHOLD
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -97,13 +94,13 @@ class Fragment(object):
     certainty_P2 : float
         certainty of the identification of the fragment computed according to meth:`compute_P2_vector`
     is_certain : bool
-        True if :attr:`certainty` is greater than :const:`~constants.CERTAINTY_THRESHOLD`
+        True if :attr:`certainty` is greater than :const:`conf.CERTAINTY_THRESHOLD`
     temporary_id : int
         Identity assigned to the fragment during the fingerprint protocols cascade
     identity : int
         Identity assigned to the fragment
     identity_is_fixed : bool
-        True if the :attr:`certainty_P2` is greater than :const:`~constants.FIXED_IDENTITY_THRESHOLD`
+        True if the :attr:`certainty_P2` is greater than :const:`conf.FIXED_IDENTITY_THRESHOLD`
     identity_corrected_closing_gaps : int
         Identity assigned to the fragment while solving the crossing if it exists else None
     user_generated_identity : int
@@ -538,7 +535,7 @@ class Fragment(object):
                 self.zero_identity_assigned_by_P2 = True
                 self._ambiguous_identities = possible_identities
             else:
-                if max_P2 > FIXED_IDENTITY_THRESHOLD:
+                if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
                     self._identity_is_fixed = True
                 self._identity = possible_identities[0]
                 self._P1_vector = np.zeros(len(self.P1_vector))
@@ -565,7 +562,7 @@ class Fragment(object):
             P2_vector_ordered = np.sort(self.P2_vector)
             P2_first_max = P2_vector_ordered[-1]
             P2_second_max = P2_vector_ordered[-2]
-            self._certainty_P2 = MAX_FLOAT if P2_second_max == 0 else P2_first_max / P2_second_max
+            self._certainty_P2 = conf.MAX_FLOAT if P2_second_max == 0 else P2_first_max / P2_second_max
         else:
             self._P2_vector = np.zeros(self.number_of_animals)
             self._certainty_P2 = 0.

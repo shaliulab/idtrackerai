@@ -26,14 +26,9 @@
  
 
 from __future__ import absolute_import, division, print_function
-import itertools
-import tensorflow as tf
-import os
-import sys
-import matplotlib.pyplot as plt
-import numpy as np
-import psutil
-from idtrackerai.constants import  BATCH_SIZE_PREDICTIONS_DCD
+import sys, numpy as np, psutil
+from confapp import conf
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -48,7 +43,7 @@ class GetPredictionCrossigns(object):
         self._softmax_probs = []
         self._predictions = []
         self._fc_vectors = []
-        self.batch_size = BATCH_SIZE_PREDICTIONS_DCD
+        self.batch_size = conf.BATCH_SIZE_PREDICTIONS_DCD
 
 
     def next_batch_test(self, batch_size):
@@ -63,7 +58,7 @@ class GetPredictionCrossigns(object):
         self.number_of_image_predicted = 0
         predictions = []
         while self.number_of_image_predicted < len(test_images):
-            predictions.extend(self.net.prediction(self.next_batch_test(batch_size = BATCH_SIZE_PREDICTIONS_DCD)))
+            predictions.extend(self.net.prediction(self.next_batch_test(batch_size = conf.BATCH_SIZE_PREDICTIONS_DCD)))
 
         return predictions
 

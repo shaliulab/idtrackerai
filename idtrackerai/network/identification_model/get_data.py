@@ -26,9 +26,9 @@
 
 
 from __future__ import absolute_import, division, print_function
-import numpy as np
-import sys
-from idtrackerai.constants import  VALIDATION_PROPORTION
+import numpy as np, sys
+from confapp import conf
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -105,7 +105,7 @@ def duplicate_PCA_images(training_images, training_labels):
     training_labels = np.concatenate([training_labels, training_labels], axis = 0)
     return training_images, training_labels
 
-def split_data_train_and_validation(number_of_animals, images, labels, validation_proportion = VALIDATION_PROPORTION):
+def split_data_train_and_validation(number_of_animals, images, labels, validation_proportion = conf.VALIDATION_PROPORTION):
     """Splits a set of `images` and `labels` into training and validation sets
 
     Parameters

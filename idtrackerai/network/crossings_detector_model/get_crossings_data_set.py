@@ -26,15 +26,11 @@
 
 
 from __future__ import absolute_import, print_function, division
-import os
-import sys
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
-from idtrackerai.blob import Blob
+import os, sys, cv2, numpy as np
+from confapp import conf
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.network.identification_model.get_data import duplicate_PCA_images
-from idtrackerai.constants import MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -91,7 +87,7 @@ class CrossingDataset(object):
             self.crossing_blobs = [blob for blobs_in_frame in self.blobs for blob in blobs_in_frame
                                     if blob.is_a_sure_crossing()]
             logger.debug("number of crossing blobs (in get list): %i" %len(self.crossing_blobs))
-            if len(self.crossing_blobs) <= MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR:
+            if len(self.crossing_blobs) <= conf.MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR:
                 logger.debug("Not enough crossings where found")
                 self.there_are_crossings = False
             else:

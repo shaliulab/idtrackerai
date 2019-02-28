@@ -37,8 +37,7 @@ from joblib import Parallel, delayed
 import gc
 from tqdm import tqdm
 from scipy import ndimage
-from idtrackerai.constants import NUMBER_OF_CORES_FOR_SEGMENTATION,\
-                                SIGMA_GAUSSIAN_BLURRING
+from confapp import conf
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import flatten, set_mkl_to_single_thread, set_mkl_to_multi_thread
 from idtrackerai.utils.video_utils import segment_frame, blob_extractor
@@ -129,8 +128,8 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
     """
     blobs_in_frame = []
     ret, frame = cap.read()
-    if SIGMA_GAUSSIAN_BLURRING is not None:
-        frame = cv2.GaussianBlur(frame, (0, 0), SIGMA_GAUSSIAN_BLURRING)
+    if conf.SIGMA_GAUSSIAN_BLURRING is not None:
+        frame = cv2.GaussianBlur(frame, (0, 0), conf.SIGMA_GAUSSIAN_BLURRING)
 
     try:
         if video.resolution_reduction != 1 and ret:
@@ -273,11 +272,11 @@ def segment(video):
     # num_cores = 1
     if NUMBER_OF_CORES_FOR_SEGMENTATION is not None:
         try:
-            logger.info('NUMBER_OF_CORES_FOR_SEGMENTATION set to a value different than the default')
-            assert NUMBER_OF_CORES_FOR_SEGMENTATION <= multiprocessing.cpu_count()
-            num_cores = NUMBER_OF_CORES_FOR_SEGMENTATION
+            logger.info('conf.NUMBER_OF_CORES_FOR_SEGMENTATION set to a value different than the default')
+            assert conf.NUMBER_OF_CORES_FOR_SEGMENTATION <= multiprocessing.cpu_count()
+            num_cores = conf.NUMBER_OF_CORES_FOR_SEGMENTATION
         except:
-            logger.info('NUMBER_OF_CORES_FOR_SEGMENTATION > multiprocessing.cpu_count(). Setting NUMBER_OF_CORES_FOR_SEGMENTATION set to 1')
+            logger.info('conf.NUMBER_OF_CORES_FOR_SEGMENTATION > multiprocessing.cpu_count(). Setting conf.NUMBER_OF_CORES_FOR_SEGMENTATION set to 1')
             num_cores = 1
 
     #init variables to store data

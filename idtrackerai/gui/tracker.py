@@ -26,7 +26,6 @@
 
 
 from __future__ import absolute_import, division, print_function
-import kivy
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.logger import Logger
@@ -34,51 +33,13 @@ from kivy.clock import Clock
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
-from kivy.graphics.texture import Texture
-from kivy.uix.image import Image
 from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
 from kivy.graphics import *
-from kivy.graphics.transformation import Matrix
 from kivy.uix.switch import Switch
-from kivy.uix.slider import Slider
-from kivy.uix.progressbar import ProgressBar
-from idtrackerai.gui.visualise_video import VisualiseVideo
-from idtrackerai.gui.bkg_subtraction import BkgSubtraction
-from idtrackerai.gui.kivy_utils import HelpButton, CustomLabel, Chosen_Video, Deactivate_Process
-import matplotlib
+from idtrackerai.gui.kivy_utils import HelpButton, CustomLabel
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
-import matplotlib.pyplot as plt
-import seaborn as sns
-import os
-import sys
-import copy
-import numpy as np
-import time
-from scipy.stats import mode
-import cv2
-from idtrackerai.preprocessing.segmentation import segment_frame, segment
-from idtrackerai.utils.video_utils import blob_extractor
-from idtrackerai.video import Video
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.list_of_fragments import ListOfFragments, create_list_of_fragments
-from idtrackerai.list_of_global_fragments import ListOfGlobalFragments
-from idtrackerai.crossing_detector import detect_crossings
-from idtrackerai.list_of_global_fragments import create_list_of_global_fragments
-from idtrackerai.accumulation_manager import AccumulationManager
-from idtrackerai.accumulator import perform_one_accumulation_step
-from idtrackerai.network.identification_model.network_params import NetworkParams
-from idtrackerai.trainer import train
-from idtrackerai.assigner import assigner
-from idtrackerai.postprocessing.compute_velocity_model import compute_model_velocity
-from idtrackerai.postprocessing.correct_impossible_velocity_jumps import correct_impossible_velocity_jumps
-from idtrackerai.postprocessing.assign_them_all import close_trajectories_gaps
-from idtrackerai.postprocessing.get_trajectories import produce_output_dict
-from idtrackerai.pre_trainer import pre_train_global_fragment
-from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
-from idtrackerai.network.identification_model.id_CNN import ConvNetwork
-from idtrackerai.constants import  BATCH_SIZE_IDCNN, THRESHOLD_ACCEPTABLE_ACCUMULATION, VEL_PERCENTILE, THRESHOLD_EARLY_STOP_ACCUMULATION, MAX_RATIO_OF_PRETRAINED_IMAGES, MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
-from idtrackerai.postprocessing.identify_non_assigned_with_interpolation import assign_zeros_with_interpolation_identities
+import matplotlib.pyplot as plt, os, matplotlib
 
 from .tracker_api import TrackerAPI
 

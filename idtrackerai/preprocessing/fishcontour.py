@@ -32,7 +32,8 @@ import scipy.ndimage
 from scipy.signal import argrelmax
 import cv2
 sys.path.append('./')
-from idtrackerai.constants import SMOOTH_SIGMA, HEAD_DIAMETER
+from confapp import conf
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -90,7 +91,7 @@ class FishContour():
         nose_i = find_max(abs(smoother.curvature()),n=2)
         return self.c[nose_i,:]
 
-    def find_nose_and_orientation(self,head_size = HEAD_DIAMETER):
+    def find_nose_and_orientation(self,head_size = conf.HEAD_DIAMETER):
         """It returns nose coordinates, angle needed to rotate so nose points to negative y
         and the centroid of the head
 
@@ -128,4 +129,4 @@ def smooth(contour):
 
     :param contour: instance of FishContour()
     """
-    return FishContour(scipy.ndimage.filters.gaussian_filter1d(contour.c, SMOOTH_SIGMA, mode='wrap',axis=0))
+    return FishContour(scipy.ndimage.filters.gaussian_filter1d(contour.c, conf.SMOOTH_SIGMA, mode='wrap',axis=0))
