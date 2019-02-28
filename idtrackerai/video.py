@@ -97,7 +97,7 @@ class Video(object):
         self._apply_ROI = None #boolean: True if the user applies a ROI to the video
         self._min_threshold = conf.MIN_THRESHOLD_DEFAULT
         self._max_threshold = conf.MAX_THRESHOLD_DEFAULT
-        self._min_area = conf.conf.MIN_AREA_DEFAULT
+        self._min_area = conf.MIN_AREA_DEFAULT
         self._max_area = conf.MAX_AREA_DEFAULT
         self._resize = 1
         self._resegmentation_parameters = []

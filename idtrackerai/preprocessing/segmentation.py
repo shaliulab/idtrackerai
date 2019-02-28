@@ -41,6 +41,7 @@ from confapp import conf
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import flatten, set_mkl_to_single_thread, set_mkl_to_multi_thread
 from idtrackerai.utils.video_utils import segment_frame, blob_extractor
+
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -270,7 +271,7 @@ def segment(video):
     # avoid computing with all the cores in very large videos. It fills the RAM.
     num_cores = int(multiprocessing.cpu_count())
     # num_cores = 1
-    if NUMBER_OF_CORES_FOR_SEGMENTATION is not None:
+    if conf.NUMBER_OF_CORES_FOR_SEGMENTATION is not None:
         try:
             logger.info('conf.NUMBER_OF_CORES_FOR_SEGMENTATION set to a value different than the default')
             assert conf.NUMBER_OF_CORES_FOR_SEGMENTATION <= multiprocessing.cpu_count()
