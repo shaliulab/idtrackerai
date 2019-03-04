@@ -278,18 +278,15 @@ class TrackerAPI(object):
         self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
         self.chosen_video.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
         self.net = ConvNetwork(self.accumulation_network_params)
+        if self.chosen_video.video.identity_transfer:
+            self.accumulation_network_params._restore_folder = self.chosen_video.video.knowledge_transfer_model_folder
         if self.chosen_video.video.tracking_with_knowledge_transfer:
             logger.debug('Restoring for knowledge transfer')
+            tf.reset_default_graph()
+            self.net = ConvNetwork(self.accumulation_network_params)
             self.net.restore()
-        self.chosen_video.video._first_frame_first_global_fragment.append(self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = 0))
-        # if self.chosen_video.video.identity_transfer and\
-        #     self.chosen_video.video.number_of_animals < self.chosen_video.video.knowledge_transfer_info_dict['number_of_animals']:
-        #     tf.reset_default_graph()
-        #     self.accumulation_network_params.number_of_animals = self.chosen_video.video.number_of_animals
-        #     self.accumulation_network_params._restore_folder = None
-        #     self.accumulation_network_params.knowledge_transfer_folder = self.chosen_video.video.knowledge_transfer_model_folder
-        #     self.net = ConvNetwork(self.accumulation_network_params)
-        #     self.net.restore()
+
+        self.chosen_video.video._first_frame_first_global_fragment.append(self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(self.chosen_video.video, net=self.net, accumulation_trial=0))
         self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = 0)
         self.accumulation_manager = AccumulationManager(self.chosen_video.video, self.chosen_video.list_of_fragments,
                                                     self.chosen_video.list_of_global_fragments,
@@ -485,25 +482,24 @@ class TrackerAPI(object):
         self.chosen_video.video.accumulation_trial = iteration_number
         self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
         self.chosen_video.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
+        if self.chosen_video.video.identity_transfer:
+            tf.reset_default_graph()
+            self.accumulation_network_params._restore_folder = self.chosen_video.video.knowledge_transfer_model_folder
+            self.net = ConvNetwork(self.accumulation_network_params)
+            self.net.restore()
+        self.chosen_video.video._first_frame_first_global_fragment.append(self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(self.chosen_video.video, net=self.net, accumulation_trial = iteration_number - 1))
+        self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = iteration_number - 1)
+        logger.warning('first_frame_first_global_fragment ' + str(self.chosen_video.video.first_frame_first_global_fragment))
         logger.info("We will restore the network from a previous pretraining: %s" %self.chosen_video.video.pretraining_folder)
         self.accumulation_network_params.save_folder = self.chosen_video.video.accumulation_folder
-        self.accumulation_network_params.restore_folder = self.chosen_video.video.pretraining_folder
+        self.accumulation_network_params._restore_folder = self.chosen_video.video.pretraining_folder
         self.accumulation_network_params.scopes_layers_to_optimize = ['fully-connected1','fully_connected_pre_softmax']
         logger.info("Initialising accumulation network")
+        tf.reset_default_graph()
         self.net = ConvNetwork(self.accumulation_network_params)
         self.net.restore()
         self.net.reinitialize_softmax_and_fully_connected()
         logger.info("Initialising accumulation manager")
-        self.chosen_video.video._first_frame_first_global_fragment.append(self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = iteration_number - 1))
-        logger.warning('first_frame_first_global_fragment ' + str(self.chosen_video.video.first_frame_first_global_fragment))
-        if self.chosen_video.video.identity_transfer and self.chosen_video.video.number_of_animals < self.chosen_video.video.knowledge_transfer_info_dict['number_of_animals']:
-            tf.reset_default_graph()
-            self.accumulation_network_params.number_of_animals = self.chosen_video.video.number_of_animals
-            self.accumulation_network_params.restore_folder = self.chosen_video.video.pretraining_folder
-            self.net = ConvNetwork(self.accumulation_network_params)
-            self.net.restore()
-            self.net.reinitialize_softmax_and_fully_connected()
-        self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = iteration_number - 1)
         self.accumulation_manager = AccumulationManager(self.chosen_video.video,
                                                     self.chosen_video.list_of_fragments, self.chosen_video.list_of_global_fragments,
                                                     threshold_acceptable_accumulation = conf.THRESHOLD_ACCEPTABLE_ACCUMULATION)

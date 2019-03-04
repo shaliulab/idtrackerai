@@ -124,9 +124,12 @@ in the folder network and how they are map to a single value code in the module
 id_CNN.py in the network/identification_model folder.
 '''
 CNN_MODEL = 0
-'''***KNOWLEDGE_TRANSFER_FOLDER_IDCNN
+'''***KNOWLEDGE_TRANSFER_FOLDER_IDCNN***
 '''
 KNOWLEDGE_TRANSFER_FOLDER_IDCNN = None
+'''***IDENTITY_TRANSFER***
+'''
+IDENTITY_TRANSFER = False
 '''***USE_ADAM_OPTIMISER***
 By default the identification neural network is trained with SGD. If this parameter
 is set to TRUE, the network will be trained with the ADAM optimizer.

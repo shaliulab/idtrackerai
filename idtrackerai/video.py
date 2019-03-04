@@ -383,11 +383,26 @@ class Video(object):
         return self._identity_transfer
 
     def is_identity_transfer_possible(self):
-        return self.number_of_animals <= self.knowledge_transfer_info_dict['number_of_animals']
+        return self.number_of_animals == self.knowledge_transfer_info_dict['number_of_animals']
 
-    @property
-    def first_global_fragment_knowledge_transfer_identities(self):
-        return _first_global_fragment_knowledge_transfer_identities
+    def check_and_set_identity_transfer_if_possible(self):
+        if conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN is None:
+            raise ValueError("Need to provide a value (path) for the varialbe KNOWLEDGE_TRANSFER_FOLDER_IDCNN in the local_settings.py file")
+        self.knowledge_transfer_model_folder = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
+        self.knowledge_transfer_info_dict = np.load(os.path.join(self.knowledge_transfer_model_folder, 'info.npy')).item()
+        if self.is_identity_transfer_possible():
+            logger.info("Tracking with identity transfer. The IDENTIFICATION_IMAGE_SIZE will be matched\
+                        to the input_image_size of the transferred network")
+            self._identity_transfer = True
+            self._tracking_with_knowledge_transfer = True
+            self._knowledge_transfer_model_folder = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
+            conf.IDENTIFICATION_IMAGE_SIZE = self.knowledge_transfer_info_dict['input_image_size']
+        else:
+            logger.info("Tracking with identity transfer failed. The number of animals in the video\
+                        needs to be the same as the number of animals in the transferred network")
+            self._identity_transfer = False
+            self._tracking_with_knowledge_transfer = False
+            conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN = None
 
     @property
     def tracking_with_knowledge_transfer(self):
@@ -695,6 +710,7 @@ class Video(object):
             self._identification_image_size = (identification_image_size, identification_image_size, self.number_of_channels)
         else:
             self._identification_image_size = conf.IDENTIFICATION_IMAGE_SIZE
+
     def init_processes_time_attributes(self):
         self.generate_trajectories_time = 0
         self.solve_impossible_jumps_time = 0
