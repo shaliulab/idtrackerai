@@ -798,8 +798,7 @@ class TrackerAPI(object):
             logger.info("Saving trajectories")
             np.save(trajectories_file, trajectories)
         self.chosen_video.video._has_trajectories = True
-        self.chosen_video.video.save()
-
+        
         # Call GUI function
         if trajectories_popup_dismiss: trajectories_popup_dismiss()
 
@@ -817,6 +816,7 @@ class TrackerAPI(object):
                                             number_of_chunks = self.chosen_video.video.number_of_frames)
             # Call GUI function
             if update_and_show_happy_ending_popup: update_and_show_happy_ending_popup()
+        self.chosen_video.video.save()
 
 
 

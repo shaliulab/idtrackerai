@@ -227,7 +227,7 @@ class SelectFile(BoxLayout):
             self.init_chosen_video_parameters()
             DEACTIVATE_ROI.setter(False)
             DEACTIVATE_PREPROCESSING.setter(False)
-        elif self.process_has_to_be_restored('post_processing'):
+        elif self.process_has_to_be_restored('post_processing') or (self.process_has_to_be_restored('residual_identification') and CHOSEN_VIDEO.old_video.track_wo_identities):
             DEACTIVATE_ROI.restored = '(restored)'
             DEACTIVATE_PREPROCESSING.restored = '(restored)'
             DEACTIVATE_TRACKING.restored = '(restored)'
