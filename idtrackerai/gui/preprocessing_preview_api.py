@@ -39,7 +39,7 @@ class PreprocessingPreviewAPI(object):
         self.number_of_animals    = chosen_video.video.number_of_animals if chosen_video.video.number_of_animals is not None else 1
         #: ListOfFragments: List of fragments ( blobs paths before crossing )
         self.list_of_fragments    = None
-        #: list(GlobalFragment): ? 
+        #: list(GlobalFragment): ?
         self.list_of_global_fragments = None
         #: ?: ?
         self.crossing_detector_trainer= None
@@ -47,16 +47,16 @@ class PreprocessingPreviewAPI(object):
         self.resegmentation_step_finished = True
         #: list(int): Indexes of the frames with more blobs than animals to track
         self.frames_with_more_blobs_than_animals = None
-        
+
 
     def init_preview(self):
-        
+
         logger.debug("init_preview")
         self.init_preproc_parameters()
-        
+
         self.bkg = self.chosen_video.video.bkg
         self.ROI = self.chosen_video.video.ROI if self.chosen_video.video.ROI is not None else np.ones((self.chosen_video.video.original_height, self.chosen_video.video.original_width) ,dtype='uint8') * 255
-        
+
         logger.debug("init_segment_zero")
         self.init_segment_zero()
 
@@ -65,14 +65,14 @@ class PreprocessingPreviewAPI(object):
         self.currentSegment = 0
         self.areas_plotted  = False
         self.number_of_detected_blobs = [0]
-            
+
 
     def init_preproc_parameters(self):
 
         logger.debug("init_preproc_parameters")
 
         if self.chosen_video.old_video is not None and self.chosen_video.old_video._has_been_preprocessed == True:
-            
+
             self.max_threshold = self.chosen_video.old_video.max_threshold
             self.min_threshold = self.chosen_video.old_video.min_threshold
             self.min_area      = self.chosen_video.old_video.min_area
@@ -80,7 +80,7 @@ class PreprocessingPreviewAPI(object):
             self.resolution_reduction = self.chosen_video.old_video.resolution_reduction
             self.number_of_animals    = self.chosen_video.old_video.number_of_animals
             self.chosen_video.video.resolution_reduction = self.chosen_video.old_video.resolution_reduction
-        
+
         else:
 
             self.max_threshold = conf.MAX_THRESHOLD_DEFAULT
@@ -94,7 +94,7 @@ class PreprocessingPreviewAPI(object):
 
     def compute_list_of_blobs(self, *args):
         self.blobs = segment(self.chosen_video.video)
-        
+
 
     def segment(self, min_threshold, max_threshold, min_area, max_area):
         self.chosen_video.video._segmentation_time = time.time()
@@ -125,14 +125,14 @@ class PreprocessingPreviewAPI(object):
         """
 
     def save_list_of_blobs(self):
-        
+
         self.chosen_video.video._has_been_segmented = True
-        
+
         if len(self.chosen_video.list_of_blobs.blobs_in_video[-1]) == 0:
             self.chosen_video.list_of_blobs.blobs_in_video   = self.chosen_video.list_of_blobs.blobs_in_video[:-1]
             self.chosen_video.list_of_blobs.number_of_frames = len(self.chosen_video.list_of_blobs.blobs_in_video)
             self.chosen_video.video._number_of_frames        = self.chosen_video.list_of_blobs.number_of_frames
-        
+
         self.chosen_video.video.save()
         self.chosen_video.list_of_blobs.save(
             self.chosen_video.video,
@@ -140,11 +140,11 @@ class PreprocessingPreviewAPI(object):
             number_of_chunks = self.chosen_video.video.number_of_frames
         )
         self.chosen_video.video._segmentation_time = time.time() - self.chosen_video.video.segmentation_time
-        
+
 
     def model_area_and_crossing_detector(self):
         self.chosen_video.video._crossing_detector_time = time.time()
-        
+
         self.chosen_video.video._model_area, self.chosen_video.video._median_body_length = self.chosen_video.list_of_blobs.compute_model_area_and_body_length(
             self.chosen_video.video.number_of_animals
         )
@@ -152,14 +152,14 @@ class PreprocessingPreviewAPI(object):
 
         if not self.chosen_video.list_of_blobs.blobs_are_connected:
             self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()
-        
-        
+
+
     def train_and_apply_crossing_detector(self):
 
         if self.chosen_video.video.number_of_animals != 1:
-            
+
             self.crossing_detector_trainer = detect_crossings(
-                self.chosen_video.list_of_blobs, 
+                self.chosen_video.list_of_blobs,
                 self.chosen_video.video,
                 self.chosen_video.video.model_area,
                 use_network = True,
@@ -167,7 +167,7 @@ class PreprocessingPreviewAPI(object):
                 plot_flag = False
             )
         else:
-            
+
             self.chosen_video.list_of_blob = detect_crossings(
                 self.chosen_video.list_of_blobs,
                 self.chosen_video.video,
@@ -185,7 +185,7 @@ class PreprocessingPreviewAPI(object):
 
     def generate_list_of_fragments_and_global_fragments(self):
         self.chosen_video.video._fragmentation_time = time.time()
-        
+
         if self.chosen_video.video.number_of_animals != 1:
             self.chosen_video.list_of_blobs.compute_overlapping_between_subsequent_frames()
             self.chosen_video.list_of_blobs.compute_fragment_identifier_and_blob_index(max(self.chosen_video.video.number_of_animals, self.chosen_video.video.maximum_number_of_blobs))
@@ -221,4 +221,3 @@ class PreprocessingPreviewAPI(object):
             self.chosen_video.list_of_global_fragments = self.list_of_global_fragments
         self.chosen_video.video._fragmentation_time = time.time() - self.chosen_video.video.fragmentation_time
         self.chosen_video.video.save()
-        
