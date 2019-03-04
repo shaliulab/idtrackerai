@@ -38,31 +38,37 @@ PROCESSES = ['preprocessing','protocols1_and_2', 'protocol3_pretraining',
 #######################################
 ##########       video      ###########
 #######################################
+'''***AVAILABLE_VIDEO_EXTENSION***
+Tested and available video extensions
+'''
 AVAILABLE_VIDEO_EXTENSION = ['.avi', '.AVI', '.mp4', '.MP4', '.mpg', '.MPG', '.mov', '.MOV']
 '''***FRAMES_PER_EPISODE***
 Number of frames per video chunk. Used to parallelise processes
 '''
 FRAMES_PER_EPISODE = 500
-
 #######################################
 ##########   preprocessing  ###########
 #######################################
+"""***NUMBER_OF_ANIMALS_DEFAULT
+Number of animals to be tracked
+"""
+NUMBER_OF_ANIMALS_DEFAULT = 8
 """***MIN_AREA_LOWER, MIN_AREA_UPPER***
 Lower and upper bounds for the minimum area slider
 """
 MIN_AREA_LOWER, MIN_AREA_UPPER = 0, 10000
-"""***MIN_AREA_DEFAULT***
+"""***DEFAULT_RESOLUTION_REDUCTION***
+Ratio to which the width and height are rescaled.
+"""
+RES_REDUCTION_DEFAULT = 1.0
+"""***MIN_AREA_DEFAULT, MAX_AREA_DEFAULT***
 Default value for min area in preprocessing
 """
-MIN_AREA_DEFAULT = 150
+MIN_AREA_DEFAULT, MAX_AREA_DEFAULT = 150, 60000
 """***MAX_AREA_LOWER, MAX_AREA_UPPER***
 Lower and upper bounds for the maximum area slider
 """
 MAX_AREA_LOWER, MAX_AREA_UPPER = 0, 60000
-"""***MAX_AREA_DEFAULT***
-Default value for min area in preprocessing
-"""
-MAX_AREA_DEFAULT = 60000
 """***MIN_THRESHOLD, MAX_AREA_UPPER***
 Lower and upper bounds for the maximum area slider
 """
@@ -70,7 +76,7 @@ MIN_THRESHOLD, MAX_THRESHOLD = 0, 255
 """***MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT***
 Default value for min area in preprocessing
 """
-MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT = 0, 135
+MIN_THRESHOLD_DEFAULT, MAX_THRESHOLD_DEFAULT = 0, 155
 """***VEL_PERCENTILE***
 percentile on the average speed of the individuals used to compute the maximal
 velocity threshold
@@ -83,7 +89,7 @@ STD_TOLERANCE = 4
 """***BACKGROUND_SUBTRACTION_PERIOD***
 Period used to sample the video to compute the background model
 """
-BACKGROUND_SUBTRACTION_PERIOD = 100
+BACKGROUND_SUBTRACTION_PERIOD = 500
 """***NUMBER_OF_CORES_FOR_BACKGROUND_SUBTRACTION***
 Number of jobs used to compute the background model
 """
@@ -108,10 +114,49 @@ Minimum number of frame to allow an individual fragment to be part of a
 global one
 '''
 MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = 3
-
 #######################################
 ##########        CNN       ###########
 #######################################
+'''***CNN_MODEL***
+Architecture for the IDCNN network. By default the model 0 is used, which correspond
+to the model of the paper. Check the different models in the module cnn_architectures.py
+in the folder network and how they are map to a single value code in the module
+id_CNN.py in the network/identification_model folder.
+'''
+CNN_MODEL = 0
+'''***KNOWLEDGE_TRANSFER_FOLDER_IDCNN
+'''
+KNOWLEDGE_TRANSFER_FOLDER_IDCNN = None
+'''***USE_ADAM_OPTIMISER***
+By default the identification neural network is trained with SGD. If this parameter
+is set to TRUE, the network will be trained with the ADAM optimizer.
+'''
+USE_ADAM_OPTIMISER = False
+'''***LAYERS_TO_OPTIMISE_ACCUMULATION
+List of layers to be optimized. None indicates that all layers are optimizsed.
+To check the name of the different layers see the module cnn_architectures.py
+in the folder network.
+'''
+LAYERS_TO_OPTIMISE_ACCUMULATION = None # ['fully-connected1','fully_connected_pre_softmax']
+LAYERS_TO_OPTIMISE_PRETRAINING = None
+'''***LEARNING_RATE_IDCNN_ACCUMULATION***
+'''
+LEARNING_RATE_IDCNN_ACCUMULATION = 0.005
+'''***LEARNING_RATE_IDCNN_PRETRAINING***
+'''
+LEARNING_RATE_IDCNN_PRETRAINING = 0.01
+'''***LEARNING_RATE_DCD***
+'''
+LEARNING_RATE_DCD = 0.001
+'''***KEEP_PROB_IDCNN_ACCUMULATION***
+'''
+KEEP_PROB_IDCNN_ACCUMULATION = 1.
+'''***KEEP_PROB_IDCNN_PRETRAINING***
+'''
+KEEP_PROB_IDCNN_PRETRAINING = 1.
+'''***KEEP_PROB_DCD***
+'''
+KEEP_PROB_DCD = 1.
 '''***VALIDATION_PROPORTION***
 Protortion of images used for validation in the IDCNN model
 '''
@@ -127,7 +172,6 @@ Remark: This is done to prevent out-of-memory error in the GPU
 '''
 BATCH_SIZE_PREDICTIONS_DCD = 100
 BATCH_SIZE_PREDICTIONS_IDCNN = 500
-
 '''***LEARNING_PERCENTAGE_DIFFERENCE_1 ***
 Overfitting threshold during training
 '''
@@ -164,7 +208,6 @@ Minimum number of crossings required to train the crossing detector, otherwise
 only the model area is used to distinguish crossings from individuals
 '''
 MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR = 10
-
 #######################################
 # Deep fingerprint protocols cascade  #
 #######################################
@@ -183,11 +226,9 @@ if equal or bigger than THRESHOLD_ACCEPTABLE_ACCUMULATION.
 (1) THRESHOLD_EARLY_STOP_ACCUMULATION is not reached
 """
 THRESHOLD_ACCEPTABLE_ACCUMULATION = .9
-
 """***MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
 ***"""
 MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS = 3
-
 '''***MAXIMAL_IMAGES_PER_ANIMAL***
 Maximal number of images per indiviudal to be included in the training dataset
 of the idCNN
@@ -224,7 +265,6 @@ the last model or the ones belonging to the model realising the minimum loss in
 validation.
 '''
 RESTORE_CRITERION = 'last'
-
 #######################################
 ########   post-processing   ##########
 #######################################
@@ -234,7 +274,6 @@ threshold we consider the identification certain. Thus, it won't be modified
 either during the final identification or post-processing
 '''
 FIXED_IDENTITY_THRESHOLD = .9
-
 #######################################
 ##########   fish-specific  ###########
 #######################################

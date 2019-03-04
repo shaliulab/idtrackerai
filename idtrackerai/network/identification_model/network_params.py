@@ -28,6 +28,7 @@
 from __future__ import absolute_import, division, print_function
 import os
 import sys
+from confapp import conf
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
     logger = Logger
@@ -72,14 +73,14 @@ class NetworkParams(object):
     .. [2] Kingma, Diederik P., and Jimmy Ba. "Adam: A method for stochastic optimization." arXiv preprint arXiv:1412.6980 (2014).
     """
 
-    def __init__(self, number_of_animals, cnn_model = 0, learning_rate = None,
-                keep_prob = None, use_adam_optimiser = False,
+    def __init__(self, number_of_animals, cnn_model = conf.CNN_MODEL, learning_rate = None,
+                keep_prob = None,
+                use_adam_optimiser = conf.USE_ADAM_OPTIMISER,
                 scopes_layers_to_optimize = None, restore_folder = None,
-                save_folder = None, knowledge_transfer_folder = None,
+                save_folder = None, knowledge_transfer_folder = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN,
                 image_size = None,
                 number_of_channels = None,
                 video_path = None):
-
         self.video_path = video_path
         self.number_of_animals = number_of_animals
         self.learning_rate = learning_rate

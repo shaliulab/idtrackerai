@@ -29,6 +29,8 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import cv2
 import sys
+from confapp import conf
+import tensorflow as tf
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.network.cnn_architectures import cnn_model_crossing_detector
 from idtrackerai.network.crossings_detector_model.get_crossings_data_set import CrossingDataset
@@ -66,6 +68,7 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True, retur
     list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0], video.number_of_animals)
 
     if use_network:
+        tf.reset_default_graph()
         video.create_crossings_detector_folder()
         logger.info("Get individual and crossing images labelled data")
         training_set = CrossingDataset(list_of_blobs.blobs_in_video, video, scope = 'training')
@@ -86,9 +89,9 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True, retur
             crossing_image_shape = training_set.images.shape[1:]
             logger.info("crossing image shape %s" %str(crossing_image_shape))
             crossings_detector_network_params = NetworkParams_crossings(number_of_classes = 2,
-                                                                        learning_rate = 0.001,
+                                                                        learning_rate = conf.LEARNING_RATE_DCD,
                                                                         architecture = cnn_model_crossing_detector,
-                                                                        keep_prob = 1.0,
+                                                                        keep_prob = conf.KEEP_PROB_IDCNN_PRETRAINING,
                                                                         save_folder = video._crossings_detector_folder,
                                                                         image_size = crossing_image_shape)
             net = ConvNetwork_crossings(crossings_detector_network_params)

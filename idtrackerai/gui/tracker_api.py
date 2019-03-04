@@ -72,6 +72,7 @@ class TrackerAPI(object):
                 self.track_single_global_fragment_video()
 
         else:
+            tf.reset_default_graph()
             self.chosen_video.video.accumulation_trial = 0
             delete = not self.chosen_video.processes_to_restore[
                 'protocols1_and_2'] if 'protocols1_and_2' in self.chosen_video.processes_to_restore.keys() else True
@@ -80,6 +81,9 @@ class TrackerAPI(object):
                 else self.chosen_video.video.knowledge_transfer_info_dict['number_of_animals']
             self.restoring_first_accumulation = False
             self.init_accumulation_network()
+            self.chosen_video.video._tracking_with_knowledge_transfer = False if self.accumulation_network_params.knowledge_transfer_folder is None else True
+
+
 
             if not_been_executed_call: not_been_executed_call()
 
@@ -249,9 +253,9 @@ class TrackerAPI(object):
 
     def init_accumulation_network(self):
         self.accumulation_network_params = NetworkParams(self.number_of_animals,
-            learning_rate = 0.005,
-            keep_prob = 1.0,
-            scopes_layers_to_optimize = None,
+            learning_rate = conf.LEARNING_RATE_IDCNN_ACCUMULATION,
+            keep_prob = conf.KEEP_PROB_IDCNN_ACCUMULATION,
+            scopes_layers_to_optimize = conf.LAYERS_TO_OPTIMISE_ACCUMULATION,
             save_folder = self.chosen_video.video.accumulation_folder,
             image_size = self.chosen_video.video.identification_image_size,
             video_path = self.chosen_video.video.video_path
@@ -273,23 +277,19 @@ class TrackerAPI(object):
         self.chosen_video.video._protocol1_time = time.time()
         self.chosen_video.list_of_fragments.reset(roll_back_to = 'fragmentation')
         self.chosen_video.list_of_global_fragments.reset(roll_back_to = 'fragmentation')
-        # print("self.accumulation_network_params", self.accumulation_network_params.__dict__)
-        # if self.chosen_video.video.tracking_with_knowledge_transfer:
-        #     Logger.debug('Setting layers to optimize for knowledge_transfer')
-        #     self.accumulation_network_params.scopes_layers_to_optimize = None #['fully-connected1','fully_connected_pre_softmax']
         self.net = ConvNetwork(self.accumulation_network_params)
         if self.chosen_video.video.tracking_with_knowledge_transfer:
             logger.debug('Restoring for knowledge transfer')
             self.net.restore()
         self.chosen_video.video._first_frame_first_global_fragment.append(self.chosen_video.list_of_global_fragments.set_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = 0))
-        if self.chosen_video.video.identity_transfer and\
-            self.chosen_video.video.number_of_animals < self.chosen_video.video.knowledge_transfer_info_dict['number_of_animals']:
-            tf.reset_default_graph()
-            self.accumulation_network_params.number_of_animals = self.chosen_video.video.number_of_animals
-            self.accumulation_network_params._restore_folder = None
-            self.accumulation_network_params.knowledge_transfer_folder = self.chosen_video.video.knowledge_transfer_model_folder
-            self.net = ConvNetwork(self.accumulation_network_params)
-            self.net.restore()
+        # if self.chosen_video.video.identity_transfer and\
+        #     self.chosen_video.video.number_of_animals < self.chosen_video.video.knowledge_transfer_info_dict['number_of_animals']:
+        #     tf.reset_default_graph()
+        #     self.accumulation_network_params.number_of_animals = self.chosen_video.video.number_of_animals
+        #     self.accumulation_network_params._restore_folder = None
+        #     self.accumulation_network_params.knowledge_transfer_folder = self.chosen_video.video.knowledge_transfer_model_folder
+        #     self.net = ConvNetwork(self.accumulation_network_params)
+        #     self.net.restore()
         self.chosen_video.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(self.chosen_video.video, accumulation_trial = 0)
         self.accumulation_manager = AccumulationManager(self.chosen_video.video, self.chosen_video.list_of_fragments,
                                                     self.chosen_video.list_of_global_fragments,
@@ -635,10 +635,9 @@ class TrackerAPI(object):
         delete = not self.chosen_video.processes_to_restore['protocol3_pretraining'] if 'protocol3_pretraining' in self.chosen_video.processes_to_restore.keys() else True
         self.chosen_video.video.create_pretraining_folder(delete = delete)
         self.pretrain_network_params = NetworkParams(self.chosen_video.video.number_of_animals,
-                                                learning_rate = 0.01,
-                                                keep_prob = 1.0,
-                                                use_adam_optimiser = False,
-                                                scopes_layers_to_optimize = None,
+                                                learning_rate = conf.LEARNING_RATE_IDCNN_PRETRAINING,
+                                                keep_prob = conf.KEEP_PROB_IDCNN_PRETRAINING,
+                                                scopes_layers_to_optimize = conf.LAYERS_TO_OPTIMISE_PRETRAINING,
                                                 save_folder = self.chosen_video.video.pretraining_folder,
                                                 image_size = self.chosen_video.video.identification_image_size,
                                                 video_path = self.chosen_video.video.video_path)
@@ -798,7 +797,7 @@ class TrackerAPI(object):
             logger.info("Saving trajectories")
             np.save(trajectories_file, trajectories)
         self.chosen_video.video._has_trajectories = True
-        
+
         # Call GUI function
         if trajectories_popup_dismiss: trajectories_popup_dismiss()
 
