@@ -30,6 +30,7 @@ import os
 import uuid
 import sys
 import cv2
+import h5py
 import itertools
 import numpy as np
 from tqdm import tqdm
@@ -51,6 +52,8 @@ class Blob(object):
 
     frame_number : int
         Object containing all the parameters of the video.
+    in_frame_index : int
+        Hierarchy of the blob in the segmentation of the frame
     number_of_animals : int
         Number of animals to be tracked
     centroid : tuple
@@ -84,7 +87,7 @@ class Blob(object):
     _fragment_identifier : int
         Unique integer identifying the fragment (built by blob overlapping) to which self belongs to
     _blob_index : int
-        Hierarchy of the blob
+        Hierarchy of the blob at the beggining of the core of the global fragment. Only used to plot accumulation steps
     _used_for_training : bool
         If True the image obtained from the blob has been used to train the idCNN
     _accumulation_step : int
@@ -119,19 +122,21 @@ class Blob(object):
     """
     def __init__(self, centroid, contour, area,
                 bounding_box_in_frame_coordinates, bounding_box_image = None,
-                bounding_box_image_path = None,
+                bounding_box_images_path = None,
                 estimated_body_length = None, pixels = None,
-                number_of_animals = None, frame_number = None):
+                number_of_animals = None, frame_number = None,
+                in_frame_index=None):
         self.frame_number = frame_number
+        self.in_frame_index = in_frame_index
         self.number_of_animals = number_of_animals
         self.centroid = np.array(centroid) # numpy array (int64): coordinates of the centroid of the blob in pixels
         self.contour = contour # openCV contour [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]]
         self.area = area # int: number of pixels in the blob
         self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates #tuple of tuples: ((x1,y1),(x2,y2)) (top-left corner, bottom-right corner) in pixels
-        self.bounding_box_image_path = bounding_box_image_path # path to where the bounding_box_image is saved
-        if bounding_box_image_path is not None: np.save(bounding_box_image_path, bounding_box_image)
+        self.bounding_box_images_path = bounding_box_images_path # path to where the bounding_box_image is saved
         self.estimated_body_length = estimated_body_length
         self.image_for_identification_path = None # path where the image for identification is stored
+        self.identification_image_index = None
         self.pixels = pixels # list of int's: linearized pixels of the blob
         self._is_an_individual = False
         self._is_a_crossing = False
@@ -149,11 +154,10 @@ class Blob(object):
         self._identity_corrected_solving_jumps = None
         self._identity = None
 
-
-
     @property
     def bounding_box_image(self):
-        return np.load(self.bounding_box_image_path)
+        with h5py.File(self.bounding_box_images_path, 'r') as f:
+            return f[str(self.frame_number) + '-' + str(self.in_frame_index)][:]
 
     @property
     def fragment_identifier(self):
@@ -354,12 +358,13 @@ class Blob(object):
         if self.is_an_individual_in_a_fragment:
             self._blob_index = new_blob_index
 
-    @property
-    def image_for_identification(self):
-        if self.is_an_individual:
-            return np.load(self.image_for_identification_path)
-        else:
-            return None
+    # @property
+    # def image_for_identification(self):
+    #     if self.is_an_individual:
+    #         with h5py.File(self.image_for_identification_path, 'r') as f:
+    #             return f['identification_images'][self.identification_image_index]
+    #     else:
+    #         return None
 
     @property
     def nose_coordinates(self):
@@ -449,7 +454,8 @@ class Blob(object):
                 logger.debug("mean pixels both blobs %s" %str(np.mean([len(self.pixels), len(self.previous[0].pixels)])))
                 raise ValueError("non_shared_information_with_previous is nan")
 
-    def apply_model_area(self, video, number_of_animals, model_area, identification_image_size, number_of_blobs):
+    def apply_model_area(self, video, number_of_animals, model_area,
+                         identification_image_size, number_of_blobs):
         """Classify self as a crossing or individual blob according to its area
 
         Parameters
@@ -482,14 +488,17 @@ class Blob(object):
 
         """
         image_for_identification, \
-        self._extreme1_coordinates, \
-        self._extreme2_coordinates, _ = self.get_image_for_identification(video)
+            self._extreme1_coordinates, \
+            self._extreme2_coordinates, _ = self.get_image_for_identification(video)
 
         # For RAM optimization
-        if self.image_for_identification_path is not None and os.path.isfile(self.image_for_identification_path):
-            os.remove(self.image_for_identification_path)
-        self.image_for_identification_path = os.path.join(video._identification_images_folder, 'id_' + str(uuid.uuid4()) + '.npy')
-        np.save(self.image_for_identification_path, image_for_identification)
+        with h5py.File(video.identification_images_file_path, 'a') as f:
+            dset = f['identification_images']
+            i = dset.shape[-1]
+            dset.resize((image_for_identification.shape[0],
+                         image_for_identification.shape[0], i + 1))
+            dset[..., i] = image_for_identification
+        self.identification_image_index = i
 
     def get_image_for_identification(self, video, folder_to_save_for_paper_figure = '', image_size = None):
         """Compute the image that will be used to identify the animal with the idCNN

@@ -29,6 +29,8 @@ from __future__ import absolute_import, division, print_function
 import numpy as np, sys
 from confapp import conf
 
+from idtrackerai.list_of_fragments import load_identification_images
+
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -268,7 +270,7 @@ class GlobalFragment(object):
             self.total_number_of_images = sum([fragment.number_of_images for fragment in self.individual_fragments])
         return self.total_number_of_images
 
-    def get_images_and_labels(self, scope='pretraining'):
+    def get_images_and_labels(self, identification_images_file_path, scope='pretraining'):
         """Arrange the images and identities in the global fragment as a
         labelled dataset in order to train the idCNN
         """
@@ -281,7 +283,7 @@ class GlobalFragment(object):
             if scope=='pretraining':
                 fragment._temporary_id_for_pretraining = temporary_id
 
-        return np.asarray([np.load(image) for image in images]), labels
+        return np.asarray(load_identification_images(identification_images_file_path, images)), labels
 
     def compute_start_end_frame_indices_of_individual_fragments(self, blobs_in_video):
         """

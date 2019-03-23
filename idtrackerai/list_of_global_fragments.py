@@ -178,7 +178,7 @@ class ListOfGlobalFragments(object):
                                         reverse = False)
 
     def get_transferred_identities(self, video, net):
-        images, _ = self.first_global_fragment_for_accumulation.get_images_and_labels(scope='identity_transfer')
+        images, _ = self.first_global_fragment_for_accumulation.get_images_and_labels(video.identification_images_file_path, scope='identity_transfer')
         images = np.asarray(images)
         assigner = assign(net, images, False)
         compute_identification_statistics_for_non_accumulated_fragments(
@@ -380,4 +380,5 @@ def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
     """
     global_fragments_boolean_array = check_global_fragments(blobs_in_video, num_animals)
     indices_beginning_of_fragment = detect_beginnings(global_fragments_boolean_array)
-    return [GlobalFragment(blobs_in_video, fragments, i, num_animals) for i in indices_beginning_of_fragment]
+    return [GlobalFragment(blobs_in_video, fragments, i, num_animals)
+            for i in indices_beginning_of_fragment]

@@ -690,7 +690,7 @@ class Video(object):
             self.get_episodes()
         else:
             chunks_lengths = [int(cv2.VideoCapture(chunk).get(7)) for chunk in self._paths_to_video_segments]
-            self._episodes_start_end = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])) for i in range(1,len(chunks_lengths)+1)]
+            self._episodes_start_end = [(np.sum(chunks_lengths[:i-1], dtype = np.int), np.sum(chunks_lengths[:i])-1) for i in range(1,len(chunks_lengths)+1)]
             self._number_of_frames = np.sum(chunks_lengths)
             self._number_of_episodes = len(self._paths_to_video_segments)
         cap.release()
@@ -747,6 +747,7 @@ class Video(object):
         ## for RAM optimization
         self._segmentation_images_folder = os.path.join(self.session_folder, 'segmentation_images')
         self._identification_images_folder = os.path.join(self.session_folder, 'identification_images')
+        self.identification_images_file_path = os.path.join(self._identification_images_folder, 'i_images.hdf5')
         if not os.path.isdir(self._segmentation_images_folder):
             os.makedirs(self._segmentation_images_folder)
             logger.info("the folder %s has been created" %self._segmentation_images_folder)
@@ -867,7 +868,7 @@ class Video(object):
             logger.info("the folder %s has been created" %self.embeddings_folder)
 
     def get_episodes(self):
-        """Split video in episodes (chunks) of 500 frames
+        """Split video in episodes (chunks) of FRAMES_PER_EPISODE frames
         for parallelisation"""
         starting_frames = np.arange(0, self.number_of_frames, conf.FRAMES_PER_EPISODE)
         ending_frames = np.hstack((starting_frames[1:]-1, self.number_of_frames))

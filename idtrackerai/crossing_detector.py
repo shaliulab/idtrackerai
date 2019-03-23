@@ -26,7 +26,9 @@
 
 
 from __future__ import absolute_import, division, print_function
+import os
 import numpy as np
+import h5py
 import cv2
 import sys
 from confapp import conf
@@ -65,6 +67,14 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True, retur
 
     """
     logger.info("Discriminating blobs representing individuals from blobs associated to crossings")
+
+    image_shape = video.identification_image_size[0]
+    with h5py.File(video.identification_images_file_path, 'w') as f:
+        f.create_dataset("identification_images", ((image_shape, image_shape, 0)),
+                         chunks=(image_shape, image_shape, 1),
+                         maxshape=(image_shape, image_shape,
+                                   video.number_of_animals*video.number_of_frames*2))
+
     list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0], video.number_of_animals)
 
     if use_network:

@@ -125,9 +125,13 @@ id_CNN.py in the network/identification_model folder.
 '''
 CNN_MODEL = 0
 '''***KNOWLEDGE_TRANSFER_FOLDER_IDCNN***
+Folder for a accumulation folder with a model from another video. Note that if
+the IDENTITY_TRANSFER flag is True, then the IDENTIFICATION_IMAGE_SIZE will be
+taken from the knowledge_transfer_info_dict.
 '''
 KNOWLEDGE_TRANSFER_FOLDER_IDCNN = None
 '''***IDENTITY_TRANSFER***
+Bloonean
 '''
 IDENTITY_TRANSFER = False
 '''***USE_ADAM_OPTIMISER***

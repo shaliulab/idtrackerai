@@ -29,6 +29,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import random
 from idtrackerai.assigner import assign
+from idtrackerai.list_of_fragments import load_identification_images
 from confapp import conf
 import sys
 
@@ -179,7 +180,7 @@ class AccumulationManager(object):
                     # this condition is set because the first time we accumulate the variable used_images is None
                     images.extend([self.used_images[i] for i in used_images_indices])
                     labels.extend([i] * number_of_used_images)
-        return np.asarray([np.load(image) for image in images]), np.asarray(labels)
+        return np.asarray(load_identification_images(self.video.identification_images_file_path, images)), np.asarray(labels)
 
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training
@@ -619,7 +620,7 @@ def get_predictions_of_candidates_fragments(net, video, fragments):
             candidate_individual_fragments_identifiers.append(fragment.identifier)
 
     if len(images) != 0:
-        images = np.asarray([np.load(image) for image in images])
+        images = np.asarray(load_identification_images(video.identification_images_file_path, images))
         assigner = assign(net, images, print_flag = False)
 
     return assigner._predictions, assigner._softmax_probs, np.cumsum(lengths)[:-1], candidate_individual_fragments_identifiers

@@ -32,6 +32,7 @@ import sys
 import numpy as np
 import multiprocessing
 import cv2
+import h5py
 # import cPickle as pickle
 from joblib import Parallel, delayed
 import gc
@@ -87,7 +88,10 @@ def get_videoCapture(video, path, episode_start_end_frames):
 
     return cap, number_of_frames_in_episode
 
-def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs, frame_number, global_frame_number):
+
+def get_blobs_in_frame(cap, video, segmentation_thresholds,
+                       max_number_of_blobs, frame_number, global_frame_number,
+                       episode_path, episode):
     """Segments a frame read from `cap` according to the preprocessing parameters
     in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
     and the `max_number_of_blobs` found in the video so far. Frames are segmented
@@ -164,17 +168,22 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds, max_number_of_blobs,
         contours = []
 
     # create blob objects
-    for i, bounding_box in enumerate(bounding_boxes):
-        blob = Blob(centroids[i],
-                    contours[i],
-                    areas[i],
-                    bounding_box,
-                    bounding_box_image = miniframes[i],
-                    bounding_box_image_path = os.path.join(video._segmentation_images_folder, str(uuid.uuid4()) + '.npy'),
-                    estimated_body_length = estimated_body_lengths[i],
-                    pixels = pixels[i],
-                    number_of_animals = video.number_of_animals)
-        blobs_in_frame.append(blob)
+    with h5py.File(episode_path, 'a') as f:
+        for i, bounding_box in enumerate(bounding_boxes):
+            f.create_dataset(str(global_frame_number) + '-' + str(i),
+                             data=miniframes[i])
+            blob = Blob(centroids[i],
+                        contours[i],
+                        areas[i],
+                        bounding_box,
+                        bounding_box_image=miniframes[i],
+                        bounding_box_images_path=episode_path,
+                        estimated_body_length=estimated_body_lengths[i],
+                        pixels=pixels[i],
+                        number_of_animals=video.number_of_animals,
+                        frame_number=global_frame_number,
+                        in_frame_index=i)
+            blobs_in_frame.append(blob)
 
     if len(centroids) > max_number_of_blobs:
         max_number_of_blobs = len(centroids)
@@ -222,7 +231,11 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
     segment_frame
     blob_extractor
     """
-
+    episode = video.in_which_episode(episode_start_end_frames[0])
+    episode_path = os.path.join(video._segmentation_images_folder,
+                                's_images_{}.hdf5'.format(str(episode)))
+    if os.path.isfile(episode_path):
+        os.remove(episode_path)
     blobs_in_episode = []
 
     cap, number_of_frames_in_episode = get_videoCapture(video, path, episode_start_end_frames)
@@ -236,7 +249,9 @@ def segment_episode(video, segmentation_thresholds, path = None, episode_start_e
                                                                     segmentation_thresholds,
                                                                     max_number_of_blobs,
                                                                     frame_number,
-                                                                    global_frame_number)
+                                                                    global_frame_number,
+                                                                    episode_path,
+                                                                    episode)
         else:
             ret, _ = cap.read()
             blobs_in_frame = []
@@ -363,10 +378,18 @@ def resegment(video, frame_number, list_of_blobs, new_segmentation_thresholds):
         start = video.episodes_start_end[episode_number][0]
         cap.set(1,frame_number - start)
 
+    episode = video.in_which_episode(frame_number)
+    episode_path = os.path.join(video._segmentation_images_folder,
+                                's_images_{}.hdf5'.format(str(episode)))
+    with h5py.File(episode_path, 'a') as f:
+        images_to_delete = [d_name for d_name in f.keys()
+                            if d_name.split('-')[0] == str(frame_number)]
+        for im in images_to_delete:
+            del im
     blobs_in_resegmanted_frame, \
     number_of_blobs_in_frame = get_blobs_in_frame(cap, video, new_segmentation_thresholds,
-                                                0, frame_number, frame_number)
-    [os.remove(blob.bounding_box_image_path) for blob in list_of_blobs.blobs_in_video[frame_number]] ## for RAM optimization
+                                                0, frame_number, frame_number,
+                                                episode_path, episode)
     list_of_blobs.blobs_in_video[frame_number] = blobs_in_resegmanted_frame
     cap.release()
     cv2.destroyAllWindows()

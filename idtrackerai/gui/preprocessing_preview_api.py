@@ -201,7 +201,8 @@ class PreprocessingPreviewAPI(object):
             self.chosen_video.list_of_blobs.compute_crossing_fragment_identifier()
             fragments = create_list_of_fragments(self.chosen_video.list_of_blobs.blobs_in_video,
                                                 self.chosen_video.video.number_of_animals)
-            self.list_of_fragments = ListOfFragments(fragments)
+            self.list_of_fragments = ListOfFragments(fragments,
+                                                     self.chosen_video.video.identification_images_file_path)
             self.chosen_video.video._fragment_identifier_to_index = self.list_of_fragments.get_fragment_identifier_to_index_list()
             global_fragments = create_list_of_global_fragments(self.chosen_video.list_of_blobs.blobs_in_video,
                                                                 self.list_of_fragments.fragments,

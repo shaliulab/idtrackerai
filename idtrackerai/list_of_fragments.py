@@ -28,7 +28,7 @@
 from __future__ import absolute_import, division, print_function
 import os
 import sys
-import random
+import h5py
 import numpy as np
 from tqdm import tqdm
 from idtrackerai.fragment import Fragment
@@ -56,9 +56,10 @@ class ListOfFragments(object):
         number of fragments computed by the method
         :meth:`~list_of_blobs.compute_fragment_identifier_and_blob_index`
     """
-    def __init__(self, fragments):
+    def __init__(self, fragments, identification_images_file_path):
         self.fragments = fragments
         self.number_of_fragments = len(self.fragments)
+        self.identification_images_file_path = identification_images_file_path
 
     def get_fragment_identifier_to_index_list(self):
         """Creates a mapping between the attribute :attr:`fragments` and
@@ -96,7 +97,9 @@ class ListOfFragments(object):
         """
         images_lists = [fragment.images for fragment in self.fragments
                         if not fragment.used_for_training and fragment.is_an_individual]
-        return np.asarray([np.load(image) for images in images_lists for image in images])
+        images = [image for images in images_lists for image in images]
+        return np.asarray(load_identification_images(self.identification_images_file_path, images))
+
 
     def compute_number_of_unique_images_used_for_pretraining(self):
         """Returns the number of images used for pretraining
@@ -579,6 +582,7 @@ class ListOfFragments(object):
         fig.savefig(os.path.join(video.preprocessing_folder,'fragments_summary_2.pdf'), transparent=True)
         plt.show()
 
+
 def create_list_of_fragments(blobs_in_video, number_of_animals):
     """Generate a list of instances of :class:`~fragment.Fragment` collecting
     all the fragments in the video.
@@ -605,7 +609,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
         for blob in blobs_in_frame:
             current_fragment_identifier = blob.fragment_identifier
             if current_fragment_identifier not in used_fragment_identifiers:
-                images = [blob.image_for_identification_path] if blob.is_an_individual else [blob.bounding_box_image]
+                images = [blob.identification_image_index] if blob.is_an_individual else [blob.bounding_box_image]
                 bounding_boxes = [blob.bounding_box_in_frame_coordinates] if blob.is_a_crossing else []
                 centroids = [blob.centroid]
                 areas = [blob.area]
@@ -616,7 +620,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                 while len(current.next) > 0 and current.next[0].fragment_identifier == current_fragment_identifier:
                     current = current.next[0]
                     bounding_box_in_frame_coordinates = [current.bounding_box_in_frame_coordinates] if current.is_a_crossing else []
-                    images, bounding_boxes, centroids, areas, pixels = append_values_to_lists([current.image_for_identification_path,
+                    images, bounding_boxes, centroids, areas, pixels = append_values_to_lists([current.identification_image_index,
                                                                 bounding_box_in_frame_coordinates,
                                                                 current.centroid,
                                                                 current.area,
@@ -647,3 +651,10 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
     logger.info("getting coexisting individual fragments indices")
     [fragment.get_coexisting_individual_fragments_indices(fragments) for fragment in fragments]
     return fragments
+
+
+def load_identification_images(identification_images_file_path, images_indices):
+    with h5py.File(identification_images_file_path, 'r') as f:
+        dset = f['identification_images']
+        images = [dset[..., image_index] for image_index in images_indices]
+    return images

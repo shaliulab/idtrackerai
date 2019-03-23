@@ -270,7 +270,9 @@ class ListOfBlobs(object):
         number_of_animals : int
             number of animals to be tracked
         """
-        def apply_model_area_to_blobs_in_frame(video, number_of_animals, blobs_in_frame, model_area, identification_image_size):
+        def apply_model_area_to_blobs_in_frame(video, number_of_animals,
+                                               blobs_in_frame, model_area,
+                                               identification_image_size):
             """Applies `model_area` to the collection of Blob instances in
             `blobs_in_frame`
 
@@ -291,10 +293,13 @@ class ListOfBlobs(object):
             """
             number_of_blobs = len(blobs_in_frame)
             for blob in blobs_in_frame:
-                blob.apply_model_area(video, number_of_animals, model_area, identification_image_size, number_of_blobs)
-        for blobs_in_frame in tqdm(self.blobs_in_video, desc = 'Applying model area'):
-            apply_model_area_to_blobs_in_frame(video, number_of_animals, blobs_in_frame, model_area, identification_image_size)
-
+                blob.apply_model_area(video, number_of_animals, model_area,
+                                      identification_image_size,
+                                      number_of_blobs)
+        for blobs_in_frame in tqdm(self.blobs_in_video, desc='Applying model area'):
+            apply_model_area_to_blobs_in_frame(video, number_of_animals,
+                                               blobs_in_frame, model_area,
+                                               identification_image_size)
     def get_data_plot(self):
         """Gets the areas of all the blobs segmented in the video
 
