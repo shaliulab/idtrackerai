@@ -400,8 +400,12 @@ class Blob(object):
 
     @property
     def identity_corrected_solving_jumps(self):
-        return self._identity_corrected_solving_jumps
-
+        try:
+            return self._identity_corrected_solving_jumps
+        except Exception as e:
+            print(e)
+            self._identity_corrected_solving_jumps = None
+            return None
     @property
     def identity_corrected_closing_gaps(self):
         return self._identity_corrected_closing_gaps
