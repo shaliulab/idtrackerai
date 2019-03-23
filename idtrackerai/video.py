@@ -912,6 +912,48 @@ class Video(object):
 
         self.overall_P2 = weighted_P2 / number_of_individual_blobs
 
+    def delete_accumulation_folders(self):
+        for path in glob.glob(os.path.join(self.session_folder, '*')):
+            if 'accumulation_' in path or 'pretraining' in path:
+                rmtree(path)
+
+    def delete_data(self):
+        logger.info("Data policy: {}".format(conf.DATA_POLICY))
+        if conf.DATA_POLICY in ['trajectories', 'validation',
+                           'knowledge_transfer', 'idmatcher.ai']:
+
+            if os.path.isdir(self._segmentation_images_folder):
+                logger.info("Deleting segmentation images")
+                rmtree(self._segmentation_images_folder)
+            if os.path.isfile(self.global_fragments_path):
+                logger.info("Deleting global fragments")
+                os.remove(self.global_fragments_path)
+            if os.path.isfile(self.fragments_path):
+                logger.info("Deleting fragments")
+                os.remove(self.fragments_path)
+            if os.path.isfile(self.blobs_path_segmented):
+                logger.info("Deleting blobs segmented")
+                os.remove(self.blobs_path_segmented)
+            if os.path.isdir(self.crossings_detector_folder):
+                logger.info("Deleting crossing detector folder")
+                rmtree(self.crossings_detector_folder)
+
+        if conf.DATA_POLICY in ['trajectories', 'validation',
+                           'knowledge_transfer']:
+            if os.path.isdir(self._identification_images_folder):
+                logger.info("Deleting identification images")
+                rmtree(self._identification_images_folder)
+
+        if conf.DATA_POLICY in ['trajectories', 'validation']:
+            logger.info("Deleting CNN models folders")
+            self.delete_accumulation_folders()
+
+        if conf.DATA_POLICY == 'trajectories':
+            if os.path.isdir(self.preprocessing_folder):
+                logger.info("Deleting preprocessing data")
+                rmtree(self.preprocessing_folder)
+
+
 def scanFolder(path):
     video = os.path.basename(path)
     filename, extension = os.path.splitext(video)

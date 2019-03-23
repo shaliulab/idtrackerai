@@ -293,3 +293,15 @@ SMOOTH_SIGMA = 10
 Distance between nose and base of the head
 '''
 HEAD_DIAMETER = 20
+
+##################################################
+##########   data management policies  ###########
+##################################################
+""" Data policy to be applied at the end of the tracking
+'all': saves all the data as it is generated from tracking
+'trajectories': saves only the trajectories
+'validation': saves the information needed to validate the video
+'id_transfer': saves the information needed to perfom identity_transfer to another video
+'id_matcher': saves the information needed to perform identity_matching between videos
+"""
+DATA_POLICY = 'all'
