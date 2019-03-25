@@ -1,3 +1,6 @@
 [submodule "idtrackerai-gui"]
 	path = idtrackerai-gui
 	url = https://UmSenhorQualquer@bitbucket.org/fchampalimaud/idtrackerai-gui.git
+[submodule "python-video-annotator"]
+	path = python-video-annotator
+	url = https://github.com/UmSenhorQualquer/pythonVideoAnnotator.git
