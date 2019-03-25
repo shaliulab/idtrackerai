@@ -129,7 +129,7 @@
 <span class="c1">#</span>
 <span class="c1"># [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,</span>
 <span class="c1"># (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)</span>
- 
+
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
@@ -144,6 +144,7 @@
 <span class="k">else</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">logging</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;__main__.epoch_runner&quot;</span><span class="p">)</span>
+    <span class="c1"># logger = logging.getLogger(__name__)</span>
 
 <div class="viewcode-block" id="EpochRunner"><a class="viewcode-back" href="../idCNN.html#epoch_runner.EpochRunner">[docs]</a><span class="k">class</span> <span class="nc">EpochRunner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Runs an epoch divided in batches for a given operation and a given</span>
@@ -252,7 +253,6 @@
         <span class="n">individual_accuracy_epoch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">individual_accuracy_epoch</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_flag</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> (epoch </span><span class="si">%i</span><span class="s1">). Loss: </span><span class="si">%f</span><span class="s1">, accuracy </span><span class="si">%f</span><span class="s1">, individual accuracy: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting_epoch</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_epochs_completed</span><span class="p">,</span> <span class="n">loss_epoch</span><span class="p">,</span> <span class="n">accuracy_epoch</span> <span class="p">,</span> <span class="n">individual_accuracy_epoch</span><span class="p">))</span>
-
         <span class="c1"># self._index_in_epoch_train = 0</span>
         <span class="n">store_loss_and_accuracy</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">loss_epoch</span><span class="p">,</span> <span class="n">accuracy_epoch</span><span class="p">,</span> <span class="n">individual_accuracy_epoch</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">feed_dict</span></div></div>
@@ -278,7 +278,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jan 14, 2019.
+      Last updated on Jan 30, 2019.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.

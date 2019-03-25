@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, division, print_function
 import itertools
@@ -38,6 +38,7 @@ if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
 else:
     import logging
     logger = logging.getLogger("__main__.epoch_runner")
+    # logger = logging.getLogger(__name__)
 
 class EpochRunner(object):
     """ Runs an epoch divided in batches for a given operation and a given
@@ -146,7 +147,6 @@ class EpochRunner(object):
         individual_accuracy_epoch = np.nanmean(np.vstack(individual_accuracy_epoch),axis=0)
         if self.print_flag:
             logger.info('%s (epoch %i). Loss: %f, accuracy %f, individual accuracy: %s' %(name, self.starting_epoch + self._epochs_completed, loss_epoch, accuracy_epoch , individual_accuracy_epoch))
-
         # self._index_in_epoch_train = 0
         store_loss_and_accuracy.append_data(loss_epoch, accuracy_epoch, individual_accuracy_epoch)
         return feed_dict

@@ -91,7 +91,7 @@ NUMBER_OF_CORES_FOR_SEGMENTATION = None # Set None to use the default mode of th
 """***IDENTIFICATION_IMAGE_SIZE***
 size of the identification images. Used for idmatcher.ai
 """
-IDENTIFICATION_IMAGE_SIZE = None #(46, 46, 1)
+IDENTIFICATION_IMAGE_SIZE = (60, 60, 1) #(46, 46, 1)
 """***SIGMA_GAUSSIAN_BLURRING***
 sigma for gaussian blurring tests
 """

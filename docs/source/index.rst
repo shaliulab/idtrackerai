@@ -9,16 +9,15 @@ Welcome to idtracker.ai's documentation!
 .. image:: /_static/flies_tracked.png
     :width: 150
     :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
-
 .. image:: /_static/14ants.png
     :width: 150
-    :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
+    :target: https://www.youtube.com/watch?v=d0TTdu41NoA
 .. image:: /_static/mice.png
     :width: 150
-    :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
+    :target: https://www.youtube.com/watch?v=ANsThSPgBFM
 .. image:: /_static/2fish.png
     :width: 150
-    :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
+    :target: https://www.youtube.com/watch?v=dT28-VcXaCc
 
 
 

@@ -223,8 +223,8 @@ class ListOfFragments(object):
             Mapping from the collection of fragments to the list of fragment
             identifiers
         """
-        [setattr(self.fragments[fragment_identifier_to_index[blob.fragment_identifier]], '_user_generated_identity', blob.user_generated_identity)
-            for blobs_in_frame in blobs_in_video for blob in blobs_in_frame if blob.user_generated_identity is not None ]
+        [setattr(self.fragments[fragment_identifier_to_index[blob.fragment_identifier]], '_user_generated_identity', blob.final_identity)
+            for blobs_in_frame in blobs_in_video for blob in blobs_in_frame if blob.final_identity is not None ]
 
     def get_ordered_list_of_fragments(self, scope = None, first_frame_first_global_fragment = None):
         """Sorts the fragments starting from the frame number

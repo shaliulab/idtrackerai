@@ -347,8 +347,8 @@
 <span class="sd">        Pixels with value 1 are valid pixels given the thresholds and the mask.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">useBkg</span><span class="p">:</span>
-        <span class="c1"># frame = cv2.absdiff(bkg,frame) #only step where frame normalization is important, because the background is normalised</span>
-        <span class="n">frame</span> <span class="o">=</span> <span class="n">bkg</span> <span class="o">-</span> <span class="n">frame</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">absdiff</span><span class="p">(</span><span class="n">bkg</span><span class="p">,</span><span class="n">frame</span><span class="p">)</span> <span class="c1">#only step where frame normalization is important, because the background is normalised</span>
+        <span class="c1"># frame = bkg - frame</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="mi">255</span> <span class="o">-</span> <span class="n">frame</span> <span class="o">*</span> <span class="p">(</span><span class="mf">255.0</span><span class="o">/</span><span class="n">frame</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
         <span class="n">frame_segmented</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">inRange</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">min_threshold</span><span class="p">,</span> <span class="n">max_threshold</span><span class="p">)</span> <span class="c1">#output: 255 in range, else 0</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">useBkg</span><span class="p">:</span>
@@ -663,7 +663,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jan 14, 2019.
+      Last updated on Jan 30, 2019.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.

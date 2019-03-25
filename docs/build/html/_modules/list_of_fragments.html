@@ -329,8 +329,8 @@
 <span class="sd">            Mapping from the collection of fragments to the list of fragment</span>
 <span class="sd">            identifiers</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">[</span><span class="n">fragment_identifier_to_index</span><span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span><span class="p">]],</span> <span class="s1">&#39;_user_generated_identity&#39;</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">user_generated_identity</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">blobs_in_video</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span> <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">user_generated_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="p">]</span></div>
+        <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">[</span><span class="n">fragment_identifier_to_index</span><span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">fragment_identifier</span><span class="p">]],</span> <span class="s1">&#39;_user_generated_identity&#39;</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">blobs_in_frame</span> <span class="ow">in</span> <span class="n">blobs_in_video</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs_in_frame</span> <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">final_identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="p">]</span></div>
 
 <div class="viewcode-block" id="ListOfFragments.get_ordered_list_of_fragments"><a class="viewcode-back" href="../fragmentation.html#list_of_fragments.ListOfFragments.get_ordered_list_of_fragments">[docs]</a>    <span class="k">def</span> <span class="nf">get_ordered_list_of_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">first_frame_first_global_fragment</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sorts the fragments starting from the frame number</span>
@@ -776,7 +776,7 @@
         &copy; Copyright 2018, Champalimaud Center for the Unknown.
       </li>
       <li>
-      Last updated on Jan 14, 2019.
+      Last updated on Jan 30, 2019.
       </li>
       <li>
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.3.
