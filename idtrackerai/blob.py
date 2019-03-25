@@ -94,7 +94,7 @@ class Blob(object):
         The identity corrected manually by the user during validation
     _identity_corrected_closing_gaps : int
         The identity given to the blob during in postprocessing
-    _identity_corrected_solving_duplication : int
+    _identity_corrected_solving_jumps : int
         The identity given to the blob while solving duplications
     _identity : int
         Identity associated to the blob
@@ -143,7 +143,7 @@ class Blob(object):
         self._generated_while_closing_the_gap = False
         self._user_generated_identity = None
         self._identity_corrected_closing_gaps = None
-        self._identity_corrected_solving_duplication = None
+        self._identity_corrected_solving_jumps = None
         self._identity = None
 
     @property
@@ -399,9 +399,13 @@ class Blob(object):
             self._is_a_misclassified_individual = True
 
     @property
-    def identity_corrected_solving_duplication(self):
-        return self._identity_corrected_solving_duplication
-
+    def identity_corrected_solving_jumps(self):
+        try:
+            return self._identity_corrected_solving_jumps
+        except Exception as e:
+            print(e)
+            self._identity_corrected_solving_jumps = None
+            return None
     @property
     def identity_corrected_closing_gaps(self):
         return self._identity_corrected_closing_gaps
@@ -417,8 +421,8 @@ class Blob(object):
     def assigned_identity(self):
         if hasattr(self, 'identity_corrected_closing_gaps') and self.identity_corrected_closing_gaps is not None:
             return self.identity_corrected_closing_gaps
-        elif hasattr(self, 'identity_corrected_solving_duplication') and self.identity_corrected_solving_duplication is not None:
-            return self.identity_corrected_solving_duplication
+        elif hasattr(self, 'identity_corrected_solving_jumps') and self.identity_corrected_solving_jumps is not None:
+            return self.identity_corrected_solving_jumps
         else:
             return self.identity
 

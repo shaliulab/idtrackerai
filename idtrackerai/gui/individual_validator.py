@@ -379,7 +379,7 @@ class IndividualValidator(BoxLayout):
                     root = roots[3]
                 elif blob.identity_corrected_closing_gaps is not None:
                     root = roots[2]
-                elif blob.identity_corrected_solving_duplication is not None:
+                elif blob.identity_corrected_solving_jumps is not None:
                     root = roots[1]
                 elif not blob.used_for_training:
                     root = roots[0]

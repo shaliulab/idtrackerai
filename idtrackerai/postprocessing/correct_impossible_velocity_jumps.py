@@ -23,7 +23,7 @@
 #
 # [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., De Polavieja, G.G.,
 # (2018). idtracker.ai: Tracking all individuals in large collectives of unmarked animals (F.R.-F. and M.G.B. contributed equally to this work. Correspondence should be addressed to G.G.d.P: gonzalo.polavieja@neuro.fchampalimaud.org)
- 
+
 
 from __future__ import absolute_import, print_function, division
 import sys
@@ -249,9 +249,11 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
             else:
                 candidate_id = 0
 
-    if fragment._identity_corrected_solving_duplication is not None:
-        fragment._identity_corrected_solving_duplication = candidate_id
+    if fragment._identity_corrected_solving_jumps is not None:
+        fragment._identity_corrected_solving_jumps = candidate_id
     else:
+        if candidate_id == 0:
+            print("***********", fragment._identity, fragment.identifier)
         fragment._identity = candidate_id
 
 def compute_velocities_consecutive_fragments(neighbour_fragment_past,

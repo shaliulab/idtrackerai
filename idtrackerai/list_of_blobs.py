@@ -356,7 +356,7 @@ class ListOfBlobs(object):
         """
         attributes = ['identity',
                         'P2_vector',
-                        'identity_corrected_solving_duplication',
+                        'identity_corrected_solving_jumps',
                         'user_generated_identity', 'used_for_training',
                         'accumulation_step']
 
