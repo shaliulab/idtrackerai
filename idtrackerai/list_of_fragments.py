@@ -229,6 +229,17 @@ class ListOfFragments(object):
         [setattr(self.fragments[fragment_identifier_to_index[blob.fragment_identifier]], '_user_generated_identity', blob.user_generated_identity)
             for blobs_in_frame in blobs_in_video for blob in blobs_in_frame if blob.user_generated_identity is not None ]
 
+
+    def update_identification_images_dataset(self):
+        with h5py.File(self.identification_images_file_path, 'a') as f:
+            f.create_dataset("identities", (f['identification_images'].shape[0], 1),
+                             fillvalue=np.nan)
+            for fragment in self.fragments:
+                if fragment.used_for_training:
+                    for image in fragment.images:
+                        f['identities'][image] = fragment.identity
+
+
     def get_ordered_list_of_fragments(self, scope = None, first_frame_first_global_fragment = None):
         """Sorts the fragments starting from the frame number
         `first_frame_first_global_fragment`. According to `scope` the sorting
@@ -656,5 +667,5 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
 def load_identification_images(identification_images_file_path, images_indices):
     with h5py.File(identification_images_file_path, 'r') as f:
         dset = f['identification_images']
-        images = [dset[..., image_index] for image_index in images_indices]
+        images = [dset[image_index, ...] for image_index in images_indices]
     return images

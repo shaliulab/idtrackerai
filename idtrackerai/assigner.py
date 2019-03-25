@@ -71,7 +71,7 @@ def assign(net, images, print_flag):
     GetPrediction
     """
     logger.info("assigning identities to images...")
-    images = np.expand_dims(np.asarray(images), axis = 3)
+    images = np.expand_dims(np.asarray(images), axis=3)
     logger.info("generating data set. Images shape %s" %str(images.shape))
     data = DataSet(net.params.number_of_animals, images)
     logger.info("getting predictions")
@@ -79,6 +79,7 @@ def assign(net, images, print_flag):
     assigner.get_predictions_softmax(net.predict)
     logger.info("done")
     return assigner
+
 
 def compute_identification_statistics_for_non_accumulated_fragments(fragments, assigner, number_of_animals = None):
     """Given the predictions associated to the images in each (individual)

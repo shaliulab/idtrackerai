@@ -494,10 +494,11 @@ class Blob(object):
         # For RAM optimization
         with h5py.File(video.identification_images_file_path, 'a') as f:
             dset = f['identification_images']
-            i = dset.shape[-1]
-            dset.resize((image_for_identification.shape[0],
-                         image_for_identification.shape[0], i + 1))
-            dset[..., i] = image_for_identification
+            i = dset.shape[0]
+            dset.resize((i + 1,
+                         image_for_identification.shape[1],
+                         image_for_identification.shape[1]))
+            dset[i, ...] = image_for_identification
         self.identification_image_index = i
 
     def get_image_for_identification(self, video, folder_to_save_for_paper_figure = '', image_size = None):

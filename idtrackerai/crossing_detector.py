@@ -70,10 +70,12 @@ def detect_crossings(list_of_blobs, video, model_area, use_network = True, retur
 
     image_shape = video.identification_image_size[0]
     with h5py.File(video.identification_images_file_path, 'w') as f:
-        f.create_dataset("identification_images", ((image_shape, image_shape, 0)),
-                         chunks=(image_shape, image_shape, 1),
-                         maxshape=(image_shape, image_shape,
-                                   video.number_of_animals*video.number_of_frames*2))
+        f.create_dataset("identification_images", ((0, image_shape, image_shape)),
+                         chunks=(1, image_shape, image_shape),
+                         maxshape=(video.number_of_animals*video.number_of_frames*5,
+                                   image_shape, image_shape))
+        f.attrs['number_of_animals'] = video.number_of_animals
+        f.attrs['video_path'] = video.video_path
 
     list_of_blobs.apply_model_area_to_video(video, model_area, video.identification_image_size[0], video.number_of_animals)
 

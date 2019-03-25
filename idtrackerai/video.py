@@ -928,15 +928,15 @@ class Video(object):
             if os.path.isfile(self.global_fragments_path):
                 logger.info("Deleting global fragments")
                 os.remove(self.global_fragments_path)
-            if os.path.isfile(self.fragments_path):
-                logger.info("Deleting fragments")
-                os.remove(self.fragments_path)
             if os.path.isfile(self.blobs_path_segmented):
                 logger.info("Deleting blobs segmented")
                 os.remove(self.blobs_path_segmented)
-            if os.path.isdir(self.crossings_detector_folder):
+            if hasattr(self, '_crossings_detector_folder') and os.path.isdir(self.crossings_detector_folder):
                 logger.info("Deleting crossing detector folder")
                 rmtree(self.crossings_detector_folder)
+            if os.path.isfile(self.fragments_path):
+                logger.info("Deleting fragments")
+                os.remove(self.fragments_path)
 
         if conf.DATA_POLICY in ['trajectories', 'validation',
                            'knowledge_transfer']:
