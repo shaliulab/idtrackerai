@@ -94,6 +94,8 @@ class PreprocessingPreviewAPI(object):
 
     def compute_list_of_blobs(self, *args):
         self.blobs = segment(self.chosen_video.video)
+        self.chosen_video.list_of_blobs = ListOfBlobs(blobs_in_video = self.blobs)
+        self.chosen_video.video.create_preprocessing_folder()
 
 
     def segment(self, min_threshold, max_threshold, min_area, max_area):
@@ -113,8 +115,6 @@ class PreprocessingPreviewAPI(object):
         """
         :return: True if the segmentation is consistence with the number of animals, otherwise return False
         """
-        self.chosen_video.list_of_blobs = ListOfBlobs(blobs_in_video = self.blobs)
-        self.chosen_video.video.create_preprocessing_folder()
         self.chosen_video.video.frames_with_more_blobs_than_animals, self.chosen_video.video._maximum_number_of_blobs = \
             self.chosen_video.list_of_blobs.check_maximal_number_of_blob(
                 self.chosen_video.video.number_of_animals,
