@@ -44,6 +44,7 @@ else:
     import logging
     logger = logging.getLogger("__main__.blob")
 
+
 class Blob(object):
     """ Object representing a blob (collection of pixels) segmented from a frame
 
@@ -121,11 +122,12 @@ class Blob(object):
 
     """
     def __init__(self, centroid, contour, area,
-                bounding_box_in_frame_coordinates, bounding_box_image = None,
-                bounding_box_images_path = None,
-                estimated_body_length = None, pixels = None,
-                number_of_animals = None, frame_number = None,
-                in_frame_index=None):
+                 bounding_box_in_frame_coordinates, bounding_box_image=None,
+                 bounding_box_images_path=None,
+                 estimated_body_length=None, pixels=None,
+                 number_of_animals=None, frame_number=None,
+                 in_frame_index=None, pixels_path=None,
+                 video_height=None, video_width=None):
         self.frame_number = frame_number
         self.in_frame_index = in_frame_index
         self.number_of_animals = number_of_animals
@@ -137,7 +139,12 @@ class Blob(object):
         self.estimated_body_length = estimated_body_length
         self.image_for_identification_path = None # path where the image for identification is stored
         self.identification_image_index = None
-        self.pixels = pixels # list of int's: linearized pixels of the blob
+        ##
+        self._pixels_path = pixels_path
+        self._pixels = pixels # list of int's: linearized pixels of the blob
+        self.video_height = video_height
+        self.video_width = video_width
+        ##
         self._is_an_individual = False
         self._is_a_crossing = False
         self._was_a_crossing = False
@@ -158,6 +165,22 @@ class Blob(object):
     def bounding_box_image(self):
         with h5py.File(self.bounding_box_images_path, 'r') as f:
             return f[str(self.frame_number) + '-' + str(self.in_frame_index)][:]
+
+    @property
+    def pixels(self):
+        if self._pixels is not None:
+            return self._pixels
+        elif self._pixels_path is not None and os.path.isfile(self._pixels_path):
+            with h5py.File(self._pixels_path, 'r') as f:
+                return f[str(self.frame_number) + '-' + str(self.in_frame_index)][:]
+        else:
+            cimg = np.zeros((self.video_height, self.video_width))
+            cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
+            pts = np.where(cimg == 255)
+            pixels = np.asarray(list(zip(pts[0], pts[1])))
+            pixels = np.ravel_multi_index([pixels[:, 0], pixels[:, 1]],
+                                          (self.video_height, self.video_width))
+            return pixels
 
     @property
     def fragment_identifier(self):
@@ -274,7 +297,8 @@ class Blob(object):
             True if the lists of pixels have non-empty intersection
         """
         overlaps = False
-        intersection = np.intersect1d(self.pixels, other.pixels)
+        intersection = np.intersect1d(self.pixels, other.pixels,
+                                      assume_unique=True)
         if len(intersection) > 0:
             overlaps = True
         return overlaps
@@ -527,7 +551,7 @@ class Blob(object):
                                                 self.bounding_box_image, self.pixels,
                                                 self.bounding_box_in_frame_coordinates,
                                                 image_size,
-                                                folder_to_save_for_paper_figure = folder_to_save_for_paper_figure)
+                                                folder_to_save_for_paper_figure=folder_to_save_for_paper_figure)
 
 
     @staticmethod

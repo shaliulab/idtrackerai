@@ -57,8 +57,6 @@ class Fragment(object):
         List of centroids (see :attr:`~blob.Blob.centroid`)
     areas : list
         List of areas (see :attr:`~blob.Blob.area`)
-    pixels : list
-        List of pixels (see :attr:`~blob.Blob.pixels`)
     is_an_individual : bool
         True if the image has been classified as representing an individual by :func:`~crossing_detector.detect_crossings`
     is_a_crossing : bool
@@ -129,7 +127,7 @@ class Fragment(object):
     def __init__(self, fragment_identifier = None, start_end = None,
                         blob_hierarchy_in_starting_frame = None, images = None,
                         bounding_box_in_frame_coordinates = None,
-                        centroids = None, areas = None, pixels = None,
+                        centroids = None, areas = None,
                         is_an_individual = None, is_a_crossing = None,
                         number_of_animals = None,
                         user_generated_identity = None):
@@ -142,7 +140,6 @@ class Fragment(object):
         if centroids is not None:
             self.set_distance_travelled()
         self.areas = np.asarray(areas)
-        self.pixels = pixels
         self.is_an_individual = is_an_individual
         self.is_a_crossing = is_a_crossing
         self.number_of_animals = number_of_animals

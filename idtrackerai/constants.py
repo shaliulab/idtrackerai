@@ -106,6 +106,13 @@ IDENTIFICATION_IMAGE_SIZE = None #(46, 46, 1)
 sigma for gaussian blurring tests
 """
 SIGMA_GAUSSIAN_BLURRING = None
+"""***SAVE_PIXELS***
+Where to store the pixels list of every blob
+DISK: pixels are stored in hdf5 files in the disk
+RAM: pixels are stored in the blob object in the ram
+NOT: pixels are not stored and are computed from the contour everytime
+"""
+SAVE_PIXELS = 'DISK' # 'RAM' or 'NOT'
 #######################################
 #########  global fragments  ##########
 #######################################

@@ -199,7 +199,7 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
             self.segmenting_popup.bind(on_open = self.compute_list_of_blobs)
             self.segmenting_popup.bind(on_dismiss = self.show_consistency_popup)
             self.consistency_popup.bind(on_open = self.check_segmentation_consistency)
-            self.consistency_success_popup.bind(on_open = self.save_list_of_blobs)
+            self.consistency_success_popup.bind(on_open = self.save_list_of_blobs_segmented)
             self.consistency_success_popup.bind(on_dismiss = self.model_area_and_crossing_detector)
             self.DCD_popup.bind(on_open = self.train_and_apply_crossing_detector)
             self.DCD_popup.bind(on_dismiss = self.plot_crossing_detection_statistics)
@@ -329,9 +329,8 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
     def check_segmentation_consistency(self, *args):
         super().check_segmentation_consistency()
 
-        if len(self.frames_with_more_blobs_than_animals) > 0 and \
-                (self.check_segmentation_consistency_switch.active or
-                 self.chosen_video.video.number_of_animals == 1):
+        if self.check_segmentation_consistency_switch.active and \
+          len(self.frames_with_more_blobs_than_animals) > 0:
             self.resegmentation_step_finished = True
             self.consistency_popup.dismiss()
             self.consistency_fail_popup.open()
@@ -341,8 +340,8 @@ class PreprocessingPreview(PreprocessingPreviewAPI, BoxLayout):
             self.consistency_success_popup.open()
 
 
-    def save_list_of_blobs(self, *args):
-        super().save_list_of_blobs()
+    def save_list_of_blobs_segmented(self, *args):
+        super().save_list_of_blobs_segmented()
         self.consistency_success_popup.dismiss()
 
     def model_area_and_crossing_detector(self, *args):

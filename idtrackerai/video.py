@@ -745,12 +745,12 @@ class Video(object):
         """Create a folder named images inside of the session_folder
         """
         ## for RAM optimization
-        self._segmentation_images_folder = os.path.join(self.session_folder, 'segmentation_images')
+        self._segmentation_data_folder = os.path.join(self.session_folder, 'segmentation_data')
         self._identification_images_folder = os.path.join(self.session_folder, 'identification_images')
         self.identification_images_file_path = os.path.join(self._identification_images_folder, 'i_images.hdf5')
-        if not os.path.isdir(self._segmentation_images_folder):
-            os.makedirs(self._segmentation_images_folder)
-            logger.info("the folder %s has been created" %self._segmentation_images_folder)
+        if not os.path.isdir(self._segmentation_data_folder):
+            os.makedirs(self._segmentation_data_folder)
+            logger.info("the folder %s has been created" %self._segmentation_data_folder)
 
         if not os.path.isdir(self._identification_images_folder):
             os.makedirs(self._identification_images_folder)
@@ -922,9 +922,9 @@ class Video(object):
         if conf.DATA_POLICY in ['trajectories', 'validation',
                            'knowledge_transfer', 'idmatcher.ai']:
 
-            if os.path.isdir(self._segmentation_images_folder):
+            if os.path.isdir(self._segmentation_data_folder):
                 logger.info("Deleting segmentation images")
-                rmtree(self._segmentation_images_folder)
+                rmtree(self._segmentation_data_folder)
             if os.path.isfile(self.global_fragments_path):
                 logger.info("Deleting global fragments")
                 os.remove(self.global_fragments_path)

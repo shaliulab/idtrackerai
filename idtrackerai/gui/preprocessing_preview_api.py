@@ -120,6 +120,7 @@ class PreprocessingPreviewAPI(object):
                 self.chosen_video.video.number_of_animals,
                 return_maximum_number_of_blobs=True
             )
+        self.frames_with_more_blobs_than_animals = self.chosen_video.video.frames_with_more_blobs_than_animals
 
         """
         #This call is used in the GUI to re-segment the image in the case the tracking returned more blobs than expected
@@ -133,8 +134,7 @@ class PreprocessingPreviewAPI(object):
 
 
 
-    def save_list_of_blobs(self):
-
+    def save_list_of_blobs_segmented(self):
         self.chosen_video.video._has_been_segmented = True
 
         if len(self.chosen_video.list_of_blobs.blobs_in_video[-1]) == 0:
@@ -143,11 +143,16 @@ class PreprocessingPreviewAPI(object):
             self.chosen_video.video._number_of_frames        = self.chosen_video.list_of_blobs.number_of_frames
 
         self.chosen_video.video.save()
-        self.chosen_video.list_of_blobs.save(
-            self.chosen_video.video,
-            self.chosen_video.video.blobs_path_segmented,
-            number_of_chunks = self.chosen_video.video.number_of_frames
-        )
+        # NOTE: The name of this functions should be changed. We do not need to save
+        # the list_of_blobs after segmentation as we are not restoring the segmentation anymore
+        # Even if we restore, we restore the whole preprocessing, not only the segmentation
+
+        # self.chosen_video.list_of_blobs.save(
+        #     self.chosen_video.video,
+        #     self.chosen_video.video.blobs_path_segmented,
+        #     number_of_chunks = self.chosen_video.video.number_of_frames
+        # )
+
         self.chosen_video.video._segmentation_time = time.time() - self.chosen_video.video.segmentation_time
 
 

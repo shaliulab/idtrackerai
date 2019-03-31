@@ -118,7 +118,7 @@ class SelectFile(BoxLayout):
     def init_chosen_video_parameters(self):
         CHOSEN_VIDEO.video._apply_ROI = False
         CHOSEN_VIDEO.video._subtract_bkg = False
-        [os.remove(image) for image in glob.glob(os.path.join(CHOSEN_VIDEO.video._segmentation_images_folder, '*'))]
+        [os.remove(image) for image in glob.glob(os.path.join(CHOSEN_VIDEO.video._segmentation_data_folder, '*'))]
         [os.remove(image) for image in glob.glob(os.path.join(CHOSEN_VIDEO.video._identification_images_folder, '*'))]
 
     def open(self, *args):

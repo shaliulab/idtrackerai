@@ -29,7 +29,10 @@ from __future__ import absolute_import, division, print_function
 import cv2
 from confapp import conf
 from joblib import Parallel, delayed
+import numpy as np
+import multiprocessing
 from idtrackerai.utils.py_utils import *
+from idtrackerai.utils.py_utils import set_mkl_to_single_thread, set_mkl_to_multi_thread
 
 if sys.argv[0] == 'idtrackeraiApp.py' or 'idtrackeraiGUI' in sys.argv[0]:
     from kivy.logger import Logger
@@ -42,6 +45,8 @@ else:
 """
 The utilities to segment and extract the blob information
 """
+
+
 def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
                                                         ending_frame,
                                                         video_path, bkg):
@@ -86,6 +91,7 @@ def sum_frames_for_bkg_per_episode_in_single_file_video(starting_frame,
     cap.release()
     return bkg, number_of_frames_for_bkg_in_episode
 
+
 def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
     """Computes the sum of frames (1 every 100 frames) for a particular episode of
     the video when the video is splitted in several files
@@ -107,7 +113,6 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
     """
     logger.debug('Adding video %s to background' % video_path)
     cap = cv2.VideoCapture(video_path)
-    counter = 0
     numFrame = int(cap.get(7))
     number_of_frames_for_bkg_in_episode = 0
     frameInds = range(0,numFrame, conf.BACKGROUND_SUBTRACTION_PERIOD)
@@ -123,6 +128,7 @@ def sum_frames_for_bkg_per_episode_in_multiple_files_video(video_path, bkg):
             number_of_frames_for_bkg_in_episode += 1
 
     return bkg, number_of_frames_for_bkg_in_episode
+
 
 def cumpute_background(video):
     """Computes a model of the background by averaging multiple frames of the video.
@@ -178,6 +184,7 @@ def cumpute_background(video):
     bkg = np.true_divide(bkg, totNumFrame)
     return bkg.astype('float32')
 
+
 def check_background_substraction(video, old_video, use_previous_background):
     """Checks whether background substraction must be used and in that case it
     checks whether a previous computed background can be used. Otherwise it
@@ -210,6 +217,7 @@ def check_background_substraction(video, old_video, use_previous_background):
             bkg = cumpute_background(video)
 
     return bkg
+
 
 def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`) and the
@@ -249,6 +257,7 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
     frame_segmented_and_masked = cv2.bitwise_and(frame_segmented,frame_segmented, mask=ROI) #Applying the mask
     return frame_segmented_and_masked
 
+
 def filter_contours_by_area(contours, min_area, max_area):
     """Filters out contours which number of pixels is smaller than `min_area` or
     greater than `max_area`
@@ -275,6 +284,7 @@ def filter_contours_by_area(contours, min_area, max_area):
             good_contours.append(contour)
     return good_contours
 
+
 def cnt2BoundingBox(cnt,bounding_box):
     """Transforms the coordinates of the contour in the full frame to the the
     bounding box of the blob.
@@ -294,6 +304,7 @@ def cnt2BoundingBox(cnt,bounding_box):
         Array with the pairs of coordinates of the contour in the bounding box
     """
     return cnt - np.asarray([bounding_box[0][0],bounding_box[0][1]])
+
 
 def get_bounding_box(cnt, width, height, crossing_detector = False):
     """Computes the bounding box of a given contour with an extra margin of 45
@@ -341,6 +352,7 @@ def get_bounding_box(cnt, width, height, crossing_detector = False):
         h = height - y
     return ((x, y),(x + w, y + h)), original_diagonal
 
+
 def getCentroid(cnt):
     """Computes the centroid of the contour
 
@@ -359,6 +371,7 @@ def getCentroid(cnt):
     x = M['m10']/M['m00']
     y = M['m01']/M['m00']
     return (x,y)
+
 
 def get_pixels(cnt, width, height):
     """Gets the coordinates list of the pixels inside the contour
@@ -384,7 +397,8 @@ def get_pixels(cnt, width, height):
     pts = np.where(cimg == 255)
     return np.asarray(list(zip(pts[0],pts[1])))
 
-def get_bounding_box_image(frame, cnt):
+
+def get_bounding_box_image(frame, cnt, save_pixels):
     """Computes the `bounding_box_image`from a given frame and contour. It also
     returns the coordinates of the `bounding_box`, the ravelled `pixels` inside of
     the contour and the diagonal of the `bounding_box` as an `estimated_body_length`
@@ -419,18 +433,23 @@ def get_bounding_box_image(frame, cnt):
     bounding_box, estimated_body_length = get_bounding_box(cnt, width, height) # the estimated body length is the diagonal of the original bounding_box
     bounding_box_image = frame[bounding_box[0][1]:bounding_box[1][1],
                             bounding_box[0][0]:bounding_box[1][0]]
-    contour_in_bounding_box = cnt2BoundingBox(cnt,bounding_box)
-    pixels_in_bounding_box = get_pixels(contour_in_bounding_box,
-                            np.abs(bounding_box[0][0] - bounding_box[1][0]),
-                            np.abs(bounding_box[0][1] - bounding_box[1][1]))
-    pixels_in_full_frame = pixels_in_bounding_box + \
-                            np.asarray([bounding_box[0][1], bounding_box[0][0]])
-    pixels_in_full_frame_ravelled = np.ravel_multi_index(
-                                    [pixels_in_full_frame[:,0], pixels_in_full_frame[:,1]],
-                                    (height,width))
+    contour_in_bounding_box = cnt2BoundingBox(cnt, bounding_box)
+    if save_pixels == 'RAM' or save_pixels == 'DISK':
+        pixels_in_bounding_box = get_pixels(contour_in_bounding_box,
+                                np.abs(bounding_box[0][0] - bounding_box[1][0]),
+                                np.abs(bounding_box[0][1] - bounding_box[1][1]))
+        pixels_in_full_frame = pixels_in_bounding_box + \
+                                np.asarray([bounding_box[0][1], bounding_box[0][0]])
+        pixels_in_full_frame_ravelled = np.ravel_multi_index(
+                                        [pixels_in_full_frame[:,0], pixels_in_full_frame[:,1]],
+                                        (height,width))
+    elif save_pixels == 'NOT':
+        pixels_in_full_frame_ravelled = None
+
     return bounding_box, bounding_box_image, pixels_in_full_frame_ravelled, estimated_body_length
 
-def get_blobs_information_per_frame(frame, contours):
+
+def get_blobs_information_per_frame(frame, contours, save_pixels):
     """Computes a set of properties for all the `contours` in a given frame.
 
     Parameters
@@ -472,7 +491,7 @@ def get_blobs_information_per_frame(frame, contours):
         bounding_box, \
         bounding_box_image, \
         pixels_in_full_frame_ravelled, \
-        estimated_body_length = get_bounding_box_image(frame, cnt)
+        estimated_body_length = get_bounding_box_image(frame, cnt, save_pixels)
         #bounding boxes
         bounding_boxes.append(bounding_box)
         # bounding_box_images
@@ -485,9 +504,11 @@ def get_blobs_information_per_frame(frame, contours):
         # estimated body lengths list
         estimated_body_lengths.append(estimated_body_length)
 
-    return bounding_boxes, bounding_box_images, centroids, areas, pixels, estimated_body_lengths
+    return bounding_boxes, bounding_box_images, centroids, areas, \
+        pixels, estimated_body_lengths
 
-def blob_extractor(segmented_frame, frame, min_area, max_area):
+
+def blob_extractor(segmented_frame, frame, min_area, max_area, save_pixels='RAM'):
     """Given a `segmented_frame` it extracts the blobs with area greater than
     `min_area` and smaller than `max_area` and it computes a set of relevant
     properties for every blob.
@@ -525,12 +546,19 @@ def blob_extractor(segmented_frame, frame, min_area, max_area):
     filter_contours_by_area
     get_blobs_information_per_frame
     """
-    _, contours, hierarchy = cv2.findContours(segmented_frame,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+    _, contours, hierarchy = cv2.findContours(segmented_frame,
+                                              cv2.RETR_TREE,
+                                              cv2.CHAIN_APPROX_NONE)
     # Filter contours by size
-    good_contours_in_full_frame = filter_contours_by_area(contours,min_area, max_area)
+    good_contours_in_full_frame = filter_contours_by_area(contours,
+                                                          min_area,
+                                                          max_area)
     # get contours properties
     bounding_boxes, bounding_box_images, \
-    centroids, areas, pixels, \
-    estimated_body_lengths = get_blobs_information_per_frame(frame, good_contours_in_full_frame)
+        centroids, areas, pixels, \
+        estimated_body_lengths = \
+        get_blobs_information_per_frame(frame, good_contours_in_full_frame,
+                                        save_pixels)
 
-    return bounding_boxes, bounding_box_images, centroids, areas, pixels, good_contours_in_full_frame, estimated_body_lengths
+    return bounding_boxes, bounding_box_images, centroids, areas, pixels, \
+        good_contours_in_full_frame, estimated_body_lengths

@@ -304,9 +304,7 @@ class ListOfFragments(object):
             attributes listed in `attributes`
         """
         if attributes == None:
-            attributes_to_discard = ['images',
-                            'pixels',
-                            'coexisting_individual_fragments']
+            attributes_to_discard = ['images', 'coexisting_individual_fragments']
         return [{attribute: getattr(fragment, attribute) for attribute in fragment.__dict__.keys() if attribute not in attributes_to_discard}
                     for fragment in self.fragments]
 
@@ -620,27 +618,24 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
         for blob in blobs_in_frame:
             current_fragment_identifier = blob.fragment_identifier
             if current_fragment_identifier not in used_fragment_identifiers:
-                images = [blob.identification_image_index] if blob.is_an_individual else [blob.bounding_box_image]
+                images = [blob.identification_image_index] if blob.is_an_individual else [None]
                 bounding_boxes = [blob.bounding_box_in_frame_coordinates] if blob.is_a_crossing else []
                 centroids = [blob.centroid]
                 areas = [blob.area]
-                pixels = [blob.pixels]
                 start = blob.frame_number
                 current = blob
 
                 while len(current.next) > 0 and current.next[0].fragment_identifier == current_fragment_identifier:
                     current = current.next[0]
                     bounding_box_in_frame_coordinates = [current.bounding_box_in_frame_coordinates] if current.is_a_crossing else []
-                    images, bounding_boxes, centroids, areas, pixels = append_values_to_lists([current.identification_image_index,
+                    images, bounding_boxes, centroids, areas = append_values_to_lists([current.identification_image_index,
                                                                 bounding_box_in_frame_coordinates,
                                                                 current.centroid,
-                                                                current.area,
-                                                                current.pixels],
+                                                                current.area],
                                                                 [images,
                                                                 bounding_boxes,
                                                                 centroids,
-                                                                areas,
-                                                                pixels])
+                                                                areas])
 
                 end = current.frame_number
                 fragment = Fragment(current_fragment_identifier,
@@ -650,7 +645,6 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                                     bounding_boxes,
                                     centroids,
                                     areas,
-                                    pixels,
                                     blob.is_an_individual,
                                     blob.is_a_crossing,
                                     number_of_animals,
