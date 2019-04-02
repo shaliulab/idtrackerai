@@ -126,8 +126,10 @@ class Blob(object):
                  bounding_box_images_path=None,
                  estimated_body_length=None, pixels=None,
                  number_of_animals=None, frame_number=None,
+                 frame_number_in_video_path=None,
                  in_frame_index=None, pixels_path=None,
-                 video_height=None, video_width=None):
+                 video_height=None, video_width=None,
+                 video_path=None):
         self.frame_number = frame_number
         self.in_frame_index = in_frame_index
         self.number_of_animals = number_of_animals
@@ -135,6 +137,7 @@ class Blob(object):
         self.contour = contour # openCV contour [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]]
         self.area = area # int: number of pixels in the blob
         self.bounding_box_in_frame_coordinates = bounding_box_in_frame_coordinates #tuple of tuples: ((x1,y1),(x2,y2)) (top-left corner, bottom-right corner) in pixels
+        self._bounding_box_image = bounding_box_image
         self.bounding_box_images_path = bounding_box_images_path # path to where the bounding_box_image is saved
         self.estimated_body_length = estimated_body_length
         self.image_for_identification_path = None # path where the image for identification is stored
@@ -160,11 +163,23 @@ class Blob(object):
         self._identity_corrected_closing_gaps = None
         self._identity_corrected_solving_jumps = None
         self._identity = None
+        self.video_path = video_path
+        self.frame_number_in_video_path = frame_number_in_video_path
 
     @property
     def bounding_box_image(self):
-        with h5py.File(self.bounding_box_images_path, 'r') as f:
-            return f[str(self.frame_number) + '-' + str(self.in_frame_index)][:]
+        if self._bounding_box_image is not None:
+            return self._bounding_box_image
+        elif self.bounding_box_images_path is not None and os.path.isfile(self.bounding_box_images_path):
+            with h5py.File(self.bounding_box_images_path, 'r') as f:
+                return f[str(self.frame_number) + '-' + str(self.in_frame_index)][:]
+        else:
+            cap = cv2.VideoCapture(self.video_path)
+            cap.set(1, self.frame_number_in_video_path)
+            ret, frame = cap.read()
+            bb = self.bounding_box_in_frame_coordinates
+            return frame[bb[0][1]:bb[1][1], bb[0][0]:bb[1][0], 0]
+
 
     @property
     def pixels(self):

@@ -398,7 +398,7 @@ def get_pixels(cnt, width, height):
     return np.asarray(list(zip(pts[0],pts[1])))
 
 
-def get_bounding_box_image(frame, cnt, save_pixels):
+def get_bounding_box_image(frame, cnt, save_pixels, save_segmentation_image):
     """Computes the `bounding_box_image`from a given frame and contour. It also
     returns the coordinates of the `bounding_box`, the ravelled `pixels` inside of
     the contour and the diagonal of the `bounding_box` as an `estimated_body_length`
@@ -431,8 +431,11 @@ def get_bounding_box_image(frame, cnt, save_pixels):
     height = frame.shape[0]
     width = frame.shape[1]
     bounding_box, estimated_body_length = get_bounding_box(cnt, width, height) # the estimated body length is the diagonal of the original bounding_box
-    bounding_box_image = frame[bounding_box[0][1]:bounding_box[1][1],
-                            bounding_box[0][0]:bounding_box[1][0]]
+    if save_segmentation_image == 'RAM' or save_segmentation_image == 'DISK':
+        bounding_box_image = frame[bounding_box[0][1]:bounding_box[1][1],
+                                bounding_box[0][0]:bounding_box[1][0]]
+    elif save_segmentation_image == 'NOT':
+        bounding_box_image = None
     contour_in_bounding_box = cnt2BoundingBox(cnt, bounding_box)
     if save_pixels == 'RAM' or save_pixels == 'DISK':
         pixels_in_bounding_box = get_pixels(contour_in_bounding_box,
@@ -449,7 +452,8 @@ def get_bounding_box_image(frame, cnt, save_pixels):
     return bounding_box, bounding_box_image, pixels_in_full_frame_ravelled, estimated_body_length
 
 
-def get_blobs_information_per_frame(frame, contours, save_pixels):
+def get_blobs_information_per_frame(frame, contours, save_pixels,
+                                    save_segmentation_image):
     """Computes a set of properties for all the `contours` in a given frame.
 
     Parameters
@@ -491,7 +495,8 @@ def get_blobs_information_per_frame(frame, contours, save_pixels):
         bounding_box, \
         bounding_box_image, \
         pixels_in_full_frame_ravelled, \
-        estimated_body_length = get_bounding_box_image(frame, cnt, save_pixels)
+        estimated_body_length = get_bounding_box_image(frame, cnt, save_pixels,
+                                                       save_segmentation_image)
         #bounding boxes
         bounding_boxes.append(bounding_box)
         # bounding_box_images
@@ -508,7 +513,8 @@ def get_blobs_information_per_frame(frame, contours, save_pixels):
         pixels, estimated_body_lengths
 
 
-def blob_extractor(segmented_frame, frame, min_area, max_area, save_pixels='RAM'):
+def blob_extractor(segmented_frame, frame, min_area, max_area, save_pixels='DISK',
+                   save_segmentation_image='DISK'):
     """Given a `segmented_frame` it extracts the blobs with area greater than
     `min_area` and smaller than `max_area` and it computes a set of relevant
     properties for every blob.
@@ -558,7 +564,7 @@ def blob_extractor(segmented_frame, frame, min_area, max_area, save_pixels='RAM'
         centroids, areas, pixels, \
         estimated_body_lengths = \
         get_blobs_information_per_frame(frame, good_contours_in_full_frame,
-                                        save_pixels)
+                                        save_pixels, save_segmentation_image)
 
     return bounding_boxes, bounding_box_images, centroids, areas, pixels, \
         good_contours_in_full_frame, estimated_body_lengths

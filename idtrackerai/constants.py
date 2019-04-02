@@ -113,6 +113,13 @@ RAM: pixels are stored in the blob object in the ram
 NOT: pixels are not stored and are computed from the contour everytime
 """
 SAVE_PIXELS = 'DISK' # 'RAM' or 'NOT'
+"""***SAVE_SEGMENTATION_IMAGE***
+Where to store the segmentation image of every blob
+DISK: image is stored in hdf5 files in the disk
+RAM: image is stored in the blob object in the ram
+NOT: image is not stored and are computed from the contour everytime
+"""
+SAVE_SEGMENTATION_IMAGE = 'DISK' # 'RAM' or 'NOT'
 #######################################
 #########  global fragments  ##########
 #######################################
