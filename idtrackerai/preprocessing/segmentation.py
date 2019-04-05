@@ -178,6 +178,7 @@ def get_blobs_in_frame(cap, video, segmentation_thresholds,
             with h5py.File(bounding_box_images_path, 'a') as f1:
                 f1.create_dataset(str(global_frame_number) + '-' + str(i),
                                   data=miniframes[i])
+            miniframes[i] = None
         if save_pixels == 'DISK':
             with h5py.File(pixels_path, 'a') as f2:
                 f2.create_dataset(str(global_frame_number) + '-' + str(i),
