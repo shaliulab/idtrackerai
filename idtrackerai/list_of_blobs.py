@@ -300,6 +300,7 @@ class ListOfBlobs(object):
             apply_model_area_to_blobs_in_frame(video, number_of_animals,
                                                blobs_in_frame, model_area,
                                                identification_image_size)
+
     def get_data_plot(self):
         """Gets the areas of all the blobs segmented in the video
 
