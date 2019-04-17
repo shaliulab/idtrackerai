@@ -181,7 +181,7 @@ class Video(object):
     @property
     def has_been_pretrained(self):
         return self._has_been_pretrained
-        
+
     @property
     def previous_session_folder(self):
         return self._previous_session_folder
@@ -593,7 +593,7 @@ class Video(object):
 
     @staticmethod
     def update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name):
-        checkpoint_file = open(checkpoint_path, "r")
+        # checkpoint_file = open(checkpoint_path, "r")
         fh, abs_path = mkstemp()
         with os.fdopen(fh,'w') as new_file:
             with open(checkpoint_path) as old_file:
