@@ -611,7 +611,7 @@ class Video(object):
 
     @staticmethod
     def update_tensorflow_checkpoints_file(checkpoint_path, current_session_name, new_session_name):
-        checkpoint_file = open(checkpoint_path, "r")
+        #checkpoint_file = open(checkpoint_path, "r")
         fh, abs_path = mkstemp()
         with os.fdopen(fh,'w') as new_file:
             with open(checkpoint_path) as old_file:
