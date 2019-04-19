@@ -28,6 +28,7 @@
 from __future__ import absolute_import, print_function, division
 import collections, numpy as np, cv2, sys, os
 from tqdm import tqdm
+import h5py
 from scipy.spatial.distance import cdist
 from idtrackerai.utils.video_utils import blob_extractor
 from idtrackerai.list_of_fragments import ListOfFragments
@@ -73,20 +74,50 @@ def erode(image, kernel_size):
     kernel = np.ones(kernel_size, np.uint8)
     return cv2.erode(image,kernel,iterations = 1)
 
-def get_eroded_blobs(video, blobs_in_frame):
+def get_eroded_blobs(video, blobs_in_frame, frame_number):
+    episode = video.in_which_episode(frame_number)
+    pixels_path = None
+    if conf.SAVE_PIXELS == 'DISK':
+        pixels_path = os.path.join(video._segmentation_data_folder,
+                                   'episode_pixels_{}.hdf5'.format(str(episode)))
+
     # logger.debug('Getting eroded blobs')
     segmented_frame = np.zeros((video.height, video.width)).astype('uint8')
 
     for blob in blobs_in_frame:
-        pixels = blob.eroded_pixels if hasattr(blob,'eroded_pixels') else blob.pixels
+        pixels = blob.eroded_pixels if (hasattr(blob, 'has_eroded_pixels') and blob.has_eroded_pixels) else blob.pixels
         pxs = np.array(np.unravel_index(pixels,(video.height, video.width))).T
         segmented_frame[pxs[:,0], pxs[:,1]] = 255
 
     segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
     boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(segmented_eroded_frame, segmented_eroded_frame, 0, np.inf)
     # logger.debug('Finished getting eroded blobse')
-    return [Blob(centroid, contour, None, bounding_box, pixels = pixels)
-                for centroid, contour, pixels, bounding_box in zip(centroids, contours, pixels_all, boundingBoxes)]
+    eroded_blobs_in_frame = []
+    for i, (centroid, contour, pixels, bounding_box) in enumerate(zip(centroids, contours, pixels_all, boundingBoxes)):
+        if conf.SAVE_PIXELS == 'DISK':
+            with h5py.File(pixels_path, 'a') as f:
+                f.create_dataset(str(frame_number) + '-' + str(i) + '-eroded',
+                                  data=pixels)
+            pixels=None
+
+        eroded_blobs_in_frame.append(Blob(centroid,
+                                          contour,
+                                          None,
+                                          bounding_box,
+                                          bounding_box_image=None,
+                                          number_of_animals=video.number_of_animals,
+                                          frame_number=frame_number,
+                                          pixels=pixels,
+                                          pixels_path=pixels_path,
+                                          in_frame_index=i,
+                                          video_height=video.height,
+                                          video_width=video.width,
+                                          video_path=video.video_path,
+                                          pixels_are_eroded=True))
+
+    return eroded_blobs_in_frame
+    # return [Blob(centroid, contour, None, bounding_box, pixels = pixels)
+    #             for centroid, contour, pixels, bounding_box in zip(centroids, contours, pixels_all, boundingBoxes)]
 
 ''' assign them all '''
 
@@ -258,7 +289,7 @@ def get_internal_point_to_blob(pixels):
 def plot_blob_and_centroid(video, blob, centroid):
     segmented_frame = np.zeros((video.height, video.width)).astype('uint8')
 
-    pixels = blob.eroded_pixels if hasattr(blob,'eroded_pixels') else blob.pixels
+    pixels = blob.eroded_pixels if blob.has_eroded_pixels else blob.pixels
     pxs = np.array(np.unravel_index(pixels,(video.height, video.width))).T
     segmented_frame[pxs[:,0], pxs[:,1]] = 255
 
@@ -427,7 +458,7 @@ def interpolate_trajectories_during_gaps(video, list_of_blobs, list_of_fragments
                     if len(inner_blobs_in_frame) != 0:
                         # logger.debug('----There are blobs in the inner frame')
                         if erosion_counter != 0:
-                            eroded_blobs_in_frame = get_eroded_blobs(video, inner_blobs_in_frame) #list of eroded blobs!
+                            eroded_blobs_in_frame = get_eroded_blobs(video, inner_blobs_in_frame, inner_frame_number) #list of eroded blobs!
                             if len(eroded_blobs_in_frame) == 0:
                                 eroded_blobs_in_frame = inner_blobs_in_frame
                         else:
@@ -595,7 +626,6 @@ def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
     list_of_occluded_identities = [[] for i in range(len(list_of_blobs.blobs_in_video))]
 
     while continue_erosion_protocol or erosion_counter == 1:
-        # logger.debug('\nIn main while to close gaps')
         reset_blobs_in_video_before_erosion_iteration(list_of_blobs.blobs_in_video)
         list_of_blobs.blobs_in_video, \
         list_of_occluded_identities = interpolate_trajectories_during_gaps(video,
